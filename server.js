@@ -191,6 +191,15 @@ async function api(req, res, route) {
     await store.saveUser(user);
     return send(res, 200, { attempt: at });
   }
+  // One past exam, identified by its timestamp.
+  if (req.method === 'DELETE' && route === 'attempt') {
+    const at = +(await readBody(req)).at;
+    const n = user.attempts.length;
+    user.attempts = user.attempts.filter(a => a.at !== at);
+    if (user.attempts.length === n) return send(res, 404, { error: 'آزمون پیدا نشد.' });
+    await store.saveUser(user);
+    return send(res, 200, { ok: true });
+  }
   if (req.method === 'DELETE' && route === 'attempts') {
     user.attempts = [];
     await store.saveUser(user);

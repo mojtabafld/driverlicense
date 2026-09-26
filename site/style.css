@@ -512,3 +512,9 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .btn-text{padding:8px 4px;color:var(--link);font-size:14px}
 .btn-text:hover{text-decoration:underline}
 .btn-text.danger{color:var(--bad)}
+/* past-exams page in delete mode */
+.hist-row{display:flex;align-items:center;gap:10px}
+.hist-row .hist{flex:1;min-width:0}
+.hist-del{flex:none;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;color:var(--bad);background:var(--bad-soft);transition:background .15s,color .15s}
+.hist-del:hover{background:var(--bad);color:#fff}
+.words-head .tr-toggle svg{vertical-align:-3px}
