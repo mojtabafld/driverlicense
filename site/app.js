@@ -97,9 +97,9 @@
     $modal.onclick = e => { if (e.target === $modal || e.target.closest('[data-close]')) closeModal(); };
   }
   function closeModal() { $modal.hidden = true; $modal.innerHTML = ''; }
-  function confirmBox(title, body, okText, onOk) {
+  function confirmBox(title, body, okText, onOk, cancelText = 'انصراف') {
     openModal(`<h3>${title}</h3><p style="color:var(--muted);margin:0">${body}</p>
-      <div class="row-btns"><button class="btn btn-ghost" data-close>انصراف</button><button class="btn btn-primary" id="mOk">${okText}</button></div>`);
+      <div class="row-btns"><button class="btn btn-ghost" data-close>${cancelText}</button><button class="btn btn-primary" id="mOk">${okText}</button></div>`);
     document.getElementById('mOk').onclick = () => { closeModal(); onOk(); };
   }
   const zoomImg = src => openModal(`<img src="${src}" alt="" data-close>`, 'img');
@@ -593,7 +593,7 @@
     document.getElementById('again').onclick = () => askSize('random');
     document.getElementById('toHome').onclick = home;
     const back = document.getElementById('back');
-    if (back) back.onclick = state.reviewFrom === 'history' ? historyView : home;
+    if (back) back.onclick = state.reviewFrom === 'history' ? () => historyView() : home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
     bindReviewCards($app);
     $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) c.classList.add('open'); });
@@ -778,20 +778,22 @@
 
   // Newest first; the dashboard passes a limit and links to the full list on its own page.
   const HOME_HIST = 3;
-  function historyList(limit = Infinity) {
+  // `edit` (past-exams page) adds a delete button next to each exam.
+  function historyList(limit = Infinity, edit = false) {
     const atts = state.attempts;
     if (!atts.length) return '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
     const shown = atts.map((_, i) => i).reverse().slice(0, limit);
     return shown.map(i => {
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
-      return `<button class="card hist" data-att="${i}">
+      const row = `<button class="card hist" data-att="${i}">
         <span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
         <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'} · ${modeName(h.mode)}<br>
           <small>${fmtDateTime(h.at)} · ${wrongImgs ? `${faNum(wrongImgs)} سؤال غلط` : 'بدون اشتباه'} · ${fmtTime(h.secs)}${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>
         <span class="go">مرور ←</span>
       </button>`;
+      return edit ? `<div class="hist-row">${row}<button class="hist-del" data-del-att="${i}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>` : row;
     }).join('') + (atts.length > limit ? `<button class="tr-toggle more" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(atts.length)}) ←</button>` : '');
   }
 
@@ -878,7 +880,7 @@
     if (dd) dd.onclick = () => confirmBox('حذف آزمون نیمه‌تمام؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'حذف', () => { dropDraft(); home(); });
     document.getElementById('openWords').onclick = () => wordsView();
     const se = document.getElementById('statExams');
-    if (se && state.attempts.length) { se.onclick = historyView; se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
+    if (se && state.attempts.length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
     document.getElementById('startM').onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
@@ -893,14 +895,29 @@
     });
   }
   // Full list of past exams (opened from the "exams" card on the dashboard).
-  function historyView() {
+  // "حذف" switches the page into delete mode: a delete button next to each exam, each asking for a yes/no first.
+  function historyView(edit = false) {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    edit = edit && state.attempts.length > 0;
     $app.innerHTML = `<section class="view hist-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
-      <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1></div>
-      <div class="history">${historyList()}</div>
+      <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1>
+        ${state.attempts.length ? `<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'پایان حذف' : `${ICON.trash} حذف`}</button>` : ''}</div>
+      <div class="history">${historyList(Infinity, edit)}</div>
     </section>`;
     document.getElementById('back').onclick = home;
+    const eh = document.getElementById('editHist'); if (eh) eh.onclick = () => { const y = scrollY; historyView(!edit); scrollTo({ top: y }); };
+    $app.querySelectorAll('[data-del-att]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.delAtt, att = state.attempts[i];
+      confirmBox('حذف آزمون؟', `آزمون ${faNum(i + 1)} (${fmtDateTime(att.at)}) و نتیجه‌اش از تاریخچه و آمار حذف می‌شود.`, 'بله', async () => {
+        try {
+          await api('DELETE', 'attempt', { at: att.at });
+          state.attempts = state.attempts.filter(a => a !== att);
+          const y = scrollY; historyView(true); scrollTo({ top: y });
+          toast('آزمون حذف شد');
+        } catch (e) { toast(e.message); }
+      }, 'خیر');
+    });
     bindHistory();
     window.scrollTo({ top: 0 });
   }
@@ -908,7 +925,7 @@
   function bindHistory() {
     $app.querySelectorAll('[data-att]').forEach(b => b.onclick = () => openAttempt(+b.dataset.att));
     const all = document.getElementById('allHist');
-    if (all) all.onclick = historyView;
+    if (all) all.onclick = () => historyView();
   }
 
   // ---------- Word bank ----------
