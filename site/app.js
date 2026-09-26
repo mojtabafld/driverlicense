@@ -59,10 +59,10 @@
   const nl = s => esc(s).replace(/\n/g, '<br>');
   const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   // Show Persian digits everywhere on the page, Danish content (questions, answers, Danish labels) included;
-  // only inputs, code and the exam's "Spørgsmål 3 ud af 25" counter keep Latin digits.
+  // only inputs, code, the exam's "Spørgsmål 3 ud af 25" counter and the review's statement numbers keep Latin digits.
   // Runs on every DOM change, so animated counters and timers are covered.
   // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
-  const LATIN_ZONE = 'input, textarea, code, .x-count, script, style';
+  const LATIN_ZONE = 'input, textarea, code, .x-count, .rnum-c, script, style';
   const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
   const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
@@ -83,7 +83,6 @@
   }).observe(document.body, { childList: true, subtree: true, characterData: true });
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const fmtTime = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-  const isTrivial = s => /^(بله|خیر|ja|nej)[.!]?$/i.test((s || '').trim());
   const scoreOf = a => a.items.filter(x => x.ok).length;
   const fmtDate = t => new Date(t).toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' });
   const fmtDateTime = t => new Date(t).toLocaleString('fa-IR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -628,23 +627,21 @@
       </div>
       <div class="rbody">
         ${q.st.map((s, k) => {
-          const w = r.wrong ? r.wrong[k] : null;
-          const efa = s.efa && !isTrivial(s.efa) ? s.efa : '';
-          const eda = s.eda && !isTrivial(s.eda) ? s.eda : '';
-          const box = r.a ? (r.a[k] ? 'on' : '') : 'na';
-          // Green/red says whether the user's answer to this statement was right; the line under it says why.
-          // Without the user's answers (old attempts) it can only say whether the statement is true.
-          const cls = r.a ? (w ? 'res-bad' : 'res-ok') : (s.ok ? 'res-ok' : 'res-bad');
-          const verdict = !r.a ? (s.ok ? 'گزینه‌ی درست' : 'گزینه‌ی نادرست')
-            : `${w ? '✗ پاسخ شما اشتباه' : '✓ پاسخ شما درست'} · ${s.ok ? 'این گزینه درست است' : 'این گزینه نادرست است'} و ${r.a[k] ? 'تیک زدید' : 'تیک نزدید'}`;
-          return `<div class="rstmt ${cls}">
-            <span class="rbox ${box}" aria-label="${r.a ? (r.a[k] ? 'تیک زده شده' : 'تیک زده نشده') : ''}"></span>
-            <div class="rtxt">
-              <div class="rverdict fa">${verdict}</div>
-              <div class="da" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</div>
-              ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
-              ${efa || eda ? `<div class="expl">${efa ? `<div class="fa">${nl(efa)}</div>` : ''}${eda ? `<div class="da">${nl(eda)}</div>` : ''}</div>` : ''}
+          // Like prove.dk: the number is green when the user answered this statement right, red when wrong
+          // (grey for old attempts that did not store the ticks), then "Det rigtige svar er: …".
+          const res = r.a ? (r.wrong[k] ? 'bad' : 'ok') : 'na';
+          const eda = (s.eda || '').trim() || (s.ok ? 'Ja.' : 'Nej.');
+          const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
+          return `<div class="rstmt">
+            <div class="rline">
+              <span class="rnum-c ${res}" aria-label="${res === 'ok' ? 'پاسخ شما درست' : res === 'bad' ? 'پاسخ شما اشتباه' : ''}">${k + 1}</span>
+              <div class="rtxt">
+                <div class="da rst-da" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</div>
+                ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
+              </div>
             </div>
+            <div class="ranswer da">Det rigtige svar er: <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
+            <div class="ranswer fa">پاسخ درست: <i>${nl(efa)}</i></div>
           </div>`;
         }).join('')}
         ${t ? `<div class="lesson"><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
