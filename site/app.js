@@ -98,7 +98,7 @@
   }
   function closeModal() { $modal.hidden = true; $modal.innerHTML = ''; }
   function confirmBox(title, body, okText, onOk, cancelText = 'انصراف') {
-    openModal(`<h3>${title}</h3><p style="color:var(--muted);margin:0">${body}</p>
+    openModal(`<h3>${title}</h3>${body ? `<p style="color:var(--muted);margin:0">${body}</p>` : ''}
       <div class="row-btns"><button class="btn btn-ghost" data-close>${cancelText}</button><button class="btn btn-primary" id="mOk">${okText}</button></div>`);
     document.getElementById('mOk').onclick = () => { closeModal(); onOk(); };
   }
@@ -184,7 +184,7 @@
     if (!state.user) { $user.innerHTML = ''; return; }
     $user.innerHTML = `<span class="user-chip"><span class="avatar">${esc(state.user.name.trim()[0] || '?').toUpperCase()}</span><span class="uname">${esc(state.user.name)}</span></span>
       <button class="icon-btn" id="logoutBtn" title="خروج از حساب" aria-label="خروج"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M15 17l5-5-5-5M20 12H9M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
-    document.getElementById('logoutBtn').onclick = () => confirmBox('خروج از حساب؟', 'اطلاعات شما روی سرور ذخیره است و با ورود دوباره برمی‌گردد.', 'خروج', async () => {
+    document.getElementById('logoutBtn').onclick = () => confirmBox('خروج از حساب؟', '', 'خروج', async () => {
       await api('POST', 'logout').catch(() => {});
       clearInterval(state.timerId);
       Object.assign(state, { user: null, attempts: [], exam: null, words: [] });
