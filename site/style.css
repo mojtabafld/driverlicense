@@ -382,3 +382,23 @@ body.exam-mode main{max-width:none;padding:0}
   .mgrid{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* exam size picker */
+.size-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.size-opt{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:16px 6px 14px;border-radius:10px;background:var(--surface);border:1.5px solid var(--line);transition:border-color .15s,transform .15s,background .15s;animation:rise .3s var(--ease) both}
+.size-opt:nth-child(2){animation-delay:.03s}.size-opt:nth-child(3){animation-delay:.06s}.size-opt:nth-child(4){animation-delay:.09s}.size-opt:nth-child(5){animation-delay:.12s}
+.size-opt:hover{border-color:var(--navy);transform:translateY(-2px)}
+.size-opt.last{border-color:var(--navy);background:var(--accent-soft)}
+.size-opt b{font-size:28px;line-height:1.1;color:var(--navy)}
+:root[data-theme="dark"] .size-opt b{color:var(--accent)}
+.size-opt span{font-size:13px;font-weight:600}
+.size-opt small{font-size:11px;color:var(--muted);text-align:center;line-height:1.5;margin-top:4px}
+.size-opt em{position:absolute;top:-9px;font-style:normal;font-size:10.5px;font-weight:700;background:var(--navy);color:#fff;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.modal .sheet.size-sheet{width:min(620px,100%)}
+@media (max-width:560px){
+  .size-grid{grid-template-columns:1fr}
+  .size-opt{flex-direction:row;justify-content:flex-start;gap:10px;padding:13px 16px}
+  .size-opt b{font-size:24px;min-width:34px}
+  .size-opt small{margin:0 auto 0 0;text-align:left}
+  .size-opt em{top:50%;transform:translateY(-50%);left:auto;right:auto;position:static}
+}

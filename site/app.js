@@ -12,7 +12,11 @@
       document.head.appendChild(s);
     });
   }
-  const EXAM_SIZE = 25, PASS_MIN = 20, EXAM_SECONDS = 25 * 60;
+  // The real test has 25 pictures and allows 5 wrong (80%); shorter practice exams keep the same ratio.
+  const FULL = 25, SIZES = [5, 10, 15, 20, 25], SECONDS_PER_Q = 60;
+  const passMin = n => n - Math.floor(n / 5);
+  const isPass = a => scoreOf(a) >= passMin(a.items.length);
+  const pct = a => scoreOf(a) / Math.max(1, a.items.length);
   const $app = document.getElementById('app');
   const $modal = document.getElementById('modal');
   const $user = document.getElementById('userBox');
@@ -104,12 +108,12 @@
   }
   // Per-image accuracy from recent exams (newer weigh more, small prior), then P(≥20 of 25 correct).
   function passEstimate() {
-    const recent = state.attempts.filter(a => a.items.length === EXAM_SIZE).slice(-10);
+    const recent = state.attempts.slice(-10);
     if (!recent.length) return null;
     let ok = 2, tot = 4;
     recent.forEach((a, i) => { const w = 0.85 ** (recent.length - 1 - i); ok += w * scoreOf(a); tot += w * a.items.length; });
     const p = ok / tot;
-    return { p, prob: binomTailAtLeast(EXAM_SIZE, PASS_MIN, p), n: recent.length };
+    return { p, prob: binomTailAtLeast(FULL, passMin(FULL), p), n: recent.length };
   }
   function topicStats() {
     const m = new Map();
@@ -185,19 +189,37 @@
   const saveSettings = () => api('PUT', 'settings', state.settings).catch(() => toast('ذخیره‌ی تنظیمات ناموفق بود'));
 
   // ---------- Exam ----------
-  // Start with `first` questions (if any) and top up with random ones to 25.
-  function buildIds(first) {
-    first = first.slice(0, EXAM_SIZE);
+  // Start with `first` questions (if any) and top up with random ones to `size`.
+  function buildIds(first, size) {
+    first = first.slice(0, size);
     const used = new Set(first);
     const fill = shuffle(BANK.questions.map(q => q.id).filter(id => !used.has(id)));
-    return shuffle(first.concat(fill.slice(0, EXAM_SIZE - first.length)));
+    return shuffle(first.concat(fill.slice(0, size - first.length)));
   }
 
-  function newExam(mode, ids) {
+  // "Start exam" → pick how many questions, then begin.
+  function askSize(mode) {
+    const last = local.get('size', FULL);
+    openModal(`<h3>تعداد سؤال‌ها را انتخاب کنید</h3>
+      <p style="color:var(--muted);margin:0 0 14px;font-size:14px">${modeName(mode)} · برای هر سؤال ۱ دقیقه زمان دارید.</p>
+      <div class="size-grid">${SIZES.map(n => `
+        <button class="size-opt ${n === last ? 'last' : ''}" data-size="${n}">
+          <b>${faNum(n)}</b><span>سؤال</span>
+          <small>${faNum(n)} دقیقه · قبولی با ${faNum(passMin(n))} درست</small>
+          ${n === FULL ? '<em>مثل آزمون واقعی</em>' : ''}
+        </button>`).join('')}
+      </div>
+      <div class="row-btns"><button class="btn btn-ghost" data-close>انصراف</button></div>`, 'size-sheet');
+    $modal.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
+      const n = +b.dataset.size; local.set('size', n); newExam(mode, null, n);
+    });
+  }
+
+  function newExam(mode, ids, size = FULL) {
     closeModal();
-    if (!ids) ids = buildIds(mode === 'mistakes' ? shuffle(mistakeIds()) : mode === 'top' ? mistakeStats().map(s => s.id) : []);
+    if (!ids) ids = buildIds(mode === 'mistakes' ? shuffle(mistakeIds()) : mode === 'top' ? mistakeStats().map(s => s.id) : [], size);
     state.exam = {
-      mode, ids, idx: 0, view: 'q', done: false, started: Date.now(), left: EXAM_SECONDS,
+      mode, ids, size: ids.length, idx: 0, view: 'q', done: false, started: Date.now(), left: ids.length * SECONDS_PER_Q,
       answers: ids.map(id => Array(Q.get(id).st.length).fill(false)), // ticked = true statement
       seen: ids.map((_, i) => i === 0), flags: ids.map(() => false), showFa: ids.map(() => state.settings.showFa),
     };
@@ -301,7 +323,7 @@
         </div>
       </div>`;
     const foot = `${i > 0 ? `<button id="prev" class="x-btn">${ICON.la}<span>Forrige</span></button>` : '<span class="x-spacer"></span>'}
-      <span class="x-count">Spørgsmål ${i + 1} ud af ${EXAM_SIZE}</span>
+      <span class="x-count">Spørgsmål ${i + 1} ud af ${ex.size}</span>
       <button id="next" class="x-btn"><span>Næste</span>${ICON.ra}</button>`;
     $app.innerHTML = examShell(inner, foot);
     bindShell();
@@ -318,7 +340,7 @@
     document.getElementById('zoom').onclick = () => zoomImg(q.img);
     const pv = document.getElementById('prev'); if (pv) pv.onclick = () => go(i - 1);
     // After the last question the real test shows the overview with the hand-in button.
-    document.getElementById('next').onclick = () => i === EXAM_SIZE - 1 ? showOverview() : go(i + 1);
+    document.getElementById('next').onclick = () => i === ex.size - 1 ? showOverview() : go(i + 1);
   }
 
   function bindShell() {
@@ -343,7 +365,7 @@
             <li><span class="lg-box answered"></span>Besvaret <span class="fa">— پاسخ‌داده</span></li>
             <li>${ICON.bookmark(true)}Gemte spørgsmål <span class="fa">— ذخیره‌شده برای بعد</span></li>
           </ul>
-          <div class="ov-sum fa">${faNum(answered)} از ${faNum(EXAM_SIZE)} سؤال پاسخ داده شده · ${faNum(ex.flags.filter(Boolean).length)} سؤال ذخیره‌شده</div>
+          <div class="ov-sum fa">${faNum(answered)} از ${faNum(ex.size)} سؤال پاسخ داده شده · ${faNum(ex.flags.filter(Boolean).length)} سؤال ذخیره‌شده</div>
         </div>
         <div class="ov-r">
           <div class="ov-label">Spring til dit spørgsmål</div>
@@ -360,7 +382,7 @@
     $app.innerHTML = examShell(inner, foot, { overview: true });
     bindShell();
     $app.querySelectorAll('.tile').forEach(t => t.onclick = () => { ex.view = 'q'; go(+t.dataset.i); });
-    document.getElementById('prev').onclick = () => { ex.view = 'q'; go(EXAM_SIZE - 1); };
+    document.getElementById('prev').onclick = () => { ex.view = 'q'; go(ex.size - 1); };
     document.getElementById('handin').onclick = askFinish;
   }
 
@@ -373,7 +395,7 @@
   }
 
   function go(i) {
-    const ex = state.exam; if (i < 0 || i >= EXAM_SIZE) return;
+    const ex = state.exam; if (i < 0 || i >= ex.size) return;
     ex.view = 'q'; ex.idx = i; renderExam(false, true); window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -422,7 +444,7 @@
   function renderReview(ctx, filter, fresh) {
     setExamMode(false);
     const { res, correct, wrongSt, secs, at, mode } = ctx;
-    const n = res.length, pass = correct >= PASS_MIN && n === EXAM_SIZE;
+    const n = res.length, pass = correct >= passMin(n);
     const C = 2 * Math.PI * 74, pct = correct / Math.max(n, 1);
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
     const savedN = res.filter(r => r.m).length;
@@ -440,7 +462,7 @@
         <div>
           <div class="res-meta">${modeName(mode)} · ${fmtDateTime(at)}</div>
           <h2 class="verdict ${pass ? 'ok' : 'bad'}">${pass ? (fresh ? '🎉 قبول شدید!' : '✓ قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : '✗ مردود')}</h2>
-          <div style="color:var(--muted)">${pass ? 'حداقل ۲۰ تصویر کاملاً درست بود.' : `برای قبولی حداقل ${faNum(PASS_MIN)} تصویر باید کاملاً درست باشد.`}</div>
+          <div style="color:var(--muted)">${pass ? `حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} کاملاً درست بود.` : `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.`}</div>
           <div class="kpis">
             <span class="kpi">تصاویر درست: <b>${correct}</b></span>
             <span class="kpi">تصاویر اشتباه: <b>${n - correct}</b></span>
@@ -472,8 +494,8 @@
     const tick = setInterval(() => { sn.textContent = v; if (v++ >= correct) clearInterval(tick); }, 1200 / Math.max(correct, 1));
 
     const rw = document.getElementById('retryWrong');
-    if (rw) rw.onclick = () => newExam('mistakes', buildIds(res.filter(r => !r.ok).map(r => r.q.id)));
-    document.getElementById('again').onclick = () => newExam('random');
+    if (rw) rw.onclick = () => newExam('mistakes', shuffle(res.filter(r => !r.ok).map(r => r.q.id)));
+    document.getElementById('again').onclick = () => askSize('random');
     document.getElementById('toHome').onclick = home;
     const back = document.getElementById('back'); if (back) back.onclick = home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
@@ -552,19 +574,19 @@
     const data = atts.slice(-30);
     const W = Math.round(Math.min(640, Math.max(300, $app.clientWidth - 70))), H = 230, L = 34, R = 14, T = 14, B = 26;
     const x = i => L + i * (W - L - R) / (data.length - 1);
-    const y = v => T + (1 - v / 25) * (H - T - B);
-    const pts = data.map((a, i) => [x(i), y(scoreOf(a))]);
+    const y = v => T + (1 - v / 100) * (H - T - B);   // percent of pictures fully correct
+    const pts = data.map((a, i) => [x(i), y(pct(a) * 100)]);
     const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
     const area = `${line} L${pts[pts.length - 1][0].toFixed(1)} ${y(0)} L${pts[0][0].toFixed(1)} ${y(0)} Z`;
-    const grid = [0, 5, 10, 15, 20, 25].map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L - 8}" y="${y(v) + 4}" class="axis" text-anchor="end">${v}</text>`).join('');
+    const grid = [0, 20, 40, 60, 80, 100].map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L - 8}" y="${y(v) + 4}" class="axis" text-anchor="end">${v}%</text>`).join('');
     const every = Math.ceil(data.length / 8);
     const xl = data.map((a, i) => i % every === 0 || i === data.length - 1 ? `<text x="${x(i)}" y="${H - 6}" class="axis" text-anchor="middle">${i + 1 + (atts.length - data.length)}</text>` : '').join('');
     return `<div class="chart" id="progChart">
       <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="نمودار نمره‌ی آزمون‌ها">
         <defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".16"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
         ${grid}
-        <line x1="${L}" x2="${W - R}" y1="${y(PASS_MIN)}" y2="${y(PASS_MIN)}" class="threshold"/>
-        <text x="${L + 6}" y="${y(PASS_MIN) - 6}" class="axis thr-label" text-anchor="start">حد قبولی ۲۰</text>
+        <line x1="${L}" x2="${W - R}" y1="${y(80)}" y2="${y(80)}" class="threshold"/>
+        <text x="${L + 6}" y="${y(80) - 6}" class="axis thr-label" text-anchor="end" direction="rtl" style="unicode-bidi:embed">حد قبولی ۸۰٪</text>
         <path d="${area}" fill="url(#ga)" class="area"/>
         <path d="${line}" class="line" pathLength="1"/>
         ${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4.5" class="pt"/>`).join('')}
@@ -590,7 +612,7 @@
       pts.forEach((p, i) => p.classList.toggle('on', i === best));
       xh.setAttribute('x1', cx); xh.setAttribute('x2', cx); xh.style.opacity = 1;
       tip.hidden = false;
-      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode)}</span><span>نمره: <b class="da">${s}/25</b> · ${s >= PASS_MIN ? '✓ قبول' : '✗ مردود'}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
+      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode)}</span><span>نمره: <b class="da">${s}/${a.items.length}</b> · ${isPass(a) ? '✓ قبول' : '✗ مردود'}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
       const px = cx / vb.width * r.width;
       tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + 'px';
       tip.style.top = (+pts[best].getAttribute('cy') / vb.height * r.height - tip.offsetHeight - 12) + 'px';
@@ -630,15 +652,15 @@
 
   function historyList() {
     const atts = state.attempts;
-    if (!atts.length) return '<div class="card empty">هنوز آزمونی نداده‌اید. از «آزمون ۲۵ سؤالی تصادفی» شروع کنید ✨</div>';
+    if (!atts.length) return '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
     const idxs = atts.map((_, i) => i).reverse();
     const shown = state.showAllHist ? idxs : idxs.slice(0, 8);
     return shown.map(i => {
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
       return `<button class="card hist" data-att="${i}">
-        <span class="pill ${s >= PASS_MIN ? 'ok' : 'bad'}">${s}/25</span>
-        <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${s >= PASS_MIN ? 'قبول' : 'مردود'} · ${modeName(h.mode)}<br>
+        <span class="pill ${isPass(h) ? 'ok' : 'bad'}">${s}/${h.items.length}</span>
+        <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isPass(h) ? 'قبول' : 'مردود'} · ${modeName(h.mode)}<br>
           <small>${fmtDateTime(h.at)} · ${faNum(wrongImgs)} تصویر اشتباه · ${faNum(h.items.reduce((a, it) => a + it.w, 0))} گزینه‌ی اشتباه · ${fmtTime(h.secs)}${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>
         <span class="go">مرور ←</span>
@@ -649,17 +671,17 @@
   function home() {
     stopSpeak(); clearInterval(state.timerId); state.exam = null; closeModal(); setExamMode(false);
     const atts = state.attempts;
-    const scores = atts.map(scoreOf);
-    const passed = scores.filter(s => s >= PASS_MIN).length;
-    const last5 = scores.slice(-5);
+    const passed = atts.filter(isPass).length;
+    const pcts = atts.map(a => Math.round(pct(a) * 100));
+    const last5 = pcts.slice(-5);
     const avg5 = last5.length ? last5.reduce((a, b) => a + b, 0) / last5.length : 0;
-    const best = scores.length ? Math.max(...scores) : 0;
+    const best = pcts.length ? Math.max(...pcts) : 0;
     const seen = new Set(atts.flatMap(a => a.items.map(i => i.id))).size;
     const mCount = mistakeIds().length, topCount = mistakeStats().length;
     const est = passEstimate();
     const avgSecs = atts.length ? Math.round(atts.reduce((a, b) => a + b.secs, 0) / atts.length) : 0;
-    const prev3 = scores.slice(-6, -3);
-    const trend = scores.length >= 4 ? scores.slice(-3).reduce((a, b) => a + b, 0) / 3 - prev3.reduce((a, b) => a + b, 0) / prev3.length : null;
+    const prev3 = pcts.slice(-6, -3);
+    const trend = pcts.length >= 4 ? pcts.slice(-3).reduce((a, b) => a + b, 0) / 3 - prev3.reduce((a, b) => a + b, 0) / prev3.length : null;
     const probPct = est ? Math.round(est.prob * 100) : null;
     const probCls = probPct == null ? '' : probPct >= 80 ? 'ok' : probPct >= 50 ? 'warn' : 'bad';
     const probText = probPct == null ? 'اولین آزمون را بدهید' : probPct >= 80 ? 'آماده‌ی آزمون هستید' : probPct >= 50 ? 'نزدیک هستید؛ تمرین بیشتر' : 'نیاز به تمرین بیشتر';
@@ -671,7 +693,7 @@
           <div class="hello">سلام ${esc(state.user.name)} 👋</div>
           <h1>${atts.length ? 'ادامه بده، هر آزمون تو را <span>یک قدم نزدیک‌تر</span> می‌کند' : 'آماده‌ای؟ <span>اولین آزمون</span> را شروع کن'}</h1>
           <div class="actions">
-            <button class="btn btn-primary" id="start"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg> آزمون ۲۵ سؤالی تصادفی</button>
+            <button class="btn btn-primary" id="start"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg> شروع آزمون</button>
             <button class="btn btn-ghost" id="startM" ${mCount ? '' : 'disabled'}>تمرین اشتباهات (${faNum(mCount)})</button>
           </div>
         </div>
@@ -687,8 +709,8 @@
 
       <div class="stats">
         <div class="card stat"><span>آزمون‌ها</span><b>${atts.length}</b><small>${faNum(passed)} قبولی${atts.length ? ` · ${faNum(Math.round(passed / atts.length * 100))}٪` : ''}</small></div>
-        <div class="card stat"><span>میانگین ۵ آزمون اخیر</span><b>${atts.length ? avg5.toFixed(1) : '–'}<em>/25</em></b><small>${trend == null ? 'روند: داده‌ی کافی نیست' : trend >= 0 ? `▲ ${faNum(trend.toFixed(1))} رو به بهبود` : `▼ ${faNum(Math.abs(trend).toFixed(1))} افت`}</small></div>
-        <div class="card stat"><span>بهترین نمره</span><b>${atts.length ? best : '–'}<em>/25</em></b><small>میانگین زمان ${atts.length ? fmtTime(avgSecs) : '–'}</small></div>
+        <div class="card stat"><span>میانگین ۵ آزمون اخیر (درصد درست)</span><b>${atts.length ? Math.round(avg5) : '–'}<em>%</em></b><small>${trend == null ? 'روند: داده‌ی کافی نیست' : trend >= 0 ? `▲ ${faNum(Math.round(trend))}٪ رو به بهبود` : `▼ ${faNum(Math.round(Math.abs(trend)))}٪ افت`}</small></div>
+        <div class="card stat"><span>بهترین نمره</span><b>${atts.length ? best : '–'}<em>%</em></b><small>میانگین زمان ${atts.length ? fmtTime(avgSecs) : '–'}</small></div>
         <div class="card stat"><span>پوشش بانک سؤال</span><b>${Math.round(seen / BANK.questions.length * 100)}<em>%</em></b><small>${faNum(seen)} از ${faNum(BANK.questions.length)} · 🔥 ${faNum(streakDays())} روز پیاپی</small>
           <span class="mini-track"><i style="width:${seen / BANK.questions.length * 100}%"></i></span></div>
       </div>
@@ -707,8 +729,8 @@
       <div class="section-title">تنظیمات</div>
       <div class="card opts">
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
-        <div class="opt"><div>زمان‌سنج ۲۵ دقیقه‌ای<small>مثل آزمون واقعی؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
-        <div class="opt"><div>شرط قبولی<small>حداقل ${faNum(PASS_MIN)} تصویر از ${faNum(EXAM_SIZE)} باید کاملاً درست باشند؛ یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
+        <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
+        <div class="opt"><div>شرط قبولی<small>حداقل ۸۰٪ تصاویر باید کاملاً درست باشند (در آزمون واقعی ۲۵ سؤالی: ۲۰ تصویر؛ ۵ سؤالی: ۴ تصویر). «کاملاً درست» یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
       </div>
     </section>`;
 
@@ -721,9 +743,9 @@
   }
 
   function bindHome() {
-    document.getElementById('start').onclick = () => newExam('random');
-    document.getElementById('startM').onclick = () => newExam('mistakes');
-    const st = document.getElementById('startTop'); if (st) st.onclick = () => newExam('top');
+    document.getElementById('start').onclick = () => askSize('random');
+    document.getElementById('startM').onclick = () => askSize('mistakes');
+    const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
     bindHistory();
     $app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
@@ -750,7 +772,7 @@
     const ex = state.exam; if (!ex || ex.done || !$modal.hidden) return;
     if (e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') return;
     if (ex.view === 'overview') return;
-    if (e.key === 'ArrowRight') ex.idx === EXAM_SIZE - 1 ? showOverview() : go(ex.idx + 1); // LTR like the real test
+    if (e.key === 'ArrowRight') ex.idx === ex.size - 1 ? showOverview() : go(ex.idx + 1); // LTR like the real test
     else if (e.key === 'ArrowLeft') go(ex.idx - 1);
     else if (/^[1-4]$/.test(e.key)) { const cb = $app.querySelectorAll('.answer input')[+e.key - 1]; if (cb) cb.click(); }
   });
