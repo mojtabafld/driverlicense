@@ -271,6 +271,10 @@
     la: '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     ra: '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     tr: '<svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 5h8M8 3v2M6 5c0 4 2.5 7 6 8M10 5c-.5 3.5-2.8 6.5-6 8M13 21l4-9 4 9M14.5 18h5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    book: '<svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>',
+    edit: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+    trash: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+    chevL: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     zoom: '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
     clock: '<svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
   };
@@ -742,7 +746,7 @@
 
       <div class="section-title">تنظیمات و امکانات</div>
       <div class="card opts">
-        <button class="opt opt-link" id="openWords"><div>📖 لغات ذخیره‌شده<small>${(state.words || []).length ? `${faNum(state.words.length)} لغت با ترجمه و جمله‌ی نمونه — مرور، جستجو، شنیدن تلفظ و ویرایش` : 'در حین آزمون روی هر کلمه‌ی دانمارکی دوبار بزنید تا با ترجمه ذخیره شود.'}</small></div><span class="opt-go">${(state.words || []).length ? faNum(state.words.length) + ' ←' : '←'}</span></button>
+        <button class="opt opt-link" id="openWords"><span class="opt-ico">${ICON.book}</span><div class="opt-main">لغات ذخیره‌شده<small>${(state.words || []).length ? `${faNum(state.words.length)} لغت با ترجمه و جمله‌ی نمونه — مرور، جستجو، شنیدن تلفظ و ویرایش` : 'در حین آزمون روی هر کلمه‌ی دانمارکی دوبار بزنید تا با ترجمه ذخیره شود.'}</small></div><span class="opt-go">${(state.words || []).length ? `<b>${faNum(state.words.length)}</b>` : ''}${ICON.chevL}</span></button>
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
         <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
         <div class="opt"><div>شرط قبولی<small>حداقل ۸۰٪ تصاویر باید کاملاً درست باشند (در آزمون واقعی ۲۵ سؤالی: ۲۰ تصویر؛ ۵ سؤالی: ۴ تصویر). «کاملاً درست» یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
@@ -878,7 +882,7 @@
     $app.innerHTML = `<section class="view">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head">
-        <h1>📖 بانک لغات <small class="muted">(${faNum(all.length)} لغت)</small></h1>
+        <h1><span class="h-ico">${ICON.book}</span>بانک لغات <small class="muted">(${faNum(all.length)} لغت)</small></h1>
         ${all.length ? `<label class="field words-search"><input id="wSearch" value="${esc(query)}" placeholder="جستجو در لغات (دانمارکی، فارسی یا انگلیسی)" autocomplete="off"></label>` : ''}
       </div>
       ${all.length ? '' : `<div class="card empty">هنوز لغتی ذخیره نکرده‌اید.<br>در حین آزمون، روی یک کلمه‌ی دانمارکی دوبار بزنید (یا آن را انتخاب کنید) و «ذخیره در بانک لغات» را بزنید.</div>`}
@@ -887,8 +891,8 @@
           <div class="wtop">
             <div class="wmain"><span class="wword da">${esc(x.w)}</span><button class="speak" data-sayw="${esc(x.w)}" aria-label="Læs højt">${ICON.speaker}</button></div>
             <div class="wact">
-              <button class="wbtn" data-edit title="ویرایش ترجمه">✎</button>
-              <button class="wbtn danger" data-del title="حذف">🗑</button>
+              <button class="wbtn" data-edit title="ویرایش ترجمه" aria-label="ویرایش ترجمه">${ICON.edit}</button>
+              <button class="wbtn danger" data-del title="حذف" aria-label="حذف">${ICON.trash}</button>
             </div>
           </div>
           <div class="wt fa">${x.t ? esc(x.t) : '<span class="muted">بدون ترجمه</span>'}</div>

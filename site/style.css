@@ -469,3 +469,18 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .wb-save:hover{background:var(--navy-2)}
 .wb-save[disabled]{opacity:.6}
 .wb-saved{font-size:13.5px;font-weight:600;color:var(--ok);text-align:center;padding:4px 0}
+
+/* flat icons for the word bank */
+.opt-link{justify-content:flex-start}
+.opt-link .opt-main{flex:1}
+.opt-ico,.h-ico{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--accent-soft);color:var(--navy)}
+:root[data-theme="dark"] .opt-ico,:root[data-theme="dark"] .h-ico{color:var(--accent)}
+.opt-go{display:flex;align-items:center;gap:4px}
+.opt-go b{font-weight:700}
+.opt-link:hover .opt-go svg{transform:translateX(-3px)}
+.opt-go svg{transition:transform .2s var(--ease)}
+.words-head h1{display:flex;align-items:center;gap:10px}
+.h-ico{width:38px;height:38px}
+.wbtn{width:34px;height:34px;border-radius:8px;color:var(--muted);transition:background .15s,color .15s}
+.wbtn:hover{background:var(--accent-soft);color:var(--navy)}
+.wbtn.danger:hover{background:var(--bad-soft);color:var(--bad)}
