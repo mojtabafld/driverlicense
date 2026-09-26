@@ -728,7 +728,7 @@
       <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span>${atts.length ? '<button class="tr-toggle danger" id="clearH">پاک‌کردن تاریخچه</button>' : ''}</div>
       <div class="history">${historyList()}</div>
 
-      <div class="section-title"><span>بیشترین اشتباهات شما</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
+      <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(Math.min(topCount, 10))} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
       ${mistakesSection()}
 
       <div class="section-title">تنظیمات</div>
