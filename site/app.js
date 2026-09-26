@@ -632,9 +632,15 @@
           const efa = s.efa && !isTrivial(s.efa) ? s.efa : '';
           const eda = s.eda && !isTrivial(s.eda) ? s.eda : '';
           const box = r.a ? (r.a[k] ? 'on' : '') : 'na';
-          return `<div class="rstmt ${s.ok ? 'is-true' : 'is-false'} ${w ? 'mistake' : ''}">
+          // Green/red says whether the user's answer to this statement was right; the line under it says why.
+          // Without the user's answers (old attempts) it can only say whether the statement is true.
+          const cls = r.a ? (w ? 'res-bad' : 'res-ok') : (s.ok ? 'res-ok' : 'res-bad');
+          const verdict = !r.a ? (s.ok ? 'گزینه‌ی درست' : 'گزینه‌ی نادرست')
+            : `${w ? '✗ پاسخ شما اشتباه' : '✓ پاسخ شما درست'} · ${s.ok ? 'این گزینه درست است' : 'این گزینه نادرست است'} و ${r.a[k] ? 'تیک زدید' : 'تیک نزدید'}`;
+          return `<div class="rstmt ${cls}">
             <span class="rbox ${box}" aria-label="${r.a ? (r.a[k] ? 'تیک زده شده' : 'تیک زده نشده') : ''}"></span>
             <div class="rtxt">
+              <div class="rverdict fa">${verdict}</div>
               <div class="da" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</div>
               ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
               ${efa || eda ? `<div class="expl">${efa ? `<div class="fa">${nl(efa)}</div>` : ''}${eda ? `<div class="da">${nl(eda)}</div>` : ''}</div>` : ''}

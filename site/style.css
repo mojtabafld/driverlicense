@@ -473,10 +473,11 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 
 /* review answers: colour = statement true/false, checkbox = what the user ticked */
 .rstmt{direction:ltr;display:flex;gap:12px;align-items:flex-start;border-radius:8px;padding:11px 14px;margin-bottom:8px;border:1.5px solid transparent}
-.rstmt.is-true{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
-.rstmt.is-false{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
-.rstmt.mistake.is-true{border:2.5px solid var(--ok)}
-.rstmt.mistake.is-false{border:2.5px solid var(--bad)}
+.rstmt.res-ok{background:var(--ok-soft);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.rstmt.res-bad{background:var(--bad-soft);border:2px solid var(--bad)}
+.rverdict{font-size:12.5px;font-weight:700;margin-bottom:3px;direction:rtl;text-align:right}
+.res-ok .rverdict{color:var(--ok)}
+.res-bad .rverdict{color:var(--bad)}
 .rbox{flex:none;width:15px;height:15px;margin-top:3px;border:1.5px solid var(--text);border-radius:2px;background:var(--surface)}
 .rbox.on{background:var(--text)}
 .rbox.na{border-style:dashed;opacity:.5}
