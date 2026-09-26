@@ -1,4 +1,4 @@
-"""Build site/data.js from data/raw.json + data/cats.json.
+"""Build site/data.js from data/raw.json + data/cats.json (+ data/en.json, the English text from prove.dk).
 
 Adds Persian topic lessons and fills in the few missing Persian translations.
 """
@@ -224,6 +224,10 @@ for k, v in _fix.items():
     FA_FILL[k] = d
 
 
+# English version of every question (prove.dk, locale "en"), keyed by question id like raw.json.
+EN = json.load(open(os.path.join(ROOT, 'data/en.json'), encoding='utf-8'))
+
+
 def clean(s):
     return (s or '').strip()
 
@@ -231,6 +235,7 @@ def clean(s):
 questions = []
 for k, q in raw['questions'].items():
     fa = FA_FILL.get(k) or q['fa']
+    en = EN[k]
     n = q['n']
     items = []
     for i in range(1, n + 1):
@@ -240,6 +245,8 @@ for k, q in raw['questions'].items():
             'ok': q['a'][i - 1],
             'eda': clean(q['da'].get(f'e{i}')),
             'efa': clean(fa.get(f'e{i}')),
+            'en': clean(en.get(f'q{i}')),
+            'een': clean(en.get(f'e{i}')),
         })
     questions.append({
         'id': q['id'],
@@ -247,6 +254,7 @@ for k, q in raw['questions'].items():
         'c': cats.get(k),
         'sda': clean(q['da']['s']),
         'sfa': clean(fa.get('s')),
+        'sen': clean(en.get('s')),
         'st': items,
     })
 

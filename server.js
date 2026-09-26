@@ -255,7 +255,8 @@ async function api(req, res, route) {
   }
   if (req.method === 'PUT' && route === 'settings') {
     const b = await readBody(req);
-    user.settings = { showFa: !!b.showFa, timer: !!b.timer };
+    const lang = ['da', 'en'].includes(b.lang) ? b.lang : (user.settings || {}).lang;
+    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}) };
     await store.saveUser(user);
     return send(res, 200, { settings: user.settings });
   }

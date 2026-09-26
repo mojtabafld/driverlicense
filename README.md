@@ -39,7 +39,8 @@ Accounts are stored in `data/db.json` when `DATABASE_URL` is not set.
 
 ## Rebuilding the question data
 
-`build.py` turns `data/raw.json` (+ `data/cats.json`, `data/fa_fix.json`) into `site/data.js`,
+`build.py` turns `data/raw.json` (+ `data/cats.json`, `data/fa_fix.json`, and `data/en.json` with the English
+text of every question from prove.dk) into `site/data.js`,
 including the Persian topic lessons and corrected translations:
 
 ```bash
