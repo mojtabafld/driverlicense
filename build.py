@@ -255,7 +255,17 @@ topics = {str(k): {'fa': v[0], 'da': v[1], 'lesson': v[2]} for k, v in TOPICS.it
 missing = {q['c'] for q in questions} - set(TOPICS)
 assert not missing, missing
 
-out = {'tests': tests, 'questions': questions, 'topics': topics}
+# Danish → Persian glossary for every word used in the questions (driving context), data/dict_fa_*.txt
+import glob
+glossary = {}
+for f in sorted(glob.glob(os.path.join(ROOT, 'data/dict_fa_*.txt'))):
+    for line in open(f, encoding='utf-8'):
+        line = line.strip()
+        if line and '=' in line:
+            k, v = line.split('=', 1)
+            glossary[k.strip().lower()] = v.strip()
+
+out = {'tests': tests, 'questions': questions, 'topics': topics, 'dict': glossary}
 with open(os.path.join(ROOT, 'site/data.js'), 'w', encoding='utf-8') as f:
     f.write('window.BANK=')
     json.dump(out, f, ensure_ascii=False, separators=(',', ':'))

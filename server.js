@@ -19,24 +19,6 @@ const MAX_ATTEMPTS = 500;
 const MODES = ['random', 'mistakes', 'top'];
 const MAX_WORDS = 3000;
 
-// ---------- word translation (Danish → Persian/English) ----------
-// Uses Google's public translate endpoint; results are cached in memory.
-const tCache = new Map();
-async function gtranslate(q, tl) {
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=da&tl=${tl}&dt=t&q=${encodeURIComponent(q)}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
-  if (!r.ok) throw new Error('translate ' + r.status);
-  const d = await r.json();
-  return (d[0] || []).map(x => x[0]).join('').trim();
-}
-async function translateWord(q) {
-  const key = q.toLowerCase();
-  if (tCache.has(key)) return tCache.get(key);
-  const [fa, en] = await Promise.all([gtranslate(q, 'fa').catch(() => ''), gtranslate(q, 'en').catch(() => '')]);
-  const out = { fa, en };
-  if (fa || en) { tCache.set(key, out); if (tCache.size > 5000) tCache.delete(tCache.keys().next().value); }
-  return out;
-}
 const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
 let store; // set in main()
@@ -200,11 +182,6 @@ async function api(req, res, route) {
     user.attempts = [];
     await store.saveUser(user);
     return send(res, 200, { ok: true });
-  }
-  if (req.method === 'GET' && route === 'translate') {
-    const q = clip(new URL(req.url, 'http://x').searchParams.get('q'), 80);
-    if (!q) return send(res, 400, { error: 'empty' });
-    return send(res, 200, await translateWord(q));
   }
   // Word bank: POST upserts by the word (case-insensitive), DELETE removes it.
   if (req.method === 'POST' && route === 'words') {

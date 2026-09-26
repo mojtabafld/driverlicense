@@ -784,21 +784,31 @@
   }
 
   // ---------- Word bank ----------
-  // Select (or double-tap) a Danish word in a question or answer → a small bubble offers to save it
-  // with its translation. Saved words are listed on their own page (from "Settings & tools").
+  // Select (or double-tap) a Danish word in a question or answer → a bubble immediately shows its Persian
+  // meaning (from the built-in glossary BANK.dict) with a one-tap "save" button. Saved words are listed on
+  // their own page (from "Settings & tools").
   const findWord = w => (state.words || []).find(x => x.w.toLowerCase() === w.toLowerCase());
-  const $bubble = document.createElement('button');
+  const normWord = w => w.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+  // Meaning of a word or short phrase: the whole phrase if known, otherwise word by word.
+  function glossOf(text) {
+    const dict = (BANK && BANK.dict) || {};
+    const whole = dict[normWord(text)];
+    if (whole) return whole;
+    const parts = text.split(/\s+/).map(w => ({ w, m: dict[normWord(w)] })).filter(p => p.m);
+    return parts.length ? parts.map(p => (parts.length > 1 ? `${p.w}: ` : '') + p.m.replace(/\s*\(.*?\)\s*/g, ' ').trim()).join(' · ') : '';
+  }
+
+  const $bubble = document.createElement('div');
   $bubble.className = 'word-bubble';
-  $bubble.type = 'button';
   $bubble.hidden = true;
   document.body.appendChild($bubble);
-  let selInfo = null, selTimer = null;
+  let selInfo = null, selTimer = null, hideTimer = null;
 
   function currentSelection() {
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
     const text = sel.toString().replace(/\s+/g, ' ').trim().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
-    if (!text || text.length > 60 || text.split(' ').length > 5 || /[؀-ۿ]/.test(text)) return null;
+    if (!text || text.length > 60 || text.split(' ').length > 5 || /[\u0600-\u06FF]/.test(text)) return null;
     const range = sel.getRangeAt(0);
     const node = range.commonAncestorContainer;
     const host = (node.nodeType === 1 ? node : node.parentElement)?.closest('[data-wq]');
@@ -808,31 +818,47 @@
     return { text, qid: +host.dataset.wq, st: +host.dataset.wst, rect };
   }
   function hideBubble() { $bubble.hidden = true; selInfo = null; }
-  function updateBubble() {
-    selInfo = currentSelection();
-    if (!selInfo) return hideBubble();
-    const saved = findWord(selInfo.text);
-    $bubble.innerHTML = saved
-      ? `<span class="fa">✓ در بانک لغات</span>`
-      : `<span class="fa">＋ ذخیره در بانک لغات</span>`;
-    $bubble.hidden = false;
-    const r = selInfo.rect, bw = $bubble.offsetWidth, bh = $bubble.offsetHeight;
+  function placeBubble(r) {
+    const bw = $bubble.offsetWidth, bh = $bubble.offsetHeight;
     // Below the selection (keeps clear of the phone's own copy/paste menu above it).
     let top = r.bottom + 10;
     if (top + bh > window.innerHeight - 70) top = r.top - bh - 10;
     $bubble.style.top = Math.max(8, top) + 'px';
     $bubble.style.left = Math.min(Math.max(8, r.left + r.width / 2 - bw / 2), window.innerWidth - bw - 8) + 'px';
   }
+  function updateBubble() {
+    clearTimeout(hideTimer);
+    selInfo = currentSelection();
+    if (!selInfo) return hideBubble();
+    const saved = findWord(selInfo.text);
+    const meaning = saved ? saved.t : glossOf(selInfo.text);
+    selInfo.meaning = meaning;
+    $bubble.innerHTML = `<div class="wb-head"><span class="wb-word da">${esc(selInfo.text)}</span>
+        <button type="button" class="wb-say" aria-label="Læs højt">${ICON.speaker}</button></div>
+      <div class="wb-mean fa">${meaning ? esc(meaning) : '<span class="muted">معنی در دسترس نیست</span>'}</div>
+      ${saved ? '<div class="wb-saved fa">✓ در بانک لغات</div>' : '<button type="button" class="wb-save fa">＋ ذخیره در بانک لغات</button>'}`;
+    $bubble.hidden = false;
+    placeBubble(selInfo.rect);
+  }
   document.addEventListener('selectionchange', () => { clearTimeout(selTimer); selTimer = setTimeout(updateBubble, 180); });
   window.addEventListener('scroll', () => { if (!$bubble.hidden) hideBubble(); }, { passive: true });
-  // Keep the text selected while pressing the bubble.
+  // Keep the text selected while pressing inside the bubble.
   $bubble.addEventListener('pointerdown', e => e.preventDefault());
   $bubble.addEventListener('mousedown', e => e.preventDefault());
-  $bubble.addEventListener('click', () => {
+  $bubble.addEventListener('click', async e => {
     const info = selInfo; if (!info) return;
-    hideBubble();
-    window.getSelection()?.removeAllRanges();
-    openSaveWord(info);
+    if (e.target.closest('.wb-say')) return speak(info.text);
+    const btn = e.target.closest('.wb-save'); if (!btn) return;
+    btn.disabled = true;
+    const { ctx, ctxFa } = contextOf(info);
+    try {
+      const { word } = await api('POST', 'words', { w: info.text, t: info.meaning || '', ctx, ctxFa, qid: info.qid });
+      state.words = state.words || [];
+      const i = state.words.findIndex(x => x.w.toLowerCase() === word.w.toLowerCase());
+      if (i >= 0) state.words[i] = word; else state.words.push(word);
+      btn.outerHTML = '<div class="wb-saved fa">✓ در بانک لغات ذخیره شد</div>';
+      hideTimer = setTimeout(() => { window.getSelection()?.removeAllRanges(); hideBubble(); }, 1400);
+    } catch (err) { btn.disabled = false; toast(err.message); }
   });
 
   function contextOf(info) {
@@ -844,42 +870,6 @@
     const i = text.toLowerCase().indexOf(w.toLowerCase());
     return i < 0 ? esc(text) : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + w.length)) + '</mark>' + esc(text.slice(i + w.length));
   };
-
-  async function openSaveWord(info) {
-    const w = info.text, saved = findWord(w);
-    const { ctx, ctxFa } = contextOf(info);
-    openModal(`<h3>ذخیره در بانک لغات</h3>
-      <div class="wsave">
-        <div class="wsave-word"><span class="da">${esc(w)}</span><button class="speak" id="wsSay" aria-label="Læs højt">${ICON.speaker}</button></div>
-        <label class="field"><span>ترجمه‌ی فارسی</span><input id="wsT" value="${esc(saved ? saved.t : '')}" placeholder="در حال ترجمه…" autocomplete="off"></label>
-        <div class="wsave-en da" id="wsEn">${saved && saved.en ? 'EN: ' + esc(saved.en) : ''}</div>
-        ${ctx ? `<div class="wsave-ctx"><div class="da">${markWord(ctx, w)}</div>${ctxFa ? `<div class="fa">${esc(ctxFa)}</div>` : ''}</div>` : ''}
-        ${saved ? '<div class="note">این لغت قبلاً ذخیره شده است؛ با ذخیره، ترجمه‌اش به‌روز می‌شود.</div>' : ''}
-      </div>
-      <div class="row-btns"><button class="btn btn-ghost" data-close>انصراف</button><button class="btn btn-primary" id="wsSave">${saved ? 'به‌روزرسانی' : 'ذخیره'}</button></div>`);
-    const $t = document.getElementById('wsT'), $en = document.getElementById('wsEn');
-    let en = saved ? saved.en : '';
-    document.getElementById('wsSay').onclick = () => speak(w);
-    if (!saved) {
-      try {
-        const r = await api('GET', 'translate?q=' + encodeURIComponent(w));
-        if (document.getElementById('wsT') === $t && !$t.value) $t.value = r.fa || '';
-        en = r.en || '';
-        if ($en.isConnected && en) $en.textContent = 'EN: ' + en;
-      } catch { /* the user can type the translation */ }
-      $t.placeholder = 'ترجمه را بنویسید';
-    }
-    document.getElementById('wsSave').onclick = async () => {
-      try {
-        const { word } = await api('POST', 'words', { w, t: $t.value, en, ctx, ctxFa, qid: info.qid });
-        state.words = state.words || [];
-        const i = state.words.findIndex(x => x.w.toLowerCase() === w.toLowerCase());
-        if (i >= 0) state.words[i] = word; else state.words.push(word);
-        closeModal();
-        toast(`«${w}» در بانک لغات ذخیره شد 📖`);
-      } catch (e) { toast(e.message); }
-    };
-  }
 
   function wordsView(query = '') {
     stopSpeak(); clearInterval(state.timerId); state.exam = null; setExamMode(false); closeModal();
