@@ -99,12 +99,12 @@ function adminStats() {
     if (created === today) t.newToday++;
     if (last7.has(created)) t.new7++;
     const active = new Set(u.days || []);
-    let last = u.lastSeen || u.created, tests7 = 0, passed = 0, full = 0;
+    let last = u.lastSeen || u.created, testsToday = 0, tests7 = 0, passed = 0, full = 0;
     for (const a of u.attempts) {
       const d = dayKey(a.at);
       active.add(d); last = Math.max(last, a.at); t.tests++;
       if (perDay[d]) { perDay[d].tests++; t.correct30 += scoreOf(a); t.items30 += a.items.length; }
-      if (d === today) t.testsToday++;
+      if (d === today) { t.testsToday++; testsToday++; }
       if (last7.has(d)) { t.tests7++; tests7++; }
       if (a.items.length >= FULL) { full++; if (scoreOf(a) >= PASS_MIN) passed++; }
     }
@@ -115,7 +115,7 @@ function adminStats() {
     t.lang[(u.settings || {}).lang || 'none']++;
     const lastA = u.attempts[u.attempts.length - 1];
     users.push({ username: u.username, name: u.name, created: u.created, lastActive: last, activeDays: active.size,
-      tests: u.attempts.length, tests7, full, passed, words: (u.words || []).length, lang: (u.settings || {}).lang || null,
+      tests: u.attempts.length, testsToday, tests7, full, passed, words: (u.words || []).length, lang: (u.settings || {}).lang || null,
       lastPct: lastA ? Math.round(scoreOf(lastA) / lastA.items.length * 100) : null });
   }
   users.sort((a, b) => b.lastActive - a.lastActive);
