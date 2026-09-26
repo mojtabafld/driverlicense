@@ -1,0 +1,16 @@
+{
+  "name": "teoriprove",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Danish driving theory test practice (category B) with Persian translations, accounts and progress tracking.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  }
+}
