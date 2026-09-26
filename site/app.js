@@ -898,7 +898,7 @@
     $app.innerHTML = `<section class="view hist-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1>
-        ${state.attempts.length ? `<span class="head-btns">${edit ? '<button class="tr-toggle danger" id="clearH">حذف همه</button>' : ''}<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'پایان حذف' : `${ICON.trash} حذف`}</button></span>` : ''}</div>
+        ${state.attempts.length ? `<span class="head-btns">${edit ? '<button class="tr-toggle danger" id="clearH">حذف همه</button>' : ''}<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'لغو' : `${ICON.trash} حذف`}</button></span>` : ''}</div>
       <div class="history">${historyList(Infinity, edit)}</div>
     </section>`;
     document.getElementById('back').onclick = home;
