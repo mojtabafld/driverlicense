@@ -59,9 +59,10 @@
   const nl = s => esc(s).replace(/\n/g, '<br>');
   const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   // Show Persian digits everywhere on the page, Danish content (questions, answers, Danish labels) included;
-  // only inputs and code keep Latin digits. Runs on every DOM change, so animated counters and timers are covered.
+  // only inputs, code and the exam's "Spørgsmål 3 ud af 25" counter keep Latin digits.
+  // Runs on every DOM change, so animated counters and timers are covered.
   // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
-  const LATIN_ZONE = 'input, textarea, code, script, style';
+  const LATIN_ZONE = 'input, textarea, code, .x-count, script, style';
   const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
   const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
