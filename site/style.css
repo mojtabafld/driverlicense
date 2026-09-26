@@ -7,7 +7,7 @@
   --ok:#2c7a3f; --ok-soft:#e4f2e7; --bad:#c62828; --bad-soft:#fdeceb; --warn:#a86400; --warn-soft:#fff3df;
   --shadow:none; --shadow-lg:0 10px 30px -12px rgba(38,57,69,.35);
   --radius:10px; --ease:cubic-bezier(.2,.8,.2,1);
-  --fa:'Vazirmatn',system-ui,sans-serif; --da:'IBM Plex Sans',Verdana,Helvetica,sans-serif;
+  --fa:'Vazirmatn',system-ui,sans-serif; --da:'IBM Plex Sans','Vazirmatn',Verdana,Helvetica,sans-serif;
   color-scheme:light;
 }
 :root[data-theme="dark"]{
