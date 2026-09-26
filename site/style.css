@@ -471,12 +471,10 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .wbtn:hover{background:var(--accent-soft);color:var(--navy)}
 .wbtn.danger:hover{background:var(--bad-soft);color:var(--bad)}
 
-/* review answers, as on prove.dk: one white card per statement, numbered circle (and border) green = the user
-   answered it right, red = wrong; then the correct answer with its explanation */
+/* review answers, as on prove.dk: one white card per statement, numbered circle green = the user answered it
+   right, red = wrong; then the correct answer with its explanation */
 .rbody{background:var(--bg);padding-top:14px}
-.rstmt{background:var(--surface);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:16px 18px;margin-bottom:12px;border:2px solid transparent}
-.rstmt.ok{border-color:#4bb543}
-.rstmt.bad{border-color:#d32f2f}
+.rstmt{background:var(--surface);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:16px 18px;margin-bottom:12px}
 .rline{direction:ltr;display:flex;gap:14px;align-items:flex-start}
 .rnum-c{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--da);font-size:16px;background:var(--muted)}
 .rnum-c.ok{background:#4bb543}

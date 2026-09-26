@@ -632,7 +632,7 @@
           const res = r.a ? (r.wrong[k] ? 'bad' : 'ok') : 'na';
           const eda = (s.eda || '').trim() || (s.ok ? 'Ja.' : 'Nej.');
           const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
-          return `<div class="rstmt ${res}">
+          return `<div class="rstmt">
             <div class="rline">
               <span class="rnum-c ${res}" aria-label="${res === 'ok' ? 'پاسخ شما درست' : res === 'bad' ? 'پاسخ شما اشتباه' : ''}">${k + 1}</span>
               <div class="rtxt">
