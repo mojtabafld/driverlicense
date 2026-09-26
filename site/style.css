@@ -28,7 +28,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 
 /* ---------- app top bar ---------- */
 .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;height:60px;border-bottom:1px solid var(--line);padding:0 max(16px,calc(50% - 490px));background:var(--surface);box-shadow:var(--shadow)}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--da);font-size:18px;direction:ltr;color:var(--navy)}
+.brand{display:flex;flex-direction:row-reverse;align-items:center;gap:10px;font-family:var(--da);font-size:18px;direction:ltr;color:var(--navy)}
 :root[data-theme="dark"] .brand{color:var(--text)}
 .brand b{font-weight:700}
 .logo svg rect{fill:var(--navy)}
