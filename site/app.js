@@ -131,12 +131,14 @@
     }
     return s;
   }
-  // Per-image accuracy from recent exams (newer weigh more, small prior), then P(≥20 of 25 correct).
+  // Per-image accuracy over the last 5 exams (with a small prior so one short exam cannot say 0% or 100%),
+  // then P(≥20 of 25 correct) in a full exam.
+  const PASS_WINDOW = 5;
   function passEstimate() {
-    const recent = state.attempts.slice(-10);
+    const recent = state.attempts.slice(-PASS_WINDOW);
     if (!recent.length) return null;
     let ok = 2, tot = 4;
-    recent.forEach((a, i) => { const w = 0.85 ** (recent.length - 1 - i); ok += w * scoreOf(a); tot += w * a.items.length; });
+    recent.forEach(a => { ok += scoreOf(a); tot += a.items.length; });
     const p = ok / tot;
     return { p, prob: binomTailAtLeast(FULL, passMin(FULL), p), n: recent.length };
   }
