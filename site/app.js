@@ -850,7 +850,7 @@
         <div class="card panel"><div class="panel-h"><h3>نقاط ضعف بر اساس مبحث</h3></div>${topicBars(topicStats())}</div>
       </div>
 
-      <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span>${atts.length ? '<button class="tr-toggle danger" id="clearH">پاک‌کردن تاریخچه</button>' : ''}</div>
+      <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span></div>
       <div class="history">${historyList(HOME_HIST)}</div>
 
       <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(topCount)} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
@@ -889,10 +889,6 @@
     $app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
       const k = b.dataset.set; state.settings[k] = !state.settings[k]; b.classList.toggle('on', state.settings[k]); saveSettings();
     });
-    const ch = document.getElementById('clearH');
-    if (ch) ch.onclick = () => confirmBox('پاک‌کردن تاریخچه؟', 'همه‌ی آزمون‌ها، نمودارها و آمار اشتباهات حساب شما پاک می‌شود.', 'پاک کن', async () => {
-      try { await api('DELETE', 'attempts'); state.attempts = []; home(); } catch (e) { toast(e.message); }
-    });
   }
   // Full list of past exams (opened from the "exams" card on the dashboard).
   // "حذف" switches the page into delete mode: a delete button next to each exam, each asking for a yes/no first.
@@ -902,11 +898,15 @@
     $app.innerHTML = `<section class="view hist-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1>
-        ${state.attempts.length ? `<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'پایان حذف' : `${ICON.trash} حذف`}</button>` : ''}</div>
+        ${state.attempts.length ? `<span class="head-btns">${edit ? '<button class="tr-toggle danger" id="clearH">حذف همه</button>' : ''}<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'پایان حذف' : `${ICON.trash} حذف`}</button></span>` : ''}</div>
       <div class="history">${historyList(Infinity, edit)}</div>
     </section>`;
     document.getElementById('back').onclick = home;
     const eh = document.getElementById('editHist'); if (eh) eh.onclick = () => { const y = scrollY; historyView(!edit); scrollTo({ top: y }); };
+    const ch = document.getElementById('clearH');
+    if (ch) ch.onclick = () => confirmBox('حذف همه‌ی آزمون‌ها؟', `هر ${faNum(state.attempts.length)} آزمون، نمودارها و آمار اشتباهات حساب شما پاک می‌شود.`, 'بله', async () => {
+      try { await api('DELETE', 'attempts'); state.attempts = []; historyView(); toast('همه‌ی آزمون‌ها حذف شدند'); } catch (e) { toast(e.message); }
+    }, 'خیر');
     $app.querySelectorAll('[data-del-att]').forEach(b => b.onclick = () => {
       const i = +b.dataset.delAtt, att = state.attempts[i];
       confirmBox('حذف آزمون؟', `آزمون ${faNum(i + 1)} (${fmtDateTime(att.at)}) و نتیجه‌اش از تاریخچه و آمار حذف می‌شود.`, 'بله', async () => {

@@ -517,3 +517,4 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .hist-del{flex:none;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:var(--bad);background:var(--bad-soft);transition:background .15s,color .15s}
 .hist-del:hover{background:var(--bad);color:#fff}
 .words-head .tr-toggle svg{vertical-align:-3px}
+.head-btns{display:flex;gap:8px;flex-wrap:wrap}
