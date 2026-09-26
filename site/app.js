@@ -569,7 +569,6 @@
         <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
       </div>
       <div class="rbody">
-        <div class="rlegend fa"><span><i class="lg-t"></i>گزینه‌ی درست</span><span><i class="lg-f"></i>گزینه‌ی نادرست</span>${r.a ? '<span><i class="lg-box"></i>پاسخ شما (پر = تیک زده)</span>' : ''}</div>
         ${q.st.map((s, k) => {
           const w = r.wrong ? r.wrong[k] : null;
           const efa = s.efa && !isTrivial(s.efa) ? s.efa : '';
