@@ -58,6 +58,25 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nl = s => esc(s).replace(/\n/g, '<br>');
   const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  // Show Persian digits in all Persian UI text. Danish content (questions, answers, Danish labels) keeps
+  // Latin digits, as do inputs. Runs on every DOM change, so animated counters and timers are covered.
+  const LATIN_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count, input, textarea, script, style';
+  const toFa = t => t.replace(/(\d)\.(\d)/g, '$1٫$2').replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  function persianizeDigits(root) {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      if (!/\d/.test(n.nodeValue)) continue;
+      const el = n.parentElement;
+      if (!el || el.closest(LATIN_ZONE)) continue;
+      n.nodeValue = toFa(n.nodeValue);
+    }
+  }
+  new MutationObserver(ms => {
+    for (const m of ms) {
+      if (m.type === 'characterData') { if (m.target.parentNode) persianizeDigits(m.target.parentNode); }
+      else m.addedNodes.forEach(node => { if (node.nodeType === 1) persianizeDigits(node); else if (node.nodeType === 3 && node.parentNode) persianizeDigits(node.parentNode); });
+    }
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const fmtTime = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const isTrivial = s => /^(بله|خیر|ja|nej)[.!]?$/i.test((s || '').trim());
@@ -318,7 +337,6 @@
           </div>
           <p class="qtext" data-wq="${q.id}" data-wst="-1">${nl(q.sda)}</p>
           ${fa ? `<p class="tr fa q-tr">${nl(q.sfa)}</p>` : ''}
-          <p class="static-q">Vælg det eller de korrekte svar${fa ? '<span class="fa">گزینه یا گزینه‌های درست را انتخاب کنید</span>' : ''}</p>
           <div class="answers">${q.st.map((s, k) => `
             <label class="answer ${ans[k] ? 'checked' : ''}">
               <input type="checkbox" data-k="${k}" ${ans[k] ? 'checked' : ''}>
@@ -464,7 +482,7 @@
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
     const savedN = res.filter(r => r.m).length;
     $app.innerHTML = `<section class="view">
-      ${fresh ? '' : `<button class="back-link" id="back">→ بازگشت به داشبورد</button>`}
+      ${fresh ? '' : `<button class="back-link" id="back">→ ${state.reviewFrom === 'history' ? 'بازگشت به آزمون‌های قبلی' : 'بازگشت به داشبورد'}</button>`}
       <div class="card result-hero">
         <div class="ring">
           <svg width="170" height="170" viewBox="0 0 170 170">
@@ -472,7 +490,7 @@
             <circle class="fg" cx="85" cy="85" r="74" stroke="${full ? (pass ? 'var(--ok)' : 'var(--bad)') : 'var(--navy)'}" stroke-width="14" fill="none" stroke-linecap="round"
               stroke-dasharray="${C}" stroke-dashoffset="${C}" id="ringFg"/>
           </svg>
-          <div class="val"><div>${full ? `<b id="scoreN">0</b><small>af ${n}</small>` : `<b id="scoreN" class="pct">0</b><small class="fa" style="text-align:center">${faNum(correct)} از ${faNum(n)}</small>`}</div></div>
+          <div class="val"><div>${full ? `<b id="scoreN">0</b><small class="fa" style="text-align:center">از ${n}</small>` : `<b id="scoreN" class="pct">0</b><small class="fa" style="text-align:center">${faNum(correct)} از ${faNum(n)}</small>`}</div></div>
         </div>
         <div>
           <div class="res-meta">${modeName(mode)} · ${fmtDateTime(at)}</div>
@@ -514,7 +532,8 @@
     if (rw) rw.onclick = () => newExam('mistakes', shuffle(res.filter(r => !r.ok).map(r => r.q.id)));
     document.getElementById('again').onclick = () => askSize('random');
     document.getElementById('toHome').onclick = home;
-    const back = document.getElementById('back'); if (back) back.onclick = home;
+    const back = document.getElementById('back');
+    if (back) back.onclick = state.reviewFrom === 'history' ? historyView : home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
     bindReviewCards($app);
     $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) c.classList.add('open'); });
@@ -547,19 +566,18 @@
         <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
       </div>
       <div class="rbody">
+        <div class="rlegend fa"><span><i class="lg-t"></i>گزینه‌ی درست</span><span><i class="lg-f"></i>گزینه‌ی نادرست</span>${r.a ? '<span><i class="lg-box"></i>پاسخ شما (پر = تیک زده)</span>' : ''}</div>
         ${q.st.map((s, k) => {
           const w = r.wrong ? r.wrong[k] : null;
           const efa = s.efa && !isTrivial(s.efa) ? s.efa : '';
           const eda = s.eda && !isTrivial(s.eda) ? s.eda : '';
-          const mine = r.a ? (r.a[k] ? '☑ شما تیک زدید' : '☐ شما تیک نزدید') : '';
-          return `<div class="rstmt ${w === true ? 'wrong' : w === false ? 'right' : ''}">
-            <div class="row">
-              <div style="flex:1;min-width:0"><div class="da" style="font-weight:600" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</div><div class="fa" style="color:var(--muted);font-size:14px">${nl(s.fa)}</div></div>
-              <div class="ans">${mine ? `<span class="${w ? 'w' : ''}">${mine}</span>` : ''}<span class="c ${s.ok ? '' : 'neg'}">${s.ok ? 'درست ✓' : 'نادرست ✗'}</span></div>
-            </div>
-            <div class="expl">
-              <div class="fa"><b>${s.ok ? '✔ این گزینه درست است و باید تیک بخورد.' : '✘ این گزینه نادرست است و نباید تیک بخورد.'}</b> ${efa ? nl(efa) : ''}</div>
-              ${eda ? `<div class="da">${nl(eda)}</div>` : ''}
+          const box = r.a ? (r.a[k] ? 'on' : '') : 'na';
+          return `<div class="rstmt ${s.ok ? 'is-true' : 'is-false'} ${w ? 'mistake' : ''}">
+            <span class="rbox ${box}" aria-label="${r.a ? (r.a[k] ? 'تیک زده شده' : 'تیک زده نشده') : ''}"></span>
+            <div class="rtxt">
+              <div class="da" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</div>
+              ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
+              ${efa || eda ? `<div class="expl">${efa ? `<div class="fa">${nl(efa)}</div>` : ''}${eda ? `<div class="da">${nl(eda)}</div>` : ''}</div>` : ''}
             </div>
           </div>`;
         }).join('')}
@@ -571,6 +589,7 @@
 
   function openAttempt(idx) {
     const att = state.attempts[idx]; if (!att) return;
+    state.reviewFrom = document.querySelector('.hist-page') ? 'history' : 'home';
     renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode), 'wrong', false);
   }
 
@@ -630,7 +649,7 @@
       pts.forEach((p, i) => p.classList.toggle('on', i === best));
       xh.setAttribute('x1', cx); xh.setAttribute('x2', cx); xh.style.opacity = 1;
       tip.hidden = false;
-      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode)}</span><span>${isFull(a) ? `نمره: <b class="da">${s}/${a.items.length}</b> · ${isPass(a) ? '✓ قبول' : '✗ مردود'}` : `${faNum(a.items.length)} سؤالی · <b>${pctText(a)}</b> درست`}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
+      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode)}</span><span>${isFull(a) ? `نمره: <b class="num">${s}/${a.items.length}</b> · ${isPass(a) ? '✓ قبول' : '✗ مردود'}` : `${faNum(a.items.length)} سؤالی · <b>${pctText(a)}</b> درست`}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
       const px = cx / vb.width * r.width;
       tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + 'px';
       tip.style.top = (+pts[best].getAttribute('cy') / vb.height * r.height - tip.offsetHeight - 12) + 'px';
@@ -647,7 +666,7 @@
       <div class="bar-row" title="${esc(t.ok)} درست از ${esc(t.n)}">
         <span class="bar-label">${esc(BANK.topics[t.c].fa)}</span>
         <span class="bar-track"><i style="--w:${Math.max(t.acc * 100, 2)}%;animation-delay:${n * 60}ms"></i></span>
-        <span class="bar-val da">${Math.round(t.acc * 100)}%</span>
+        <span class="bar-val num">${Math.round(t.acc * 100)}%</span>
       </div>`).join('')}</div>
       <div class="chart-note">درصد تصاویری که در هر مبحث کاملاً درست جواب داده‌اید (ضعیف‌ترین مباحث بالا).</div>`;
   }
@@ -683,7 +702,7 @@
         <span class="hthumbs">${thumbs}</span>
         <span class="go">مرور ←</span>
       </button>`;
-    }).join('') + (atts.length > 8 ? `<button class="tr-toggle more" id="moreHist">${state.showAllHist ? 'نمایش کمتر' : `نمایش همه (${faNum(atts.length)})`}</button>` : '');
+    }).join('') + (atts.length > 8 && !document.querySelector('.hist-page') ? `<button class="tr-toggle more" id="moreHist">${state.showAllHist ? 'نمایش کمتر' : `نمایش همه (${faNum(atts.length)})`}</button>` : '');
   }
 
   function home() {
@@ -718,7 +737,7 @@
         <div class="card gauge ${probCls}">
           <div class="gauge-ring">
             <svg width="130" height="130" viewBox="0 0 130 130"><circle cx="65" cy="65" r="52" class="g-bg"/><circle cx="65" cy="65" r="52" class="g-fg" stroke-dasharray="${G}" stroke-dashoffset="${G}" id="gFg"/></svg>
-            <div class="g-val"><b class="da">${probPct == null ? '–' : probPct + '%'}</b></div>
+            <div class="g-val"><b class="num">${probPct == null ? '–' : probPct + '%'}</b></div>
           </div>
           <div class="g-txt"><div class="g-title">احتمال قبولی</div><div class="g-sub">${probText}</div>
             ${est ? `<div class="g-note">بر اساس ${faNum(est.n)} آزمون اخیر · دقت هر تصویر ${faNum(Math.round(est.p * 100))}٪</div>` : ''}</div>
@@ -726,10 +745,10 @@
       </div>
 
       <div class="stats">
-        <div class="card stat"><span>آزمون‌ها</span><b>${atts.length}</b><small>${fullN ? `${faNum(passed)} قبولی از ${faNum(fullN)} آزمون کامل` : 'هنوز آزمون کامل ۲۵ سؤالی نداده‌اید'}</small></div>
-        <div class="card stat"><span>میانگین ۵ آزمون اخیر (درصد درست)</span><b>${atts.length ? Math.round(avg5) : '–'}<em>%</em></b><small>${trend == null ? 'روند: داده‌ی کافی نیست' : trend >= 0 ? `▲ ${faNum(Math.round(trend))}٪ رو به بهبود` : `▼ ${faNum(Math.round(Math.abs(trend)))}٪ افت`}</small></div>
-        <div class="card stat"><span>بهترین نمره</span><b>${atts.length ? best : '–'}<em>%</em></b><small>میانگین زمان ${atts.length ? fmtTime(avgSecs) : '–'}</small></div>
-        <div class="card stat"><span>پوشش بانک سؤال</span><b>${Math.round(seen / BANK.questions.length * 100)}<em>%</em></b><small>${faNum(seen)} از ${faNum(BANK.questions.length)} · 🔥 ${faNum(streakDays())} روز پیاپی</small>
+        <div class="card stat stat-link" id="statExams" role="button" tabindex="0" title="مشاهده‌ی آزمون‌های قبلی"><span>آزمون‌ها ${atts.length ? ICON.chevL : ''}</span><b>${atts.length}</b><small>${fullN ? `${faNum(passed)} قبولی از ${faNum(fullN)} آزمون کامل` : 'هنوز آزمون کامل ۲۵ سؤالی نداده‌اید'}</small></div>
+        <div class="card stat"><span>میانگین ۵ آزمون اخیر (درصد درست)</span><b>${atts.length ? Math.round(avg5) : '–'}<em>٪</em></b><small>${trend == null ? 'روند: داده‌ی کافی نیست' : trend >= 0 ? `▲ ${faNum(Math.round(trend))}٪ رو به بهبود` : `▼ ${faNum(Math.round(Math.abs(trend)))}٪ افت`}</small></div>
+        <div class="card stat"><span>بهترین نمره</span><b>${atts.length ? best : '–'}<em>٪</em></b><small>میانگین زمان ${atts.length ? fmtTime(avgSecs) : '–'}</small></div>
+        <div class="card stat"><span>پوشش بانک سؤال</span><b>${Math.round(seen / BANK.questions.length * 100)}<em>٪</em></b><small>${faNum(seen)} از ${faNum(BANK.questions.length)} · 🔥 ${faNum(streakDays())} روز پیاپی</small>
           <span class="mini-track"><i style="width:${seen / BANK.questions.length * 100}%"></i></span></div>
       </div>
 
@@ -764,6 +783,8 @@
   function bindHome() {
     document.getElementById('start').onclick = () => askSize('random');
     document.getElementById('openWords').onclick = () => wordsView();
+    const se = document.getElementById('statExams');
+    if (se && state.attempts.length) { se.onclick = historyView; se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
     document.getElementById('startM').onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
@@ -776,6 +797,21 @@
       try { await api('DELETE', 'attempts'); state.attempts = []; home(); } catch (e) { toast(e.message); }
     });
   }
+  // Full list of past exams (opened from the "exams" card on the dashboard).
+  function historyView() {
+    stopSpeak(); clearInterval(state.timerId); state.exam = null; setExamMode(false); closeModal();
+    const keep = state.showAllHist; state.showAllHist = true;
+    $app.innerHTML = `<section class="view hist-page">
+      <button class="back-link" id="back">→ بازگشت به داشبورد</button>
+      <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1></div>
+      <div class="history">${historyList()}</div>
+    </section>`;
+    state.showAllHist = keep;
+    document.getElementById('back').onclick = home;
+    bindHistory();
+    window.scrollTo({ top: 0 });
+  }
+
   function bindHistory() {
     $app.querySelectorAll('[data-att]').forEach(b => b.onclick = () => openAttempt(+b.dataset.att));
     const more = document.getElementById('moreHist');
