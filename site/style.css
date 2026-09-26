@@ -402,3 +402,10 @@ body.exam-mode main{max-width:none;padding:0}
   .size-opt small{margin:0 auto 0 0;text-align:left}
   .size-opt em{top:50%;transform:translateY(-50%);left:auto;right:auto;position:static}
 }
+
+.size-cancel{display:flex;width:100%;margin-top:16px}
+.verdict.neutral{color:var(--navy)}
+:root[data-theme="dark"] .verdict.neutral{color:var(--accent)}
+.ring .val b.pct{font-size:36px}
+.pill.neutral{background:var(--accent-soft);color:var(--navy)}
+:root[data-theme="dark"] .pill.neutral{color:var(--accent)}

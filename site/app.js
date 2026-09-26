@@ -15,7 +15,10 @@
   // The real test has 25 pictures and allows 5 wrong (80%); shorter practice exams keep the same ratio.
   const FULL = 25, SIZES = [5, 10, 15, 20, 25], SECONDS_PER_Q = 60;
   const passMin = n => n - Math.floor(n / 5);
-  const isPass = a => scoreOf(a) >= passMin(a.items.length);
+  // Only full 25-question exams get a pass/fail verdict; shorter practice exams just record the percent correct.
+  const isFull = a => a.items.length >= FULL;
+  const isPass = a => isFull(a) && scoreOf(a) >= passMin(a.items.length);
+  const pctText = a => faNum(Math.round(pct(a) * 100)) + '٪';
   const pct = a => scoreOf(a) / Math.max(1, a.items.length);
   const $app = document.getElementById('app');
   const $modal = document.getElementById('modal');
@@ -205,11 +208,11 @@
       <div class="size-grid">${SIZES.map(n => `
         <button class="size-opt ${n === last ? 'last' : ''}" data-size="${n}">
           <b>${faNum(n)}</b><span>سؤال</span>
-          <small>${faNum(n)} دقیقه · قبولی با ${faNum(passMin(n))} درست</small>
+          <small>${faNum(n)} دقیقه · ${n === FULL ? `قبولی با ${faNum(passMin(n))} درست` : 'فقط درصد درست'}</small>
           ${n === FULL ? '<em>مثل آزمون واقعی</em>' : ''}
         </button>`).join('')}
       </div>
-      <div class="row-btns"><button class="btn btn-ghost" data-close>انصراف</button></div>`, 'size-sheet');
+      <button class="btn btn-ghost size-cancel" data-close>انصراف</button>`, 'size-sheet');
     $modal.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
       const n = +b.dataset.size; local.set('size', n); newExam(mode, null, n);
     });
@@ -444,7 +447,7 @@
   function renderReview(ctx, filter, fresh) {
     setExamMode(false);
     const { res, correct, wrongSt, secs, at, mode } = ctx;
-    const n = res.length, pass = correct >= passMin(n);
+    const n = res.length, full = n >= FULL, pass = full && correct >= passMin(n), pctN = Math.round(correct / Math.max(n, 1) * 100);
     const C = 2 * Math.PI * 74, pct = correct / Math.max(n, 1);
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
     const savedN = res.filter(r => r.m).length;
@@ -454,15 +457,17 @@
         <div class="ring">
           <svg width="170" height="170" viewBox="0 0 170 170">
             <circle cx="85" cy="85" r="74" stroke="var(--surface-2)" stroke-width="14" fill="none"/>
-            <circle class="fg" cx="85" cy="85" r="74" stroke="${pass ? 'var(--ok)' : 'var(--bad)'}" stroke-width="14" fill="none" stroke-linecap="round"
+            <circle class="fg" cx="85" cy="85" r="74" stroke="${full ? (pass ? 'var(--ok)' : 'var(--bad)') : 'var(--navy)'}" stroke-width="14" fill="none" stroke-linecap="round"
               stroke-dasharray="${C}" stroke-dashoffset="${C}" id="ringFg"/>
           </svg>
-          <div class="val"><div><b id="scoreN">0</b><small>af ${n}</small></div></div>
+          <div class="val"><div>${full ? `<b id="scoreN">0</b><small>af ${n}</small>` : `<b id="scoreN" class="pct">0</b><small class="fa" style="text-align:center">${faNum(correct)} از ${faNum(n)}</small>`}</div></div>
         </div>
         <div>
           <div class="res-meta">${modeName(mode)} · ${fmtDateTime(at)}</div>
-          <h2 class="verdict ${pass ? 'ok' : 'bad'}">${pass ? (fresh ? '🎉 قبول شدید!' : '✓ قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : '✗ مردود')}</h2>
-          <div style="color:var(--muted)">${pass ? `حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} کاملاً درست بود.` : `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.`}</div>
+          ${full ? `<h2 class="verdict ${pass ? 'ok' : 'bad'}">${pass ? (fresh ? '🎉 قبول شدید!' : '✓ قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : '✗ مردود')}</h2>
+          <div style="color:var(--muted)">${pass ? `حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} کاملاً درست بود.` : `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.`}</div>`
+          : `<h2 class="verdict neutral">${faNum(pctN)}٪ پاسخ درست</h2>
+          <div style="color:var(--muted)">آزمون تمرینی ${faNum(n)} سؤالی؛ فقط درصد پاسخ‌های درست ثبت می‌شود. قبولی/مردودی فقط برای آزمون کامل ۲۵ سؤالی تعیین می‌شود.</div>`}
           <div class="kpis">
             <span class="kpi">تصاویر درست: <b>${correct}</b></span>
             <span class="kpi">تصاویر اشتباه: <b>${n - correct}</b></span>
@@ -490,8 +495,8 @@
     requestAnimationFrame(() => requestAnimationFrame(() => {
       document.getElementById('ringFg').style.strokeDashoffset = C * (1 - pct);
     }));
-    const sn = document.getElementById('scoreN'); let v = 0;
-    const tick = setInterval(() => { sn.textContent = v; if (v++ >= correct) clearInterval(tick); }, 1200 / Math.max(correct, 1));
+    const sn = document.getElementById('scoreN'), target = full ? correct : pctN; let v = 0;
+    const tick = setInterval(() => { sn.textContent = full ? v : v + '%'; if (v++ >= target) clearInterval(tick); }, 1200 / Math.max(target, 1));
 
     const rw = document.getElementById('retryWrong');
     if (rw) rw.onclick = () => newExam('mistakes', shuffle(res.filter(r => !r.ok).map(r => r.q.id)));
@@ -612,7 +617,7 @@
       pts.forEach((p, i) => p.classList.toggle('on', i === best));
       xh.setAttribute('x1', cx); xh.setAttribute('x2', cx); xh.style.opacity = 1;
       tip.hidden = false;
-      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode)}</span><span>نمره: <b class="da">${s}/${a.items.length}</b> · ${isPass(a) ? '✓ قبول' : '✗ مردود'}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
+      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode)}</span><span>${isFull(a) ? `نمره: <b class="da">${s}/${a.items.length}</b> · ${isPass(a) ? '✓ قبول' : '✗ مردود'}` : `${faNum(a.items.length)} سؤالی · <b>${pctText(a)}</b> درست`}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
       const px = cx / vb.width * r.width;
       tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + 'px';
       tip.style.top = (+pts[best].getAttribute('cy') / vb.height * r.height - tip.offsetHeight - 12) + 'px';
@@ -659,8 +664,8 @@
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
       return `<button class="card hist" data-att="${i}">
-        <span class="pill ${isPass(h) ? 'ok' : 'bad'}">${s}/${h.items.length}</span>
-        <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isPass(h) ? 'قبول' : 'مردود'} · ${modeName(h.mode)}<br>
+        <span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
+        <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'} · ${modeName(h.mode)}<br>
           <small>${fmtDateTime(h.at)} · ${faNum(wrongImgs)} تصویر اشتباه · ${faNum(h.items.reduce((a, it) => a + it.w, 0))} گزینه‌ی اشتباه · ${fmtTime(h.secs)}${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>
         <span class="go">مرور ←</span>
@@ -671,7 +676,7 @@
   function home() {
     stopSpeak(); clearInterval(state.timerId); state.exam = null; closeModal(); setExamMode(false);
     const atts = state.attempts;
-    const passed = atts.filter(isPass).length;
+    const passed = atts.filter(isPass).length, fullN = atts.filter(isFull).length;
     const pcts = atts.map(a => Math.round(pct(a) * 100));
     const last5 = pcts.slice(-5);
     const avg5 = last5.length ? last5.reduce((a, b) => a + b, 0) / last5.length : 0;
@@ -708,7 +713,7 @@
       </div>
 
       <div class="stats">
-        <div class="card stat"><span>آزمون‌ها</span><b>${atts.length}</b><small>${faNum(passed)} قبولی${atts.length ? ` · ${faNum(Math.round(passed / atts.length * 100))}٪` : ''}</small></div>
+        <div class="card stat"><span>آزمون‌ها</span><b>${atts.length}</b><small>${fullN ? `${faNum(passed)} قبولی از ${faNum(fullN)} آزمون کامل` : 'هنوز آزمون کامل ۲۵ سؤالی نداده‌اید'}</small></div>
         <div class="card stat"><span>میانگین ۵ آزمون اخیر (درصد درست)</span><b>${atts.length ? Math.round(avg5) : '–'}<em>%</em></b><small>${trend == null ? 'روند: داده‌ی کافی نیست' : trend >= 0 ? `▲ ${faNum(Math.round(trend))}٪ رو به بهبود` : `▼ ${faNum(Math.round(Math.abs(trend)))}٪ افت`}</small></div>
         <div class="card stat"><span>بهترین نمره</span><b>${atts.length ? best : '–'}<em>%</em></b><small>میانگین زمان ${atts.length ? fmtTime(avgSecs) : '–'}</small></div>
         <div class="card stat"><span>پوشش بانک سؤال</span><b>${Math.round(seen / BANK.questions.length * 100)}<em>%</em></b><small>${faNum(seen)} از ${faNum(BANK.questions.length)} · 🔥 ${faNum(streakDays())} روز پیاپی</small>
