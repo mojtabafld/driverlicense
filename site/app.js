@@ -786,14 +786,14 @@
     return shown.map(i => {
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
-      const row = `<button class="card hist" data-att="${i}">
-        <span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
+      const body = `<span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
         <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'} · ${modeName(h.mode)}<br>
           <small>${fmtDateTime(h.at)} · ${wrongImgs ? `${faNum(wrongImgs)} سؤال غلط` : 'بدون اشتباه'} · ${fmtTime(h.secs)}${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
-        <span class="hthumbs">${thumbs}</span>
-        <span class="go">مرور ←</span>
-      </button>`;
-      return edit ? `<div class="hist-row">${row}<button class="hist-del" data-del-att="${i}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>` : row;
+        <span class="hthumbs">${thumbs}</span>`;
+      // In delete mode the card is not a link: the delete button takes the place of "مرور".
+      return edit
+        ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
+        : `<button class="card hist" data-att="${i}">${body}<span class="go">مرور ←</span></button>`;
     }).join('') + (atts.length > limit ? `<button class="tr-toggle more" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(atts.length)}) ←</button>` : '');
   }
 
