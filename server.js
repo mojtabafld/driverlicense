@@ -174,7 +174,7 @@ async function api(req, res, route) {
     return send(res, 200, { ok: true });
   }
   if (req.method === 'GET' && route === 'me') {
-    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [] });
+    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], draft: user.draft || null });
   }
   if (req.method === 'POST' && route === 'attempts') {
     const b = await readBody(req);
@@ -186,6 +186,7 @@ async function api(req, res, route) {
     if (!items.length) return send(res, 400, { error: 'empty attempt' });
     const at = { at: Date.now(), secs: Math.max(0, Math.min(36000, +b.secs || 0)), mode: MODES.includes(b.mode) ? b.mode : 'random', items };
     user.attempts.push(at);
+    delete user.draft; // the exam is handed in, so it is no longer unfinished
     if (user.attempts.length > MAX_ATTEMPTS) user.attempts.splice(0, user.attempts.length - MAX_ATTEMPTS);
     await store.saveUser(user);
     return send(res, 200, { attempt: at });
@@ -220,6 +221,27 @@ async function api(req, res, route) {
     const key = clip(b.w, 80).toLowerCase();
     user.words = (user.words || []).filter(x => x.w.toLowerCase() !== key);
     await store.saveUser(user);
+    return send(res, 200, { ok: true });
+  }
+  // Unfinished exam, so it can be resumed later: PUT replaces it, DELETE drops it.
+  if (req.method === 'PUT' && route === 'draft') {
+    const b = await readBody(req);
+    const ids = Array.isArray(b.ids) ? b.ids.slice(0, 25).map(Number).filter(Number.isInteger) : [];
+    if (!ids.length) return send(res, 400, { error: 'empty draft' });
+    const bools = (v, n) => Array.from({ length: n }, (_, i) => !!(Array.isArray(v) && v[i]));
+    const num = (v, max) => Math.max(0, Math.min(max, Math.round(+v || 0)));
+    user.draft = {
+      mode: MODES.includes(b.mode) ? b.mode : 'random', ids,
+      idx: num(b.idx, ids.length - 1),
+      answers: ids.map((_, i) => bools(Array.isArray(b.answers) && b.answers[i], 4)),
+      seen: bools(b.seen, ids.length), flags: bools(b.flags, ids.length), showFa: bools(b.showFa, ids.length),
+      left: num(b.left, 36000), elapsed: num(b.elapsed, 36000 * 24), saved: Date.now(),
+    };
+    await store.saveUser(user);
+    return send(res, 200, { ok: true });
+  }
+  if (req.method === 'DELETE' && route === 'draft') {
+    if (user.draft) { delete user.draft; await store.saveUser(user); }
     return send(res, 200, { ok: true });
   }
   if (req.method === 'PUT' && route === 'settings') {

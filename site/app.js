@@ -209,11 +209,59 @@
     await loadBank();
     state.user = d.user; state.attempts = d.attempts || []; state.words = d.words || [];
     state.settings = Object.assign({ showFa: true, timer: true }, d.settings);
+    state.draft = d.draft && d.draft.ids.every(id => Q.has(id)) ? d.draft : null;
     renderUserBox();
   }
   const saveSettings = () => api('PUT', 'settings', state.settings).catch(() => toast('ذخیره‌ی تنظیمات ناموفق بود'));
 
   // ---------- Exam ----------
+  // An unfinished exam is kept on the server as a "draft" (every change, debounced; right away when the page
+  // is hidden or the user leaves the exam), so it can be resumed later, also on another device.
+  // Time only runs while the exam is open.
+  let draftTimer = null;
+  const snapshot = ex => ({
+    mode: ex.mode, ids: ex.ids, idx: ex.idx, answers: ex.answers, seen: ex.seen, flags: ex.flags, showFa: ex.showFa,
+    left: ex.left, elapsed: Math.round((Date.now() - ex.started) / 1000), saved: Date.now(),
+  });
+  function putDraft(keepalive = false) {
+    clearTimeout(draftTimer);
+    if (!state.draft) return;
+    fetch('/api/draft', { method: 'PUT', keepalive, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state.draft) }).catch(() => {});
+  }
+  function saveDraft(now = false) {
+    const ex = state.exam; if (!ex || ex.done) return;
+    state.draft = snapshot(ex);
+    if (now) putDraft(now === 'keepalive'); else { clearTimeout(draftTimer); draftTimer = setTimeout(putDraft, 1500); }
+  }
+  function dropDraft() {
+    clearTimeout(draftTimer); state.draft = null;
+    api('DELETE', 'draft').catch(() => {});
+  }
+  // Leaving the exam screen (logo, dashboard, …) keeps the unfinished exam as a draft.
+  function leaveExam() { clearInterval(state.timerId); saveDraft(true); state.exam = null; }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraft('keepalive'); });
+
+  function resumeExam() {
+    const d = state.draft; if (!d) return;
+    closeModal();
+    state.exam = {
+      ...d, size: d.ids.length, view: 'q', done: false, started: Date.now() - d.elapsed * 1000,
+      answers: d.ids.map((id, i) => Q.get(id).st.map((_, k) => !!d.answers[i][k])), // the server keeps 4 per question
+    };
+    setExamMode(true);
+    renderExam(true);
+    window.scrollTo({ top: 0 });
+    startTimer();
+  }
+  function draftCard() {
+    const d = state.draft; if (!d) return '';
+    const answered = d.answers.filter(a => a.some(Boolean)).length;
+    return `<div class="card resume">
+      <div class="resume-txt"><b>آزمون نیمه‌تمام</b>
+        <small>${modeName(d.mode)} · ${faNum(d.ids.length)} سؤالی · ${faNum(answered)} سؤال پاسخ داده شده${state.settings.timer ? ` · ${fmtTime(Math.max(0, d.left))} زمان باقی‌مانده` : ''} · ${fmtDateTime(d.saved)}</small></div>
+      <div class="resume-btns"><button class="btn btn-ghost" id="dropDraft">حذف</button><button class="btn btn-primary" id="resume">ادامه‌ی آزمون</button></div>
+    </div>`;
+  }
   // Start with `first` questions (if any) and top up with random ones to `size`.
   function buildIds(first, size) {
     first = first.slice(0, size);
@@ -234,6 +282,7 @@
           ${n === FULL ? '<em>مثل آزمون واقعی</em>' : ''}
         </button>`).join('')}
       </div>
+      ${state.draft ? '<p class="size-warn">با شروع آزمون جدید، آزمون نیمه‌تمام قبلی حذف می‌شود.</p>' : ''}
       <button class="btn btn-ghost size-cancel" data-close>انصراف</button>`, 'size-sheet');
     $modal.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
       const n = +b.dataset.size; newExam(mode, null, n);
@@ -260,6 +309,7 @@
     state.timerId = setInterval(() => {
       const ex = state.exam; if (!ex || ex.done) return clearInterval(state.timerId);
       ex.left--;
+      if (ex.left % 15 === 0) saveDraft();
       const el = document.getElementById('timer');
       if (el) { el.textContent = fmtTime(Math.max(0, ex.left)); el.parentElement.classList.toggle('low', ex.left <= 60); }
       if (ex.left <= 0) { clearInterval(state.timerId); toast('زمان تمام شد!'); finish(); }
@@ -327,6 +377,7 @@
     if (ex.view === 'overview') return renderOverview();
     const i = ex.idx, q = Q.get(ex.ids[i]), ans = ex.answers[i], fa = ex.showFa[i];
     ex.seen[i] = true;
+    saveDraft();
     const inner = `<div class="x-body ${slide || anim ? 'anim' : ''}">
         <div class="photo">
           <img src="${q.img}" alt="" class="${anim || slide ? 'loading' : ''}" onload="this.classList.remove('loading')">
@@ -356,7 +407,7 @@
     $app.innerHTML = examShell(inner, foot);
     bindShell();
 
-    const setAns = (cb, v) => { cb.checked = v; ans[+cb.dataset.k] = v; cb.closest('.answer').classList.toggle('checked', v); };
+    const setAns = (cb, v) => { cb.checked = v; ans[+cb.dataset.k] = v; cb.closest('.answer').classList.toggle('checked', v); saveDraft(); };
     $app.querySelectorAll('.answer input').forEach(cb => cb.onchange = () => setAns(cb, cb.checked));
     // Selecting a word (drag or double-click) inside an answer must not tick it: ignore clicks that end a
     // selection, and undo the toggle from the first click of a double-click.
@@ -424,9 +475,10 @@
 
   function quitDialog() {
     openModal(`<h3>خروج از آزمون</h3>
-      <p style="color:var(--muted);margin:0">آزمون را تحویل می‌دهید و نتیجه را می‌بینید، یا بدون ذخیره خارج می‌شوید؟</p>
-      <div class="row-btns"><button class="btn btn-ghost" id="mLeave">خروج بدون ذخیره</button><button class="btn btn-primary" id="mHand">تحویل و نتیجه</button></div>`);
+      <p style="color:var(--muted);margin:0">آزمون را تحویل می‌دهید، برای ادامه در زمانی دیگر نگه می‌دارید، یا حذفش می‌کنید؟</p>
+      <div class="row-btns"><button class="btn btn-ghost" id="mDrop">حذف آزمون</button><button class="btn btn-ghost" id="mLeave">ادامه در زمانی دیگر</button><button class="btn btn-primary" id="mHand">تحویل و نتیجه</button></div>`);
     document.getElementById('mLeave').onclick = () => { closeModal(); stopSpeak(); home(); };
+    document.getElementById('mDrop').onclick = () => { state.exam.done = true; dropDraft(); closeModal(); stopSpeak(); home(); };
     document.getElementById('mHand').onclick = () => { closeModal(); askFinish(); };
   }
 
@@ -465,6 +517,7 @@
   async function finish() {
     const ex = state.exam; if (!ex || ex.done) return;
     ex.done = true; clearInterval(state.timerId); stopSpeak();
+    clearTimeout(draftTimer); state.draft = null; // the server drops its draft when it stores the attempt
     const res = gradeExam(ex);
     const secs = Math.round((Date.now() - ex.started) / 1000);
     const payload = { secs, mode: ex.mode, items: res.map(r => ({ id: r.q.id, ok: r.ok, w: r.w, a: r.a, m: r.m ? 1 : 0 })) };
@@ -673,10 +726,15 @@
       <div class="chart-note">درصد تصاویری که در هر مبحث کاملاً درست جواب داده‌اید (ضعیف‌ترین مباحث بالا).</div>`;
   }
 
+  const HOME_MISTAKES = 5;
   function mistakesSection() {
-    const top = mistakeStats().slice(0, 10);
-    if (!top.length) return `<div class="card empty">هنوز اشتباهی ثبت نشده است.</div>`;
-    return `<div class="mgrid">${top.map((s, n) => {
+    const all = mistakeStats();
+    if (!all.length) return `<div class="card empty">هنوز اشتباهی ثبت نشده است.</div>`;
+    return mistakeCards(all.slice(0, HOME_MISTAKES)) +
+      `<button class="tr-toggle more" id="allMistakes">نمایش همه‌ی اشتباهات به تفکیک مبحث (${faNum(all.length)}) ←</button>`;
+  }
+  function mistakeCards(list) {
+    return `<div class="mgrid">${list.map((s, n) => {
       const q = Q.get(s.id), t = BANK.topics[q.c];
       return `<button class="card mcard" data-mid="${s.id}" style="animation-delay:${n * 40}ms">
         <span class="mimg"><img src="${q.img}" alt="" loading="lazy"><span class="mcount">×${s.wrong}</span></span>
@@ -687,6 +745,27 @@
         </span>
       </button>`;
     }).join('')}</div>`;
+  }
+  // All mistakes on their own page, grouped by topic; topics with the most wrong answers first.
+  function mistakesView() {
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    const groups = new Map();
+    for (const s of mistakeStats()) {
+      const c = Q.get(s.id).c, g = groups.get(c) || { c, list: [], wrong: 0 };
+      g.list.push(s); g.wrong += s.wrong; groups.set(c, g);
+    }
+    const sorted = [...groups.values()].sort((a, b) => b.wrong - a.wrong || b.list.length - a.list.length);
+    const total = sorted.reduce((a, g) => a + g.list.length, 0);
+    $app.innerHTML = `<section class="view">
+      <button class="back-link" id="back">→ بازگشت به داشبورد</button>
+      <div class="words-head"><h1>بیشترین اشتباهات <small class="muted">(${faNum(total)} سؤال در ${faNum(sorted.length)} مبحث)</small></h1></div>
+      ${sorted.length ? sorted.map(g => `
+        <div class="section-title"><span>${esc(BANK.topics[g.c] ? BANK.topics[g.c].fa : 'سایر')} <small class="muted">(${faNum(g.list.length)} سؤال · ${faNum(g.wrong)} اشتباه)</small></span></div>
+        ${mistakeCards(g.list)}`).join('') : '<div class="card empty">هنوز اشتباهی ثبت نشده است.</div>'}
+    </section>`;
+    document.getElementById('back').onclick = home;
+    $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
+    window.scrollTo({ top: 0 });
   }
 
   // Newest first; the dashboard passes a limit and links to the full list on its own page.
@@ -709,7 +788,7 @@
   }
 
   function home() {
-    stopSpeak(); clearInterval(state.timerId); state.exam = null; closeModal(); setExamMode(false);
+    stopSpeak(); leaveExam(); closeModal(); setExamMode(false);
     const atts = state.attempts;
     const passed = atts.filter(isPass).length, fullN = atts.filter(isFull).length;
     const pcts = atts.map(a => Math.round(pct(a) * 100));
@@ -728,6 +807,7 @@
     const G = 2 * Math.PI * 52;
 
     $app.innerHTML = `<section class="view">
+      ${draftCard()}
       <div class="dash-hero">
         <div>
           <div class="hello">سلام ${esc(state.user.name)} 👋</div>
@@ -763,7 +843,7 @@
       <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span>${atts.length ? '<button class="tr-toggle danger" id="clearH">پاک‌کردن تاریخچه</button>' : ''}</div>
       <div class="history">${historyList(HOME_HIST)}</div>
 
-      <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(Math.min(topCount, 10))} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
+      <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(topCount)} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
       ${mistakesSection()}
 
       <div class="section-title">تنظیمات و امکانات</div>
@@ -772,7 +852,6 @@
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
         <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
         <div class="opt"><div>شرط قبولی<small>حداقل ۸۰٪ تصاویر باید کاملاً درست باشند (در آزمون واقعی ۲۵ سؤالی: ۲۰ تصویر؛ ۵ سؤالی: ۴ تصویر). «کاملاً درست» یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
-        ${state.version ? `<div class="opt"><div>نسخه‌ی سایت<small>بعد از هر deploy این کد عوض می‌شود.</small></div><code class="da">${esc(state.version)}</code></div>` : ''}
       </div>
     </section>`;
 
@@ -786,12 +865,16 @@
 
   function bindHome() {
     document.getElementById('start').onclick = () => askSize('random');
+    const rs = document.getElementById('resume'); if (rs) rs.onclick = resumeExam;
+    const dd = document.getElementById('dropDraft');
+    if (dd) dd.onclick = () => confirmBox('حذف آزمون نیمه‌تمام؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'حذف', () => { dropDraft(); home(); });
     document.getElementById('openWords').onclick = () => wordsView();
     const se = document.getElementById('statExams');
     if (se && state.attempts.length) { se.onclick = historyView; se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
     document.getElementById('startM').onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
+    const am = document.getElementById('allMistakes'); if (am) am.onclick = mistakesView;
     bindHistory();
     $app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
       const k = b.dataset.set; state.settings[k] = !state.settings[k]; b.classList.toggle('on', state.settings[k]); saveSettings();
@@ -803,7 +886,7 @@
   }
   // Full list of past exams (opened from the "exams" card on the dashboard).
   function historyView() {
-    stopSpeak(); clearInterval(state.timerId); state.exam = null; setExamMode(false); closeModal();
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
     $app.innerHTML = `<section class="view hist-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1></div>
@@ -909,7 +992,7 @@
   };
 
   function wordsView(query = '') {
-    stopSpeak(); clearInterval(state.timerId); state.exam = null; setExamMode(false); closeModal();
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
     const all = (state.words || []).slice().sort((a, b) => b.at - a.at);
     const q = query.trim().toLowerCase();
     const list = q ? all.filter(x => x.w.toLowerCase().includes(q) || (x.t || '').includes(q) || (x.en || '').toLowerCase().includes(q)) : all;
@@ -981,7 +1064,7 @@
       $app.innerHTML = `<div class="card empty" style="margin-top:40px">برای ورود با حساب کاربری، سایت را از طریق سرور باز کنید:<br><code class="da">node server.js</code> و سپس <code class="da">http://localhost:3000</code></div>`;
       return;
     }
-    try { const c = await api('GET', 'config'); state.inviteRequired = !!c.inviteRequired; state.version = c.version; } catch { /* offline: assume no invite */ }
+    try { state.inviteRequired = !!(await api('GET', 'config')).inviteRequired; } catch { /* offline: assume no invite */ }
     try { await loadMe(); home(); }
     catch (e) {
       if (e.status && e.status !== 401) toast(e.message);
