@@ -13,7 +13,10 @@ const PORT = +process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const SITE = path.join(__dirname, 'site');
 const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'data', 'db.json');
-const INVITE_CODE = (process.env.INVITE_CODE || '').trim();
+// Invite codes are temporarily switched off: sign-up is open and the form has no invite field.
+// Set INVITE_PAUSED back to false to require INVITE_CODE again.
+const INVITE_PAUSED = true;
+const INVITE_CODE = INVITE_PAUSED ? '' : (process.env.INVITE_CODE || '').trim();
 const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
 const MODES = ['random', 'mistakes', 'top'];
