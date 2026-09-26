@@ -58,17 +58,20 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nl = s => esc(s).replace(/\n/g, '<br>');
   const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
-  // Show Persian digits in all Persian UI text. Danish content (questions, answers, Danish labels) keeps
-  // Latin digits, as do inputs. Runs on every DOM change, so animated counters and timers are covered.
-  const LATIN_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count, input, textarea, script, style';
-  const toFa = t => t.replace(/(\d)\.(\d)/g, '$1٫$2').replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  // Show Persian digits everywhere on the page, Danish content (questions, answers, Danish labels) included;
+  // only inputs keep Latin digits. Runs on every DOM change, so animated counters and timers are covered.
+  // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
+  const LATIN_ZONE = 'input, textarea, script, style';
+  const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
+  const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
   function persianizeDigits(root) {
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     for (let n = w.nextNode(); n; n = w.nextNode()) {
       if (!/\d/.test(n.nodeValue)) continue;
       const el = n.parentElement;
       if (!el || el.closest(LATIN_ZONE)) continue;
-      n.nodeValue = toFa(n.nodeValue);
+      n.nodeValue = el.closest(DANISH_ZONE) ? toFaDigits(n.nodeValue) : toFa(n.nodeValue);
     }
   }
   new MutationObserver(ms => {
@@ -847,7 +850,7 @@
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
     const text = sel.toString().replace(/\s+/g, ' ').trim().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
-    if (!text || text.length > 60 || text.split(' ').length > 5 || /[\u0600-\u06FF]/.test(text)) return null;
+    if (!text || text.length > 60 || text.split(' ').length > 5 || /[\u0600-\u06EF\u06FA-\u06FF]/.test(text)) return null;
     const range = sel.getRangeAt(0);
     const node = range.commonAncestorContainer;
     const host = (node.nodeType === 1 ? node : node.parentElement)?.closest('[data-wq]');
