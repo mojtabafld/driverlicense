@@ -4,6 +4,7 @@
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_USERS (comma-separated usernames that get the admin panel).
 'use strict';
+process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');

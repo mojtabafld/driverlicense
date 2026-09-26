@@ -84,8 +84,11 @@
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const fmtTime = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   const scoreOf = a => a.items.filter(x => x.ok).length;
-  const fmtDate = t => new Date(t).toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' });
-  const fmtDateTime = t => new Date(t).toLocaleString('fa-IR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  // All dates and times are shown in Copenhagen time, whatever the device's time zone.
+  const TZ = 'Europe/Copenhagen';
+  const fmtDate = t => new Date(t).toLocaleDateString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric' });
+  const fmtDateTime = t => new Date(t).toLocaleString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const dayKey = t => new Date(t).toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD in Copenhagen
   const modeName = m => ({ mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات' }[m] || 'آزمون تصادفی');
   const setExamMode = on => document.body.classList.toggle('exam-mode', on);
   function toast(msg) {
@@ -172,10 +175,10 @@
     return [...m.values()].filter(t => t.n >= 3 && BANK.topics[t.c]).map(t => ({ ...t, acc: t.ok / t.n }));
   }
   function streakDays() {
-    const days = new Set(state.attempts.map(a => new Date(a.at).toDateString()));
-    const d = new Date(); let n = 0;
-    if (!days.has(d.toDateString())) d.setDate(d.getDate() - 1);
-    while (days.has(d.toDateString())) { n++; d.setDate(d.getDate() - 1); }
+    const days = new Set(state.attempts.map(a => dayKey(a.at)));
+    let t = Date.now(), n = 0;
+    if (!days.has(dayKey(t))) t -= 864e5;
+    while (days.has(dayKey(t))) { n++; t -= 864e5; }
     return n;
   }
 
@@ -976,7 +979,7 @@
   // One series per chart, so a single colour and no legend; each bar has a tooltip with its day and value.
   function dayBars(days, key, unit) {
     const max = Math.max(1, ...days.map(d => d[key]));
-    const label = d => new Date(d.day + 'T12:00').toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' });
+    const label = d => new Date(d.day + 'T12:00Z').toLocaleDateString('fa-IR', { timeZone: 'UTC', month: 'short', day: 'numeric' }); // d.day is already a Copenhagen day
     return `<div class="dbars" role="img" aria-label="${unit} در ۳۰ روز اخیر">${days.map(d => `
         <span class="dbar" data-tip="${label(d)}: ${faNum(d[key])} ${unit}"><i style="height:${d[key] ? Math.max(4, d[key] / max * 100) : 0}%"></i></span>`).join('')}</div>
       <div class="dbars-axis"><span>${label(days[0])}</span><span>بیشینه: ${faNum(max)}</span><span>${label(days[days.length - 1])}</span></div>`;
