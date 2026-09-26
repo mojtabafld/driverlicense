@@ -36,6 +36,7 @@ Accounts are stored in `data/db.json` when `DATABASE_URL` is not set.
 | `DATABASE_CA_CERT` | CA certificate of the database (set by App Platform). |
 | `INVITE_CODE` | When set, sign-up requires this code. |
 | `PORT` | Port to listen on (App Platform sets 8080). |
+| `ADMIN_USERS` | Comma-separated usernames that see «پنل مدیریت» (admin panel with usage stats) in the settings. |
 
 ## Rebuilding the question data
 

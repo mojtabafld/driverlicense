@@ -525,3 +525,19 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .lang-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
 .lang-pick .btn{flex-direction:column;gap:2px;padding:14px}
 .lang-pick small{font-weight:400;opacity:.8;font-size:12.5px}
+/* admin panel */
+.admin .stats{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.admin .grid2{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.dbars{direction:ltr;display:flex;align-items:flex-end;gap:2px;height:140px;margin-top:8px;border-bottom:1px solid var(--line)}
+.dbar{flex:1;height:100%;display:flex;align-items:flex-end;position:relative;cursor:default}
+.dbar i{display:block;width:100%;background:var(--navy);border-radius:4px 4px 0 0}
+:root[data-theme="dark"] .dbar i{background:var(--accent)}
+.dbar:hover i{opacity:.75}
+.dbar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;font-size:12px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:3;direction:rtl}
+.dbars-axis{display:flex;justify-content:space-between;color:var(--muted);font-size:11.5px;margin-top:4px;direction:ltr}
+.table-wrap{overflow-x:auto;padding:0}
+.utable{width:100%;border-collapse:collapse;font-size:13.5px;white-space:nowrap}
+.utable th{text-align:right;color:var(--muted);font-weight:600;font-size:12.5px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.utable td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.utable tr:last-child td{border-bottom:0}
+.utable td small{display:block;color:var(--muted);font-size:12px}

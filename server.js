@@ -1,7 +1,8 @@
 // TeoriPrøve server: serves ./site and a small JSON API with per-user accounts.
 // Run locally:  node server.js            (data kept in data/db.json)
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
-// Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE.
+// Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
+// ADMIN_USERS (comma-separated usernames that get the admin panel).
 'use strict';
 const http = require('node:http');
 const fs = require('node:fs');
@@ -21,6 +22,8 @@ const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
 const MODES = ['random', 'mistakes', 'top'];
 const MAX_WORDS = 3000;
+const ADMINS = new Set((process.env.ADMIN_USERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
+const isAdmin = u => ADMINS.has(u.username);
 
 const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
@@ -64,7 +67,60 @@ function sessionUser(req) {
   const user = store.users[s.username];
   return user ? { token: m[1], user } : null;
 }
-const publicUser = u => ({ username: u.username, name: u.name, created: u.created });
+const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined });
+
+// ---------- usage tracking & admin stats ----------
+// Days are counted in Danish time.
+const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit' });
+const dayKey = t => dayFmt.format(new Date(t)); // YYYY-MM-DD
+// Remember on which days a user was active (at most one save per user per day).
+async function touch(user) {
+  user.lastSeen = Date.now();
+  const d = dayKey(user.lastSeen);
+  if (user.lastDay === d) return;
+  user.lastDay = d;
+  user.days = [...(user.days || []).filter(x => x !== d).slice(-399), d];
+  await store.saveUser(user);
+}
+const FULL = 25, PASS_MIN = 20;
+const scoreOf = a => a.items.filter(x => x.ok).length;
+function adminStats() {
+  const now = Date.now(), today = dayKey(now), DAYS = 30;
+  const keys = Array.from({ length: DAYS }, (_, i) => dayKey(now - (DAYS - 1 - i) * 864e5));
+  const perDay = Object.fromEntries(keys.map(k => [k, { day: k, tests: 0, active: 0, newUsers: 0 }]));
+  const last7 = new Set(keys.slice(-7));
+  const t = { users: 0, newToday: 0, new7: 0, activeToday: 0, active7: 0, testsToday: 0, tests7: 0, tests: 0, full: 0, passed: 0,
+    correct30: 0, items30: 0, words: 0, drafts: 0, lang: { da: 0, en: 0, none: 0 } };
+  const users = [];
+  for (const u of Object.values(store.users)) {
+    t.users++;
+    const created = dayKey(u.created);
+    if (perDay[created]) perDay[created].newUsers++;
+    if (created === today) t.newToday++;
+    if (last7.has(created)) t.new7++;
+    const active = new Set(u.days || []);
+    let last = u.lastSeen || u.created, tests7 = 0, passed = 0, full = 0;
+    for (const a of u.attempts) {
+      const d = dayKey(a.at);
+      active.add(d); last = Math.max(last, a.at); t.tests++;
+      if (perDay[d]) { perDay[d].tests++; t.correct30 += scoreOf(a); t.items30 += a.items.length; }
+      if (d === today) t.testsToday++;
+      if (last7.has(d)) { t.tests7++; tests7++; }
+      if (a.items.length >= FULL) { full++; if (scoreOf(a) >= PASS_MIN) passed++; }
+    }
+    for (const d of active) if (perDay[d]) perDay[d].active++;
+    if (active.has(today)) t.activeToday++;
+    if ([...last7].some(d => active.has(d))) t.active7++;
+    t.full += full; t.passed += passed; t.words += (u.words || []).length; if (u.draft) t.drafts++;
+    t.lang[(u.settings || {}).lang || 'none']++;
+    const lastA = u.attempts[u.attempts.length - 1];
+    users.push({ username: u.username, name: u.name, created: u.created, lastActive: last, activeDays: active.size,
+      tests: u.attempts.length, tests7, full, passed, words: (u.words || []).length, lang: (u.settings || {}).lang || null,
+      lastPct: lastA ? Math.round(scoreOf(lastA) / lastA.items.length * 100) : null });
+  }
+  users.sort((a, b) => b.lastActive - a.lastActive);
+  return { totals: t, days: keys.map(k => perDay[k]), users };
+}
 
 // Behind App Platform's load balancer the client address is in X-Forwarded-For.
 const clientIp = req => (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
@@ -169,12 +225,17 @@ async function api(req, res, route) {
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
   const user = s.user;
+  await touch(user);
 
   if (req.method === 'POST' && route === 'logout') {
     delete store.sessions[s.token];
     await store.deleteSession(s.token);
     res.setHeader('Set-Cookie', cookie(req, '', 0));
     return send(res, 200, { ok: true });
+  }
+  if (req.method === 'GET' && route === 'adminstats') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    return send(res, 200, adminStats());
   }
   if (req.method === 'GET' && route === 'me') {
     return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], draft: user.draft || null });
