@@ -384,6 +384,7 @@
     book: '<svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>',
     edit: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
     trash: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+    chart: '<svg class="ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
     chevL: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     zoom: '<svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
     clock: '<svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
@@ -897,6 +898,7 @@
       <div class="section-title">تنظیمات و امکانات</div>
       <div class="card opts">
         <button class="opt opt-link" id="openWords"><span class="opt-ico">${ICON.book}</span><div class="opt-main">لغات ذخیره‌شده</div><span class="opt-go">${(state.words || []).length ? `<b>${faNum(state.words.length)}</b>` : ''}${ICON.chevL}</span></button>
+        ${state.user.admin ? `<button class="opt opt-link" id="openAdmin"><span class="opt-ico">${ICON.chart}</span><div class="opt-main">پنل مدیریت</div><span class="opt-go">${ICON.chevL}</span></button>` : ''}
         <div class="opt"><div>زبان آزمون<small>سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند؛ ترجمه‌ی فارسی در هر دو حالت هست.</small></div>
           <div class="seg" role="group" aria-label="زبان آزمون">${Object.entries(LANGS).map(([k, v]) => `<button data-lang="${k}" class="${examLang() === k ? 'on' : ''}">${v}</button>`).join('')}</div></div>
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
@@ -919,6 +921,7 @@
     const dd = document.getElementById('dropDraft');
     if (dd) dd.onclick = () => confirmBox('حذف آزمون نیمه‌تمام؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'حذف', () => { dropDraft(); home(); });
     document.getElementById('openWords').onclick = () => wordsView();
+    const oa = document.getElementById('openAdmin'); if (oa) oa.onclick = adminView;
     const se = document.getElementById('statExams');
     if (se && state.attempts.length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
     document.getElementById('startM').onclick = () => askSize('mistakes');
@@ -967,6 +970,55 @@
     $app.querySelectorAll('[data-att]').forEach(b => b.onclick = () => openAttempt(+b.dataset.att));
     const all = document.getElementById('allHist');
     if (all) all.onclick = () => historyView();
+  }
+
+  // ---------- Admin panel (users listed in the server's ADMIN_USERS) ----------
+  // One series per chart, so a single colour and no legend; each bar has a tooltip with its day and value.
+  function dayBars(days, key, unit) {
+    const max = Math.max(1, ...days.map(d => d[key]));
+    const label = d => new Date(d.day + 'T12:00').toLocaleDateString('fa-IR', { month: 'short', day: 'numeric' });
+    return `<div class="dbars" role="img" aria-label="${unit} در ۳۰ روز اخیر">${days.map(d => `
+        <span class="dbar" data-tip="${label(d)}: ${faNum(d[key])} ${unit}"><i style="height:${d[key] ? Math.max(4, d[key] / max * 100) : 0}%"></i></span>`).join('')}</div>
+      <div class="dbars-axis"><span>${label(days[0])}</span><span>بیشینه: ${faNum(max)}</span><span>${label(days[days.length - 1])}</span></div>`;
+  }
+  async function adminView() {
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    $app.innerHTML = '<section class="view"><div class="card empty">در حال بارگذاری آمار…</div></section>';
+    let d;
+    try { d = await api('GET', 'adminstats'); } catch (e) { toast(e.message); return home(); }
+    const t = d.totals, pct = (a, b) => (b ? Math.round(a / b * 100) : 0);
+    const stat = (label, value, sub) => `<div class="card stat"><span>${label}</span><b>${value}</b><small>${sub}</small></div>`;
+    $app.innerHTML = `<section class="view admin">
+      <button class="back-link" id="back">→ بازگشت به داشبورد</button>
+      <div class="words-head"><h1><span class="h-ico">${ICON.chart}</span>پنل مدیریت</h1><button class="tr-toggle" id="reloadAdmin">به‌روزرسانی</button></div>
+      <div class="stats">
+        ${stat('کاربران', faNum(t.users), `${faNum(t.newToday)} امروز · ${faNum(t.new7)} در ۷ روز اخیر`)}
+        ${stat('کاربران فعال امروز', faNum(t.activeToday), `${faNum(t.active7)} کاربر در ۷ روز اخیر`)}
+        ${stat('آزمون‌های امروز', faNum(t.testsToday), `${faNum(t.tests7)} آزمون در ۷ روز اخیر`)}
+        ${stat('کل آزمون‌ها', faNum(t.tests), `${faNum(t.full)} آزمون کامل · ${faNum(pct(t.passed, t.full))}٪ قبولی`)}
+        ${stat('دقت میانگین (۳۰ روز)', `${faNum(pct(t.correct30, t.items30))}<em>٪</em>`, 'تصاویر کاملاً درست از کل تصاویر')}
+        ${stat('زبان آزمون', `${faNum(t.lang.da)} / ${faNum(t.lang.en)}`, `دانمارکی / انگلیسی${t.lang.none ? ` · ${faNum(t.lang.none)} انتخاب‌نشده` : ''}`)}
+        ${stat('آزمون‌های نیمه‌تمام', faNum(t.drafts), 'کاربرانی که آزمون ناتمام دارند')}
+        ${stat('لغات ذخیره‌شده', faNum(t.words), 'مجموع بانک لغات همه‌ی کاربران')}
+      </div>
+      <div class="grid2">
+        <div class="card panel"><div class="panel-h"><h3>آزمون‌ها در هر روز</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.days, 'tests', 'آزمون')}</div>
+        <div class="card panel"><div class="panel-h"><h3>کاربران فعال در هر روز</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.days, 'active', 'کاربر فعال')}</div>
+        <div class="card panel"><div class="panel-h"><h3>ثبت‌نام‌های جدید در هر روز</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.days, 'newUsers', 'ثبت‌نام')}</div>
+      </div>
+      <div class="section-title">کاربران <small class="muted">(${faNum(d.users.length)} نفر، به ترتیب آخرین فعالیت)</small></div>
+      <div class="card table-wrap"><table class="utable">
+        <thead><tr><th>کاربر</th><th>عضویت</th><th>آخرین فعالیت</th><th>روزهای فعال</th><th>آزمون‌ها</th><th>۷ روز اخیر</th><th>قبولی / کامل</th><th>آخرین نمره</th><th>زبان</th><th>لغات</th></tr></thead>
+        <tbody>${d.users.map(u => `<tr>
+          <td><b>${esc(u.name)}</b><small class="da">${esc(u.username)}</small></td>
+          <td>${fmtDate(u.created)}</td><td>${fmtDateTime(u.lastActive)}</td><td>${faNum(u.activeDays)}</td>
+          <td>${faNum(u.tests)}</td><td>${faNum(u.tests7)}</td><td>${faNum(u.passed)} / ${faNum(u.full)}</td>
+          <td>${u.lastPct == null ? '–' : faNum(u.lastPct) + '٪'}</td><td>${u.lang ? LANGS[u.lang] : '–'}</td><td>${faNum(u.words)}</td></tr>`).join('')}</tbody>
+      </table></div>
+    </section>`;
+    document.getElementById('back').onclick = home;
+    document.getElementById('reloadAdmin').onclick = adminView;
+    window.scrollTo({ top: 0 });
   }
 
   // ---------- Word bank ----------
