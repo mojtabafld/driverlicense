@@ -21,6 +21,15 @@ const MAX_WORDS = 3000;
 
 const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
+// Version of the front end: a hash of its files. index.html links app.js/style.css with ?v=VERSION so a
+// browser (or CDN) never keeps an old copy after a deploy, and /api/config reports it to check what is live.
+const VERSION = crypto.createHash('sha256')
+  .update(['index.html', 'app.js', 'style.css'].map(f => fs.readFileSync(path.join(SITE, f))).join('\0'))
+  .digest('hex').slice(0, 8);
+const INDEX_HTML = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8')
+  .replace('href="style.css"', `href="style.css?v=${VERSION}"`)
+  .replace('src="app.js"', `src="app.js?v=${VERSION}"`);
+
 let store; // set in main()
 
 // ---------- auth helpers ----------
@@ -94,7 +103,10 @@ const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
-  if (p === '/') p = '/index.html';
+  if (p === '/' || p === '/index.html') {
+    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+    return res.end(req.method === 'HEAD' ? undefined : INDEX_HTML);
+  }
   if (isProtected(p) && !sessionUser(req)) { res.writeHead(401, { 'Cache-Control': 'no-store' }); return res.end('Sign in first'); }
   const file = path.normalize(path.join(SITE, p));
   if (!file.startsWith(SITE + path.sep)) { res.writeHead(403); return res.end(); }
@@ -117,7 +129,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -235,7 +247,7 @@ async function main() {
     else { res.writeHead(405); res.end(); }
   }).listen(PORT, HOST, () => {
     const nets = Object.values(require('node:os').networkInterfaces()).flat().filter(n => n && n.family === 'IPv4' && !n.internal);
-    console.log(`TeoriPrøve running:\n  http://localhost:${PORT}`);
+    console.log(`TeoriPrøve ${VERSION} running:\n  http://localhost:${PORT}`);
     nets.forEach(n => console.log(`  http://${n.address}:${PORT}   (other devices on your Wi-Fi)`));
     if (INVITE_CODE) console.log('  Sign-up requires the invite code (INVITE_CODE).');
   }).on('error', err => {

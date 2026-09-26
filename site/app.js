@@ -59,9 +59,9 @@
   const nl = s => esc(s).replace(/\n/g, '<br>');
   const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   // Show Persian digits everywhere on the page, Danish content (questions, answers, Danish labels) included;
-  // only inputs keep Latin digits. Runs on every DOM change, so animated counters and timers are covered.
+  // only inputs and code keep Latin digits. Runs on every DOM change, so animated counters and timers are covered.
   // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
-  const LATIN_ZONE = 'input, textarea, script, style';
+  const LATIN_ZONE = 'input, textarea, code, script, style';
   const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
   const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
@@ -772,6 +772,7 @@
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
         <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
         <div class="opt"><div>شرط قبولی<small>حداقل ۸۰٪ تصاویر باید کاملاً درست باشند (در آزمون واقعی ۲۵ سؤالی: ۲۰ تصویر؛ ۵ سؤالی: ۴ تصویر). «کاملاً درست» یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
+        ${state.version ? `<div class="opt"><div>نسخه‌ی سایت<small>بعد از هر deploy این کد عوض می‌شود.</small></div><code class="da">${esc(state.version)}</code></div>` : ''}
       </div>
     </section>`;
 
@@ -986,7 +987,7 @@
       $app.innerHTML = `<div class="card empty" style="margin-top:40px">برای ورود با حساب کاربری، سایت را از طریق سرور باز کنید:<br><code class="da">node server.js</code> و سپس <code class="da">http://localhost:3000</code></div>`;
       return;
     }
-    try { state.inviteRequired = !!(await api('GET', 'config')).inviteRequired; } catch { /* offline: assume no invite */ }
+    try { const c = await api('GET', 'config'); state.inviteRequired = !!c.inviteRequired; state.version = c.version; } catch { /* offline: assume no invite */ }
     try { await loadMe(); home(); }
     catch (e) {
       if (e.status && e.status !== 401) toast(e.message);
