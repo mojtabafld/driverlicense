@@ -202,7 +202,7 @@
 
   // "Start exam" → pick how many questions, then begin.
   function askSize(mode) {
-    const last = local.get('size', FULL);
+    const last = FULL; // 25 (the real test) is always the highlighted default
     openModal(`<h3>تعداد سؤال‌ها را انتخاب کنید</h3>
       <p style="color:var(--muted);margin:0 0 14px;font-size:14px">${modeName(mode)} · برای هر سؤال ۱ دقیقه زمان دارید.</p>
       <div class="size-grid">${SIZES.map(n => `
@@ -214,7 +214,7 @@
       </div>
       <button class="btn btn-ghost size-cancel" data-close>انصراف</button>`, 'size-sheet');
     $modal.querySelectorAll('[data-size]').forEach(b => b.onclick = () => {
-      const n = +b.dataset.size; local.set('size', n); newExam(mode, null, n);
+      const n = +b.dataset.size; newExam(mode, null, n);
     });
   }
 
