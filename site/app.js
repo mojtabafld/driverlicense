@@ -746,7 +746,7 @@
 
       <div class="section-title">تنظیمات و امکانات</div>
       <div class="card opts">
-        <button class="opt opt-link" id="openWords"><span class="opt-ico">${ICON.book}</span><div class="opt-main">لغات ذخیره‌شده<small>${(state.words || []).length ? `${faNum(state.words.length)} لغت با ترجمه و جمله‌ی نمونه — مرور، جستجو، شنیدن تلفظ و ویرایش` : 'در حین آزمون روی هر کلمه‌ی دانمارکی دوبار بزنید تا با ترجمه ذخیره شود.'}</small></div><span class="opt-go">${(state.words || []).length ? `<b>${faNum(state.words.length)}</b>` : ''}${ICON.chevL}</span></button>
+        <button class="opt opt-link" id="openWords"><span class="opt-ico">${ICON.book}</span><div class="opt-main">لغات ذخیره‌شده</div><span class="opt-go">${(state.words || []).length ? `<b>${faNum(state.words.length)}</b>` : ''}${ICON.chevL}</span></button>
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
         <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
         <div class="opt"><div>شرط قبولی<small>حداقل ۸۰٪ تصاویر باید کاملاً درست باشند (در آزمون واقعی ۲۵ سؤالی: ۲۰ تصویر؛ ۵ سؤالی: ۴ تصویر). «کاملاً درست» یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
