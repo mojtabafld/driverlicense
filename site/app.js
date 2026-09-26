@@ -323,7 +323,6 @@
               <button type="button" class="speak" data-say="${k}" aria-label="Læs højt">${ICON.speaker}</button>
             </label>`).join('')}
           </div>
-          ${(state.words || []).length < 3 ? '<p class="word-hint fa">💡 برای ذخیره‌ی یک لغت در بانک لغات، روی کلمه‌ی دانمارکی دوبار بزنید یا آن را انتخاب کنید.</p>' : ''}
         </div>
       </div>`;
     const foot = `${i > 0 ? `<button id="prev" class="x-btn">${ICON.la}<span>Forrige</span></button>` : '<span class="x-spacer"></span>'}
