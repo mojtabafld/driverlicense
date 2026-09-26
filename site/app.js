@@ -43,7 +43,7 @@
   }
 
   // ---------- state ----------
-  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, showAllHist: false, words: [] };
+  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, words: [] };
 
   // ---------- theme (light by default, like the real test) ----------
   const applyTheme = t => document.documentElement.dataset.theme = t;
@@ -689,11 +689,12 @@
     }).join('')}</div>`;
   }
 
-  function historyList() {
+  // Newest first; the dashboard passes a limit and links to the full list on its own page.
+  const HOME_HIST = 3;
+  function historyList(limit = Infinity) {
     const atts = state.attempts;
     if (!atts.length) return '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
-    const idxs = atts.map((_, i) => i).reverse();
-    const shown = state.showAllHist ? idxs : idxs.slice(0, 8);
+    const shown = atts.map((_, i) => i).reverse().slice(0, limit);
     return shown.map(i => {
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
@@ -704,7 +705,7 @@
         <span class="hthumbs">${thumbs}</span>
         <span class="go">مرور ←</span>
       </button>`;
-    }).join('') + (atts.length > 8 && !document.querySelector('.hist-page') ? `<button class="tr-toggle more" id="moreHist">${state.showAllHist ? 'نمایش کمتر' : `نمایش همه (${faNum(atts.length)})`}</button>` : '');
+    }).join('') + (atts.length > limit ? `<button class="tr-toggle more" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(atts.length)}) ←</button>` : '');
   }
 
   function home() {
@@ -760,7 +761,7 @@
       </div>
 
       <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span>${atts.length ? '<button class="tr-toggle danger" id="clearH">پاک‌کردن تاریخچه</button>' : ''}</div>
-      <div class="history">${historyList()}</div>
+      <div class="history">${historyList(HOME_HIST)}</div>
 
       <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(Math.min(topCount, 10))} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
       ${mistakesSection()}
@@ -803,13 +804,11 @@
   // Full list of past exams (opened from the "exams" card on the dashboard).
   function historyView() {
     stopSpeak(); clearInterval(state.timerId); state.exam = null; setExamMode(false); closeModal();
-    const keep = state.showAllHist; state.showAllHist = true;
     $app.innerHTML = `<section class="view hist-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1></div>
       <div class="history">${historyList()}</div>
     </section>`;
-    state.showAllHist = keep;
     document.getElementById('back').onclick = home;
     bindHistory();
     window.scrollTo({ top: 0 });
@@ -817,12 +816,8 @@
 
   function bindHistory() {
     $app.querySelectorAll('[data-att]').forEach(b => b.onclick = () => openAttempt(+b.dataset.att));
-    const more = document.getElementById('moreHist');
-    if (more) more.onclick = () => {
-      state.showAllHist = !state.showAllHist;
-      $app.querySelector('.history').innerHTML = historyList();
-      bindHistory();
-    };
+    const all = document.getElementById('allHist');
+    if (all) all.onclick = historyView;
   }
 
   // ---------- Word bank ----------
