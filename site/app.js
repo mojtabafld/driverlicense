@@ -104,6 +104,27 @@
   }
   const zoomImg = src => openModal(`<img src="${src}" alt="" data-close>`, 'img');
 
+  // ---------- exam language (Danish or English, per user; the Persian translation is shown with either) ----------
+  const LANGS = { da: 'دانمارکی', en: 'انگلیسی' };
+  const examLang = () => (state.settings.lang === 'en' ? 'en' : 'da');
+  const qText = q => (examLang() === 'en' && q.sen) || q.sda;
+  const stText = s => (examLang() === 'en' && s.en) || s.da;
+  const stExpl = s => (examLang() === 'en' ? s.een : s.eda) || '';
+  // Labels of the exam screens, as in the real test in each language.
+  const EXAM_UI = {
+    da: { read: 'Læs højt', save: 'Gem til senere', prev: 'Forrige', next: 'Næste', count: (i, n) => `Spørgsmål ${i} ud af ${n}`,
+      overview: 'Spørgsmålsoversigt', ovTitle: 'Din spørgsmålsoversigt',
+      ovText: 'Spørgsmålsoversigten giver dig et overblik over dine besvarede, ubesvarede og gemte spørgsmål. Du skal trykke på et nummer for at gå til spørgsmålet.',
+      notAnswered: 'Ikke besvaret', answered: 'Besvaret', saved: 'Gemte spørgsmål', jump: 'Spring til dit spørgsmål', q: 'Spørgsmål',
+      handin: 'Aflever prøven', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.' },
+    en: { read: 'Read aloud', save: 'Save for later', prev: 'Previous', next: 'Next', count: (i, n) => `Question ${i} of ${n}`,
+      overview: 'Question overview', ovTitle: 'Your question overview',
+      ovText: 'The question overview gives you an overview of your answered, unanswered and saved questions. Tap a number to go to the question.',
+      notAnswered: 'Not answered', answered: 'Answered', saved: 'Saved questions', jump: 'Jump to your question', q: 'Question',
+      handin: 'Hand in the test', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.' },
+  };
+  const ui = () => EXAM_UI[examLang()];
+
   // ---------- analytics ----------
   // Questions whose most recent answer was wrong.
   function mistakeIds() {
@@ -214,6 +235,20 @@
     state.draft = d.draft && d.draft.ids.every(id => Q.has(id)) ? d.draft : null;
     renderUserBox();
   }
+  function setLang(lang) {
+    if (state.settings.lang === lang) return;
+    state.settings.lang = lang; saveSettings();
+    $app.querySelectorAll('[data-lang]').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+    toast(`زبان آزمون: ${LANGS[lang]}`);
+  }
+  // Asked once per account (new and existing users alike) until a language is chosen.
+  function askLang() {
+    openModal(`<h3>زبان آزمون را انتخاب کنید</h3>
+      <p style="color:var(--muted);margin:0">سؤال‌ها به کدام زبان نمایش داده شوند؟ ترجمه‌ی فارسی در هر دو حالت هست و بعداً هم می‌توانید در «تنظیمات و امکانات» آن را عوض کنید.</p>
+      <div class="lang-pick"><button class="btn btn-primary" data-pick="da">دانمارکی<small class="da">Dansk</small></button><button class="btn btn-primary" data-pick="en">انگلیسی<small class="da">English</small></button></div>`);
+    $modal.onclick = null; // a choice is required
+    $modal.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { closeModal(); setLang(b.dataset.pick); });
+  }
   const saveSettings = () => api('PUT', 'settings', state.settings).catch(() => toast('ذخیره‌ی تنظیمات ناموفق بود'));
 
   // ---------- Exam ----------
@@ -322,14 +357,15 @@
     return state.exam.answers[i].some(Boolean) ? 'answered' : 'unanswered';
   }
 
-  // Read aloud in Danish using the browser's speech engine (like "Læs højt" in the real test).
+  // Read aloud in the exam language using the browser's speech engine (like "Læs højt" in the real test).
   function speak(text) {
     try {
       const s = window.speechSynthesis; if (!s) return toast('مرورگر شما خواندن متن را پشتیبانی نمی‌کند.');
       s.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'da-DK';
-      const v = s.getVoices().find(v => /^da/i.test(v.lang)); if (v) u.voice = v;
+      const en = examLang() === 'en';
+      u.lang = en ? 'en-GB' : 'da-DK';
+      const v = s.getVoices().find(v => (en ? /^en/i : /^da/i).test(v.lang)); if (v) u.voice = v;
       u.rate = 0.95;
       s.speak(u);
     } catch { /* ignore */ }
@@ -364,7 +400,7 @@
           ${state.settings.timer ? `<span class="x-timer ${ex.left <= 60 ? 'low' : ''}">${ICON.clock}<span id="timer">${fmtTime(ex.left)}</span></span>` : ''}
           ${overview
             ? `<button id="closeOv" class="x-sbtn">${ICON.x}<span>Luk</span></button>`
-            : `<button id="grid" class="x-sbtn">${ICON.list}<span>Spørgsmålsoversigt</span>${saved ? `<span class="x-badge">${saved}</span>` : ''}</button>`}
+            : `<button id="grid" class="x-sbtn">${ICON.list}<span>${ui().overview}</span>${saved ? `<span class="x-badge">${saved}</span>` : ''}</button>`}
           <button id="quit" class="x-sbtn">${ICON.x}<span class="fa">خروج</span></button>
         </span>
       </div>
@@ -387,25 +423,25 @@
         </div>
         <div class="qside">
           <div class="qtools">
-            <button id="readQ">${ICON.speaker}<span>Læs højt</span></button>
-            <button id="flag" class="${ex.flags[i] ? 'on' : ''}">${ICON.bookmark(ex.flags[i])}<span>Gem til senere</span></button>
+            <button id="readQ">${ICON.speaker}<span>${ui().read}</span></button>
+            <button id="flag" class="${ex.flags[i] ? 'on' : ''}">${ICON.bookmark(ex.flags[i])}<span>${ui().save}</span></button>
             <button id="trT" class="${fa ? 'on' : ''}">${ICON.tr}<span class="fa">${fa ? 'پنهان‌کردن ترجمه' : 'ترجمه‌ی فارسی'}</span></button>
           </div>
-          <p class="qtext" data-wq="${q.id}" data-wst="-1">${nl(q.sda)}</p>
+          <p class="qtext" data-wq="${q.id}" data-wst="-1">${nl(qText(q))}</p>
           ${fa ? `<p class="tr fa q-tr">${nl(q.sfa)}</p>` : ''}
           <div class="answers">${q.st.map((s, k) => `
             <label class="answer ${ans[k] ? 'checked' : ''}">
               <input type="checkbox" data-k="${k}" ${ans[k] ? 'checked' : ''}>
               <span class="box" aria-hidden="true"></span>
-              <span class="txt"><span class="da-t" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</span>${fa && s.fa ? `<span class="tr fa">${nl(s.fa)}</span>` : ''}</span>
-              <button type="button" class="speak" data-say="${k}" aria-label="Læs højt">${ICON.speaker}</button>
+              <span class="txt"><span class="da-t" data-wq="${q.id}" data-wst="${k}">${nl(stText(s))}</span>${fa && s.fa ? `<span class="tr fa">${nl(s.fa)}</span>` : ''}</span>
+              <button type="button" class="speak" data-say="${k}" aria-label="${ui().read}">${ICON.speaker}</button>
             </label>`).join('')}
           </div>
         </div>
       </div>`;
-    const foot = `${i > 0 ? `<button id="prev" class="x-btn">${ICON.la}<span>Forrige</span></button>` : '<span class="x-spacer"></span>'}
-      <span class="x-count">Spørgsmål ${i + 1} ud af ${ex.size}</span>
-      <button id="next" class="x-btn"><span>Næste</span>${ICON.ra}</button>`;
+    const foot = `${i > 0 ? `<button id="prev" class="x-btn">${ICON.la}<span>${ui().prev}</span></button>` : '<span class="x-spacer"></span>'}
+      <span class="x-count">${ui().count(i + 1, ex.size)}</span>
+      <button id="next" class="x-btn"><span>${ui().next}</span>${ICON.ra}</button>`;
     $app.innerHTML = examShell(inner, foot);
     bindShell();
 
@@ -422,8 +458,8 @@
       l.addEventListener('dblclick', e => { if (!e.target.closest('.speak')) setAns(cb, !cb.checked); });
     });
     // The speaker sits inside the option's label, so it must not toggle the checkbox.
-    $app.querySelectorAll('[data-say]').forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); speak(q.st[+b.dataset.say].da); });
-    document.getElementById('readQ').onclick = () => speak([q.sda, ...q.st.map(s => s.da)].join('. '));
+    $app.querySelectorAll('[data-say]').forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); speak(stText(q.st[+b.dataset.say])); });
+    document.getElementById('readQ').onclick = () => speak([qText(q), ...q.st.map(stText)].join('. '));
     document.getElementById('trT').onclick = () => { ex.showFa[i] = !ex.showFa[i]; renderExam(false); };
     document.getElementById('flag').onclick = () => { ex.flags[i] = !ex.flags[i]; renderExam(false); };
     document.getElementById('zoom').onclick = () => zoomImg(q.img);
@@ -446,28 +482,28 @@
     const answered = ex.answers.filter(a => a.some(Boolean)).length;
     const inner = `<div class="x-body ov anim">
         <div class="ov-l">
-          <h1>Din spørgsmålsoversigt</h1>
-          <p>Spørgsmålsoversigten giver dig et overblik over dine besvarede, ubesvarede og gemte spørgsmål. Du skal trykke på et nummer for at gå til spørgsmålet.</p>
+          <h1>${ui().ovTitle}</h1>
+          <p>${ui().ovText}</p>
           <p class="fa ov-fa">در این صفحه سؤال‌های پاسخ‌داده، بی‌پاسخ و ذخیره‌شده (نشانه‌گذاری‌شده) را می‌بینید. روی شماره‌ی هر سؤال بزنید تا به آن بروید.</p>
           <ul class="ov-legend">
-            <li><span class="lg-box"></span>Ikke besvaret <span class="fa">— بی‌پاسخ</span></li>
-            <li><span class="lg-box answered"></span>Besvaret <span class="fa">— پاسخ‌داده</span></li>
-            <li>${ICON.bookmark(true)}Gemte spørgsmål <span class="fa">— ذخیره‌شده برای بعد</span></li>
+            <li><span class="lg-box"></span>${ui().notAnswered} <span class="fa">— بی‌پاسخ</span></li>
+            <li><span class="lg-box answered"></span>${ui().answered} <span class="fa">— پاسخ‌داده</span></li>
+            <li>${ICON.bookmark(true)}${ui().saved} <span class="fa">— ذخیره‌شده برای بعد</span></li>
           </ul>
           <div class="ov-sum fa">${faNum(answered)} از ${faNum(ex.size)} سؤال پاسخ داده شده · ${faNum(ex.flags.filter(Boolean).length)} سؤال ذخیره‌شده</div>
         </div>
         <div class="ov-r">
-          <div class="ov-label">Spring til dit spørgsmål</div>
+          <div class="ov-label">${ui().jump}</div>
           <div class="tiles">${ex.ids.map((_, i) => `
-            <button class="tile ${qStatus(i)} ${ex.flags[i] ? 'marked' : ''} ${i === ex.idx ? 'cur' : ''}" data-i="${i}" aria-label="Spørgsmål ${i + 1}">
+            <button class="tile ${qStatus(i)} ${ex.flags[i] ? 'marked' : ''} ${i === ex.idx ? 'cur' : ''}" data-i="${i}" aria-label="${ui().q} ${i + 1}">
               ${ex.flags[i] ? ICON.bookmark(true) : ''}${i + 1}
             </button>`).join('')}
           </div>
         </div>
       </div>`;
-    const foot = `<button id="prev" class="x-btn">${ICON.la}<span>Forrige</span></button>
+    const foot = `<button id="prev" class="x-btn">${ICON.la}<span>${ui().prev}</span></button>
       <span class="x-count"></span>
-      <button id="handin" class="x-btn submit"><span>Aflever prøven</span>${ICON.ra}</button>`;
+      <button id="handin" class="x-btn submit"><span>${ui().handin}</span>${ICON.ra}</button>`;
     $app.innerHTML = examShell(inner, foot, { overview: true });
     bindShell();
     $app.querySelectorAll('.tile').forEach(t => t.onclick = () => { ex.view = 'q'; go(+t.dataset.i); });
@@ -622,7 +658,7 @@
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
         </div>
         <div class="rq">
-          <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(q.sda)}</p>
+          <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(qText(q))}</p>
           <p class="rq-fa fa">${nl(q.sfa)}</p>
         </div>
         <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
@@ -632,17 +668,17 @@
           // Like prove.dk: the number is green when the user answered this statement right, red when wrong
           // (grey for old attempts that did not store the ticks), then "Det rigtige svar er: …".
           const res = r.a ? (r.wrong[k] ? 'bad' : 'ok') : 'na';
-          const eda = (s.eda || '').trim() || (s.ok ? 'Ja.' : 'Nej.');
+          const eda = stExpl(s).trim() || (s.ok ? ui().yes : ui().no);
           const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
           return `<div class="rstmt">
             <div class="rline">
               <span class="rnum-c ${res}" aria-label="${res === 'ok' ? 'پاسخ شما درست' : res === 'bad' ? 'پاسخ شما اشتباه' : ''}">${k + 1}</span>
               <div class="rtxt">
-                <div class="da rst-da" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</div>
+                <div class="da rst-da" data-wq="${q.id}" data-wst="${k}">${nl(stText(s))}</div>
                 ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
               </div>
             </div>
-            <div class="ranswer da">Det rigtige svar er: <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
+            <div class="ranswer da">${ui().correct} <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
             <div class="ranswer fa">پاسخ درست: <i>${nl(efa)}</i></div>
           </div>`;
         }).join('')}
@@ -750,7 +786,7 @@
         <span class="mimg"><img src="${q.img}" alt="" loading="lazy"><span class="mcount">×${s.wrong}</span></span>
         <span class="mbody">
           <span class="mtopic">${t ? esc(t.fa) : ''}</span>
-          <span class="mq da">${esc(q.sda)}</span>
+          <span class="mq da">${esc(qText(q))}</span>
           <span class="mmeta">${faNum(s.wrong)} اشتباه از ${faNum(s.seen)} بار · ${s.lastOk ? '<span class="okc">آخرین بار درست</span>' : '<span class="badc">آخرین بار اشتباه</span>'}</span>
         </span>
       </button>`;
@@ -861,6 +897,8 @@
       <div class="section-title">تنظیمات و امکانات</div>
       <div class="card opts">
         <button class="opt opt-link" id="openWords"><span class="opt-ico">${ICON.book}</span><div class="opt-main">لغات ذخیره‌شده</div><span class="opt-go">${(state.words || []).length ? `<b>${faNum(state.words.length)}</b>` : ''}${ICON.chevL}</span></button>
+        <div class="opt"><div>زبان آزمون<small>سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند؛ ترجمه‌ی فارسی در هر دو حالت هست.</small></div>
+          <div class="seg" role="group" aria-label="زبان آزمون">${Object.entries(LANGS).map(([k, v]) => `<button data-lang="${k}" class="${examLang() === k ? 'on' : ''}">${v}</button>`).join('')}</div></div>
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
         <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
         <div class="opt"><div>شرط قبولی<small>حداقل ۸۰٪ تصاویر باید کاملاً درست باشند (در آزمون واقعی ۲۵ سؤالی: ۲۰ تصویر؛ ۵ سؤالی: ۴ تصویر). «کاملاً درست» یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
@@ -873,6 +911,7 @@
     bindProgressChart(atts);
     bindHome();
     window.scrollTo({ top: 0 });
+    if (!state.settings.lang) askLang();
   }
 
   function bindHome() {
@@ -888,6 +927,7 @@
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
     const am = document.getElementById('allMistakes'); if (am) am.onclick = mistakesView;
     bindHistory();
+    $app.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => setLang(b.dataset.lang));
     $app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
       const k = b.dataset.set; state.settings[k] = !state.settings[k]; b.classList.toggle('on', state.settings[k]); saveSettings();
     });
@@ -981,7 +1021,7 @@
     const meaning = saved ? saved.t : glossOf(selInfo.text);
     selInfo.meaning = meaning;
     $bubble.innerHTML = `<div class="wb-head"><span class="wb-word da">${esc(selInfo.text)}</span>
-        <button type="button" class="wb-say" aria-label="Læs højt">${ICON.speaker}</button></div>
+        <button type="button" class="wb-say" aria-label="${ui().read}">${ICON.speaker}</button></div>
       <div class="wb-mean fa">${meaning ? esc(meaning) : '<span class="muted">معنی در دسترس نیست</span>'}</div>
       ${saved ? '<div class="wb-saved fa">✓ در بانک لغات</div>' : '<button type="button" class="wb-save fa">＋ ذخیره در بانک لغات</button>'}`;
     $bubble.hidden = false;
@@ -1011,7 +1051,7 @@
   function contextOf(info) {
     const q = Q.get(info.qid); if (!q) return { ctx: '', ctxFa: '' };
     const s = info.st >= 0 ? q.st[info.st] : null;
-    return s ? { ctx: s.da, ctxFa: s.fa } : { ctx: q.sda, ctxFa: q.sfa };
+    return s ? { ctx: stText(s), ctxFa: s.fa } : { ctx: qText(q), ctxFa: q.sfa };
   }
   const markWord = (text, w) => {
     const i = text.toLowerCase().indexOf(w.toLowerCase());
@@ -1033,7 +1073,7 @@
       <div class="words">${list.map((x, n) => `
         <article class="card wcard" style="animation-delay:${Math.min(n, 10) * 30}ms" data-w="${esc(x.w)}">
           <div class="wtop">
-            <div class="wmain"><span class="wword da">${esc(x.w)}</span><button class="speak" data-sayw="${esc(x.w)}" aria-label="Læs højt">${ICON.speaker}</button></div>
+            <div class="wmain"><span class="wword da">${esc(x.w)}</span><button class="speak" data-sayw="${esc(x.w)}" aria-label="${ui().read}">${ICON.speaker}</button></div>
             <div class="wact">
               <button class="wbtn" data-edit title="ویرایش ترجمه" aria-label="ویرایش ترجمه">${ICON.edit}</button>
               <button class="wbtn danger" data-del title="حذف" aria-label="حذف">${ICON.trash}</button>

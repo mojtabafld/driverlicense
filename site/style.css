@@ -518,3 +518,10 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .hist-del:hover{background:var(--bad);color:#fff}
 .words-head .tr-toggle svg{vertical-align:-3px}
 .head-btns{display:flex;gap:8px;flex-wrap:wrap}
+/* exam language: segmented switch in settings, and the first-login choice */
+.seg{display:inline-flex;flex:none;border-radius:8px;background:var(--bg);padding:3px;gap:3px}
+.seg button{padding:6px 14px;border-radius:6px;font-size:14px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--navy);color:#fff}
+.lang-pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.lang-pick .btn{flex-direction:column;gap:2px;padding:14px}
+.lang-pick small{font-weight:400;opacity:.8;font-size:12.5px}
