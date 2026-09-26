@@ -1008,12 +1008,13 @@
       </div>
       <div class="section-title">کاربران <small class="muted">(${faNum(d.users.length)} نفر، به ترتیب آخرین فعالیت)</small></div>
       <div class="card table-wrap"><table class="utable">
-        <thead><tr><th>کاربر</th><th>عضویت</th><th>آخرین فعالیت</th><th>روزهای فعال</th><th>آزمون‌ها</th><th>۷ روز اخیر</th><th>قبولی / کامل</th><th>آخرین نمره</th><th>زبان</th><th>لغات</th></tr></thead>
+        <thead><tr><th>کاربر</th><th>تعداد آزمون</th><th>امروز</th><th>۷ روز اخیر</th><th>قبولی / کامل</th><th>آخرین نمره</th><th>آخرین فعالیت</th><th>روزهای فعال</th><th>عضویت</th><th>زبان</th><th>لغات</th></tr></thead>
         <tbody>${d.users.map(u => `<tr>
           <td><b>${esc(u.name)}</b><small class="da">${esc(u.username)}</small></td>
-          <td>${fmtDate(u.created)}</td><td>${fmtDateTime(u.lastActive)}</td><td>${faNum(u.activeDays)}</td>
-          <td>${faNum(u.tests)}</td><td>${faNum(u.tests7)}</td><td>${faNum(u.passed)} / ${faNum(u.full)}</td>
-          <td>${u.lastPct == null ? '–' : faNum(u.lastPct) + '٪'}</td><td>${u.lang ? LANGS[u.lang] : '–'}</td><td>${faNum(u.words)}</td></tr>`).join('')}</tbody>
+          <td class="num-strong">${faNum(u.tests)}</td><td>${faNum(u.testsToday)}</td><td>${faNum(u.tests7)}</td>
+          <td>${faNum(u.passed)} / ${faNum(u.full)}</td><td>${u.lastPct == null ? '–' : faNum(u.lastPct) + '٪'}</td>
+          <td>${fmtDateTime(u.lastActive)}</td><td>${faNum(u.activeDays)}</td><td>${fmtDate(u.created)}</td>
+          <td>${u.lang ? LANGS[u.lang] : '–'}</td><td>${faNum(u.words)}</td></tr>`).join('')}</tbody>
       </table></div>
     </section>`;
     document.getElementById('back').onclick = home;
