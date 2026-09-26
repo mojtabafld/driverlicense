@@ -17,6 +17,27 @@ const INVITE_CODE = (process.env.INVITE_CODE || '').trim();
 const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
 const MODES = ['random', 'mistakes', 'top'];
+const MAX_WORDS = 3000;
+
+// ---------- word translation (Danish → Persian/English) ----------
+// Uses Google's public translate endpoint; results are cached in memory.
+const tCache = new Map();
+async function gtranslate(q, tl) {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=da&tl=${tl}&dt=t&q=${encodeURIComponent(q)}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+  if (!r.ok) throw new Error('translate ' + r.status);
+  const d = await r.json();
+  return (d[0] || []).map(x => x[0]).join('').trim();
+}
+async function translateWord(q) {
+  const key = q.toLowerCase();
+  if (tCache.has(key)) return tCache.get(key);
+  const [fa, en] = await Promise.all([gtranslate(q, 'fa').catch(() => ''), gtranslate(q, 'en').catch(() => '')]);
+  const out = { fa, en };
+  if (fa || en) { tCache.set(key, out); if (tCache.size > 5000) tCache.delete(tCache.keys().next().value); }
+  return out;
+}
+const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
 let store; // set in main()
 
@@ -159,7 +180,7 @@ async function api(req, res, route) {
     return send(res, 200, { ok: true });
   }
   if (req.method === 'GET' && route === 'me') {
-    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {} });
+    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [] });
   }
   if (req.method === 'POST' && route === 'attempts') {
     const b = await readBody(req);
@@ -177,6 +198,38 @@ async function api(req, res, route) {
   }
   if (req.method === 'DELETE' && route === 'attempts') {
     user.attempts = [];
+    await store.saveUser(user);
+    return send(res, 200, { ok: true });
+  }
+  if (req.method === 'GET' && route === 'translate') {
+    const q = clip(new URL(req.url, 'http://x').searchParams.get('q'), 80);
+    if (!q) return send(res, 400, { error: 'empty' });
+    return send(res, 200, await translateWord(q));
+  }
+  // Word bank: POST upserts by the word (case-insensitive), DELETE removes it.
+  if (req.method === 'POST' && route === 'words') {
+    const b = await readBody(req);
+    const w = clip(b.w, 80);
+    if (!w) return send(res, 400, { error: 'empty word' });
+    user.words = user.words || [];
+    const key = w.toLowerCase();
+    const old = user.words.find(x => x.w.toLowerCase() === key);
+    const entry = {
+      w, t: clip(b.t, 200), en: clip(b.en, 200), ctx: clip(b.ctx, 500), ctxFa: clip(b.ctxFa, 500),
+      qid: Number.isFinite(+b.qid) ? +b.qid : null, at: old ? old.at : Date.now(),
+    };
+    if (old) Object.assign(old, entry);
+    else {
+      if (user.words.length >= MAX_WORDS) return send(res, 400, { error: 'بانک لغات پر است.' });
+      user.words.push(entry);
+    }
+    await store.saveUser(user);
+    return send(res, 200, { word: old || entry });
+  }
+  if (req.method === 'DELETE' && route === 'words') {
+    const b = await readBody(req);
+    const key = clip(b.w, 80).toLowerCase();
+    user.words = (user.words || []).filter(x => x.w.toLowerCase() !== key);
     await store.saveUser(user);
     return send(res, 200, { ok: true });
   }

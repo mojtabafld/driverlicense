@@ -43,7 +43,7 @@
   }
 
   // ---------- state ----------
-  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, showAllHist: false };
+  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, showAllHist: false, words: [] };
 
   // ---------- theme (light by default, like the real test) ----------
   const applyTheme = t => document.documentElement.dataset.theme = t;
@@ -142,7 +142,7 @@
     document.getElementById('logoutBtn').onclick = () => confirmBox('خروج از حساب؟', 'اطلاعات شما روی سرور ذخیره است و با ورود دوباره برمی‌گردد.', 'خروج', async () => {
       await api('POST', 'logout').catch(() => {});
       clearInterval(state.timerId);
-      Object.assign(state, { user: null, attempts: [], exam: null });
+      Object.assign(state, { user: null, attempts: [], exam: null, words: [] });
       renderUserBox(); authView('login');
     });
   }
@@ -185,7 +185,7 @@
   async function loadMe() {
     const d = await api('GET', 'me');
     await loadBank();
-    state.user = d.user; state.attempts = d.attempts || [];
+    state.user = d.user; state.attempts = d.attempts || []; state.words = d.words || [];
     state.settings = Object.assign({ showFa: true, timer: true }, d.settings);
     renderUserBox();
   }
@@ -312,17 +312,18 @@
             <button id="flag" class="${ex.flags[i] ? 'on' : ''}">${ICON.bookmark(ex.flags[i])}<span>Gem til senere</span></button>
             <button id="trT" class="${fa ? 'on' : ''}">${ICON.tr}<span class="fa">${fa ? 'پنهان‌کردن ترجمه' : 'ترجمه‌ی فارسی'}</span></button>
           </div>
-          <p class="qtext">${nl(q.sda)}</p>
+          <p class="qtext" data-wq="${q.id}" data-wst="-1">${nl(q.sda)}</p>
           ${fa ? `<p class="tr fa q-tr">${nl(q.sfa)}</p>` : ''}
           <p class="static-q">Vælg det eller de korrekte svar${fa ? '<span class="fa">گزینه یا گزینه‌های درست را انتخاب کنید</span>' : ''}</p>
           <div class="answers">${q.st.map((s, k) => `
             <label class="answer ${ans[k] ? 'checked' : ''}">
               <input type="checkbox" data-k="${k}" ${ans[k] ? 'checked' : ''}>
               <span class="box" aria-hidden="true"></span>
-              <span class="txt"><span class="da-t">${nl(s.da)}</span>${fa && s.fa ? `<span class="tr fa">${nl(s.fa)}</span>` : ''}</span>
+              <span class="txt"><span class="da-t" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</span>${fa && s.fa ? `<span class="tr fa">${nl(s.fa)}</span>` : ''}</span>
               <button type="button" class="speak" data-say="${k}" aria-label="Læs højt">${ICON.speaker}</button>
             </label>`).join('')}
           </div>
+          ${(state.words || []).length < 3 ? '<p class="word-hint fa">💡 برای ذخیره‌ی یک لغت در بانک لغات، روی کلمه‌ی دانمارکی دوبار بزنید یا آن را انتخاب کنید.</p>' : ''}
         </div>
       </div>`;
     const foot = `${i > 0 ? `<button id="prev" class="x-btn">${ICON.la}<span>Forrige</span></button>` : '<span class="x-spacer"></span>'}
@@ -331,9 +332,17 @@
     $app.innerHTML = examShell(inner, foot);
     bindShell();
 
-    $app.querySelectorAll('.answer input').forEach(cb => cb.onchange = () => {
-      ans[+cb.dataset.k] = cb.checked;
-      cb.closest('.answer').classList.toggle('checked', cb.checked);
+    const setAns = (cb, v) => { cb.checked = v; ans[+cb.dataset.k] = v; cb.closest('.answer').classList.toggle('checked', v); };
+    $app.querySelectorAll('.answer input').forEach(cb => cb.onchange = () => setAns(cb, cb.checked));
+    // Selecting a word (drag or double-click) inside an answer must not tick it: ignore clicks that end a
+    // selection, and undo the toggle from the first click of a double-click.
+    $app.querySelectorAll('.answer').forEach(l => {
+      const cb = l.querySelector('input');
+      l.addEventListener('click', e => {
+        if (e.target.closest('.speak')) return;
+        if (e.detail > 1 || !window.getSelection().isCollapsed) e.preventDefault();
+      });
+      l.addEventListener('dblclick', e => { if (!e.target.closest('.speak')) setAns(cb, !cb.checked); });
     });
     // The speaker sits inside the option's label, so it must not toggle the checkbox.
     $app.querySelectorAll('[data-say]').forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); speak(q.st[+b.dataset.say].da); });
@@ -512,6 +521,7 @@
   function bindReviewCards(root) {
     root.querySelectorAll('.rhead').forEach(h => h.onclick = e => {
       if (e.target.tagName === 'IMG') return zoomImg(e.target.src);
+      if (!window.getSelection().isCollapsed || e.detail > 1) return;
       h.parentElement.classList.toggle('open');
     });
   }
@@ -528,7 +538,7 @@
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
         </div>
         <div class="rq">
-          <p class="situation da">${nl(q.sda)}</p>
+          <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(q.sda)}</p>
           <p class="rq-fa fa">${nl(q.sfa)}</p>
         </div>
         <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
@@ -541,7 +551,7 @@
           const mine = r.a ? (r.a[k] ? '☑ شما تیک زدید' : '☐ شما تیک نزدید') : '';
           return `<div class="rstmt ${w === true ? 'wrong' : w === false ? 'right' : ''}">
             <div class="row">
-              <div style="flex:1;min-width:0"><div class="da" style="font-weight:600">${nl(s.da)}</div><div class="fa" style="color:var(--muted);font-size:14px">${nl(s.fa)}</div></div>
+              <div style="flex:1;min-width:0"><div class="da" style="font-weight:600" data-wq="${q.id}" data-wst="${k}">${nl(s.da)}</div><div class="fa" style="color:var(--muted);font-size:14px">${nl(s.fa)}</div></div>
               <div class="ans">${mine ? `<span class="${w ? 'w' : ''}">${mine}</span>` : ''}<span class="c ${s.ok ? '' : 'neg'}">${s.ok ? 'درست ✓' : 'نادرست ✗'}</span></div>
             </div>
             <div class="expl">
@@ -731,8 +741,9 @@
       <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(Math.min(topCount, 10))} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
       ${mistakesSection()}
 
-      <div class="section-title">تنظیمات</div>
+      <div class="section-title">تنظیمات و امکانات</div>
       <div class="card opts">
+        <button class="opt opt-link" id="openWords"><div>📖 لغات ذخیره‌شده<small>${(state.words || []).length ? `${faNum(state.words.length)} لغت با ترجمه و جمله‌ی نمونه — مرور، جستجو، شنیدن تلفظ و ویرایش` : 'در حین آزمون روی هر کلمه‌ی دانمارکی دوبار بزنید تا با ترجمه ذخیره شود.'}</small></div><span class="opt-go">${(state.words || []).length ? faNum(state.words.length) + ' ←' : '←'}</span></button>
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
         <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
         <div class="opt"><div>شرط قبولی<small>حداقل ۸۰٪ تصاویر باید کاملاً درست باشند (در آزمون واقعی ۲۵ سؤالی: ۲۰ تصویر؛ ۵ سؤالی: ۴ تصویر). «کاملاً درست» یعنی همه‌ی گزینه‌های درست تیک خورده و هیچ گزینه‌ی نادرستی تیک نخورده باشد.</small></div></div>
@@ -749,6 +760,7 @@
 
   function bindHome() {
     document.getElementById('start').onclick = () => askSize('random');
+    document.getElementById('openWords').onclick = () => wordsView();
     document.getElementById('startM').onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
@@ -769,6 +781,159 @@
       $app.querySelector('.history').innerHTML = historyList();
       bindHistory();
     };
+  }
+
+  // ---------- Word bank ----------
+  // Select (or double-tap) a Danish word in a question or answer → a small bubble offers to save it
+  // with its translation. Saved words are listed on their own page (from "Settings & tools").
+  const findWord = w => (state.words || []).find(x => x.w.toLowerCase() === w.toLowerCase());
+  const $bubble = document.createElement('button');
+  $bubble.className = 'word-bubble';
+  $bubble.type = 'button';
+  $bubble.hidden = true;
+  document.body.appendChild($bubble);
+  let selInfo = null, selTimer = null;
+
+  function currentSelection() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+    const text = sel.toString().replace(/\s+/g, ' ').trim().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+    if (!text || text.length > 60 || text.split(' ').length > 5 || /[؀-ۿ]/.test(text)) return null;
+    const range = sel.getRangeAt(0);
+    const node = range.commonAncestorContainer;
+    const host = (node.nodeType === 1 ? node : node.parentElement)?.closest('[data-wq]');
+    if (!host) return null;
+    const rect = range.getBoundingClientRect();
+    if (!rect.width && !rect.height) return null;
+    return { text, qid: +host.dataset.wq, st: +host.dataset.wst, rect };
+  }
+  function hideBubble() { $bubble.hidden = true; selInfo = null; }
+  function updateBubble() {
+    selInfo = currentSelection();
+    if (!selInfo) return hideBubble();
+    const saved = findWord(selInfo.text);
+    $bubble.innerHTML = saved
+      ? `<span class="fa">✓ در بانک لغات</span>`
+      : `<span class="fa">＋ ذخیره در بانک لغات</span>`;
+    $bubble.hidden = false;
+    const r = selInfo.rect, bw = $bubble.offsetWidth, bh = $bubble.offsetHeight;
+    // Below the selection (keeps clear of the phone's own copy/paste menu above it).
+    let top = r.bottom + 10;
+    if (top + bh > window.innerHeight - 70) top = r.top - bh - 10;
+    $bubble.style.top = Math.max(8, top) + 'px';
+    $bubble.style.left = Math.min(Math.max(8, r.left + r.width / 2 - bw / 2), window.innerWidth - bw - 8) + 'px';
+  }
+  document.addEventListener('selectionchange', () => { clearTimeout(selTimer); selTimer = setTimeout(updateBubble, 180); });
+  window.addEventListener('scroll', () => { if (!$bubble.hidden) hideBubble(); }, { passive: true });
+  // Keep the text selected while pressing the bubble.
+  $bubble.addEventListener('pointerdown', e => e.preventDefault());
+  $bubble.addEventListener('mousedown', e => e.preventDefault());
+  $bubble.addEventListener('click', () => {
+    const info = selInfo; if (!info) return;
+    hideBubble();
+    window.getSelection()?.removeAllRanges();
+    openSaveWord(info);
+  });
+
+  function contextOf(info) {
+    const q = Q.get(info.qid); if (!q) return { ctx: '', ctxFa: '' };
+    const s = info.st >= 0 ? q.st[info.st] : null;
+    return s ? { ctx: s.da, ctxFa: s.fa } : { ctx: q.sda, ctxFa: q.sfa };
+  }
+  const markWord = (text, w) => {
+    const i = text.toLowerCase().indexOf(w.toLowerCase());
+    return i < 0 ? esc(text) : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + w.length)) + '</mark>' + esc(text.slice(i + w.length));
+  };
+
+  async function openSaveWord(info) {
+    const w = info.text, saved = findWord(w);
+    const { ctx, ctxFa } = contextOf(info);
+    openModal(`<h3>ذخیره در بانک لغات</h3>
+      <div class="wsave">
+        <div class="wsave-word"><span class="da">${esc(w)}</span><button class="speak" id="wsSay" aria-label="Læs højt">${ICON.speaker}</button></div>
+        <label class="field"><span>ترجمه‌ی فارسی</span><input id="wsT" value="${esc(saved ? saved.t : '')}" placeholder="در حال ترجمه…" autocomplete="off"></label>
+        <div class="wsave-en da" id="wsEn">${saved && saved.en ? 'EN: ' + esc(saved.en) : ''}</div>
+        ${ctx ? `<div class="wsave-ctx"><div class="da">${markWord(ctx, w)}</div>${ctxFa ? `<div class="fa">${esc(ctxFa)}</div>` : ''}</div>` : ''}
+        ${saved ? '<div class="note">این لغت قبلاً ذخیره شده است؛ با ذخیره، ترجمه‌اش به‌روز می‌شود.</div>' : ''}
+      </div>
+      <div class="row-btns"><button class="btn btn-ghost" data-close>انصراف</button><button class="btn btn-primary" id="wsSave">${saved ? 'به‌روزرسانی' : 'ذخیره'}</button></div>`);
+    const $t = document.getElementById('wsT'), $en = document.getElementById('wsEn');
+    let en = saved ? saved.en : '';
+    document.getElementById('wsSay').onclick = () => speak(w);
+    if (!saved) {
+      try {
+        const r = await api('GET', 'translate?q=' + encodeURIComponent(w));
+        if (document.getElementById('wsT') === $t && !$t.value) $t.value = r.fa || '';
+        en = r.en || '';
+        if ($en.isConnected && en) $en.textContent = 'EN: ' + en;
+      } catch { /* the user can type the translation */ }
+      $t.placeholder = 'ترجمه را بنویسید';
+    }
+    document.getElementById('wsSave').onclick = async () => {
+      try {
+        const { word } = await api('POST', 'words', { w, t: $t.value, en, ctx, ctxFa, qid: info.qid });
+        state.words = state.words || [];
+        const i = state.words.findIndex(x => x.w.toLowerCase() === w.toLowerCase());
+        if (i >= 0) state.words[i] = word; else state.words.push(word);
+        closeModal();
+        toast(`«${w}» در بانک لغات ذخیره شد 📖`);
+      } catch (e) { toast(e.message); }
+    };
+  }
+
+  function wordsView(query = '') {
+    stopSpeak(); clearInterval(state.timerId); state.exam = null; setExamMode(false); closeModal();
+    const all = (state.words || []).slice().sort((a, b) => b.at - a.at);
+    const q = query.trim().toLowerCase();
+    const list = q ? all.filter(x => x.w.toLowerCase().includes(q) || (x.t || '').includes(q) || (x.en || '').toLowerCase().includes(q)) : all;
+    $app.innerHTML = `<section class="view">
+      <button class="back-link" id="back">→ بازگشت به داشبورد</button>
+      <div class="words-head">
+        <h1>📖 بانک لغات <small class="muted">(${faNum(all.length)} لغت)</small></h1>
+        ${all.length ? `<label class="field words-search"><input id="wSearch" value="${esc(query)}" placeholder="جستجو در لغات (دانمارکی، فارسی یا انگلیسی)" autocomplete="off"></label>` : ''}
+      </div>
+      ${all.length ? '' : `<div class="card empty">هنوز لغتی ذخیره نکرده‌اید.<br>در حین آزمون، روی یک کلمه‌ی دانمارکی دوبار بزنید (یا آن را انتخاب کنید) و «ذخیره در بانک لغات» را بزنید.</div>`}
+      <div class="words">${list.map((x, n) => `
+        <article class="card wcard" style="animation-delay:${Math.min(n, 10) * 30}ms" data-w="${esc(x.w)}">
+          <div class="wtop">
+            <div class="wmain"><span class="wword da">${esc(x.w)}</span><button class="speak" data-sayw="${esc(x.w)}" aria-label="Læs højt">${ICON.speaker}</button></div>
+            <div class="wact">
+              <button class="wbtn" data-edit title="ویرایش ترجمه">✎</button>
+              <button class="wbtn danger" data-del title="حذف">🗑</button>
+            </div>
+          </div>
+          <div class="wt fa">${x.t ? esc(x.t) : '<span class="muted">بدون ترجمه</span>'}</div>
+          ${x.en ? `<div class="wen da">${esc(x.en)}</div>` : ''}
+          ${x.ctx ? `<div class="wctx"><div class="da">${markWord(x.ctx, x.w)}</div>${x.ctxFa ? `<div class="fa">${esc(x.ctxFa)}</div>` : ''}</div>` : ''}
+          <div class="wdate">${fmtDateTime(x.at)}</div>
+        </article>`).join('')}
+        ${all.length && !list.length ? '<div class="card empty">لغتی با این جستجو پیدا نشد.</div>' : ''}
+      </div>
+    </section>`;
+    document.getElementById('back').onclick = home;
+    const s = document.getElementById('wSearch');
+    if (s) {
+      s.oninput = () => { clearTimeout(s._t); s._t = setTimeout(() => { wordsView(s.value); const n = document.getElementById('wSearch'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
+    }
+    $app.querySelectorAll('[data-sayw]').forEach(b => b.onclick = () => speak(b.dataset.sayw));
+    $app.querySelectorAll('.wcard').forEach(card => {
+      const w = card.dataset.w, entry = findWord(w);
+      card.querySelector('[data-del]').onclick = () => confirmBox('حذف لغت؟', `«${esc(w)}» از بانک لغات حذف شود؟`, 'حذف', async () => {
+        try { await api('DELETE', 'words', { w }); state.words = state.words.filter(x => x !== entry); wordsView(query); }
+        catch (e) { toast(e.message); }
+      });
+      card.querySelector('[data-edit]').onclick = () => {
+        const box = card.querySelector('.wt');
+        box.innerHTML = `<form class="wedit"><input value="${esc(entry.t || '')}" autocomplete="off"><button class="btn btn-primary">ذخیره</button></form>`;
+        const f = box.querySelector('form'), inp = f.querySelector('input'); inp.focus();
+        f.onsubmit = async e => {
+          e.preventDefault();
+          try { const { word } = await api('POST', 'words', { ...entry, t: inp.value }); Object.assign(entry, word); wordsView(query); }
+          catch (err) { toast(err.message); }
+        };
+      };
+    });
+    if (!query) window.scrollTo({ top: 0 });
   }
 
   // ---------- keyboard ----------

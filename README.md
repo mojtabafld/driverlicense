@@ -3,6 +3,8 @@
 Practice site for the Danish category B theory test: random 25-question exams in the style of
 Færdselsstyrelsen's digital test, Persian translations, explanations and short lessons, per-user
 accounts, progress charts and a pass-probability estimate.
+During an exam, double-tap (or select) a Danish word to save it with its translation to your word bank
+(translations come from Google Translate's public endpoint; only the selected word is sent).
 
 > The questions and pictures come from prove.dk and are copyrighted. Keep this repository private
 > and the deployed site limited to invited users (see `INVITE_CODE`).
