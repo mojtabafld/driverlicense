@@ -513,11 +513,11 @@
 
   function quitDialog() {
     openModal(`<h3>خروج از آزمون</h3>
-      <p style="color:var(--muted);margin:0">آزمون را تحویل می‌دهید، برای ادامه در زمانی دیگر نگه می‌دارید، یا حذفش می‌کنید؟</p>
+      <p style="color:var(--muted);margin:0">آزمون را تحویل می‌دهید، برای ادامه در زمانی دیگر نگه می‌دارید، یا لغوش می‌کنید؟</p>
       <div class="quit-btns">
         <button class="btn btn-primary" id="mHand">تحویل و دیدن نتیجه</button>
         <button class="btn btn-ghost" id="mLeave">ذخیره و ادامه در زمانی دیگر</button>
-        <div class="quit-row"><button class="btn btn-text" data-close>بازگشت به آزمون</button><button class="btn btn-text danger" id="mDrop">حذف آزمون</button></div>
+        <div class="quit-row"><button class="btn btn-text" data-close>بازگشت به آزمون</button><button class="btn btn-text danger" id="mDrop">لغو آزمون</button></div>
       </div>`, 'quit-sheet');
     document.getElementById('mLeave').onclick = () => { closeModal(); stopSpeak(); home(); };
     document.getElementById('mDrop').onclick = () => { state.exam.done = true; dropDraft(); closeModal(); stopSpeak(); home(); };
