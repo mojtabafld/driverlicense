@@ -467,7 +467,10 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 /* review answers, as on prove.dk: one white card per statement, numbered circle green = the user answered it
    right, red = wrong; then the correct answer with its explanation */
 .rbody{background:var(--bg);padding-top:14px}
-.rstmt{background:var(--surface);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:16px 18px;margin-bottom:12px;border:2px solid transparent;transition:background .15s,border-color .15s}
+.rstmts{display:grid;gap:12px;margin-bottom:12px}
+/* same look as the test's option boxes (.answer) */
+.rstmt{background:var(--surface);border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:15px 14px;transition:background .15s,border-color .15s}
+:root[data-theme="dark"] .rstmt{border-color:var(--line)}
 /* prove.dk-style review: "Dine svar" (the user's ticks) / "Korrekte svar" (the right ticks + explanation) */
 .rtools{grid-area:trt;margin:0}
 .rcard.no-fa .rq-fa,.rcard.no-fa .rtr,.rcard.no-fa .ranswer.fa{display:none}
@@ -478,23 +481,18 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .rview-btn.right{border-color:#1f5fbf;color:#1f5fbf}
 .rviews .rview-btn.on{color:#fff}
 .rview-btn.mine.bad.on{background:#d32f2f}.rview-btn.mine.good.on{background:#2e9d3a}.rview-btn.right.on{background:#1f5fbf}
-.rbox{flex:none;width:24px;height:24px;margin-top:5px;border:2px solid #6b7280;border-radius:4px;background:var(--surface);display:grid;place-items:center}
-.v-mine .rstmt.me,.v-right .rstmt.ok{background:#e3eefc;border-color:#9dbdf0}
-.v-mine .rstmt.me .rbox,.v-right .rstmt.ok .rbox{background:#1d2a44;border-color:#1d2a44}
-.v-mine .rstmt.me .rbox::after,.v-right .rstmt.ok .rbox::after{content:'';width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+.rbox{flex:none;width:13px;height:13px;margin-top:4px;border:1px solid var(--text);border-radius:1px;background:var(--surface)}
+.v-mine .rstmt.me,.v-right .rstmt.ok{background:var(--checked-bg);border-color:var(--text)}
+.v-mine .rstmt.me .rbox,.v-right .rstmt.ok .rbox{background:var(--navy);border-color:var(--navy)}
+:root[data-theme="dark"] .v-mine .rstmt.me .rbox,:root[data-theme="dark"] .v-right .rstmt.ok .rbox{background:var(--accent);border-color:var(--accent)}
 .v-mine .rexpl{display:none}
-:root[data-theme="dark"] .v-mine .rstmt.me,:root[data-theme="dark"] .v-right .rstmt.ok{background:#1c2c45;border-color:#3b5d8f}
-:root[data-theme="dark"] .v-mine .rstmt.me .rbox,:root[data-theme="dark"] .v-right .rstmt.ok .rbox{background:#9dbdf0;border-color:#9dbdf0}
-:root[data-theme="dark"] .v-mine .rstmt.me .rbox::after,:root[data-theme="dark"] .v-right .rstmt.ok .rbox::after{border-color:#10192b}
-:root[data-theme="dark"] .rbox{border-color:var(--muted)}
-.rline{direction:ltr;display:flex;gap:14px;align-items:flex-start}
-.rnum-c{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--da);font-size:14px;background:var(--muted)}
-.rnum-c.ok{background:#4bb543}
-.rnum-c.bad{background:#d32f2f}
-.rtxt{flex:1;min-width:0;display:grid;gap:3px;padding-top:4px}
-.rst-da{font-weight:600;font-size:16px}
+.rline{direction:ltr;display:flex;gap:10px;align-items:flex-start}
+.rtxt{flex:1;min-width:0;display:grid;gap:4px}
+.rst-da{font-size:16.5px;line-height:1.35}
 .rtxt .rtr{color:var(--muted);font-size:14px}
-.ranswer{margin-top:10px;font-size:15px;line-height:1.7}
+.rexpl{padding-left:23px}
+.rexpl .ranswer.fa{direction:rtl}
+.ranswer{margin-top:10px;font-size:15px;line-height:1.6}
 .ranswer.da i{font-style:italic;color:var(--text)}
 .ranswer.fa{margin-top:4px;color:var(--muted);font-size:14px}
 .ranswer.fa i{font-style:normal}

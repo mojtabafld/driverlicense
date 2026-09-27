@@ -759,10 +759,8 @@
         </div>
         <div class="rstmts ${r.a ? 'v-mine' : 'v-right'}">
         ${q.st.map((s, k) => {
-          // Like prove.dk's review: "Dine svar" shows the user's ticks, "Korrekte svar" the right ticks with the
-          // explanation. The number is green when the user answered this statement right, red when wrong
-          // (grey for old attempts that did not store the ticks).
-          const res = r.a ? (r.wrong[k] ? 'bad' : 'ok') : 'na';
+          // Like prove.dk's review: the same option boxes as in the test; "پاسخ شما" shows the user's ticks,
+          // "پاسخ صحیح" the right ticks with the explanation.
           const eda = stExpl(s).trim() || (s.ok ? ui().yes : ui().no);
           const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
           return `<div class="rstmt ${r.a && r.a[k] ? 'me' : ''} ${s.ok ? 'ok' : ''}">
@@ -772,7 +770,6 @@
                 <div class="da rst-da" data-wq="${q.id}" data-wst="${k}">${nl(stText(s))}</div>
                 ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
               </div>
-              <span class="rnum-c ${res}" aria-label="${res === 'ok' ? 'پاسخ شما درست' : res === 'bad' ? 'پاسخ شما اشتباه' : ''}">${k + 1}</span>
             </div>
             <div class="rexpl">
               <div class="ranswer da">${ui().expl} <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
