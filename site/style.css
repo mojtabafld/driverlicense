@@ -583,3 +583,5 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .ai-lesson ul{margin:0}
 .ai-wait{animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.45}}
+.ai-lesson h4 .ai-ico{color:#7c5cff;flex:none}
+:root[data-theme="dark"] .ai-lesson h4 .ai-ico{color:#a894ff}
