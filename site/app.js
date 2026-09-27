@@ -416,9 +416,6 @@
   const stopSpeak = () => { try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch {} };
 
   const ICON = {
-    thumbUp: '<svg width="17" height="17" viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8c1.7 0 2.6 1.2 2.2 2.8L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.9A2 2 0 0 1 17.8 20H7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>',
-    thumbDown: '<svg width="17" height="17" viewBox="0 0 24 24" style="transform:rotate(180deg)"><path d="M7 11v9H4v-9zM7 11l4-8c1.7 0 2.6 1.2 2.2 2.8L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.9A2 2 0 0 1 17.8 20H7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>',
-    check: '<svg width="17" height="17" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     list: '<svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M9 12h7M9 16h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
     x: '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
     // Same bookmark glyph as "Gem til senere" in the digital test.
@@ -701,8 +698,8 @@
       if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
     });
     root.querySelectorAll('.rviews').forEach(v => v.onclick = e => {
-      const b = e.target.closest('.rview-btn'); if (!b) return;
-      v.querySelectorAll('.rview-btn').forEach(x => x.classList.toggle('on', x === b));
+      const b = e.target.closest('.rseg'); if (!b) return;
+      v.querySelectorAll('.rseg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
     });
     root.querySelectorAll('.rcard.open').forEach(aiLesson);
@@ -752,17 +749,20 @@
         <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
       </div>
       <div class="rbody">
-        <div class="rviews" role="tablist">
-          ${r.a ? `<button class="rview-btn mine ${r.ok ? 'good' : 'bad'} on" data-v="mine" role="tab">${r.ok ? ICON.thumbUp : ICON.thumbDown}<span>پاسخ شما</span></button>` : ''}
-          <button class="rview-btn right ${r.a ? '' : 'on'}" data-v="right" role="tab">${ICON.check}<span>پاسخ صحیح</span></button>
-        </div>
+        ${r.a ? `<div class="rviews" role="tablist">
+          <button class="rseg mine on" data-v="mine" role="tab" aria-selected="true"><span class="rseg-t">پاسخ شما</span><span class="rseg-chip ${r.ok ? 'good' : 'bad'}">${r.ok ? '✓ درست' : `✗ ${faNum(r.wrong.filter(Boolean).length)} خطا`}</span></button>
+          <button class="rseg right" data-v="right" role="tab" aria-selected="false"><span class="rseg-t">پاسخ صحیح</span></button>
+        </div>` : '<div class="rviews-title">پاسخ صحیح</div>'}
         <div class="rstmts ${r.a ? 'v-mine' : 'v-right'}">
         ${q.st.map((s, k) => {
-          // Like prove.dk's review: the same option boxes as in the test; "پاسخ شما" shows the user's ticks,
-          // "پاسخ صحیح" the right ticks with the explanation.
+          // "پاسخ شما": the user's ticks, each option saying plainly whether that choice was right.
+          // "پاسخ صحیح": the right ticks, with the explanation under every option.
+          const me = !!(r.a && r.a[k]);
+          const m = !r.a ? '' : me && s.ok ? 'm-good' : me ? 'm-extra' : s.ok ? 'm-miss' : 'm-none';
+          const tag = { 'm-good': '✓ درست انتخاب کردید', 'm-extra': '✗ نباید انتخاب می‌شد', 'm-miss': '✗ باید انتخاب می‌شد', 'm-none': '' }[m] || '';
           const eda = stExpl(s).trim() || (s.ok ? ui().yes : ui().no);
           const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
-          return `<div class="rstmt ${r.a && r.a[k] ? 'me' : ''} ${s.ok ? 'ok' : ''}">
+          return `<div class="rstmt ${me ? 'me' : ''} ${s.ok ? 'ok' : ''} ${m}">
             <div class="rline">
               <span class="rbox" aria-hidden="true"></span>
               <div class="rtxt">
@@ -770,6 +770,8 @@
                 ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
               </div>
             </div>
+            ${tag ? `<div class="rtag t-mine">${tag}</div>` : ''}
+            <div class="rtag t-right">${s.ok ? '✓ گزینه‌ی درست' : '✗ گزینه‌ی نادرست'}</div>
             <div class="rexpl">
               <div class="ranswer da">${ui().expl} <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
               <div class="ranswer fa">توضیح: <i>${nl(efa)}</i></div>
