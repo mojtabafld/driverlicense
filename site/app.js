@@ -690,18 +690,17 @@
     root.querySelectorAll('.rhead').forEach(h => h.onclick = e => {
       if (e.target.tagName === 'IMG') return zoomImg(e.target.src);
       if (e.target.closest('a')) return; // the prove.dk link opens in a new tab without toggling the card
-      const tr = e.target.closest('.rtr-btn');
-      if (tr) { // like the exam's "ترجمه‌ی فارسی" button: show or hide the Persian of this question only
-        const hide = h.parentElement.classList.toggle('no-fa');
-        tr.classList.toggle('on', !hide);
-        tr.querySelector('span').textContent = hide ? 'ترجمه‌ی فارسی' : 'پنهان‌کردن ترجمه';
-        return;
-      }
       if (!window.getSelection().isCollapsed || e.detail > 1) return;
       h.parentElement.classList.toggle('open');
       if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
     });
     root.querySelectorAll('.rviews').forEach(v => v.onclick = e => {
+      const tr = e.target.closest('.rtr-btn');
+      if (tr) { // like the exam's "ترجمه‌ی فارسی" button: show or hide the Persian of this question only
+        const hide = v.closest('.rcard').classList.toggle('no-fa');
+        tr.classList.toggle('on', !hide); tr.setAttribute('aria-pressed', !hide);
+        return;
+      }
       const b = e.target.closest('.rview-btn'); if (!b) return;
       v.querySelectorAll('.rview-btn').forEach(x => x.classList.toggle('on', x === b));
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
@@ -740,7 +739,6 @@
     return `<article class="card rcard ${state.settings.showFa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
       <div class="rhead">
         <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}</div>
-        <div class="qtools rtools"><button class="rtr-btn ${state.settings.showFa ? 'on' : ''}">${ICON.tr}<span class="fa">${state.settings.showFa ? 'پنهان‌کردن ترجمه' : 'ترجمه‌ی فارسی'}</span></button></div>
         <div class="rbadges">
           ${extraBadge}
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
@@ -756,6 +754,7 @@
         <div class="rviews" role="tablist">
           ${r.a ? `<button class="rview-btn mine ${r.ok ? 'good' : 'bad'} on" data-v="mine" role="tab">${r.ok ? ICON.thumbUp : ICON.thumbDown}<span>پاسخ شما</span></button>` : ''}
           <button class="rview-btn right ${r.a ? '' : 'on'}" data-v="right" role="tab">${ICON.check}<span>پاسخ صحیح</span></button>
+          <button class="rtr-btn ${state.settings.showFa ? 'on' : ''}" aria-pressed="${state.settings.showFa}" title="نمایش / پنهان‌کردن ترجمه‌ی فارسی">${ICON.tr}<span class="fa">ترجمه</span></button>
         </div>
         <div class="rstmts ${r.a ? 'v-mine' : 'v-right'}">
         ${q.st.map((s, k) => {
