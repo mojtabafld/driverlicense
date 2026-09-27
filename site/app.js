@@ -972,8 +972,8 @@
     bindProgressChart(atts);
     bindHome();
     window.scrollTo({ top: 0 });
-    // Keyboard focus starts on "شروع آزمون" (not on whatever focusable card comes first).
-    document.getElementById('start').focus({ preventScroll: true });
+    // Nothing is focused when the dashboard opens (the login button that had focus is gone).
+    if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
     if (!state.settings.lang) askLang();
   }
 
