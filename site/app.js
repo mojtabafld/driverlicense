@@ -697,6 +697,11 @@
       h.parentElement.classList.toggle('open');
       if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
     });
+    // "جزئیات و توضیحات" sits at the bottom of the card, under the answers and the lesson
+    root.querySelectorAll('.rtoggle').forEach(b => b.onclick = () => {
+      const card = b.closest('.rcard');
+      if (card.classList.toggle('open')) aiLesson(card);
+    });
     root.querySelectorAll('.rviews').forEach(v => v.onclick = e => {
       const b = e.target.closest('.rseg'); if (!b) return;
       v.querySelectorAll('.rseg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
@@ -747,7 +752,6 @@
           <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(qText(q))}</p>
           <p class="rq-fa fa">${nl(q.sfa)}</p>
         </div>
-        <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
       </div>
       <div class="rbody">
         ${r.a ? `<div class="rviews" role="tablist">
@@ -781,6 +785,7 @@
         ${t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
       </div>
+      <button class="rtoggle"><span class="fa">جزئیات و توضیحات</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
     </article>`;
   }
 
