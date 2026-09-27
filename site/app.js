@@ -926,6 +926,8 @@
     bindProgressChart(atts);
     bindHome();
     window.scrollTo({ top: 0 });
+    // Keyboard focus starts on "شروع آزمون" (not on whatever focusable card comes first).
+    document.getElementById('start').focus({ preventScroll: true });
     if (!state.settings.lang) askLang();
   }
 
