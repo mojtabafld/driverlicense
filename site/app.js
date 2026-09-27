@@ -700,6 +700,7 @@
     root.querySelectorAll('.rviews').forEach(v => v.onclick = e => {
       const b = e.target.closest('.rseg'); if (!b) return;
       v.querySelectorAll('.rseg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
+      v.classList.toggle('at-right', b.dataset.v === 'right');
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
     });
     root.querySelectorAll('.rcard.open').forEach(aiLesson);
@@ -750,16 +751,15 @@
       </div>
       <div class="rbody">
         ${r.a ? `<div class="rviews" role="tablist">
-          <button class="rseg mine on" data-v="mine" role="tab" aria-selected="true"><span class="rseg-t">پاسخ شما</span><span class="rseg-chip ${r.ok ? 'good' : 'bad'}">${r.ok ? '✓ درست' : `✗ ${faNum(r.wrong.filter(Boolean).length)} خطا`}</span></button>
-          <button class="rseg right" data-v="right" role="tab" aria-selected="false"><span class="rseg-t">پاسخ صحیح</span></button>
+          <button class="rseg mine on" data-v="mine" role="tab" aria-selected="true" title="${r.ok ? 'پاسخ شما درست بود' : 'پاسخ شما اشتباه بود'}"><i class="rseg-dot ${r.ok ? 'good' : 'bad'}"></i>پاسخ شما</button>
+          <button class="rseg right" data-v="right" role="tab" aria-selected="false">پاسخ صحیح</button>
         </div>` : '<div class="rviews-title">پاسخ صحیح</div>'}
         <div class="rstmts ${r.a ? 'v-mine' : 'v-right'}">
         ${q.st.map((s, k) => {
-          // "پاسخ شما": the user's ticks, each option saying plainly whether that choice was right.
+          // "پاسخ شما": the user's ticks, coloured by whether that choice was right.
           // "پاسخ صحیح": the right ticks, with the explanation under every option.
           const me = !!(r.a && r.a[k]);
           const m = !r.a ? '' : me && s.ok ? 'm-good' : me ? 'm-extra' : s.ok ? 'm-miss' : 'm-none';
-          const tag = { 'm-good': '✓ درست انتخاب کردید', 'm-extra': '✗ نباید انتخاب می‌شد', 'm-miss': '✗ باید انتخاب می‌شد', 'm-none': '' }[m] || '';
           const eda = stExpl(s).trim() || (s.ok ? ui().yes : ui().no);
           const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
           return `<div class="rstmt ${me ? 'me' : ''} ${s.ok ? 'ok' : ''} ${m}">
@@ -770,8 +770,6 @@
                 ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
               </div>
             </div>
-            ${tag ? `<div class="rtag t-mine">${tag}</div>` : ''}
-            <div class="rtag t-right">${s.ok ? '✓ گزینه‌ی درست' : '✗ گزینه‌ی نادرست'}</div>
             <div class="rexpl">
               <div class="ranswer da">${ui().expl} <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
               <div class="ranswer fa">توضیح: <i>${nl(efa)}</i></div>

@@ -469,13 +469,14 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .rstmts{display:grid;gap:12px;margin-bottom:12px}
 .rstmt{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:14px;transition:background .2s,border-color .2s}
 /* two-part switch: «پاسخ شما» (with the verdict of this question) | «پاسخ صحیح» */
-.rviews{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:4px 0 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:14px}
-.rseg{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:10px 8px;border-radius:10px;color:var(--muted);font:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
-.rseg.on{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.14)}
-.rseg.right.on{color:var(--ok)}
-.rseg-chip{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
-.rseg-chip.bad{background:var(--bad-soft);color:var(--bad)}
-.rseg-chip.good{background:var(--ok-soft);color:var(--ok)}
+.rviews{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;padding:3px;margin:2px 0 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px}
+.rviews::before{content:'';position:absolute;top:3px;bottom:3px;right:3px;width:calc(50% - 3px);border-radius:999px;background:var(--navy);box-shadow:0 2px 6px rgba(2,71,118,.25);transition:transform .25s var(--ease)}
+.rviews.at-right::before{transform:translateX(-100%)}
+.rseg{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 18px;border-radius:999px;color:var(--muted);font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;transition:color .2s}
+.rseg.on{color:#fff}
+.rseg-dot{width:7px;height:7px;border-radius:50%;flex:none}
+.rseg-dot.bad{background:var(--bad)}.rseg-dot.good{background:var(--ok)}
+.rseg.on .rseg-dot{box-shadow:0 0 0 2px rgba(255,255,255,.85)}
 .rviews-title{font-weight:700;color:var(--ok);margin:4px 0 12px}
 /* option: a clear checkbox with a tick; in «پاسخ شما» it is the user's tick, in «پاسخ صحیح» the right one */
 .rbox{flex:none;width:22px;height:22px;margin-top:1px;border:2px solid var(--muted);border-radius:6px;background:var(--surface);display:grid;place-items:center;transition:background .2s,border-color .2s}
@@ -487,11 +488,6 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .v-mine .rstmt.m-miss{border-color:var(--bad);border-style:dashed}
 .v-right .rstmt.ok{border-color:var(--ok);background:var(--ok-soft)}
 .v-right .rstmt:not(.ok){opacity:.8}
-.rtag{display:none;width:fit-content;margin:10px auto 0 32px;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:700}
-.v-mine .rtag.t-mine,.v-right .rtag.t-right{display:block}
-.m-good .rtag.t-mine,.rstmt.ok .rtag.t-right{background:var(--surface);color:var(--ok);border:1px solid var(--ok)}
-.m-extra .rtag.t-mine,.m-miss .rtag.t-mine{background:var(--bad);color:#fff}
-.rstmt:not(.ok) .rtag.t-right{background:var(--surface-2);color:var(--muted)}
 .v-mine .rexpl{display:none}
 .rexpl{padding-left:32px}
 .rexpl .ranswer.fa{direction:rtl}
