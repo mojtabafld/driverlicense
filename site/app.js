@@ -756,7 +756,7 @@
         </div>` : '<div class="rviews-title">پاسخ صحیح</div>'}
         <div class="rstmts ${r.a ? 'v-mine' : 'v-right'}">
         ${q.st.map((s, k) => {
-          // "پاسخ شما": the user's ticks, coloured by whether that choice was right.
+          // "پاسخ شما": the user's ticks; a wrong tick or a missing one is marked red.
           // "پاسخ صحیح": the right ticks, with the explanation under every option.
           const me = !!(r.a && r.a[k]);
           const m = !r.a ? '' : me && s.ok ? 'm-good' : me ? 'm-extra' : s.ok ? 'm-miss' : 'm-none';
