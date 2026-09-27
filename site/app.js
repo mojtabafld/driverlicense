@@ -10,7 +10,11 @@
       s.onload = () => {
         BANK = window.BANK; Q = new Map(BANK.questions.map(q => [q.id, q]));
         // Where each question sits in prove.dk's numbered tests ("prove.dk 12 · #7" = test 12, question 7); a few are in two.
-        BANK.tests.forEach(t => t.qs.forEach((id, i) => { const q = Q.get(id); if (q) (q.src = q.src || []).push(`prove.dk ${(t.title.match(/\d+/) || [t.id])[0]} · #${i + 1}`); }));
+        // Our test ids are prove.dk's, so each label links to that test there (prove.dk has no link to a single question).
+        BANK.tests.forEach(t => t.qs.forEach((id, i) => {
+          const q = Q.get(id);
+          if (q) (q.src = q.src || []).push({ label: `prove.dk ${(t.title.match(/\d+/) || [t.id])[0]} · #${i + 1}`, test: t.id });
+        }));
         resolve();
       };
       s.onerror = () => { s.remove(); reject(new Error('بارگذاری سؤال‌ها ناموفق بود')); };
@@ -650,6 +654,7 @@
   function bindReviewCards(root) {
     root.querySelectorAll('.rhead').forEach(h => h.onclick = e => {
       if (e.target.tagName === 'IMG') return zoomImg(e.target.src);
+      if (e.target.closest('a')) return; // the prove.dk link opens in a new tab without toggling the card
       if (!window.getSelection().isCollapsed || e.detail > 1) return;
       h.parentElement.classList.toggle('open');
     });
@@ -665,7 +670,7 @@
           ${r.m ? `<span class="badge saved">${ICON.bookmark(true)} ذخیره‌شده</span>` : ''}
           ${extraBadge}
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
-          ${q.src ? `<span class="badge src" title="آزمون و شماره‌ی سؤال در prove.dk">${esc(q.src.join(' / '))}</span>` : ''}
+          ${q.src ? q.src.map(x => `<a class="badge src" href="https://prove.dk/${examLang() === 'en' ? 'en/' : ''}app/newtest/${x.test}" target="_blank" rel="noopener" title="باز کردن این آزمون در prove.dk">${esc(x.label)}</a>`).join('') : ''}
         </div>
         <div class="rq">
           <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(qText(q))}</p>
