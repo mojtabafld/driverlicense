@@ -666,7 +666,6 @@
       <div class="rhead">
         <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}</div>
         <div class="rbadges">
-          ${r.m ? `<span class="badge saved">${ICON.bookmark(true)} ذخیره‌شده</span>` : ''}
           ${extraBadge}
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
           ${q.src ? q.src.map(x => `<a class="badge src" href="https://prove.dk/${examLang() === 'en' ? 'en/' : ''}app/newtest/${x.test}" target="_blank" rel="noopener" title="باز کردن این آزمون در prove.dk">${esc(x.label)}</a>`).join('') : ''}
@@ -829,7 +828,7 @@
     const pctCls = p => (p >= 0.8 ? 'ok' : p >= 0.6 ? 'warn' : 'bad');
     $app.innerHTML = `<section class="view mistakes-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
-      <div class="words-head"><h1>بیشترین اشتباهات</h1>${open ? '<button class="btn btn-primary" id="practiceOpen">تمرین همه‌ی اشتباهات باز</button>' : ''}</div>
+      <div class="words-head"><h1>بیشترین اشتباهات</h1>${open ? '<button class="btn btn-primary" id="practiceOpen">تمرین همه‌ی اشتباهات</button>' : ''}</div>
       ${sorted.length ? `
       <div class="card panel msum">
         <div class="panel-h"><h3>وضعیت مباحث</h3><small class="muted">ضعیف‌ترین مبحث بالا — روی هر مبحث بزنید</small></div>
@@ -839,16 +838,16 @@
             <span class="mt-name">${esc(topicName(g.c))}</span>
             <span class="bar-track"><i class="${pctCls(accOf(g.c))}" style="--w:${Math.max(accOf(g.c) * 100, 2)}%"></i></span>
             <span class="mt-acc">${faNum(Math.round(accOf(g.c) * 100))}٪ دقت</span>
-            <span class="mt-cnt">${g.open ? `<span class="badc">${faNum(g.open)} باز</span>` : '<span class="okc">همه اصلاح شد ✓</span>'}${g.fixed && g.open ? `، <span class="okc">${faNum(g.fixed)} اصلاح‌شده</span>` : ''}</span>
+            <span class="mt-cnt">${g.open ? `<span class="badc">${faNum(g.open)} مورد</span>` : '<span class="okc">همه اصلاح شد ✓</span>'}${g.fixed && g.open ? `، <span class="okc">${faNum(g.fixed)} اصلاح‌شده</span>` : ''}</span>
           </button>`).join('')}</div>
-        <p class="mtip">پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «باز» به «اصلاح‌شده» بروند.</p>
+        <p class="mtip">پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «هنوز اشتباه» به «اصلاح‌شده» بروند.</p>
       </div>
       <div class="tabs mtabs"><button data-mf="open" class="${filter === 'open' ? 'on' : ''}">هنوز اشتباه (${faNum(open)})</button><button data-mf="fixed" class="${filter === 'fixed' ? 'on' : ''}">اصلاح‌شده (${faNum(fixed)})</button><button data-mf="all" class="${filter === 'all' ? 'on' : ''}">همه (${faNum(open + fixed)})</button></div>
       ${sorted.map(g => {
         const list = g.list.filter(keep), t = BANK.topics[g.c];
         if (!list.length) return '';
         return `<div class="mgroup" id="mt-${g.c}">
-          <div class="section-title"><span>${esc(topicName(g.c))} <small class="muted">(دقت ${faNum(Math.round(accOf(g.c) * 100))}٪، ${faNum(g.open)} باز، ${faNum(g.fixed)} اصلاح‌شده)</small></span>
+          <div class="section-title"><span>${esc(topicName(g.c))} <small class="muted">(دقت ${faNum(Math.round(accOf(g.c) * 100))}٪، ${faNum(g.open)} مورد، ${faNum(g.fixed)} اصلاح‌شده)</small></span>
             <span class="mg-btns">${t && t.lesson ? `<button class="tr-toggle" data-lesson="${g.c}">آموزش کوتاه</button>` : ''}<button class="tr-toggle" data-practice="${g.c}">تمرین این مبحث</button></span></div>
           ${t && t.lesson ? `<div class="lesson" id="lesson-${g.c}" hidden><h4>📘 ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4><ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
           ${mistakeCards(list)}</div>`;
