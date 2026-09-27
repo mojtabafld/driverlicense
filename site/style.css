@@ -474,7 +474,8 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 /* prove.dk-style review: "Dine svar" (the user's ticks) / "Korrekte svar" (the right ticks + explanation) */
 .rcard.no-fa .rq-fa,.rcard.no-fa .rtr,.rcard.no-fa .ranswer.fa{display:none}
 .rviews{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:4px 0 14px}
-.rtr-btn{margin-inline-start:auto;display:flex;align-items:center;gap:5px;padding:7px 10px;border-radius:999px;border:1.5px solid var(--line);color:var(--muted);font-size:13.5px;white-space:nowrap}
+.rtr-btn{margin-inline-start:auto;display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:12.5px;white-space:nowrap}
+.rtr-btn svg{width:14px;height:14px}
 .rtr-btn.on{color:var(--navy);border-color:var(--navy);background:var(--checked-bg);font-weight:600}
 :root[data-theme="dark"] .rtr-btn.on{color:var(--accent);border-color:var(--accent)}
 .rview-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;white-space:nowrap;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
@@ -482,7 +483,6 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .rview-btn.mine.good{border-color:#2e9d3a;color:#2e9d3a}
 .rview-btn.right{border-color:#1f5fbf;color:#1f5fbf}
 .rviews .rview-btn.on{color:#fff}
-@media (max-width:400px){.rviews{gap:6px}.rview-btn{padding:7px 11px}.rview-btn svg,.rtr-btn svg{display:none}}
 .rview-btn.mine.bad.on{background:#d32f2f}.rview-btn.mine.good.on{background:#2e9d3a}.rview-btn.right.on{background:#1f5fbf}
 .rbox{flex:none;width:13px;height:13px;margin-top:4px;border:1px solid var(--text);border-radius:1px;background:var(--surface)}
 .v-mine .rstmt.me,.v-right .rstmt.ok{background:var(--checked-bg);border-color:var(--text)}
