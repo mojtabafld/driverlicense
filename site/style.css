@@ -467,8 +467,10 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 /* review answers: one card per statement; «پاسخ شما» / «پاسخ صحیح» switch between the user's ticks and the right ones */
 .rbody{margin:0 16px 16px;padding:14px;background:var(--bg);border:1px solid var(--line);border-radius:12px}
 @media (max-width:640px){.rbody{margin:0 12px 12px;padding:12px}}
-.rstmts{display:grid;gap:12px;margin-bottom:12px}
-.rstmt{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:14px;transition:background .2s,border-color .2s}
+/* the options of one question form a single box, one row per option, divided by a line */
+.rstmts{display:grid;margin-bottom:12px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
+.rstmt{background:var(--surface);padding:14px;transition:background .2s,box-shadow .2s}
+.rstmt + .rstmt{border-top:1px solid var(--line)}
 /* «پاسخ شما» | «پاسخ صحیح»: same segmented look as the exam-language switch in settings (.seg) */
 .rviews{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;margin:2px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
 .rseg{display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 14px;border-radius:6px;color:var(--muted);font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .2s,color .2s}
@@ -482,7 +484,7 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .v-mine .rstmt.me .rbox,.v-right .rstmt.ok .rbox{background:var(--navy);border-color:var(--navy)}
 .v-mine .rstmt.me .rbox::after,.v-right .rstmt.ok .rbox::after{content:'';width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
 /* «پاسخ شما»: only mistakes are marked, a wrong tick or a missing one, both solid red */
-.v-mine .rstmt.m-extra,.v-mine .rstmt.m-miss{border-color:var(--bad);background:var(--bad-soft)}
+.v-mine .rstmt.m-extra,.v-mine .rstmt.m-miss{background:var(--bad-soft);box-shadow:inset 0 0 0 1.5px var(--bad)}
 .v-mine .rexpl{display:none}
 .rexpl{padding-left:32px}
 .rexpl .ranswer.fa{direction:rtl}
