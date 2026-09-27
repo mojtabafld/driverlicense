@@ -712,7 +712,7 @@
     const q = Q.get(id), a = s.lastA;
     const wrong = a ? q.st.map((st, k) => (a[k] ? 1 : 0) !== st.ok) : null;
     const r = { q, a, wrong, ok: s.lastOk, w: wrong ? wrong.filter(Boolean).length : 0 };
-    openModal(`<div class="review">${reviewCard(r, 0, `<span class="badge warn">${faNum(s.wrong)} بار اشتباه از ${faNum(s.seen)} بار</span>`)}</div>
+    openModal(`<div class="review">${reviewCard(r, 0, `<span class="badge warn">${faNum(s.wrong)} اشتباه در ${faNum(s.seen)} آزمون</span>`)}</div>
       <p style="color:var(--muted);font-size:13px;margin:10px 0 0">«شما تیک زدید / نزدید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</p>
       <div class="row-btns"><button class="btn btn-ghost" data-close>بستن</button></div>`, 'wide');
     bindReviewCards($modal);
@@ -800,7 +800,7 @@
         <span class="mbody">
           <span class="mtopic">${t ? esc(t.fa) : ''}</span>
           <span class="mq da">${esc(qText(q))}</span>
-          <span class="mmeta">${faNum(s.wrong)} اشتباه از ${faNum(s.seen)} بار · ${s.lastOk ? '<span class="okc">آخرین بار درست</span>' : '<span class="badc">آخرین بار اشتباه</span>'}${s.lastAt ? ` · ${fmtDate(s.lastAt)}` : ''}</span>
+          <span class="mmeta">${faNum(s.wrong)} اشتباه در ${faNum(s.seen)} آزمون · ${s.lastOk ? '<span class="okc">آخرین بار درست</span>' : '<span class="badc">آخرین بار اشتباه</span>'}${s.lastAt ? ` · ${fmtDate(s.lastAt)}` : ''}</span>
         </span>
       </button>`;
     }).join('')}</div>`;
