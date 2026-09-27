@@ -9,8 +9,8 @@
       s.src = 'data.js';
       s.onload = () => {
         BANK = window.BANK; Q = new Map(BANK.questions.map(q => [q.id, q]));
-        // Where each question sits in prove.dk's numbered tests ("Teoriprøve 12", question 7); a few are in two.
-        BANK.tests.forEach(t => t.qs.forEach((id, i) => { const q = Q.get(id); if (q) (q.src = q.src || []).push(`${t.title.replace(/\s*\(.*\)\s*$/, '')} · #${i + 1}`); }));
+        // Where each question sits in prove.dk's numbered tests ("prove.dk 12 · #7" = test 12, question 7); a few are in two.
+        BANK.tests.forEach(t => t.qs.forEach((id, i) => { const q = Q.get(id); if (q) (q.src = q.src || []).push(`prove.dk ${(t.title.match(/\d+/) || [t.id])[0]} · #${i + 1}`); }));
         resolve();
       };
       s.onerror = () => { s.remove(); reject(new Error('بارگذاری سؤال‌ها ناموفق بود')); };
