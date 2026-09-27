@@ -944,16 +944,14 @@
           <span class="mini-track"><i style="width:${seen / BANK.questions.length * 100}%"></i></span></div>
       </div>
 
-      <div class="grid2">
-        <div class="card panel"><div class="panel-h"><h3>نمودار پیشرفت</h3><span class="legend"><i class="lg-line"></i>نمره هر آزمون <i class="lg-thr"></i>حد قبولی</span></div>${progressChart(atts)}</div>
-        <div class="card panel"><div class="panel-h"><h3>نقاط ضعف بر اساس مبحث</h3></div>${topicBars(topicStats())}</div>
-      </div>
+      <div class="card panel"><div class="panel-h"><h3>نمودار پیشرفت</h3><span class="legend"><i class="lg-line"></i>نمره هر آزمون <i class="lg-thr"></i>حد قبولی</span></div>${progressChart(atts)}</div>
 
       <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span></div>
       <div class="history">${historyList(HOME_HIST)}</div>
 
       <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(topCount)} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
       ${mistakesSection()}
+      <div class="card panel topic-panel"><div class="panel-h"><h3>نقاط ضعف بر اساس مبحث</h3></div>${topicBars(topicStats())}</div>
 
       <div class="section-title">تنظیمات و امکانات</div>
       <div class="card opts">

@@ -574,3 +574,4 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .mg-btns{display:flex;gap:6px;flex-wrap:wrap}
 .mgroup .lesson{margin:0 0 12px}
 @media (hover:hover){.mtopic-row:hover{background:var(--surface-2)}}
+.topic-panel{margin-top:12px}
