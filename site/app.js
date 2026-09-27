@@ -666,7 +666,6 @@
       <div class="rhead">
         <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}</div>
         <div class="rbadges">
-          <span class="badge ${r.ok ? 'ok' : 'bad'}">${r.ok ? '✓ درست' : `✗ ${faNum(r.w)} گزینه‌ی اشتباه`}</span>
           ${r.m ? `<span class="badge saved">${ICON.bookmark(true)} ذخیره‌شده</span>` : ''}
           ${extraBadge}
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
