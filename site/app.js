@@ -128,14 +128,12 @@
       overview: 'Spørgsmålsoversigt', ovTitle: 'Din spørgsmålsoversigt',
       ovText: 'Spørgsmålsoversigten giver dig et overblik over dine besvarede, ubesvarede og gemte spørgsmål. Du skal trykke på et nummer for at gå til spørgsmålet.',
       notAnswered: 'Ikke besvaret', answered: 'Besvaret', saved: 'Gemte spørgsmål', jump: 'Spring til dit spørgsmål', q: 'Spørgsmål',
-      handin: 'Aflever prøven', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.',
-      mine: 'Dine svar', right: 'Korrekte svar', expl: 'Forklaring:' },
+      handin: 'Aflever prøven', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.', expl: 'Forklaring:' },
     en: { read: 'Read aloud', save: 'Save for later', prev: 'Previous', next: 'Next', count: (i, n) => `Question ${i} of ${n}`,
       overview: 'Question overview', ovTitle: 'Your question overview',
       ovText: 'The question overview gives you an overview of your answered, unanswered and saved questions. Tap a number to go to the question.',
       notAnswered: 'Not answered', answered: 'Answered', saved: 'Saved questions', jump: 'Jump to your question', q: 'Question',
-      handin: 'Hand in the test', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.',
-      mine: 'Your answers', right: 'Correct answers', expl: 'Explanation:' },
+      handin: 'Hand in the test', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.', expl: 'Explanation:' },
   };
   const ui = () => EXAM_UI[examLang()];
 
@@ -755,9 +753,9 @@
         <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
       </div>
       <div class="rbody">
-        <div class="rviews" dir="ltr" role="tablist">
-          ${r.a ? `<button class="rview-btn mine ${r.ok ? 'good' : 'bad'} on" data-v="mine" role="tab">${r.ok ? ICON.thumbUp : ICON.thumbDown}<span class="da">${ui().mine}</span><span class="fa">پاسخ‌های شما</span></button>` : ''}
-          <button class="rview-btn right ${r.a ? '' : 'on'}" data-v="right" role="tab">${ICON.check}<span class="da">${ui().right}</span><span class="fa">پاسخ‌های درست</span></button>
+        <div class="rviews" role="tablist">
+          ${r.a ? `<button class="rview-btn mine ${r.ok ? 'good' : 'bad'} on" data-v="mine" role="tab">${r.ok ? ICON.thumbUp : ICON.thumbDown}<span>پاسخ شما</span></button>` : ''}
+          <button class="rview-btn right ${r.a ? '' : 'on'}" data-v="right" role="tab">${ICON.check}<span>پاسخ صحیح</span></button>
         </div>
         <div class="rstmts ${r.a ? 'v-mine' : 'v-right'}">
         ${q.st.map((s, k) => {
