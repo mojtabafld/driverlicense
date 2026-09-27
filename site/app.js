@@ -963,7 +963,7 @@
             <div class="g-val"><b class="num">${probPct == null ? '–' : probPct + '%'}</b></div>
           </div>
           <div class="g-txt"><div class="g-title">احتمال قبولی</div><div class="g-sub">${probText}</div>
-            ${est ? `<div class="g-note">${est.onlyRandom ? `بر اساس ${faNum(est.n)} سؤال آخر آزمون‌های تصادفی${est.weight < 50 ? ' · برآورد اولیه' : ''}` : `بر اساس ${faNum(est.n)} سؤال آزمون‌های تمرینی`}</div>` : ''}</div>
+            ${est ? `<div class="g-note">${est.onlyRandom ? `بر اساس ${faNum(est.n)} سؤال آخر آزمون‌ها${est.weight < 50 ? ' · برآورد اولیه' : ''}` : `بر اساس ${faNum(est.n)} سؤال آزمون‌های تمرینی`}</div>` : ''}</div>
         </div>
       </div>
 
