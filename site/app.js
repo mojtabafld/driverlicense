@@ -156,29 +156,55 @@
     }));
     return [...m.values()].filter(s => s.wrong > 0).sort((a, b) => b.wrong - a.wrong || (b.wrong / b.seen) - (a.wrong / a.seen) || b.lastAttempt - a.lastAttempt);
   }
-  function binomTailAtLeast(n, k, p) {
-    let s = 0, c = 1;
-    for (let i = 0; i <= n; i++) {
-      if (i > 0) c = c * (n - i + 1) / i;
-      if (i >= k) s += c * p ** i * (1 - p) ** (n - i);
-    }
-    return s;
+  // ---- pass probability ----
+  // Real rule (Færdselsstyrelsen, as on prove.dk): pass with at most 5 wrong pictures, i.e. ≥20 of 25 fully right.
+  // Model: every picture is answered fully right with an unknown probability p. What we know about p is a Beta
+  // distribution fitted to the user's own answers, and the chance of passing is the beta-binomial probability of
+  // ≥20 right out of 25. Unlike plugging a single p into a binomial, this keeps the remaining uncertainty about p,
+  // so a few lucky or unlucky pictures cannot swing the estimate to 0% or 100%.
+  // Which answers count, and how much:
+  //  - only exams with random questions (any length), like the real test; "mistakes" / "most-missed" practice
+  //    is made of the user's hard questions and would pull p down (used only when there is nothing else);
+  //  - recent answers weigh more (half-life of 50 answered pictures, last 200 considered), since users improve;
+  //  - a picture the user had already seen before counts half: the official test has its own pictures, so
+  //    remembered answers overstate what the user will get right there.
+  // Prior: uniform Beta(1, 1).
+  const PASS_HALF_LIFE = 50, PASS_MAX_ANSWERS = 200, REPEAT_WEIGHT = 0.5;
+  function logGamma(x) { // Lanczos approximation
+    const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+      12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - logGamma(1 - x);
+    x -= 1; let a = c[0]; const t = x + 7.5;
+    for (let i = 1; i < 9; i++) a += c[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
   }
-  // Per-image accuracy over the last 5 exams that look like the real test (with a small prior so one exam cannot
-  // say 0% or 100%), then P(≥20 of 25 correct) in a full exam. Preferred: full 25-question random exams. Short
-  // "practice" exams and "mistakes" / "most-missed" exams (made of hard questions) are only used while there is
-  // no full random exam yet, in that order of preference.
-  const PASS_WINDOW = 5;
+  const logBeta = (a, b) => logGamma(a) + logGamma(b) - logGamma(a + b);
+  // P(X ≥ k) for X ~ BetaBinomial(n, a, b)
+  function betaBinomTailAtLeast(n, k, a, b) {
+    let s = 0;
+    for (let i = k; i <= n; i++) s += Math.exp(logGamma(n + 1) - logGamma(i + 1) - logGamma(n - i + 1) + logBeta(i + a, n - i + b) - logBeta(a, b));
+    return Math.min(1, s);
+  }
   function passEstimate() {
-    const random = state.attempts.filter(a => a.mode === 'random');
-    const fullRandom = random.filter(isFull);
-    const basis = fullRandom.length ? 'full' : random.length ? 'random' : 'any';
-    const recent = (fullRandom.length ? fullRandom : random.length ? random : state.attempts).slice(-PASS_WINDOW);
+    const seen = new Set(), random = [], any = [];
+    state.attempts.forEach((att, e) => att.items.forEach(it => {
+      const x = { ok: it.ok, repeat: seen.has(it.id), exam: e };
+      any.push(x); if (att.mode === 'random') random.push(x);
+      seen.add(it.id);
+    }));
+    const onlyRandom = random.length > 0;
+    const recent = (onlyRandom ? random : any).slice(-PASS_MAX_ANSWERS);
     if (!recent.length) return null;
-    let ok = 2, tot = 4;
-    recent.forEach(a => { ok += scoreOf(a); tot += a.items.length; });
-    const p = ok / tot;
-    return { p, prob: binomTailAtLeast(FULL, passMin(FULL), p), n: recent.length, basis };
+    // Age of an answer = how many counted answers come from later exams (all answers of one exam are equally recent).
+    const newer = {};
+    recent.forEach(x => { for (const k in newer) if (+k < x.exam) newer[k]++; newer[x.exam] = newer[x.exam] || 0; });
+    let good = 0, bad = 0;
+    recent.forEach(x => {
+      const w = 0.5 ** (newer[x.exam] / PASS_HALF_LIFE) * (x.repeat ? REPEAT_WEIGHT : 1);
+      if (x.ok) good += w; else bad += w;
+    });
+    const a = 1 + good, b = 1 + bad;
+    return { p: a / (a + b), prob: betaBinomTailAtLeast(FULL, passMin(FULL), a, b), n: recent.length, weight: good + bad, onlyRandom };
   }
   function topicStats() {
     const m = new Map();
@@ -937,7 +963,7 @@
             <div class="g-val"><b class="num">${probPct == null ? '–' : probPct + '%'}</b></div>
           </div>
           <div class="g-txt"><div class="g-title">احتمال قبولی</div><div class="g-sub">${probText}</div>
-            ${est ? `<div class="g-note">بر اساس ${faNum(est.n)} آزمون ${est.basis === 'full' ? 'کامل ۲۵ سؤالی ' : est.basis === 'random' ? 'تصادفی ' : ''}اخیر · دقت هر تصویر ${faNum(Math.round(est.p * 100))}٪</div>` : ''}</div>
+            ${est ? `<div class="g-note">بر اساس ${faNum(est.n)} سؤال اخیر ${est.onlyRandom ? 'از آزمون‌های تصادفی ' : ''}· دقت تخمینی هر تصویر ${faNum(Math.round(est.p * 100))}٪${!est.onlyRandom ? ' · فقط از آزمون‌های تمرین اشتباهات؛ برای برآورد واقعی یک آزمون تصادفی بدهید' : est.weight < 50 ? ' · برآورد اولیه؛ با آزمون‌های بیشتر دقیق‌تر می‌شود' : ''}</div>` : ''}</div>
         </div>
       </div>
 
