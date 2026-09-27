@@ -2,7 +2,7 @@
 // Run locally:  node server.js            (data kept in data/db.json)
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
-// ADMIN_USERS (comma-separated usernames that get the admin panel).
+// ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review).
 'use strict';
 process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
 const http = require('node:http');
@@ -10,6 +10,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
+const { getLesson, lessonsAvailable } = require('./lesson');
+const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -238,7 +240,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -282,6 +284,18 @@ async function api(req, res, route) {
     await store.deleteSession(s.token);
     res.setHeader('Set-Cookie', cookie(req, '', 0));
     return send(res, 200, { ok: true });
+  }
+  // AI lesson for one reviewed question: { qid, a: ticks per statement (optional), lang }.
+  if (req.method === 'POST' && route === 'lesson') {
+    const b = await readBody(req);
+    try {
+      const lesson = await getLesson({ store, siteDir: SITE, username: user.username, qid: b.qid, ticks: Array.isArray(b.a) ? b.a.slice(0, 4) : null, lang: b.lang });
+      return send(res, 200, { text: lesson.text });
+    } catch (e) {
+      if (e instanceof Anthropic.APIError) { console.error('lesson API error', e.status, e.message); return send(res, 502, { error: 'آموزش هوش مصنوعی الان در دسترس نیست.' }); }
+      if (e.status) return send(res, e.status, { error: e.message });
+      throw e;
+    }
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
