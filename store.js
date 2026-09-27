@@ -1,13 +1,14 @@
 // Persistence for users and sessions.
 // - DATABASE_URL set  → PostgreSQL (DigitalOcean App Platform / Managed DB); data survives redeploys.
 // - otherwise         → a local JSON file (data/db.json), handy for running on your own computer.
-// Everything is kept in memory; writes go through saveUser / saveSession / deleteSession.
+// Everything is kept in memory; writes go through saveUser / saveSession / deleteSession / saveMeta.
+// meta holds small site-wide documents by key (e.g. 'visits' for the admin panel's visit counts).
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
 
 async function openStore({ dbFile }) {
-  const mem = { users: {}, sessions: {} };
+  const mem = { users: {}, sessions: {}, meta: {} };
 
   if (process.env.DATABASE_URL) {
     const { Pool } = require('pg');
@@ -25,6 +26,7 @@ async function openStore({ dbFile }) {
     const createTables = async p => {
       await p.query(`CREATE TABLE IF NOT EXISTS tp_users (username TEXT PRIMARY KEY, data JSONB NOT NULL)`);
       await p.query(`CREATE TABLE IF NOT EXISTS tp_sessions (token TEXT PRIMARY KEY, username TEXT NOT NULL, exp BIGINT NOT NULL)`);
+      await p.query(`CREATE TABLE IF NOT EXISTS tp_meta (key TEXT PRIMARY KEY, data JSONB NOT NULL)`);
     };
     let pool = makePool();
     try {
@@ -43,6 +45,7 @@ async function openStore({ dbFile }) {
     for (const r of (await pool.query('SELECT token, username, exp FROM tp_sessions')).rows) {
       mem.sessions[r.token] = { username: r.username, exp: +r.exp };
     }
+    for (const r of (await pool.query('SELECT key, data FROM tp_meta')).rows) mem.meta[r.key] = r.data;
     console.log(`Storage: PostgreSQL (${Object.keys(mem.users).length} users)`);
     return {
       ...mem,
@@ -54,6 +57,8 @@ async function openStore({ dbFile }) {
         'INSERT INTO tp_sessions (token, username, exp) VALUES ($1, $2, $3) ON CONFLICT (token) DO UPDATE SET exp = EXCLUDED.exp',
         [token, s.username, s.exp]),
       deleteSession: token => pool.query('DELETE FROM tp_sessions WHERE token = $1', [token]),
+      saveMeta: (key, data) => pool.query(
+        'INSERT INTO tp_meta (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data', [key, data]),
     };
   }
 
@@ -66,14 +71,15 @@ async function openStore({ dbFile }) {
     clearTimeout(timer);
     timer = setTimeout(() => {
       const tmp = dbFile + '.tmp';
-      fs.writeFileSync(tmp, JSON.stringify({ users: mem.users, sessions: mem.sessions }));
+      fs.writeFileSync(tmp, JSON.stringify({ users: mem.users, sessions: mem.sessions, meta: mem.meta }));
       fs.renameSync(tmp, dbFile); // atomic replace
       const done = waiting; waiting = [];
       done.forEach(r => r());
     }, 100);
   });
   console.log(`Storage: ${path.relative(process.cwd(), dbFile) || dbFile} (${Object.keys(mem.users).length} users)`);
-  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush };
+  mem.meta = mem.meta || {};
+  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); } };
 }
 
 module.exports = { openStore };

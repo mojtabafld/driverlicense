@@ -997,6 +997,18 @@
         <span class="dbar" data-tip="${label(d)}: ${faNum(d[key])} ${unit}"><i style="height:${d[key] ? Math.max(4, d[key] / max * 100) : 0}%"></i></span>`).join('')}</div>
       <div class="dbars-axis"><span>${label(days[0])}</span><span>بیشینه: ${faNum(max)}</span><span>${label(days[days.length - 1])}</span></div>`;
   }
+  // 24 hourly bars of one Copenhagen day, from the server's per-hour visit counts ("YYYY-MM-DD HH").
+  function hourBars(hours, day) {
+    const rows = Array.from({ length: 24 }, (_, h) => ({ h, ...(hours[`${day} ${String(h).padStart(2, '0')}`] || { v: 0, u: 0 }) }));
+    const max = Math.max(1, ...rows.map(r => r.v));
+    const hh = h => `${String(h).padStart(2, '0')}:00`;
+    return `<div class="dbars hbars" role="img" aria-label="بازدید ساعتی">${rows.map(r => `
+        <span class="dbar" data-tip="${hh(r.h)}: ${faNum(r.v)} بازدید · ${faNum(r.u)} بازدیدکننده"><i style="height:${r.v ? Math.max(4, r.v / max * 100) : 0}%"></i></span>`).join('')}</div>
+      <div class="dbars-axis"><span>۰۰:۰۰</span><span>۰۶:۰۰</span><span>۱۲:۰۰</span><span>۱۸:۰۰</span><span>۲۳:۰۰</span></div>
+      <div class="hlist">${rows.filter(r => r.v).map(r => `<span><b>${hh(r.h)}</b> ${faNum(r.v)} بازدید · ${faNum(r.u)} نفر</span>`).join('') || '<span class="muted">در این روز بازدیدی ثبت نشده است.</span>'}</div>`;
+  }
+  const dayLabel = day => new Date(day + 'T12:00Z').toLocaleDateString('fa-IR', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
+
   async function adminView() {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
     $app.innerHTML = '<section class="view"><div class="card empty">در حال بارگذاری آمار…</div></section>';
@@ -1008,6 +1020,8 @@
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1><span class="h-ico">${ICON.chart}</span>پنل مدیریت</h1><button class="tr-toggle" id="reloadAdmin">به‌روزرسانی</button></div>
       <div class="stats">
+        ${stat('بازدید امروز', faNum(t.visitsToday), `${faNum(t.visitorsToday)} بازدیدکننده`)}
+        ${stat('بازدید ۷ روز اخیر', faNum(t.visits7), `${faNum(t.visits30)} بازدید در ۳۰ روز`)}
         ${stat('کاربران', faNum(t.users), `${faNum(t.newToday)} امروز · ${faNum(t.new7)} در ۷ روز اخیر`)}
         ${stat('کاربران فعال امروز', faNum(t.activeToday), `${faNum(t.active7)} کاربر در ۷ روز اخیر`)}
         ${stat('آزمون‌های امروز', faNum(t.testsToday), `${faNum(t.tests7)} آزمون در ۷ روز اخیر`)}
@@ -1017,6 +1031,17 @@
         ${stat('آزمون‌های نیمه‌تمام', faNum(t.drafts), 'کاربرانی که آزمون ناتمام دارند')}
         ${stat('لغات ذخیره‌شده', faNum(t.words), 'مجموع بانک لغات همه‌ی کاربران')}
       </div>
+      <div class="grid2">
+        <div class="card panel"><div class="panel-h"><h3>بازدید روزانه</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.visitDays, 'v', 'بازدید')}</div>
+        <div class="card panel"><div class="panel-h"><h3>بازدید ساعتی</h3>
+          <select id="hourDay" class="day-pick">${d.visitDays.slice().reverse().map(x => `<option value="${x.day}">${dayLabel(x.day)} (${faNum(x.v)})</option>`).join('')}</select></div>
+          <div id="hourChart">${hourBars(d.visitHours, d.visitDays[d.visitDays.length - 1].day)}</div></div>
+      </div>
+      <div class="section-title">بازدید به تفکیک روز <small class="muted">(به وقت کپنهاگ؛ بازدیدکننده = دستگاه یکتا در آن روز)</small></div>
+      <div class="card table-wrap vtable-wrap"><table class="utable">
+        <thead><tr><th>روز</th><th>بازدید</th><th>بازدیدکننده</th></tr></thead>
+        <tbody>${d.visitDays.slice().reverse().map(x => `<tr><td>${dayLabel(x.day)}</td><td class="num-strong">${faNum(x.v)}</td><td>${faNum(x.u)}</td></tr>`).join('')}</tbody>
+      </table></div>
       <div class="grid2">
         <div class="card panel"><div class="panel-h"><h3>آزمون‌ها در هر روز</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.days, 'tests', 'آزمون')}</div>
         <div class="card panel"><div class="panel-h"><h3>کاربران فعال در هر روز</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.days, 'active', 'کاربر فعال')}</div>
@@ -1035,6 +1060,7 @@
     </section>`;
     document.getElementById('back').onclick = home;
     document.getElementById('reloadAdmin').onclick = adminView;
+    document.getElementById('hourDay').onchange = e => { document.getElementById('hourChart').innerHTML = hourBars(d.visitHours, e.target.value); };
     window.scrollTo({ top: 0 });
   }
 
