@@ -678,7 +678,7 @@
     if (back) back.onclick = state.reviewFrom === 'history' ? () => historyView() : home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
     bindReviewCards($app);
-    $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) c.classList.add('open'); });
+    $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) { c.classList.add('open'); aiLesson(c); } });
     window.scrollTo({ top: 0 });
   }
 
@@ -688,7 +688,35 @@
       if (e.target.closest('a')) return; // the prove.dk link opens in a new tab without toggling the card
       if (!window.getSelection().isCollapsed || e.detail > 1) return;
       h.parentElement.classList.toggle('open');
+      if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
     });
+    root.querySelectorAll('.rcard.open').forEach(aiLesson);
+  }
+  // AI lesson for a reviewed question (server: /api/lesson, Claude, cached per question + mistakes). Loaded the
+  // first time its card is opened; if it fails or AI lessons are off, the topic's fixed lesson is shown instead.
+  const lessonHtml = text => {
+    let html = '', list = false;
+    const close = () => { if (list) { html += '</ul>'; list = false; } };
+    for (const raw of text.split('\n')) {
+      const line = raw.trim(); if (!line) continue;
+      if (line.startsWith('#')) { close(); html += `<h5>${esc(line.replace(/^#+\s*/, ''))}</h5>`; }
+      else if (/^[-•*]\s+/.test(line)) { if (!list) { html += '<ul>'; list = true; } html += `<li>${esc(line.replace(/^[-•*]\s+/, ''))}</li>`; }
+      else { close(); html += `<p>${esc(line)}</p>`; }
+    }
+    close(); return html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  };
+  function aiLesson(card) {
+    const box = card.querySelector('.ai-lesson'); if (!box || box.dataset.state) return;
+    box.dataset.state = 'loading';
+    const body = box.querySelector('.ai-body');
+    body.innerHTML = '<p class="muted ai-wait">در حال آماده‌سازی آموزش بر اساس پاسخ‌های شما…</p>';
+    const a = box.dataset.a ? box.dataset.a.split('').map(Number) : undefined;
+    api('POST', 'lesson', { qid: +box.dataset.q, a, lang: examLang() })
+      .then(d => { box.dataset.state = 'done'; body.innerHTML = lessonHtml(d.text); })
+      .catch(() => {
+        box.dataset.state = 'failed'; box.hidden = true;
+        const t = card.querySelector('.topic-lesson'); if (t) t.hidden = false;
+      });
   }
 
   function reviewCard(r, n, extraBadge = '') {
@@ -726,7 +754,8 @@
             <div class="ranswer fa">پاسخ درست: <i>${nl(efa)}</i></div>
           </div>`;
         }).join('')}
-        ${t ? `<div class="lesson"><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
+        ${state.aiLessons ? `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.join('') : ''}"><h4>📘 آموزش این سؤال</h4><div class="ai-body"></div></div>` : ''}
+        ${t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
       </div>
     </article>`;
@@ -747,7 +776,7 @@
       <p style="color:var(--muted);font-size:13px;margin:10px 0 0">«شما تیک زدید / نزدید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</p>
       <div class="row-btns"><button class="btn btn-ghost" data-close>بستن</button></div>`, 'wide');
     bindReviewCards($modal);
-    $modal.querySelector('.rcard').classList.add('open');
+    const card = $modal.querySelector('.rcard'); card.classList.add('open'); aiLesson(card);
   }
 
   // ---------- Dashboard (home) ----------
@@ -1300,7 +1329,7 @@
       $app.innerHTML = `<div class="card empty" style="margin-top:40px">برای ورود با حساب کاربری، سایت را از طریق سرور باز کنید:<br><code class="da">node server.js</code> و سپس <code class="da">http://localhost:3000</code></div>`;
       return;
     }
-    try { state.inviteRequired = !!(await api('GET', 'config')).inviteRequired; } catch { /* offline: assume no invite */ }
+    try { const c = await api('GET', 'config'); state.inviteRequired = !!c.inviteRequired; state.aiLessons = !!c.aiLessons; } catch { /* offline: assume no invite */ }
     try { await loadMe(); home(); }
     catch (e) {
       if (e.status && e.status !== 401) toast(e.message);

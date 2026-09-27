@@ -37,6 +37,7 @@ Accounts are stored in `data/db.json` when `DATABASE_URL` is not set.
 | `INVITE_CODE` | When set, sign-up requires this code. |
 | `PORT` | Port to listen on (App Platform sets 8080). |
 | `ADMIN_USERS` | Comma-separated usernames that see «پنل مدیریت» (admin panel with usage stats) in the settings. |
+| `ANTHROPIC_API_KEY` | Turns on the AI lesson («آموزش این سؤال») in the answer review: Claude explains each question and the user's own mistakes in Persian. Lessons are cached per question + mistake pattern. Optional `LESSON_MODEL` (default `claude-opus-5`). Without the key the topic's fixed lesson is shown. |
 
 ## Rebuilding the question data
 

@@ -576,3 +576,10 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 @media (hover:hover){.mtopic-row:hover{background:var(--surface-2)}}
 .topic-panel{margin-top:12px}
 .nowrap{white-space:nowrap}
+/* AI lesson in the answer review */
+.ai-lesson h5{margin:10px 0 4px;font-size:14px;color:var(--navy)}
+:root[data-theme="dark"] .ai-lesson h5{color:var(--accent)}
+.ai-lesson p{margin:2px 0;font-size:14px;line-height:1.8}
+.ai-lesson ul{margin:0}
+.ai-wait{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
