@@ -625,7 +625,7 @@
 
   function renderReview(ctx, filter, fresh) {
     setExamMode(false);
-    const { res, correct, wrongSt, secs, at, mode } = ctx;
+    const { res, correct, secs, at, mode } = ctx;
     const n = res.length, full = n >= FULL, pass = full && correct >= passMin(n), pctN = Math.round(correct / Math.max(n, 1) * 100);
     const C = 2 * Math.PI * 74, pct = correct / Math.max(n, 1);
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
@@ -650,7 +650,6 @@
           <div class="kpis">
             <span class="kpi">تصاویر درست: <b>${correct}</b></span>
             <span class="kpi">تصاویر اشتباه: <b>${n - correct}</b></span>
-            <span class="kpi">گزینه‌های اشتباه: <b>${wrongSt}</b></span>
             <span class="kpi">زمان: <b>${fmtTime(secs)}</b></span>
           </div>
           <div class="res-actions">
@@ -693,6 +692,13 @@
     root.querySelectorAll('.rhead').forEach(h => h.onclick = e => {
       if (e.target.tagName === 'IMG') return zoomImg(e.target.src);
       if (e.target.closest('a')) return; // the prove.dk link opens in a new tab without toggling the card
+      const tr = e.target.closest('.rtr-btn');
+      if (tr) { // like the exam's "ترجمه‌ی فارسی" button: show or hide the Persian of this question only
+        const hide = h.parentElement.classList.toggle('no-fa');
+        tr.classList.toggle('on', !hide);
+        tr.querySelector('span').textContent = hide ? 'ترجمه‌ی فارسی' : 'پنهان‌کردن ترجمه';
+        return;
+      }
       if (!window.getSelection().isCollapsed || e.detail > 1) return;
       h.parentElement.classList.toggle('open');
       if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
@@ -733,9 +739,10 @@
 
   function reviewCard(r, n, extraBadge = '') {
     const q = r.q, t = BANK.topics[q.c];
-    return `<article class="card rcard" style="animation-delay:${Math.min(n, 8) * 50}ms">
+    return `<article class="card rcard ${state.settings.showFa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
       <div class="rhead">
         <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}</div>
+        <div class="qtools rtools"><button class="rtr-btn ${state.settings.showFa ? 'on' : ''}">${ICON.tr}<span class="fa">${state.settings.showFa ? 'پنهان‌کردن ترجمه' : 'ترجمه‌ی فارسی'}</span></button></div>
         <div class="rbadges">
           ${extraBadge}
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
