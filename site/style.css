@@ -554,3 +554,23 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .hlist{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;font-size:12.5px;color:var(--muted)}
 .hlist b{color:var(--text);font-weight:600}
 .vtable-wrap{max-height:340px;overflow-y:auto;margin-bottom:12px}
+/* mistakes page */
+.mistakes-page .words-head .btn{padding:9px 16px}
+.msum{margin-bottom:14px}
+.msum-kpis{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted);margin:2px 0 12px}
+.msum-kpis b{font-size:18px;color:var(--text)}
+.mtopics{display:grid;gap:4px}
+.mtopic-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(60px,1fr) auto;grid-template-areas:"name bar acc" "cnt cnt cnt";gap:2px 10px;align-items:center;text-align:right;padding:8px 6px;border-radius:6px;font-size:14px}
+.mtopic-row .mt-name{grid-area:name;font-weight:600;line-height:1.5}
+.mtopic-row .bar-track{grid-area:bar}
+.mtopic-row .mt-acc{grid-area:acc;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.mtopic-row .mt-cnt{grid-area:cnt;font-size:12.5px}
+.mtopic-row .bar-track i.ok{background:var(--ok)}
+.mtopic-row .bar-track i.warn{background:var(--warn)}
+.mtopic-row .bar-track i.bad{background:var(--bad)}
+.mtip{margin:12px 0 0;font-size:13px;color:var(--muted);line-height:1.8}
+.mtabs{margin:4px 0 6px}
+.mgroup{scroll-margin-top:70px}
+.mg-btns{display:flex;gap:6px;flex-wrap:wrap}
+.mgroup .lesson{margin:0 0 12px}
+@media (hover:hover){.mtopic-row:hover{background:var(--surface-2)}}
