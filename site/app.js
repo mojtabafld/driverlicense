@@ -705,7 +705,6 @@
     root.querySelectorAll('.rviews').forEach(v => v.onclick = e => {
       const b = e.target.closest('.rseg'); if (!b) return;
       v.querySelectorAll('.rseg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
-      v.classList.toggle('at-right', b.dataset.v === 'right');
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
     });
     root.querySelectorAll('.rcard.open').forEach(aiLesson);
