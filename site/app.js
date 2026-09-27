@@ -328,7 +328,7 @@
         <button class="size-opt ${n === last ? 'last' : ''}" data-size="${n}">
           <b>${faNum(n)}</b><span>سؤال</span>
           <small>${faNum(n)} دقیقه · ${n === FULL ? `قبولی با ${faNum(passMin(n))} درست` : 'فقط درصد درست'}</small>
-          ${n === FULL ? '<em>مثل آزمون واقعی</em>' : ''}
+          ${n === FULL ? '<em>مشابه آزمون اصلی</em>' : ''}
         </button>`).join('')}
       </div>
       ${state.draft ? '<p class="size-warn">با شروع آزمون جدید، آزمون نیمه‌تمام قبلی حذف می‌شود.</p>' : ''}
@@ -962,7 +962,7 @@
         <div class="opt"><div>زبان آزمون<small>سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند؛ ترجمه‌ی فارسی در هر دو حالت هست.</small></div>
           <div class="seg" role="group" aria-label="زبان آزمون">${Object.entries(LANGS).map(([k, v]) => `<button data-lang="${k}" class="${examLang() === k ? 'on' : ''}">${v}</button>`).join('')}</div></div>
         <div class="opt"><div>نمایش ترجمه‌ی فارسی زیر گزینه‌ها<small>در هر سؤال با دکمه‌ی «ترجمه» هم می‌توانید آن را باز و بسته کنید.</small></div><button class="switch ${state.settings.showFa ? 'on' : ''}" data-set="showFa" aria-label="ترجمه"></button></div>
-        <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مثل آزمون واقعی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
+        <div class="opt"><div>زمان‌سنج<small>برای هر سؤال ۱ دقیقه (آزمون ۲۵ سؤالی = ۲۵ دقیقه، مشابه آزمون اصلی)؛ با پایان زمان، آزمون خودکار تحویل داده می‌شود.</small></div><button class="switch ${state.settings.timer ? 'on' : ''}" data-set="timer" aria-label="زمان‌سنج"></button></div>
       </div>
     </section>`;
 
