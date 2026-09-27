@@ -164,20 +164,21 @@
     }
     return s;
   }
-  // Per-image accuracy over the last 5 random exams (with a small prior so one short exam cannot say 0% or 100%),
-  // then P(≥20 of 25 correct) in a full exam. Only random exams count: like the real test they draw from the whole
-  // bank, while "mistakes" / "most-missed" practice is made of hard questions and would pull the estimate down.
-  // Without any random exam yet, the last 5 exams of any kind are used.
+  // Per-image accuracy over the last 5 exams that look like the real test (with a small prior so one exam cannot
+  // say 0% or 100%), then P(≥20 of 25 correct) in a full exam. Preferred: full 25-question random exams. Short
+  // "practice" exams and "mistakes" / "most-missed" exams (made of hard questions) are only used while there is
+  // no full random exam yet, in that order of preference.
   const PASS_WINDOW = 5;
   function passEstimate() {
     const random = state.attempts.filter(a => a.mode === 'random');
-    const onlyRandom = random.length > 0;
-    const recent = (onlyRandom ? random : state.attempts).slice(-PASS_WINDOW);
+    const fullRandom = random.filter(isFull);
+    const basis = fullRandom.length ? 'full' : random.length ? 'random' : 'any';
+    const recent = (fullRandom.length ? fullRandom : random.length ? random : state.attempts).slice(-PASS_WINDOW);
     if (!recent.length) return null;
     let ok = 2, tot = 4;
     recent.forEach(a => { ok += scoreOf(a); tot += a.items.length; });
     const p = ok / tot;
-    return { p, prob: binomTailAtLeast(FULL, passMin(FULL), p), n: recent.length, onlyRandom };
+    return { p, prob: binomTailAtLeast(FULL, passMin(FULL), p), n: recent.length, basis };
   }
   function topicStats() {
     const m = new Map();
@@ -936,7 +937,7 @@
             <div class="g-val"><b class="num">${probPct == null ? '–' : probPct + '%'}</b></div>
           </div>
           <div class="g-txt"><div class="g-title">احتمال قبولی</div><div class="g-sub">${probText}</div>
-            ${est ? `<div class="g-note">بر اساس ${faNum(est.n)} آزمون ${est.onlyRandom ? 'تصادفی ' : ''}اخیر · دقت هر تصویر ${faNum(Math.round(est.p * 100))}٪</div>` : ''}</div>
+            ${est ? `<div class="g-note">بر اساس ${faNum(est.n)} آزمون ${est.basis === 'full' ? 'کامل ۲۵ سؤالی ' : est.basis === 'random' ? 'تصادفی ' : ''}اخیر · دقت هر تصویر ${faNum(Math.round(est.p * 100))}٪</div>` : ''}</div>
         </div>
       </div>
 
