@@ -189,7 +189,7 @@ body.exam-mode main{max-width:none;padding:0}
 .review{display:grid;gap:14px}
 .rcard{overflow:hidden;animation:rise .45s var(--ease) both}
 /* Review card header: picture on the side, badges + question (Danish, then Persian in a tinted block) beside it */
-.rcard .rhead{display:grid;grid-template-columns:230px minmax(0,1fr);grid-template-areas:"img badges" "img q" "trt q" "tog tog";grid-template-rows:auto 1fr auto auto;column-gap:18px;row-gap:10px;padding:16px;cursor:pointer;align-items:start}
+.rcard .rhead{display:grid;grid-template-columns:230px minmax(0,1fr);grid-template-areas:"img badges" "img q" "tog tog";grid-template-rows:auto 1fr auto;column-gap:18px;row-gap:10px;padding:16px;cursor:pointer;align-items:start}
 .rimg{grid-area:img;position:relative}
 .rimg img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:6px;display:block}
 .rnum{position:absolute;top:8px;right:8px;background:rgba(38,57,69,.82);color:#fff;font-size:12px;font-weight:600;padding:1px 9px;border-radius:99px}
@@ -354,7 +354,7 @@ body.exam-mode main{max-width:none;padding:0}
   .user-chip{padding:3px}
   .result-hero{grid-template-columns:1fr;text-align:center;justify-items:center}
   .kpis{margin-inline:auto}
-  .rcard .rhead{grid-template-columns:1fr;grid-template-areas:"img" "trt" "badges" "q" "tog";padding:12px}
+  .rcard .rhead{grid-template-columns:1fr;grid-template-areas:"img" "badges" "q" "tog";padding:12px}
   .rimg img{aspect-ratio:16/9}
   .result-hero > div{width:100%}
   .res-actions{max-width:none;width:100%}
@@ -472,14 +472,17 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .rstmt{background:var(--surface);border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:15px 14px;transition:background .15s,border-color .15s}
 :root[data-theme="dark"] .rstmt{border-color:var(--line)}
 /* prove.dk-style review: "Dine svar" (the user's ticks) / "Korrekte svar" (the right ticks + explanation) */
-.rtools{grid-area:trt;margin:0}
 .rcard.no-fa .rq-fa,.rcard.no-fa .rtr,.rcard.no-fa .ranswer.fa{display:none}
-.rviews{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 14px}
-.rview-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;white-space:nowrap;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.rviews{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:4px 0 14px}
+.rtr-btn{margin-inline-start:auto;display:flex;align-items:center;gap:5px;padding:7px 10px;border-radius:999px;border:1.5px solid var(--line);color:var(--muted);font-size:13.5px;white-space:nowrap}
+.rtr-btn.on{color:var(--navy);border-color:var(--navy);background:var(--checked-bg);font-weight:600}
+:root[data-theme="dark"] .rtr-btn.on{color:var(--accent);border-color:var(--accent)}
+.rview-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;white-space:nowrap;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .rview-btn.mine.bad{border-color:#d32f2f;color:#d32f2f}
 .rview-btn.mine.good{border-color:#2e9d3a;color:#2e9d3a}
 .rview-btn.right{border-color:#1f5fbf;color:#1f5fbf}
 .rviews .rview-btn.on{color:#fff}
+@media (max-width:400px){.rviews{gap:6px}.rview-btn{padding:7px 11px}.rview-btn svg,.rtr-btn svg{display:none}}
 .rview-btn.mine.bad.on{background:#d32f2f}.rview-btn.mine.good.on{background:#2e9d3a}.rview-btn.right.on{background:#1f5fbf}
 .rbox{flex:none;width:13px;height:13px;margin-top:4px;border:1px solid var(--text);border-radius:1px;background:var(--surface)}
 .v-mine .rstmt.me,.v-right .rstmt.ok{background:var(--checked-bg);border-color:var(--text)}
