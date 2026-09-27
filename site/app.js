@@ -151,7 +151,7 @@
       if (!Q.has(it.id)) return;
       const s = m.get(it.id) || { id: it.id, wrong: 0, seen: 0, lastOk: true, lastA: null, lastAttempt: -1 };
       s.seen++; if (!it.ok) s.wrong++;
-      s.lastOk = it.ok; s.lastA = it.a || null; s.lastAttempt = ai;
+      s.lastOk = it.ok; s.lastA = it.a || null; s.lastAttempt = ai; s.lastAt = a.at;
       m.set(it.id, s);
     }));
     return [...m.values()].filter(s => s.wrong > 0).sort((a, b) => b.wrong - a.wrong || (b.wrong / b.seen) - (a.wrong / a.seen) || b.lastAttempt - a.lastAttempt);
@@ -802,31 +802,79 @@
         <span class="mbody">
           <span class="mtopic">${t ? esc(t.fa) : ''}</span>
           <span class="mq da">${esc(qText(q))}</span>
-          <span class="mmeta">${faNum(s.wrong)} اشتباه از ${faNum(s.seen)} بار · ${s.lastOk ? '<span class="okc">آخرین بار درست</span>' : '<span class="badc">آخرین بار اشتباه</span>'}</span>
+          <span class="mmeta">${faNum(s.wrong)} اشتباه از ${faNum(s.seen)} بار · ${s.lastOk ? '<span class="okc">آخرین بار درست</span>' : '<span class="badc">آخرین بار اشتباه</span>'}${s.lastAt ? ` · ${fmtDate(s.lastAt)}` : ''}</span>
         </span>
       </button>`;
     }).join('')}</div>`;
   }
-  // All mistakes on their own page, grouped by topic; topics with the most wrong answers first.
-  function mistakesView() {
+  // All mistakes on their own page, grouped by topic, to see which topics need work and practise them.
+  // "Still wrong" = the last answer to that question was wrong; "fixed" = answered wrong before but right last time.
+  // Topics are ordered by how many questions are still wrong, then by accuracy in that topic.
+  function mistakesView(filter = 'open') {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
-    const groups = new Map();
-    for (const s of mistakeStats()) {
-      const c = Q.get(s.id).c, g = groups.get(c) || { c, list: [], wrong: 0 };
-      g.list.push(s); g.wrong += s.wrong; groups.set(c, g);
+    const acc = new Map(); // accuracy per topic over every answer given in it
+    for (const a of state.attempts) for (const it of a.items) {
+      const q = Q.get(it.id); if (!q) continue;
+      const x = acc.get(q.c) || { ok: 0, n: 0 }; x.n++; if (it.ok) x.ok++; acc.set(q.c, x);
     }
-    const sorted = [...groups.values()].sort((a, b) => b.wrong - a.wrong || b.list.length - a.list.length);
-    const total = sorted.reduce((a, g) => a + g.list.length, 0);
-    $app.innerHTML = `<section class="view">
+    const groups = new Map();
+    for (const st of mistakeStats()) {
+      const c = Q.get(st.id).c, g = groups.get(c) || { c, list: [], open: 0, fixed: 0, wrong: 0 };
+      g.list.push(st); g.wrong += st.wrong; st.lastOk ? g.fixed++ : g.open++; groups.set(c, g);
+    }
+    const topicName = c => (BANK.topics[c] ? BANK.topics[c].fa : 'سایر');
+    const accOf = c => { const x = acc.get(c); return x && x.n ? x.ok / x.n : 0; };
+    const sorted = [...groups.values()].sort((a, b) => b.open - a.open || accOf(a.c) - accOf(b.c) || b.wrong - a.wrong);
+    const open = sorted.reduce((n, g) => n + g.open, 0), fixed = sorted.reduce((n, g) => n + g.fixed, 0);
+    const keep = st => filter === 'all' || (filter === 'open' ? !st.lastOk : st.lastOk);
+    const pctCls = p => (p >= 0.8 ? 'ok' : p >= 0.6 ? 'warn' : 'bad');
+    $app.innerHTML = `<section class="view mistakes-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
-      <div class="words-head"><h1>بیشترین اشتباهات <small class="muted">(${faNum(total)} سؤال در ${faNum(sorted.length)} مبحث)</small></h1></div>
-      ${sorted.length ? sorted.map(g => `
-        <div class="section-title"><span>${esc(BANK.topics[g.c] ? BANK.topics[g.c].fa : 'سایر')} <small class="muted">(${faNum(g.list.length)} سؤال · ${faNum(g.wrong)} اشتباه)</small></span></div>
-        ${mistakeCards(g.list)}`).join('') : '<div class="card empty">هنوز اشتباهی ثبت نشده است.</div>'}
+      <div class="words-head"><h1>بیشترین اشتباهات</h1>${open ? '<button class="btn btn-primary" id="practiceOpen">تمرین همه‌ی اشتباهات باز</button>' : ''}</div>
+      ${sorted.length ? `
+      <div class="card panel msum">
+        <div class="panel-h"><h3>وضعیت مباحث</h3><small class="muted">ضعیف‌ترین مبحث بالا — روی هر مبحث بزنید</small></div>
+        <div class="msum-kpis"><span><b class="badc">${faNum(open)}</b> سؤال هنوز اشتباه</span><span><b class="okc">${faNum(fixed)}</b> سؤال اصلاح‌شده</span><span><b>${faNum(sorted.length)}</b> مبحث</span></div>
+        <div class="mtopics">${sorted.map(g => `
+          <button class="mtopic-row" data-jump="${g.c}">
+            <span class="mt-name">${esc(topicName(g.c))}</span>
+            <span class="bar-track"><i class="${pctCls(accOf(g.c))}" style="--w:${Math.max(accOf(g.c) * 100, 2)}%"></i></span>
+            <span class="mt-acc">${faNum(Math.round(accOf(g.c) * 100))}٪ دقت</span>
+            <span class="mt-cnt">${g.open ? `<span class="badc">${faNum(g.open)} باز</span>` : '<span class="okc">همه اصلاح شد ✓</span>'}${g.fixed && g.open ? `، <span class="okc">${faNum(g.fixed)} اصلاح‌شده</span>` : ''}</span>
+          </button>`).join('')}</div>
+        <p class="mtip">پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «باز» به «اصلاح‌شده» بروند.</p>
+      </div>
+      <div class="tabs mtabs"><button data-mf="open" class="${filter === 'open' ? 'on' : ''}">هنوز اشتباه (${faNum(open)})</button><button data-mf="fixed" class="${filter === 'fixed' ? 'on' : ''}">اصلاح‌شده (${faNum(fixed)})</button><button data-mf="all" class="${filter === 'all' ? 'on' : ''}">همه (${faNum(open + fixed)})</button></div>
+      ${sorted.map(g => {
+        const list = g.list.filter(keep), t = BANK.topics[g.c];
+        if (!list.length) return '';
+        return `<div class="mgroup" id="mt-${g.c}">
+          <div class="section-title"><span>${esc(topicName(g.c))} <small class="muted">(دقت ${faNum(Math.round(accOf(g.c) * 100))}٪، ${faNum(g.open)} باز، ${faNum(g.fixed)} اصلاح‌شده)</small></span>
+            <span class="mg-btns">${t && t.lesson ? `<button class="tr-toggle" data-lesson="${g.c}">آموزش کوتاه</button>` : ''}<button class="tr-toggle" data-practice="${g.c}">تمرین این مبحث</button></span></div>
+          ${t && t.lesson ? `<div class="lesson" id="lesson-${g.c}" hidden><h4>📘 ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4><ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
+          ${mistakeCards(list)}</div>`;
+      }).join('') || `<div class="card empty">${filter === 'open' ? 'هیچ سؤالی در حالت «هنوز اشتباه» نیست؛ عالی! ✨' : 'موردی نیست.'}</div>`}` : '<div class="card empty">هنوز اشتباهی ثبت نشده است.</div>'}
     </section>`;
     document.getElementById('back').onclick = home;
+    const po = document.getElementById('practiceOpen'); if (po) po.onclick = () => askSize('mistakes');
+    $app.querySelectorAll('[data-mf]').forEach(b => b.onclick = () => { const y = scrollY; mistakesView(b.dataset.mf); scrollTo({ top: y }); });
+    $app.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => {
+      let el = document.getElementById('mt-' + b.dataset.jump);
+      if (!el) { mistakesView('all'); el = document.getElementById('mt-' + b.dataset.jump); }
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    $app.querySelectorAll('[data-lesson]').forEach(b => b.onclick = () => { const l = document.getElementById('lesson-' + b.dataset.lesson); l.hidden = !l.hidden; });
+    $app.querySelectorAll('[data-practice]').forEach(b => b.onclick = () => practiceTopic(+b.dataset.practice));
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
     window.scrollTo({ top: 0 });
+  }
+  // Practice one topic: its still-wrong questions first, then fixed ones, then other questions of the topic (10 at most).
+  function practiceTopic(c) {
+    const stats = mistakeStats().filter(st => Q.get(st.id).c === c);
+    const first = [...shuffle(stats.filter(st => !st.lastOk).map(st => st.id)), ...shuffle(stats.filter(st => st.lastOk).map(st => st.id))];
+    const rest = shuffle(BANK.questions.filter(q => q.c === c && !first.includes(q.id)).map(q => q.id));
+    const ids = [...first, ...rest].slice(0, 10);
+    newExam('mistakes', shuffle(ids));
   }
 
   // Newest first; the dashboard passes a limit and links to the full list on its own page.
@@ -943,7 +991,7 @@
     document.getElementById('startM').onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
-    const am = document.getElementById('allMistakes'); if (am) am.onclick = mistakesView;
+    const am = document.getElementById('allMistakes'); if (am) am.onclick = () => mistakesView();
     bindHistory();
     $app.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => setLang(b.dataset.lang));
     $app.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
