@@ -543,3 +543,5 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .utable td small{display:block;color:var(--muted);font-size:12px}
 .utable td.num-strong{font-weight:700;color:var(--navy);font-size:15px}
 .badge.src{background:var(--surface-2);color:var(--muted);font-family:var(--da);font-weight:600;direction:ltr;margin-inline-start:6px}
+a.badge.src{text-decoration:none;cursor:pointer}
+a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
