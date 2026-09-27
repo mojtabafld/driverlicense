@@ -83,6 +83,50 @@ async function touch(user) {
   user.days = [...(user.days || []).filter(x => x !== d).slice(-399), d];
   await store.saveUser(user);
 }
+// ---------- site visits (admin panel) ----------
+// A visit is a load of the page itself (not API calls, pictures or health checks), bots excluded. Unique
+// visitors are counted with a salted hash of IP + browser that changes every day; no IP is stored.
+// Counts are kept per Copenhagen hour for 31 days and per day for 400 days, saved (debounced) in store.meta.visits.
+const hourFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
+const hourKey = t => { const p = Object.fromEntries(hourFmt.formatToParts(new Date(t)).map(x => [x.type, x.value])); return `${p.year}-${p.month}-${p.day} ${p.hour}`; };
+const BOT_RE = /bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget|python|httpclient|headless|monitor|uptime/i;
+let visits, visitSets, visitTimer = null;
+function loadVisits() {
+  const v = store.meta.visits || {};
+  visits = { salt: v.salt || crypto.randomBytes(16).toString('hex'), days: v.days || {}, hours: v.hours || {}, today: v.today || '', dayIds: v.dayIds || [], hourIds: v.hourIds || {} };
+  visitSets = { day: new Set(visits.dayIds), hour: Object.fromEntries(Object.entries(visits.hourIds).map(([h, ids]) => [h, new Set(ids)])) };
+}
+function saveVisits(now = false) {
+  if (visitTimer && !now) return;
+  clearTimeout(visitTimer); visitTimer = null;
+  const write = () => {
+    visitTimer = null;
+    visits.dayIds = [...visitSets.day];
+    visits.hourIds = Object.fromEntries(Object.entries(visitSets.hour).map(([h, set]) => [h, [...set]]));
+    return store.saveMeta('visits', visits).catch(e => console.error('saving visits failed', e));
+  };
+  if (now) return write();
+  visitTimer = setTimeout(write, 30e3);
+}
+function recordVisit(req) {
+  if (BOT_RE.test(req.headers['user-agent'] || '')) return;
+  const now = Date.now(), d = dayKey(now), h = hourKey(now);
+  if (visits.today !== d) { // new day: forget yesterday's visitor ids, drop old counts
+    visits.today = d; visitSets.day = new Set(); visitSets.hour = {};
+    const minHour = hourKey(now - 31 * 864e5), minDay = dayKey(now - 400 * 864e5);
+    for (const k of Object.keys(visits.hours)) if (k < minHour) delete visits.hours[k];
+    for (const k of Object.keys(visits.days)) if (k < minDay) delete visits.days[k];
+  }
+  const id = crypto.createHash('sha256').update(`${visits.salt}|${d}|${clientIp(req)}|${req.headers['user-agent'] || ''}`).digest('hex').slice(0, 12);
+  const day = visits.days[d] = visits.days[d] || { v: 0, u: 0 };
+  const hour = visits.hours[h] = visits.hours[h] || { v: 0, u: 0 };
+  day.v++; hour.v++;
+  if (!visitSets.day.has(id)) { visitSets.day.add(id); day.u++; }
+  const hs = visitSets.hour[h] = visitSets.hour[h] || new Set();
+  if (!hs.has(id)) { hs.add(id); hour.u++; }
+  saveVisits();
+}
+
 const FULL = 25, PASS_MIN = 20;
 const scoreOf = a => a.items.filter(x => x.ok).length;
 function adminStats() {
@@ -120,7 +164,11 @@ function adminStats() {
       lastPct: lastA ? Math.round(scoreOf(lastA) / lastA.items.length * 100) : null });
   }
   users.sort((a, b) => b.lastActive - a.lastActive);
-  return { totals: t, days: keys.map(k => perDay[k]), users };
+  const vd = k => visits.days[k] || { v: 0, u: 0 };
+  const visitDays = keys.map(k => ({ day: k, ...vd(k) }));
+  t.visitsToday = vd(today).v; t.visitorsToday = vd(today).u;
+  t.visits7 = visitDays.slice(-7).reduce((a, x) => a + x.v, 0); t.visits30 = visitDays.reduce((a, x) => a + x.v, 0);
+  return { totals: t, days: keys.map(k => perDay[k]), users, visitDays, visitHours: visits.hours };
 }
 
 // Behind App Platform's load balancer the client address is in X-Forwarded-For.
@@ -164,6 +212,7 @@ function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
   if (p === '/' || p === '/index.html') {
+    if (req.method === 'GET') recordVisit(req);
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
     return res.end(req.method === 'HEAD' ? undefined : INDEX_HTML);
   }
@@ -330,6 +379,9 @@ async function api(req, res, route) {
 
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
+  loadVisits();
+  // Save the visit counts before App Platform stops the old instance on a redeploy.
+  process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });
   http.createServer(async (req, res) => {
     let pathname;
     try { pathname = new URL(req.url, 'http://x').pathname; } catch { res.writeHead(400); return res.end(); }

@@ -549,3 +549,8 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .opt-link:hover{background:var(--surface-2)}
 .stat-link:hover{border-color:var(--navy);transform:translateY(-1px)}
 }
+/* admin: visits */
+.day-pick{font:inherit;font-size:13px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+.hlist{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.hlist b{color:var(--text);font-weight:600}
+.vtable-wrap{max-height:340px;overflow-y:auto;margin-bottom:12px}
