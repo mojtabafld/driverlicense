@@ -467,14 +467,15 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 /* review answers: one card per statement; «پاسخ شما» / «پاسخ صحیح» switch between the user's ticks and the right ones */
 .rbody{margin:0 16px 16px;padding:14px;background:var(--bg);border:1px solid var(--line);border-radius:12px}
 @media (max-width:640px){.rbody{margin:0 12px 12px;padding:12px}}
-/* the options of one question form a single box, one row per option, divided by a line */
-.rstmts{display:grid;margin-bottom:12px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
-.rstmt{background:var(--surface);padding:14px;transition:background .2s,box-shadow .2s}
-/* rows follow the box's rounded corners (12px outer - 1.5px border), so a red frame on the first or last row fits */
-.rstmt:first-child{border-radius:10.5px 10.5px 0 0}
-.rstmt:last-child{border-radius:0 0 10.5px 10.5px}
-.rstmt:only-child{border-radius:10.5px}
-.rstmt + .rstmt{box-shadow:inset 0 1px 0 var(--line)}
+/* the options of one question form a single box, one row per option, divided by a line. Every row draws its
+   own 2px border and overlaps the one above by 2px, so each edge (outer or shared) is exactly one 2px line;
+   a mistake's red border is drawn above its neighbours' grey. Whole pixels keep every edge the same thickness. */
+.rstmts{display:grid;margin-bottom:12px}
+.rstmt{position:relative;background:var(--surface);padding:14px;border:2px solid var(--line);transition:background .2s,border-color .2s}
+.rstmt + .rstmt{margin-top:-2px}
+.rstmt:first-child{border-radius:12px 12px 0 0}
+.rstmt:last-child{border-radius:0 0 12px 12px}
+.rstmt:only-child{border-radius:12px}
 /* «پاسخ شما» | «پاسخ صحیح»: same segmented look as the exam-language switch in settings (.seg) */
 .rviews{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;margin:2px 0 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
 .rseg{display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 14px;border-radius:6px;color:var(--muted);font:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .2s,color .2s}
@@ -488,11 +489,7 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .v-mine .rstmt.me .rbox,.v-right .rstmt.ok .rbox{background:var(--navy);border-color:var(--navy)}
 .v-mine .rstmt.me .rbox::after,.v-right .rstmt.ok .rbox::after{content:'';width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
 /* «پاسخ شما»: only mistakes are marked, a wrong tick or a missing one, both solid red */
-.v-mine .rstmt.m-extra,.v-mine .rstmt.m-miss{background:var(--bad-soft);box-shadow:inset 0 0 0 1.5px var(--bad)}
-/* two mistakes in a row share one red line: the lower one draws no top edge */
-.v-mine :is(.m-extra,.m-miss) + :is(.m-extra,.m-miss){box-shadow:inset 1.5px 0 0 var(--bad),inset -1.5px 0 0 var(--bad),inset 0 -1.5px 0 var(--bad)}
-/* and a plain row under a mistake needs no grey line of its own */
-.v-mine :is(.m-extra,.m-miss) + .rstmt:not(.m-extra):not(.m-miss){box-shadow:none}
+.v-mine .rstmt.m-extra,.v-mine .rstmt.m-miss{z-index:1;border-color:var(--bad);background:var(--bad-soft)}
 .v-mine .rexpl{display:none}
 .rexpl{padding-left:32px}
 .rexpl .ranswer.fa{direction:rtl}
