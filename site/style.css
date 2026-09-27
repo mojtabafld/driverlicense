@@ -464,37 +464,46 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .wbtn:hover{background:var(--accent-soft);color:var(--navy)}
 .wbtn.danger:hover{background:var(--bad-soft);color:var(--bad)}
 
-/* review answers, as on prove.dk: one white card per statement, numbered circle green = the user answered it
-   right, red = wrong; then the correct answer with its explanation */
+/* review answers: one card per statement; «پاسخ شما» / «پاسخ صحیح» switch between the user's ticks and the right ones */
 .rbody{background:var(--bg);padding-top:14px}
 .rstmts{display:grid;gap:12px;margin-bottom:12px}
-/* same look as the test's option boxes (.answer) */
-.rstmt{background:var(--surface);border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:15px 14px;transition:background .15s,border-color .15s}
-:root[data-theme="dark"] .rstmt{border-color:var(--line)}
-/* prove.dk-style review: "Dine svar" (the user's ticks) / "Korrekte svar" (the right ticks + explanation) */
+.rstmt{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:14px;transition:background .2s,border-color .2s}
+/* two-part switch: «پاسخ شما» (with the verdict of this question) | «پاسخ صحیح» */
+.rviews{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:4px 0 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:14px}
+.rseg{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:10px 8px;border-radius:10px;color:var(--muted);font:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.rseg.on{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.14)}
+.rseg.right.on{color:var(--ok)}
+.rseg-chip{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
+.rseg-chip.bad{background:var(--bad-soft);color:var(--bad)}
+.rseg-chip.good{background:var(--ok-soft);color:var(--ok)}
+.rviews-title{font-weight:700;color:var(--ok);margin:4px 0 12px}
+/* option: a clear checkbox with a tick; in «پاسخ شما» it is the user's tick, in «پاسخ صحیح» the right one */
+.rbox{flex:none;width:22px;height:22px;margin-top:1px;border:2px solid var(--muted);border-radius:6px;background:var(--surface);display:grid;place-items:center;transition:background .2s,border-color .2s}
+.v-mine .rstmt.me .rbox,.v-right .rstmt.ok .rbox{background:var(--navy);border-color:var(--navy)}
+.v-mine .rstmt.me .rbox::after,.v-right .rstmt.ok .rbox::after{content:'';width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+.v-right .rstmt.ok .rbox{background:var(--ok);border-color:var(--ok)}
+.v-mine .rstmt.m-good{border-color:var(--ok);background:var(--ok-soft)}
+.v-mine .rstmt.m-extra{border-color:var(--bad);background:var(--bad-soft)}
+.v-mine .rstmt.m-miss{border-color:var(--bad);border-style:dashed}
+.v-right .rstmt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.v-right .rstmt:not(.ok){opacity:.8}
+.rtag{display:none;width:fit-content;margin:10px auto 0 32px;padding:3px 10px;border-radius:999px;font-size:12.5px;font-weight:700}
+.v-mine .rtag.t-mine,.v-right .rtag.t-right{display:block}
+.m-good .rtag.t-mine,.rstmt.ok .rtag.t-right{background:var(--surface);color:var(--ok);border:1px solid var(--ok)}
+.m-extra .rtag.t-mine,.m-miss .rtag.t-mine{background:var(--bad);color:#fff}
+.rstmt:not(.ok) .rtag.t-right{background:var(--surface-2);color:var(--muted)}
+.v-mine .rexpl{display:none}
+.rexpl{padding-left:32px}
+.rexpl .ranswer.fa{direction:rtl}
 .rcard.no-fa .rq-fa,.rcard.no-fa .rtr,.rcard.no-fa .ranswer.fa{display:none}
-.rviews{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:4px 0 14px}
 .rtr-btn{margin-inline-start:auto;display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:12.5px;white-space:nowrap}
 .rtr-btn svg{width:14px;height:14px}
 .rtr-btn.on{color:var(--navy);border-color:var(--navy);background:var(--checked-bg);font-weight:600}
 :root[data-theme="dark"] .rtr-btn.on{color:var(--accent);border-color:var(--accent)}
-.rview-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;white-space:nowrap;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--text);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
-.rview-btn.mine.bad{border-color:#d32f2f;color:#d32f2f}
-.rview-btn.mine.good{border-color:#2e9d3a;color:#2e9d3a}
-.rview-btn.right{border-color:#1f5fbf;color:#1f5fbf}
-.rviews .rview-btn.on{color:#fff}
-.rview-btn.mine.bad.on{background:#d32f2f}.rview-btn.mine.good.on{background:#2e9d3a}.rview-btn.right.on{background:#1f5fbf}
-.rbox{flex:none;width:13px;height:13px;margin-top:4px;border:1px solid var(--text);border-radius:1px;background:var(--surface)}
-.v-mine .rstmt.me,.v-right .rstmt.ok{background:var(--checked-bg);border-color:var(--text)}
-.v-mine .rstmt.me .rbox,.v-right .rstmt.ok .rbox{background:var(--navy);border-color:var(--navy)}
-:root[data-theme="dark"] .v-mine .rstmt.me .rbox,:root[data-theme="dark"] .v-right .rstmt.ok .rbox{background:var(--accent);border-color:var(--accent)}
-.v-mine .rexpl{display:none}
 .rline{direction:ltr;display:flex;gap:10px;align-items:flex-start}
 .rtxt{flex:1;min-width:0;display:grid;gap:4px}
 .rst-da{font-size:16.5px;line-height:1.35}
 .rtxt .rtr{color:var(--muted);font-size:14px}
-.rexpl{padding-left:23px}
-.rexpl .ranswer.fa{direction:rtl}
 .ranswer{margin-top:10px;font-size:15px;line-height:1.6}
 .ranswer.da i{font-style:italic;color:var(--text)}
 .ranswer.fa{margin-top:4px;color:var(--muted);font-size:14px}
