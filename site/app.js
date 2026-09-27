@@ -128,12 +128,14 @@
       overview: 'Spørgsmålsoversigt', ovTitle: 'Din spørgsmålsoversigt',
       ovText: 'Spørgsmålsoversigten giver dig et overblik over dine besvarede, ubesvarede og gemte spørgsmål. Du skal trykke på et nummer for at gå til spørgsmålet.',
       notAnswered: 'Ikke besvaret', answered: 'Besvaret', saved: 'Gemte spørgsmål', jump: 'Spring til dit spørgsmål', q: 'Spørgsmål',
-      handin: 'Aflever prøven', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.' },
+      handin: 'Aflever prøven', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.',
+      mine: 'Dine svar', right: 'Korrekte svar', expl: 'Forklaring:' },
     en: { read: 'Read aloud', save: 'Save for later', prev: 'Previous', next: 'Next', count: (i, n) => `Question ${i} of ${n}`,
       overview: 'Question overview', ovTitle: 'Your question overview',
       ovText: 'The question overview gives you an overview of your answered, unanswered and saved questions. Tap a number to go to the question.',
       notAnswered: 'Not answered', answered: 'Answered', saved: 'Saved questions', jump: 'Jump to your question', q: 'Question',
-      handin: 'Hand in the test', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.' },
+      handin: 'Hand in the test', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.',
+      mine: 'Your answers', right: 'Correct answers', expl: 'Explanation:' },
   };
   const ui = () => EXAM_UI[examLang()];
 
@@ -416,6 +418,9 @@
   const stopSpeak = () => { try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch {} };
 
   const ICON = {
+    thumbUp: '<svg width="17" height="17" viewBox="0 0 24 24"><path d="M7 11v9H4v-9zM7 11l4-8c1.7 0 2.6 1.2 2.2 2.8L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.9A2 2 0 0 1 17.8 20H7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>',
+    thumbDown: '<svg width="17" height="17" viewBox="0 0 24 24" style="transform:rotate(180deg)"><path d="M7 11v9H4v-9zM7 11l4-8c1.7 0 2.6 1.2 2.2 2.8L12.6 9H19a2 2 0 0 1 2 2.3l-1.2 6.9A2 2 0 0 1 17.8 20H7" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/></svg>',
+    check: '<svg width="17" height="17" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     list: '<svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M9 12h7M9 16h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
     x: '<svg width="14" height="14" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
     // Same bookmark glyph as "Gem til senere" in the digital test.
@@ -692,6 +697,11 @@
       h.parentElement.classList.toggle('open');
       if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
     });
+    root.querySelectorAll('.rviews').forEach(v => v.onclick = e => {
+      const b = e.target.closest('.rview-btn'); if (!b) return;
+      v.querySelectorAll('.rview-btn').forEach(x => x.classList.toggle('on', x === b));
+      v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
+    });
     root.querySelectorAll('.rcard.open').forEach(aiLesson);
   }
   // AI lesson for a reviewed question (server: /api/lesson, Claude, cached per question + mistakes). Loaded the
@@ -738,24 +748,34 @@
         <span class="rtoggle"><span class="fa">${'جزئیات و توضیحات'}</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
       </div>
       <div class="rbody">
+        <div class="rviews" dir="ltr" role="tablist">
+          ${r.a ? `<button class="rview-btn mine ${r.ok ? 'good' : 'bad'} on" data-v="mine" role="tab">${r.ok ? ICON.thumbUp : ICON.thumbDown}<span class="da">${ui().mine}</span><span class="fa">پاسخ‌های شما</span></button>` : ''}
+          <button class="rview-btn right ${r.a ? '' : 'on'}" data-v="right" role="tab">${ICON.check}<span class="da">${ui().right}</span><span class="fa">پاسخ‌های درست</span></button>
+        </div>
+        <div class="rstmts ${r.a ? 'v-mine' : 'v-right'}">
         ${q.st.map((s, k) => {
-          // Like prove.dk: the number is green when the user answered this statement right, red when wrong
-          // (grey for old attempts that did not store the ticks), then "Det rigtige svar er: …".
+          // Like prove.dk's review: "Dine svar" shows the user's ticks, "Korrekte svar" the right ticks with the
+          // explanation. The number is green when the user answered this statement right, red when wrong
+          // (grey for old attempts that did not store the ticks).
           const res = r.a ? (r.wrong[k] ? 'bad' : 'ok') : 'na';
           const eda = stExpl(s).trim() || (s.ok ? ui().yes : ui().no);
           const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
-          return `<div class="rstmt">
+          return `<div class="rstmt ${r.a && r.a[k] ? 'me' : ''} ${s.ok ? 'ok' : ''}">
             <div class="rline">
-              <span class="rnum-c ${res}" aria-label="${res === 'ok' ? 'پاسخ شما درست' : res === 'bad' ? 'پاسخ شما اشتباه' : ''}">${k + 1}</span>
+              <span class="rbox" aria-hidden="true"></span>
               <div class="rtxt">
                 <div class="da rst-da" data-wq="${q.id}" data-wst="${k}">${nl(stText(s))}</div>
                 ${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}
               </div>
+              <span class="rnum-c ${res}" aria-label="${res === 'ok' ? 'پاسخ شما درست' : res === 'bad' ? 'پاسخ شما اشتباه' : ''}">${k + 1}</span>
             </div>
-            <div class="ranswer da">${ui().correct} <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
-            <div class="ranswer fa">پاسخ درست: <i>${nl(efa)}</i></div>
+            <div class="rexpl">
+              <div class="ranswer da">${ui().expl} <i data-wq="${q.id}" data-wst="${k}">${nl(eda)}</i></div>
+              <div class="ranswer fa">توضیح: <i>${nl(efa)}</i></div>
+            </div>
           </div>`;
         }).join('')}
+        </div>
         ${state.aiLessons ? `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.join('') : ''}"><h4>${ICON.ai} آموزش این سؤال</h4><div class="ai-body"></div></div>` : ''}
         ${t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
