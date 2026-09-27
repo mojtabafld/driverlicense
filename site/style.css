@@ -482,7 +482,6 @@ mark{background:#ffe58a;color:inherit;border-radius:3px;padding:0 2px}
 .rbox{flex:none;width:22px;height:22px;margin-top:1px;border:2px solid var(--muted);border-radius:6px;background:var(--surface);display:grid;place-items:center;transition:background .2s,border-color .2s}
 .v-mine .rstmt.me .rbox,.v-right .rstmt.ok .rbox{background:var(--navy);border-color:var(--navy)}
 .v-mine .rstmt.me .rbox::after,.v-right .rstmt.ok .rbox::after{content:'';width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
-.v-right .rstmt.ok .rbox{background:var(--ok);border-color:var(--ok)}
 .v-mine .rstmt.m-good{border-color:var(--ok);background:var(--ok-soft)}
 .v-mine .rstmt.m-extra{border-color:var(--bad);background:var(--bad-soft)}
 .v-mine .rstmt.m-miss{border-color:var(--bad);border-style:dashed}
