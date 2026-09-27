@@ -7,7 +7,12 @@
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
       s.src = 'data.js';
-      s.onload = () => { BANK = window.BANK; Q = new Map(BANK.questions.map(q => [q.id, q])); resolve(); };
+      s.onload = () => {
+        BANK = window.BANK; Q = new Map(BANK.questions.map(q => [q.id, q]));
+        // Where each question sits in prove.dk's numbered tests ("Teoriprøve 12", question 7); a few are in two.
+        BANK.tests.forEach(t => t.qs.forEach((id, i) => { const q = Q.get(id); if (q) (q.src = q.src || []).push(`${t.title.replace(/\s*\(.*\)\s*$/, '')} · #${i + 1}`); }));
+        resolve();
+      };
       s.onerror = () => { s.remove(); reject(new Error('بارگذاری سؤال‌ها ناموفق بود')); };
       document.head.appendChild(s);
     });
@@ -62,7 +67,7 @@
   // only inputs, code, the exam's "Spørgsmål 3 ud af 25" counter and the review's statement numbers keep Latin digits.
   // Runs on every DOM change, so animated counters and timers are covered.
   // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
-  const LATIN_ZONE = 'input, textarea, code, .x-count, .rnum-c, script, style';
+  const LATIN_ZONE = 'input, textarea, code, .x-count, .rnum-c, .badge.src, script, style';
   const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
   const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
@@ -660,6 +665,7 @@
           ${r.m ? `<span class="badge saved">${ICON.bookmark(true)} ذخیره‌شده</span>` : ''}
           ${extraBadge}
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
+          ${q.src ? `<span class="badge src" title="آزمون و شماره‌ی سؤال در prove.dk">${esc(q.src.join(' / '))}</span>` : ''}
         </div>
         <div class="rq">
           <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(qText(q))}</p>
