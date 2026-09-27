@@ -358,7 +358,7 @@
       <div class="size-grid">${SIZES.map(n => `
         <button class="size-opt ${n === last ? 'last' : ''}" data-size="${n}">
           <b>${faNum(n)}</b><span>سؤال</span>
-          <small>${faNum(n)} دقیقه · ${n === FULL ? `قبولی با ${faNum(passMin(n))} درست` : 'فقط درصد درست'}</small>
+          <small>${faNum(n)} دقیقه${n === FULL ? ` · قبولی با ${faNum(passMin(n))} درست` : ''}</small>
           ${n === FULL ? '<em>مشابه آزمون اصلی</em>' : ''}
         </button>`).join('')}
       </div>
