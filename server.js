@@ -30,10 +30,10 @@ const isAdmin = u => ADMINS.has(u.username);
 
 const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
-// Version of the front end: a hash of its files. index.html links app.js/style.css with ?v=VERSION so a
+// Version of the front end: a hash of its files (incl. the question bank). index.html links app.js/style.css with ?v=VERSION so a
 // browser (or CDN) never keeps an old copy after a deploy, and /api/config reports it to check what is live.
 const VERSION = crypto.createHash('sha256')
-  .update(['index.html', 'app.js', 'style.css'].map(f => fs.readFileSync(path.join(SITE, f))).join('\0'))
+  .update(['index.html', 'app.js', 'style.css', 'data.js'].map(f => fs.readFileSync(path.join(SITE, f))).join('\0'))
   .digest('hex').slice(0, 8);
 const INDEX_HTML = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8')
   .replace('href="style.css"', `href="style.css?v=${VERSION}"`)
