@@ -228,13 +228,18 @@ for k, v in _fix.items():
 EN = json.load(open(os.path.join(ROOT, 'data/en.json'), encoding='utf-8'))
 
 
+# New Persian translation of every question, translated directly from the current Danish text.
+# The previous Persian (prove.dk + fa_fix.json) is kept in data/backup/ and remains the fallback.
+FA_AI = json.load(open(os.path.join(ROOT, 'data/fa_ai.json'), encoding='utf-8'))
+
+
 def clean(s):
     return (s or '').strip()
 
 
 questions = []
 for k, q in raw['questions'].items():
-    fa = FA_FILL.get(k) or q['fa']
+    fa = FA_AI.get(k) or FA_FILL.get(k) or q['fa']
     en = EN[k]
     n = q['n']
     items = []
