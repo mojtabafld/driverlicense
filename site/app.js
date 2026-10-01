@@ -1459,6 +1459,8 @@
   // The user picks sections, then how many questions; they come in random order.
   const sectionOf = c => +String(c).split('.')[0];
   const sectionPool = nums => BANK.questions.filter(q => nums.includes(sectionOf(q.c))).map(q => q.id);
+  // Questions the user has already answered in any exam or lesson.
+  const seenIds = () => new Set(state.attempts.flatMap(a => a.items.map(it => it.id)));
   // The user's accuracy per section, from the topics answered at least 3 times.
   function sectionAcc() {
     const m = new Map();
@@ -1480,6 +1482,7 @@
             <span class="cat-n">${faNum(sectionPool([sec.n]).length)}<small>سؤال</small></span></label>`).join('')}</div>
         <div class="sec-foot">
           <div class="sec-foot-h"><b>تعداد سؤال‌ها</b><span class="sec-total" id="secTotal"></span></div>
+          <label class="sec-new"><input type="checkbox" id="secNew"><span class="sw" aria-hidden="true"></span><span>فقط سؤال‌های غیرتکراری <small>(سؤال‌هایی که هنوز جواب نداده‌اید)</small></span></label>
           <div class="sec-sizes" id="secSizes"></div>
           <button class="btn btn-primary wide" id="secStart" disabled>شروع آموزش</button>
         </div>
@@ -1492,15 +1495,17 @@
     const boxes = [...box.querySelectorAll('.cat-card input')];
     let size = null;
     const chosen = () => boxes.filter(b => b.checked).map(b => +b.value);
+    const fresh = document.getElementById('secNew'), seen = seenIds();
+    const poolIds = () => sectionPool(chosen()).filter(id => !fresh.checked || !seen.has(id));
     const update = () => {
-      const nums = chosen(), pool = sectionPool(nums).length;
+      const nums = chosen(), pool = poolIds().length;
       boxes.forEach(b => b.closest('.cat-card').classList.toggle('on', b.checked));
-      document.getElementById('secTotal').textContent = nums.length ? `${faNum(pool)} سؤال در ${faNum(nums.length)} دسته` : 'دسته‌ای انتخاب نشده';
+      document.getElementById('secTotal').textContent = nums.length ? `${faNum(pool)} سؤال${fresh.checked ? ' غیرتکراری' : ''} در ${faNum(nums.length)} دسته` : 'دسته‌ای انتخاب نشده';
       const sizes = SIZES.filter(n => n <= pool); if (pool && pool < FULL && !sizes.includes(pool)) sizes.push(pool);
       if (!sizes.includes(size)) size = sizes.includes(FULL) ? FULL : sizes[sizes.length - 1] || null;
       document.getElementById('secSizes').innerHTML = sizes.length
         ? sizes.map(n => `<button type="button" class="sec-size ${n === size ? 'on' : ''}" data-n="${n}"><b>${faNum(n)}</b><small>سؤال</small></button>`).join('')
-        : '<span class="muted">ابتدا دست‌کم یک دسته را انتخاب کنید.</span>';
+        : `<span class="muted">${nums.length ? 'در این دسته‌ها سؤال غیرتکراری باقی نمانده است.' : 'ابتدا دست‌کم یک دسته را انتخاب کنید.'}</span>`;
       box.querySelectorAll('.sec-size').forEach(b => b.onclick = () => { size = +b.dataset.n; update(); });
       document.getElementById('secStart').disabled = !size;
     };
@@ -1516,12 +1521,13 @@
       box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     boxes.forEach(b => b.onchange = update);
+    fresh.onchange = update;
     document.getElementById('secAll').onclick = () => { boxes.forEach(b => { b.checked = true; }); update(); };
     document.getElementById('secNone').onclick = () => { boxes.forEach(b => { b.checked = false; }); update(); };
     const weak = document.getElementById('secWeak');
     if (weak) weak.onclick = () => { const acc = sectionAcc(); boxes.forEach(b => { b.checked = acc.get(+b.value) < 0.75; }); update(); };
     document.getElementById('secStart').onclick = () => {
-      const ids = shuffle(sectionPool(chosen())).slice(0, size);
+      const ids = shuffle(poolIds()).slice(0, size);
       const go = () => newExam('sections', ids);
       if (state.draft) confirmBox('شروع آموزش جدید؟', 'با شروع این آموزش، آزمون نیمه‌تمام قبلی حذف می‌شود.', 'شروع', go); else go();
     };

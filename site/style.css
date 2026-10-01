@@ -820,6 +820,14 @@ body.focus-mode .topbar{display:none}
 .cat-head:has(input:focus-visible){outline:2px solid var(--navy);outline-offset:2px}
 @media (hover:hover){.sec-pick:not(.no-hover) .cat-card:not(.on):hover{box-shadow:inset 0 0 0 1.5px var(--navy)}}
 .cat-acc{justify-self:start;margin-top:2px}
+.sec-new{display:flex;align-items:center;gap:10px;margin:2px 0 12px;cursor:pointer;font-size:13.5px}
+.sec-new input{position:absolute;opacity:0;pointer-events:none}
+.sec-new small{color:var(--muted);font-size:11.5px}
+.sec-new .sw{position:relative;width:38px;height:22px;flex:none;border-radius:99px;background:var(--line);transition:.25s}
+.sec-new .sw::after{content:"";position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.25s var(--ease)}
+.sec-new input:checked+.sw{background:var(--navy)}
+.sec-new input:checked+.sw::after{right:19px}
+.sec-new input:focus-visible+.sw{outline:2px solid var(--navy);outline-offset:2px}
 .sec-sizes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .sec-size{display:flex;align-items:baseline;gap:4px;padding:5px 12px;border-radius:99px;box-shadow:inset 0 0 0 1.5px var(--line);background:var(--surface);color:var(--text);font:inherit;cursor:pointer}
 .sec-size b{font-family:var(--fa);font-size:14px}
