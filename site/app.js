@@ -712,7 +712,7 @@
     else {
       bindReviewCards($app);
       if (isLesson) aiSummary(res);
-      $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) { c.classList.add('open'); aiLesson(c); } });
+      $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) c.classList.add('open'); });
     }
     window.scrollTo({ top: 0 });
   }
@@ -735,7 +735,7 @@
       </nav>`;
     box.innerHTML = !total ? '<div class="card empty">موردی نیست.</div>'
       : end ? `${summaryBox(res) || `<div class="card empty">${res.some(r => !r.ok) ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'}</div>`}${nav}`
-      : `<div class="review">${reviewCard(list[k], 0, '', true, true, fa, true)}</div>${nav}`;
+      : `<div class="review">${reviewCard(list[k], 0, '', true, true, fa)}</div>${nav}`;
     if (!total) return;
     document.getElementById('rsPrev').onclick = () => reviewStep(res, list, k - 1, true, fa);
     const nx = document.getElementById('rsNext'); if (nx) nx.onclick = () => reviewStep(res, list, k + 1, true, fa);
@@ -759,22 +759,25 @@
       if (!window.getSelection().isCollapsed || e.detail > 1) return;
       if (h.parentElement.classList.contains('study-card')) return; // the practice card stays open
       h.parentElement.classList.toggle('open');
-      if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
     });
     // "جزئیات و توضیحات" sits at the bottom of the card, under the answers and the lesson
     root.querySelectorAll('.rtoggle').forEach(b => b.onclick = () => {
       const card = b.closest('.rcard');
-      if (card.classList.toggle('open')) aiLesson(card);
+      card.classList.toggle('open');
     });
     root.querySelectorAll('.rviews').forEach(v => v.onclick = e => {
       const b = e.target.closest('.rseg'); if (!b) return;
       v.querySelectorAll('.rseg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
     });
+    // «نکات سؤال»: the first click prepares the tips, later clicks hide and show them.
     root.querySelectorAll('.ai-start').forEach(b => b.onclick = () => {
-      b.hidden = true; aiLesson(b.closest('.rcard'), true);
+      const box = b.closest('.ai-lesson'), body = box.querySelector('.ai-body');
+      if (box.dataset.state === 'loading') return;
+      if (box.dataset.state === 'done') body.hidden = !body.hidden;
+      else aiLesson(b.closest('.rcard'));
+      box.classList.toggle('shown', !body.hidden); b.setAttribute('aria-expanded', !body.hidden);
     });
-    root.querySelectorAll('.rcard.open').forEach(c => aiLesson(c));
   }
   // ---------- Saved questions (bookmark on a review card's picture) ----------
   const isSaved = id => state.saved.some(x => x.id === id);
@@ -811,8 +814,8 @@
     return { q, a, wrong, w: wrong.filter(Boolean).length, ok: !wrong.some(Boolean) };
   }
 
-  // AI lesson for a reviewed question (server: /api/lesson, Claude, cached per question + mistakes). Loaded the
-  // first time its card is opened; if it fails or AI lessons are off, the topic's fixed lesson is shown instead.
+  // AI tips for a reviewed question (server: /api/lesson, Claude, cached per question + mistakes), prepared when
+  // the user asks for them with «نکات سؤال». Without AI lessons, the topic's fixed lesson is shown instead.
   const lessonHtml = text => {
     let html = '', list = false;
     const close = () => { if (list) { html += '</ul>'; list = false; } };
@@ -830,29 +833,23 @@
   // Lessons already fetched on this page visit, so opening one again needs no request at all
   // (the server also keeps every lesson, so later visits get it without a new AI call).
   const lessonCache = new Map();
-  // `.ai-click` boxes (in the lessons) wait for the user to ask for the lesson; the others load when opened.
-  function aiLesson(card, asked = false) {
+  function aiLesson(card) {
     const box = card.querySelector('.ai-lesson'); if (!box || box.dataset.state) return;
-    if (box.classList.contains('ai-click') && !asked) return;
     box.dataset.state = 'loading';
     const body = box.querySelector('.ai-body'); body.hidden = false;
     const a = box.dataset.a ? box.dataset.a.split('').map(Number) : undefined;
     const key = `${box.dataset.q}:${box.dataset.a}:${examLang()}`;
     const show = text => {
       box.dataset.state = 'done'; lessonCache.set(key, text);
-      body.innerHTML = `<div class="ai-reveal">${box.classList.contains('ai-click') ? `<h4>${ICON.ai} نکات سؤال</h4>` : ''}${lessonHtml(text)}</div>`;
+      body.innerHTML = `<div class="ai-reveal">${lessonHtml(text)}</div>`;
     };
     if (lessonCache.has(key)) return show(lessonCache.get(key));
     body.innerHTML = aiLoading('در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما');
     api('POST', 'lesson', { qid: +box.dataset.q, a, lang: examLang() })
       .then(d => show(d.text))
-      .catch(e => {
-        if (box.classList.contains('ai-click')) { // keep the button so it can be tried again
-          delete box.dataset.state; body.innerHTML = `<p class="muted">${esc(e.status === 429 ? e.message : 'آموزش الان آماده نشد؛ دوباره امتحان کنید.')}</p>`;
-          box.querySelector('.ai-start').hidden = false; return;
-        }
-        box.dataset.state = 'failed'; box.hidden = true;
-        const t = card.querySelector('.topic-lesson'); if (t) t.hidden = false;
+      .catch(e => { // the button stays, so it can be tried again
+        delete box.dataset.state;
+        body.innerHTML = `<p class="muted">${esc(e.status === 429 ? e.message : 'نکات الان آماده نشد؛ دوباره امتحان کنید.')}</p>`;
       });
   }
 
@@ -877,8 +874,7 @@
 
   // `lessons` false (a lesson's review): no per-question lesson, the AI summary above covers the mistakes.
   // `fa`: whether the Persian translation starts shown (hidden in lessons, as in the lesson itself).
-  // `aiClick`: the AI lesson waits for a click on «آموزش این سؤال» instead of loading when the card opens.
-  function reviewCard(r, n, extraBadge = '', open = false, lessons = true, fa = lessons && state.settings.showFa, aiClick = false) {
+  function reviewCard(r, n, extraBadge = '', open = false, lessons = true, fa = lessons && state.settings.showFa) {
     const q = r.q, t = BANK.topics[q.c];
     return `<article class="card rcard ${open ? 'open' : ''} ${fa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
       ${cardHead(q, r, extraBadge, fa)}
@@ -910,9 +906,9 @@
           </div>`;
         }).join('')}
         </div>
-        ${lessons && state.aiLessons ? (aiClick
-          ? `<div class="lesson ai-lesson ai-click" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}"><button class="ai-start" type="button"><span class="ai-spark">${ICON.ai}</span><span><b>نکات سؤال</b><small>با استفاده از هوش مصنوعی</small></span></button><div class="ai-body" hidden></div></div>`
-          : `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}"><h4>${ICON.ai} آموزش این سؤال</h4><div class="ai-body"></div></div>`) : ''}
+        ${lessons && state.aiLessons ? `<div class="ai-lesson ai-click" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}">
+          <button class="ai-start" type="button" aria-expanded="false"><span class="ai-spark">${ICON.ai}</span><span class="ai-txt"><b>نکات سؤال</b><small>با استفاده از هوش مصنوعی</small></span><svg class="ai-chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+          <div class="ai-body" hidden></div></div>` : ''}
         ${lessons && t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
       </div>
@@ -936,7 +932,7 @@
       <p style="color:var(--muted);font-size:13px;margin:10px 0 0">«شما تیک زدید / نزدید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</p>
       <div class="row-btns"><button class="btn btn-ghost" data-close>بستن</button></div>`, 'wide');
     bindReviewCards($modal);
-    const card = $modal.querySelector('.rcard'); card.classList.add('open'); aiLesson(card);
+    const card = $modal.querySelector('.rcard'); card.classList.add('open');
   }
 
   // ---------- Dashboard (home) ----------
