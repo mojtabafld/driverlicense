@@ -657,3 +657,13 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .st-runs button:hover{transform:scale(1.12);box-shadow:0 0 0 3px var(--accent-soft)}
 .st-runs button.ok{background:var(--ok)}
 .st-runs button.bad{background:var(--bad)}
+
+/* past lesson: question-by-question review, previous / counter / next (like the exam footer) */
+#stepBox{scroll-margin-top:16px}
+.st-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}
+.st-nav .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:140px}
+.st-nav .btn:disabled{opacity:.45;cursor:default}
+.st-pos{flex:1;text-align:center;color:var(--muted);font-family:var(--da);font-size:14.5px;font-weight:600}
+.st-short{display:none}
+@media (max-width:640px){.st-nav .btn{min-width:0;padding:11px 12px}.st-pos{font-size:13px}}
+@media (max-width:480px){.st-long{display:none}.st-short{display:inline;white-space:nowrap;font-size:15px}}
