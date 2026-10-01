@@ -751,6 +751,60 @@
       $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) c.classList.add('open'); });
     }
     window.scrollTo({ top: 0 });
+    if (fresh && pass) setTimeout(celebrate, 450); // just handed in and passed (a full 25-question exam or lesson)
+  }
+
+  // ---------- Celebration when an exam is passed ----------
+  // A short, light canvas animation over the result page: two confetti bursts from the bottom corners and a
+  // few small fireworks, about 4 seconds, then it fades away. Nothing for users who prefer reduced motion.
+  function celebrate() {
+    try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch {}
+    const c = document.createElement('canvas');
+    c.className = 'celebrate'; c.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(c);
+    const ctx = c.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = innerWidth, H = innerHeight;
+    c.width = W * dpr; c.height = H * dpr; ctx.scale(dpr, dpr);
+    const colors = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93', '#ff70a6', '#00c2d1'];
+    const pick = () => colors[(Math.random() * colors.length) | 0];
+    const parts = [];
+    const confetti = (x, dir) => {
+      const n = Math.round(Math.min(90, W / 8));
+      for (let i = 0; i < n; i++) {
+        const a = -Math.PI / 2 + dir * (0.12 + Math.random() * 0.55), v = H / 55 + Math.random() * H / 70;
+        parts.push({ k: 'c', x, y: H + 10, vx: Math.cos(a) * v, vy: Math.sin(a) * v, w: 6 + Math.random() * 6, h: 3 + Math.random() * 4,
+          r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.35, col: pick(), life: 1 });
+      }
+    };
+    const firework = () => {
+      const x = W * (0.2 + Math.random() * 0.6), y = H * (0.15 + Math.random() * 0.3), col = pick(), n = 34;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2, v = 1.6 + Math.random() * 2.6;
+        parts.push({ k: 'f', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, col, life: 1, size: 2 + Math.random() * 1.5 });
+      }
+    };
+    confetti(0, 1); confetti(W, -1);
+    [250, 750, 1300, 1900].forEach(t => setTimeout(firework, t));
+    const start = performance.now();
+    const frame = now => {
+      const t = now - start;
+      ctx.clearRect(0, 0, W, H);
+      for (const p of parts) {
+        if (p.k === 'c') {
+          p.vx *= 0.985; p.vy = p.vy * 0.985 + 0.32; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+          if (t > 2600) p.life -= 0.02;
+          ctx.save(); ctx.globalAlpha = Math.max(0, p.life); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+          ctx.fillStyle = p.col; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2)) + 1); ctx.restore();
+        } else {
+          p.vx *= 0.97; p.vy = p.vy * 0.97 + 0.04; p.x += p.vx; p.y += p.vy; p.life -= 0.012;
+          ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.col;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+      if (t < 4200) requestAnimationFrame(frame); else c.remove();
+    };
+    requestAnimationFrame(frame);
   }
 
   // «جمع‌بندی آموزشی اشتباهات» under the questions: prepared only when the user asks for it, then shown / hidden.
