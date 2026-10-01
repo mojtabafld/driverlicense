@@ -1215,7 +1215,7 @@
       return edit
         ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" data-label="${kind === 'lesson' ? lessonName(h.lesson) : `آزمون ${faNum(num.get(i))}`}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
         : `<button class="card hist" data-att="${i}">${body}<span class="go">مرور ←</span></button>`;
-    }).join('') + (idx.length > limit ? `<button class="tr-toggle more" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(idx.length)}) ←</button>` : '');
+    }).join('') + (idx.length > limit ? `<button class="tr-toggle more act-btn" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(idx.length)}) ←</button>` : '');
   }
 
   function home() {
