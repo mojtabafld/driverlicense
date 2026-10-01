@@ -1122,14 +1122,6 @@
             <button class="btn btn-ghost study-btn" id="openStudy">${ICON.book} آموزش درس‌به‌درس <small>(${faNum(BANK.tests.length)} درس)</small></button>
           </div>
         </div>
-        <div class="card gauge ${probCls}">
-          <div class="gauge-ring">
-            <svg width="130" height="130" viewBox="0 0 130 130"><circle cx="65" cy="65" r="52" class="g-bg"/><circle cx="65" cy="65" r="52" class="g-fg" stroke-dasharray="${G}" stroke-dashoffset="${G}" id="gFg"/></svg>
-            <div class="g-val"><b class="num">${probPct == null ? '–' : probPct + '%'}</b></div>
-          </div>
-          <div class="g-txt"><div class="g-title">احتمال قبولی</div><div class="g-sub">${probText}</div>
-            ${est ? `<div class="g-note">${est.onlyRandom ? `بر اساس ${faNum(est.n)} سؤال آخر آزمون‌ها${est.weight < 50 ? ' · برآورد اولیه' : ''}` : `بر اساس ${faNum(est.n)} سؤال آزمون‌های تمرینی`}</div>` : ''}</div>
-        </div>
       </div>
 
       <div class="stats">
@@ -1141,6 +1133,14 @@
       </div>
 
       <div class="card panel"><div class="panel-h"><h3>نمودار پیشرفت</h3><span class="legend"><i class="lg-line"></i>نمره هر آزمون <i class="lg-thr"></i>حد قبولی</span></div>${progressChart(atts)}</div>
+      <div class="card gauge gauge-panel ${probCls}">
+          <div class="gauge-ring">
+            <svg width="130" height="130" viewBox="0 0 130 130"><circle cx="65" cy="65" r="52" class="g-bg"/><circle cx="65" cy="65" r="52" class="g-fg" stroke-dasharray="${G}" stroke-dashoffset="${G}" id="gFg"/></svg>
+            <div class="g-val"><b class="num">${probPct == null ? '–' : probPct + '%'}</b></div>
+          </div>
+          <div class="g-txt"><div class="g-title">احتمال قبولی</div><div class="g-sub">${probText}</div>
+            ${est ? `<div class="g-note">${est.onlyRandom ? `بر اساس ${faNum(est.n)} سؤال آخر آزمون‌ها${est.weight < 50 ? ' · برآورد اولیه' : ''}` : `بر اساس ${faNum(est.n)} سؤال آزمون‌های تمرینی`}</div>` : ''}</div>
+      </div>
 
       <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span></div>
       <div class="history">${historyList(HOME_HIST)}</div>
