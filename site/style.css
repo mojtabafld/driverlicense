@@ -86,16 +86,21 @@ body.exam-mode .topbar{display:none}
 body.exam-mode main{max-width:none;padding:0}
 .exam{min-height:100vh;display:flex;flex-direction:column;font-family:var(--da);color:var(--text)}
 .x-badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--navy);color:#fff;font-size:11px;font-weight:600;margin-left:2px;animation:pop .3s var(--ease)}
-.x-strip{position:sticky;top:0;z-index:20;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 50px 0 60px;background:var(--strip);color:#fff;font-size:15px}
-.x-mode{opacity:.75;font-size:13px}
+.x-strip{position:sticky;top:0;z-index:20;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 50px 0 60px;background:var(--bg);color:var(--text);border-bottom:1px solid var(--line);font-size:15px}
+.x-mode{color:var(--muted);font-size:13px}
 .x-strip-r{display:flex;align-items:center;gap:10px}
 .x-strip-r .x-timer{margin-right:8px}
 .x-timer{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
-.x-timer.low{color:#ffb4ab;font-weight:600;animation:pulse 1s infinite}
+.x-timer{color:var(--navy);font-weight:600}
+:root[data-theme="dark"] .x-timer{color:var(--accent)}
+.x-timer.low{color:var(--bad);font-weight:700;animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.5}}
-.x-sbtn{display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:4px;color:#fff;font-size:14px;background:rgba(255,255,255,.08);transition:background .15s}
-.x-sbtn:hover{background:rgba(255,255,255,.18)}
-.x-sbtn .x-badge{background:#fff;color:var(--strip)}
+.x-sbtn{display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:4px;color:var(--navy);font-size:14px;font-weight:600;background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);transition:background .15s,color .15s,box-shadow .15s}
+.x-sbtn:hover{background:var(--navy);color:#fff;box-shadow:none}
+:root[data-theme="dark"] .x-sbtn{color:var(--accent)}
+:root[data-theme="dark"] .x-sbtn:hover{background:var(--accent);color:#0b1520}
+.x-sbtn .x-badge{background:var(--navy);color:#fff}
+.x-sbtn:hover .x-badge{background:#fff;color:var(--navy)}
 
 .x-body{flex:1;display:grid;grid-template-columns:minmax(0,675px) minmax(0,440px);justify-content:center;gap:28px;align-items:start;width:100%;padding:40px 30px 110px}
 .x-body.anim > *{animation:slidein .3s var(--ease) both}
