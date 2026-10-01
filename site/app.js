@@ -52,7 +52,7 @@
   }
 
   // ---------- state ----------
-  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, words: [] };
+  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, words: [], saved: [] };
 
   // ---------- theme (light by default, like the real test) ----------
   const applyTheme = t => document.documentElement.dataset.theme = t;
@@ -273,7 +273,7 @@
   async function loadMe() {
     const d = await api('GET', 'me');
     await loadBank();
-    state.user = d.user; state.attempts = d.attempts || []; state.words = d.words || [];
+    state.user = d.user; state.attempts = d.attempts || []; state.words = d.words || []; state.saved = d.saved || [];
     state.settings = Object.assign({ showFa: true, timer: true }, d.settings);
     state.draft = d.draft && d.draft.ids.every(id => Q.has(id)) ? d.draft : null;
     renderUserBox();
@@ -685,6 +685,8 @@
 
   function bindReviewCards(root) {
     root.querySelectorAll('.rhead').forEach(h => h.onclick = e => {
+      const bm = e.target.closest('.rbm');
+      if (bm) return toggleSaved(bm);
       if (e.target.tagName === 'IMG') return zoomImg(e.target.src);
       if (e.target.closest('a')) return; // the prove.dk link opens in a new tab without toggling the card
       const tr = e.target.closest('.rtr-btn');
@@ -694,6 +696,7 @@
         return;
       }
       if (!window.getSelection().isCollapsed || e.detail > 1) return;
+      if (h.parentElement.classList.contains('study-card')) return; // the practice card stays open
       h.parentElement.classList.toggle('open');
       if (h.parentElement.classList.contains('open')) aiLesson(h.parentElement);
     });
@@ -709,6 +712,41 @@
     });
     root.querySelectorAll('.rcard.open').forEach(aiLesson);
   }
+  // ---------- Saved questions (bookmark on a review card's picture) ----------
+  const isSaved = id => state.saved.some(x => x.id === id);
+  // Every bookmark of that question on the page follows the new state.
+  function markSaved(id, on) {
+    document.querySelectorAll(`.rbm[data-bm="${id}"]`).forEach(b => {
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+      b.title = on ? 'حذف از سؤالات ذخیره‌شده' : 'ذخیره برای مرور بعدی';
+      b.innerHTML = ICON.bookmark(on);
+    });
+    const c = document.getElementById('savedCount'); if (c) c.textContent = faNum(state.saved.length);
+  }
+  async function toggleSaved(btn) {
+    const id = +btn.dataset.bm, on = !isSaved(id);
+    const a = btn.dataset.a ? btn.dataset.a.split('').map(Number) : undefined;
+    markSaved(id, on); // right away; undone if the server refuses
+    try {
+      if (on) {
+        const { saved } = await api('POST', 'saved', { id, a });
+        state.saved = [...state.saved.filter(x => x.id !== id), saved];
+        toast('سؤال ذخیره شد؛ در «سؤالات ذخیره‌شده» آن را می‌بینید');
+      } else {
+        await api('DELETE', 'saved', { id });
+        state.saved = state.saved.filter(x => x.id !== id);
+        toast('از سؤالات ذخیره‌شده حذف شد');
+      }
+      markSaved(id, on);
+    } catch (e) { markSaved(id, !on); toast(e.message); }
+  }
+  // A question's result for the user's ticks `a` (as in a graded exam item).
+  function resultOf(q, a) {
+    if (!a) return { q };
+    const wrong = q.st.map((s, k) => !!a[k] !== !!s.ok);
+    return { q, a, wrong, w: wrong.filter(Boolean).length, ok: !wrong.some(Boolean) };
+  }
+
   // AI lesson for a reviewed question (server: /api/lesson, Claude, cached per question + mistakes). Loaded the
   // first time its card is opened; if it fails or AI lessons are off, the topic's fixed lesson is shown instead.
   const lessonHtml = text => {
@@ -736,11 +774,13 @@
       });
   }
 
-  function reviewCard(r, n, extraBadge = '') {
-    const q = r.q, t = BANK.topics[q.c];
-    return `<article class="card rcard ${state.settings.showFa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
-      <div class="rhead">
-        <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}</div>
+  // Picture, badges and question of a review card (also used by the lessons' practice card).
+  // The bookmark on the picture saves the question, with the ticks shown in this card, to «سؤالات ذخیره‌شده».
+  function cardHead(q, r, extraBadge = '') {
+    const t = BANK.topics[q.c], on = isSaved(q.id);
+    return `<div class="rhead">
+        <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}
+          <button class="rbm ${on ? 'on' : ''}" data-bm="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}" aria-pressed="${on}" title="${on ? 'حذف از سؤالات ذخیره‌شده' : 'ذخیره برای مرور بعدی'}" aria-label="ذخیره‌ی سؤال">${ICON.bookmark(on)}</button></div>
         <div class="rbadges">
           ${extraBadge}
           ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
@@ -751,7 +791,13 @@
           <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(qText(q))}</p>
           <p class="rq-fa fa">${nl(q.sfa)}</p>
         </div>
-      </div>
+      </div>`;
+  }
+
+  function reviewCard(r, n, extraBadge = '', open = false) {
+    const q = r.q, t = BANK.topics[q.c];
+    return `<article class="card rcard ${open ? 'open' : ''} ${state.settings.showFa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
+      ${cardHead(q, r, extraBadge)}
       <div class="rbody">
         ${r.a ? `<div class="rviews" role="tablist">
           <button class="rseg mine on" data-v="mine" role="tab" aria-selected="true" title="${r.ok ? 'پاسخ شما درست بود' : 'پاسخ شما اشتباه بود'}"><i class="rseg-dot ${r.ok ? 'good' : 'bad'}"></i>پاسخ شما</button>
@@ -1011,6 +1057,7 @@
           <div class="actions">
             <button class="btn btn-primary" id="start"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg> شروع آزمون</button>
             <button class="btn btn-ghost" id="startM" ${mCount ? '' : 'disabled'}>تمرین اشتباهات (${faNum(mCount)})</button>
+            <button class="btn btn-ghost study-btn" id="openStudy">${ICON.book} آموزش درس‌به‌درس <small>(${faNum(BANK.tests.length)} درس)</small></button>
           </div>
         </div>
         <div class="card gauge ${probCls}">
@@ -1042,6 +1089,7 @@
 
       <div class="section-title">تنظیمات و امکانات</div>
       <div class="card opts">
+        <button class="opt opt-link" id="openSaved"><span class="opt-ico">${ICON.bookmark(true)}</span><div class="opt-main">سؤالات ذخیره‌شده</div><span class="opt-go">${state.saved.length ? `<b>${faNum(state.saved.length)}</b>` : ''}${ICON.chevL}</span></button>
         <button class="opt opt-link" id="openWords"><span class="opt-ico">${ICON.book}</span><div class="opt-main">لغات ذخیره‌شده</div><span class="opt-go">${(state.words || []).length ? `<b>${faNum(state.words.length)}</b>` : ''}${ICON.chevL}</span></button>
         ${state.user.admin ? `<button class="opt opt-link" id="openAdmin"><span class="opt-ico">${ICON.chart}</span><div class="opt-main">پنل مدیریت</div><span class="opt-go">${ICON.chevL}</span></button>` : ''}
         <div class="opt"><div>زبان آزمون<small>سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند؛ ترجمه‌ی فارسی در هر دو حالت هست.</small></div>
@@ -1068,6 +1116,8 @@
     const dd = document.getElementById('dropDraft');
     if (dd) dd.onclick = () => confirmBox('حذف آزمون نیمه‌تمام؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'حذف', () => { dropDraft(); home(); });
     document.getElementById('openWords').onclick = () => wordsView();
+    document.getElementById('openSaved').onclick = () => savedView();
+    document.getElementById('openStudy').onclick = () => studyList();
     const oa = document.getElementById('openAdmin'); if (oa) oa.onclick = adminView;
     const se = document.getElementById('statExams');
     if (se && state.attempts.length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
@@ -1117,6 +1167,123 @@
     $app.querySelectorAll('[data-att]').forEach(b => b.onclick = () => openAttempt(+b.dataset.att));
     const all = document.getElementById('allHist');
     if (all) all.onclick = () => historyView();
+  }
+
+  // ---------- Saved questions page ----------
+  // Bookmarked questions, newest first, shown like the exam review: «پاسخ شما» (the ticks saved with the
+  // bookmark) and «پاسخ صحیح»; the newest three are open, as in the exam review. Removing a bookmark here
+  // keeps the card until the page is opened again, so it can be undone.
+  function savedView() {
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    const list = state.saved.filter(x => Q.has(x.id)).slice().sort((a, b) => b.at - a.at);
+    $app.innerHTML = `<section class="view saved-page">
+      <button class="back-link" id="back">→ بازگشت به داشبورد</button>
+      <div class="words-head"><h1><span class="h-ico">${ICON.bookmark(true)}</span>سؤالات ذخیره‌شده <small class="muted">(<span id="savedCount">${faNum(list.length)}</span> سؤال)</small></h1></div>
+      ${list.length ? '' : `<div class="card empty">هنوز سؤالی ذخیره نکرده‌اید.<br>در مرور آزمون‌های قبلی یا در «آموزش درس‌به‌درس»، روی نشانک گوشه‌ی تصویر هر سؤال بزنید تا اینجا ذخیره شود.</div>`}
+      <div class="review">${list.map((x, n) => reviewCard(resultOf(Q.get(x.id), x.a), n, `<span class="badge saved">${ICON.bookmark(true)} ${fmtDate(x.at)}</span>`, n < 3)).join('')}</div>
+    </section>`;
+    document.getElementById('back').onclick = home;
+    bindReviewCards($app);
+    window.scrollTo({ top: 0 });
+  }
+
+  // ---------- Lessons: prove.dk's 44 numbered tests of 25 questions, in their order ----------
+  // Each question is practised on its own: tick the options and check them («پاسخ شما» / «پاسخ صحیح»
+  // with explanations and the lesson), or show the right answer straight away.
+  // Which questions were done and where the user left off is kept on this device.
+  const studyKey = () => 'study.' + (state.user ? state.user.username : '');
+  const studyProg = () => local.get(studyKey(), {});
+  const studyNote = t => {
+    const m = /\(([^)]*)\)/.exec(t.title); if (!m) return '';
+    return /nye regler/i.test(m[1]) ? 'فقط قوانین جدید' : /nyeste billeder/i.test(m[1]) ? 'جدیدترین تصاویر' : m[1];
+  };
+  const studyNum = (t, i) => (t.title.match(/\d+/) || [i + 1])[0];
+
+  function studyList() {
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    const prog = studyProg();
+    const done = BANK.tests.reduce((n, t) => n + ((prog[t.id] || {}).done || []).filter(Boolean).length, 0);
+    const total = BANK.tests.reduce((n, t) => n + t.qs.length, 0);
+    $app.innerHTML = `<section class="view study-page">
+      <button class="back-link" id="back">→ بازگشت به داشبورد</button>
+      <div class="words-head"><h1><span class="h-ico">${ICON.book}</span>آموزش درس‌به‌درس</h1></div>
+      <p class="study-intro">${faNum(BANK.tests.length)} درس ${faNum(25)} سؤالی، به همان ترتیب آزمون‌های تئوری prove.dk. در هر درس سؤال‌ها را یکی‌یکی جواب دهید و پاسخ صحیح، توضیحات و آموزش هر سؤال را ببینید. پیشرفت شما: <b>${faNum(done)}</b> از ${faNum(total)} سؤال.</p>
+      <div class="study-grid">${BANK.tests.map((t, i) => {
+        const p = prog[t.id] || {}, n = (p.done || []).filter(Boolean).length, note = studyNote(t);
+        return `<button class="card study-tile ${n >= t.qs.length ? 'complete' : n ? 'started' : ''}" data-st="${i}" style="animation-delay:${Math.min(i, 12) * 25}ms">
+          <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b>${n >= t.qs.length ? '<span class="st-done">✓</span>' : ''}</span>
+          <span class="st-sub">${note ? esc(note) : `${faNum(t.qs.length)} سؤال`}</span>
+          <span class="mini-track"><i style="width:${n / t.qs.length * 100}%"></i></span>
+          <span class="st-count">${n ? `${faNum(n)} از ${faNum(t.qs.length)}` : 'شروع نشده'}</span>
+        </button>`;
+      }).join('')}</div>
+    </section>`;
+    document.getElementById('back').onclick = home;
+    $app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => {
+      const t = BANK.tests[+b.dataset.st], p = studyProg()[t.id] || {};
+      state.study = { ti: +b.dataset.st, ticks: {}, shown: {} };
+      studyQ(Math.min(p.last || 0, t.qs.length - 1));
+    });
+    window.scrollTo({ top: 0 });
+  }
+
+  function studyMark(t, qi, doneNow) {
+    const all = studyProg(), p = all[t.id] || { done: [] };
+    p.last = qi; if (doneNow) { p.done = p.done || []; p.done[qi] = 1; }
+    all[t.id] = p; local.set(studyKey(), all);
+    return p;
+  }
+
+  function studyQ(qi) {
+    stopSpeak();
+    const st = state.study, t = BANK.tests[st.ti], q = Q.get(t.qs[qi]);
+    st.qi = qi;
+    const p = studyMark(t, qi, false), done = p.done || [];
+    const ticks = st.ticks[qi] || (st.ticks[qi] = q.st.map(() => 0));
+    const shown = st.shown[qi]; // 'check' (the user's ticks were checked) or 'reveal'
+    const card = shown
+      ? reviewCard({ ...resultOf(q, shown === 'check' ? ticks : null), i: qi }, 0, '', true)
+      : `<article class="card rcard open study-card ${state.settings.showFa ? '' : 'no-fa'}">
+          ${cardHead(q, { i: qi })}
+          <div class="rbody">
+            <div class="rviews-title study-hint">گزینه‌های درست را تیک بزنید</div>
+            <div class="rstmts v-mine">${q.st.map((s, k) => `
+              <button type="button" class="rstmt pick ${ticks[k] ? 'me' : ''}" data-k="${k}" aria-pressed="${!!ticks[k]}">
+                <div class="rline"><span class="rbox" aria-hidden="true"></span>
+                  <div class="rtxt"><div class="da rst-da">${nl(stText(s))}</div>${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}</div></div>
+              </button>`).join('')}</div>
+            <div class="study-acts"><button class="btn btn-primary" id="stCheck">بررسی پاسخ</button><button class="btn btn-ghost" id="stReveal">نمایش پاسخ صحیح</button></div>
+          </div>
+        </article>`;
+    const last = qi === t.qs.length - 1, nextT = BANK.tests[st.ti + 1];
+    $app.innerHTML = `<section class="view study-q">
+      <button class="back-link" id="back">→ بازگشت به فهرست درس‌ها</button>
+      <div class="words-head"><h1>درس ${faNum(studyNum(t, st.ti))} ${studyNote(t) ? `<small class="muted">(${esc(studyNote(t))})</small>` : ''}</h1><span class="st-pos">سؤال <b>${faNum(qi + 1)}</b> از ${faNum(t.qs.length)}</span></div>
+      <div class="st-nums" role="navigation" aria-label="سؤال‌های این درس">${t.qs.map((_, k) => `<button class="${k === qi ? 'cur' : ''} ${done[k] ? 'done' : ''}" data-go="${k}" aria-label="سؤال ${faNum(k + 1)}">${faNum(k + 1)}</button>`).join('')}</div>
+      <div class="review">${card}</div>
+      <nav class="st-nav">
+        <button class="btn btn-ghost" id="stPrev" ${qi ? '' : 'disabled'}>→ سؤال قبلی</button>
+        ${last
+          ? (nextT ? `<button class="btn btn-primary" id="stNextT">درس بعدی ←</button>` : `<button class="btn btn-primary" id="stEnd">پایان درس‌ها</button>`)
+          : `<button class="btn btn-primary" id="stNext">سؤال بعدی ←</button>`}
+      </nav>
+    </section>`;
+    document.getElementById('back').onclick = studyList;
+    $app.querySelectorAll('[data-go]').forEach(b => b.onclick = () => studyQ(+b.dataset.go));
+    document.getElementById('stPrev').onclick = () => studyQ(qi - 1);
+    const nx = document.getElementById('stNext'); if (nx) nx.onclick = () => studyQ(qi + 1);
+    const nt = document.getElementById('stNextT');
+    if (nt) nt.onclick = () => { state.study = { ti: st.ti + 1, ticks: {}, shown: {} }; studyQ(0); };
+    const en = document.getElementById('stEnd'); if (en) en.onclick = studyList;
+    $app.querySelectorAll('.rstmt.pick').forEach(b => b.onclick = () => {
+      const k = +b.dataset.k; ticks[k] = ticks[k] ? 0 : 1;
+      b.classList.toggle('me', !!ticks[k]); b.setAttribute('aria-pressed', !!ticks[k]);
+    });
+    const finishQ = how => { st.shown[qi] = how; studyMark(t, qi, true); studyQ(qi); };
+    const ck = document.getElementById('stCheck'); if (ck) ck.onclick = () => finishQ('check');
+    const rv = document.getElementById('stReveal'); if (rv) rv.onclick = () => finishQ('reveal');
+    bindReviewCards($app);
+    window.scrollTo({ top: 0 });
   }
 
   // ---------- Admin panel (users listed in the server's ADMIN_USERS) ----------

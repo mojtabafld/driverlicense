@@ -26,6 +26,7 @@ const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
 const MODES = ['random', 'mistakes', 'top'];
 const MAX_WORDS = 3000;
+const MAX_SAVED = 1000; // bookmarked questions per user
 const ADMINS = new Set((process.env.ADMIN_USERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
 const isAdmin = u => ADMINS.has(u.username);
 
@@ -303,7 +304,7 @@ async function api(req, res, route) {
     return send(res, 200, adminStats());
   }
   if (req.method === 'GET' && route === 'me') {
-    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], draft: user.draft || null });
+    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], draft: user.draft || null });
   }
   if (req.method === 'POST' && route === 'attempts') {
     const b = await readBody(req);
@@ -358,6 +359,29 @@ async function api(req, res, route) {
     const b = await readBody(req);
     const key = clip(b.w, 80).toLowerCase();
     user.words = (user.words || []).filter(x => x.w.toLowerCase() !== key);
+    await store.saveUser(user);
+    return send(res, 200, { ok: true });
+  }
+  // Saved questions ("سؤالات ذخیره‌شده"): POST bookmarks a question with the user's ticks from that review
+  // (so it can be shown again as «پاسخ شما» / «پاسخ صحیح»), DELETE removes it.
+  if (req.method === 'POST' && route === 'saved') {
+    const b = await readBody(req);
+    const id = +b.id;
+    if (!Number.isInteger(id) || id <= 0) return send(res, 400, { error: 'bad question' });
+    user.saved = user.saved || [];
+    const entry = { id, a: Array.isArray(b.a) ? b.a.slice(0, 4).map(v => (v ? 1 : 0)) : undefined, at: Date.now() };
+    const old = user.saved.find(x => x.id === id);
+    if (old) Object.assign(old, entry);
+    else {
+      if (user.saved.length >= MAX_SAVED) return send(res, 400, { error: 'فهرست سؤالات ذخیره‌شده پر است.' });
+      user.saved.push(entry);
+    }
+    await store.saveUser(user);
+    return send(res, 200, { saved: old || entry });
+  }
+  if (req.method === 'DELETE' && route === 'saved') {
+    const id = +(await readBody(req)).id;
+    user.saved = (user.saved || []).filter(x => x.id !== id);
     await store.saveUser(user);
     return send(res, 200, { ok: true });
   }

@@ -606,3 +606,53 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 @keyframes pulse{50%{opacity:.45}}
 .ai-lesson h4 .ai-ico{color:#7c5cff;flex:none}
 :root[data-theme="dark"] .ai-lesson h4 .ai-ico{color:#a894ff}
+
+/* bookmark on a review card's picture: a small see-through chip in the corner, so the picture stays visible */
+.rbm{position:absolute;top:8px;left:8px;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;
+  background:rgba(255,255,255,.55);color:var(--navy);border:1px solid rgba(255,255,255,.7);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);box-shadow:0 1px 3px rgba(0,0,0,.18);cursor:pointer;transition:background .15s,transform .15s}
+.rbm:hover{background:rgba(255,255,255,.8);transform:scale(1.06)}
+.rbm .bm{width:14px;height:17px}
+.rbm.on{background:rgba(255,255,255,.85);color:var(--navy)}
+:root[data-theme="dark"] .rbm{background:rgba(20,30,40,.5);border-color:rgba(255,255,255,.25);color:#fff}
+:root[data-theme="dark"] .rbm.on{background:rgba(20,30,40,.75);color:var(--accent)}
+.opt-ico .bm,.h-ico .bm{width:16px;height:19px}
+
+/* dashboard: «آموزش درس‌به‌درس» sits under «شروع آزمون» */
+.dash-hero .actions{grid-template-areas:"start mist" "study ."}
+#start{grid-area:start} #startM{grid-area:mist} .study-btn{grid-area:study}
+.study-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.study-btn .ico{width:18px;height:18px;flex:none}
+.study-btn small{font-weight:500;opacity:.8}
+@media (max-width:760px){.dash-hero .actions{grid-template-areas:"start" "study" "mist"}}
+
+/* lessons list */
+.study-intro{color:var(--muted);margin:-4px 2px 16px;line-height:1.8}
+.study-intro b{color:var(--text)}
+.study-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.study-tile{display:grid;gap:4px;text-align:right;padding:14px;cursor:pointer;animation:rise .35s var(--ease) both;transition:border-color .15s,transform .15s}
+.study-tile:hover{border-color:var(--navy);transform:translateY(-1px)}
+.st-top{display:flex;justify-content:space-between;align-items:center;font-size:16px}
+.st-done{color:var(--ok);font-weight:800}
+.st-sub,.st-count{color:var(--muted);font-size:12.5px}
+.study-tile .mini-track{margin-top:4px}
+.study-tile.complete{border-color:var(--ok)}
+.study-tile.complete .mini-track i{background:var(--ok)}
+
+/* one lesson question */
+.st-pos{color:var(--muted);font-size:14px}
+.st-pos b{color:var(--text)}
+.st-nums{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.st-nums button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-family:var(--fa);font-size:13.5px;cursor:pointer}
+.st-nums button.done{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--navy)}
+:root[data-theme="dark"] .st-nums button.done{color:var(--accent)}
+.st-nums button.cur{background:var(--navy);border-color:var(--navy);color:#fff}
+.rstmt.pick{width:100%;display:block;text-align:inherit;font:inherit;color:inherit;cursor:pointer}
+.rstmt.pick:hover{border-color:var(--navy)}
+.study-acts{display:flex;gap:10px;flex-wrap:wrap}
+.study-acts .btn{flex:1;min-width:150px}
+.study-hint{color:var(--muted)}
+.st-nav{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.st-nav .btn{min-width:140px}
+.st-nav .btn:disabled{opacity:.45;cursor:default}
+@media (max-width:640px){.st-nums button{width:30px;height:30px;font-size:12.5px}.st-nav .btn{flex:1;min-width:0}}
