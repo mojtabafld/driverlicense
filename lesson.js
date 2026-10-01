@@ -97,7 +97,7 @@ function promptFor(q, ticks, lang) {
   ].filter(Boolean).join('\n');
 }
 
-// Returns { text } or throws an Error with .status.
+// Returns { text, key } (key: where the lesson is cached in store.meta) or throws an Error with .status.
 async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
   loadBank(siteDir);
   const q = Q.get(+qid);
@@ -106,11 +106,11 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
   const known = Array.isArray(ticks);
   const mask = known ? q.st.map((s, k) => ((!!ticks[k]) !== !!s.ok ? 1 : 0)).join('') : 'x';
   const key = `lesson:v4:${q.id}:${mask}:${lang}`; // v4: key points in **bold** (v3 had none)
-  if (store.meta[key]) return store.meta[key];
+  if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
 
-  return generate({ store, key, system: SYSTEM, prompt: promptFor(q, known ? ticks : null, lang), maxTokens: 4000 });
+  return { ...(await generate({ store, key, system: SYSTEM, prompt: promptFor(q, known ? ticks : null, lang), maxTokens: 4000 })), key };
 }
 
 // Calls Claude once per cache key (concurrent requests for the same key share the call) and caches the text.
@@ -149,11 +149,11 @@ async function getSummary({ store, siteDir, username, items, lang }) {
   if (!list.length) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   const mask = (q, a) => q.st.map((s, k) => ((!!a[k]) !== !!s.ok ? 1 : 0)).join('');
   const key = `summary:v2:${lang}:${list.map(x => `${x.n}.${x.q.id}.${mask(x.q, x.a)}`).sort().join(',')}`; // v2: real question numbers
-  if (store.meta[key]) return store.meta[key];
+  if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
   const prompt = list.map(x => `### سؤال ${x.n}\n${promptFor(x.q, x.a, lang)}`).join('\n\n');
-  return generate({ store, key, system: SUMMARY_SYSTEM, prompt, maxTokens: 8000 });
+  return { ...(await generate({ store, key, system: SUMMARY_SYSTEM, prompt, maxTokens: 8000 })), key };
 }
 
 module.exports = { getLesson, getSummary, lessonsAvailable: available };

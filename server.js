@@ -290,10 +290,24 @@ async function api(req, res, route) {
     return send(res, 200, { ok: true });
   }
   // AI lesson for one reviewed question: { qid, a: ticks per statement (optional), lang }.
+  // AI lessons and summaries made while reviewing a past exam (`at`) are also linked to that exam
+  // (attempt.ai: cache keys, not the texts), so reviewing it again shows them without a new AI call,
+  // even after the exam language or the cache version changes.
+  const attemptAt = at => (Number.isFinite(+at) && +at > 0 ? user.attempts.find(a => a.at === +at) : null);
+  const linkAi = async (att, slot, key) => {
+    att.ai = att.ai || {};
+    if (slot === 's') { if (att.ai.s === key) return; att.ai.s = key; }
+    else { att.ai.q = att.ai.q || {}; if (att.ai.q[slot] === key) return; att.ai.q[slot] = key; }
+    await store.saveUser(user);
+  };
   if (req.method === 'POST' && route === 'lesson') {
     const b = await readBody(req);
+    const qid = +b.qid, att = attemptAt(b.at);
+    const ref = att && att.ai && att.ai.q && att.ai.q[qid];
+    if (ref && store.meta[ref]) return send(res, 200, { text: store.meta[ref].text });
     try {
-      const lesson = await getLesson({ store, siteDir: SITE, username: user.username, qid: b.qid, ticks: Array.isArray(b.a) ? b.a.slice(0, 4) : null, lang: b.lang });
+      const lesson = await getLesson({ store, siteDir: SITE, username: user.username, qid, ticks: Array.isArray(b.a) ? b.a.slice(0, 4) : null, lang: b.lang });
+      if (att && att.items.some(it => it.id === qid)) await linkAi(att, qid, lesson.key);
       return send(res, 200, { text: lesson.text });
     } catch (e) {
       if (e instanceof Anthropic.APIError) { console.error('lesson API error', e.status, e.message); return send(res, 502, { error: 'آموزش هوش مصنوعی الان در دسترس نیست.' }); }
@@ -306,8 +320,11 @@ async function api(req, res, route) {
     const b = await readBody(req);
     const items = Array.isArray(b.items) ? b.items.slice(0, 25).filter(x => x && Array.isArray(x.a)).map(x => ({ id: +x.id, a: x.a.slice(0, 4), n: +x.n || undefined })) : [];
     if (!items.length) return send(res, 400, { error: 'no mistakes' });
+    const att = attemptAt(b.at), ref = att && att.ai && att.ai.s;
+    if (ref && store.meta[ref]) return send(res, 200, { text: store.meta[ref].text });
     try {
       const summary = await getSummary({ store, siteDir: SITE, username: user.username, items, lang: b.lang });
+      if (att) await linkAi(att, 's', summary.key);
       return send(res, 200, { text: summary.text });
     } catch (e) {
       if (e instanceof Anthropic.APIError) { console.error('summary API error', e.status, e.message); return send(res, 502, { error: 'جمع‌بندی هوش مصنوعی الان در دسترس نیست.' }); }
