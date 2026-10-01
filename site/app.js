@@ -1453,40 +1453,32 @@
     page.addEventListener('pointermove', () => page.classList.remove('no-hover'), { once: true });
     window.scrollTo({ top: 0 });
   }
-  // ---------- Study by category (official sections and subsections) ----------
+  // ---------- Study by category (official main sections) ----------
   // The main sections of the official teaching plan for category B (Undervisningsplan for kategori B) that the
   // theory test asks about (2 and 9 are practical only); a topic code ("7.19") starts with its section number.
-  // The user picks whole sections or single subsections, then how many questions; they come in random order.
+  // The user picks sections, then how many questions; they come in random order.
   const sectionOf = c => +String(c).split('.')[0];
-  const topicPool = codes => BANK.questions.filter(q => codes.includes(q.c)).map(q => q.id);
-  const sectionTopics = n => Object.keys(BANK.topics).filter(c => sectionOf(c) === n);
-  const sectionPrefKey = () => 'catpick.' + (state.user ? state.user.username : '');
+  const sectionPool = nums => BANK.questions.filter(q => nums.includes(sectionOf(q.c))).map(q => q.id);
+  const sectionPrefKey = () => 'catsec.' + (state.user ? state.user.username : '');
+  // The user's accuracy per section, from the topics answered at least 3 times.
+  function sectionAcc() {
+    const m = new Map();
+    for (const t of topicStats()) { const n = sectionOf(t.c), x = m.get(n) || { ok: 0, n: 0 }; x.ok += t.ok; x.n += t.n; m.set(n, x); }
+    return new Map([...m].map(([n, x]) => [n, x.ok / x.n]));
+  }
   function sectionPicker() {
-    const chosen = new Set(local.get(sectionPrefKey(), []));
-    const count = new Map(); BANK.questions.forEach(q => count.set(q.c, (count.get(q.c) || 0) + 1));
-    const acc = new Map(topicStats().map(t => [t.c, t.acc]));
+    const chosen = local.get(sectionPrefKey(), []), acc = sectionAcc();
     const pctCls = p => (p >= 0.8 ? 'ok' : p >= 0.6 ? 'warn' : 'bad');
-    const accTag = c => acc.has(c) ? `<span class="cat-acc ${pctCls(acc.get(c))}">${faNum(Math.round(acc.get(c) * 100))}٪</span>` : '';
-    const card = sec => {
-      const subs = sectionTopics(sec.n), n = subs.reduce((s, c) => s + count.get(c), 0);
-      return `<div class="cat-card" data-sec="${sec.n}">
-        <label class="cat-head"><input type="checkbox" class="cat-all">
-          <span class="cat-num">${faNum(sec.n)}</span>
-          <span class="cat-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small></span>
-          <span class="cat-n">${faNum(n)}<small>سؤال</small></span></label>
-        ${subs.length > 1 ? `<button type="button" class="cat-more" aria-expanded="false"><span class="cat-sel"></span>${ICON.la}</button>` : ''}
-        <div class="cat-subs" hidden>${subs.map(c => `
-          <label class="cat-sub"><input type="checkbox" value="${c}" ${chosen.has(c) ? 'checked' : ''}>
-            <span class="cat-code">${faNum(c)}</span><span class="cat-sub-t">${esc(BANK.topics[c].fa)}</span>
-            ${accTag(c)}<span class="cat-sub-n">${faNum(count.get(c))}</span></label>`).join('')}</div>
-      </div>`;
-    };
-    const weak = [...acc].some(([, a]) => a < 0.75);
+    const weak = [...acc.values()].some(a => a < 0.75);
     return `<div class="sec-pick" id="secPick">
-      <button class="hist-sec-h" id="secToggle" aria-expanded="false"><span class="opt-ico">${ICON.book}</span><span class="hs-t"><b>آموزش بر اساس دسته‌بندی</b><small>دسته‌ها و زیربخش‌های برنامه‌ی آموزشی رسمی را انتخاب کنید و فقط همان مباحث را تمرین کنید</small></span><svg class="hs-chev" width="20" height="20" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <button class="hist-sec-h" id="secToggle" aria-expanded="false"><span class="opt-ico">${ICON.book}</span><span class="hs-t"><b>آموزش بر اساس دسته‌بندی</b><small>دسته‌های برنامه‌ی آموزشی رسمی را انتخاب کنید و فقط همان مباحث را تمرین کنید</small></span><svg class="hs-chev" width="20" height="20" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
       <div class="sec-body" hidden>
         <div class="sec-row"><button type="button" class="tr-toggle" id="secAll">انتخاب همه</button><button type="button" class="tr-toggle" id="secNone">هیچ‌کدام</button>${weak ? '<button type="button" class="tr-toggle" id="secWeak">مباحث ضعیف من</button>' : ''}</div>
-        <div class="cat-grid">${(BANK.sections || []).map(card).join('')}</div>
+        <div class="cat-grid">${(BANK.sections || []).map(sec => `
+          <label class="cat-card cat-head"><input type="checkbox" value="${sec.n}" ${chosen.includes(sec.n) ? 'checked' : ''}>
+            <span class="cat-num">${faNum(sec.n)}</span>
+            <span class="cat-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small>${acc.has(sec.n) ? `<span class="cat-acc ${pctCls(acc.get(sec.n))}">دقت ${faNum(Math.round(acc.get(sec.n) * 100))}٪</span>` : ''}</span>
+            <span class="cat-n">${faNum(sectionPool([sec.n]).length)}<small>سؤال</small></span></label>`).join('')}</div>
         <div class="sec-foot">
           <div class="sec-foot-h"><b>تعداد سؤال‌ها</b><span class="sec-total" id="secTotal"></span></div>
           <div class="sec-sizes" id="secSizes"></div>
@@ -1498,26 +1490,19 @@
   function bindSectionPicker() {
     const box = document.getElementById('secPick'); if (!box) return;
     const body = box.querySelector('.sec-body'), tog = document.getElementById('secToggle');
-    const subs = [...box.querySelectorAll('.cat-sub input')];
+    const boxes = [...box.querySelectorAll('.cat-card input')];
     let size = null;
-    const chosen = () => subs.filter(b => b.checked).map(b => b.value);
+    const chosen = () => boxes.filter(b => b.checked).map(b => +b.value);
     const update = () => {
-      const codes = chosen(), pool = topicPool(codes).length;
-      local.set(sectionPrefKey(), codes);
-      box.querySelectorAll('.cat-card').forEach(card => {
-        const own = [...card.querySelectorAll('.cat-sub input')], on = own.filter(b => b.checked).length, all = card.querySelector('.cat-all');
-        all.checked = on === own.length; all.indeterminate = on > 0 && on < own.length;
-        card.classList.toggle('on', on > 0); card.classList.toggle('part', on > 0 && on < own.length);
-        const sel = card.querySelector('.cat-sel');
-        if (sel) sel.textContent = on ? `${faNum(on)} از ${faNum(own.length)} زیربخش انتخاب شده` : `${faNum(own.length)} زیربخش`;
-      });
-      subs.forEach(b => b.closest('.cat-sub').classList.toggle('on', b.checked));
-      document.getElementById('secTotal').textContent = codes.length ? `${faNum(pool)} سؤال در ${faNum(codes.length)} مبحث` : 'مبحثی انتخاب نشده';
+      const nums = chosen(), pool = sectionPool(nums).length;
+      local.set(sectionPrefKey(), nums);
+      boxes.forEach(b => b.closest('.cat-card').classList.toggle('on', b.checked));
+      document.getElementById('secTotal').textContent = nums.length ? `${faNum(pool)} سؤال در ${faNum(nums.length)} دسته` : 'دسته‌ای انتخاب نشده';
       const sizes = SIZES.filter(n => n <= pool); if (pool && pool < FULL && !sizes.includes(pool)) sizes.push(pool);
       if (!sizes.includes(size)) size = sizes.includes(FULL) ? FULL : sizes[sizes.length - 1] || null;
       document.getElementById('secSizes').innerHTML = sizes.length
         ? sizes.map(n => `<button type="button" class="sec-size ${n === size ? 'on' : ''}" data-n="${n}"><b>${faNum(n)}</b><small>سؤال</small></button>`).join('')
-        : '<span class="muted">ابتدا دست‌کم یک دسته یا زیربخش را انتخاب کنید.</span>';
+        : '<span class="muted">ابتدا دست‌کم یک دسته را انتخاب کنید.</span>';
       box.querySelectorAll('.sec-size').forEach(b => b.onclick = () => { size = +b.dataset.n; update(); });
       document.getElementById('secStart').disabled = !size;
     };
@@ -1525,27 +1510,13 @@
       const on = body.hidden; body.hidden = !on; box.classList.toggle('open', on); tog.setAttribute('aria-expanded', on);
       if (on) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
-    box.querySelectorAll('.cat-card').forEach(card => {
-      const own = [...card.querySelectorAll('.cat-sub input')];
-      card.querySelector('.cat-all').onchange = e => { own.forEach(b => { b.checked = e.target.checked; }); update(); };
-      const more = card.querySelector('.cat-more'), list = card.querySelector('.cat-subs');
-      if (more) more.onclick = () => { list.hidden = !list.hidden; card.classList.toggle('open', !list.hidden); more.setAttribute('aria-expanded', !list.hidden); };
-    });
-    subs.forEach(b => b.onchange = update);
-    document.getElementById('secAll').onclick = () => { subs.forEach(b => { b.checked = true; }); update(); };
-    document.getElementById('secNone').onclick = () => { subs.forEach(b => { b.checked = false; }); update(); };
+    boxes.forEach(b => b.onchange = update);
+    document.getElementById('secAll').onclick = () => { boxes.forEach(b => { b.checked = true; }); update(); };
+    document.getElementById('secNone').onclick = () => { boxes.forEach(b => { b.checked = false; }); update(); };
     const weak = document.getElementById('secWeak');
-    if (weak) weak.onclick = () => {
-      const low = new Set(topicStats().filter(t => t.acc < 0.75).map(t => t.c));
-      subs.forEach(b => { b.checked = low.has(b.value); });
-      box.querySelectorAll('.cat-card').forEach(card => {
-        const list = card.querySelector('.cat-subs'), more = card.querySelector('.cat-more');
-        if (more && card.querySelector('.cat-sub input:checked')) { list.hidden = false; card.classList.add('open'); more.setAttribute('aria-expanded', true); }
-      });
-      update();
-    };
+    if (weak) weak.onclick = () => { const acc = sectionAcc(); boxes.forEach(b => { b.checked = acc.get(+b.value) < 0.75; }); update(); };
     document.getElementById('secStart').onclick = () => {
-      const ids = shuffle(topicPool(chosen())).slice(0, size);
+      const ids = shuffle(sectionPool(chosen())).slice(0, size);
       const go = () => newExam('sections', ids);
       if (state.draft) confirmBox('شروع آموزش جدید؟', 'با شروع این آموزش، آزمون نیمه‌تمام قبلی حذف می‌شود.', 'شروع', go); else go();
     };
