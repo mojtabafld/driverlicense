@@ -667,3 +667,9 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .st-short{display:none}
 @media (max-width:640px){.st-nav .btn{min-width:0;padding:11px 12px}.st-pos{font-size:13px}}
 @media (max-width:480px){.st-long{display:none}.st-short{display:inline;white-space:nowrap;font-size:15px}}
+
+/* past lesson review: one short result line instead of the result card */
+.res-line{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;padding:10px 14px;border-radius:10px;font-size:15px;border:1px solid}
+.res-line.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
+.res-line.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.res-line small{margin-inline-start:auto;color:var(--muted);font-size:12.5px}
