@@ -1198,22 +1198,24 @@
   // data-att keeps the index in state.attempts.
   const examIdx = () => state.attempts.map((_, i) => i).filter(i => state.attempts[i].mode !== 'lesson');
   const lessonIdx = () => state.attempts.map((_, i) => i).filter(i => state.attempts[i].mode === 'lesson');
-  // kind 'random': the exams (dashboard and the first section of the past-exams page); 'lesson': finished lessons.
+  // kind 'random': the exams (first section of the past-exams page); 'lesson': finished lessons;
+  // 'all': both, newest first (dashboard). Exams keep their number among exams, lessons show the lesson's name.
   function historyList(limit = Infinity, edit = false, kind = 'random') {
-    const atts = state.attempts, idx = kind === 'lesson' ? lessonIdx() : examIdx();
+    const atts = state.attempts, idx = kind === 'lesson' ? lessonIdx() : kind === 'all' ? atts.map((_, i) => i) : examIdx();
     if (!idx.length) return kind === 'lesson' ? '<div class="card empty">هنوز درسی را تمام نکرده‌اید.</div>' : '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
-    const num = new Map(idx.map((i, k) => [i, k + 1]));
+    const num = new Map(examIdx().map((i, k) => [i, k + 1]));
+    const label = i => (atts[i].mode === 'lesson' ? lessonName(atts[i].lesson) : `آزمون ${faNum(num.get(i))}`);
     const shown = idx.slice().reverse().slice(0, limit);
     return shown.map(i => {
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
       const body = `<span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
-        <span class="meta"><b>${kind === 'lesson' ? lessonName(h.lesson) : `آزمون ${faNum(num.get(i))}`}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' || h.mode === 'sections' ? ` · ${modeName(h.mode)}` : ''}<br>
+        <span class="meta"><b>${label(i)}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' || h.mode === 'sections' ? ` · ${modeName(h.mode)}` : ''}<br>
           <small>${fmtDate(h.at)} · ${wrongImgs ? `${faNum(wrongImgs)} سؤال غلط` : 'بدون اشتباه'} · <span class="nowrap">مدت زمان آزمون: ${fmtTime(h.secs)}</span>${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>`;
       // In delete mode the card is not a link: the delete button takes the place of "مرور".
       return edit
-        ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" data-label="${kind === 'lesson' ? lessonName(h.lesson) : `آزمون ${faNum(num.get(i))}`}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
+        ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" data-label="${label(i)}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
         : `<button class="card hist" data-att="${i}">${body}<span class="go">مرور ←</span></button>`;
     }).join('') + (idx.length > limit ? `<button class="tr-toggle more act-btn" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(idx.length)}) ←</button>` : '');
   }
@@ -1271,7 +1273,7 @@
       </div>
 
       <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span></div>
-      <div class="history">${historyList(HOME_HIST)}</div>
+      <div class="history">${historyList(HOME_HIST, false, 'all')}</div>
 
       <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(topCount)} سؤال)</small>` : ''}</span></div>
       ${mistakesSection()}
