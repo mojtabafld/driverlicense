@@ -71,7 +71,7 @@
   // only inputs, code, the exam's "Spørgsmål 3 ud af 25" counter and the review's statement numbers keep Latin digits.
   // Runs on every DOM change, so animated counters and timers are covered.
   // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
-  const LATIN_ZONE = 'input, textarea, code, .x-count, .st-pos, .rnum-c, .badge.src, script, style';
+  const LATIN_ZONE = 'input, textarea, code, .x-count, .rnum-c, .badge.src, script, style';
   const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
   const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
@@ -98,7 +98,9 @@
   const fmtDate = t => new Date(t).toLocaleDateString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric' });
   const fmtDateTime = t => new Date(t).toLocaleString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const dayKey = t => new Date(t).toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD in Copenhagen
-  const modeName = m => ({ mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات' }[m] || 'آزمون تصادفی');
+  const modeName = (m, lesson) => (m === 'lesson' ? lessonName(lesson) : { mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات' }[m] || 'آزمون تصادفی');
+  // Lessons are learning, not a timed test: no clock.
+  const timed = ex => state.settings.timer && ex.mode !== 'lesson';
   const setExamMode = on => document.body.classList.toggle('exam-mode', on);
   function toast(msg) {
     const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
@@ -128,12 +130,12 @@
       overview: 'Spørgsmålsoversigt', ovTitle: 'Din spørgsmålsoversigt',
       ovText: 'Spørgsmålsoversigten giver dig et overblik over dine besvarede, ubesvarede og gemte spørgsmål. Du skal trykke på et nummer for at gå til spørgsmålet.',
       notAnswered: 'Ikke besvaret', answered: 'Besvaret', saved: 'Gemte spørgsmål', jump: 'Spring til dit spørgsmål', q: 'Spørgsmål',
-      handin: 'Aflever prøven', nextLesson: 'Næste lektion', endLessons: 'Afslut', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.', expl: 'Forklaring:' },
+      handin: 'Aflever prøven', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.', expl: 'Forklaring:' },
     en: { read: 'Read aloud', save: 'Save for later', prev: 'Previous', next: 'Next', count: (i, n) => `Question ${i} of ${n}`,
       overview: 'Question overview', ovTitle: 'Your question overview',
       ovText: 'The question overview gives you an overview of your answered, unanswered and saved questions. Tap a number to go to the question.',
       notAnswered: 'Not answered', answered: 'Answered', saved: 'Saved questions', jump: 'Jump to your question', q: 'Question',
-      handin: 'Hand in the test', nextLesson: 'Next lesson', endLessons: 'Finish', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.', expl: 'Explanation:' },
+      handin: 'Hand in the test', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.', expl: 'Explanation:' },
   };
   const ui = () => EXAM_UI[examLang()];
 
@@ -300,7 +302,7 @@
   // Time only runs while the exam is open.
   let draftTimer = null;
   const snapshot = ex => ({
-    mode: ex.mode, ids: ex.ids, idx: ex.idx, answers: ex.answers, seen: ex.seen, flags: ex.flags, showFa: ex.showFa,
+    mode: ex.mode, lesson: ex.lesson, ids: ex.ids, idx: ex.idx, answers: ex.answers, seen: ex.seen, flags: ex.flags, showFa: ex.showFa,
     left: ex.left, elapsed: Math.round((Date.now() - ex.started) / 1000), saved: Date.now(),
   });
   function putDraft(keepalive = false) {
@@ -338,7 +340,7 @@
     const answered = d.answers.filter(a => a.some(Boolean)).length;
     return `<div class="card resume">
       <div class="resume-txt"><b>آزمون نیمه‌تمام</b>
-        <small>${modeName(d.mode)} · ${faNum(d.ids.length)} سؤالی · ${faNum(answered)} سؤال پاسخ داده شده${state.settings.timer ? ` · ${fmtTime(Math.max(0, d.left))} زمان باقی‌مانده` : ''} · ${fmtDateTime(d.saved)}</small></div>
+        <small>${modeName(d.mode, d.lesson)} · ${faNum(d.ids.length)} سؤالی · ${faNum(answered)} سؤال پاسخ داده شده${timed(d) ? ` · ${fmtTime(Math.max(0, d.left))} زمان باقی‌مانده` : ''} · ${fmtDateTime(d.saved)}</small></div>
       <div class="resume-btns"><button class="btn btn-ghost" id="dropDraft">حذف</button><button class="btn btn-primary" id="resume">ادامه‌ی آزمون</button></div>
     </div>`;
   }
@@ -369,11 +371,11 @@
     });
   }
 
-  function newExam(mode, ids, size = FULL) {
+  function newExam(mode, ids, size = FULL, lesson) {
     closeModal();
     if (!ids) ids = buildIds(mode === 'mistakes' ? shuffle(mistakeIds()) : mode === 'top' ? mistakeStats().map(s => s.id) : [], size);
     state.exam = {
-      mode, ids, size: ids.length, idx: 0, view: 'q', done: false, started: Date.now(), left: ids.length * SECONDS_PER_Q,
+      mode, lesson, ids, size: ids.length, idx: 0, view: 'q', done: false, started: Date.now(), left: ids.length * SECONDS_PER_Q,
       answers: ids.map(id => Array(Q.get(id).st.length).fill(false)), // ticked = true statement
       seen: ids.map((_, i) => i === 0), flags: ids.map(() => false), showFa: ids.map(() => state.settings.showFa),
     };
@@ -385,7 +387,7 @@
 
   function startTimer() {
     clearInterval(state.timerId);
-    if (!state.settings.timer) return;
+    if (!timed(state.exam)) return;
     state.timerId = setInterval(() => {
       const ex = state.exam; if (!ex || ex.done) return clearInterval(state.timerId);
       ex.left--;
@@ -441,9 +443,9 @@
     const saved = ex.flags.filter(Boolean).length;
     return `<section class="exam" dir="ltr">
       <div class="x-strip">
-        <span>Teoriprøve B <span class="fa x-mode">· ${modeName(ex.mode)}</span></span>
+        <span>Teoriprøve B <span class="fa x-mode">· ${modeName(ex.mode, ex.lesson)}</span></span>
         <span class="x-strip-r">
-          ${state.settings.timer ? `<span class="x-timer ${ex.left <= 60 ? 'low' : ''}">${ICON.clock}<span id="timer">${fmtTime(ex.left)}</span></span>` : ''}
+          ${timed(ex) ? `<span class="x-timer ${ex.left <= 60 ? 'low' : ''}">${ICON.clock}<span id="timer">${fmtTime(ex.left)}</span></span>` : ''}
           ${overview
             ? `<button id="closeOv" class="x-sbtn">${ICON.x}<span>Luk</span></button>`
             : `<button id="grid" class="x-sbtn">${ICON.list}<span>${ui().overview}</span>${saved ? `<span class="x-badge">${saved}</span>` : ''}</button>`}
@@ -598,8 +600,8 @@
       return { q, a, wrong, ok: it.ok, w: it.w, m: !!it.m };
     });
   }
-  const summarize = (res, secs, at, mode) => ({
-    res, secs, at, mode, correct: res.filter(r => r.ok).length, wrongSt: res.reduce((a, r) => a + r.w, 0),
+  const summarize = (res, secs, at, mode, lesson) => ({
+    res, secs, at, mode, lesson, correct: res.filter(r => r.ok).length, wrongSt: res.reduce((a, r) => a + r.w, 0),
   });
 
   async function finish() {
@@ -608,19 +610,20 @@
     clearTimeout(draftTimer); state.draft = null; // the server drops its draft when it stores the attempt
     const res = gradeExam(ex);
     const secs = Math.round((Date.now() - ex.started) / 1000);
-    const payload = { secs, mode: ex.mode, items: res.map(r => ({ id: r.q.id, ok: r.ok, w: r.w, a: r.a, m: r.m ? 1 : 0 })) };
+    const payload = { secs, mode: ex.mode, lesson: ex.lesson, items: res.map(r => ({ id: r.q.id, ok: r.ok, w: r.w, a: r.a, m: r.m ? 1 : 0 })) };
     try {
       const { attempt } = await api('POST', 'attempts', payload);
       state.attempts.push(attempt);
     } catch (e) {
       toast(e.status === 401 ? 'نشست شما منقضی شده؛ نتیجه ذخیره نشد. دوباره وارد شوید.' : 'ذخیره‌ی نتیجه روی سرور ناموفق بود.');
     }
-    renderReview(summarize(res, secs, Date.now(), ex.mode), 'wrong', true);
+    renderReview(summarize(res, secs, Date.now(), ex.mode, ex.lesson), 'wrong', true);
   }
 
   function renderReview(ctx, filter, fresh) {
     setExamMode(false);
-    const { res, correct, secs, at, mode } = ctx;
+    const { res, correct, secs, at, mode, lesson } = ctx;
+    const isLesson = mode === 'lesson', li = isLesson ? BANK.tests.findIndex(t => t.id === lesson) : -1;
     const n = res.length, full = n >= FULL, pass = full && correct >= passMin(n), pctN = Math.round(correct / Math.max(n, 1) * 100);
     const C = 2 * Math.PI * 74, pct = correct / Math.max(n, 1);
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
@@ -637,7 +640,7 @@
           <div class="val"><div>${full ? `<b id="scoreN">0</b><small class="fa" style="text-align:center">از ${n}</small>` : `<b id="scoreN" class="pct">0</b><small class="fa" style="text-align:center">${faNum(correct)} از ${faNum(n)}</small>`}</div></div>
         </div>
         <div>
-          <div class="res-meta">${modeName(mode)} · ${fmtDateTime(at)}</div>
+          <div class="res-meta">${modeName(mode, lesson)} · ${fmtDateTime(at)}</div>
           ${full ? `<h2 class="verdict ${pass ? 'ok' : 'bad'}">${pass ? (fresh ? '🎉 قبول شدید!' : '✓ قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : '✗ مردود')}</h2>
           <div style="color:var(--muted)">${pass ? `حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} کاملاً درست بود.` : `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.`}</div>`
           : `<h2 class="verdict neutral">${faNum(pctN)}٪ پاسخ درست</h2>
@@ -649,19 +652,22 @@
           </div>
           <div class="res-actions">
             ${n - correct ? `<button class="btn btn-primary wide-btn" id="retryWrong">تمرین دوباره‌ی همین اشتباهات</button>` : ''}
-            <button class="btn ${n - correct ? 'btn-ghost' : 'btn-primary'}" id="again">آزمون جدید</button>
+            ${isLesson
+              ? `${BANK.tests[li + 1] ? `<button class="btn ${n - correct ? 'btn-ghost' : 'btn-primary'}" id="nextLesson">درس بعدی</button>` : ''}<button class="btn btn-ghost" id="toLessons">فهرست درس‌ها</button>`
+              : `<button class="btn ${n - correct ? 'btn-ghost' : 'btn-primary'}" id="again">آزمون جدید</button>`}
             <button class="btn btn-ghost" id="toHome">داشبورد</button>
           </div>
         </div>
       </div>
 
+      ${isLesson && n - correct && state.aiLessons && res.some(r => !r.ok && r.a) ? `<div class="lesson ai-lesson ai-summary" id="aiSummary"><h4>${ICON.ai} جمع‌بندی آموزشی اشتباهات شما</h4><div class="ai-body"></div></div>` : ''}
       <div class="section-title" style="margin-top:28px">
         <span>مرور پاسخ‌ها</span>
         <div class="tabs"><button data-f="wrong" class="${filter === 'wrong' ? 'on' : ''}">اشتباهات (${faNum(n - correct)})</button>${savedN ? `<button data-f="saved" class="${filter === 'saved' ? 'on' : ''}">${ICON.bookmark(true)} ذخیره‌شده‌ها (${faNum(savedN)})</button>` : ''}<button data-f="all" class="${filter === 'all' ? 'on' : ''}">همه (${faNum(n)})</button></div>
       </div>
       ${res.some(r => !r.a) ? '<div class="note">این آزمون قبل از ذخیره‌ی پاسخ‌های تک‌تک گزینه‌ها انجام شده؛ فقط پاسخ‌های درست نمایش داده می‌شوند.</div>' : ''}
       <div class="review">
-        ${list.length ? list.map((r, k) => reviewCard(r, k)).join('') : `<div class="card empty">${filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'}</div>`}
+        ${list.length ? list.map((r, k) => reviewCard(r, k, '', false, !isLesson)).join('') : `<div class="card empty">${filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'}</div>`}
       </div>
     </section>`;
 
@@ -673,12 +679,15 @@
 
     const rw = document.getElementById('retryWrong');
     if (rw) rw.onclick = () => newExam('mistakes', shuffle(res.filter(r => !r.ok).map(r => r.q.id)));
-    document.getElementById('again').onclick = () => askSize('random');
+    const ag = document.getElementById('again'); if (ag) ag.onclick = () => askSize('random');
+    const nl2 = document.getElementById('nextLesson'); if (nl2) nl2.onclick = () => startLesson(li + 1);
+    const tl = document.getElementById('toLessons'); if (tl) tl.onclick = studyList;
     document.getElementById('toHome').onclick = home;
     const back = document.getElementById('back');
     if (back) back.onclick = state.reviewFrom === 'history' ? () => historyView() : home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
     bindReviewCards($app);
+    if (isLesson) aiSummary(res);
     $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) { c.classList.add('open'); aiLesson(c); } });
     window.scrollTo({ top: 0 });
   }
@@ -793,7 +802,8 @@
       </div>`;
   }
 
-  function reviewCard(r, n, extraBadge = '', open = false) {
+  // `lessons` false (a lesson's review): no per-question lesson; the AI summary above covers the mistakes.
+  function reviewCard(r, n, extraBadge = '', open = false, lessons = true) {
     const q = r.q, t = BANK.topics[q.c];
     return `<article class="card rcard ${open ? 'open' : ''} ${state.settings.showFa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
       ${cardHead(q, r, extraBadge)}
@@ -825,8 +835,8 @@
           </div>`;
         }).join('')}
         </div>
-        ${state.aiLessons ? `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.join('') : ''}"><h4>${ICON.ai} آموزش این سؤال</h4><div class="ai-body"></div></div>` : ''}
-        ${t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
+        ${lessons && state.aiLessons ? `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.join('') : ''}"><h4>${ICON.ai} آموزش این سؤال</h4><div class="ai-body"></div></div>` : ''}
+        ${lessons && t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
       </div>
       <button class="rtoggle"><span class="fa">جزئیات و توضیحات</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
@@ -836,7 +846,7 @@
   function openAttempt(idx) {
     const att = state.attempts[idx]; if (!att) return;
     state.reviewFrom = document.querySelector('.hist-page') ? 'history' : 'home';
-    renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode), 'wrong', false);
+    renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode, att.lesson), 'wrong', false);
   }
 
   function showMistake(id) {
@@ -895,7 +905,7 @@
       pts.forEach((p, i) => p.classList.toggle('on', i === best));
       xh.setAttribute('x1', cx); xh.setAttribute('x2', cx); xh.style.opacity = 1;
       tip.hidden = false;
-      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode)}</span><span>${isFull(a) ? `نمره: <b class="num">${s}/${a.items.length}</b> · ${isPass(a) ? '✓ قبول' : '✗ مردود'}` : `${faNum(a.items.length)} سؤالی · <b>${pctText(a)}</b> درست`}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
+      tip.innerHTML = `<b>آزمون ${faNum(best + 1 + offset)}</b><span>${fmtDate(a.at)} · ${modeName(a.mode, a.lesson)}</span><span>${isFull(a) ? `نمره: <b class="num">${s}/${a.items.length}</b> · ${isPass(a) ? '✓ قبول' : '✗ مردود'}` : `${faNum(a.items.length)} سؤالی · <b>${pctText(a)}</b> درست`}</span><span class="tip-hint">برای مرور کلیک کنید</span>`;
       const px = cx / vb.width * r.width;
       tip.style.left = Math.min(Math.max(px - tip.offsetWidth / 2, 0), r.width - tip.offsetWidth) + 'px';
       tip.style.top = (+pts[best].getAttribute('cy') / vb.height * r.height - tip.offsetHeight - 12) + 'px';
@@ -1018,7 +1028,7 @@
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
       const body = `<span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
-        <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' ? ` · ${modeName(h.mode)}` : ''}<br>
+        <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' || h.mode === 'lesson' ? ` · ${modeName(h.mode, h.lesson)}` : ''}<br>
           <small>${fmtDate(h.at)} · ${wrongImgs ? `${faNum(wrongImgs)} سؤال غلط` : 'بدون اشتباه'} · <span class="nowrap">مدت زمان آزمون: ${fmtTime(h.secs)}</span>${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>`;
       // In delete mode the card is not a link: the delete button takes the place of "مرور".
@@ -1187,103 +1197,62 @@
   }
 
   // ---------- Lessons: prove.dk's 44 numbered tests of 25 questions, in their order ----------
-  // Each question is practised on its own: tick the options and check them («پاسخ شما» / «پاسخ صحیح»
-  // with explanations and the lesson), or show the right answer straight away.
-  // Which questions were done and where the user left off is kept on this device.
-  const studyKey = () => 'study.' + (state.user ? state.user.username : '');
-  const studyProg = () => local.get(studyKey(), {});
+  // A lesson is taken like the exam (same screens, the questions in prove.dk's order, no timer). When it is
+  // handed in, the review starts with an AI summary that teaches from the user's own mistakes.
+  // The tiles show each lesson's last and best result, from the stored attempts.
   const studyNote = t => {
     const m = /\(([^)]*)\)/.exec(t.title); if (!m) return '';
     return /nye regler/i.test(m[1]) ? 'فقط قوانین جدید' : /nyeste billeder/i.test(m[1]) ? 'جدیدترین تصاویر' : m[1];
   };
   const studyNum = (t, i) => (t.title.match(/\d+/) || [i + 1])[0];
+  const lessonName = id => {
+    const i = BANK.tests.findIndex(t => t.id === id);
+    return i < 0 ? 'درس' : `درس ${faNum(studyNum(BANK.tests[i], i))}`;
+  };
 
   function studyList() {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
-    const prog = studyProg();
-    const done = BANK.tests.reduce((n, t) => n + ((prog[t.id] || {}).done || []).filter(Boolean).length, 0);
-    const total = BANK.tests.reduce((n, t) => n + t.qs.length, 0);
+    const byLesson = new Map();
+    state.attempts.forEach(a => { if (a.mode === 'lesson' && a.lesson) (byLesson.get(a.lesson) || byLesson.set(a.lesson, []).get(a.lesson)).push(a); });
+    const doneN = BANK.tests.filter(t => byLesson.has(t.id)).length;
     $app.innerHTML = `<section class="view study-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1><span class="h-ico">${ICON.book}</span>آموزش درس‌به‌درس</h1></div>
-      <p class="study-intro">${faNum(BANK.tests.length)} درس ${faNum(25)} سؤالی، به همان ترتیب آزمون‌های تئوری prove.dk. در هر درس سؤال‌ها را یکی‌یکی جواب دهید و پاسخ صحیح، توضیحات و آموزش هر سؤال را ببینید. پیشرفت شما: <b>${faNum(done)}</b> از ${faNum(total)} سؤال.</p>
+      <p class="study-intro">${faNum(BANK.tests.length)} درس ${faNum(FULL)} سؤالی، به همان ترتیب آزمون‌های تئوری prove.dk. هر درس مثل آزمون اصلی جواب داده می‌شود، بدون محدودیت زمان؛ در پایان، اشتباهات شما بررسی می‌شود و هوش مصنوعی بر اساس پاسخ‌هایتان یک جمع‌بندی آموزشی می‌دهد. درس‌های انجام‌شده: <b>${faNum(doneN)}</b> از ${faNum(BANK.tests.length)}.</p>
       <div class="study-grid">${BANK.tests.map((t, i) => {
-        const p = prog[t.id] || {}, n = (p.done || []).filter(Boolean).length, note = studyNote(t);
+        const atts = byLesson.get(t.id) || [], last = atts[atts.length - 1], note = studyNote(t);
+        const best = atts.length ? Math.max(...atts.map(scoreOf)) : 0;
         // Thumbnail: the first question of the lesson with a real scene picture (build.py picks it).
         const img = (Q.get(t.thumb || t.qs[0]) || {}).img;
-        return `<button class="card study-tile ${n >= t.qs.length ? 'complete' : n ? 'started' : ''}" data-st="${i}" style="animation-delay:${Math.min(i, 12) * 25}ms">
+        return `<button class="card study-tile ${last ? (isPass(last) ? 'complete' : 'started') : ''}" data-st="${i}" style="animation-delay:${Math.min(i, 12) * 25}ms">
           ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
-          <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b>${n >= t.qs.length ? '<span class="st-done">✓</span>' : ''}</span>
+          <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b>${last ? `<span class="pill ${isPass(last) ? 'ok' : 'bad'}">${scoreOf(last)}/${last.items.length}</span>` : ''}</span>
           <span class="st-sub">${note ? esc(note) : `${faNum(t.qs.length)} سؤال`}</span>
-          <span class="mini-track"><i style="width:${n / t.qs.length * 100}%"></i></span>
-          <span class="st-count">${n ? `${faNum(n)} از ${faNum(t.qs.length)}` : 'شروع نشده'}</span>
+          <span class="mini-track"><i style="width:${best / t.qs.length * 100}%"></i></span>
+          <span class="st-count">${last ? `بهترین: ${faNum(best)} از ${faNum(t.qs.length)} · ${faNum(atts.length)} بار` : 'شروع نشده'}</span>
         </button>`;
       }).join('')}</div>
     </section>`;
     document.getElementById('back').onclick = home;
-    $app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => {
-      const t = BANK.tests[+b.dataset.st], p = studyProg()[t.id] || {};
-      state.study = { ti: +b.dataset.st, ticks: {}, shown: {} };
-      studyQ(Math.min(p.last || 0, t.qs.length - 1));
-    });
+    $app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => startLesson(+b.dataset.st));
     window.scrollTo({ top: 0 });
   }
-
-  function studyMark(t, qi, doneNow) {
-    const all = studyProg(), p = all[t.id] || { done: [] };
-    p.last = qi; if (doneNow) { p.done = p.done || []; p.done[qi] = 1; }
-    all[t.id] = p; local.set(studyKey(), all);
-    return p;
+  function startLesson(i) {
+    const t = BANK.tests[i]; if (!t) return;
+    const go = () => newExam('lesson', t.qs.filter(id => Q.has(id)), FULL, t.id);
+    if (state.draft) confirmBox('شروع درس؟', 'با شروع این درس، آزمون نیمه‌تمام قبلی حذف می‌شود.', 'شروع درس', go);
+    else go();
   }
 
-  function studyQ(qi) {
-    stopSpeak();
-    const st = state.study, t = BANK.tests[st.ti], q = Q.get(t.qs[qi]);
-    st.qi = qi;
-    studyMark(t, qi, false);
-    const ticks = st.ticks[qi] || (st.ticks[qi] = q.st.map(() => 0));
-    const shown = st.shown[qi]; // 'check' (the user's ticks were checked) or 'reveal'
-    const card = shown
-      ? reviewCard({ ...resultOf(q, shown === 'check' ? ticks : null), i: qi }, 0, '', true)
-      : `<article class="card rcard open study-card ${state.settings.showFa ? '' : 'no-fa'}">
-          ${cardHead(q, { i: qi })}
-          <div class="rbody">
-            <div class="rstmts v-mine">${q.st.map((s, k) => `
-              <button type="button" class="rstmt pick ${ticks[k] ? 'me' : ''}" data-k="${k}" aria-pressed="${!!ticks[k]}">
-                <div class="rline"><span class="rbox" aria-hidden="true"></span>
-                  <div class="rtxt"><div class="da rst-da">${nl(stText(s))}</div>${s.fa ? `<div class="fa rtr">${nl(s.fa)}</div>` : ''}</div></div>
-              </button>`).join('')}</div>
-            <div class="study-acts"><button class="btn btn-primary" id="stCheck">بررسی پاسخ</button><button class="btn btn-ghost" id="stReveal">نمایش پاسخ صحیح</button></div>
-          </div>
-        </article>`;
-    const last = qi === t.qs.length - 1, nextT = BANK.tests[st.ti + 1];
-    $app.innerHTML = `<section class="view study-q">
-      <button class="back-link" id="back">→ بازگشت به فهرست درس‌ها</button>
-      <div class="words-head"><h1>درس ${faNum(studyNum(t, st.ti))} ${studyNote(t) ? `<small class="muted">(${esc(studyNote(t))})</small>` : ''}</h1></div>
-      <div class="review">${card}</div>
-      <nav class="st-nav" dir="ltr">
-        <button class="btn btn-ghost" id="stPrev" ${qi ? '' : 'disabled'}>${ICON.la}<span>${ui().prev}</span></button>
-        <span class="st-pos"><span class="st-long">${ui().count(qi + 1, t.qs.length)}</span><span class="st-short">${qi + 1} / ${t.qs.length}</span></span>
-        ${last
-          ? (nextT ? `<button class="btn btn-primary" id="stNextT"><span>${ui().nextLesson}</span>${ICON.ra}</button>` : `<button class="btn btn-primary" id="stEnd">${ui().endLessons}</button>`)
-          : `<button class="btn btn-primary" id="stNext"><span>${ui().next}</span>${ICON.ra}</button>`}
-      </nav>
-    </section>`;
-    document.getElementById('back').onclick = studyList;
-    document.getElementById('stPrev').onclick = () => studyQ(qi - 1);
-    const nx = document.getElementById('stNext'); if (nx) nx.onclick = () => studyQ(qi + 1);
-    const nt = document.getElementById('stNextT');
-    if (nt) nt.onclick = () => { state.study = { ti: st.ti + 1, ticks: {}, shown: {} }; studyQ(0); };
-    const en = document.getElementById('stEnd'); if (en) en.onclick = studyList;
-    $app.querySelectorAll('.rstmt.pick').forEach(b => b.onclick = () => {
-      const k = +b.dataset.k; ticks[k] = ticks[k] ? 0 : 1;
-      b.classList.toggle('me', !!ticks[k]); b.setAttribute('aria-pressed', !!ticks[k]);
-    });
-    const finishQ = how => { st.shown[qi] = how; studyMark(t, qi, true); studyQ(qi); };
-    const ck = document.getElementById('stCheck'); if (ck) ck.onclick = () => finishQ('check');
-    const rv = document.getElementById('stReveal'); if (rv) rv.onclick = () => finishQ('reveal');
-    bindReviewCards($app);
-    window.scrollTo({ top: 0 });
+  // AI summary at the top of a lesson's review: one lesson over all its mistakes (server: /api/summary).
+  function aiSummary(res) {
+    const box = document.getElementById('aiSummary'); if (!box) return;
+    const body = box.querySelector('.ai-body');
+    const items = res.filter(r => !r.ok && r.a).map(r => ({ id: r.q.id, a: r.a.map(v => (v ? 1 : 0)) }));
+    body.innerHTML = '<p class="muted ai-wait">در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی…</p>';
+    api('POST', 'summary', { items, lang: examLang() })
+      .then(d => { body.innerHTML = lessonHtml(d.text); })
+      .catch(e => { body.innerHTML = `<p class="muted">${esc(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message)}</p>`; });
   }
 
   // ---------- Admin panel (users listed in the server's ADMIN_USERS) ----------

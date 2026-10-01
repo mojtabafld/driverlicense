@@ -5,7 +5,8 @@ Færdselsstyrelsen's digital test, Persian translations, explanations and short 
 accounts, progress charts and a pass-probability estimate.
 In the review of an exam, the bookmark on a question's picture saves it to «سؤالات ذخیره‌شده» (in the
 settings and features menu), with the user's own ticks, to review again later. «آموزش درس‌به‌درس» on the
-dashboard goes through prove.dk's 44 numbered tests of 25 questions, in order, one question at a time.
+dashboard goes through prove.dk's 44 numbered tests of 25 questions: each is taken like the exam, in prove.dk's
+order and without a timer, and its review starts with an AI summary that teaches from the user's mistakes.
 During an exam, double-tap (or select) a Danish word to see its Persian meaning (built-in glossary
 `data/dict_fa_*.txt`, driving context) and save it to your word bank.
 
@@ -55,7 +56,7 @@ it replaces the whole variable list and would delete the secrets that were added
 |---|---|---|
 | `DATABASE_URL` | Spec (from the attached database) | PostgreSQL connection string. Without it, accounts are stored in `data/db.json`. |
 | `DATABASE_CA_CERT` | Spec (from the attached database) | CA certificate of the database. |
-| `ANTHROPIC_API_KEY` | Dashboard, encrypted | Turns on the AI lesson («آموزش این سؤال») in the answer review: Claude explains each question and the user's own mistakes in Persian. Lessons are cached per question + mistake pattern. Without the key, the topic's fixed lesson is shown. |
+| `ANTHROPIC_API_KEY` | Dashboard, encrypted | Turns on the AI lessons in Persian: «آموزش این سؤال» in an exam's answer review explains each question and the user's own mistakes; after a lesson, «جمع‌بندی آموزشی اشتباهات شما» covers all its mistakes in one summary. Key points are in bold. Lessons are cached per question (or set of questions) + mistake pattern. Without the key, the topic's fixed lesson is shown. |
 | `LESSON_MODEL` | Spec, editable in the dashboard | Claude model for the AI lessons. Default `claude-opus-5-5` (Claude Opus 5.5), also used when the variable is missing. |
 | `INVITE_CODE` | Dashboard, encrypted (optional) | When set, sign-up requires this code. |
 | `ADMIN_USERS` | Dashboard (optional) | Comma-separated usernames that see «پنل مدیریت» (admin panel with usage stats) in the settings. |
