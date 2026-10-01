@@ -789,3 +789,6 @@ body.focus-mode .topbar{display:none}
 .field-tip.show{animation:tipIn .25s var(--ease)}
 .field-tip[hidden]{display:none}
 @keyframes tipIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+
+/* passed: confetti + small fireworks over the page for a few seconds (see celebrate() in app.js) */
+.celebrate{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:300}
