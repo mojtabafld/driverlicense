@@ -641,10 +641,10 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .study-prog .mini-track{height:8px;margin-top:10px}
 .study-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
 .study-tile{display:grid;gap:4px;align-content:start;text-align:right;padding:10px 10px 12px;animation:rise .35s var(--ease) both;transition:border-color .15s,transform .15s}
-.study-tile:hover{border-color:var(--navy);transform:translateY(-1px)}
+@media (hover:hover){.study-page:not(.no-hover) .study-tile:hover{border-color:var(--navy);transform:translateY(-1px)}}
 .st-thumb{display:block;margin-bottom:6px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
 .st-thumb img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;transition:transform .3s var(--ease)}
-.study-tile:hover .st-thumb img{transform:scale(1.04)}
+@media (hover:hover){.study-page:not(.no-hover) .study-tile:hover .st-thumb img{transform:scale(1.04)}}
 @media (max-width:640px){.study-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
 .st-top{display:flex;justify-content:space-between;align-items:center;font-size:16px}
 .st-sub,.st-count{color:var(--muted);font-size:12.5px}
@@ -769,7 +769,7 @@ body.focus-mode .topbar{display:none}
 .study-tile.st-new{border-color:var(--line)}
 .study-tile.st-fail{border-color:color-mix(in srgb,var(--bad) 40%,transparent);background:color-mix(in srgb,var(--bad-soft) 35%,var(--surface))}
 .study-tile.st-pass{border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok-soft) 35%,var(--surface))}
-.study-tile.st-new:hover{border-color:var(--navy)}
+@media (hover:hover){.study-page:not(.no-hover) .study-tile.st-new:hover{border-color:var(--navy)}}
 
 /* past exams: two sections (random exams / lessons), each opened with its button */
 .hist-sec{margin-bottom:12px}

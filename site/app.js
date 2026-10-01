@@ -1381,6 +1381,12 @@
     document.getElementById('back').onclick = home;
     $app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => startLesson(+b.dataset.st));
     $app.querySelectorAll('[data-run]').forEach(b => b.onclick = () => openAttempt(+b.dataset.run));
+    // No lesson looks selected when the page opens: nothing keeps focus, and hover highlights wait until the
+    // pointer actually moves (the click that opened the page often ends right over the first tile).
+    if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+    const page = $app.querySelector('.study-page');
+    page.classList.add('no-hover');
+    page.addEventListener('pointermove', () => page.classList.remove('no-hover'), { once: true });
     window.scrollTo({ top: 0 });
   }
   // An unfinished attempt of this lesson is offered first: continue it, or start the lesson again.
