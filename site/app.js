@@ -651,11 +651,12 @@
             <span class="kpi">زمان: <b>${fmtTime(secs)}</b></span>
           </div>
           <div class="res-actions">
+            ${isLesson ? '<button class="btn btn-ghost wide-btn" id="toHome">داشبورد</button>' : ''}
             ${n - correct ? `<button class="btn btn-primary wide-btn" id="retryWrong">تمرین دوباره‌ی همین اشتباهات</button>` : ''}
             ${isLesson
               ? `${BANK.tests[li + 1] ? `<button class="btn ${n - correct ? 'btn-ghost' : 'btn-primary'}" id="nextLesson">درس بعدی</button>` : ''}<button class="btn btn-ghost" id="toLessons">فهرست درس‌ها</button>`
-              : `<button class="btn ${n - correct ? 'btn-ghost' : 'btn-primary'}" id="again">آزمون جدید</button>`}
-            <button class="btn btn-ghost" id="toHome">داشبورد</button>
+              : `<button class="btn ${n - correct ? 'btn-ghost' : 'btn-primary'}" id="again">آزمون جدید</button>
+            <button class="btn btn-ghost" id="toHome">داشبورد</button>`}
           </div>
         </div>
       </div>
