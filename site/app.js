@@ -734,7 +734,7 @@
       </nav>`;
     box.innerHTML = !total ? '<div class="card empty">موردی نیست.</div>'
       : end ? `${summaryBox(res) || `<div class="card empty">${res.some(r => !r.ok) ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'}</div>`}${nav}`
-      : `<div class="review">${reviewCard(list[k], 0, '', true, true, false)}</div>${nav}`;
+      : `<div class="review">${reviewCard(list[k], 0, '', true, true, false, true)}</div>${nav}`;
     if (!total) return;
     document.getElementById('rsPrev').onclick = () => reviewStep(res, list, k - 1);
     const nx = document.getElementById('rsNext'); if (nx) nx.onclick = () => reviewStep(res, list, k + 1);
@@ -770,7 +770,10 @@
       v.querySelectorAll('.rseg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
     });
-    root.querySelectorAll('.rcard.open').forEach(aiLesson);
+    root.querySelectorAll('.ai-start').forEach(b => b.onclick = () => {
+      b.hidden = true; aiLesson(b.closest('.rcard'), true);
+    });
+    root.querySelectorAll('.rcard.open').forEach(c => aiLesson(c));
   }
   // ---------- Saved questions (bookmark on a review card's picture) ----------
   const isSaved = id => state.saved.some(x => x.id === id);
@@ -820,15 +823,33 @@
     }
     close(); return html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   };
-  function aiLesson(card) {
+  // Waiting state of an AI lesson: pulsing sparkles, a line of text and shimmering placeholder lines.
+  const aiLoading = text => `<div class="ai-loading" role="status"><div class="ai-load-h"><span class="ai-spark">${ICON.ai}</span><span>${text}</span><span class="ai-dots"><i></i><i></i><i></i></span></div>
+    <div class="ai-skel"><i style="width:92%"></i><i style="width:78%"></i><i style="width:86%"></i><i style="width:55%"></i></div></div>`;
+  // Lessons already fetched on this page visit, so opening one again needs no request at all
+  // (the server also keeps every lesson, so later visits get it without a new AI call).
+  const lessonCache = new Map();
+  // `.ai-click` boxes (in the lessons) wait for the user to ask for the lesson; the others load when opened.
+  function aiLesson(card, asked = false) {
     const box = card.querySelector('.ai-lesson'); if (!box || box.dataset.state) return;
+    if (box.classList.contains('ai-click') && !asked) return;
     box.dataset.state = 'loading';
-    const body = box.querySelector('.ai-body');
-    body.innerHTML = '<p class="muted ai-wait">در حال آماده‌سازی آموزش بر اساس پاسخ‌های شما…</p>';
+    const body = box.querySelector('.ai-body'); body.hidden = false;
     const a = box.dataset.a ? box.dataset.a.split('').map(Number) : undefined;
+    const key = `${box.dataset.q}:${box.dataset.a}:${examLang()}`;
+    const show = text => {
+      box.dataset.state = 'done'; lessonCache.set(key, text);
+      body.innerHTML = `<div class="ai-reveal">${box.classList.contains('ai-click') ? `<h4>${ICON.ai} آموزش این سؤال</h4>` : ''}${lessonHtml(text)}</div>`;
+    };
+    if (lessonCache.has(key)) return show(lessonCache.get(key));
+    body.innerHTML = aiLoading('در حال آماده‌سازی آموزش و نکته‌های این سؤال بر اساس پاسخ شما');
     api('POST', 'lesson', { qid: +box.dataset.q, a, lang: examLang() })
-      .then(d => { box.dataset.state = 'done'; body.innerHTML = lessonHtml(d.text); })
-      .catch(() => {
+      .then(d => show(d.text))
+      .catch(e => {
+        if (box.classList.contains('ai-click')) { // keep the button so it can be tried again
+          delete box.dataset.state; body.innerHTML = `<p class="muted">${esc(e.status === 429 ? e.message : 'آموزش الان آماده نشد؛ دوباره امتحان کنید.')}</p>`;
+          box.querySelector('.ai-start').hidden = false; return;
+        }
         box.dataset.state = 'failed'; box.hidden = true;
         const t = card.querySelector('.topic-lesson'); if (t) t.hidden = false;
       });
@@ -855,7 +876,8 @@
 
   // `lessons` false (a lesson's review): no per-question lesson, the AI summary above covers the mistakes.
   // `fa`: whether the Persian translation starts shown (hidden in lessons, as in the lesson itself).
-  function reviewCard(r, n, extraBadge = '', open = false, lessons = true, fa = lessons && state.settings.showFa) {
+  // `aiClick`: the AI lesson waits for a click on «آموزش این سؤال» instead of loading when the card opens.
+  function reviewCard(r, n, extraBadge = '', open = false, lessons = true, fa = lessons && state.settings.showFa, aiClick = false) {
     const q = r.q, t = BANK.topics[q.c];
     return `<article class="card rcard ${open ? 'open' : ''} ${fa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
       ${cardHead(q, r, extraBadge, fa)}
@@ -887,7 +909,9 @@
           </div>`;
         }).join('')}
         </div>
-        ${lessons && state.aiLessons ? `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.join('') : ''}"><h4>${ICON.ai} آموزش این سؤال</h4><div class="ai-body"></div></div>` : ''}
+        ${lessons && state.aiLessons ? (aiClick
+          ? `<div class="lesson ai-lesson ai-click" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}"><button class="ai-start" type="button"><span class="ai-spark">${ICON.ai}</span><span><b>آموزش این سؤال</b><small>نکته‌های این سؤال بر اساس پاسخ شما، با هوش مصنوعی</small></span></button><div class="ai-body" hidden></div></div>`
+          : `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}"><h4>${ICON.ai} آموزش این سؤال</h4><div class="ai-body"></div></div>`) : ''}
         ${lessons && t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
       </div>
@@ -1328,9 +1352,9 @@
     const box = document.getElementById('aiSummary'); if (!box) return;
     const body = box.querySelector('.ai-body');
     const items = res.filter(r => !r.ok && r.a).map(r => ({ id: r.q.id, a: r.a.map(v => (v ? 1 : 0)) }));
-    body.innerHTML = '<p class="muted ai-wait">در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی…</p>';
+    body.innerHTML = aiLoading('در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی');
     api('POST', 'summary', { items, lang: examLang() })
-      .then(d => { body.innerHTML = lessonHtml(d.text); })
+      .then(d => { body.innerHTML = `<div class="ai-reveal">${lessonHtml(d.text)}</div>`; })
       .catch(e => { body.innerHTML = `<p class="muted">${esc(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message)}</p>`; });
   }
 
