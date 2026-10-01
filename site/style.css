@@ -644,18 +644,15 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .study-tile.complete .mini-track i{background:var(--ok)}
 
 /* one lesson question */
-.st-pos{color:var(--muted);font-size:14px}
-.st-pos b{color:var(--text)}
-.st-nums{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
-.st-nums button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-family:var(--fa);font-size:13.5px;cursor:pointer}
-.st-nums button.done{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--navy)}
-:root[data-theme="dark"] .st-nums button.done{color:var(--accent)}
-.st-nums button.cur{background:var(--navy);border-color:var(--navy);color:#fff}
 .rstmt.pick{width:100%;display:block;text-align:inherit;font:inherit;color:inherit;cursor:pointer}
 .rstmt.pick:hover{border-color:var(--navy)}
 .study-acts{display:flex;gap:10px;flex-wrap:wrap}
 .study-acts .btn{flex:1;min-width:150px}
-.st-nav{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.st-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}
+.st-nav .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.st-pos{flex:1;text-align:center;color:var(--muted);font-family:var(--da);font-size:14.5px;font-weight:600}
 .st-nav .btn{min-width:140px}
 .st-nav .btn:disabled{opacity:.45;cursor:default}
-@media (max-width:640px){.st-nums button{width:30px;height:30px;font-size:12.5px}.st-nav .btn{flex:1;min-width:0}}
+.st-short{display:none}
+@media (max-width:640px){.st-nav .btn{min-width:0;padding:11px 12px}.st-pos{font-size:13px}}
+@media (max-width:480px){.st-long{display:none}.st-short{display:inline;white-space:nowrap;font-size:15px}}

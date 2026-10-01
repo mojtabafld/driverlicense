@@ -71,7 +71,7 @@
   // only inputs, code, the exam's "Spørgsmål 3 ud af 25" counter and the review's statement numbers keep Latin digits.
   // Runs on every DOM change, so animated counters and timers are covered.
   // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
-  const LATIN_ZONE = 'input, textarea, code, .x-count, .rnum-c, .badge.src, script, style';
+  const LATIN_ZONE = 'input, textarea, code, .x-count, .st-pos, .rnum-c, .badge.src, script, style';
   const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
   const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
@@ -128,12 +128,12 @@
       overview: 'Spørgsmålsoversigt', ovTitle: 'Din spørgsmålsoversigt',
       ovText: 'Spørgsmålsoversigten giver dig et overblik over dine besvarede, ubesvarede og gemte spørgsmål. Du skal trykke på et nummer for at gå til spørgsmålet.',
       notAnswered: 'Ikke besvaret', answered: 'Besvaret', saved: 'Gemte spørgsmål', jump: 'Spring til dit spørgsmål', q: 'Spørgsmål',
-      handin: 'Aflever prøven', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.', expl: 'Forklaring:' },
+      handin: 'Aflever prøven', nextLesson: 'Næste lektion', endLessons: 'Afslut', correct: 'Det rigtige svar er:', yes: 'Ja.', no: 'Nej.', expl: 'Forklaring:' },
     en: { read: 'Read aloud', save: 'Save for later', prev: 'Previous', next: 'Next', count: (i, n) => `Question ${i} of ${n}`,
       overview: 'Question overview', ovTitle: 'Your question overview',
       ovText: 'The question overview gives you an overview of your answered, unanswered and saved questions. Tap a number to go to the question.',
       notAnswered: 'Not answered', answered: 'Answered', saved: 'Saved questions', jump: 'Jump to your question', q: 'Question',
-      handin: 'Hand in the test', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.', expl: 'Explanation:' },
+      handin: 'Hand in the test', nextLesson: 'Next lesson', endLessons: 'Finish', correct: 'The correct answer is:', yes: 'Yes.', no: 'No.', expl: 'Explanation:' },
   };
   const ui = () => EXAM_UI[examLang()];
 
@@ -777,13 +777,12 @@
   // Picture, badges and question of a review card (also used by the lessons' practice card).
   // The bookmark on the picture saves the question, with the ticks shown in this card, to «سؤالات ذخیره‌شده».
   function cardHead(q, r, extraBadge = '') {
-    const t = BANK.topics[q.c], on = isSaved(q.id);
+    const on = isSaved(q.id);
     return `<div class="rhead">
         <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}
           <button class="rbm ${on ? 'on' : ''}" data-bm="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}" aria-pressed="${on}" title="${on ? 'حذف از سؤالات ذخیره‌شده' : 'ذخیره برای مرور بعدی'}" aria-label="ذخیره‌ی سؤال">${ICON.bookmark(on)}</button></div>
         <div class="rbadges">
           ${extraBadge}
-          ${t ? `<span class="badge topic">${esc(t.fa)}</span>` : ''}
           ${q.src ? q.src.map(x => `<a class="badge src" href="https://prove.dk/${examLang() === 'en' ? 'en/' : ''}app/newtest/${x.test}" target="_blank" rel="noopener" title="باز کردن این آزمون در prove.dk">${esc(x.label)}</a>`).join('') : ''}
           <button class="rtr-btn ${state.settings.showFa ? 'on' : ''}" aria-pressed="${state.settings.showFa}" title="نمایش / پنهان‌کردن ترجمه‌ی فارسی">${ICON.tr}<span class="fa">ترجمه</span></button>
         </div>
@@ -1241,7 +1240,7 @@
     stopSpeak();
     const st = state.study, t = BANK.tests[st.ti], q = Q.get(t.qs[qi]);
     st.qi = qi;
-    const p = studyMark(t, qi, false), done = p.done || [];
+    studyMark(t, qi, false);
     const ticks = st.ticks[qi] || (st.ticks[qi] = q.st.map(() => 0));
     const shown = st.shown[qi]; // 'check' (the user's ticks were checked) or 'reveal'
     const card = shown
@@ -1260,18 +1259,17 @@
     const last = qi === t.qs.length - 1, nextT = BANK.tests[st.ti + 1];
     $app.innerHTML = `<section class="view study-q">
       <button class="back-link" id="back">→ بازگشت به فهرست درس‌ها</button>
-      <div class="words-head"><h1>درس ${faNum(studyNum(t, st.ti))} ${studyNote(t) ? `<small class="muted">(${esc(studyNote(t))})</small>` : ''}</h1><span class="st-pos">سؤال <b>${faNum(qi + 1)}</b> از ${faNum(t.qs.length)}</span></div>
-      <div class="st-nums" role="navigation" aria-label="سؤال‌های این درس">${t.qs.map((_, k) => `<button class="${k === qi ? 'cur' : ''} ${done[k] ? 'done' : ''}" data-go="${k}" aria-label="سؤال ${faNum(k + 1)}">${faNum(k + 1)}</button>`).join('')}</div>
+      <div class="words-head"><h1>درس ${faNum(studyNum(t, st.ti))} ${studyNote(t) ? `<small class="muted">(${esc(studyNote(t))})</small>` : ''}</h1></div>
       <div class="review">${card}</div>
-      <nav class="st-nav">
-        <button class="btn btn-ghost" id="stPrev" ${qi ? '' : 'disabled'}>→ سؤال قبلی</button>
+      <nav class="st-nav" dir="ltr">
+        <button class="btn btn-ghost" id="stPrev" ${qi ? '' : 'disabled'}>${ICON.la}<span>${ui().prev}</span></button>
+        <span class="st-pos"><span class="st-long">${ui().count(qi + 1, t.qs.length)}</span><span class="st-short">${qi + 1} / ${t.qs.length}</span></span>
         ${last
-          ? (nextT ? `<button class="btn btn-primary" id="stNextT">درس بعدی ←</button>` : `<button class="btn btn-primary" id="stEnd">پایان درس‌ها</button>`)
-          : `<button class="btn btn-primary" id="stNext">سؤال بعدی ←</button>`}
+          ? (nextT ? `<button class="btn btn-primary" id="stNextT"><span>${ui().nextLesson}</span>${ICON.ra}</button>` : `<button class="btn btn-primary" id="stEnd">${ui().endLessons}</button>`)
+          : `<button class="btn btn-primary" id="stNext"><span>${ui().next}</span>${ICON.ra}</button>`}
       </nav>
     </section>`;
     document.getElementById('back').onclick = studyList;
-    $app.querySelectorAll('[data-go]').forEach(b => b.onclick = () => studyQ(+b.dataset.go));
     document.getElementById('stPrev').onclick = () => studyQ(qi - 1);
     const nx = document.getElementById('stNext'); if (nx) nx.onclick = () => studyQ(qi + 1);
     const nt = document.getElementById('stNextT');
