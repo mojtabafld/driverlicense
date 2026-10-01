@@ -645,7 +645,10 @@
     const savedN = res.filter(r => r.m).length;
     $app.innerHTML = `<section class="view">
       ${fresh ? '' : `<button class="back-link" id="back">→ ${{ history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد'}</button>`}
-      <div class="card result-hero">
+      ${stepMode ? `<div class="res-line ${pass ? 'ok' : 'bad'}">
+        <b>${pass ? '✓ قبول' : '✗ مردود'}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span>
+        <small>${modeName(mode, lesson)}، ${fmtDate(at)}</small>
+      </div>` : `<div class="card result-hero">
         <div class="ring">
           <svg width="170" height="170" viewBox="0 0 170 170">
             <circle cx="85" cy="85" r="74" stroke="var(--surface-2)" stroke-width="14" fill="none"/>
@@ -674,10 +677,10 @@
             <button class="btn btn-ghost" id="toHome">داشبورد</button>`}
           </div>
         </div>
-      </div>
+      </div>`}
 
       ${isLesson && !stepMode ? summaryBox(res) : ''}
-      <div class="section-title" style="margin-top:28px">
+      <div class="section-title" style="margin-top:${stepMode ? 14 : 28}px">
         <span>${stepMode ? 'مرور سؤال به سؤال' : 'مرور پاسخ‌ها'}</span>
         <div class="tabs"><button data-f="wrong" class="${filter === 'wrong' ? 'on' : ''}">اشتباهات (${faNum(n - correct)})</button>${savedN ? `<button data-f="saved" class="${filter === 'saved' ? 'on' : ''}">${ICON.bookmark(true)} ذخیره‌شده‌ها (${faNum(savedN)})</button>` : ''}<button data-f="all" class="${filter === 'all' ? 'on' : ''}">همه (${faNum(n)})</button></div>
       </div>
@@ -687,18 +690,21 @@
       </div>`}
     </section>`;
 
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      document.getElementById('ringFg').style.strokeDashoffset = C * (1 - pct);
-    }));
-    const sn = document.getElementById('scoreN'), target = full ? correct : pctN; let v = 0;
-    const tick = setInterval(() => { sn.textContent = full ? v : v + '%'; if (v++ >= target) clearInterval(tick); }, 1200 / Math.max(target, 1));
+    const sn = document.getElementById('scoreN');
+    if (sn) { // the result card (not on a past lesson's step-by-step review)
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.getElementById('ringFg').style.strokeDashoffset = C * (1 - pct);
+      }));
+      const target = full ? correct : pctN; let v = 0;
+      const tick = setInterval(() => { sn.textContent = full ? v : v + '%'; if (v++ >= target) clearInterval(tick); }, 1200 / Math.max(target, 1));
+    }
 
     const rw = document.getElementById('retryWrong');
     if (rw) rw.onclick = () => newExam('mistakes', shuffle(res.filter(r => !r.ok).map(r => r.q.id)));
     const ag = document.getElementById('again'); if (ag) ag.onclick = () => askSize('random');
     const nl2 = document.getElementById('nextLesson'); if (nl2) nl2.onclick = () => startLesson(li + 1);
     const tl = document.getElementById('toLessons'); if (tl) tl.onclick = studyList;
-    document.getElementById('toHome').onclick = home;
+    const th = document.getElementById('toHome'); if (th) th.onclick = home;
     const back = document.getElementById('back');
     if (back) back.onclick = { history: () => historyView(), lessons: studyList }[state.reviewFrom] || home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
