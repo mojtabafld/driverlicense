@@ -643,16 +643,7 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .study-tile.complete{border-color:var(--ok)}
 .study-tile.complete .mini-track i{background:var(--ok)}
 
-/* one lesson question */
-.rstmt.pick{width:100%;display:block;text-align:inherit;font:inherit;color:inherit;cursor:pointer}
-.rstmt.pick:hover{border-color:var(--navy)}
-.study-acts{display:flex;gap:10px;flex-wrap:wrap}
-.study-acts .btn{flex:1;min-width:150px}
-.st-nav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}
-.st-nav .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.st-pos{flex:1;text-align:center;color:var(--muted);font-family:var(--da);font-size:14.5px;font-weight:600}
-.st-nav .btn{min-width:140px}
-.st-nav .btn:disabled{opacity:.45;cursor:default}
-.st-short{display:none}
-@media (max-width:640px){.st-nav .btn{min-width:0;padding:11px 12px}.st-pos{font-size:13px}}
-@media (max-width:480px){.st-long{display:none}.st-short{display:inline;white-space:nowrap;font-size:15px}}
+/* a lesson's review: AI summary of all its mistakes, above the answers */
+.ai-summary{margin-top:22px}
+.ai-summary h4{font-size:16px}
+.study-tile .pill{font-family:var(--fa);font-weight:700;padding:1px 9px;border-radius:99px;font-size:12.5px}

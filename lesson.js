@@ -1,5 +1,7 @@
-// Per-question AI lesson for the answer review ("آموزش این سؤال"), written in Persian by Claude.
-// It explains what the question is about and, from the user's ticks, why each wrong statement was wrong.
+// AI lessons written in Persian by Claude:
+// - per question in the answer review ("آموزش این سؤال"): what the question is about and, from the user's
+//   ticks, why each wrong statement was wrong;
+// - per exam or lesson ("جمع‌بندی اشتباهات"): one short lesson over all the questions answered wrongly.
 // Lessons are cached in store.meta by question + mistake pattern + exam language, so each combination is
 // generated once and later views are free. Needs ANTHROPIC_API_KEY; without it the endpoint says "unavailable"
 // and the page keeps showing the topic's fixed lesson.
@@ -28,6 +30,27 @@ const SYSTEM = `شما معلم آزمون تئوری رانندگی دانما�
 - پاسخ درستِ هر گزینه همانی است که در داده آمده؛ آن را تغییر ندهید و با آن تناقض نگویید.
 - فقط بر اساس قوانین رانندگی دانمارک و توضیحات داده‌شده بنویسید؛ چیزی از خودتان نسازید.
 - حداکثر حدود ۱۲۰ کلمه، ساده و روان، بدون مقدمه و بدون جمع‌بندی اضافه.
+- اصطلاح‌های دانمارکی مهم (مثل ubetinget vigepligt) را در صورت لزوم داخل پرانتز بیاورید.
+- نکته‌های مهم (قاعده‌ی اصلی، عدد یا شرط کلیدی، دلیل درست یا نادرست بودن) را با **دو ستاره** پررنگ کنید؛ در هر خط حداکثر یکی دو عبارت کوتاه، نه کل جمله.`;
+
+const SUMMARY_SYSTEM = `شما معلم آزمون تئوری رانندگی دانمارک (گواهینامه‌ی B) برای فارسی‌زبانان هستید.
+کاربر یک درس یا آزمون را تمام کرده است. فهرست سؤال‌هایی که اشتباه جواب داده، با پاسخ‌های خودش، به شما داده می‌شود.
+یک جمع‌بندی آموزشی کوتاه به فارسی بنویسید که دقیقاً بر اساس همین اشتباهات باشد.
+
+قالب پاسخ دقیقاً این بخش‌ها است (عنوان‌ها همین باشند، هر بخش در خط جدا):
+## اشتباهات شما در یک نگاه
+یک یا دو جمله: اشتباهات بیشتر در چه مباحثی بود.
+## سؤال به سؤال
+برای هر سؤال یک خط که با «- » شروع شود: «سؤال n» (شماره‌ای که داده شده)، موضوع سؤال در چند کلمه، اینکه کاربر کدام گزینه را به اشتباه «انتخاب کرد» یا «انتخاب نکرد» و قاعده‌ی درست در یک جمله.
+## مهم‌ترین نکته‌ها برای مرور
+سه تا پنج خط با «- »: قاعده‌های عملی و قابل‌به‌خاطرسپاری که این اشتباهات را برطرف می‌کند. سؤال‌های هم‌موضوع را در یک نکته جمع کنید.
+
+قواعد:
+- پاسخ درستِ هر گزینه همانی است که در داده آمده؛ آن را تغییر ندهید و با آن تناقض نگویید.
+- فقط بر اساس قوانین رانندگی دانمارک و توضیحات داده‌شده بنویسید؛ چیزی از خودتان نسازید.
+- برای پاسخ کاربر همیشه «انتخاب کردید / انتخاب نکردید» بنویسید.
+- نکته‌های مهم (قاعده‌ی اصلی، عدد یا شرط کلیدی) را با **دو ستاره** پررنگ کنید؛ در هر خط حداکثر یکی دو عبارت کوتاه.
+- ساده و روان، بدون مقدمه و بدون جمع‌بندی اضافه؛ حداکثر حدود ۶۰ کلمه برای بخش اول، یک خط برای هر سؤال، و ۱۲۰ کلمه برای بخش آخر.
 - اصطلاح‌های دانمارکی مهم (مثل ubetinget vigepligt) را در صورت لزوم داخل پرانتز بیاورید.`;
 
 let client = null, BANK = null, Q = null;
@@ -82,24 +105,29 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
   lang = lang === 'en' ? 'en' : 'da';
   const known = Array.isArray(ticks);
   const mask = known ? q.st.map((s, k) => ((!!ticks[k]) !== !!s.ok ? 1 : 0)).join('') : 'x';
-  const key = `lesson:v3:${q.id}:${mask}:${lang}`; // v3: written by Claude Opus 5.5 (v2 lessons came from Opus 5)
+  const key = `lesson:v4:${q.id}:${mask}:${lang}`; // v4: key points in **bold** (v3 had none)
   if (store.meta[key]) return store.meta[key];
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
-  if (inflight.has(key)) return inflight.get(key);
-  if (!allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
+  if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
 
+  return generate({ store, key, system: SYSTEM, prompt: promptFor(q, known ? ticks : null, lang), maxTokens: 4000 });
+}
+
+// Calls Claude once per cache key (concurrent requests for the same key share the call) and caches the text.
+async function generate({ store, key, system, prompt, maxTokens }) {
+  if (inflight.has(key)) return inflight.get(key);
   const job = (async () => {
-    client = client || new Anthropic({ timeout: 90e3, maxRetries: 2 });
+    client = client || new Anthropic({ timeout: 120e3, maxRetries: 2 });
     const response = await client.beta.messages.create({
       model: MODEL,
-      max_tokens: 4000,
+      max_tokens: maxTokens,
       output_config: { effort: 'low' },
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
-      system: SYSTEM,
-      messages: [{ role: 'user', content: promptFor(q, known ? ticks : null, lang) }],
+      system,
+      messages: [{ role: 'user', content: prompt }],
     });
-    if (response.stop_reason === 'refusal') throw Object.assign(new Error('آموزش برای این سؤال ساخته نشد.'), { status: 502 });
+    if (response.stop_reason === 'refusal') throw Object.assign(new Error('آموزش ساخته نشد.'), { status: 502 });
     const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
     if (!text) throw Object.assign(new Error('آموزش خالی بود.'), { status: 502 });
     const lesson = { text, model: response.model, at: Date.now() };
@@ -111,4 +139,20 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
   try { return await job; } finally { inflight.delete(key); }
 }
 
-module.exports = { getLesson, lessonsAvailable: available };
+// items: [{ id, a }] — the wrongly answered questions of an exam or lesson, with the user's ticks.
+// Cached by the questions + mistake patterns + exam language, so the same result gets the same summary.
+async function getSummary({ store, siteDir, username, items, lang }) {
+  loadBank(siteDir);
+  lang = lang === 'en' ? 'en' : 'da';
+  const list = items.map(x => ({ q: Q.get(+x.id), a: x.a })).filter(x => x.q);
+  if (!list.length) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
+  const mask = (q, a) => q.st.map((s, k) => ((!!a[k]) !== !!s.ok ? 1 : 0)).join('');
+  const key = `summary:v1:${lang}:${list.map(x => `${x.q.id}.${mask(x.q, x.a)}`).sort().join(',')}`;
+  if (store.meta[key]) return store.meta[key];
+  if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
+  if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
+  const prompt = list.map((x, n) => `### سؤال ${n + 1}\n${promptFor(x.q, x.a, lang)}`).join('\n\n');
+  return generate({ store, key, system: SUMMARY_SYSTEM, prompt, maxTokens: 8000 });
+}
+
+module.exports = { getLesson, getSummary, lessonsAvailable: available };

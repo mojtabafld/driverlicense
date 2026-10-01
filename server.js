@@ -11,7 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
-const { getLesson, lessonsAvailable } = require('./lesson');
+const { getLesson, getSummary, lessonsAvailable } = require('./lesson');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
@@ -24,7 +24,8 @@ const INVITE_PAUSED = true;
 const INVITE_CODE = INVITE_PAUSED ? '' : (process.env.INVITE_CODE || '').trim();
 const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
-const MODES = ['random', 'mistakes', 'top'];
+const MODES = ['random', 'mistakes', 'top', 'lesson']; // lesson: one of prove.dk's 44 tests, in its order
+const lessonOf = b => (b.mode === 'lesson' && Number.isInteger(+b.lesson) && +b.lesson > 0 ? { lesson: +b.lesson } : {});
 const MAX_WORDS = 3000;
 const MAX_SAVED = 1000; // bookmarked questions per user
 const ADMINS = new Set((process.env.ADMIN_USERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
@@ -299,6 +300,20 @@ async function api(req, res, route) {
       throw e;
     }
   }
+  // AI summary of the mistakes of a whole exam or lesson: [{ id, a }] of the wrongly answered questions.
+  if (req.method === 'POST' && route === 'summary') {
+    const b = await readBody(req);
+    const items = Array.isArray(b.items) ? b.items.slice(0, 25).filter(x => x && Array.isArray(x.a)).map(x => ({ id: +x.id, a: x.a.slice(0, 4) })) : [];
+    if (!items.length) return send(res, 400, { error: 'no mistakes' });
+    try {
+      const summary = await getSummary({ store, siteDir: SITE, username: user.username, items, lang: b.lang });
+      return send(res, 200, { text: summary.text });
+    } catch (e) {
+      if (e instanceof Anthropic.APIError) { console.error('summary API error', e.status, e.message); return send(res, 502, { error: 'جمع‌بندی هوش مصنوعی الان در دسترس نیست.' }); }
+      if (e.status) return send(res, e.status, { error: e.message });
+      throw e;
+    }
+  }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, adminStats());
@@ -314,7 +329,7 @@ async function api(req, res, route) {
       m: x.m ? 1 : undefined, // bookmarked ("Gem til senere") during the exam
     })) : [];
     if (!items.length) return send(res, 400, { error: 'empty attempt' });
-    const at = { at: Date.now(), secs: Math.max(0, Math.min(36000, +b.secs || 0)), mode: MODES.includes(b.mode) ? b.mode : 'random', items };
+    const at = { at: Date.now(), secs: Math.max(0, Math.min(36000, +b.secs || 0)), mode: MODES.includes(b.mode) ? b.mode : 'random', ...lessonOf(b), items };
     user.attempts.push(at);
     delete user.draft; // the exam is handed in, so it is no longer unfinished
     if (user.attempts.length > MAX_ATTEMPTS) user.attempts.splice(0, user.attempts.length - MAX_ATTEMPTS);
@@ -393,7 +408,7 @@ async function api(req, res, route) {
     const bools = (v, n) => Array.from({ length: n }, (_, i) => !!(Array.isArray(v) && v[i]));
     const num = (v, max) => Math.max(0, Math.min(max, Math.round(+v || 0)));
     user.draft = {
-      mode: MODES.includes(b.mode) ? b.mode : 'random', ids,
+      mode: MODES.includes(b.mode) ? b.mode : 'random', ...lessonOf(b), ids,
       idx: num(b.idx, ids.length - 1),
       answers: ids.map((_, i) => bools(Array.isArray(b.answers) && b.answers[i], 4)),
       seen: bools(b.seen, ids.length), flags: bools(b.flags, ids.length), showFa: bools(b.showFa, ids.length),
