@@ -28,6 +28,7 @@ const MODES = ['random', 'mistakes', 'top', 'lesson']; // lesson: one of prove.d
 const lessonOf = b => (b.mode === 'lesson' && Number.isInteger(+b.lesson) && +b.lesson > 0 ? { lesson: +b.lesson } : {});
 const MAX_WORDS = 3000;
 const MAX_SAVED = 1000; // bookmarked questions per user
+const MAX_LESSON_DRAFTS = 100; // unfinished lessons per user (there are 44)
 const ADMINS = new Set((process.env.ADMIN_USERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
 const isAdmin = u => ADMINS.has(u.username);
 
@@ -319,7 +320,11 @@ async function api(req, res, route) {
     return send(res, 200, adminStats());
   }
   if (req.method === 'GET' && route === 'me') {
-    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], draft: user.draft || null });
+    if (user.draft && user.draft.mode === 'lesson') { // from before lessons had their own drafts
+      if (user.draft.lesson) (user.lessonDrafts = user.lessonDrafts || {})[user.draft.lesson] = user.draft;
+      delete user.draft; await store.saveUser(user);
+    }
+    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], draft: user.draft || null, lessonDrafts: user.lessonDrafts || {} });
   }
   if (req.method === 'POST' && route === 'attempts') {
     const b = await readBody(req);
@@ -331,7 +336,8 @@ async function api(req, res, route) {
     if (!items.length) return send(res, 400, { error: 'empty attempt' });
     const at = { at: Date.now(), secs: Math.max(0, Math.min(36000, +b.secs || 0)), mode: MODES.includes(b.mode) ? b.mode : 'random', ...lessonOf(b), items };
     user.attempts.push(at);
-    delete user.draft; // the exam is handed in, so it is no longer unfinished
+    // the exam (or that lesson) is handed in, so it is no longer unfinished
+    if (at.mode === 'lesson') { if (user.lessonDrafts) delete user.lessonDrafts[at.lesson]; } else delete user.draft;
     if (user.attempts.length > MAX_ATTEMPTS) user.attempts.splice(0, user.attempts.length - MAX_ATTEMPTS);
     await store.saveUser(user);
     return send(res, 200, { attempt: at });
@@ -401,24 +407,33 @@ async function api(req, res, route) {
     return send(res, 200, { ok: true });
   }
   // Unfinished exam, so it can be resumed later: PUT replaces it, DELETE drops it.
+  // Exams have one draft; each lesson has its own (user.lessonDrafts by test id), so they never replace each other.
   if (req.method === 'PUT' && route === 'draft') {
     const b = await readBody(req);
     const ids = Array.isArray(b.ids) ? b.ids.slice(0, 25).map(Number).filter(Number.isInteger) : [];
     if (!ids.length) return send(res, 400, { error: 'empty draft' });
     const bools = (v, n) => Array.from({ length: n }, (_, i) => !!(Array.isArray(v) && v[i]));
     const num = (v, max) => Math.max(0, Math.min(max, Math.round(+v || 0)));
-    user.draft = {
+    const draft = {
       mode: MODES.includes(b.mode) ? b.mode : 'random', ...lessonOf(b), ids,
       idx: num(b.idx, ids.length - 1),
       answers: ids.map((_, i) => bools(Array.isArray(b.answers) && b.answers[i], 4)),
       seen: bools(b.seen, ids.length), flags: bools(b.flags, ids.length), showFa: bools(b.showFa, ids.length),
       left: num(b.left, 36000), elapsed: num(b.elapsed, 36000 * 24), saved: Date.now(),
     };
+    if (draft.mode === 'lesson') {
+      if (!draft.lesson) return send(res, 400, { error: 'lesson missing' });
+      user.lessonDrafts = user.lessonDrafts || {};
+      if (!user.lessonDrafts[draft.lesson] && Object.keys(user.lessonDrafts).length >= MAX_LESSON_DRAFTS) return send(res, 400, { error: 'too many drafts' });
+      user.lessonDrafts[draft.lesson] = draft;
+    } else user.draft = draft;
     await store.saveUser(user);
     return send(res, 200, { ok: true });
   }
   if (req.method === 'DELETE' && route === 'draft') {
-    if (user.draft) { delete user.draft; await store.saveUser(user); }
+    const lesson = +(await readBody(req)).lesson;
+    if (lesson) { if (user.lessonDrafts && user.lessonDrafts[lesson]) { delete user.lessonDrafts[lesson]; await store.saveUser(user); } }
+    else if (user.draft) { delete user.draft; await store.saveUser(user); }
     return send(res, 200, { ok: true });
   }
   if (req.method === 'PUT' && route === 'settings') {
