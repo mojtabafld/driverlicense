@@ -1482,7 +1482,7 @@
             <span class="cat-n">${faNum(sectionPool([sec.n]).length)}<small>سؤال</small></span></label>`).join('')}</div>
         <div class="sec-foot">
           <div class="sec-foot-h"><b>تعداد سؤال‌ها</b><span class="sec-total" id="secTotal"></span></div>
-          <label class="sec-new"><input type="checkbox" id="secNew"><span class="sw" aria-hidden="true"></span><span>فقط سؤال‌های غیرتکراری <small>(سؤال‌هایی که هنوز جواب نداده‌اید)</small></span></label>
+          <label class="sec-new"><input type="checkbox" id="secNew"><span class="sw" aria-hidden="true"></span><span>فقط سؤال‌های غیرتکراری</span></label>
           <div class="sec-sizes" id="secSizes"></div>
           <button class="btn btn-primary wide" id="secStart" disabled>شروع آموزش</button>
         </div>
@@ -1505,7 +1505,7 @@
       if (!sizes.includes(size)) size = sizes.includes(FULL) ? FULL : sizes[sizes.length - 1] || null;
       document.getElementById('secSizes').innerHTML = sizes.length
         ? sizes.map(n => `<button type="button" class="sec-size ${n === size ? 'on' : ''}" data-n="${n}"><b>${faNum(n)}</b><small>سؤال</small></button>`).join('')
-        : `<span class="muted">${nums.length ? 'در این دسته‌ها سؤال غیرتکراری باقی نمانده است.' : 'ابتدا دست‌کم یک دسته را انتخاب کنید.'}</span>`;
+        : `<span class="muted">${nums.length ? 'در این دسته‌ها سؤال غیرتکراری باقی نمانده است.' : ''}</span>`;
       box.querySelectorAll('.sec-size').forEach(b => b.onclick = () => { size = +b.dataset.n; update(); });
       document.getElementById('secStart').disabled = !size;
     };
