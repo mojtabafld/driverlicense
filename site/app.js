@@ -100,7 +100,7 @@
   const fmtDate = t => new Date(t).toLocaleDateString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric' });
   const fmtDateTime = t => new Date(t).toLocaleString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const dayKey = t => new Date(t).toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD in Copenhagen
-  const modeName = (m, lesson) => (m === 'lesson' ? lessonName(lesson) : { mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات', sections: 'آزمون بخش‌های منتخب' }[m] || 'آزمون تصادفی');
+  const modeName = (m, lesson) => (m === 'lesson' ? lessonName(lesson) : { mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات', sections: 'آموزش بر اساس دسته‌بندی' }[m] || 'آزمون تصادفی');
   // Lessons are learning, not a timed test: no clock.
   const timed = ex => state.settings.timer && ex.mode !== 'lesson';
   // exam-mode: the exam screens (no site header). focus-mode: a past review, also without the header; every view
@@ -1453,59 +1453,101 @@
     page.addEventListener('pointermove', () => page.classList.remove('no-hover'), { once: true });
     window.scrollTo({ top: 0 });
   }
-  // ---------- Exam from chosen official sections ----------
+  // ---------- Study by category (official sections and subsections) ----------
   // The main sections of the official teaching plan for category B (Undervisningsplan for kategori B) that the
-  // theory test asks about (2 and 9 are practical only); a question's topic code starts with its section number.
-  const sectionOf = q => +String(q.c).split('.')[0];
-  const sectionPool = nums => BANK.questions.filter(q => nums.includes(sectionOf(q))).map(q => q.id);
-  const sectionPrefKey = () => 'sections.' + (state.user ? state.user.username : '');
+  // theory test asks about (2 and 9 are practical only); a topic code ("7.19") starts with its section number.
+  // The user picks whole sections or single subsections, then how many questions; they come in random order.
+  const sectionOf = c => +String(c).split('.')[0];
+  const topicPool = codes => BANK.questions.filter(q => codes.includes(q.c)).map(q => q.id);
+  const sectionTopics = n => Object.keys(BANK.topics).filter(c => sectionOf(c) === n);
+  const sectionPrefKey = () => 'catpick.' + (state.user ? state.user.username : '');
   function sectionPicker() {
-    const chosen = local.get(sectionPrefKey(), []);
+    const chosen = new Set(local.get(sectionPrefKey(), []));
+    const count = new Map(); BANK.questions.forEach(q => count.set(q.c, (count.get(q.c) || 0) + 1));
+    const acc = new Map(topicStats().map(t => [t.c, t.acc]));
+    const pctCls = p => (p >= 0.8 ? 'ok' : p >= 0.6 ? 'warn' : 'bad');
+    const accTag = c => acc.has(c) ? `<span class="cat-acc ${pctCls(acc.get(c))}">${faNum(Math.round(acc.get(c) * 100))}٪</span>` : '';
+    const card = sec => {
+      const subs = sectionTopics(sec.n), n = subs.reduce((s, c) => s + count.get(c), 0);
+      return `<div class="cat-card" data-sec="${sec.n}">
+        <label class="cat-head"><input type="checkbox" class="cat-all">
+          <span class="cat-num">${faNum(sec.n)}</span>
+          <span class="cat-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small></span>
+          <span class="cat-n">${faNum(n)}<small>سؤال</small></span></label>
+        ${subs.length > 1 ? `<button type="button" class="cat-more" aria-expanded="false"><span class="cat-sel"></span>${ICON.la}</button>` : ''}
+        <div class="cat-subs" hidden>${subs.map(c => `
+          <label class="cat-sub"><input type="checkbox" value="${c}" ${chosen.has(c) ? 'checked' : ''}>
+            <span class="cat-code">${faNum(c)}</span><span class="cat-sub-t">${esc(BANK.topics[c].fa)}</span>
+            ${accTag(c)}<span class="cat-sub-n">${faNum(count.get(c))}</span></label>`).join('')}</div>
+      </div>`;
+    };
+    const weak = [...acc].some(([, a]) => a < 0.75);
     return `<div class="sec-pick" id="secPick">
-      <button class="hist-sec-h" id="secToggle" aria-expanded="false"><span class="opt-ico">${ICON.list}</span><span class="hs-t"><b>آزمون از بخش‌های دلخواه</b><small>بخش‌های اصلی برنامه‌ی آموزشی رسمی را انتخاب کنید؛ سؤال‌ها تصادفی از همان بخش‌ها می‌آیند</small></span><svg class="hs-chev" width="20" height="20" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <button class="hist-sec-h" id="secToggle" aria-expanded="false"><span class="opt-ico">${ICON.book}</span><span class="hs-t"><b>آموزش بر اساس دسته‌بندی</b><small>دسته‌ها و زیربخش‌های برنامه‌ی آموزشی رسمی را انتخاب کنید و فقط همان مباحث را تمرین کنید</small></span><svg class="hs-chev" width="20" height="20" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
       <div class="sec-body" hidden>
-        <div class="sec-grid">${(BANK.sections || []).map(sec => {
-          const n = sectionPool([sec.n]).length;
-          return `<label class="sec-opt ${n ? '' : 'off'}"><input type="checkbox" value="${sec.n}" ${chosen.includes(sec.n) && n ? 'checked' : ''} ${n ? '' : 'disabled'}>
-            <span class="sec-num">${faNum(sec.n)}</span><span class="sec-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small><small>${faNum(n)} سؤال</small></span></label>`;
-        }).join('')}</div>
-        <div class="sec-row"><button type="button" class="tr-toggle" id="secAll">انتخاب همه</button><button type="button" class="tr-toggle" id="secNone">هیچ‌کدام</button><span class="sec-total" id="secTotal"></span></div>
-        <div class="sec-sizes-h">تعداد سؤال‌ها</div>
-        <div class="sec-sizes" id="secSizes"></div>
-        <button class="btn btn-primary wide" id="secStart" disabled>شروع آزمون</button>
+        <div class="sec-row"><button type="button" class="tr-toggle" id="secAll">انتخاب همه</button><button type="button" class="tr-toggle" id="secNone">هیچ‌کدام</button>${weak ? '<button type="button" class="tr-toggle" id="secWeak">مباحث ضعیف من</button>' : ''}</div>
+        <div class="cat-grid">${(BANK.sections || []).map(card).join('')}</div>
+        <div class="sec-foot">
+          <div class="sec-foot-h"><b>تعداد سؤال‌ها</b><span class="sec-total" id="secTotal"></span></div>
+          <div class="sec-sizes" id="secSizes"></div>
+          <button class="btn btn-primary wide" id="secStart" disabled>شروع آموزش</button>
+        </div>
       </div>
     </div>`;
   }
   function bindSectionPicker() {
     const box = document.getElementById('secPick'); if (!box) return;
     const body = box.querySelector('.sec-body'), tog = document.getElementById('secToggle');
-    const boxes = [...box.querySelectorAll('.sec-opt input')];
+    const subs = [...box.querySelectorAll('.cat-sub input')];
     let size = null;
-    const chosen = () => boxes.filter(b => b.checked).map(b => +b.value);
+    const chosen = () => subs.filter(b => b.checked).map(b => b.value);
     const update = () => {
-      const nums = chosen(), pool = sectionPool(nums).length;
-      local.set(sectionPrefKey(), nums);
-      document.getElementById('secTotal').textContent = nums.length ? `${faNum(pool)} سؤال در ${faNum(nums.length)} بخش` : 'بخشی انتخاب نشده';
+      const codes = chosen(), pool = topicPool(codes).length;
+      local.set(sectionPrefKey(), codes);
+      box.querySelectorAll('.cat-card').forEach(card => {
+        const own = [...card.querySelectorAll('.cat-sub input')], on = own.filter(b => b.checked).length, all = card.querySelector('.cat-all');
+        all.checked = on === own.length; all.indeterminate = on > 0 && on < own.length;
+        card.classList.toggle('on', on > 0); card.classList.toggle('part', on > 0 && on < own.length);
+        const sel = card.querySelector('.cat-sel');
+        if (sel) sel.textContent = on ? `${faNum(on)} از ${faNum(own.length)} زیربخش انتخاب شده` : `${faNum(own.length)} زیربخش`;
+      });
+      subs.forEach(b => b.closest('.cat-sub').classList.toggle('on', b.checked));
+      document.getElementById('secTotal').textContent = codes.length ? `${faNum(pool)} سؤال در ${faNum(codes.length)} مبحث` : 'مبحثی انتخاب نشده';
       const sizes = SIZES.filter(n => n <= pool); if (pool && pool < FULL && !sizes.includes(pool)) sizes.push(pool);
       if (!sizes.includes(size)) size = sizes.includes(FULL) ? FULL : sizes[sizes.length - 1] || null;
       document.getElementById('secSizes').innerHTML = sizes.length
         ? sizes.map(n => `<button type="button" class="sec-size ${n === size ? 'on' : ''}" data-n="${n}"><b>${faNum(n)}</b><small>سؤال</small></button>`).join('')
-        : '<span class="muted">ابتدا دست‌کم یک بخش را انتخاب کنید.</span>';
+        : '<span class="muted">ابتدا دست‌کم یک دسته یا زیربخش را انتخاب کنید.</span>';
       box.querySelectorAll('.sec-size').forEach(b => b.onclick = () => { size = +b.dataset.n; update(); });
-      box.querySelectorAll('.sec-opt').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
       document.getElementById('secStart').disabled = !size;
     };
     tog.onclick = () => {
       const on = body.hidden; body.hidden = !on; box.classList.toggle('open', on); tog.setAttribute('aria-expanded', on);
       if (on) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
-    boxes.forEach(b => b.onchange = update);
-    document.getElementById('secAll').onclick = () => { boxes.forEach(b => { if (!b.disabled) b.checked = true; }); update(); };
-    document.getElementById('secNone').onclick = () => { boxes.forEach(b => { b.checked = false; }); update(); };
+    box.querySelectorAll('.cat-card').forEach(card => {
+      const own = [...card.querySelectorAll('.cat-sub input')];
+      card.querySelector('.cat-all').onchange = e => { own.forEach(b => { b.checked = e.target.checked; }); update(); };
+      const more = card.querySelector('.cat-more'), list = card.querySelector('.cat-subs');
+      if (more) more.onclick = () => { list.hidden = !list.hidden; card.classList.toggle('open', !list.hidden); more.setAttribute('aria-expanded', !list.hidden); };
+    });
+    subs.forEach(b => b.onchange = update);
+    document.getElementById('secAll').onclick = () => { subs.forEach(b => { b.checked = true; }); update(); };
+    document.getElementById('secNone').onclick = () => { subs.forEach(b => { b.checked = false; }); update(); };
+    const weak = document.getElementById('secWeak');
+    if (weak) weak.onclick = () => {
+      const low = new Set(topicStats().filter(t => t.acc < 0.75).map(t => t.c));
+      subs.forEach(b => { b.checked = low.has(b.value); });
+      box.querySelectorAll('.cat-card').forEach(card => {
+        const list = card.querySelector('.cat-subs'), more = card.querySelector('.cat-more');
+        if (more && card.querySelector('.cat-sub input:checked')) { list.hidden = false; card.classList.add('open'); more.setAttribute('aria-expanded', true); }
+      });
+      update();
+    };
     document.getElementById('secStart').onclick = () => {
-      const ids = shuffle(sectionPool(chosen())).slice(0, size);
+      const ids = shuffle(topicPool(chosen())).slice(0, size);
       const go = () => newExam('sections', ids);
-      if (state.draft) confirmBox('شروع آزمون جدید؟', 'با شروع این آزمون، آزمون نیمه‌تمام قبلی حذف می‌شود.', 'شروع', go); else go();
+      if (state.draft) confirmBox('شروع آموزش جدید؟', 'با شروع این آموزش، آزمون نیمه‌تمام قبلی حذف می‌شود.', 'شروع', go); else go();
     };
     update();
   }
