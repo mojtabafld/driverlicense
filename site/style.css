@@ -640,7 +640,7 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .study-prog .mini-track{height:8px;margin-top:10px}
 .study-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
 .study-tile[hidden]{display:none}
-.study-more{display:block;margin:14px auto 0}
+.study-more{display:block;margin:16px auto 0;font-size:15px;padding:10px 26px;border-radius:10px}
 .study-tile{display:grid;gap:4px;align-content:start;text-align:right;padding:10px 10px 12px;animation:rise .35s var(--ease) both;transition:border-color .15s,transform .15s}
 @media (hover:hover){.study-page:not(.no-hover) .study-tile:hover{border-color:var(--navy);transform:translateY(-1px)}}
 .st-thumb{display:block;margin-bottom:6px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
