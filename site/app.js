@@ -1112,7 +1112,7 @@
           <h1>${atts.length ? 'ادامه بده، هر آزمون تو را <span>یک قدم نزدیک‌تر</span> می‌کند' : 'آماده‌ای؟ <span>اولین آزمون</span> را شروع کن'}</h1>
           <div class="actions">
             <button class="btn btn-primary" id="start"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor"/></svg> شروع آزمون</button>
-            <button class="btn btn-ghost" id="startM" ${mCount ? '' : 'disabled'}>تمرین اشتباهات (${faNum(mCount)})</button>
+            ${mCount ? `<button class="btn btn-ghost" id="startM">تمرین اشتباهات (${faNum(mCount)})</button>` : '' /* only once there are mistakes */}
             <button class="btn btn-ghost study-btn" id="openStudy">${ICON.book} آموزش درس‌به‌درس <small>(${faNum(BANK.tests.length)} درس)</small></button>
           </div>
         </div>
@@ -1177,7 +1177,7 @@
     const oa = document.getElementById('openAdmin'); if (oa) oa.onclick = adminView;
     const se = document.getElementById('statExams');
     if (se && state.attempts.length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
-    document.getElementById('startM').onclick = () => askSize('mistakes');
+    const sm = document.getElementById('startM'); if (sm) sm.onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
     const am = document.getElementById('allMistakes'); if (am) am.onclick = () => mistakesView();
