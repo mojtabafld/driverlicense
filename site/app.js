@@ -71,7 +71,7 @@
   // only inputs, code, the exam's "Spørgsmål 3 ud af 25" counter and the review's statement numbers keep Latin digits.
   // Runs on every DOM change, so animated counters and timers are covered.
   // In Danish text "." is a thousands separator (1.000 kr), so only Persian text gets the decimal sign.
-  const LATIN_ZONE = 'input, textarea, code, .x-count, .rnum-c, .badge.src, script, style';
+  const LATIN_ZONE = 'input, textarea, code, .x-count, .st-pos, .rnum-c, .badge.src, script, style';
   const DANISH_ZONE = '.da, [data-wq], .qtext, .answer .txt, .x-count';
   const toFaDigits = t => t.replace(/(\d)\s?%/g, '$1٪').replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
   const toFa = t => toFaDigits(t.replace(/(\d)\.(\d)/g, '$1٫$2'));
@@ -636,6 +636,9 @@
     setExamMode(false);
     const { res, correct, secs, at, mode, lesson } = ctx;
     const isLesson = mode === 'lesson', li = isLesson ? BANK.tests.findIndex(t => t.id === lesson) : -1;
+    // A past lesson (not the one just handed in) is reviewed one question at a time, each with its own short
+    // AI lesson, and ends with the AI summary of all the mistakes.
+    const stepMode = isLesson && !fresh;
     const n = res.length, full = n >= FULL, pass = full && correct >= passMin(n), pctN = Math.round(correct / Math.max(n, 1) * 100);
     const C = 2 * Math.PI * 74, pct = correct / Math.max(n, 1);
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
@@ -673,15 +676,15 @@
         </div>
       </div>
 
-      ${isLesson && n - correct && state.aiLessons && res.some(r => !r.ok && r.a) ? `<div class="lesson ai-lesson ai-summary" id="aiSummary"><h4>${ICON.ai} جمع‌بندی آموزشی اشتباهات شما</h4><div class="ai-body"></div></div>` : ''}
+      ${isLesson && !stepMode ? summaryBox(res) : ''}
       <div class="section-title" style="margin-top:28px">
-        <span>مرور پاسخ‌ها</span>
+        <span>${stepMode ? 'مرور سؤال به سؤال' : 'مرور پاسخ‌ها'}</span>
         <div class="tabs"><button data-f="wrong" class="${filter === 'wrong' ? 'on' : ''}">اشتباهات (${faNum(n - correct)})</button>${savedN ? `<button data-f="saved" class="${filter === 'saved' ? 'on' : ''}">${ICON.bookmark(true)} ذخیره‌شده‌ها (${faNum(savedN)})</button>` : ''}<button data-f="all" class="${filter === 'all' ? 'on' : ''}">همه (${faNum(n)})</button></div>
       </div>
       ${res.some(r => !r.a) ? '<div class="note">این آزمون قبل از ذخیره‌ی پاسخ‌های تک‌تک گزینه‌ها انجام شده؛ فقط پاسخ‌های درست نمایش داده می‌شوند.</div>' : ''}
-      <div class="review">
+      ${stepMode ? '<div id="stepBox"></div>' : `<div class="review">
         ${list.length ? list.map((r, k) => reviewCard(r, k, '', false, !isLesson)).join('') : `<div class="card empty">${filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'}</div>`}
-      </div>
+      </div>`}
     </section>`;
 
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -699,10 +702,39 @@
     const back = document.getElementById('back');
     if (back) back.onclick = { history: () => historyView(), lessons: studyList }[state.reviewFrom] || home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
-    bindReviewCards($app);
-    if (isLesson) aiSummary(res);
-    $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) { c.classList.add('open'); aiLesson(c); } });
+    if (stepMode) reviewStep(res, list, 0, false);
+    else {
+      bindReviewCards($app);
+      if (isLesson) aiSummary(res);
+      $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) { c.classList.add('open'); aiLesson(c); } });
+    }
     window.scrollTo({ top: 0 });
+  }
+
+  const summaryBox = res => (res.some(r => !r.ok && r.a) && state.aiLessons
+    ? `<div class="lesson ai-lesson ai-summary" id="aiSummary"><h4>${ICON.ai} جمع‌بندی آموزشی اشتباهات شما</h4><div class="ai-body"></div></div>` : '');
+
+  // One step of a past lesson's review: question k of `list` (open, with its short AI lesson), or, after the
+  // last one, the summary of all the mistakes. Previous/next and the counter follow the exam language.
+  function reviewStep(res, list, k, scroll = true) {
+    const box = document.getElementById('stepBox'); if (!box) return;
+    const total = list.length, end = k >= total;
+    const nav = `<nav class="st-nav" dir="ltr">
+        <button class="btn btn-ghost" id="rsPrev" ${k ? '' : 'disabled'}>${ICON.la}<span>${ui().prev}</span></button>
+        <span class="st-pos">${end ? '' : `<span class="st-long">${ui().count(k + 1, total)}</span><span class="st-short">${k + 1} / ${total}</span>`}</span>
+        ${end ? `<button class="btn btn-ghost" id="rsFirst"><span class="fa">مرور از اول</span></button>`
+          : k === total - 1 ? `<button class="btn btn-primary" id="rsNext"><span class="fa">جمع‌بندی اشتباهات</span>${ICON.ra}</button>`
+          : `<button class="btn btn-primary" id="rsNext"><span>${ui().next}</span>${ICON.ra}</button>`}
+      </nav>`;
+    box.innerHTML = !total ? '<div class="card empty">موردی نیست.</div>'
+      : end ? `${summaryBox(res) || `<div class="card empty">${res.some(r => !r.ok) ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'}</div>`}${nav}`
+      : `<div class="review">${reviewCard(list[k], 0, '', true, true, false)}</div>${nav}`;
+    if (!total) return;
+    document.getElementById('rsPrev').onclick = () => reviewStep(res, list, k - 1);
+    const nx = document.getElementById('rsNext'); if (nx) nx.onclick = () => reviewStep(res, list, k + 1);
+    const fs = document.getElementById('rsFirst'); if (fs) fs.onclick = () => reviewStep(res, list, 0);
+    if (end) aiSummary(res); else bindReviewCards(box);
+    if (scroll) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function bindReviewCards(root) {
@@ -815,10 +847,10 @@
       </div>`;
   }
 
-  // `lessons` false (a lesson's review): no per-question lesson, the AI summary above covers the mistakes,
-  // and the Persian translation starts hidden, as in the lesson itself.
-  function reviewCard(r, n, extraBadge = '', open = false, lessons = true) {
-    const q = r.q, t = BANK.topics[q.c], fa = lessons && state.settings.showFa;
+  // `lessons` false (a lesson's review): no per-question lesson, the AI summary above covers the mistakes.
+  // `fa`: whether the Persian translation starts shown (hidden in lessons, as in the lesson itself).
+  function reviewCard(r, n, extraBadge = '', open = false, lessons = true, fa = lessons && state.settings.showFa) {
+    const q = r.q, t = BANK.topics[q.c];
     return `<article class="card rcard ${open ? 'open' : ''} ${fa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
       ${cardHead(q, r, extraBadge, fa)}
       <div class="rbody">
@@ -860,7 +892,8 @@
   function openAttempt(idx) {
     const att = state.attempts[idx]; if (!att) return;
     state.reviewFrom = document.querySelector('.hist-page') ? 'history' : document.querySelector('.study-page') ? 'lessons' : 'home';
-    renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode, att.lesson), 'wrong', false);
+    // A past lesson is reviewed question by question, all of them in order.
+    renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode, att.lesson), att.mode === 'lesson' ? 'all' : 'wrong', false);
   }
 
   function showMistake(id) {
