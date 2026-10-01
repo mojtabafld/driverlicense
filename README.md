@@ -69,7 +69,9 @@ it replaces the whole variable list and would delete the secrets that were added
 
 `build.py` turns `data/raw.json` (+ `data/cats.json`, `data/fa_fix.json`, and `data/en.json` with the English
 text of every question from prove.dk) into `site/data.js`,
-including the Persian topic lessons and corrected translations:
+including the Persian topic lessons and corrected translations. Topics are the subsections of the official
+teaching plan (Undervisningsplan for kategori B, e.g. `7.19`); prove.dk's categories are mapped onto them in
+`CAT_CODE`/`ID_CODE`:
 
 ```bash
 python3 build.py

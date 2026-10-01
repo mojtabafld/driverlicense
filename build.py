@@ -174,6 +174,94 @@ TOPICS = {
     ]),
 }
 
+# The site's topics follow the official teaching plan (Undervisningsplan for kategori B): main sections 1–10 and
+# their subsections. Sections 2 and 9 are practical only, and some subsections have no theory questions in the
+# bank, so only subsections with questions appear.
+SECTIONS = [
+    (1, "تجهیزات، کار با خودرو و مدارک", "Køretøjets indretning, udstyr, betjening og dokumenter"),
+    (3, "ویژگی‌های مانور وسایل نقلیه", "Køretøjers manøvreegenskaber"),
+    (4, "رفتار در ترافیک", "Trafikantadfærd"),
+    (5, "شرایط جاده", "Vejforhold"),
+    (6, "قواعد پایه‌ی ترافیک", "Grundregler for færdsel"),
+    (7, "مانورها در جاده", "Manøvrer på vej"),
+    (8, "خطرات ویژه در ترافیک", "Særlige risikoforhold i trafikken"),
+    (10, "قوانین گواهینامه", "Regler og retningslinjer for kørekort"),
+]
+
+# Official subsection -> (Persian title, official Danish title, lesson). A lesson is built from the prove.dk
+# category lessons above: a cat id takes all its bullets, (cat id, k) takes bullet k; a string is a new bullet.
+OFFICIAL = {
+    '1.2': ("قوانین ساختار و تجهیزات خودرو", "Lovbestemmelser om køretøjets indretning og udstyr", [9]),
+    '3.2': ("ویژگی‌های مانور وسایل نقلیه‌ی مختلف", "Forskellige køretøjers manøvreegenskaber", [28]),
+    '4.4': ("قوانین توانایی رانندگی و سلامت (الکل)", "Lovbestemmelser om køreevne og helbred", [(26, 0), (26, 1), (36, 1)]),
+    '4.5': ("رفتار دیگر کاربران راه", "Andre trafikanters adfærd", [(26, 2),
+        "بوق فقط برای هشدار در برابر خطر است؛ برای عجله‌دادن یا جلب توجه بی‌دلیل از آن استفاده نکنید.",
+        "کاربرانی را که شما را ندیده‌اند یا اشتباه می‌کنند پیش‌بینی کنید و فاصله و سرعت را با آن‌ها تنظیم کنید."]),
+    '5.1': ("طراحی ایمن جاده‌ها", "Vejenes sikkerhedsmæssige udformning", [39, 40, 41]),
+    '5.2': ("خطرهای مربوط به جاده", "Risikoforhold ved vejene", [38, 42]),
+    '6.1': ("تابلوها، خط‌کشی‌ها و علائم", "Anvisninger for færdslen", [(31, 1), 37, 45]),
+    '6.2': ("ترافیک ایمن و روان", "Sikker og uhindret afvikling af færdslen", [(31, 0), (31, 2), (31, 3)]),
+    '7.1': ("حرکت و توقف کنار جدول", "Igangsætning og standsning ved kørebanekant", [10]),
+    '7.2': ("جایگاه در مسیر مستقیم", "Placering under ligeudkørsel", [11]),
+    '7.3': ("سرعت در مسیر مستقیم", "Hastighed under ligeudkørsel", [12]),
+    '7.4': ("تغییر خط و ادغام", "Vognbaneskift og sammenfletning", [13]),
+    '7.5': ("دور زدن و دنده‌عقب", "Vending og baglænskørsel", [14]),
+    '7.6': ("عبور از کنار خودروهای متوقف و عابران", "Kørsel forbi holdende køretøjer og gående mv.", [16]),
+    '7.7': ("مواجهه با ترافیک روبرو", "Møde", [17]),
+    '7.8': ("رانندگی جلو و پشت دیگران", "Kørsel foran eller efter andre", [18]),
+    '7.9': ("سبقت", "Overhaling", [24]),
+    '7.10': ("مناطق آرام‌سازی ترافیک", "Kørsel i trafiksanerede områder", [15]),
+    '7.11': ("نزدیک شدن به تقاطع و حق تقدم", "Fremkørsel mod kryds", [19]),
+    '7.12': ("عبور مستقیم از تقاطع", "Ligeudkørsel i kryds", [34]),
+    '7.13': ("گردش به راست در تقاطع", "Højresving i kryds", [32]),
+    '7.14': ("گردش به چپ در تقاطع", "Venstresving i kryds", [33]),
+    '7.15': ("میدان", "Kørsel i rundkørsel", [20]),
+    '7.16': ("بزرگراه و موتورترافیک‌وی", "Kørsel på motorvej", [21]),
+    '7.17': ("رانندگی کنار دیگران", "Kørsel ved siden af andre", [29]),
+    '7.18': ("توقف و پارک", "Standsning og parkering", [22]),
+    '7.19': ("رانندگی در تاریکی و چراغ‌ها", "Kørsel i mørke og i lygtetændingstiden i øvrigt", [25]),
+    '7.20': ("رانندگی در تونل", "Kørsel i tunnel", [
+        "پیش از ورود به تونل چراغ‌ها (نور پایین) را روشن کنید.",
+        "به تابلوی حداکثر ارتفاع توجه کنید؛ اگر خودرو بلندتر است، وارد تونل نشوید.",
+        "در تونل توقف و پارک ممنوع است؛ سرعت را رعایت کنید و فاصله را بیشتر نگه دارید."]),
+    '8.1': ("خطرهای ویژه: الکل، مواد، دارو و کمربند", "Særlige risikoforhold", [36, (46, 0),
+        "بستن کمربند ایمنی برای همه‌ی سرنشینان اجباری است؛ بدون کمربند خطر مرگ در تصادف چند برابر می‌شود."]),
+    '10.3': ("قوانین گواهینامه", "Lovbestemmelser om kørekort", [(9, 0), (46, 1), (46, 2)]),
+}
+
+# prove.dk category -> official subsection; questions of the mixed categories 26, 31 and 46 are placed by id/text.
+CAT_CODE = {9: '1.2', 10: '7.1', 11: '7.2', 12: '7.3', 13: '7.4', 14: '7.5', 15: '7.10', 16: '7.6', 17: '7.7',
+            18: '7.8', 19: '7.11', 20: '7.15', 21: '7.16', 22: '7.18', 24: '7.9', 25: '7.19', 26: '4.5',
+            28: '3.2', 29: '7.17', 31: '6.2', 32: '7.13', 33: '7.14', 34: '7.12', 36: '8.1', 37: '6.1',
+            38: '5.2', 39: '5.1', 40: '5.1', 41: '5.1', 42: '5.2', 45: '6.1', 46: '10.3'}
+ID_CODE = {
+    '45': '4.4', '120': '4.4', '1480': '4.4',                  # alcohol limits in the law
+    '246': '8.1', '914': '8.1', '1476': '8.1', '1477': '8.1',  # alcohol with medicine, alcohol facts, seat belts
+    '699': '7.20', '881': '7.20',                              # driving through a tunnel
+    '676': '1.2', '1071': '10.3', '900': '7.16',               # goods load, what a B licence covers, motorway phone
+}
+
+
+def official_code(k, q, cat):
+    if k in ID_CODE:
+        return ID_CODE[k]
+    if cat == 31:  # signs, road markings and signals vs. the general rules
+        text = ' '.join(str(v) for v in q['da'].values()).lower()
+        return '6.1' if any(w in text for w in ('tavle', 'afmærkning', 'lyssignal')) else '6.2'
+    return CAT_CODE[cat]
+
+
+def lesson_of(parts):
+    out = []
+    for p in parts:
+        if isinstance(p, int):
+            out += TOPICS[p][2]
+        elif isinstance(p, tuple):
+            out.append(TOPICS[p[0]][2][p[1]])
+        else:
+            out.append(p)
+    return out
+
 # Persian translations for questions the site had no Persian version of.
 FA_FILL = {
     '1486': {"s": "در اینجا به چه چیزی باید توجه ویژه داشته باشید؟",
@@ -256,7 +344,7 @@ for k, q in raw['questions'].items():
     questions.append({
         'id': q['id'],
         'img': f"img/q{q['id']}.jpg",
-        'c': cats.get(k),
+        'c': official_code(k, q, cats.get(k)),
         'sda': clean(q['da']['s']),
         'sfa': clean(fa.get('s')),
         'sen': clean(en.get('s')),
@@ -280,9 +368,13 @@ def thumb(qs):
 
 
 tests = [{'id': t['id'], 'title': t['title'], 'qs': t['qs'], 'thumb': thumb(t['qs'])} for t in raw['tests']]
-topics = {str(k): {'fa': v[0], 'da': v[1], 'lesson': v[2]} for k, v in TOPICS.items()}
-missing = {q['c'] for q in questions} - set(TOPICS)
+used = {q['c'] for q in questions}
+missing = used - set(OFFICIAL)
 assert not missing, missing
+code_key = lambda c: tuple(int(x) for x in c.split('.'))
+topics = {c: {'fa': v[0], 'da': v[1], 'lesson': lesson_of(v[2])}
+          for c, v in sorted(OFFICIAL.items(), key=lambda kv: code_key(kv[0])) if c in used}
+sections = [{'n': n, 'fa': fa, 'da': da} for n, fa, da in SECTIONS]
 
 # Danish → Persian glossary for every word used in the questions (driving context), data/dict_fa_*.txt
 import glob
@@ -294,7 +386,7 @@ for f in sorted(glob.glob(os.path.join(ROOT, 'data/dict_fa_*.txt'))):
             k, v = line.split('=', 1)
             glossary[k.strip().lower()] = v.strip()
 
-out = {'tests': tests, 'questions': questions, 'topics': topics, 'dict': glossary}
+out = {'tests': tests, 'questions': questions, 'topics': topics, 'sections': sections, 'dict': glossary}
 with open(os.path.join(ROOT, 'site/data.js'), 'w', encoding='utf-8') as f:
     f.write('window.BANK=')
     json.dump(out, f, ensure_ascii=False, separators=(',', ':'))

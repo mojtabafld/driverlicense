@@ -24,7 +24,7 @@ const INVITE_PAUSED = true;
 const INVITE_CODE = INVITE_PAUSED ? '' : (process.env.INVITE_CODE || '').trim();
 const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
-const MODES = ['random', 'mistakes', 'top', 'lesson']; // lesson: one of prove.dk's 44 tests, in its order
+const MODES = ['random', 'mistakes', 'top', 'lesson', 'sections']; // lesson: one of prove.dk's 44 tests, in its order; sections: random questions from chosen official sections
 const lessonOf = b => (b.mode === 'lesson' && Number.isInteger(+b.lesson) && +b.lesson > 0 ? { lesson: +b.lesson } : {});
 const MAX_WORDS = 3000;
 const MAX_SAVED = 1000; // bookmarked questions per user

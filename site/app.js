@@ -67,6 +67,8 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const nl = s => esc(s).replace(/\n/g, '<br>');
   const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  // Topics are the official teaching-plan subsections (e.g. "7.19"); shown with their number.
+  const topicFa = c => (BANK.topics[c] ? `${faNum(c)} ${BANK.topics[c].fa}` : 'سایر');
   // Show Persian digits everywhere on the page, Danish content (questions, answers, Danish labels) included;
   // only inputs, code, the exam's "Spørgsmål 3 ud af 25" counter and the review's statement numbers keep Latin digits.
   // Runs on every DOM change, so animated counters and timers are covered.
@@ -98,7 +100,7 @@
   const fmtDate = t => new Date(t).toLocaleDateString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric' });
   const fmtDateTime = t => new Date(t).toLocaleString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const dayKey = t => new Date(t).toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD in Copenhagen
-  const modeName = (m, lesson) => (m === 'lesson' ? lessonName(lesson) : { mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات' }[m] || 'آزمون تصادفی');
+  const modeName = (m, lesson) => (m === 'lesson' ? lessonName(lesson) : { mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات', sections: 'آزمون بخش‌های منتخب' }[m] || 'آزمون تصادفی');
   // Lessons are learning, not a timed test: no clock.
   const timed = ex => state.settings.timer && ex.mode !== 'lesson';
   // exam-mode: the exam screens (no site header). focus-mode: a past review, also without the header; every view
@@ -1002,7 +1004,7 @@
         ${lessons && state.aiLessons ? `<div class="ai-lesson ai-click" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}">
           <button class="ai-start" type="button" aria-expanded="false"><span class="ai-spark">${ICON.ai}</span><span class="ai-txt"><b>نکات سؤال</b><small>با استفاده از هوش مصنوعی</small></span><svg class="ai-chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
           <div class="ai-body" hidden></div></div>` : ''}
-        ${lessons && t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
+        ${lessons && t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(topicFa(q.c))} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
       </div>
       <button class="rtoggle"><span class="fa">جزئیات و توضیحات</span><svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
@@ -1090,7 +1092,7 @@
     const rows = stats.sort((a, b) => a.acc - b.acc).slice(0, 8);
     return `<div class="bars">${rows.map((t, n) => `
       <div class="bar-row" title="${esc(t.ok)} درست از ${esc(t.n)}">
-        <span class="bar-label">${esc(BANK.topics[t.c].fa)}</span>
+        <span class="bar-label">${esc(topicFa(t.c))}</span>
         <span class="bar-track"><i style="--w:${Math.max(t.acc * 100, 2)}%;animation-delay:${n * 60}ms"></i></span>
         <span class="bar-val num">${Math.round(t.acc * 100)}%</span>
       </div>`).join('')}</div>
@@ -1110,7 +1112,7 @@
       return `<button class="card mcard" data-mid="${s.id}" style="animation-delay:${n * 40}ms">
         <span class="mimg"><img src="${q.img}" alt="" loading="lazy"><span class="mcount">×${s.wrong}</span></span>
         <span class="mbody">
-          <span class="mtopic">${t ? esc(t.fa) : ''}</span>
+          <span class="mtopic">${t ? esc(topicFa(q.c)) : ''}</span>
           <span class="mq da">${esc(qText(q))}</span>
           <span class="mmeta">${faNum(s.wrong)} اشتباه در ${faNum(s.seen)} آزمون · ${s.lastOk ? '<span class="okc">آخرین بار درست</span>' : '<span class="badc">آخرین بار اشتباه</span>'}${s.lastAt ? ` · ${fmtDate(s.lastAt)}` : ''}</span>
         </span>
@@ -1132,7 +1134,6 @@
       const c = Q.get(st.id).c, g = groups.get(c) || { c, list: [], open: 0, fixed: 0, wrong: 0 };
       g.list.push(st); g.wrong += st.wrong; st.lastOk ? g.fixed++ : g.open++; groups.set(c, g);
     }
-    const topicName = c => (BANK.topics[c] ? BANK.topics[c].fa : 'سایر');
     const accOf = c => { const x = acc.get(c); return x && x.n ? x.ok / x.n : 0; };
     const sorted = [...groups.values()].sort((a, b) => b.open - a.open || accOf(a.c) - accOf(b.c) || b.wrong - a.wrong);
     const open = sorted.reduce((n, g) => n + g.open, 0), fixed = sorted.reduce((n, g) => n + g.fixed, 0);
@@ -1147,7 +1148,7 @@
         <div class="msum-kpis"><span><b class="badc">${faNum(open)}</b> سؤال هنوز اشتباه</span><span><b class="okc">${faNum(fixed)}</b> سؤال اصلاح‌شده</span><span><b>${faNum(sorted.length)}</b> مبحث</span></div>
         <div class="mtopics">${sorted.map(g => `
           <button class="mtopic-row" data-jump="${g.c}">
-            <span class="mt-name">${esc(topicName(g.c))}</span>
+            <span class="mt-name">${esc(topicFa(g.c))}</span>
             <span class="bar-track"><i class="${pctCls(accOf(g.c))}" style="--w:${Math.max(accOf(g.c) * 100, 2)}%"></i></span>
             <span class="mt-acc">${faNum(Math.round(accOf(g.c) * 100))}٪ دقت</span>
             <span class="mt-cnt">${g.open ? `<span class="badc">${faNum(g.open)} مورد</span>` : '<span class="okc">همه اصلاح شد ✓</span>'}${g.fixed && g.open ? `، <span class="okc">${faNum(g.fixed)} اصلاح‌شده</span>` : ''}</span>
@@ -1159,9 +1160,9 @@
         const list = g.list.filter(keep), t = BANK.topics[g.c];
         if (!list.length) return '';
         return `<div class="mgroup" id="mt-${g.c}">
-          <div class="section-title"><span>${esc(topicName(g.c))} <small class="muted">(دقت ${faNum(Math.round(accOf(g.c) * 100))}٪، ${faNum(g.open)} مورد، ${faNum(g.fixed)} اصلاح‌شده)</small></span>
+          <div class="section-title"><span>${esc(topicFa(g.c))} <small class="muted">(دقت ${faNum(Math.round(accOf(g.c) * 100))}٪، ${faNum(g.open)} مورد، ${faNum(g.fixed)} اصلاح‌شده)</small></span>
             <span class="mg-btns">${t && t.lesson ? `<button class="tr-toggle" data-lesson="${g.c}">آموزش کوتاه</button>` : ''}<button class="tr-toggle" data-practice="${g.c}">تمرین این مبحث</button></span></div>
-          ${t && t.lesson ? `<div class="lesson" id="lesson-${g.c}" hidden><h4>📘 ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4><ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
+          ${t && t.lesson ? `<div class="lesson" id="lesson-${g.c}" hidden><h4>📘 ${esc(topicFa(g.c))} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4><ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
           ${mistakeCards(list)}</div>`;
       }).join('') || `<div class="card empty">${filter === 'open' ? 'هیچ سؤالی در حالت «هنوز اشتباه» نیست؛ عالی! ✨' : 'موردی نیست.'}</div>`}` : '<div class="card empty">هنوز اشتباهی ثبت نشده است.</div>'}
     </section>`;
@@ -1174,7 +1175,7 @@
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
     $app.querySelectorAll('[data-lesson]').forEach(b => b.onclick = () => { const l = document.getElementById('lesson-' + b.dataset.lesson); l.hidden = !l.hidden; });
-    $app.querySelectorAll('[data-practice]').forEach(b => b.onclick = () => practiceTopic(+b.dataset.practice));
+    $app.querySelectorAll('[data-practice]').forEach(b => b.onclick = () => practiceTopic(b.dataset.practice));
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
     window.scrollTo({ top: 0 });
   }
@@ -1204,7 +1205,7 @@
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
       const body = `<span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
-        <span class="meta"><b>${kind === 'lesson' ? lessonName(h.lesson) : `آزمون ${faNum(num.get(i))}`}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' ? ` · ${modeName(h.mode)}` : ''}<br>
+        <span class="meta"><b>${kind === 'lesson' ? lessonName(h.lesson) : `آزمون ${faNum(num.get(i))}`}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' || h.mode === 'sections' ? ` · ${modeName(h.mode)}` : ''}<br>
           <small>${fmtDate(h.at)} · ${wrongImgs ? `${faNum(wrongImgs)} سؤال غلط` : 'بدون اشتباه'} · <span class="nowrap">مدت زمان آزمون: ${fmtTime(h.secs)}</span>${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>`;
       // In delete mode the card is not a link: the delete button takes the place of "مرور".
@@ -1438,8 +1439,10 @@
           <span class="st-runs">${recent.length ? recent.map((a, k) => `<button class="${isPass(a) ? 'ok' : 'bad'}" data-run="${state.attempts.indexOf(a)}" title="مرور: ${isPass(a) ? 'قبول' : 'مردود'} · ${scoreOf(a)}/${a.items.length} · ${fmtDate(a.at)}" aria-label="مرور آزمون ${faNum(k + 1)} این درس">${faNum(k + 1)}</button>`).join('') : draftOf(t.id) ? '' : '<span class="st-count">شروع نشده</span>'}</span>
         </div>`;
       }).join('')}</div>
+      ${sectionPicker()}
     </section>`;
     document.getElementById('back').onclick = home;
+    bindSectionPicker();
     $app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => startLesson(+b.dataset.st));
     $app.querySelectorAll('[data-run]').forEach(b => b.onclick = () => openAttempt(+b.dataset.run));
     // No lesson looks selected when the page opens: nothing keeps focus, and hover highlights wait until the
@@ -1450,6 +1453,63 @@
     page.addEventListener('pointermove', () => page.classList.remove('no-hover'), { once: true });
     window.scrollTo({ top: 0 });
   }
+  // ---------- Exam from chosen official sections ----------
+  // The main sections of the official teaching plan for category B (Undervisningsplan for kategori B) that the
+  // theory test asks about (2 and 9 are practical only); a question's topic code starts with its section number.
+  const sectionOf = q => +String(q.c).split('.')[0];
+  const sectionPool = nums => BANK.questions.filter(q => nums.includes(sectionOf(q))).map(q => q.id);
+  const sectionPrefKey = () => 'sections.' + (state.user ? state.user.username : '');
+  function sectionPicker() {
+    const chosen = local.get(sectionPrefKey(), []);
+    return `<div class="sec-pick" id="secPick">
+      <button class="hist-sec-h" id="secToggle" aria-expanded="false"><span class="opt-ico">${ICON.list}</span><span class="hs-t"><b>آزمون از بخش‌های دلخواه</b><small>بخش‌های اصلی برنامه‌ی آموزشی رسمی را انتخاب کنید؛ سؤال‌ها تصادفی از همان بخش‌ها می‌آیند</small></span><svg class="hs-chev" width="20" height="20" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+      <div class="sec-body" hidden>
+        <div class="sec-grid">${(BANK.sections || []).map(sec => {
+          const n = sectionPool([sec.n]).length;
+          return `<label class="sec-opt ${n ? '' : 'off'}"><input type="checkbox" value="${sec.n}" ${chosen.includes(sec.n) && n ? 'checked' : ''} ${n ? '' : 'disabled'}>
+            <span class="sec-num">${faNum(sec.n)}</span><span class="sec-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small><small>${faNum(n)} سؤال</small></span></label>`;
+        }).join('')}</div>
+        <div class="sec-row"><button type="button" class="tr-toggle" id="secAll">انتخاب همه</button><button type="button" class="tr-toggle" id="secNone">هیچ‌کدام</button><span class="sec-total" id="secTotal"></span></div>
+        <div class="sec-sizes-h">تعداد سؤال‌ها</div>
+        <div class="sec-sizes" id="secSizes"></div>
+        <button class="btn btn-primary wide" id="secStart" disabled>شروع آزمون</button>
+      </div>
+    </div>`;
+  }
+  function bindSectionPicker() {
+    const box = document.getElementById('secPick'); if (!box) return;
+    const body = box.querySelector('.sec-body'), tog = document.getElementById('secToggle');
+    const boxes = [...box.querySelectorAll('.sec-opt input')];
+    let size = null;
+    const chosen = () => boxes.filter(b => b.checked).map(b => +b.value);
+    const update = () => {
+      const nums = chosen(), pool = sectionPool(nums).length;
+      local.set(sectionPrefKey(), nums);
+      document.getElementById('secTotal').textContent = nums.length ? `${faNum(pool)} سؤال در ${faNum(nums.length)} بخش` : 'بخشی انتخاب نشده';
+      const sizes = SIZES.filter(n => n <= pool); if (pool && pool < FULL && !sizes.includes(pool)) sizes.push(pool);
+      if (!sizes.includes(size)) size = sizes.includes(FULL) ? FULL : sizes[sizes.length - 1] || null;
+      document.getElementById('secSizes').innerHTML = sizes.length
+        ? sizes.map(n => `<button type="button" class="sec-size ${n === size ? 'on' : ''}" data-n="${n}"><b>${faNum(n)}</b><small>سؤال</small></button>`).join('')
+        : '<span class="muted">ابتدا دست‌کم یک بخش را انتخاب کنید.</span>';
+      box.querySelectorAll('.sec-size').forEach(b => b.onclick = () => { size = +b.dataset.n; update(); });
+      box.querySelectorAll('.sec-opt').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
+      document.getElementById('secStart').disabled = !size;
+    };
+    tog.onclick = () => {
+      const on = body.hidden; body.hidden = !on; box.classList.toggle('open', on); tog.setAttribute('aria-expanded', on);
+      if (on) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    boxes.forEach(b => b.onchange = update);
+    document.getElementById('secAll').onclick = () => { boxes.forEach(b => { if (!b.disabled) b.checked = true; }); update(); };
+    document.getElementById('secNone').onclick = () => { boxes.forEach(b => { b.checked = false; }); update(); };
+    document.getElementById('secStart').onclick = () => {
+      const ids = shuffle(sectionPool(chosen())).slice(0, size);
+      const go = () => newExam('sections', ids);
+      if (state.draft) confirmBox('شروع آزمون جدید؟', 'با شروع این آزمون، آزمون نیمه‌تمام قبلی حذف می‌شود.', 'شروع', go); else go();
+    };
+    update();
+  }
+
   // An unfinished attempt of this lesson is offered first: continue it, or start the lesson again.
   function startLesson(i) {
     const t = BANK.tests[i]; if (!t) return;
