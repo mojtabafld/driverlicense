@@ -97,8 +97,8 @@
   const scoreOf = a => a.items.filter(x => x.ok).length;
   // All dates and times are shown in Copenhagen time, whatever the device's time zone.
   const TZ = 'Europe/Copenhagen';
-  const fmtDate = t => new Date(t).toLocaleDateString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric' });
-  const fmtDateTime = t => new Date(t).toLocaleString('fa-IR', { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const fmtDate = t => new Date(t).toLocaleDateString('fa-IR-u-ca-gregory', { timeZone: TZ, month: 'short', day: 'numeric' });
+  const fmtDateTime = t => new Date(t).toLocaleString('fa-IR-u-ca-gregory', { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const dayKey = t => new Date(t).toLocaleDateString('en-CA', { timeZone: TZ }); // YYYY-MM-DD in Copenhagen
   const modeName = (m, lesson) => (m === 'lesson' ? lessonName(lesson) : { mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات', sections: 'آموزش بر اساس دسته‌بندی' }[m] || 'آزمون تصادفی');
   // Lessons are learning, not a timed test: no clock.
@@ -1606,7 +1606,7 @@
   // One series per chart, so a single colour and no legend; each bar has a tooltip with its day and value.
   function dayBars(days, key, unit) {
     const max = Math.max(1, ...days.map(d => d[key]));
-    const label = d => new Date(d.day + 'T12:00Z').toLocaleDateString('fa-IR', { timeZone: 'UTC', month: 'short', day: 'numeric' }); // d.day is already a Copenhagen day
+    const label = d => new Date(d.day + 'T12:00Z').toLocaleDateString('fa-IR-u-ca-gregory', { timeZone: 'UTC', month: 'short', day: 'numeric' }); // d.day is already a Copenhagen day
     return `<div class="dbars" role="img" aria-label="${unit} در ۳۰ روز اخیر">${days.map(d => `
         <span class="dbar" data-tip="${label(d)}: ${faNum(d[key])} ${unit}"><i style="height:${d[key] ? Math.max(4, d[key] / max * 100) : 0}%"></i></span>`).join('')}</div>
       <div class="dbars-axis"><span>${label(days[0])}</span><span>بیشینه: ${faNum(max)}</span><span>${label(days[days.length - 1])}</span></div>`;
@@ -1621,7 +1621,7 @@
       <div class="dbars-axis"><span>۰۰:۰۰</span><span>۰۶:۰۰</span><span>۱۲:۰۰</span><span>۱۸:۰۰</span><span>۲۳:۰۰</span></div>
       <div class="hlist">${rows.filter(r => r.v).map(r => `<span><b>${hh(r.h)}</b> ${faNum(r.v)} بازدید · ${faNum(r.u)} نفر</span>`).join('') || '<span class="muted">در این روز بازدیدی ثبت نشده است.</span>'}</div>`;
   }
-  const dayLabel = day => new Date(day + 'T12:00Z').toLocaleDateString('fa-IR', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
+  const dayLabel = day => new Date(day + 'T12:00Z').toLocaleDateString('fa-IR-u-ca-gregory', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' });
 
   async function adminView() {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
