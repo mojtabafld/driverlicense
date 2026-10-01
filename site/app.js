@@ -1488,7 +1488,8 @@
         <div class="cat-grid">${(BANK.sections || []).map((sec, i) => `
           <label class="cat-card cat-head"><input type="checkbox" value="${sec.n}">
             <span class="cat-num">${faNum(i + 1)}</span>
-            <span class="cat-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small>${acc.has(sec.n) ? `<span class="cat-acc ${pctCls(acc.get(sec.n))}">دقت ${faNum(Math.round(acc.get(sec.n) * 100))}٪</span>` : ''}</span>
+            <span class="cat-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small></span>
+            ${acc.has(sec.n) ? `<span class="cat-acc ${pctCls(acc.get(sec.n))}">${faNum(Math.round(acc.get(sec.n) * 100))}٪ پاسخ درست</span>` : ''}
             <span class="cat-n">${faNum(sectionPool([sec.n]).length)}<small>سؤال</small></span></label>`).join('')}</div>
         <div class="sec-foot">
           <div class="sec-foot-h"><b>تعداد سؤال‌ها</b><span class="sec-total" id="secTotal"></span></div>
