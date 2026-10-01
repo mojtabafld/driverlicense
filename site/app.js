@@ -251,14 +251,28 @@
       <form class="card auth-card" id="authForm" autocomplete="on">
         <div class="tabs full"><button type="button" data-m="login" class="${reg ? '' : 'on'}">ورود</button><button type="button" data-m="register" class="${reg ? 'on' : ''}">ثبت‌نام</button></div>
         ${reg ? `<label class="field"><span>نام نمایشی</span><input name="name" maxlength="40" placeholder="مثلاً سارا" required></label>` : ''}
-        <label class="field"><span>نام کاربری</span><input name="username" class="da" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username" required></label>
-        <label class="field"><span>رمز عبور</span><input name="password" type="password" class="da" autocomplete="${reg ? 'new-password' : 'current-password'}" minlength="6" required></label>
+        <label class="field user-field"><span>نام کاربری</span><input name="username" class="da" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username" maxlength="32" ${reg ? 'minlength="3"' : ''} lang="en" dir="ltr" required>
+          <span class="field-tip" role="alert" hidden>نام کاربری فقط با حروف انگلیسی، عدد و . _ - نوشته می‌شود</span></label>
+        <label class="field"><span>رمز عبور</span><input name="password" type="password" class="da" autocomplete="${reg ? 'new-password' : 'current-password'}" required></label>
         ${reg && state.inviteRequired ? `<label class="field"><span>کد دعوت</span><input name="invite" class="da" autocomplete="off" autocapitalize="off" spellcheck="false" required></label>` : ''}
         <div class="form-err" id="authErr"></div>
         <button class="btn btn-primary wide" type="submit">${reg ? 'ساخت حساب' : 'ورود'}</button>
       </form>
     </section>`;
     $app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => authView(b.dataset.m));
+    // Username: English letters, digits and . _ - only. Anything else (e.g. typed with a Persian keyboard)
+    // is removed as it is typed or pasted, and a tooltip next to the box says why.
+    const uIn = $app.querySelector('input[name=username]'), tip = $app.querySelector('.field-tip');
+    const cleanUser = () => {
+      const v = uIn.value, ok = v.replace(/[^A-Za-z0-9_.-]/g, '');
+      if (ok === v) return;
+      const pos = Math.max(0, (uIn.selectionStart || ok.length) - (v.length - ok.length));
+      uIn.value = ok; uIn.setSelectionRange(pos, pos);
+      tip.hidden = false; tip.classList.remove('show'); void tip.offsetWidth; tip.classList.add('show');
+      clearTimeout(tip._t); tip._t = setTimeout(() => { tip.hidden = true; }, 3500);
+    };
+    uIn.addEventListener('input', e => { if (!e.isComposing) cleanUser(); });
+    uIn.addEventListener('compositionend', cleanUser);
     document.getElementById('authForm').onsubmit = async e => {
       e.preventDefault();
       const f = Object.fromEntries(new FormData(e.target));
