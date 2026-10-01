@@ -629,7 +629,7 @@
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
     const savedN = res.filter(r => r.m).length;
     $app.innerHTML = `<section class="view">
-      ${fresh ? '' : `<button class="back-link" id="back">→ ${state.reviewFrom === 'history' ? 'بازگشت به آزمون‌های قبلی' : 'بازگشت به داشبورد'}</button>`}
+      ${fresh ? '' : `<button class="back-link" id="back">→ ${{ history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد'}</button>`}
       <div class="card result-hero">
         <div class="ring">
           <svg width="170" height="170" viewBox="0 0 170 170">
@@ -685,7 +685,7 @@
     const tl = document.getElementById('toLessons'); if (tl) tl.onclick = studyList;
     document.getElementById('toHome').onclick = home;
     const back = document.getElementById('back');
-    if (back) back.onclick = state.reviewFrom === 'history' ? () => historyView() : home;
+    if (back) back.onclick = { history: () => historyView(), lessons: studyList }[state.reviewFrom] || home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
     bindReviewCards($app);
     if (isLesson) aiSummary(res);
@@ -847,7 +847,7 @@
 
   function openAttempt(idx) {
     const att = state.attempts[idx]; if (!att) return;
-    state.reviewFrom = document.querySelector('.hist-page') ? 'history' : 'home';
+    state.reviewFrom = document.querySelector('.hist-page') ? 'history' : document.querySelector('.study-page') ? 'lessons' : 'home';
     renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode, att.lesson), 'wrong', false);
   }
 
@@ -1230,16 +1230,20 @@
         const recent = atts.slice(-3);
         // Thumbnail: the first question of the lesson with a real scene picture (build.py picks it).
         const img = (Q.get(t.thumb || t.qs[0]) || {}).img;
-        return `<button class="card study-tile ${last ? (isPass(last) ? 'complete' : 'started') : ''}" data-st="${i}" style="animation-delay:${Math.min(i, 12) * 25}ms">
-          ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
-          <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b></span>
-          <span class="st-sub">${note ? esc(note) : `${faNum(t.qs.length)} سؤال`}</span>
-          <span class="st-runs">${recent.length ? recent.map((a, k) => `<i class="${isPass(a) ? 'ok' : 'bad'}" title="${isPass(a) ? 'قبول' : 'مردود'} · ${scoreOf(a)}/${a.items.length} · ${fmtDate(a.at)}">${faNum(k + 1)}</i>`).join('') : '<span class="st-count">شروع نشده</span>'}</span>
-        </button>`;
+        // The tile starts the lesson; each result circle opens the review of that attempt.
+        return `<div class="card study-tile ${last ? (isPass(last) ? 'complete' : 'started') : ''}" style="animation-delay:${Math.min(i, 12) * 25}ms">
+          <button class="st-open" data-st="${i}">
+            ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
+            <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b></span>
+            <span class="st-sub">${note ? esc(note) : `${faNum(t.qs.length)} سؤال`}</span>
+          </button>
+          <span class="st-runs">${recent.length ? recent.map((a, k) => `<button class="${isPass(a) ? 'ok' : 'bad'}" data-run="${state.attempts.indexOf(a)}" title="مرور: ${isPass(a) ? 'قبول' : 'مردود'} · ${scoreOf(a)}/${a.items.length} · ${fmtDate(a.at)}" aria-label="مرور آزمون ${faNum(k + 1)} این درس">${faNum(k + 1)}</button>`).join('') : '<span class="st-count">شروع نشده</span>'}</span>
+        </div>`;
       }).join('')}</div>
     </section>`;
     document.getElementById('back').onclick = home;
     $app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => startLesson(+b.dataset.st));
+    $app.querySelectorAll('[data-run]').forEach(b => b.onclick = () => openAttempt(+b.dataset.run));
     window.scrollTo({ top: 0 });
   }
   function startLesson(i) {
