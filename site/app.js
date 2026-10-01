@@ -840,10 +840,10 @@
     const key = `${box.dataset.q}:${box.dataset.a}:${examLang()}`;
     const show = text => {
       box.dataset.state = 'done'; lessonCache.set(key, text);
-      body.innerHTML = `<div class="ai-reveal">${box.classList.contains('ai-click') ? `<h4>${ICON.ai} آموزش این سؤال</h4>` : ''}${lessonHtml(text)}</div>`;
+      body.innerHTML = `<div class="ai-reveal">${box.classList.contains('ai-click') ? `<h4>${ICON.ai} نکات سؤال</h4>` : ''}${lessonHtml(text)}</div>`;
     };
     if (lessonCache.has(key)) return show(lessonCache.get(key));
-    body.innerHTML = aiLoading('در حال آماده‌سازی آموزش و نکته‌های این سؤال بر اساس پاسخ شما');
+    body.innerHTML = aiLoading('در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما');
     api('POST', 'lesson', { qid: +box.dataset.q, a, lang: examLang() })
       .then(d => show(d.text))
       .catch(e => {
@@ -911,7 +911,7 @@
         }).join('')}
         </div>
         ${lessons && state.aiLessons ? (aiClick
-          ? `<div class="lesson ai-lesson ai-click" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}"><button class="ai-start" type="button"><span class="ai-spark">${ICON.ai}</span><span><b>آموزش این سؤال</b><small>نکته‌های این سؤال بر اساس پاسخ شما، با هوش مصنوعی</small></span></button><div class="ai-body" hidden></div></div>`
+          ? `<div class="lesson ai-lesson ai-click" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}"><button class="ai-start" type="button"><span class="ai-spark">${ICON.ai}</span><span><b>نکات سؤال</b><small>با استفاده از هوش مصنوعی</small></span></button><div class="ai-body" hidden></div></div>`
           : `<div class="lesson ai-lesson" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}"><h4>${ICON.ai} آموزش این سؤال</h4><div class="ai-body"></div></div>`) : ''}
         ${lessons && t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(t.fa)} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}
