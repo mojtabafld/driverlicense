@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const MODEL = process.env.LESSON_MODEL || 'claude-opus-5';
+const MODEL = process.env.LESSON_MODEL || 'claude-opus-5-5';
 const PER_USER_PER_HOUR = 40; // new (uncached) lessons a user may trigger per hour
 
 const SYSTEM = `شما معلم آزمون تئوری رانندگی دانمارک (گواهینامه‌ی B) برای فارسی‌زبانان هستید.
@@ -82,7 +82,7 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
   lang = lang === 'en' ? 'en' : 'da';
   const known = Array.isArray(ticks);
   const mask = known ? q.st.map((s, k) => ((!!ticks[k]) !== !!s.ok ? 1 : 0)).join('') : 'x';
-  const key = `lesson:v2:${q.id}:${mask}:${lang}`; // v2: «انتخاب کردید / نکردید» wording
+  const key = `lesson:v3:${q.id}:${mask}:${lang}`; // v3: written by Claude Opus 5.5 (v2 lessons came from Opus 5)
   if (store.meta[key]) return store.meta[key];
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (inflight.has(key)) return inflight.get(key);
