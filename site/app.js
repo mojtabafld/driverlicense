@@ -608,7 +608,7 @@
 
   function askFinish() {
     const empty = state.exam.answers.filter(a => !a.some(Boolean)).length;
-    if (empty) confirmBox('تحویل آزمون؟', `در ${faNum(empty)} سؤال هیچ گزینه‌ای تیک نخورده است (هر سؤال حداقل یک گزینه‌ی درست دارد).`, 'تحویل و نتیجه', finish);
+    if (empty) confirmBox('تحویل آزمون؟', `در ${faNum(empty)} سؤال هیچ گزینه‌ای انتخاب نشده است (هر سؤال حداقل یک گزینه‌ی درست دارد).`, 'تحویل و نتیجه', finish);
     else finish();
   }
 
@@ -911,7 +911,10 @@
 
   // AI tips for a reviewed question (server: /api/lesson, Claude, cached per question + mistakes), prepared when
   // the user asks for them with «نکات سؤال». Without AI lessons, the topic's fixed lesson is shown instead.
+  // Older cached tips said «تیک زدید / نزدید»; the site says «انتخاب کردید / نکردید» everywhere.
+  const pickWords = t => t.replace(/تیک(?:\s|\u200c)*نزد/g, 'انتخاب نکرد').replace(/تیک(?:\s|\u200c)*زد/g, 'انتخاب کرد').replace(/تیک(?:\s|\u200c)*نخورد/g, 'انتخاب نشد').replace(/تیک(?:\s|\u200c)*خورد/g, 'انتخاب شد');
   const lessonHtml = text => {
+    text = pickWords(text);
     let html = '', list = false;
     const close = () => { if (list) { html += '</ul>'; list = false; } };
     for (const raw of text.split('\n')) {
@@ -1027,7 +1030,7 @@
     const wrong = a ? q.st.map((st, k) => (a[k] ? 1 : 0) !== st.ok) : null;
     const r = { q, a, wrong, ok: s.lastOk, w: wrong ? wrong.filter(Boolean).length : 0 };
     openModal(`<div class="review">${reviewCard(r, 0, `<span class="badge warn">${faNum(s.wrong)} اشتباه در ${faNum(s.seen)} آزمون</span>`)}</div>
-      <p style="color:var(--muted);font-size:13px;margin:10px 0 0">«شما تیک زدید / نزدید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</p>
+      <p style="color:var(--muted);font-size:13px;margin:10px 0 0">«شما انتخاب کردید / انتخاب نکردید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</p>
       <div class="row-btns"><button class="btn btn-ghost" data-close>بستن</button></div>`, 'wide');
     bindReviewCards($modal);
     const card = $modal.querySelector('.rcard'); card.classList.add('open');
