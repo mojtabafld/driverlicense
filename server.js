@@ -255,7 +255,8 @@ async function api(req, res, route) {
     }
     const u = String(username || '').trim().toLowerCase();
     if (!USER_RE.test(u)) return send(res, 400, { error: 'نام کاربری باید ۳ تا ۳۲ کاراکتر انگلیسی، عدد، نقطه، خط تیره یا زیرخط باشد.' });
-    if (typeof password !== 'string' || password.length < 6) return send(res, 400, { error: 'رمز عبور باید حداقل ۶ کاراکتر باشد.' });
+    // Any password is accepted (no length or character rules); only an empty one is refused.
+    if (typeof password !== 'string' || !password.length) return send(res, 400, { error: 'رمز عبور را وارد کنید.' });
     if (store.users[u]) return send(res, 409, { error: 'این نام کاربری قبلاً ثبت شده است.' });
     const salt = crypto.randomBytes(16).toString('hex');
     const user = { username: u, name: String(name || u).trim().slice(0, 40) || u, salt, hash: hashPw(password, salt),

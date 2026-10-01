@@ -783,3 +783,10 @@ body.focus-mode .topbar{display:none}
 .hist-sec.open .hs-chev{transform:rotate(180deg)}
 .hist-sec .history{margin-top:10px;animation:rise .3s var(--ease) both}
 .hist-sec .history[hidden]{display:none}
+
+/* sign-up / login: warning bubble next to the username box when a non-English character is typed */
+.field-tip{position:relative;justify-self:start;margin-top:4px;max-width:100%;padding:8px 12px;border-radius:8px;background:var(--bad);color:#fff;font-size:12.5px;font-weight:600;line-height:1.6;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.field-tip::before{content:'';position:absolute;top:-6px;right:18px;border:6px solid transparent;border-top:0;border-bottom-color:var(--bad)}
+.field-tip.show{animation:tipIn .25s var(--ease)}
+.field-tip[hidden]{display:none}
+@keyframes tipIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
