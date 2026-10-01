@@ -714,14 +714,14 @@
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
     if (stepMode) {
       reviewStep(res, list, 0, false, isLesson ? false : state.settings.showFa);
-      // The result line shows for 10 seconds, then fades out; «جزئیات آزمون» next to the back link brings it back.
+      // The result line shows for 5 seconds, then fades out; «جزئیات آزمون» next to the back link brings it back.
       const line = document.getElementById('resLine'), det = document.getElementById('detLink');
       const setLine = show => {
         line.classList.toggle('gone', !show); det.setAttribute('aria-expanded', show);
         det.querySelector('span').textContent = show ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون';
       };
       clearTimeout(state.resLineTimer);
-      state.resLineTimer = setTimeout(() => { if (line.isConnected) { setLine(false); det.hidden = false; } }, 10000);
+      state.resLineTimer = setTimeout(() => { if (line.isConnected) { setLine(false); det.hidden = false; } }, 5000);
       det.onclick = () => setLine(line.classList.contains('gone'));
     }
     else {
