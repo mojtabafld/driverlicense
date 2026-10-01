@@ -1104,7 +1104,8 @@
     const all = mistakeStats();
     if (!all.length) return `<div class="card empty">هنوز اشتباهی ثبت نشده است.</div>`;
     return mistakeCards(all.slice(0, HOME_MISTAKES)) +
-      `<button class="tr-toggle more" id="allMistakes">نمایش همه‌ی اشتباهات به تفکیک مبحث (${faNum(all.length)}) ←</button>`;
+      `<div class="mist-actions"><button class="tr-toggle mist-start" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>
+      <button class="tr-toggle more" id="allMistakes">نمایش همه‌ی اشتباهات به تفکیک مبحث (${faNum(all.length)}) ←</button></div>`;
   }
   function mistakeCards(list) {
     return `<div class="mgrid">${list.map((s, n) => {
@@ -1270,7 +1271,7 @@
       <div class="section-title"><span>آزمون‌های قبلی <small class="muted">— برای مرور پاسخ‌ها و اشتباهات روی هر آزمون بزنید</small></span></div>
       <div class="history">${historyList(HOME_HIST)}</div>
 
-      <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(topCount)} سؤال)</small>` : ''}</span>${topCount ? `<button class="tr-toggle" id="startTop">آزمون از پراشتباه‌ترین سؤالات</button>` : ''}</div>
+      <div class="section-title"><span>بیشترین اشتباهات شما${topCount ? ` <small class="muted">(${faNum(topCount)} سؤال)</small>` : ''}</span></div>
       ${mistakesSection()}
       <div class="card panel topic-panel"><div class="panel-h"><h3>نقاط ضعف بر اساس مبحث</h3></div>${topicBars(topicStats())}</div>
 
