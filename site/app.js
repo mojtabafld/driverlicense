@@ -1474,9 +1474,9 @@
       <button class="hist-sec-h" id="secToggle" aria-expanded="false"><span class="opt-ico">${ICON.book}</span><span class="hs-t"><b>آموزش بر اساس دسته‌بندی</b><small>دسته‌های برنامه‌ی آموزشی رسمی را انتخاب کنید و فقط همان مباحث را تمرین کنید</small></span><svg class="hs-chev" width="20" height="20" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
       <div class="sec-body" hidden>
         <div class="sec-row"><button type="button" class="tr-toggle" id="secAll">انتخاب همه</button><button type="button" class="tr-toggle" id="secNone">هیچ‌کدام</button>${weak ? '<button type="button" class="tr-toggle" id="secWeak">مباحث ضعیف من</button>' : ''}</div>
-        <div class="cat-grid">${(BANK.sections || []).map(sec => `
+        <div class="cat-grid">${(BANK.sections || []).map((sec, i) => `
           <label class="cat-card cat-head"><input type="checkbox" value="${sec.n}" ${chosen.includes(sec.n) ? 'checked' : ''}>
-            <span class="cat-num">${faNum(sec.n)}</span>
+            <span class="cat-num">${faNum(i + 1)}</span>
             <span class="cat-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small>${acc.has(sec.n) ? `<span class="cat-acc ${pctCls(acc.get(sec.n))}">دقت ${faNum(Math.round(acc.get(sec.n) * 100))}٪</span>` : ''}</span>
             <span class="cat-n">${faNum(sectionPool([sec.n]).length)}<small>سؤال</small></span></label>`).join('')}</div>
         <div class="sec-foot">
