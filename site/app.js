@@ -622,19 +622,21 @@
     if (ex.mode === 'lesson') delete state.lessonDrafts[ex.lesson]; else state.draft = null;
     const res = gradeExam(ex);
     const secs = Math.round((Date.now() - ex.started) / 1000);
+    let at = Date.now(); // the stored attempt's time once saved: AI lessons made in its review are kept with it
     const payload = { secs, mode: ex.mode, lesson: ex.lesson, items: res.map(r => ({ id: r.q.id, ok: r.ok, w: r.w, a: r.a, m: r.m ? 1 : 0 })) };
     try {
       const { attempt } = await api('POST', 'attempts', payload);
-      state.attempts.push(attempt);
+      state.attempts.push(attempt); at = attempt.at;
     } catch (e) {
       toast(e.status === 401 ? 'نشست شما منقضی شده؛ نتیجه ذخیره نشد. دوباره وارد شوید.' : 'ذخیره‌ی نتیجه روی سرور ناموفق بود.');
     }
-    renderReview(summarize(res, secs, Date.now(), ex.mode, ex.lesson), 'wrong', true);
+    renderReview(summarize(res, secs, at, ex.mode, ex.lesson), 'wrong', true);
   }
 
   function renderReview(ctx, filter, fresh) {
     setExamMode(false);
     const { res, correct, secs, at, mode, lesson } = ctx;
+    state.reviewAt = at; // AI lessons / summary of this review are linked to this attempt on the server
     const isLesson = mode === 'lesson', li = isLesson ? BANK.tests.findIndex(t => t.id === lesson) : -1;
     // A past exam or lesson (not the one just handed in) is reviewed one question at a time, each with its
     // AI lesson on request, and ends with the AI summary of all the mistakes.
@@ -644,8 +646,9 @@
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
     const savedN = res.filter(r => r.m).length;
     $app.innerHTML = `<section class="view">
-      ${fresh ? '' : `<button class="back-link" id="back">→ ${{ history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد'}</button>`}
-      ${stepMode ? `<div class="res-line ${full ? (pass ? 'ok' : 'bad') : 'neutral'}">
+      ${fresh ? '' : `<div class="rev-top"><button class="back-link" id="back">→ ${{ history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد'}</button>
+        ${stepMode ? `<button class="det-link" id="detLink" hidden aria-expanded="false">${ICON.chart}<span>جزئیات آزمون</span></button>` : ''}</div>`}
+      ${stepMode ? `<div class="res-line ${full ? (pass ? 'ok' : 'bad') : 'neutral'}" id="resLine">
         <span class="mini-ring" title="${faNum(pctN)}٪ پاسخ درست"><svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" class="mr-bg"/><circle cx="23" cy="23" r="19" class="mr-fg" stroke-dasharray="${2 * Math.PI * 19}" stroke-dashoffset="${2 * Math.PI * 19}" style="--off:${2 * Math.PI * 19 * (1 - pct)}"/></svg><i>${faNum(pctN)}٪</i></span>
         <b>${full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span>
         <small>${modeName(mode, lesson)}، ${fmtDate(at)}</small>
@@ -709,7 +712,18 @@
     const back = document.getElementById('back');
     if (back) back.onclick = { history: () => historyView(), lessons: studyList }[state.reviewFrom] || home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
-    if (stepMode) reviewStep(res, list, 0, false, isLesson ? false : state.settings.showFa);
+    if (stepMode) {
+      reviewStep(res, list, 0, false, isLesson ? false : state.settings.showFa);
+      // The result line shows for 10 seconds, then fades out; «جزئیات آزمون» next to the back link brings it back.
+      const line = document.getElementById('resLine'), det = document.getElementById('detLink');
+      const setLine = show => {
+        line.classList.toggle('gone', !show); det.setAttribute('aria-expanded', show);
+        det.querySelector('span').textContent = show ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون';
+      };
+      clearTimeout(state.resLineTimer);
+      state.resLineTimer = setTimeout(() => { if (line.isConnected) { setLine(false); det.hidden = false; } }, 10000);
+      det.onclick = () => setLine(line.classList.contains('gone'));
+    }
     else {
       bindReviewCards($app);
       if (isLesson) aiSummary(res);
@@ -846,7 +860,7 @@
     };
     if (lessonCache.has(key)) return show(lessonCache.get(key));
     body.innerHTML = aiLoading('در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما');
-    api('POST', 'lesson', { qid: +box.dataset.q, a, lang: examLang() })
+    api('POST', 'lesson', { qid: +box.dataset.q, a, lang: examLang(), at: state.reviewAt || undefined })
       .then(d => show(d.text))
       .catch(e => { // the button stays, so it can be tried again
         delete box.dataset.state;
@@ -927,6 +941,7 @@
   }
 
   function showMistake(id) {
+    state.reviewAt = null;
     const s = mistakeStats().find(x => x.id === id); if (!s) return;
     const q = Q.get(id), a = s.lastA;
     const wrong = a ? q.st.map((st, k) => (a[k] ? 1 : 0) !== st.ok) : null;
@@ -1266,7 +1281,7 @@
   // bookmark) and «پاسخ صحیح»; the newest three are open, as in the exam review. Removing a bookmark here
   // keeps the card until the page is opened again, so it can be undone.
   function savedView() {
-    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal(); state.reviewAt = null;
     const list = state.saved.filter(x => Q.has(x.id)).slice().sort((a, b) => b.at - a.at);
     $app.innerHTML = `<section class="view saved-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
@@ -1372,7 +1387,7 @@
         <div class="row-btns"><button class="btn btn-ghost" data-close>بستن</button></div>`, 'wide');
       bindReviewCards($modal);
     };
-    api('POST', 'summary', { items, lang: examLang() })
+    api('POST', 'summary', { items, lang: examLang(), at: state.reviewAt || undefined })
       .then(d => { body.innerHTML = `<div class="ai-reveal">${linkify(lessonHtml(d.text))}</div>`; })
       .catch(e => { body.innerHTML = `<p class="muted">${esc(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message)}</p>`; });
   }
