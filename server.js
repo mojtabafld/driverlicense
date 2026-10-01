@@ -304,7 +304,7 @@ async function api(req, res, route) {
   // AI summary of the mistakes of a whole exam or lesson: [{ id, a }] of the wrongly answered questions.
   if (req.method === 'POST' && route === 'summary') {
     const b = await readBody(req);
-    const items = Array.isArray(b.items) ? b.items.slice(0, 25).filter(x => x && Array.isArray(x.a)).map(x => ({ id: +x.id, a: x.a.slice(0, 4) })) : [];
+    const items = Array.isArray(b.items) ? b.items.slice(0, 25).filter(x => x && Array.isArray(x.a)).map(x => ({ id: +x.id, a: x.a.slice(0, 4), n: +x.n || undefined })) : [];
     if (!items.length) return send(res, 400, { error: 'no mistakes' });
     try {
       const summary = await getSummary({ store, siteDir: SITE, username: user.username, items, lang: b.lang });

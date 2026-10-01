@@ -41,7 +41,7 @@ const SUMMARY_SYSTEM = `شما معلم آزمون تئوری رانندگی د�
 ## اشتباهات شما در یک نگاه
 یک یا دو جمله: اشتباهات بیشتر در چه مباحثی بود.
 ## سؤال به سؤال
-برای هر سؤال یک خط که با «- » شروع شود: «سؤال n» (شماره‌ای که داده شده)، موضوع سؤال در چند کلمه، اینکه کاربر کدام گزینه را به اشتباه «انتخاب کرد» یا «انتخاب نکرد» و قاعده‌ی درست در یک جمله.
+برای هر سؤال یک خط که دقیقاً با «- سؤال n: » شروع شود (n همان شماره‌ای که داده شده، با رقم)، سپس موضوع سؤال در چند کلمه، اینکه کاربر کدام گزینه را به اشتباه «انتخاب کرد» یا «انتخاب نکرد» و قاعده‌ی درست در یک جمله.
 ## مهم‌ترین نکته‌ها برای مرور
 سه تا پنج خط با «- »: قاعده‌های عملی و قابل‌به‌خاطرسپاری که این اشتباهات را برطرف می‌کند. سؤال‌های هم‌موضوع را در یک نکته جمع کنید.
 
@@ -139,19 +139,20 @@ async function generate({ store, key, system, prompt, maxTokens }) {
   try { return await job; } finally { inflight.delete(key); }
 }
 
-// items: [{ id, a }] — the wrongly answered questions of an exam or lesson, with the user's ticks.
-// Cached by the questions + mistake patterns + exam language, so the same result gets the same summary.
+// items: [{ id, a, n }] — the wrongly answered questions of an exam or lesson, with the user's ticks and the
+// question's number in that exam (the summary refers to «سؤال n», which the page turns into a link).
+// Cached by the questions + numbers + mistake patterns + exam language, so the same result gets the same summary.
 async function getSummary({ store, siteDir, username, items, lang }) {
   loadBank(siteDir);
   lang = lang === 'en' ? 'en' : 'da';
-  const list = items.map(x => ({ q: Q.get(+x.id), a: x.a })).filter(x => x.q);
+  const list = items.map((x, k) => ({ q: Q.get(+x.id), a: x.a, n: Number.isInteger(x.n) && x.n > 0 ? x.n : k + 1 })).filter(x => x.q);
   if (!list.length) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   const mask = (q, a) => q.st.map((s, k) => ((!!a[k]) !== !!s.ok ? 1 : 0)).join('');
-  const key = `summary:v1:${lang}:${list.map(x => `${x.q.id}.${mask(x.q, x.a)}`).sort().join(',')}`;
+  const key = `summary:v2:${lang}:${list.map(x => `${x.n}.${x.q.id}.${mask(x.q, x.a)}`).sort().join(',')}`; // v2: real question numbers
   if (store.meta[key]) return store.meta[key];
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
-  const prompt = list.map((x, n) => `### سؤال ${n + 1}\n${promptFor(x.q, x.a, lang)}`).join('\n\n');
+  const prompt = list.map(x => `### سؤال ${x.n}\n${promptFor(x.q, x.a, lang)}`).join('\n\n');
   return generate({ store, key, system: SUMMARY_SYSTEM, prompt, maxTokens: 8000 });
 }
 
