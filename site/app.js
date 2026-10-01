@@ -1354,13 +1354,26 @@
   }
 
   // AI summary at the top of a lesson's review: one lesson over all its mistakes (server: /api/summary).
+  // Each «سؤال n» in it is a link that opens that question with the user's answer in a pop-up.
   function aiSummary(res) {
     const box = document.getElementById('aiSummary'); if (!box) return;
     const body = box.querySelector('.ai-body');
-    const items = res.filter(r => !r.ok && r.a).map(r => ({ id: r.q.id, a: r.a.map(v => (v ? 1 : 0)) }));
+    const items = res.map((r, i) => ({ r, n: i + 1 })).filter(x => !x.r.ok && x.r.a)
+      .map(({ r, n }) => ({ id: r.q.id, a: r.a.map(v => (v ? 1 : 0)), n }));
     body.innerHTML = aiLoading('در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی');
+    const linkify = html => html.replace(/سؤال\s*([0-9۰-۹]+)/g, (m, d) => {
+      const n = +d.replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c));
+      return res[n - 1] ? `<button type="button" class="q-link" data-qn="${n}">سؤال ${faNum(n)}</button>` : m;
+    });
+    body.onclick = e => {
+      const l = e.target.closest('.q-link'); if (!l) return;
+      const n = +l.dataset.qn, r = res[n - 1];
+      openModal(`<div class="review">${reviewCard({ ...r, i: n - 1 }, 0, '', true)}</div>
+        <div class="row-btns"><button class="btn btn-ghost" data-close>بستن</button></div>`, 'wide');
+      bindReviewCards($modal);
+    };
     api('POST', 'summary', { items, lang: examLang() })
-      .then(d => { body.innerHTML = `<div class="ai-reveal">${lessonHtml(d.text)}</div>`; })
+      .then(d => { body.innerHTML = `<div class="ai-reveal">${linkify(lessonHtml(d.text))}</div>`; })
       .catch(e => { body.innerHTML = `<p class="muted">${esc(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message)}</p>`; });
   }
 
