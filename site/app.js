@@ -1363,7 +1363,7 @@
     body.innerHTML = aiLoading('در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی');
     const linkify = html => html.replace(/سؤال\s*([0-9۰-۹]+)/g, (m, d) => {
       const n = +d.replace(/[۰-۹]/g, c => '۰۱۲۳۴۵۶۷۸۹'.indexOf(c));
-      return res[n - 1] ? `<button type="button" class="q-link" data-qn="${n}">سؤال ${faNum(n)}</button>` : m;
+      return res[n - 1] ? `<button type="button" class="q-link" data-qn="${n}" title="نمایش سؤال ${faNum(n)} و پاسخ شما">سؤال ${faNum(n)}<svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 6H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>` : m;
     });
     body.onclick = e => {
       const l = e.target.closest('.q-link'); if (!l) return;
