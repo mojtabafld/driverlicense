@@ -756,3 +756,6 @@ body.focus-mode .topbar{display:none}
   .det-link{width:36px;height:36px;padding:0;justify-content:center}
   .det-link span{display:none}
 }
+/* question-by-question review: the card is always open, so no «جزئیات و توضیحات» toggle */
+#stepBox .rtoggle{display:none}
+#stepBox .rhead{cursor:default}
