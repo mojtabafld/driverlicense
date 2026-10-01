@@ -636,17 +636,17 @@
     setExamMode(false);
     const { res, correct, secs, at, mode, lesson } = ctx;
     const isLesson = mode === 'lesson', li = isLesson ? BANK.tests.findIndex(t => t.id === lesson) : -1;
-    // A past lesson (not the one just handed in) is reviewed one question at a time, each with its own short
-    // AI lesson, and ends with the AI summary of all the mistakes.
-    const stepMode = isLesson && !fresh;
+    // A past exam or lesson (not the one just handed in) is reviewed one question at a time, each with its
+    // AI lesson on request, and ends with the AI summary of all the mistakes.
+    const stepMode = !fresh;
     const n = res.length, full = n >= FULL, pass = full && correct >= passMin(n), pctN = Math.round(correct / Math.max(n, 1) * 100);
     const C = 2 * Math.PI * 74, pct = correct / Math.max(n, 1);
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
     const savedN = res.filter(r => r.m).length;
     $app.innerHTML = `<section class="view">
       ${fresh ? '' : `<button class="back-link" id="back">→ ${{ history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد'}</button>`}
-      ${stepMode ? `<div class="res-line ${pass ? 'ok' : 'bad'}">
-        <b>${pass ? '✓ قبول' : '✗ مردود'}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span>
+      ${stepMode ? `<div class="res-line ${full ? (pass ? 'ok' : 'bad') : 'neutral'}">
+        <b>${full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span>
         <small>${modeName(mode, lesson)}، ${fmtDate(at)}</small>
       </div>` : `<div class="card result-hero">
         <div class="ring">
@@ -708,7 +708,7 @@
     const back = document.getElementById('back');
     if (back) back.onclick = { history: () => historyView(), lessons: studyList }[state.reviewFrom] || home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
-    if (stepMode) reviewStep(res, list, 0, false);
+    if (stepMode) reviewStep(res, list, 0, false, isLesson ? false : state.settings.showFa);
     else {
       bindReviewCards($app);
       if (isLesson) aiSummary(res);
@@ -722,7 +722,8 @@
 
   // One step of a past lesson's review: question k of `list` (open, with its short AI lesson), or, after the
   // last one, the summary of all the mistakes. Previous/next and the counter follow the exam language.
-  function reviewStep(res, list, k, scroll = true) {
+  // `fa`: whether the Persian translation starts shown (hidden in lessons).
+  function reviewStep(res, list, k, scroll = true, fa = false) {
     const box = document.getElementById('stepBox'); if (!box) return;
     const total = list.length, end = k >= total;
     const nav = `<nav class="st-nav" dir="ltr">
@@ -734,11 +735,11 @@
       </nav>`;
     box.innerHTML = !total ? '<div class="card empty">موردی نیست.</div>'
       : end ? `${summaryBox(res) || `<div class="card empty">${res.some(r => !r.ok) ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'}</div>`}${nav}`
-      : `<div class="review">${reviewCard(list[k], 0, '', true, true, false, true)}</div>${nav}`;
+      : `<div class="review">${reviewCard(list[k], 0, '', true, true, fa, true)}</div>${nav}`;
     if (!total) return;
-    document.getElementById('rsPrev').onclick = () => reviewStep(res, list, k - 1);
-    const nx = document.getElementById('rsNext'); if (nx) nx.onclick = () => reviewStep(res, list, k + 1);
-    const fs = document.getElementById('rsFirst'); if (fs) fs.onclick = () => reviewStep(res, list, 0);
+    document.getElementById('rsPrev').onclick = () => reviewStep(res, list, k - 1, true, fa);
+    const nx = document.getElementById('rsNext'); if (nx) nx.onclick = () => reviewStep(res, list, k + 1, true, fa);
+    const fs = document.getElementById('rsFirst'); if (fs) fs.onclick = () => reviewStep(res, list, 0, true, fa);
     if (end) aiSummary(res); else bindReviewCards(box);
     if (scroll) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -922,8 +923,8 @@
   function openAttempt(idx) {
     const att = state.attempts[idx]; if (!att) return;
     state.reviewFrom = document.querySelector('.hist-page') ? 'history' : document.querySelector('.study-page') ? 'lessons' : 'home';
-    // A past lesson is reviewed question by question, all of them in order.
-    renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode, att.lesson), att.mode === 'lesson' ? 'all' : 'wrong', false);
+    // A past exam or lesson is reviewed question by question, all of them in order.
+    renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode, att.lesson), 'all', false);
   }
 
   function showMistake(id) {
@@ -1097,28 +1098,33 @@
   // Newest first; the dashboard passes a limit and links to the full list on its own page.
   const HOME_HIST = 3;
   // `edit` (past-exams page) adds a delete button next to each exam.
+  // Past exams only: lessons have their own page («آموزش درس‌به‌درس»). Exams are numbered among themselves;
+  // data-att keeps the index in state.attempts.
+  const examIdx = () => state.attempts.map((_, i) => i).filter(i => state.attempts[i].mode !== 'lesson');
   function historyList(limit = Infinity, edit = false) {
-    const atts = state.attempts;
-    if (!atts.length) return '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
-    const shown = atts.map((_, i) => i).reverse().slice(0, limit);
+    const atts = state.attempts, idx = examIdx();
+    if (!idx.length) return '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
+    const num = new Map(idx.map((i, k) => [i, k + 1]));
+    const shown = idx.slice().reverse().slice(0, limit);
     return shown.map(i => {
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
       const body = `<span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
-        <span class="meta"><b>آزمون ${faNum(i + 1)}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' || h.mode === 'lesson' ? ` · ${modeName(h.mode, h.lesson)}` : ''}<br>
+        <span class="meta"><b>آزمون ${faNum(num.get(i))}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' ? ` · ${modeName(h.mode)}` : ''}<br>
           <small>${fmtDate(h.at)} · ${wrongImgs ? `${faNum(wrongImgs)} سؤال غلط` : 'بدون اشتباه'} · <span class="nowrap">مدت زمان آزمون: ${fmtTime(h.secs)}</span>${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>`;
       // In delete mode the card is not a link: the delete button takes the place of "مرور".
       return edit
-        ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
+        ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" data-num="${num.get(i)}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
         : `<button class="card hist" data-att="${i}">${body}<span class="go">مرور ←</span></button>`;
-    }).join('') + (atts.length > limit ? `<button class="tr-toggle more" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(atts.length)}) ←</button>` : '');
+    }).join('') + (idx.length > limit ? `<button class="tr-toggle more" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(idx.length)}) ←</button>` : '');
   }
 
   function home() {
     stopSpeak(); leaveExam(); closeModal(); setExamMode(false);
     const atts = state.attempts;
-    const passed = atts.filter(isPass).length, fullN = atts.filter(isFull).length;
+    const exams = atts.filter(a => a.mode !== 'lesson'); // the «آزمون‌ها» card opens the past exams, which list no lessons
+    const passed = exams.filter(isPass).length, fullN = exams.filter(isFull).length;
     const pcts = atts.map(a => Math.round(pct(a) * 100));
     const last5 = pcts.slice(-5);
     const avg5 = last5.length ? last5.reduce((a, b) => a + b, 0) / last5.length : 0;
@@ -1149,7 +1155,7 @@
       </div>
 
       <div class="stats">
-        <div class="card stat stat-link" id="statExams" role="button" tabindex="0" title="مشاهده‌ی آزمون‌های قبلی"><span>آزمون‌ها ${atts.length ? ICON.chevL : ''}</span><b>${atts.length}</b><small>${fullN ? `${faNum(passed)} قبولی از ${faNum(fullN)} آزمون کامل` : 'هنوز آزمون کامل ۲۵ سؤالی نداده‌اید'}</small></div>
+        <div class="card stat stat-link" id="statExams" role="button" tabindex="0" title="مشاهده‌ی آزمون‌های قبلی"><span>آزمون‌ها ${exams.length ? ICON.chevL : ''}</span><b>${exams.length}</b><small>${fullN ? `${faNum(passed)} قبولی از ${faNum(fullN)} آزمون کامل` : 'هنوز آزمون کامل ۲۵ سؤالی نداده‌اید'}</small></div>
         <div class="card stat"><span>میانگین ۵ آزمون اخیر (درصد درست)</span><b>${atts.length ? Math.round(avg5) : '–'}<em>٪</em></b><small>${trend == null ? 'روند: داده‌ی کافی نیست' : trend >= 0 ? `▲ ${faNum(Math.round(trend))}٪ رو به بهبود` : `▼ ${faNum(Math.round(Math.abs(trend)))}٪ افت`}</small></div>
         <div class="card stat"><span>بهترین نمره</span><b>${atts.length ? best : '–'}<em>٪</em></b><small>میانگین زمان ${atts.length ? fmtTime(avgSecs) : '–'}</small></div>
         <div class="card stat"><span>سؤالات تمرین‌شده</span><b>${Math.round(seen / BANK.questions.length * 100)}<em>٪</em></b><small>${faNum(seen)} از ${faNum(BANK.questions.length)} · 🔥 ${faNum(streakDays())} روز پیاپی</small>
@@ -1206,7 +1212,7 @@
     document.getElementById('openStudy').onclick = () => studyList();
     const oa = document.getElementById('openAdmin'); if (oa) oa.onclick = adminView;
     const se = document.getElementById('statExams');
-    if (se && state.attempts.length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
+    if (se && examIdx().length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
     const sm = document.getElementById('startM'); if (sm) sm.onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
@@ -1221,22 +1227,23 @@
   // "حذف" switches the page into delete mode: a delete button next to each exam, each asking for a yes/no first.
   function historyView(edit = false) {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
-    edit = edit && state.attempts.length > 0;
+    const examN = examIdx().length;
+    edit = edit && examN > 0;
     $app.innerHTML = `<section class="view hist-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
-      <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(state.attempts.length)} آزمون)</small></h1>
-        ${state.attempts.length ? `<span class="head-btns">${edit ? '<button class="tr-toggle danger" id="clearH">حذف همه</button>' : ''}<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'لغو' : `${ICON.trash} حذف`}</button></span>` : ''}</div>
+      <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(examN)} آزمون)</small></h1>
+        ${examN ? `<span class="head-btns">${edit ? '<button class="tr-toggle danger" id="clearH">حذف همه</button>' : ''}<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'لغو' : `${ICON.trash} حذف`}</button></span>` : ''}</div>
       <div class="history">${historyList(Infinity, edit)}</div>
     </section>`;
     document.getElementById('back').onclick = home;
     const eh = document.getElementById('editHist'); if (eh) eh.onclick = () => { const y = scrollY; historyView(!edit); scrollTo({ top: y }); };
     const ch = document.getElementById('clearH');
-    if (ch) ch.onclick = () => confirmBox('حذف همه‌ی آزمون‌ها؟', `هر ${faNum(state.attempts.length)} آزمون، نمودارها و آمار اشتباهات حساب شما پاک می‌شود.`, 'بله', async () => {
-      try { await api('DELETE', 'attempts'); state.attempts = []; historyView(); toast('همه‌ی آزمون‌ها حذف شدند'); } catch (e) { toast(e.message); }
+    if (ch) ch.onclick = () => confirmBox('حذف همه‌ی آزمون‌ها؟', `هر ${faNum(examN)} آزمون و نتیجه‌شان از نمودارها و آمار اشتباهات پاک می‌شود. نتایج درس‌ها می‌مانند.`, 'بله', async () => {
+      try { await api('DELETE', 'attempts', { keepLessons: true }); state.attempts = state.attempts.filter(a => a.mode === 'lesson'); historyView(); toast('همه‌ی آزمون‌ها حذف شدند'); } catch (e) { toast(e.message); }
     }, 'خیر');
     $app.querySelectorAll('[data-del-att]').forEach(b => b.onclick = () => {
       const i = +b.dataset.delAtt, att = state.attempts[i];
-      confirmBox('حذف آزمون؟', `آزمون ${faNum(i + 1)} (${fmtDateTime(att.at)}) و نتیجه‌اش از تاریخچه و آمار حذف می‌شود.`, 'بله', async () => {
+      confirmBox('حذف آزمون؟', `آزمون ${faNum(+b.dataset.num)} (${fmtDateTime(att.at)}) و نتیجه‌اش از تاریخچه و آمار حذف می‌شود.`, 'بله', async () => {
         try {
           await api('DELETE', 'attempt', { at: att.at });
           state.attempts = state.attempts.filter(a => a !== att);
