@@ -1286,7 +1286,14 @@
       b.parentElement.classList.toggle('open', on); b.setAttribute('aria-expanded', on); b.nextElementSibling.hidden = !on;
     });
     document.getElementById('back').onclick = home;
-    const eh = document.getElementById('editHist'); if (eh) eh.onclick = () => { const y = scrollY; historyView(!edit); scrollTo({ top: y }); };
+    // «حذف» opens both sections so any exam can be picked for deletion; «لغو» puts them back as they were.
+    const eh = document.getElementById('editHist');
+    if (eh) eh.onclick = () => {
+      const y = scrollY;
+      if (!edit) { state.histOpenBefore = { ...open }; open.random = open.lesson = true; }
+      else if (state.histOpenBefore) { state.histOpen = state.histOpenBefore; state.histOpenBefore = null; }
+      historyView(!edit); scrollTo({ top: y });
+    };
     const ch = document.getElementById('clearH');
     if (ch) ch.onclick = () => confirmBox('حذف همه‌ی آزمون‌ها؟', `هر ${faNum(examN)} آزمون (تصادفی و درس‌به‌درس) و نتیجه‌شان از نمودارها، آمار اشتباهات و پیشرفت درس‌ها پاک می‌شود.`, 'بله', async () => {
       try { await api('DELETE', 'attempts'); state.attempts = []; historyView(); toast('همه‌ی آزمون‌ها حذف شدند'); } catch (e) { toast(e.message); }
