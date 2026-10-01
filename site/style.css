@@ -674,6 +674,8 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .res-line{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;padding:10px 14px;border-radius:10px;font-size:15px;border:1px solid}
 .res-line.ok{background:var(--ok-soft);color:var(--ok);border-color:var(--ok)}
 .res-line.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.res-line.neutral{background:var(--accent-soft);color:var(--navy);border-color:var(--navy)}
+:root[data-theme="dark"] .res-line.neutral{color:var(--accent);border-color:var(--accent)}
 .res-line small{margin-inline-start:auto;color:var(--muted);font-size:12.5px}
 
 /* AI lesson on request (lessons): a button, then an animated "preparing" state, then the lesson fades in */

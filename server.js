@@ -351,8 +351,10 @@ async function api(req, res, route) {
     await store.saveUser(user);
     return send(res, 200, { ok: true });
   }
+  // All past exams; with { keepLessons: true } the lessons' attempts stay (the past-exams page lists no lessons).
   if (req.method === 'DELETE' && route === 'attempts') {
-    user.attempts = [];
+    const b = await readBody(req);
+    user.attempts = b.keepLessons ? user.attempts.filter(a => a.mode === 'lesson') : [];
     await store.saveUser(user);
     return send(res, 200, { ok: true });
   }
