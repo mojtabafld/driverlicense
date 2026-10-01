@@ -629,9 +629,13 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 /* lessons list */
 .study-intro{color:var(--muted);margin:-4px 2px 16px;line-height:1.8}
 .study-intro b{color:var(--text)}
-.study-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.study-tile{display:grid;gap:4px;text-align:right;padding:14px;cursor:pointer;animation:rise .35s var(--ease) both;transition:border-color .15s,transform .15s}
+.study-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.study-tile{display:grid;gap:4px;align-content:start;text-align:right;padding:10px 10px 12px;cursor:pointer;animation:rise .35s var(--ease) both;transition:border-color .15s,transform .15s}
 .study-tile:hover{border-color:var(--navy);transform:translateY(-1px)}
+.st-thumb{display:block;margin-bottom:6px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.st-thumb img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;transition:transform .3s var(--ease)}
+.study-tile:hover .st-thumb img{transform:scale(1.04)}
+@media (max-width:640px){.study-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
 .st-top{display:flex;justify-content:space-between;align-items:center;font-size:16px}
 .st-done{color:var(--ok);font-weight:800}
 .st-sub,.st-count{color:var(--muted);font-size:12.5px}
@@ -651,7 +655,6 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .rstmt.pick:hover{border-color:var(--navy)}
 .study-acts{display:flex;gap:10px;flex-wrap:wrap}
 .study-acts .btn{flex:1;min-width:150px}
-.study-hint{color:var(--muted)}
 .st-nav{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
 .st-nav .btn{min-width:140px}
 .st-nav .btn:disabled{opacity:.45;cursor:default}

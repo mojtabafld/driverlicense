@@ -263,7 +263,23 @@ for k, q in raw['questions'].items():
         'st': items,
     })
 
-tests = [{'id': t['id'], 'title': t['title'], 'qs': t['qs']} for t in raw['tests']]
+# Lesson thumbnail: the first question of the test whose picture is a real scene. Text-only questions share a
+# few generic pictures (e.g. the "?!&" card); those are skipped.
+import hashlib
+from collections import Counter
+_img_hash = {}
+for q in questions:
+    f = os.path.join(ROOT, 'site', q['img'])
+    if os.path.exists(f):
+        _img_hash[q['id']] = hashlib.md5(open(f, 'rb').read()).hexdigest()
+_shared = {h for h, n in Counter(_img_hash.values()).items() if n > 2}
+
+
+def thumb(qs):
+    return next((i for i in qs if i in _img_hash and _img_hash[i] not in _shared), qs[0])
+
+
+tests = [{'id': t['id'], 'title': t['title'], 'qs': t['qs'], 'thumb': thumb(t['qs'])} for t in raw['tests']]
 topics = {str(k): {'fa': v[0], 'da': v[1], 'lesson': v[2]} for k, v in TOPICS.items()}
 missing = {q['c'] for q in questions} - set(TOPICS)
 assert not missing, missing

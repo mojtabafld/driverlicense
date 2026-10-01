@@ -1210,7 +1210,10 @@
       <p class="study-intro">${faNum(BANK.tests.length)} درس ${faNum(25)} سؤالی، به همان ترتیب آزمون‌های تئوری prove.dk. در هر درس سؤال‌ها را یکی‌یکی جواب دهید و پاسخ صحیح، توضیحات و آموزش هر سؤال را ببینید. پیشرفت شما: <b>${faNum(done)}</b> از ${faNum(total)} سؤال.</p>
       <div class="study-grid">${BANK.tests.map((t, i) => {
         const p = prog[t.id] || {}, n = (p.done || []).filter(Boolean).length, note = studyNote(t);
+        // Thumbnail: the first question of the lesson with a real scene picture (build.py picks it).
+        const img = (Q.get(t.thumb || t.qs[0]) || {}).img;
         return `<button class="card study-tile ${n >= t.qs.length ? 'complete' : n ? 'started' : ''}" data-st="${i}" style="animation-delay:${Math.min(i, 12) * 25}ms">
+          ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
           <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b>${n >= t.qs.length ? '<span class="st-done">✓</span>' : ''}</span>
           <span class="st-sub">${note ? esc(note) : `${faNum(t.qs.length)} سؤال`}</span>
           <span class="mini-track"><i style="width:${n / t.qs.length * 100}%"></i></span>
@@ -1246,7 +1249,6 @@
       : `<article class="card rcard open study-card ${state.settings.showFa ? '' : 'no-fa'}">
           ${cardHead(q, { i: qi })}
           <div class="rbody">
-            <div class="rviews-title study-hint">گزینه‌های درست را تیک بزنید</div>
             <div class="rstmts v-mine">${q.st.map((s, k) => `
               <button type="button" class="rstmt pick ${ticks[k] ? 'me' : ''}" data-k="${k}" aria-pressed="${!!ticks[k]}">
                 <div class="rline"><span class="rbox" aria-hidden="true"></span>
