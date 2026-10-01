@@ -1163,8 +1163,8 @@
   function home() {
     stopSpeak(); leaveExam(); closeModal(); setExamMode(false);
     const atts = state.attempts;
-    const exams = atts.filter(a => a.mode !== 'lesson'); // the «آزمون‌ها» card opens the past exams, which list no lessons
-    const passed = exams.filter(isPass).length, fullN = exams.filter(isFull).length;
+    // «آزمون‌ها» card: every exam taken, random ones and lessons (the past-exams page it opens lists both)
+    const passed = atts.filter(isPass).length, fullN = atts.filter(isFull).length;
     const pcts = atts.map(a => Math.round(pct(a) * 100));
     const last5 = pcts.slice(-5);
     const avg5 = last5.length ? last5.reduce((a, b) => a + b, 0) / last5.length : 0;
@@ -1195,7 +1195,7 @@
       </div>
 
       <div class="stats">
-        <div class="card stat stat-link" id="statExams" role="button" tabindex="0" title="مشاهده‌ی آزمون‌های قبلی"><span>آزمون‌ها ${exams.length ? ICON.chevL : ''}</span><b>${exams.length}</b><small>${fullN ? `${faNum(passed)} قبولی از ${faNum(fullN)} آزمون کامل` : 'هنوز آزمون کامل ۲۵ سؤالی نداده‌اید'}</small></div>
+        <div class="card stat stat-link" id="statExams" role="button" tabindex="0" title="مشاهده‌ی آزمون‌های قبلی"><span>آزمون‌ها ${atts.length ? ICON.chevL : ''}</span><b>${atts.length}</b><small>${fullN ? `${faNum(passed)} قبولی از ${faNum(fullN)} آزمون کامل` : 'هنوز آزمون کامل ۲۵ سؤالی نداده‌اید'}</small></div>
         <div class="card stat"><span>میانگین ۵ آزمون اخیر (درصد درست)</span><b>${atts.length ? Math.round(avg5) : '–'}<em>٪</em></b><small>${trend == null ? 'روند: داده‌ی کافی نیست' : trend >= 0 ? `▲ ${faNum(Math.round(trend))}٪ رو به بهبود` : `▼ ${faNum(Math.round(Math.abs(trend)))}٪ افت`}</small></div>
         <div class="card stat"><span>بهترین نمره</span><b>${atts.length ? best : '–'}<em>٪</em></b><small>میانگین زمان ${atts.length ? fmtTime(avgSecs) : '–'}</small></div>
         <div class="card stat"><span>سؤالات تمرین‌شده</span><b>${Math.round(seen / BANK.questions.length * 100)}<em>٪</em></b><small>${faNum(seen)} از ${faNum(BANK.questions.length)} · 🔥 ${faNum(streakDays())} روز پیاپی</small>
@@ -1252,7 +1252,7 @@
     document.getElementById('openStudy').onclick = () => studyList();
     const oa = document.getElementById('openAdmin'); if (oa) oa.onclick = adminView;
     const se = document.getElementById('statExams');
-    if (se && examIdx().length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
+    if (se && state.attempts.length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
     const sm = document.getElementById('startM'); if (sm) sm.onclick = () => askSize('mistakes');
     const st = document.getElementById('startTop'); if (st) st.onclick = () => askSize('top');
     $app.querySelectorAll('[data-mid]').forEach(b => b.onclick = () => showMistake(+b.dataset.mid));
