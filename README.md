@@ -3,6 +3,9 @@
 Practice site for the Danish category B theory test: random 25-question exams in the style of
 Færdselsstyrelsen's digital test, Persian translations, explanations and short lessons, per-user
 accounts, progress charts and a pass-probability estimate.
+In the review of an exam, the bookmark on a question's picture saves it to «سؤالات ذخیره‌شده» (in the
+settings and features menu), with the user's own ticks, to review again later. «آموزش درس‌به‌درس» on the
+dashboard goes through prove.dk's 44 numbered tests of 25 questions, in order, one question at a time.
 During an exam, double-tap (or select) a Danish word to see its Persian meaning (built-in glossary
 `data/dict_fa_*.txt`, driving context) and save it to your word bank.
 
