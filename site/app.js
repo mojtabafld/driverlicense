@@ -1125,21 +1125,23 @@
   // Past exams only: lessons have their own page («آموزش درس‌به‌درس»). Exams are numbered among themselves;
   // data-att keeps the index in state.attempts.
   const examIdx = () => state.attempts.map((_, i) => i).filter(i => state.attempts[i].mode !== 'lesson');
-  function historyList(limit = Infinity, edit = false) {
-    const atts = state.attempts, idx = examIdx();
-    if (!idx.length) return '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
+  const lessonIdx = () => state.attempts.map((_, i) => i).filter(i => state.attempts[i].mode === 'lesson');
+  // kind 'random': the exams (dashboard and the first section of the past-exams page); 'lesson': finished lessons.
+  function historyList(limit = Infinity, edit = false, kind = 'random') {
+    const atts = state.attempts, idx = kind === 'lesson' ? lessonIdx() : examIdx();
+    if (!idx.length) return kind === 'lesson' ? '<div class="card empty">هنوز درسی را تمام نکرده‌اید.</div>' : '<div class="card empty">هنوز آزمونی نداده‌اید. از «شروع آزمون» شروع کنید ✨</div>';
     const num = new Map(idx.map((i, k) => [i, k + 1]));
     const shown = idx.slice().reverse().slice(0, limit);
     return shown.map(i => {
       const h = atts[i], s = scoreOf(h), wrongImgs = h.items.length - s;
       const thumbs = h.items.filter(it => !it.ok && Q.has(it.id)).slice(0, 4).map(it => `<img src="${Q.get(it.id).img}" alt="" loading="lazy">`).join('');
       const body = `<span class="pill ${isFull(h) ? (isPass(h) ? 'ok' : 'bad') : 'neutral'}">${isFull(h) ? `${s}/${h.items.length}` : pctText(h)}</span>
-        <span class="meta"><b>آزمون ${faNum(num.get(i))}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' ? ` · ${modeName(h.mode)}` : ''}<br>
+        <span class="meta"><b>${kind === 'lesson' ? lessonName(h.lesson) : `آزمون ${faNum(num.get(i))}`}</b> · ${faNum(h.items.length)} سؤالی · ${isFull(h) ? (isPass(h) ? 'قبول' : 'مردود') : 'تمرینی'}${h.mode === 'mistakes' || h.mode === 'top' ? ` · ${modeName(h.mode)}` : ''}<br>
           <small>${fmtDate(h.at)} · ${wrongImgs ? `${faNum(wrongImgs)} سؤال غلط` : 'بدون اشتباه'} · <span class="nowrap">مدت زمان آزمون: ${fmtTime(h.secs)}</span>${h.items.some(it => it.m) ? ` · ${ICON.bookmark(true)} ${faNum(h.items.filter(it => it.m).length)} ذخیره‌شده` : ''}</small></span>
         <span class="hthumbs">${thumbs}</span>`;
       // In delete mode the card is not a link: the delete button takes the place of "مرور".
       return edit
-        ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" data-num="${num.get(i)}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
+        ? `<div class="card hist editing">${body}<button class="hist-del" data-del-att="${i}" data-label="${kind === 'lesson' ? lessonName(h.lesson) : `آزمون ${faNum(num.get(i))}`}" title="حذف آزمون" aria-label="حذف آزمون">${ICON.trash}</button></div>`
         : `<button class="card hist" data-att="${i}">${body}<span class="go">مرور ←</span></button>`;
     }).join('') + (idx.length > limit ? `<button class="tr-toggle more" id="allHist">نمایش همه‌ی آزمون‌ها (${faNum(idx.length)}) ←</button>` : '');
   }
@@ -1251,23 +1253,33 @@
   // "حذف" switches the page into delete mode: a delete button next to each exam, each asking for a yes/no first.
   function historyView(edit = false) {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
-    const examN = examIdx().length;
+    // Two sections, each opened with its button: random exams and finished lessons (kept open while on the page).
+    const secs = [['random', 'آزمون‌های تصادفی', ICON.list, examIdx().length], ['lesson', 'آزمون‌های درس‌به‌درس', ICON.book, lessonIdx().length]];
+    const examN = secs[0][3] + secs[1][3];
     edit = edit && examN > 0;
+    const open = state.histOpen = state.histOpen || {};
     $app.innerHTML = `<section class="view hist-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1>آزمون‌های قبلی <small class="muted">(${faNum(examN)} آزمون)</small></h1>
         ${examN ? `<span class="head-btns">${edit ? '<button class="tr-toggle danger" id="clearH">حذف همه</button>' : ''}<button class="tr-toggle ${edit ? '' : 'danger'}" id="editHist">${edit ? 'لغو' : `${ICON.trash} حذف`}</button></span>` : ''}</div>
-      <div class="history">${historyList(Infinity, edit)}</div>
+      ${secs.map(([k, title, ico, n]) => `<div class="hist-sec ${open[k] ? 'open' : ''}">
+        <button class="hist-sec-h" data-sec="${k}" aria-expanded="${!!open[k]}"><span class="opt-ico">${ico}</span><span class="hs-t"><b>${title}</b><small>${n ? `${faNum(n)} آزمون` : 'هنوز آزمونی نیست'}</small></span><svg class="hs-chev" width="20" height="20" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+        <div class="history" ${open[k] ? '' : 'hidden'}>${historyList(Infinity, edit, k)}</div>
+      </div>`).join('')}
     </section>`;
+    $app.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => {
+      const k = b.dataset.sec, on = open[k] = !open[k];
+      b.parentElement.classList.toggle('open', on); b.setAttribute('aria-expanded', on); b.nextElementSibling.hidden = !on;
+    });
     document.getElementById('back').onclick = home;
     const eh = document.getElementById('editHist'); if (eh) eh.onclick = () => { const y = scrollY; historyView(!edit); scrollTo({ top: y }); };
     const ch = document.getElementById('clearH');
-    if (ch) ch.onclick = () => confirmBox('حذف همه‌ی آزمون‌ها؟', `هر ${faNum(examN)} آزمون و نتیجه‌شان از نمودارها و آمار اشتباهات پاک می‌شود. نتایج درس‌ها می‌مانند.`, 'بله', async () => {
-      try { await api('DELETE', 'attempts', { keepLessons: true }); state.attempts = state.attempts.filter(a => a.mode === 'lesson'); historyView(); toast('همه‌ی آزمون‌ها حذف شدند'); } catch (e) { toast(e.message); }
+    if (ch) ch.onclick = () => confirmBox('حذف همه‌ی آزمون‌ها؟', `هر ${faNum(examN)} آزمون (تصادفی و درس‌به‌درس) و نتیجه‌شان از نمودارها، آمار اشتباهات و پیشرفت درس‌ها پاک می‌شود.`, 'بله', async () => {
+      try { await api('DELETE', 'attempts'); state.attempts = []; historyView(); toast('همه‌ی آزمون‌ها حذف شدند'); } catch (e) { toast(e.message); }
     }, 'خیر');
     $app.querySelectorAll('[data-del-att]').forEach(b => b.onclick = () => {
       const i = +b.dataset.delAtt, att = state.attempts[i];
-      confirmBox('حذف آزمون؟', `آزمون ${faNum(+b.dataset.num)} (${fmtDateTime(att.at)}) و نتیجه‌اش از تاریخچه و آمار حذف می‌شود.`, 'بله', async () => {
+      confirmBox('حذف آزمون؟', `${b.dataset.label} (${fmtDateTime(att.at)}) و نتیجه‌اش از تاریخچه و آمار حذف می‌شود.`, 'بله', async () => {
         try {
           await api('DELETE', 'attempt', { at: att.at });
           state.attempts = state.attempts.filter(a => a !== att);
@@ -1339,7 +1351,9 @@
         // Thumbnail: the first question of the lesson with a real scene picture (build.py picks it).
         const img = (Q.get(t.thumb || t.qs[0]) || {}).img;
         // The tile starts the lesson; each result circle opens the review of that attempt.
-        return `<div class="card study-tile ${last ? (isPass(last) ? 'complete' : 'started') : ''}" style="animation-delay:${Math.min(i, 12) * 25}ms">
+        // border: grey = never opened, light red = opened but never passed, light green = passed at least once
+        const tileState = atts.some(isPass) ? 'st-pass' : atts.length || draftOf(t.id) ? 'st-fail' : 'st-new';
+        return `<div class="card study-tile ${tileState}" style="animation-delay:${Math.min(i, 12) * 25}ms">
           <button class="st-open" data-st="${i}">
             ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
             <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b></span>
