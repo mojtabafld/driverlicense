@@ -627,8 +627,11 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 @media (max-width:760px){.dash-hero .actions{grid-template-areas:"start" "study" "mist"}}
 
 /* lessons list */
-.study-intro{color:var(--muted);margin:-4px 2px 16px;line-height:1.8}
-.study-intro b{color:var(--text)}
+.study-prog{padding:14px 16px;margin-bottom:16px}
+.sp-row{display:flex;justify-content:space-between;align-items:center;gap:8px 14px;flex-wrap:wrap;font-size:14.5px;color:var(--muted)}
+.sp-row > b{color:var(--text);font-size:15.5px}
+.sp-row span b{color:var(--text)}
+.study-prog .mini-track{height:8px;margin-top:10px}
 .study-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
 .study-tile{display:grid;gap:4px;align-content:start;text-align:right;padding:10px 10px 12px;cursor:pointer;animation:rise .35s var(--ease) both;transition:border-color .15s,transform .15s}
 .study-tile:hover{border-color:var(--navy);transform:translateY(-1px)}
@@ -637,13 +640,14 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .study-tile:hover .st-thumb img{transform:scale(1.04)}
 @media (max-width:640px){.study-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
 .st-top{display:flex;justify-content:space-between;align-items:center;font-size:16px}
-.st-done{color:var(--ok);font-weight:800}
 .st-sub,.st-count{color:var(--muted);font-size:12.5px}
-.study-tile .mini-track{margin-top:4px}
 .study-tile.complete{border-color:var(--ok)}
-.study-tile.complete .mini-track i{background:var(--ok)}
 
 /* a lesson's review: AI summary of all its mistakes, above the answers */
 .ai-summary{margin-top:22px}
 .ai-summary h4{font-size:16px}
-.study-tile .pill{font-family:var(--fa);font-weight:700;padding:1px 9px;border-radius:99px;font-size:12.5px}
+/* last three results of a lesson: numbered circles, green = passed, red = failed */
+.st-runs{display:flex;gap:6px;align-items:center;min-height:26px;margin-top:4px}
+.st-runs i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--fa);font-size:13px;font-weight:700;color:#fff}
+.st-runs i.ok{background:var(--ok)}
+.st-runs i.bad{background:var(--bad)}

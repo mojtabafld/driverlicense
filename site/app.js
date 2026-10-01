@@ -377,7 +377,7 @@
     state.exam = {
       mode, lesson, ids, size: ids.length, idx: 0, view: 'q', done: false, started: Date.now(), left: ids.length * SECONDS_PER_Q,
       answers: ids.map(id => Array(Q.get(id).st.length).fill(false)), // ticked = true statement
-      seen: ids.map((_, i) => i === 0), flags: ids.map(() => false), showFa: ids.map(() => state.settings.showFa),
+      seen: ids.map((_, i) => i === 0), flags: ids.map(() => false), showFa: ids.map(() => mode !== 'lesson' && state.settings.showFa), // lessons start without the translation
     };
     setExamMode(true);
     renderExam(true);
@@ -785,7 +785,7 @@
 
   // Picture, badges and question of a review card (also used by the lessons' practice card).
   // The bookmark on the picture saves the question, with the ticks shown in this card, to «سؤالات ذخیره‌شده».
-  function cardHead(q, r, extraBadge = '') {
+  function cardHead(q, r, extraBadge = '', fa = state.settings.showFa) {
     const on = isSaved(q.id);
     return `<div class="rhead">
         <div class="rimg"><img src="${q.img}" alt="" loading="lazy">${r.i != null ? `<span class="rnum">سؤال ${faNum(r.i + 1)}</span>` : ''}
@@ -793,7 +793,7 @@
         <div class="rbadges">
           ${extraBadge}
           ${q.src ? q.src.map(x => `<a class="badge src" href="https://prove.dk/${examLang() === 'en' ? 'en/' : ''}app/newtest/${x.test}" target="_blank" rel="noopener" title="باز کردن این آزمون در prove.dk">${esc(x.label)}</a>`).join('') : ''}
-          <button class="rtr-btn ${state.settings.showFa ? 'on' : ''}" aria-pressed="${state.settings.showFa}" title="نمایش / پنهان‌کردن ترجمه‌ی فارسی">${ICON.tr}<span class="fa">ترجمه</span></button>
+          <button class="rtr-btn ${fa ? 'on' : ''}" aria-pressed="${fa}" title="نمایش / پنهان‌کردن ترجمه‌ی فارسی">${ICON.tr}<span class="fa">ترجمه</span></button>
         </div>
         <div class="rq">
           <p class="situation da" data-wq="${q.id}" data-wst="-1">${nl(qText(q))}</p>
@@ -802,11 +802,12 @@
       </div>`;
   }
 
-  // `lessons` false (a lesson's review): no per-question lesson; the AI summary above covers the mistakes.
+  // `lessons` false (a lesson's review): no per-question lesson, the AI summary above covers the mistakes,
+  // and the Persian translation starts hidden, as in the lesson itself.
   function reviewCard(r, n, extraBadge = '', open = false, lessons = true) {
-    const q = r.q, t = BANK.topics[q.c];
-    return `<article class="card rcard ${open ? 'open' : ''} ${state.settings.showFa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
-      ${cardHead(q, r, extraBadge)}
+    const q = r.q, t = BANK.topics[q.c], fa = lessons && state.settings.showFa;
+    return `<article class="card rcard ${open ? 'open' : ''} ${fa ? '' : 'no-fa'}" style="animation-delay:${Math.min(n, 8) * 50}ms">
+      ${cardHead(q, r, extraBadge, fa)}
       <div class="rbody">
         ${r.a ? `<div class="rviews" role="tablist">
           <button class="rseg mine on" data-v="mine" role="tab" aria-selected="true" title="${r.ok ? 'پاسخ شما درست بود' : 'پاسخ شما اشتباه بود'}"><i class="rseg-dot ${r.ok ? 'good' : 'bad'}"></i>پاسخ شما</button>
@@ -1218,18 +1219,21 @@
     $app.innerHTML = `<section class="view study-page">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1><span class="h-ico">${ICON.book}</span>آموزش درس‌به‌درس</h1></div>
-      <p class="study-intro">${faNum(BANK.tests.length)} درس ${faNum(FULL)} سؤالی، به همان ترتیب آزمون‌های تئوری prove.dk. هر درس مثل آزمون اصلی جواب داده می‌شود، بدون محدودیت زمان؛ در پایان، اشتباهات شما بررسی می‌شود و هوش مصنوعی بر اساس پاسخ‌هایتان یک جمع‌بندی آموزشی می‌دهد. درس‌های انجام‌شده: <b>${faNum(doneN)}</b> از ${faNum(BANK.tests.length)}.</p>
+      <div class="card study-prog">
+        <div class="sp-row"><b>${faNum(BANK.tests.length)} درس ${faNum(FULL)} سؤالی</b><span>پیشرفت: <b>${faNum(doneN)}</b> از ${faNum(BANK.tests.length)} درس <span class="muted">(${faNum(Math.round(doneN / BANK.tests.length * 100))}٪)</span></span></div>
+        <span class="mini-track"><i style="width:${doneN / BANK.tests.length * 100}%"></i></span>
+      </div>
       <div class="study-grid">${BANK.tests.map((t, i) => {
         const atts = byLesson.get(t.id) || [], last = atts[atts.length - 1], note = studyNote(t);
-        const best = atts.length ? Math.max(...atts.map(scoreOf)) : 0;
+        // The last three times the lesson was finished, oldest first: green = passed, red = failed.
+        const recent = atts.slice(-3);
         // Thumbnail: the first question of the lesson with a real scene picture (build.py picks it).
         const img = (Q.get(t.thumb || t.qs[0]) || {}).img;
         return `<button class="card study-tile ${last ? (isPass(last) ? 'complete' : 'started') : ''}" data-st="${i}" style="animation-delay:${Math.min(i, 12) * 25}ms">
           ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
-          <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b>${last ? `<span class="pill ${isPass(last) ? 'ok' : 'bad'}">${scoreOf(last)}/${last.items.length}</span>` : ''}</span>
+          <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b></span>
           <span class="st-sub">${note ? esc(note) : `${faNum(t.qs.length)} سؤال`}</span>
-          <span class="mini-track"><i style="width:${best / t.qs.length * 100}%"></i></span>
-          <span class="st-count">${last ? `بهترین: ${faNum(best)} از ${faNum(t.qs.length)} · ${faNum(atts.length)} بار` : 'شروع نشده'}</span>
+          <span class="st-runs">${recent.length ? recent.map((a, k) => `<i class="${isPass(a) ? 'ok' : 'bad'}" title="${isPass(a) ? 'قبول' : 'مردود'} · ${scoreOf(a)}/${a.items.length} · ${fmtDate(a.at)}">${faNum(k + 1)}</i>`).join('') : '<span class="st-count">شروع نشده</span>'}</span>
         </button>`;
       }).join('')}</div>
     </section>`;
