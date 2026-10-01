@@ -101,7 +101,9 @@
   const modeName = (m, lesson) => (m === 'lesson' ? lessonName(lesson) : { mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات' }[m] || 'آزمون تصادفی');
   // Lessons are learning, not a timed test: no clock.
   const timed = ex => state.settings.timer && ex.mode !== 'lesson';
-  const setExamMode = on => document.body.classList.toggle('exam-mode', on);
+  // exam-mode: the exam screens (no site header). focus-mode: a past review, also without the header; every view
+  // starts with setExamMode(false), which leaves both.
+  const setExamMode = on => { document.body.classList.toggle('exam-mode', on); document.body.classList.remove('focus-mode'); };
   function toast(msg) {
     const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
     clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 2400);
@@ -645,10 +647,14 @@
     const C = 2 * Math.PI * 74, pct = correct / Math.max(n, 1);
     const list = res.map((r, i) => ({ ...r, i })).filter(r => filter === 'all' || (filter === 'saved' ? r.m : !r.ok));
     const savedN = res.filter(r => r.m).length;
+    const tabsHtml = `<div class="tabs"><button data-f="wrong" class="${filter === 'wrong' ? 'on' : ''}">اشتباهات (${faNum(n - correct)})</button>${savedN ? `<button data-f="saved" class="${filter === 'saved' ? 'on' : ''}">${ICON.bookmark(true)} ذخیره‌شده‌ها (${faNum(savedN)})</button>` : ''}<button data-f="all" class="${filter === 'all' ? 'on' : ''}">همه (${faNum(n)})</button></div>`;
     $app.innerHTML = `<section class="view">
-      ${fresh ? '' : `<div class="rev-top"><button class="back-link" id="back">→ ${{ history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد'}</button>
-        ${stepMode ? `<button class="det-link" id="detLink" hidden aria-expanded="false">${ICON.chart}<span>جزئیات آزمون</span></button>` : ''}</div>`}
-      ${stepMode ? `<div class="res-line ${full ? (pass ? 'ok' : 'bad') : 'neutral'}" id="resLine">
+      ${fresh ? '' : `<div class="rev-top">${(() => {
+        const backTo = { history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد';
+        return stepMode ? `<button class="back-icon" id="back" title="${backTo}" aria-label="${backTo}">${ICON.ra}</button>` : `<button class="back-link" id="back">→ ${backTo}</button>`;
+      })()}
+        ${stepMode ? `<div class="rev-tools">${tabsHtml}<button class="det-link" id="detLink" ${ctx.lineGone == null ? 'hidden' : ''} aria-expanded="${!ctx.lineGone}">${ICON.chart}<span>${ctx.lineGone === false ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</span></button></div>` : ''}</div>`}
+      ${stepMode ? `<div class="res-line ${full ? (pass ? 'ok' : 'bad') : 'neutral'} ${ctx.lineGone ? 'gone' : ''}" id="resLine">
         <span class="mini-ring" title="${faNum(pctN)}٪ پاسخ درست"><svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" class="mr-bg"/><circle cx="23" cy="23" r="19" class="mr-fg" stroke-dasharray="${2 * Math.PI * 19}" stroke-dashoffset="${2 * Math.PI * 19}" style="--off:${2 * Math.PI * 19 * (1 - pct)}"/></svg><i>${faNum(pctN)}٪</i></span>
         <b>${full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span>
         <small>${modeName(mode, lesson)}، ${fmtDate(at)}</small>
@@ -684,10 +690,9 @@
       </div>`}
 
       ${isLesson && !stepMode ? summaryBox(res) : ''}
-      <div class="section-title" style="margin-top:${stepMode ? 14 : 28}px">
-        <span>${stepMode ? 'مرور سؤال به سؤال' : 'مرور پاسخ‌ها'}</span>
-        <div class="tabs"><button data-f="wrong" class="${filter === 'wrong' ? 'on' : ''}">اشتباهات (${faNum(n - correct)})</button>${savedN ? `<button data-f="saved" class="${filter === 'saved' ? 'on' : ''}">${ICON.bookmark(true)} ذخیره‌شده‌ها (${faNum(savedN)})</button>` : ''}<button data-f="all" class="${filter === 'all' ? 'on' : ''}">همه (${faNum(n)})</button></div>
-      </div>
+      ${stepMode ? '' : `<div class="section-title" style="margin-top:28px">
+        <span>مرور پاسخ‌ها</span>${tabsHtml}
+      </div>`}
       ${res.some(r => !r.a) ? '<div class="note">این آزمون قبل از ذخیره‌ی پاسخ‌های تک‌تک گزینه‌ها انجام شده؛ فقط پاسخ‌های درست نمایش داده می‌شوند.</div>' : ''}
       ${stepMode ? '<div id="stepBox"></div>' : `<div class="review">
         ${list.length ? list.map((r, k) => reviewCard(r, k, '', false, !isLesson)).join('') : `<div class="card empty">${filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'}</div>`}
@@ -713,15 +718,17 @@
     if (back) back.onclick = { history: () => historyView(), lessons: studyList }[state.reviewFrom] || home;
     $app.querySelectorAll('[data-f]').forEach(b => b.onclick = () => renderReview(ctx, b.dataset.f, fresh));
     if (stepMode) {
+      document.body.classList.add('focus-mode'); // past review: no site header, the questions get the room
       reviewStep(res, list, 0, false, isLesson ? false : state.settings.showFa);
       // The result line shows for 5 seconds, then fades out; «جزئیات آزمون» next to the back link brings it back.
       const line = document.getElementById('resLine'), det = document.getElementById('detLink');
+      // ctx.lineGone: undefined until the first fade, then whether it is hidden (kept when switching tabs)
       const setLine = show => {
-        line.classList.toggle('gone', !show); det.setAttribute('aria-expanded', show);
+        ctx.lineGone = !show; line.classList.toggle('gone', !show); det.setAttribute('aria-expanded', show);
         det.querySelector('span').textContent = show ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون';
       };
       clearTimeout(state.resLineTimer);
-      state.resLineTimer = setTimeout(() => { if (line.isConnected) { setLine(false); det.hidden = false; } }, 5000);
+      if (ctx.lineGone == null) state.resLineTimer = setTimeout(() => { if (line.isConnected) { setLine(false); det.hidden = false; } }, 5000);
       det.onclick = () => setLine(line.classList.contains('gone'));
     }
     else {

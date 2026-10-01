@@ -742,3 +742,17 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .det-link[hidden]{display:none}
 #resLine{max-height:120px;overflow:hidden;transition:opacity .8s ease,max-height .8s ease,padding .8s ease,margin .8s ease}
 #resLine.gone{opacity:0;max-height:0;padding-top:0;padding-bottom:0;margin:0;pointer-events:none}
+/* past review (focus mode): no site header; back is an icon, the tabs and «جزئیات آزمون» sit beside it */
+body.focus-mode .topbar{display:none}
+.back-icon{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--link);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line);cursor:pointer;transition:background .15s,color .15s}
+.back-icon:hover{background:var(--navy);color:#fff;box-shadow:none}
+.rev-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rev-tools .tabs{margin:0}
+.focus-mode .view{padding-top:6px}
+@media (max-width:480px){
+  .rev-top{flex-wrap:nowrap}
+  .rev-tools{flex-wrap:nowrap;gap:6px}
+  .rev-tools .tabs button{padding:6px 10px;font-size:13px}
+  .det-link{width:36px;height:36px;padding:0;justify-content:center}
+  .det-link span{display:none}
+}
