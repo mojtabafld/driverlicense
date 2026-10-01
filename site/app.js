@@ -646,6 +646,7 @@
     $app.innerHTML = `<section class="view">
       ${fresh ? '' : `<button class="back-link" id="back">→ ${{ history: 'بازگشت به آزمون‌های قبلی', lessons: 'بازگشت به آموزش درس‌به‌درس' }[state.reviewFrom] || 'بازگشت به داشبورد'}</button>`}
       ${stepMode ? `<div class="res-line ${full ? (pass ? 'ok' : 'bad') : 'neutral'}">
+        <span class="mini-ring" title="${faNum(pctN)}٪ پاسخ درست"><svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" class="mr-bg"/><circle cx="23" cy="23" r="19" class="mr-fg" stroke-dasharray="${2 * Math.PI * 19}" stroke-dashoffset="${2 * Math.PI * 19}" style="--off:${2 * Math.PI * 19 * (1 - pct)}"/></svg><i>${faNum(pctN)}٪</i></span>
         <b>${full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span>
         <small>${modeName(mode, lesson)}، ${fmtDate(at)}</small>
       </div>` : `<div class="card result-hero">
