@@ -1459,7 +1459,6 @@
   // The user picks sections, then how many questions; they come in random order.
   const sectionOf = c => +String(c).split('.')[0];
   const sectionPool = nums => BANK.questions.filter(q => nums.includes(sectionOf(q.c))).map(q => q.id);
-  const sectionPrefKey = () => 'catsec.' + (state.user ? state.user.username : '');
   // The user's accuracy per section, from the topics answered at least 3 times.
   function sectionAcc() {
     const m = new Map();
@@ -1467,7 +1466,7 @@
     return new Map([...m].map(([n, x]) => [n, x.ok / x.n]));
   }
   function sectionPicker() {
-    const chosen = local.get(sectionPrefKey(), []), acc = sectionAcc();
+    const acc = sectionAcc();
     const pctCls = p => (p >= 0.8 ? 'ok' : p >= 0.6 ? 'warn' : 'bad');
     const weak = [...acc.values()].some(a => a < 0.75);
     return `<div class="sec-pick" id="secPick">
@@ -1475,7 +1474,7 @@
       <div class="sec-body" hidden>
         <div class="sec-row"><button type="button" class="tr-toggle" id="secAll">انتخاب همه</button><button type="button" class="tr-toggle" id="secNone">هیچ‌کدام</button>${weak ? '<button type="button" class="tr-toggle" id="secWeak">مباحث ضعیف من</button>' : ''}</div>
         <div class="cat-grid">${(BANK.sections || []).map((sec, i) => `
-          <label class="cat-card cat-head"><input type="checkbox" value="${sec.n}" ${chosen.includes(sec.n) ? 'checked' : ''}>
+          <label class="cat-card cat-head"><input type="checkbox" value="${sec.n}">
             <span class="cat-num">${faNum(i + 1)}</span>
             <span class="cat-txt"><b>${sec.fa}</b><small class="da">${sec.da}</small>${acc.has(sec.n) ? `<span class="cat-acc ${pctCls(acc.get(sec.n))}">دقت ${faNum(Math.round(acc.get(sec.n) * 100))}٪</span>` : ''}</span>
             <span class="cat-n">${faNum(sectionPool([sec.n]).length)}<small>سؤال</small></span></label>`).join('')}</div>
@@ -1495,7 +1494,6 @@
     const chosen = () => boxes.filter(b => b.checked).map(b => +b.value);
     const update = () => {
       const nums = chosen(), pool = sectionPool(nums).length;
-      local.set(sectionPrefKey(), nums);
       boxes.forEach(b => b.closest('.cat-card').classList.toggle('on', b.checked));
       document.getElementById('secTotal').textContent = nums.length ? `${faNum(pool)} سؤال در ${faNum(nums.length)} دسته` : 'دسته‌ای انتخاب نشده';
       const sizes = SIZES.filter(n => n <= pool); if (pool && pool < FULL && !sizes.includes(pool)) sizes.push(pool);
@@ -1508,7 +1506,14 @@
     };
     tog.onclick = () => {
       const on = body.hidden; body.hidden = !on; box.classList.toggle('open', on); tog.setAttribute('aria-expanded', on);
-      if (on) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      tog.blur();
+      if (!on) return;
+      // Nothing is picked when the panel opens, and a card under the resting pointer is not highlighted while the
+      // panel scrolls into view; hover comes back once the pointer moves again.
+      boxes.forEach(b => { b.checked = false; }); update();
+      box.classList.add('no-hover');
+      setTimeout(() => box.addEventListener('pointermove', () => box.classList.remove('no-hover'), { once: true }), 700);
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     boxes.forEach(b => b.onchange = update);
     document.getElementById('secAll').onclick = () => { boxes.forEach(b => { b.checked = true; }); update(); };
