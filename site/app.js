@@ -1408,6 +1408,7 @@
     return i < 0 ? 'درس' : `درس ${faNum(studyNum(BANK.tests[i], i))}`;
   };
 
+  const STUDY_FIRST = 10; // lessons shown before «نمایش همه»
   function studyList() {
     stopSpeak(); leaveExam(); setExamMode(false); closeModal();
     const byLesson = new Map();
@@ -1429,7 +1430,7 @@
         // The tile starts the lesson; each result circle opens the review of that attempt.
         // border: grey = never opened, light red = opened but never passed, light green = passed at least once
         const tileState = atts.some(isPass) ? 'st-pass' : atts.length || draftOf(t.id) ? 'st-fail' : 'st-new';
-        return `<div class="card study-tile ${tileState}" style="animation-delay:${Math.min(i, 12) * 25}ms">
+        return `<div class="card study-tile ${tileState}" ${i >= STUDY_FIRST ? 'data-more hidden' : ''} style="animation-delay:${Math.min(i, 12) * 25}ms">
           <button class="st-open" data-st="${i}">
             ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
             <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b></span>
@@ -1439,10 +1440,19 @@
           <span class="st-runs">${recent.length ? recent.map((a, k) => `<button class="${isPass(a) ? 'ok' : 'bad'}" data-run="${state.attempts.indexOf(a)}" title="مرور: ${isPass(a) ? 'قبول' : 'مردود'} · ${scoreOf(a)}/${a.items.length} · ${fmtDate(a.at)}" aria-label="مرور آزمون ${faNum(k + 1)} این درس">${faNum(k + 1)}</button>`).join('') : draftOf(t.id) ? '' : '<span class="st-count">شروع نشده</span>'}</span>
         </div>`;
       }).join('')}</div>
+      ${BANK.tests.length > STUDY_FIRST ? `<button class="tr-toggle more study-more" id="studyMore" aria-expanded="false">نمایش همه‌ی ${faNum(BANK.tests.length)} درس</button>` : ''}
       ${sectionPicker()}
     </section>`;
     document.getElementById('back').onclick = home;
     bindSectionPicker();
+    const more = document.getElementById('studyMore');
+    if (more) more.onclick = () => {
+      const show = more.getAttribute('aria-expanded') !== 'true';
+      $app.querySelectorAll('.study-tile[data-more]').forEach(t => { t.hidden = !show; });
+      more.setAttribute('aria-expanded', show); more.blur();
+      more.textContent = show ? 'نمایش کمتر' : `نمایش همه‌ی ${faNum(BANK.tests.length)} درس`;
+      if (!show) $app.querySelector('.study-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
     $app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => startLesson(+b.dataset.st));
     $app.querySelectorAll('[data-run]').forEach(b => b.onclick = () => openAttempt(+b.dataset.run));
     // No lesson looks selected when the page opens: nothing keeps focus, and hover highlights wait until the
@@ -1482,7 +1492,7 @@
             <span class="cat-n">${faNum(sectionPool([sec.n]).length)}<small>سؤال</small></span></label>`).join('')}</div>
         <div class="sec-foot">
           <div class="sec-foot-h"><b>تعداد سؤال‌ها</b><span class="sec-total" id="secTotal"></span></div>
-          <label class="sec-new"><input type="checkbox" id="secNew"><span class="sw" aria-hidden="true"></span><span>فقط سؤال‌های غیرتکراری</span></label>
+          <label class="sec-new"><input type="checkbox" id="secNew" checked><span class="sw" aria-hidden="true"></span><span>فقط سؤال‌های غیرتکراری</span></label>
           <div class="sec-sizes" id="secSizes"></div>
           <button class="btn btn-primary wide" id="secStart" disabled>شروع آموزش</button>
         </div>
