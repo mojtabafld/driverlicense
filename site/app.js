@@ -920,8 +920,10 @@
   function openAttempt(idx) {
     const att = state.attempts[idx]; if (!att) return;
     state.reviewFrom = document.querySelector('.hist-page') ? 'history' : document.querySelector('.study-page') ? 'lessons' : 'home';
-    // A past exam or lesson is reviewed question by question, all of them in order.
-    renderReview(summarize(gradeAttempt(att), att.secs, att.at, att.mode, att.lesson), 'all', false);
+    // A past exam or lesson is reviewed question by question, starting on its mistakes («اشتباهات»);
+    // with no mistakes, all of its questions.
+    const res = gradeAttempt(att);
+    renderReview(summarize(res, att.secs, att.at, att.mode, att.lesson), res.some(r => !r.ok) ? 'wrong' : 'all', false);
   }
 
   function showMistake(id) {
