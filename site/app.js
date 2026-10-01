@@ -689,14 +689,14 @@
         </div>
       </div>`}
 
-      ${isLesson && !stepMode ? summaryBox(res) : ''}
       ${stepMode ? '' : `<div class="section-title" style="margin-top:28px">
         <span>مرور پاسخ‌ها</span>${tabsHtml}
       </div>`}
       ${res.some(r => !r.a) ? '<div class="note">این آزمون قبل از ذخیره‌ی پاسخ‌های تک‌تک گزینه‌ها انجام شده؛ فقط پاسخ‌های درست نمایش داده می‌شوند.</div>' : ''}
       ${stepMode ? '<div id="stepBox"></div>' : `<div class="review">
-        ${list.length ? list.map((r, k) => reviewCard(r, k, '', false, !isLesson)).join('') : `<div class="card empty">${filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'}</div>`}
-      </div>`}
+        ${list.length ? list.map((r, k) => reviewCard(r, k, '', false, true, isLesson ? false : state.settings.showFa)).join('') : `<div class="card empty">${filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'}</div>`}
+      </div>
+      ${summaryBox(res)}`}
     </section>`;
 
     const sn = document.getElementById('scoreN');
@@ -733,14 +733,17 @@
     }
     else {
       bindReviewCards($app);
-      if (isLesson) aiSummary(res);
+      bindSummary(res);
       $app.querySelectorAll('.rcard').forEach((c, k) => { if (filter === 'wrong' && k < 3) c.classList.add('open'); });
     }
     window.scrollTo({ top: 0 });
   }
 
+  // «جمع‌بندی آموزشی اشتباهات» under the questions: prepared only when the user asks for it, then shown / hidden.
   const summaryBox = res => (res.some(r => !r.ok && r.a) && state.aiLessons
-    ? `<div class="lesson ai-lesson ai-summary" id="aiSummary"><h4>${ICON.ai} جمع‌بندی آموزشی اشتباهات شما</h4><div class="ai-body"></div></div>` : '');
+    ? `<div class="ai-lesson ai-click ai-summary" id="aiSummary">
+        <button class="ai-start" type="button" aria-expanded="false"><span class="ai-spark">${ICON.ai}</span><span class="ai-txt"><b>جمع‌بندی آموزشی اشتباهات</b><small>خلاصه‌ی آموزشی همه‌ی اشتباهات این آزمون، با استفاده از هوش مصنوعی</small></span><svg class="ai-chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+        <div class="ai-body" hidden></div></div>` : '');
 
   // One step of a past lesson's review: question k of `list` (open, with its short AI lesson), or, after the
   // last one, the summary of all the mistakes. Previous/next and the counter follow the exam language.
@@ -762,7 +765,7 @@
     document.getElementById('rsPrev').onclick = () => reviewStep(res, list, k - 1, true, fa);
     const nx = document.getElementById('rsNext'); if (nx) nx.onclick = () => reviewStep(res, list, k + 1, true, fa);
     const fs = document.getElementById('rsFirst'); if (fs) fs.onclick = () => reviewStep(res, list, 0, true, fa);
-    if (end) aiSummary(res); else bindReviewCards(box);
+    if (end) bindSummary(res); else bindReviewCards(box);
     if (scroll) box.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -793,7 +796,7 @@
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
     });
     // «نکات سؤال»: the first click prepares the tips, later clicks hide and show them.
-    root.querySelectorAll('.ai-start').forEach(b => b.onclick = () => {
+    root.querySelectorAll('.rcard .ai-start').forEach(b => b.onclick = () => {
       const box = b.closest('.ai-lesson'), body = box.querySelector('.ai-body');
       if (box.dataset.state === 'loading') return;
       if (box.dataset.state === 'done') body.hidden = !body.hidden;
@@ -1377,9 +1380,20 @@
 
   // AI summary at the top of a lesson's review: one lesson over all its mistakes (server: /api/summary).
   // Each «سؤال n» in it is a link that opens that question with the user's answer in a pop-up.
+  function bindSummary(res) {
+    const box = document.getElementById('aiSummary'); if (!box) return;
+    const btn = box.querySelector('.ai-start'), body = box.querySelector('.ai-body');
+    btn.onclick = () => {
+      if (box.dataset.state === 'loading') return;
+      if (box.dataset.state === 'done') body.hidden = !body.hidden;
+      else aiSummary(res);
+      box.classList.toggle('shown', !body.hidden); btn.setAttribute('aria-expanded', !body.hidden);
+    };
+  }
   function aiSummary(res) {
     const box = document.getElementById('aiSummary'); if (!box) return;
     const body = box.querySelector('.ai-body');
+    box.dataset.state = 'loading'; body.hidden = false;
     const items = res.map((r, i) => ({ r, n: i + 1 })).filter(x => !x.r.ok && x.r.a)
       .map(({ r, n }) => ({ id: r.q.id, a: r.a.map(v => (v ? 1 : 0)), n }));
     body.innerHTML = aiLoading('در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی');
@@ -1395,8 +1409,8 @@
       bindReviewCards($modal);
     };
     api('POST', 'summary', { items, lang: examLang(), at: state.reviewAt || undefined })
-      .then(d => { body.innerHTML = `<div class="ai-reveal">${linkify(lessonHtml(d.text))}</div>`; })
-      .catch(e => { body.innerHTML = `<p class="muted">${esc(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message)}</p>`; });
+      .then(d => { box.dataset.state = 'done'; body.innerHTML = `<div class="ai-reveal">${linkify(lessonHtml(d.text))}</div>`; })
+      .catch(e => { delete box.dataset.state; body.innerHTML = `<p class="muted">${esc(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message)}</p>`; });
   }
 
   // ---------- Admin panel (users listed in the server's ADMIN_USERS) ----------
