@@ -56,7 +56,7 @@ it replaces the whole variable list and would delete the secrets that were added
 |---|---|---|
 | `DATABASE_URL` | Spec (from the attached database) | PostgreSQL connection string. Without it, accounts are stored in `data/db.json`. |
 | `DATABASE_CA_CERT` | Spec (from the attached database) | CA certificate of the database. |
-| `ANTHROPIC_API_KEY` | Dashboard, encrypted | Turns on the AI lessons in Persian: «آموزش این سؤال» in an exam's answer review explains each question and the user's own mistakes; after a lesson, «جمع‌بندی آموزشی اشتباهات شما» covers all its mistakes in one summary. Key points are in bold. Lessons are cached per question (or set of questions) + mistake pattern. Without the key, the topic's fixed lesson is shown. |
+| `ANTHROPIC_API_KEY` | Dashboard, encrypted | Turns on the AI lessons in Persian: «آموزش این سؤال» in an exam's answer review explains each question and the user's own mistakes; after a lesson, «جمع‌بندی آموزشی اشتباهات شما» covers all its mistakes in one summary. Key points are in bold. Claude also sees each question's picture and describes only what it clearly shows. Lessons are cached per question (or set of questions) + mistake pattern. Without the key, the topic's fixed lesson is shown. |
 | `LESSON_MODEL` | Spec, editable in the dashboard | Claude model for the AI lessons. Default `claude-opus-5-5` (Claude Opus 5.5), also used when the variable is missing. |
 | `INVITE_CODE` | Dashboard, encrypted (optional) | When set, sign-up requires this code. |
 | `ADMIN_USERS` | Dashboard (optional) | Comma-separated usernames that see «پنل مدیریت» (admin panel with usage stats) in the settings. |
