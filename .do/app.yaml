@@ -1,8 +1,17 @@
 # DigitalOcean App Platform spec.
 # Create the app with:  doctl apps create --spec .do/app.yaml
 # (or in the dashboard: Create App → GitHub → mojtabafld/driverlicense — it detects this file).
-# After the first deploy, add INVITE_CODE as an encrypted environment variable in the dashboard
-# (Settings → web → Environment Variables) so only people you invite can sign up.
+#
+# This file is only read when the app is created. Later edits here do NOT reach the running app on
+# push: change variables in the dashboard (Settings → web → Environment Variables) instead.
+# Do not run `doctl apps update --spec .do/app.yaml` on the live app: it replaces the whole variable
+# list, so the secrets added only in the dashboard (below) would be deleted.
+#
+# After the first deploy, add these in the dashboard (Settings → web → Environment Variables):
+#   ANTHROPIC_API_KEY  (Encrypt)  key from console.anthropic.com; turns on the AI lesson after an exam
+#   INVITE_CODE        (Encrypt)  only people who know it can sign up (optional)
+#   ADMIN_USERS                   comma-separated usernames that get the admin panel
+# See README.md → "Environment variables" for the full list.
 name: teoriprove
 region: fra
 services:
@@ -26,6 +35,9 @@ services:
       - key: DATABASE_CA_CERT
         scope: RUN_TIME
         value: ${db.CA_CERT}
+      - key: LESSON_MODEL
+        scope: RUN_TIME
+        value: claude-opus-5-5
 databases:
   - name: db
     engine: PG
