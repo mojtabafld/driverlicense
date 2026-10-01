@@ -648,6 +648,10 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 .ai-summary h4{font-size:16px}
 /* last three results of a lesson: numbered circles, green = passed, red = failed */
 .st-runs{display:flex;gap:6px;align-items:center;min-height:26px;margin-top:4px}
+.st-draft{justify-self:start;font-size:12px;font-weight:700;color:var(--warn);background:var(--warn-soft);padding:1px 9px;border-radius:99px}
+.ld-info{display:grid;gap:6px;margin:4px 0 14px;padding:12px 14px;border-radius:10px;background:var(--surface-2)}
+.ld-info div{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.ld-info span{color:var(--muted)}
 .st-open{display:grid;gap:4px;width:100%;text-align:right;font:inherit;color:inherit;cursor:pointer}
 .st-runs button{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-family:var(--fa);font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:transform .15s,box-shadow .15s}
 .st-runs button:hover{transform:scale(1.12);box-shadow:0 0 0 3px var(--accent-soft)}

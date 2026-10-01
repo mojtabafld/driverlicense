@@ -52,7 +52,7 @@
   }
 
   // ---------- state ----------
-  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, words: [], saved: [] };
+  const state = { user: null, attempts: [], settings: { showFa: true, timer: true }, exam: null, timerId: null, words: [], saved: [], lessonDrafts: {} };
 
   // ---------- theme (light by default, like the real test) ----------
   const applyTheme = t => document.documentElement.dataset.theme = t;
@@ -277,7 +277,9 @@
     await loadBank();
     state.user = d.user; state.attempts = d.attempts || []; state.words = d.words || []; state.saved = d.saved || [];
     state.settings = Object.assign({ showFa: true, timer: true }, d.settings);
-    state.draft = d.draft && d.draft.ids.every(id => Q.has(id)) ? d.draft : null;
+    const usable = x => x && x.ids.every(id => Q.has(id));
+    state.draft = usable(d.draft) ? d.draft : null;
+    state.lessonDrafts = Object.fromEntries(Object.entries(d.lessonDrafts || {}).filter(([, x]) => usable(x)));
     renderUserBox();
   }
   function setLang(lang) {
@@ -300,31 +302,37 @@
   // An unfinished exam is kept on the server as a "draft" (every change, debounced; right away when the page
   // is hidden or the user leaves the exam), so it can be resumed later, also on another device.
   // Time only runs while the exam is open.
-  let draftTimer = null;
+  // Random/mistake exams share one draft (state.draft, shown on the dashboard); each lesson has its own
+  // (state.lessonDrafts by test id, offered when that lesson is opened again).
+  let draftTimer = null, pendingDraft = null;
   const snapshot = ex => ({
     mode: ex.mode, lesson: ex.lesson, ids: ex.ids, idx: ex.idx, answers: ex.answers, seen: ex.seen, flags: ex.flags, showFa: ex.showFa,
     left: ex.left, elapsed: Math.round((Date.now() - ex.started) / 1000), saved: Date.now(),
   });
   function putDraft(keepalive = false) {
     clearTimeout(draftTimer);
-    if (!state.draft) return;
-    fetch('/api/draft', { method: 'PUT', keepalive, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state.draft) }).catch(() => {});
+    const d = pendingDraft; pendingDraft = null;
+    if (!d) return;
+    fetch('/api/draft', { method: 'PUT', keepalive, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) }).catch(() => {});
   }
   function saveDraft(now = false) {
     const ex = state.exam; if (!ex || ex.done) return;
-    state.draft = snapshot(ex);
+    const d = pendingDraft = snapshot(ex);
+    if (ex.mode === 'lesson') state.lessonDrafts[ex.lesson] = d; else state.draft = d;
     if (now) putDraft(now === 'keepalive'); else { clearTimeout(draftTimer); draftTimer = setTimeout(putDraft, 1500); }
   }
-  function dropDraft() {
-    clearTimeout(draftTimer); state.draft = null;
-    api('DELETE', 'draft').catch(() => {});
+  // `lesson`: drop that lesson's draft; without it, the exam draft.
+  function dropDraft(lesson) {
+    clearTimeout(draftTimer); pendingDraft = null;
+    if (lesson) delete state.lessonDrafts[lesson]; else state.draft = null;
+    api('DELETE', 'draft', lesson ? { lesson } : undefined).catch(() => {});
   }
   // Leaving the exam screen (logo, dashboard, …) keeps the unfinished exam as a draft.
   function leaveExam() { clearInterval(state.timerId); saveDraft(true); state.exam = null; }
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveDraft('keepalive'); });
 
-  function resumeExam() {
-    const d = state.draft; if (!d) return;
+  function resumeExam(d = state.draft) {
+    if (!d) return;
     closeModal();
     state.exam = {
       ...d, size: d.ids.length, view: 'q', done: false, started: Date.now() - d.elapsed * 1000,
@@ -567,8 +575,11 @@
         <button class="btn btn-ghost" id="mLeave">ذخیره و ادامه در زمانی دیگر</button>
         <div class="quit-row"><button class="btn btn-text" data-close>بازگشت به آزمون</button><button class="btn btn-text danger" id="mDrop">لغو آزمون</button></div>
       </div>`, 'quit-sheet');
-    document.getElementById('mLeave').onclick = () => { closeModal(); stopSpeak(); home(); };
-    document.getElementById('mDrop').onclick = () => { state.exam.done = true; dropDraft(); closeModal(); stopSpeak(); home(); };
+    document.getElementById('mLeave').onclick = () => { closeModal(); stopSpeak(); state.exam.mode === 'lesson' ? studyList() : home(); };
+    document.getElementById('mDrop').onclick = () => {
+      const ex = state.exam; ex.done = true; dropDraft(ex.mode === 'lesson' ? ex.lesson : undefined); closeModal(); stopSpeak();
+      ex.mode === 'lesson' ? studyList() : home();
+    };
     document.getElementById('mHand').onclick = () => { closeModal(); askFinish(); };
   }
 
@@ -607,7 +618,8 @@
   async function finish() {
     const ex = state.exam; if (!ex || ex.done) return;
     ex.done = true; clearInterval(state.timerId); stopSpeak();
-    clearTimeout(draftTimer); state.draft = null; // the server drops its draft when it stores the attempt
+    clearTimeout(draftTimer); pendingDraft = null; // the server drops the draft when it stores the attempt
+    if (ex.mode === 'lesson') delete state.lessonDrafts[ex.lesson]; else state.draft = null;
     const res = gradeExam(ex);
     const secs = Math.round((Date.now() - ex.started) / 1000);
     const payload = { secs, mode: ex.mode, lesson: ex.lesson, items: res.map(r => ({ id: r.q.id, ok: r.ok, w: r.w, a: r.a, m: r.m ? 1 : 0 })) };
@@ -1123,7 +1135,7 @@
 
   function bindHome() {
     document.getElementById('start').onclick = () => askSize('random');
-    const rs = document.getElementById('resume'); if (rs) rs.onclick = resumeExam;
+    const rs = document.getElementById('resume'); if (rs) rs.onclick = () => resumeExam();
     const dd = document.getElementById('dropDraft');
     if (dd) dd.onclick = () => confirmBox('حذف آزمون نیمه‌تمام؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'حذف', () => { dropDraft(); home(); });
     document.getElementById('openWords').onclick = () => wordsView();
@@ -1207,6 +1219,8 @@
     return /nye regler/i.test(m[1]) ? 'فقط قوانین جدید' : /nyeste billeder/i.test(m[1]) ? 'جدیدترین تصاویر' : m[1];
   };
   const studyNum = (t, i) => (t.title.match(/\d+/) || [i + 1])[0];
+  // Answered questions of a lesson's unfinished attempt (0 when there is none).
+  const draftOf = id => { const d = state.lessonDrafts[id]; return d ? Math.max(1, d.answers.filter(a => a.some(Boolean)).length) : 0; };
   const lessonName = id => {
     const i = BANK.tests.findIndex(t => t.id === id);
     return i < 0 ? 'درس' : `درس ${faNum(studyNum(BANK.tests[i], i))}`;
@@ -1236,8 +1250,9 @@
             ${img ? `<span class="st-thumb"><img src="${img}" alt="" loading="lazy"></span>` : ''}
             <span class="st-top"><b>درس ${faNum(studyNum(t, i))}</b></span>
             <span class="st-sub">${note ? esc(note) : `${faNum(t.qs.length)} سؤال`}</span>
+            ${draftOf(t.id) ? `<span class="st-draft">نیمه‌تمام: ${faNum(draftOf(t.id))} از ${faNum(t.qs.length)}</span>` : ''}
           </button>
-          <span class="st-runs">${recent.length ? recent.map((a, k) => `<button class="${isPass(a) ? 'ok' : 'bad'}" data-run="${state.attempts.indexOf(a)}" title="مرور: ${isPass(a) ? 'قبول' : 'مردود'} · ${scoreOf(a)}/${a.items.length} · ${fmtDate(a.at)}" aria-label="مرور آزمون ${faNum(k + 1)} این درس">${faNum(k + 1)}</button>`).join('') : '<span class="st-count">شروع نشده</span>'}</span>
+          <span class="st-runs">${recent.length ? recent.map((a, k) => `<button class="${isPass(a) ? 'ok' : 'bad'}" data-run="${state.attempts.indexOf(a)}" title="مرور: ${isPass(a) ? 'قبول' : 'مردود'} · ${scoreOf(a)}/${a.items.length} · ${fmtDate(a.at)}" aria-label="مرور آزمون ${faNum(k + 1)} این درس">${faNum(k + 1)}</button>`).join('') : draftOf(t.id) ? '' : '<span class="st-count">شروع نشده</span>'}</span>
         </div>`;
       }).join('')}</div>
     </section>`;
@@ -1246,11 +1261,27 @@
     $app.querySelectorAll('[data-run]').forEach(b => b.onclick = () => openAttempt(+b.dataset.run));
     window.scrollTo({ top: 0 });
   }
+  // An unfinished attempt of this lesson is offered first: continue it, or start the lesson again.
   function startLesson(i) {
     const t = BANK.tests[i]; if (!t) return;
-    const go = () => newExam('lesson', t.qs.filter(id => Q.has(id)), FULL, t.id);
-    if (state.draft) confirmBox('شروع درس؟', 'با شروع این درس، آزمون نیمه‌تمام قبلی حذف می‌شود.', 'شروع درس', go);
-    else go();
+    const fresh = () => newExam('lesson', t.qs.filter(id => Q.has(id)), FULL, t.id);
+    const d = state.lessonDrafts[t.id];
+    if (!d) return fresh();
+    const answered = d.answers.filter(a => a.some(Boolean)).length;
+    openModal(`<h3>${lessonName(t.id)} نیمه‌تمام است</h3>
+      <div class="ld-info">
+        <div><span>پاسخ داده شده</span><b>${faNum(answered)} از ${faNum(d.ids.length)} سؤال</b></div>
+        <div><span>آخرین سؤال</span><b>سؤال ${faNum(d.idx + 1)}</b></div>
+        <div><span>آخرین بار</span><b>${fmtDateTime(d.saved)}</b></div>
+      </div>
+      <p style="color:var(--muted);margin:0">درس قبلی را از همان‌جا ادامه می‌دهید یا درس را از اول شروع می‌کنید؟ با شروع دوباره، پاسخ‌های قبلی این درس حذف می‌شوند.</p>
+      <div class="quit-btns">
+        <button class="btn btn-primary" id="ldGo">ادامه‌ی درس قبلی</button>
+        <button class="btn btn-ghost" id="ldNew">شروع دوباره‌ی درس</button>
+        <div class="quit-row"><button class="btn btn-text" data-close>انصراف</button></div>
+      </div>`, 'quit-sheet');
+    document.getElementById('ldGo').onclick = () => resumeExam(d);
+    document.getElementById('ldNew').onclick = () => { dropDraft(t.id); fresh(); };
   }
 
   // AI summary at the top of a lesson's review: one lesson over all its mistakes (server: /api/summary).
