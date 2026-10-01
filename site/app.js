@@ -782,7 +782,7 @@
         return;
       }
       if (!window.getSelection().isCollapsed || e.detail > 1) return;
-      if (h.parentElement.classList.contains('study-card')) return; // the practice card stays open
+      if (h.closest('#stepBox')) return; // question-by-question review: the card always stays open
       h.parentElement.classList.toggle('open');
     });
     // "جزئیات و توضیحات" sits at the bottom of the card, under the answers and the lesson
