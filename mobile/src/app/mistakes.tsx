@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Attempt, Question } from '@/lib/bank';
 import { faNum, mistakeStats, shuffle, type MistakeStat } from '@/lib/logic';
 import { topicFa } from '@/lib/names';
+import { topicPracticeIds } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
@@ -57,13 +58,7 @@ export default function Mistakes() {
   const tone = (p: number) => (p >= 0.8 ? c.ok : p >= 0.6 ? c.warn : c.bad);
 
   const practiceAll = () => practice(shuffle(sorted.flatMap(g => g.list.filter(st => !st.lastOk).map(st => st.id))).slice(0, 25), 'تمرین اشتباهات');
-  // One topic: its still-wrong questions first, then the fixed ones, then other questions of the topic (10 at most).
-  const practiceTopic = (code: string) => {
-    const stats = sorted.find(g => g.c === code)?.list ?? [];
-    const first = [...shuffle(stats.filter(st => !st.lastOk).map(st => st.id)), ...shuffle(stats.filter(st => st.lastOk).map(st => st.id))];
-    const rest = shuffle(bank.questions.filter(q => q.c === code && !first.includes(q.id)).map(q => q.id));
-    practice(shuffle([...first, ...rest].slice(0, 10)), topicFa(bank, code));
-  };
+  const practiceTopic = (code: string) => practice(topicPracticeIds(bank, sorted.find(g => g.c === code)?.list ?? [], code), topicFa(bank, code));
   const jump = (code: string) => {
     tap();
     const go = () => { const y = groupY.current[code]; if (y != null) scroll.current?.scrollTo({ y: y - 8, animated: true }); };
