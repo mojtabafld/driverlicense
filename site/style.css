@@ -878,6 +878,13 @@ body.focus-mode .topbar{display:none}
 
 .ig-pick{flex-basis:100%;display:flex;gap:12px;align-items:center;font-size:13px;line-height:1.6}
 .ig-pick img{width:120px;aspect-ratio:4/3;object-fit:cover;border-radius:8px;flex:none}
+.ig-edit{flex-basis:100%;display:grid;gap:6px}
+.ig-edit[hidden]{display:none}
+.ig-edit label{font-size:13px;color:var(--text);font-weight:600}
+.ig-edit textarea,.ig-cell details textarea{width:100%;font:inherit;font-size:12.5px;line-height:1.6;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);resize:vertical}
+.ig-edit textarea:focus,.ig-cell details textarea:focus{outline:none;border-color:var(--navy)}
+.ig-edit .tr-toggle{justify-self:start}
+.ig-cell details{display:grid;gap:6px}
 .ig-q{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
 .ig-h{display:flex;gap:10px;align-items:baseline;margin-bottom:8px}
 .ig-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}

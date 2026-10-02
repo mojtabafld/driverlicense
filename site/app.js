@@ -1711,6 +1711,8 @@
     const where = qid => { for (let i = 0; i < BANK.tests.length; i++) { const k = BANK.tests[i].qs.indexOf(+qid); if (k >= 0) return { i, k }; } return null; };
     const whereFa = qid => { const w = where(qid); return w ? `درس ${faNum(studyNum(BANK.tests[w.i], w.i))} · سؤال ${faNum(w.k + 1)}` : `سؤال ${faNum(qid)}`; };
     const sel = imgGenPanel.sel = imgGenPanel.sel || { i: 0, k: 0 };
+    // Edited scene descriptions survive the panel's own refreshes: drafts by key ('new' = the form, else a job id).
+    const drafts = imgGenPanel.drafts = imgGenPanel.drafts || {}, openSet = imgGenPanel.open = imgGenPanel.open || new Set();
     const lessonOpts = BANK.tests.map((t, i) => `<option value="${i}" ${i === sel.i ? 'selected' : ''}>درس ${faNum(studyNum(t, i))}</option>`).join('');
     const qOpts = i => BANK.tests[i].qs.map((id, k) => `<option value="${k}" ${k === sel.k ? 'selected' : ''}>سؤال ${faNum(k + 1)}${d.items[id] ? ' ✓' : ''}</option>`).join('');
     const pending = rows.some(([, x]) => x.jobs.some(j => !j.done));
@@ -1719,7 +1721,13 @@
         <label>سؤال <select name="q" id="igQ">${qOpts(sel.i)}</select></label>
         <label>مدل <select name="model">${d.models.map(m => `<option value="${m}">${m === 'flare' ? 'GPT Image 2.5 Flare' : 'GPT Image 2.5 Sunburst'}</option>`).join('')}</select></label>
         <button class="btn btn-primary" ${d.available ? '' : 'disabled'}>ساخت تصویر جدید</button>
-        <div class="ig-pick" id="igPick"></div></form>
+        <button type="button" class="tr-toggle" id="igDraft">نوشتن توضیح صحنه برای ویرایش</button>
+        <div class="ig-pick" id="igPick"></div>
+        <div class="ig-edit" id="igNewEdit" ${drafts.new != null ? '' : 'hidden'}>
+          <label>توضیح صحنه <small class="muted">— متن را کم یا زیاد کنید؛ «ساخت تصویر جدید» تصویر را از همین متن می‌سازد</small></label>
+          <textarea class="da" dir="ltr" data-draft="new" rows="8">${esc(drafts.new || '')}</textarea>
+          <button type="button" class="tr-toggle" id="igNewClear">بستن و برگشت به توضیح خودکار</button>
+        </div></form>
       ${rows.length ? rows.map(([qid, x]) => `<div class="ig-q">
         <div class="ig-h"><b>${whereFa(qid)}</b><small class="muted da">#${qid}</small><small class="muted">${x.active ? 'روی سایت: تصویر جدید' : 'روی سایت: تصویر اصلی'}</small></div>
         <div class="ig-row">
@@ -1729,7 +1737,9 @@
             ${j.blob ? `<img src="img/gen/${qid}/${j.id}" alt="">` : `<div class="ig-wait">${j.done ? '✗' : '<span class="ig-spin"></span>'}</div>`}
             <span>${j.model === 'sunburst' ? 'Sunburst' : 'Flare'} · ${fmtDateTime(j.at)} · ${stateFa[j.state] || j.state}${j.error && j.state === 'fail' ? ` <small class="da">(${esc(j.error)})</small>` : ''}</span>
             ${j.blob ? (x.active === j.id ? '<em>نمایش داده می‌شود</em>' : `<button class="tr-toggle" data-ig-set="${qid}" data-job="${j.id}">نمایش این تصویر در سایت</button>`) : ''}
-            ${j.prompt ? `<details><summary>توضیح صحنه</summary><p class="da" dir="ltr">${esc(j.prompt)}</p></details>` : ''}</div>`).join('')}
+            ${j.prompt ? `<details data-open="${j.id}" ${openSet.has(j.id) ? 'open' : ''}><summary>توضیح صحنه${j.edited ? ' <small class="muted">(ویرایش‌شده)</small>' : ''}</summary>
+              <textarea class="da" dir="ltr" data-draft="${j.id}" rows="8">${esc(drafts[j.id] != null ? drafts[j.id] : j.prompt)}</textarea>
+              <button type="button" class="tr-toggle" data-ig-regen="${qid}" data-job="${j.id}" ${d.available ? '' : 'disabled'}>ساخت تصویر جدید با این متن</button></details>` : ''}</div>`).join('')}
         </div></div>`).join('') : '<div class="muted">هنوز تصویری ساخته نشده است.</div>'}`;
     // Preview of the chosen question: its current picture and text, so the right one is picked.
     const ls = document.getElementById('igLesson'), qs = document.getElementById('igQ'), pick = document.getElementById('igPick');
@@ -1740,18 +1750,38 @@
     ls.onchange = () => { sel.i = +ls.value; sel.k = 0; qs.innerHTML = qOpts(sel.i); showPick(); };
     qs.onchange = () => { sel.k = +qs.value; showPick(); };
     showPick();
+    const reset = () => { delete drafts.new; };
+    ls.addEventListener('change', reset); qs.addEventListener('change', reset);
     document.getElementById('igForm').onsubmit = async e => {
       e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); e.target.querySelector('button').disabled = true;
       toast('در حال شروع… (نوشتن توضیح صحنه چند ثانیه طول می‌کشد)');
-      try { await api('POST', 'imggenstart', { qid: BANK.tests[sel.i].qs[sel.k], model: f.model }); } catch (err) { toast(err.message); }
+      const prompt = drafts.new != null && drafts.new.trim() ? drafts.new : undefined;
+      try { await api('POST', 'imggenstart', { qid: BANK.tests[sel.i].qs[sel.k], model: f.model, prompt }); delete drafts.new; } catch (err) { toast(err.message); }
       imgGenPanel();
     };
+    box.querySelectorAll('[data-draft]').forEach(t => t.oninput = () => { drafts[t.dataset.draft] = t.value; });
+    box.querySelectorAll('details[data-open]').forEach(x => x.ontoggle = () => { x.open ? openSet.add(x.dataset.open) : openSet.delete(x.dataset.open); });
+    document.getElementById('igDraft').onclick = async e => {
+      e.target.disabled = true; toast('در حال نوشتن توضیح صحنه…');
+      try { drafts.new = (await api('POST', 'imggendraft', { qid: BANK.tests[sel.i].qs[sel.k] })).prompt; } catch (err) { toast(err.message); }
+      imgGenPanel();
+    };
+    document.getElementById('igNewClear').onclick = () => { delete drafts.new; imgGenPanel(); };
+    box.querySelectorAll('[data-ig-regen]').forEach(b => b.onclick = async () => {
+      const text = (drafts[b.dataset.job] != null ? drafts[b.dataset.job] : box.querySelector(`[data-draft="${b.dataset.job}"]`).value).trim();
+      if (!text) return toast('توضیح صحنه خالی است.');
+      b.disabled = true; toast('در حال ساخت تصویر از متن ویرایش‌شده…');
+      try { await api('POST', 'imggenstart', { qid: +b.dataset.igRegen, model: document.querySelector('#igForm [name=model]').value, prompt: text }); delete drafts[b.dataset.job]; } catch (err) { toast(err.message); }
+      imgGenPanel();
+    });
     box.querySelectorAll('[data-ig-set]').forEach(b => b.onclick = async () => {
       try { await api('POST', 'imggenset', { qid: +b.dataset.igSet, job: b.dataset.job || null }); await loadMe(); toast('تصویر سایت عوض شد'); } catch (err) { toast(err.message); }
       imgGenPanel();
     });
     clearTimeout(imgGenPanel.t);
-    if (pending) imgGenPanel.t = setTimeout(() => { if (document.getElementById('imgGen')) imgGenPanel(); }, 8000);
+    // Refresh while a picture is being made, but never while a description is being edited.
+    const tick = () => { const b = document.getElementById('imgGen'); if (!b) return; if (b.contains(document.activeElement) && document.activeElement.tagName === 'TEXTAREA') imgGenPanel.t = setTimeout(tick, 8000); else imgGenPanel(); };
+    if (pending) imgGenPanel.t = setTimeout(tick, 8000);
   }
 
   // ---------- Word bank ----------
