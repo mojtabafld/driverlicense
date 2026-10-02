@@ -1,4 +1,4 @@
-// «آخرین فعالیت‌ها»: the latest exams and lessons, each row green (passed / 80% or more) or red, with its name,
+// «آخرین فعالیت‌ها»: the latest exams and lessons, each row marked green (passed / 80% or more) or red, with its name,
 // date and time, duration, mistakes, score and percent. Tapping a row opens its review.
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -31,7 +31,6 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
   return (
     <Pressable onPress={() => { tap(); openAttempt(a); }} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: last ? 0 : 1, borderBottomColor: c.line }}>
-        <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: fg }} />
         <View style={{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
           <Icon name={ok ? 'checkCircle' : 'xCircle'} size={22} color={fg} contrast={soft} />
         </View>
