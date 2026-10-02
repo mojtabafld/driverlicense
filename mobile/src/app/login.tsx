@@ -1,25 +1,57 @@
-// Sign in / sign up on one card, like the site's sign-in page.
+// Sign in / sign up, set straight on the page (no card), centred: logo, greeting, a mode switch, fields with icons
+// and one wide button, then the site's three short facts.
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 import { useApp } from '@/lib/store';
-import { Backdrop, Button, Logo, Segmented, TopBar, T } from '@/ui/kit';
-import { DA_FONT, radius, useColors } from '@/ui/theme';
+import { Icon, type IconName } from '@/ui/icon';
+import { Backdrop, Button, Logo, TopBar, T, tap } from '@/ui/kit';
+import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
-function Field({ label, value, onChange, secure, ltr, placeholder }: { label: string; value: string; onChange: (v: string) => void; secure?: boolean; ltr?: boolean; placeholder?: string }) {
-  const c = useColors();
+function Field({ icon, label, value, onChange, secure, ltr, placeholder, onSubmit }: {
+  icon: IconName; label: string; value: string; onChange: (v: string) => void; secure?: boolean; ltr?: boolean; placeholder?: string; onSubmit?: () => void;
+}) {
+  const c = useColors(), dark = useIsDark();
   const [show, setShow] = useState(false), [focus, setFocus] = useState(false);
   return (
-    <View style={{ gap: 7 }}>
-      <T style={{ color: c.muted, fontSize: 13 }}>{label}</T>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: radius.field, borderWidth: 1.5,
-        borderColor: focus ? c.accent : 'transparent', backgroundColor: focus ? c.surface : c.surface2,
-        ...(Platform.OS === 'web' && focus ? { boxShadow: `0 0 0 4px ${c.accentSoft}` } as any : {}) }}>
+    <View style={{ gap: 6 }}>
+      <T style={{ color: c.muted, fontSize: 13, fontWeight: '600', marginHorizontal: 4 }}>{label}</T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 54, borderRadius: 14, borderWidth: 1.5,
+        borderColor: focus ? c.accent : dark ? 'rgba(255,255,255,0.06)' : 'rgba(2,71,118,0.08)',
+        backgroundColor: focus ? c.surface : dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)',
+        ...(Platform.OS === 'web' ? { boxShadow: focus ? `0 0 0 4px ${c.accentSoft}` : '0 1px 2px rgba(16,40,60,.05)', transition: 'border-color .15s, box-shadow .15s, background-color .15s' } as any : {}) }}>
+        <Icon name={icon} size={19} color={focus ? c.link : c.faint} />
         <TextInput value={value} onChangeText={onChange} secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false}
           placeholder={placeholder} placeholderTextColor={c.faint} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
-          style={{ flex: 1, height: 47, fontSize: 15.5, fontFamily: ltr ? DA_FONT : 'Vazirmatn-400', color: c.text, textAlign: ltr ? 'left' : 'right', writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
-        {secure ? <Pressable onPress={() => setShow(!show)} hitSlop={10}><T style={{ color: c.link, fontWeight: '600', fontSize: 13 }}>{show ? 'پنهان' : 'نمایش'}</T></Pressable> : null}
+          onSubmitEditing={onSubmit} returnKeyType={onSubmit ? 'go' : 'next'}
+          style={{ flex: 1, height: 50, fontSize: 15.5, fontFamily: ltr ? DA_FONT : 'Vazirmatn-400', color: c.text, textAlign: ltr && value ? 'left' : 'right',
+            writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
+        {secure ? (
+          <Pressable onPress={() => { tap(); setShow(!show); }} hitSlop={10} accessibilityLabel={show ? 'پنهان کردن رمز' : 'نمایش رمز'}>
+            <Icon name={show ? 'eyeSlash' : 'eye'} size={19} color={show ? c.link : c.faint} />
+          </Pressable>
+        ) : null}
       </View>
+    </View>
+  );
+}
+
+// Sign in / sign up switch: a soft track with the chosen side raised.
+function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
+  const c = useColors(), dark = useIsDark();
+  return (
+    <View style={{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(2,71,118,0.07)' }}>
+      {(['login', 'register'] as const).map(m => {
+        const on = m === mode;
+        return (
+          <Pressable key={m} onPress={() => { tap(); onChange(m); }} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+            <View style={{ paddingVertical: 9, borderRadius: 10, backgroundColor: on ? c.surface : 'transparent',
+              ...(on ? { shadowColor: '#10283c', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 } : {}) }}>
+              <T style={{ textAlign: 'center', fontSize: 14.5, fontWeight: on ? '700' : '600', color: on ? c.link : c.muted }}>{m === 'login' ? 'ورود' : 'ثبت‌نام'}</T>
+            </View>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -30,7 +62,9 @@ export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState(''), [user, setUser] = useState(''), [pw, setPw] = useState('');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
+  const ready = !busy && !!user && !!pw;
   const submit = async () => {
+    if (!ready) return;
     setErr(''); setBusy(true);
     try { if (mode === 'login') await login(user.trim(), pw); else await register(name.trim(), user.trim(), pw); }
     catch (e: any) { setErr(e.message); setBusy(false); }
@@ -38,21 +72,38 @@ export default function Login() {
   return (
     <Backdrop>
       <TopBar />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
-        <View style={{ padding: 28, paddingTop: 32, gap: 16, width: '100%', maxWidth: 400, alignSelf: 'center', borderRadius: radius.xl, backgroundColor: c.surface,
-          shadowColor: '#10283c', shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 3 }}>
-          <View style={{ alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <View style={{ marginBottom: 6 }}><Logo size={48} /></View>
-            <T style={{ fontSize: 23, lineHeight: 34, fontWeight: '700', textAlign: 'center' }}>{mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}</T>
-            <T style={{ color: c.muted, textAlign: 'center', fontSize: 13.5 }}>آزمون تئوری گواهینامه‌ی B دانمارک، با ترجمه‌ی فارسی</T>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 48, paddingTop: 8 }}>
+          <View style={{ width: '100%', maxWidth: 360, alignSelf: 'center', gap: 18 }}>
+            {/* Logo on a soft halo, greeting */}
+            <View style={{ alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <View style={{ width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft, marginBottom: 8 }}>
+                <Logo size={56} />
+              </View>
+              <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '800', textAlign: 'center' }}>{mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}</T>
+              <T style={{ color: c.muted, textAlign: 'center', fontSize: 14, lineHeight: 23 }}>
+                {mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید'}
+              </T>
+            </View>
+            <ModeSwitch mode={mode} onChange={m => { setMode(m); setErr(''); }} />
+            {mode === 'register' ? <Field icon="person" label="نام نمایشی" value={name} onChange={setName} placeholder="مثلاً سارا" /> : null}
+            <Field icon={mode === 'register' ? 'clipboard' : 'person'} label="نام کاربری" value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr placeholder="username" />
+            <Field icon="lock" label="رمز عبور" value={pw} onChange={setPw} secure ltr placeholder="••••••••" onSubmit={submit} />
+            {err ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.badSoft }}>
+                <Icon name="warning" size={17} color={c.bad} />
+                <T style={{ flex: 1, color: c.bad, fontSize: 13.5 }}>{err}</T>
+              </View>
+            ) : null}
+            <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} style={{ marginTop: 2 }} />
+            {/* The site's three facts */}
+            <View style={{ alignItems: 'center', gap: 4, marginTop: 10 }}>
+              {['🇩🇰 آزمون تئوری گواهینامه‌ی B', 'بیش از ۱۰۰۰ سؤال در ۴۴ آزمون', 'ترجمه‌ی فارسی و آموزش'].map(f => (
+                <T key={f} style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>{f}</T>
+              ))}
+            </View>
           </View>
-          <Segmented value={mode} onChange={m => { setMode(m); setErr(''); }} options={[{ value: 'login', label: 'ورود' }, { value: 'register', label: 'ثبت‌نام' }]} />
-          {mode === 'register' ? <Field label="نام نمایشی" value={name} onChange={setName} placeholder="مثلاً سارا" /> : null}
-          <Field label="نام کاربری" value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr placeholder="username" />
-          <Field label="رمز عبور" value={pw} onChange={setPw} secure ltr placeholder="••••••••" />
-          {err ? <T style={{ color: c.bad, fontSize: 13.5 }}>{err}</T> : null}
-          <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={busy || !user || !pw} style={{ marginTop: 4 }} />
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </Backdrop>
   );
