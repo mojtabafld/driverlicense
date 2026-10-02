@@ -1,4 +1,5 @@
 // Home: progress at a glance (chance of passing, counts, progress chart).
+import { router } from 'expo-router';
 import { View } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
@@ -10,17 +11,19 @@ import { ProgressChart } from '@/ui/progress-chart';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
 
-// A count card: the icon tile with the label beside it, then the number and one short line of detail.
-function Stat({ icon, label, value, extra, sub, tone }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok' }) {
+// A count card: the icon tile with the label beside it, then the number and one short line of detail; it opens
+// its own page (exams, lessons, mistakes).
+function Stat({ icon, label, value, extra, sub, tone, onPress }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok'; onPress: () => void }) {
   const c = useColors();
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   return (
-    <Card style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: 10 }}>
+    <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <View style={{ width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
           <Icon name={icon} size={16} color={fg} weight="semibold" />
         </View>
-        <T style={{ flexShrink: 1, color: c.text, fontSize: 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
+        <T style={{ flex: 1, color: c.text, fontSize: 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
+        <Icon name="chevronLeft" size={13} color={c.faint} weight="semibold" />
       </View>
       <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
         {value}{extra ? <T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
@@ -72,9 +75,9 @@ export default function Home() {
         </View>
       </Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Stat icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'هنوز آزمون کاملی نیست'} />
-        <Stat icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
-        <Stat icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'اشتباهی نمانده'} />
+        <Stat onPress={() => router.navigate('/exam')} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'هنوز آزمون کاملی نیست'} />
+        <Stat onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
+        <Stat onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'اشتباهی نمانده'} />
       </View>
       <Card style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
