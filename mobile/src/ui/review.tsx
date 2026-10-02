@@ -18,8 +18,8 @@ import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const AI = '#7c5cff';
 const UI = {
-  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever' },
-  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in' },
+  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever', restart: 'Forfra', summary: 'Opsummering' },
+  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in', restart: 'Start over', summary: 'Summary' },
 };
 export const uiText = (lang: 'da' | 'en') => UI[lang];
 

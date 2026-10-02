@@ -14,7 +14,8 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, L, T, tap } from '@/ui/kit';
+import { Backdrop, Button, Card, T, tap } from '@/ui/kit';
+import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
 import { useColors, useIsDark } from '@/ui/theme';
 
@@ -62,21 +63,6 @@ function RingSvg({ size, stroke, pct, color, track }: { size: number; stroke: nu
 }
 
 // The site's footer buttons of the step review (.st-nav): ghost «Forrige», primary «Næste».
-function NavBtn({ label, onPress, primary, disabled, icon }: { label: string; onPress: () => void; primary?: boolean; disabled?: boolean; icon: 'left' | 'right' }) {
-  const c = useColors();
-  const fg = primary ? '#fff' : c.link;
-  return (
-    <Pressable disabled={disabled} onPress={onPress} style={({ pressed }) => ({ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 })}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 4,
-        backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: c.line }}>
-        {icon === 'left' ? <Icon name="arrowLeft" size={16} color={fg} /> : null}
-        {/^[A-Za-z]/.test(label) ? <L style={{ fontSize: 15, fontWeight: '600', color: fg }}>{label}</L> : <T style={{ fontSize: 15, fontWeight: '600', color: fg }}>{label}</T>}
-        {icon === 'right' ? <Icon name="arrowRight" size={16} color={fg} /> : null}
-      </View>
-    </Pressable>
-  );
-}
-
 const OldNote = () => {
   const c = useColors();
   return (
@@ -131,18 +117,18 @@ export default function Result() {
   // ---- A past exam or lesson: question by question ----
   if (!fresh) {
     const total = list.length, end = k >= total, r = list[k];
+    // The floating glass bar, as in the exam: previous / the position / next (the summary, then «from the start»).
     const nav = (
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 14, direction: 'ltr' } as any}>
-        <NavBtn label={ui.prev} icon="left" disabled={!k} onPress={() => step(k - 1)} />
-        <L style={{ flex: 1, textAlign: 'center', color: c.muted, fontSize: 13, fontWeight: '600' }}>{end ? '' : `${k + 1} / ${total}`}</L>
-        {end ? <NavBtn label="مرور از اول" icon="right" onPress={() => step(0)} />
-          : k === total - 1 ? <NavBtn label="جمع‌بندی اشتباهات" icon="right" primary onPress={() => step(k + 1)} />
-          : <NavBtn label={ui.next} icon="right" primary onPress={() => step(k + 1)} />}
-      </View>
+      <GlassBar
+        start={<FootBtn label={ui.prev} icon="arrowLeft" lead disabled={!k} onPress={() => step(k - 1)} />}
+        middle={end ? null : <BarCount n={k + 1} of={total} />}
+        end={end ? <FootBtn label={ui.restart} icon="arrowRight" onPress={() => step(0)} />
+          : k === total - 1 ? <FootBtn label={ui.summary} icon="arrowRight" primary onPress={() => step(k + 1)} />
+          : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => step(k + 1)} />} />
     );
     return (
       <Backdrop>
-        <ScrollView ref={scroll} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+        <ScrollView ref={scroll} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .rev-top: back button, tabs, «جزئیات آزمون» */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
             <Pressable onPress={() => { tap(); router.back(); }} accessibilityLabel="بازگشت" hitSlop={6}
@@ -179,18 +165,11 @@ export default function Result() {
           {anyOld ? <OldNote /> : null}
           {!total ? <Empty text="موردی نیست." />
             : end ? (
-              <>
-                {showSummary ? <AiSummary items={a.items} at={a.at} lang={lang} onQuestion={jumpTo} />
-                  : <Empty text={wrongN ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'} />}
-                {nav}
-              </>
-            ) : (
-              <>
-                <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />
-                {nav}
-              </>
-            )}
+              showSummary ? <AiSummary items={a.items} at={a.at} lang={lang} onQuestion={jumpTo} />
+                : <Empty text={wrongN ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'} />
+            ) : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
         </ScrollView>
+        {total ? nav : null}
       </Backdrop>
     );
   }
