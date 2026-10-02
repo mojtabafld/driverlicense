@@ -1,6 +1,7 @@
 // Progress chart, like the site's «نمودار پیشرفت»: percent correct of each of the last 30 attempts, with the 80% pass
 // line. Tap the chart to pick the nearest attempt; its details and a review button show below. With `fill` it takes
 // the height of the space it is given (the home screen fits the screen without scrolling).
+import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
@@ -8,7 +9,7 @@ import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } 
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
-import { T, tap } from './kit';
+import { Button, T, tap } from './kit';
 import { useColors } from './theme';
 
 const L = 38, R = 12, TOP = 14, B = 24;
@@ -21,7 +22,13 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
   const [sel, setSel] = useState<number | null>(null);
   const box = useRef<View>(null);
   if (attempts.length < 2) {
-    return <T style={{ color: c.muted, fontSize: 13.5, textAlign: 'center', paddingVertical: 24 }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>;
+    // Nothing to draw yet: say so, with a button to the exam tab.
+    return (
+      <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 14, paddingVertical: 20 }, fill && { flex: 1 }]}>
+        <T style={{ color: c.muted, fontSize: 13.5, textAlign: 'center' }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>
+        <Button label="شروع آزمون" onPress={() => router.navigate('/exam')} icon={<Icon name="exam" size={18} color="#fff" />} />
+      </View>
+    );
   }
   const data = attempts.slice(-30), offset = attempts.length - data.length;
   const x = (i: number) => L + i * (W - L - R) / (data.length - 1);
