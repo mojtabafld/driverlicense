@@ -109,9 +109,17 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
 }
 
 // The site's .card.
+// A tappable card hands its own size (flex, width, alignSelf) to the touch area around it and fills that, so cards
+// side by side in a row keep the sizes they ask for.
 export function Card({ children, style, onPress }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void }) {
-  const inner = <Glass style={[{ padding: 16 }, style]}>{children}</Glass>;
-  return onPress ? <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => pressed && { opacity: 0.85 }}>{inner}</Pressable> : inner;
+  if (!onPress) return <Glass style={[{ padding: 16 }, style]}>{children}</Glass>;
+  const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, ...rest } = StyleSheet.flatten(style) ?? {};
+  const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf };
+  return (
+    <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [outer, pressed && { opacity: 0.85 }]}>
+      <Glass style={[{ padding: 16 }, rest, flex != null || flexGrow != null ? { flex: 1 } : null]}>{children}</Glass>
+    </Pressable>
+  );
 }
 
 // The site's .btn-primary (navy) and .btn-ghost (surface with a line border); danger is a ghost in red.
