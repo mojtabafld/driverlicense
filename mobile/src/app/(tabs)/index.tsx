@@ -19,21 +19,21 @@ function Pill({ text, fg, bg }: { text: string; fg: string; bg: string }) {
   return <View style={{ paddingHorizontal: 9, paddingVertical: 2, borderRadius: 99, backgroundColor: bg }}><T style={{ color: fg, fontSize: 12, lineHeight: 19, fontWeight: '700' }}>{text}</T></View>;
 }
 
-// A count card: the icon tile with the number beside it, then the label and one short line of detail.
+// A count card: the icon tile with the label beside it, then the number and one short line of detail.
 function Stat({ icon, label, value, extra, sub, tone }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok' }) {
   const c = useColors();
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   return (
     <Card style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
-          <Icon name={icon} size={18} color={fg} weight="semibold" />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
+          <Icon name={icon} size={16} color={fg} weight="semibold" />
         </View>
-        <T style={{ flexShrink: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
-          {value}{extra ? <T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
-        </T>
+        <T style={{ flexShrink: 1, color: c.text, fontSize: 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
-      <T style={{ color: c.text, fontSize: 13, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
+      <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
+        {value}{extra ? <T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
+      </T>
       <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>
     </Card>
   );
@@ -104,14 +104,15 @@ export default function Home() {
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12 }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
-            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avg5 != null ? pctText(avg5) : '–'}</T>
-            {trend != null ? <T style={{ fontSize: 12, fontWeight: '700', textAlign: 'center', color: trend >= 0 ? c.ok : c.bad }}>{trend >= 0 ? '▲' : '▼'} {pctText(Math.abs(trend))}</T> : null}
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
+              <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avg5 != null ? pctText(avg5) : '–'}</T>
+              {trend != null ? <T style={{ fontSize: 11, fontWeight: '700', color: trend >= 0 ? c.ok : c.bad }}>{trend >= 0 ? '▲' : '▼'} {pctText(Math.abs(trend))}</T> : null}
+            </View>
           </View>
           <View style={{ width: 1, backgroundColor: c.line }} />
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>قبولی در آزمون کامل</T>
             <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–'}</T>
-            {fullN ? <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{pctText(passN / fullN)}</T> : null}
           </View>
         </View>
       </Card>
