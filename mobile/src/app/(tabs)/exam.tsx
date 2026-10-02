@@ -44,7 +44,7 @@ export default function Exam() {
           <Button kind="glass" label="شروع تمرین" onPress={() => start('mistakes')} />
         </Card>
       ) : null}
-      <ActivityList attempts={attempts} />
+      <ActivityList attempts={attempts} limit={3} />
     </Screen>
   );
 }
