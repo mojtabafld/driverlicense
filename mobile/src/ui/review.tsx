@@ -170,8 +170,10 @@ type CardProps = {
   q: Question; it: Pick<Item, 'ok' | 'a'>; index?: number; lang: 'da' | 'en'; fa: boolean; at?: number;
   // Step-by-step review: always open, without the «جزئیات و توضیحات» switch at the bottom.
   alwaysOpen?: boolean; startOpen?: boolean;
+  // An extra badge before the prove.dk ones, e.g. «۳ اشتباه در ۴ آزمون» on the mistakes page.
+  badge?: { text: string; fg: string; bg: string };
 };
-export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, startOpen }: CardProps) {
+export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, startOpen, badge }: CardProps) {
   const c = useColors(), dark = useIsDark();
   const { bank, aiLessons, saved, toggleSaved } = useApp();
   const pic = useQuestionImage();
@@ -202,6 +204,11 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </Pressable>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+          {badge ? (
+            <View style={{ paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
+              <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '700', color: badge.fg }}>{badge.text}</T>
+            </View>
+          ) : null}
           {bank ? srcLabels(bank, q.id).map(l => (
             <View key={l} style={{ paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
               <L style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.muted }}>{l}</L>

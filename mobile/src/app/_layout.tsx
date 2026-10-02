@@ -40,6 +40,7 @@ function Root() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="run" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="result" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="mistakes" />
         </Stack.Protected>
         <Stack.Protected guard={!user}>
           <Stack.Screen name="login" />

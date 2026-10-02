@@ -33,6 +33,21 @@ export function mistakeIds(attempts: Attempt[]): number[] {
   return [...last].filter(([, ok]) => !ok).map(([id]) => id).reverse();
 }
 
+// Per-question wrong counts across all attempts, most-missed first (as the site's mistakeStats).
+export type MistakeStat = { id: number; wrong: number; seen: number; lastOk: boolean; lastA?: number[]; lastAttempt: number };
+export function mistakeStats(attempts: Attempt[], has: (id: number) => boolean): MistakeStat[] {
+  const m = new Map<number, MistakeStat>();
+  attempts.forEach((a, ai) => a.items.forEach(it => {
+    if (!has(it.id)) return;
+    const s = m.get(it.id) || { id: it.id, wrong: 0, seen: 0, lastOk: true, lastAttempt: -1 };
+    s.seen++; if (!it.ok) s.wrong++;
+    s.lastOk = it.ok; s.lastA = it.a; s.lastAttempt = ai;
+    m.set(it.id, s);
+  }));
+  return [...m.values()].filter(s => s.wrong > 0)
+    .sort((a, b) => b.wrong - a.wrong || b.wrong / b.seen - a.wrong / a.seen || b.lastAttempt - a.lastAttempt);
+}
+
 // ---- pass probability (beta-binomial, see site/app.js for the reasoning) ----
 const PASS_HALF_LIFE = 50, PASS_MAX_ANSWERS = 200, REPEAT_WEIGHT = 0.5;
 function logGamma(x: number): number {
