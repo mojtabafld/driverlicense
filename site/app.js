@@ -304,6 +304,8 @@
   async function loadMe() {
     const d = await api('GET', 'me');
     await loadBank();
+    // Questions whose picture was replaced (or restored): a new ?v= so browsers do not keep the old picture.
+    Object.entries(d.imgv || {}).forEach(([id, v]) => { const q = Q.get(+id); if (q) q.img = `img/q${id}.jpg?v=${encodeURIComponent(v)}`; });
     state.user = d.user; state.attempts = d.attempts || []; state.words = d.words || []; state.saved = d.saved || [];
     state.settings = Object.assign({ showFa: true, timer: true }, d.settings);
     const usable = x => x && x.ids.every(id => Q.has(id));
@@ -1689,11 +1691,50 @@
           <td>${fmtDateTime(u.lastActive)}</td><td>${faNum(u.activeDays)}</td><td>${fmtDate(u.created)}</td>
           <td>${u.lang ? LANGS[u.lang] : '–'}</td><td>${faNum(u.words)}</td></tr>`).join('')}</tbody>
       </table></div>
+      <div class="section-title">تصاویر جدید سؤال‌ها <small class="muted">(ساخته‌شده با هوش مصنوعی از روی توضیح متنی؛ تصویر اصلی همیشه نگه داشته می‌شود)</small></div>
+      <div class="card panel" id="imgGen"><div class="muted">در حال بارگذاری…</div></div>
     </section>`;
     document.getElementById('back').onclick = home;
     document.getElementById('reloadAdmin').onclick = adminView;
+    imgGenPanel();
     document.getElementById('hourDay').onchange = e => { document.getElementById('hourChart').innerHTML = hourBars(d.visitHours, e.target.value); };
     window.scrollTo({ top: 0 });
+  }
+
+  // New question pictures (admin): start one, watch its progress, and choose which picture the site shows.
+  async function imgGenPanel() {
+    const box = document.getElementById('imgGen'); if (!box) return;
+    let d; try { d = await api('GET', 'imggen'); } catch (e) { box.innerHTML = `<div class="muted">${esc(e.message)}</div>`; return; }
+    const stateFa = { describing: 'در حال نوشتن توضیح صحنه…', queued: 'در صف…', generating: 'در حال ساخت تصویر…', done: 'آماده', fail: 'ناموفق' };
+    const rows = Object.entries(d.items).sort((a, b) => b[1].jobs.slice(-1)[0].at - a[1].jobs.slice(-1)[0].at);
+    const pending = rows.some(([, x]) => x.jobs.some(j => !j.done));
+    box.innerHTML = `${d.available ? '' : '<div class="form-err">KIE_API_KEY روی سرور تنظیم نشده است.</div>'}
+      <form class="ig-form" id="igForm"><label>شماره‌ی سؤال <input name="qid" type="number" min="1" value="${BANK.tests[0].qs[0]}" class="da" required></label>
+        <label>مدل <select name="model">${d.models.map(m => `<option value="${m}">${m === 'flare' ? 'GPT Image 2.5 Flare' : 'GPT Image 2.5 Sunburst'}</option>`).join('')}</select></label>
+        <button class="btn btn-primary" ${d.available ? '' : 'disabled'}>ساخت تصویر جدید</button></form>
+      ${rows.length ? rows.map(([qid, x]) => `<div class="ig-q">
+        <div class="ig-h"><b>سؤال ${faNum(qid)}</b><small class="muted">${x.active ? 'روی سایت: تصویر جدید' : 'روی سایت: تصویر اصلی'}</small></div>
+        <div class="ig-row">
+          <div class="ig-cell ${x.active ? '' : 'on'}"><img src="img/q${qid}.jpg?orig=1" alt=""><span>تصویر اصلی</span>
+            ${x.active ? `<button class="tr-toggle" data-ig-set="${qid}" data-job="">برگرداندن تصویر اصلی</button>` : '<em>نمایش داده می‌شود</em>'}</div>
+          ${x.jobs.slice().reverse().map(j => `<div class="ig-cell ${x.active === j.id ? 'on' : ''}">
+            ${j.blob ? `<img src="img/gen/${qid}/${j.id}" alt="">` : `<div class="ig-wait">${j.done ? '✗' : '<span class="ig-spin"></span>'}</div>`}
+            <span>${j.model === 'sunburst' ? 'Sunburst' : 'Flare'} · ${fmtDateTime(j.at)} · ${stateFa[j.state] || j.state}${j.error && j.state === 'fail' ? ` <small class="da">(${esc(j.error)})</small>` : ''}</span>
+            ${j.blob ? (x.active === j.id ? '<em>نمایش داده می‌شود</em>' : `<button class="tr-toggle" data-ig-set="${qid}" data-job="${j.id}">نمایش این تصویر در سایت</button>`) : ''}
+            ${j.prompt ? `<details><summary>توضیح صحنه</summary><p class="da" dir="ltr">${esc(j.prompt)}</p></details>` : ''}</div>`).join('')}
+        </div></div>`).join('') : '<div class="muted">هنوز تصویری ساخته نشده است.</div>'}`;
+    document.getElementById('igForm').onsubmit = async e => {
+      e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); e.target.querySelector('button').disabled = true;
+      toast('در حال شروع… (نوشتن توضیح صحنه چند ثانیه طول می‌کشد)');
+      try { await api('POST', 'imggenstart', { qid: +f.qid, model: f.model }); } catch (err) { toast(err.message); }
+      imgGenPanel();
+    };
+    box.querySelectorAll('[data-ig-set]').forEach(b => b.onclick = async () => {
+      try { await api('POST', 'imggenset', { qid: +b.dataset.igSet, job: b.dataset.job || null }); await loadMe(); toast('تصویر سایت عوض شد'); } catch (err) { toast(err.message); }
+      imgGenPanel();
+    });
+    clearTimeout(imgGenPanel.t);
+    if (pending) imgGenPanel.t = setTimeout(() => { if (document.getElementById('imgGen')) imgGenPanel(); }, 8000);
   }
 
   // ---------- Word bank ----------

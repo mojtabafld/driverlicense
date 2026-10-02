@@ -9,6 +9,7 @@
 #
 # After the first deploy, add these in the dashboard (Settings → web → Environment Variables):
 #   ANTHROPIC_API_KEY  (Encrypt)  key from console.anthropic.com; turns on the AI lesson after an exam
+#   KIE_API_KEY        (Encrypt)  kie.ai key; new question pictures in the admin panel (optional)
 #   INVITE_CODE        (Encrypt)  only people who know it can sign up (optional)
 #   ADMIN_USERS                   comma-separated usernames that get the admin panel
 # See README.md → "Environment variables" for the full list.
