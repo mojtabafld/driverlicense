@@ -73,9 +73,12 @@ export default function Run() {
             style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1, borderColor: c.line })}>
             <Icon name="exit" size={20} color={c.link} />
           </Pressable>
-          <View style={{ flex: 1, gap: 2 }}>
-            <T style={{ fontWeight: '700', fontSize: 16, lineHeight: 26 }} numberOfLines={1}>{plan.title}</T>
-            <T style={{ color: c.muted, fontSize: 13, lineHeight: 20 }}>سؤال {faNum(i + 1)} از {faNum(qs.length)}</T>
+          {/* The exam's name in the middle, with the counter (Latin digits) in front of it. */}
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <T style={{ fontWeight: '700', fontSize: 16, lineHeight: 26, textAlign: 'center', flexShrink: 1 }} numberOfLines={1}>{plan.title}</T>
+            <View style={{ paddingHorizontal: 8, paddingVertical: 1, borderRadius: 99, backgroundColor: c.accentSoft }}>
+              <L style={{ fontSize: 13, lineHeight: 20, fontWeight: '700', color: c.link, fontVariant: ['tabular-nums'] }}>{i + 1}/{qs.length}</L>
+            </View>
           </View>
           <ThemeButton />
         </View>
@@ -122,7 +125,7 @@ export default function Run() {
                 <T style={{ fontSize: 17, lineHeight: 24, fontWeight: '800', textAlign: 'center', color: left < 60 ? ios.red : ios.label, fontVariant: ['tabular-nums'] }}>{mm}</T>
               </View>
             ) : null}
-            <T style={{ fontSize: settings.timer ? 11.5 : 15, lineHeight: settings.timer ? 16 : 22, color: settings.timer ? ios.secondary : ios.label, fontWeight: settings.timer ? '600' : '700', textAlign: 'center' }}>{faNum(i + 1)} / {faNum(qs.length)}</T>
+            <L style={{ fontSize: settings.timer ? 15 : 20, lineHeight: settings.timer ? 19 : 26, color: settings.timer ? ios.secondary : ios.label, fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] }}>{i + 1} / {qs.length}</L>
           </View>
           {last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => setI(i + 1)} />}
         </LiquidGlass>
