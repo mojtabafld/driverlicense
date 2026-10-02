@@ -10,6 +10,15 @@ import { Icon } from './icon';
 import { Glass } from './glass';
 import { DA_FONT, radius, useColors, useTheme } from './theme';
 
+// A style given in physical left/right terms. Phones running right-to-left swap left and right in styles,
+// the web does not; this keeps "left" meaning the left edge on both.
+export function physical<S extends Record<string, any>>(style: S): S {
+  if (Platform.OS === 'web') return style;
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(style)) out[k.replace(/Left|Right|left|right/, w => ({ Left: 'Right', Right: 'Left', left: 'right', right: 'left' } as any)[w])] = v;
+  return out as S;
+}
+
 export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
 // Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes.

@@ -1,7 +1,8 @@
 // Icon names shared by src/ui/icon.tsx (web, Android) and src/ui/icon.ios.tsx (SF Symbols).
 import type { SymbolWeight } from 'expo-symbols';
 
-export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles' | 'clipboard' | 'warning';
+export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles' | 'clipboard' | 'warning'
+  | 'arrowRight' | 'arrowLeft' | 'bookmark' | 'chevronDown' | 'chart' | 'translate';
 
 export type IconProps = { name: IconName; size?: number; color: string; filled?: boolean; weight?: SymbolWeight; contrast?: string };
 
@@ -20,4 +21,10 @@ export const SF: Record<IconName, [string, string]> = {
   sparkles: ['sparkles', 'sparkles'],
   clipboard: ['list.bullet.clipboard', 'list.bullet.clipboard.fill'],
   warning: ['exclamationmark.triangle', 'exclamationmark.triangle.fill'],
+  arrowRight: ['arrow.right', 'arrow.right'],
+  arrowLeft: ['arrow.left', 'arrow.left'],
+  bookmark: ['bookmark', 'bookmark.fill'],
+  chevronDown: ['chevron.down', 'chevron.down'],
+  chart: ['chart.bar', 'chart.bar.fill'],
+  translate: ['translate', 'translate'],
 };

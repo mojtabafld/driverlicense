@@ -1,13 +1,14 @@
-// Home: progress at a glance (chance of passing, counts, progress chart), the next step and the latest activity.
+// Home: progress at a glance (chance of passing, counts, progress chart) and the latest activity.
 import { router } from 'expo-router';
 import { Platform, Pressable, View } from 'react-native';
 
 import type { Attempt, Bank } from '@/lib/bank';
-import { faNum, fmtDate, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, scoreOf } from '@/lib/logic';
+import { faNum, fmtDate, isFull, isPass, mistakeIds, passEstimate, pctOf, scoreOf } from '@/lib/logic';
+import { modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { Button, Card, Ring, Screen, T, tap } from '@/ui/kit';
+import { Card, Ring, Screen, T, tap } from '@/ui/kit';
 import { ProgressChart } from '@/ui/progress-chart';
 import { useColors, type Colors } from '@/ui/theme';
 
@@ -45,14 +46,6 @@ function Stat({ icon, label, value, extra, sub, tone, progress }: { icon: IconNa
   );
 }
 
-// Name of an attempt, e.g. «آزمون تصادفی» or «درس ۱۲».
-function attemptName(a: Attempt, bank: Bank | null) {
-  if (a.mode === 'lesson') {
-    const i = bank ? bank.tests.findIndex(t => t.id === a.lesson) : -1;
-    return i >= 0 ? `درس ${faNum(lessonNumber(bank!.tests[i].title, i))}` : 'درس';
-  }
-  return a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی';
-}
 // Green or red for an attempt: a full 25-question one by the real pass rule, a shorter one by the same 80%.
 const passed = (a: Attempt) => (isFull(a) ? isPass(a) : pctOf(a) >= 0.8);
 const fmtSecs = (s: number) => `${faNum(Math.floor(s / 60))}:${faNum(String(Math.round(s % 60)).padStart(2, '0'))}`;
@@ -70,7 +63,7 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <T style={{ fontWeight: '700' }}>{attemptName(a, bank)}</T>
+            <T style={{ fontWeight: '700' }}>{modeName(a, bank)}</T>
             <Pill text={isFull(a) ? (ok ? 'قبول' : 'مردود') : ok ? 'خوب' : 'نیاز به تمرین'} fg={fg} bg={soft} />
           </View>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{fmtDate(a.at)} · ساعت {fmtClock(a.at)}</T>
@@ -144,7 +137,6 @@ export default function Home() {
         </View>
         <ProgressChart attempts={attempts} onOpen={openAttempt} />
       </Card>
-      <Button label="شروع آزمون تصادفی" onPress={() => router.navigate('/exam')} />
       {recent.length ? (
         <Card style={{ paddingVertical: 6 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 4 }}>

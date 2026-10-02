@@ -98,6 +98,31 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
       );
       break;
     }
+    case 'arrowRight':
+      body = <Path d="M4.5 12h15M13.5 6l6 6-6 6" {...line} strokeWidth={2.2} />;
+      break;
+    case 'arrowLeft':
+      body = <Path d="M19.5 12h-15M10.5 6l-6 6 6 6" {...line} strokeWidth={2.2} />;
+      break;
+    case 'bookmark': {
+      const d = 'M7 3.5h10a1 1 0 0 1 1 1v16l-6-4.2-6 4.2v-16a1 1 0 0 1 1-1z';
+      body = <Path d={d} {...(filled ? solid : line)} />;
+      break;
+    }
+    case 'chevronDown':
+      body = <Path d="M6 9.5l6 6 6-6" {...line} strokeWidth={2.2} />;
+      break;
+    case 'chart':
+      body = <Path d="M4 20V10M10 20V4M16 20v-7M21 20H3" {...line} />;
+      break;
+    case 'translate':
+      body = (
+        <G>
+          <Path d="M3.5 6h9M8 4v2M10.5 6c-.8 3.6-3.2 6.4-6.5 8M6 9.5c1.2 2 2.9 3.5 5 4.5" {...line} />
+          <Path d="M12.5 20l4-9.5 4 9.5M14 16.8h5" {...line} />
+        </G>
+      );
+      break;
   }
   return <Svg width={size} height={size} viewBox="0 0 24 24">{body}</Svg>;
 }

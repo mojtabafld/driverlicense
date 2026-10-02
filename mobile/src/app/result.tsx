@@ -1,77 +1,266 @@
-// Result and answer review of a finished (or past) exam.
-import { Image } from 'expo-image';
+// Result and answer review, laid out like the site.
+// A past exam or lesson: the site's question-by-question review (back button, tabs, a result line that fades after
+// 5 seconds, one open card at a time with Forrige / Næste, and the AI summary of the mistakes at the end).
+// One just handed in: the site's result card (ring, verdict, numbers, next steps) and the list of review cards.
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 
-import { imgSource } from '@/lib/img-source';
-import { faNum, fmtDate, isFull, isPass, passMin, pctOf, scoreOf } from '@/lib/logic';
+import type { Attempt, Item } from '@/lib/bank';
+import { faNum, fmtDate, isFull, passMin, scoreOf, shuffle } from '@/lib/logic';
+import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
-import { useApp, useQuestionImage } from '@/lib/store';
-import { Glass } from '@/ui/glass';
+import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, L, Ring, Segmented, T } from '@/ui/kit';
-import { radius, useColors } from '@/ui/theme';
+import { Backdrop, Button, Card, L, T, tap } from '@/ui/kit';
+import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
+import { useColors, useIsDark } from '@/ui/theme';
+
+type Filter = 'wrong' | 'saved' | 'all';
+type Row = { it: Item; i: number };
+
+// Leave the review and go to a tab (the review is shown over the tabs).
+const goTo = (path: '/' | '/exam' | '/learn') => {
+  try { router.dismissAll(); } catch {}
+  router.navigate(path);
+};
+
+// The site's .tabs: wrong / saved (only when some were bookmarked during the exam) / all.
+function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: (f: Filter) => void; n: number; wrong: number; savedN: number }) {
+  const c = useColors();
+  const opts: { v: Filter; label: string }[] = [
+    { v: 'wrong', label: `اشتباهات (${faNum(wrong)})` },
+    ...(savedN ? [{ v: 'saved' as Filter, label: `ذخیره‌شده‌ها (${faNum(savedN)})` }] : []),
+    { v: 'all', label: `همه (${faNum(n)})` },
+  ];
+  return (
+    <View style={{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: 8, backgroundColor: c.surface2, alignSelf: 'flex-start' }}>
+      {opts.map(o => {
+        const on = o.v === value;
+        return (
+          <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+            <View style={{ paddingVertical: 7, paddingHorizontal: 14, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }}>
+              <T style={{ fontSize: 14, fontWeight: '600', color: on ? c.link : c.muted, textAlign: 'center' }}>{o.label}</T>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function RingSvg({ size, stroke, pct, color, track }: { size: number; stroke: number; pct: number; color: string; track: string }) {
+  const r = (size - stroke) / 2, C = 2 * Math.PI * r;
+  return (
+    <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
+      <Circle cx={size / 2} cy={size / 2} r={r} stroke={track} strokeWidth={stroke} fill="none" />
+      <Circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={stroke} fill="none" strokeLinecap="round" strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - pct)} />
+    </Svg>
+  );
+}
+
+// The site's footer buttons of the step review (.st-nav): ghost «Forrige», primary «Næste».
+function NavBtn({ label, onPress, primary, disabled, icon }: { label: string; onPress: () => void; primary?: boolean; disabled?: boolean; icon: 'left' | 'right' }) {
+  const c = useColors();
+  const fg = primary ? '#fff' : c.link;
+  return (
+    <Pressable disabled={disabled} onPress={onPress} style={({ pressed }) => ({ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 })}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 4,
+        backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: c.line }}>
+        {icon === 'left' ? <Icon name="arrowLeft" size={16} color={fg} /> : null}
+        {/^[A-Za-z]/.test(label) ? <L style={{ fontSize: 15, fontWeight: '600', color: fg }}>{label}</L> : <T style={{ fontSize: 15, fontWeight: '600', color: fg }}>{label}</T>}
+        {icon === 'right' ? <Icon name="arrowRight" size={16} color={fg} /> : null}
+      </View>
+    </Pressable>
+  );
+}
+
+const OldNote = () => {
+  const c = useColors();
+  return (
+    <View style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, backgroundColor: c.warnSoft }}>
+      <T style={{ fontSize: 13, color: c.warn }}>این آزمون قبل از ذخیره‌ی پاسخ‌های تک‌تک گزینه‌ها انجام شده؛ فقط پاسخ‌های درست نمایش داده می‌شوند.</T>
+    </View>
+  );
+};
+const Empty = ({ text }: { text: string }) => {
+  const c = useColors();
+  return <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{text}</T></Card>;
+};
 
 export default function Result() {
-  const c = useColors(), ins = useSafeAreaInsets();
-  const { Q, settings } = useApp();
-  const pic = useQuestionImage();
-  const a = session.result, fresh = session.fresh;
-  const [filter, setFilter] = useState<'wrong' | 'all'>('wrong');
-  const [open, setOpen] = useState<number | null>(null);
-  if (!a) { router.back(); return null; }
-  const full = isFull(a), pass = isPass(a), n = a.items.length, right = scoreOf(a);
-  const lang = settings.lang === 'en' ? 'en' : 'da';
-  const items = a.items.map((it, k) => ({ it, k, q: Q.get(it.id) })).filter(x => x.q && (filter === 'all' || !x.it.ok));
+  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
+  const { Q, settings, bank, aiLessons } = useApp();
+  const [a] = useState<Attempt | null>(() => session.result);
+  const [fresh] = useState(() => session.fresh);
+  const n = a?.items.length ?? 0, right = a ? scoreOf(a) : 0, wrongN = n - right;
+  const [filter, setFilter] = useState<Filter>(() => (fresh || wrongN ? 'wrong' : 'all'));
+  const [k, setK] = useState(0);
+  // The result line of a past review: shown, then hidden after 5 s; «جزئیات آزمون» brings it back.
+  const [line, setLine] = useState<'shown' | 'hidden'>('shown');
+  const [faded, setFaded] = useState(false);
+  const [fade] = useState(() => new Animated.Value(1));
+  const scroll = useRef<ScrollView>(null);
+  useEffect(() => {
+    if (fresh) return;
+    const t = setTimeout(() => Animated.timing(fade, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => { setLine('hidden'); setFaded(true); }), 5000);
+    return () => clearTimeout(t);
+  }, [fresh, fade]);
+  useEffect(() => { if (!a) router.back(); }, [a]);
+  if (!a) return null;
+
+  const lang = settings.lang === 'en' ? 'en' : 'da', ui = uiText(lang);
+  const full = isFull(a), pass = full && right >= passMin(n), pct = right / Math.max(n, 1), pctN = Math.round(pct * 100);
+  const isLesson = a.mode === 'lesson';
+  const fa = isLesson ? false : settings.showFa;
+  const rows: Row[] = a.items.map((it, i) => ({ it, i })).filter(r => Q.has(r.it.id));
+  const list = rows.filter(r => filter === 'all' || (filter === 'saved' ? r.it.m : !r.it.ok));
+  const savedN = a.items.filter(it => it.m).length;
+  const tone = full ? (pass ? 'ok' : 'bad') : 'neutral';
+  const toneFg = tone === 'ok' ? c.ok : tone === 'bad' ? c.bad : c.link, toneBg = tone === 'ok' ? c.okSoft : tone === 'bad' ? c.badSoft : c.accentSoft;
+  const anyOld = a.items.some(it => !it.a);
+  const showSummary = hasSummary(a.items, aiLessons);
+  const toTop = () => scroll.current?.scrollTo({ y: 0, animated: true });
+  const changeFilter = (f: Filter) => { setFilter(f); setK(0); };
+  // «سؤال n» in the AI summary shows that question.
+  const jumpTo = (num: number) => { setFilter('all'); setK(Math.max(0, rows.findIndex(r => r.i === num - 1))); toTop(); };
+  const step = (to: number) => { tap(); setK(to); toTop(); };
+
+  // ---- A past exam or lesson: question by question ----
+  if (!fresh) {
+    const total = list.length, end = k >= total, r = list[k];
+    const nav = (
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 14, direction: 'ltr' } as any}>
+        <NavBtn label={ui.prev} icon="left" disabled={!k} onPress={() => step(k - 1)} />
+        <L style={{ flex: 1, textAlign: 'center', color: c.muted, fontSize: 13, fontWeight: '600' }}>{end ? '' : `${k + 1} / ${total}`}</L>
+        {end ? <NavBtn label="مرور از اول" icon="right" onPress={() => step(0)} />
+          : k === total - 1 ? <NavBtn label="جمع‌بندی اشتباهات" icon="right" primary onPress={() => step(k + 1)} />
+          : <NavBtn label={ui.next} icon="right" primary onPress={() => step(k + 1)} />}
+      </View>
+    );
+    return (
+      <Backdrop>
+        <ScrollView ref={scroll} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+          {/* .rev-top: back button, tabs, «جزئیات آزمون» */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+            <Pressable onPress={() => { tap(); router.back(); }} accessibilityLabel="بازگشت" hitSlop={6}
+              style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1.5, borderColor: c.line })}>
+              <Icon name="arrowRight" size={20} color={c.link} />
+            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 1 }}>
+              <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
+              {faded ? (
+                <Pressable onPress={() => { tap(); fade.setValue(1); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.accentSoft }}>
+                  <Icon name="chart" size={16} color={c.link} />
+                  <T style={{ fontSize: 13.5, fontWeight: '700', color: c.link }}>{line === 'shown' ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T>
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+          {/* .res-line */}
+          {line === 'shown' ? (
+            <Animated.View style={{ opacity: fade, flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, backgroundColor: toneBg }}>
+              <View style={{ width: 66, height: 66, alignItems: 'center', justifyContent: 'center' }}>
+                <RingSvg size={66} stroke={5} pct={pct} color={toneFg} track={dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'} />
+                <T style={{ fontSize: 15, fontWeight: '800', color: toneFg, textAlign: 'center' }}>{faNum(pctN)}٪</T>
+              </View>
+              <View style={{ flex: 1, gap: 6 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 12, rowGap: 2 }}>
+                  <T style={{ fontSize: 15, fontWeight: '700', color: toneFg }}>{full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</T>
+                  <T style={{ fontSize: 15, color: toneFg }}>{wrongN ? `${faNum(wrongN)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</T>
+                </View>
+                <T style={{ fontSize: 12.5, color: c.muted }}>{modeName(a, bank)}، {fmtDate(a.at)}</T>
+              </View>
+            </Animated.View>
+          ) : null}
+          {anyOld ? <OldNote /> : null}
+          {!total ? <Empty text="موردی نیست." />
+            : end ? (
+              <>
+                {showSummary ? <AiSummary items={a.items} at={a.at} lang={lang} onQuestion={jumpTo} />
+                  : <Empty text={wrongN ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'} />}
+                {nav}
+              </>
+            ) : (
+              <>
+                <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />
+                {nav}
+              </>
+            )}
+        </ScrollView>
+      </Backdrop>
+    );
+  }
+
+  // ---- Just handed in: result card and the review list ----
+  const retry = () => { session.plan = { mode: 'mistakes', ids: shuffle(a.items.filter(it => !it.ok).map(it => it.id)), title: 'تمرین اشتباهات' }; router.replace('/run'); };
+  const li = isLesson && bank ? bank.tests.findIndex(t => t.id === a.lesson) : -1;
+  const nextLesson = li >= 0 && bank && bank.tests[li + 1] ? bank.tests[li + 1] : null;
+  const startNext = () => {
+    if (!nextLesson) return;
+    session.plan = { mode: 'lesson', ids: nextLesson.qs.filter(id => Q.has(id)), lesson: nextLesson.id, title: modeName({ mode: 'lesson', lesson: nextLesson.id }, bank) };
+    router.replace('/run');
+  };
   return (
     <Backdrop>
-      <ScrollView contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 22 }}>
-          <Ring value={pctOf(a)} size={120} stroke={11} color={full ? (pass ? c.ok : c.bad) : c.accent} label={full ? `${faNum(right)}/${faNum(n)}` : `${faNum(Math.round(pctOf(a) * 100))}٪`} />
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            {full ? <Icon name={pass ? 'checkCircle' : 'xCircle'} size={26} color={pass ? c.ok : c.bad} contrast={c.surface} /> : null}
-            <T style={{ fontSize: 24, fontWeight: '700', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.text }}>
-              {full ? (pass ? (fresh ? 'قبول شدید!' : 'قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : 'مردود')) : `${faNum(right)} از ${faNum(n)} درست`}
-            </T>
+      <ScrollView ref={scroll} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+        {/* .result-hero */}
+        <Card style={{ alignItems: 'center', gap: 14, padding: 22 }}>
+          <View style={{ width: 170, height: 170, alignItems: 'center', justifyContent: 'center' }}>
+            <RingSvg size={170} stroke={14} pct={pct} color={full ? (pass ? c.ok : c.bad) : c.accent} track={c.surface2} />
+            {full
+              ? <><T style={{ fontSize: 42, lineHeight: 50, fontWeight: '700', textAlign: 'center' }}>{faNum(right)}</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>از {faNum(n)}</T></>
+              : <><T style={{ fontSize: 36, lineHeight: 46, fontWeight: '700', textAlign: 'center' }}>{faNum(pctN)}٪</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{faNum(right)} از {faNum(n)}</T></>}
           </View>
-          <T style={{ color: c.muted, textAlign: 'center', fontSize: 13.5 }}>{full ? `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.` : 'آزمون تمرینی'} · {fmtDate(a.at)}</T>
-        </Card>
-        <Segmented value={filter} onChange={setFilter} options={[{ value: 'wrong', label: `اشتباهات (${faNum(n - right)})` }, { value: 'all', label: `همه (${faNum(n)})` }]} />
-        {items.length ? items.map(({ it, k, q }) => (
-          <Card key={k} onPress={() => setOpen(open === k ? null : k)} style={{ gap: 10 }}>
-            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-              <Image source={imgSource(pic(q!))} style={{ width: 92, aspectRatio: 4 / 3, borderRadius: radius.sm }} contentFit="cover" />
-              <View style={{ flex: 1, gap: 2 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Icon name={it.ok ? 'checkCircle' : 'xCircle'} size={17} color={it.ok ? c.ok : c.bad} contrast={c.surface} />
-                  <T style={{ fontWeight: '700', color: it.ok ? c.ok : c.bad }}>سؤال {faNum(k + 1)}</T>
+          <View style={{ width: '100%', alignItems: 'center', gap: 4 }}>
+            <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)} · {fmtDateTime(a.at)}</T>
+            <T style={{ fontSize: 26, lineHeight: 38, fontWeight: '800', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.link }}>
+              {full ? (pass ? '🎉 قبول شدید!' : 'مردود — دوباره تلاش کنید') : `${faNum(pctN)}٪ پاسخ درست`}
+            </T>
+            <T style={{ color: c.muted, textAlign: 'center', fontSize: 14 }}>
+              {full ? (pass ? `حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} کاملاً درست بود.` : `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.`)
+                : `آزمون تمرینی ${faNum(n)} سؤالی؛ فقط درصد پاسخ‌های درست ثبت می‌شود. قبولی/مردودی فقط برای آزمون کامل ۲۵ سؤالی تعیین می‌شود.`}
+            </T>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 14, marginBottom: 4, width: '100%' }}>
+              {[['تصاویر درست', faNum(right)], ['تصاویر اشتباه', faNum(wrongN)], ['زمان', fmtTime(a.secs)]].map(([k1, v]) => (
+                <View key={k1} style={{ flex: 1, paddingVertical: 8, paddingHorizontal: 6, borderRadius: 6, backgroundColor: c.surface2 }}>
+                  <T style={{ fontSize: 13, textAlign: 'center' }}>{k1}: <T style={{ fontSize: 13, fontWeight: '700' }}>{v}</T></T>
                 </View>
-                <L numberOfLines={2} style={{ fontSize: 14, lineHeight: 20 }}>{lang === 'en' && q!.sen ? q!.sen : q!.sda}</L>
-              </View>
+              ))}
             </View>
-            {open === k ? (
-              <View style={{ gap: 8 }}>
-                <Image source={imgSource(pic(q!))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" />
-                {q!.st.map((s, j) => {
-                  const mine = !!(it.a && it.a[j]), bad = mine !== !!s.ok;
-                  return (
-                    <Glass key={j} r={radius.md} tint={bad ? c.badSoft : undefined} style={{ padding: 12, gap: 4 }}>
-                      <L style={{ fontSize: 15 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
-                      {s.fa ? <T style={{ color: c.muted, fontSize: 13.5 }}>{s.fa}</T> : null}
-                      <T style={{ fontSize: 13, fontWeight: '700', color: bad ? c.bad : c.ok }}>
-                        پاسخ درست: {s.ok ? 'بله' : 'خیر'} · شما {mine ? 'انتخاب کردید' : 'انتخاب نکردید'}
-                      </T>
-                      {s.efa || s.eda ? <T style={{ color: c.muted, fontSize: 13 }}>{s.efa || s.eda}</T> : null}
-                    </Glass>
-                  );
-                })}
-              </View>
-            ) : null}
-          </Card>
-        )) : <Card style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Icon name="sparkles" size={20} color={c.warn} /><T style={{ textAlign: 'center' }}>هیچ اشتباهی نداشتید</T></Card>}
-        <Button label="بستن" kind="glass" onPress={() => router.back()} />
+          </View>
+          {/* .res-actions */}
+          <View style={{ width: '100%', gap: 10 }}>
+            {isLesson ? <Button kind="glass" label="داشبورد" onPress={() => goTo('/')} /> : null}
+            {wrongN ? <Button label="تمرین دوباره‌ی همین اشتباهات" onPress={retry} /> : null}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {isLesson ? (
+                <>
+                  {nextLesson ? <Button style={{ flex: 1 }} kind={wrongN ? 'glass' : 'primary'} label="درس بعدی" onPress={startNext} /> : null}
+                  <Button style={{ flex: 1 }} kind="glass" label="فهرست درس‌ها" onPress={() => goTo('/learn')} />
+                </>
+              ) : (
+                <>
+                  <Button style={{ flex: 1 }} kind={wrongN ? 'glass' : 'primary'} label="آزمون جدید" onPress={() => goTo('/exam')} />
+                  <Button style={{ flex: 1 }} kind="glass" label="داشبورد" onPress={() => goTo('/')} />
+                </>
+              )}
+            </View>
+          </View>
+        </Card>
+        {/* .section-title: «مرور پاسخ‌ها» and the tabs */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginTop: 16, marginHorizontal: 2 }}>
+          <T style={{ fontSize: 16, fontWeight: '700' }}>مرور پاسخ‌ها</T>
+          <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
+        </View>
+        {anyOld ? <OldNote /> : null}
+        {list.length ? list.map((r, j) => (
+          <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} startOpen={filter === 'wrong' && j < 3} />
+        )) : <Empty text={filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'} />}
+        {showSummary ? <AiSummary items={a.items} at={a.at} lang={lang} onQuestion={() => { setFilter('all'); toTop(); }} /> : null}
       </ScrollView>
     </Backdrop>
   );
