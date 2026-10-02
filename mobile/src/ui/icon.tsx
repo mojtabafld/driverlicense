@@ -123,6 +123,22 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
         </G>
       );
       break;
+    case 'person':
+      body = <G><Circle cx={12} cy={8} r={3.8} {...line} /><Path d="M4.5 20c.9-3.6 3.9-5.6 7.5-5.6s6.6 2 7.5 5.6" {...line} /></G>;
+      break;
+    case 'lock':
+      body = <G><Path d="M6.5 10.5h11a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19v-7a1.5 1.5 0 0 1 1.5-1.5z" {...line} /><Path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" {...line} /></G>;
+      break;
+    case 'eye':
+    case 'eyeSlash':
+      body = (
+        <G>
+          <Path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" {...line} />
+          <Circle cx={12} cy={12} r={3} {...line} />
+          {name === 'eyeSlash' ? <Path d="M4 4l16 16" {...line} /> : null}
+        </G>
+      );
+      break;
   }
   return <Svg width={size} height={size} viewBox="0 0 24 24">{body}</Svg>;
 }
