@@ -498,10 +498,10 @@ async function api(req, res, route) {
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
   imagegen.init(store, SITE);
-  // One-time first picture (question 1 of lesson 1), made automatically once the kie.ai key is set.
-  if (imagegen.available() && lessonsAvailable() && !store.meta.imagesBoot) {
-    store.meta.imagesBoot = { at: Date.now() }; await store.saveMeta('imagesBoot', store.meta.imagesBoot);
-    imagegen.start(imagegen.firstQuestion(), 'flare', 'auto').catch(e => console.error('first picture', e.message));
+  // One-time first picture (question 1 of lesson 1) with Sunburst, made automatically once the kie.ai key is set.
+  if (imagegen.available() && lessonsAvailable() && !store.meta.imagesBootSunburst) {
+    store.meta.imagesBootSunburst = { at: Date.now() }; await store.saveMeta('imagesBootSunburst', store.meta.imagesBootSunburst);
+    imagegen.start(imagegen.firstQuestion(), 'sunburst', 'auto').catch(e => console.error('first picture', e.message));
   }
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
