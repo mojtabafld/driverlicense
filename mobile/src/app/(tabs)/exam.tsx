@@ -34,7 +34,7 @@ function MistakesCard() {
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 17 }}>تمرین اشتباهات</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-            {open ? <T style={{ fontSize: 12.5, color: c.bad, fontWeight: '700' }}>{faNum(open)} سؤال هنوز اشتباه</T>
+            {open ? <T style={{ fontSize: 12.5, color: c.bad, fontWeight: '700' }}>{faNum(open)} سؤال اصلاح‌نشده</T>
               : topics.length ? 'همه‌ی اشتباهات بازبینی شده‌اند' : 'هیچ اشتباهی نداشته‌اید'}
             {open && fixed ? `، ${faNum(fixed)} اصلاح‌شده` : ''}
           </T>
