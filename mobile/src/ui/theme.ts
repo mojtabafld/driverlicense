@@ -12,6 +12,8 @@ const light = {
   submit: '#2c5525', checked: '#d9e4ec', cardBorder: 'rgba(0,0,0,0.08)', hairline: '#d9e4ec',
   // Older names still used by some screens; on the site's look they are plain surfaces.
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#d9e4ec',
+  // Page background: a very soft top-to-bottom gradient around bg, with a hint of the navy.
+  bgGradient: ['#f5f8fb', '#ecf1f5', '#e2eaf2'] as readonly [string, string, string],
 };
 const dark: typeof light = {
   bg: '#111a22', surface: '#1a2631', surface2: '#22303d', line: '#2f4050',
@@ -20,6 +22,7 @@ const dark: typeof light = {
   ok: '#5cc47a', okSoft: '#15301e', bad: '#f07167', badSoft: '#3a1715', warn: '#f0b24a', warnSoft: '#33260d',
   submit: '#3d7a33', checked: '#2a3d4f', cardBorder: 'rgba(255,255,255,0.06)', hairline: '#2f4050',
   glass: '#1a2631', glassStrong: '#1a2631', glassBorder: '#2f4050',
+  bgGradient: ['#172431', '#111a22', '#0c141b'] as readonly [string, string, string],
 };
 export type Colors = typeof light;
 // The theme the user chose (light by default, like the site); set by ThemeModeProvider in src/ui/theme-mode.tsx.
