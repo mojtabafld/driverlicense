@@ -2,8 +2,10 @@
 
 One Expo (React Native) code base for iOS, Android and the web. It uses the same server and accounts as
 https://kore.mintcloud.info. Design: the same look as the web site (colours, background, cards, buttons and fonts from
-`site/style.css`, copied into `src/ui/theme.ts`), plus a tab bar at the bottom that separates the parts of the app
-(system tab bar via `expo-router/unstable-native-tabs` on iOS and Android, a site-style bar on the web).
+`site/style.css`, copied into `src/ui/theme.ts`). Two parts use Apple's **Liquid Glass** in the site's colours
+(`src/ui/liquid.tsx`: real glass via `expo-glass-effect` on iOS 26, a frosted look elsewhere): the answer options in
+exams and lessons, and the tab bar at the bottom. On iOS the tab bar is Apple's own (`expo-router/unstable-native-tabs`),
+on the web a copy of the iOS 26 floating glass bar, on Android Material tabs.
 
 ## Parts of the app (tabs at the bottom)
 - **خانه**: chance of passing, counts, latest activity.

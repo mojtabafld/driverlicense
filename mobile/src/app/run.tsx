@@ -1,8 +1,9 @@
-// Taking an exam or a lesson: one picture at a time, statements to tick, the site's exam strip on top and its footer buttons at the bottom.
+// Taking an exam or a lesson: one picture at a time, statements to tick, the site's exam strip on top, answer options on Liquid Glass and the site's footer buttons at the bottom.
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, View, useColorScheme } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
@@ -10,6 +11,7 @@ import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Backdrop, L, T, tap } from '@/ui/kit';
+import { LiquidGlass } from '@/ui/liquid';
 import { radius, useColors } from '@/ui/theme';
 
 const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
@@ -18,7 +20,7 @@ const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
 };
 
 export default function Run() {
-  const c = useColors(), ins = useSafeAreaInsets();
+  const c = useColors(), ins = useSafeAreaInsets(), dark = useColorScheme() === 'dark';
   const { Q, settings, saveAttempt } = useApp();
   const pic = useQuestionImage();
   const [plan] = useState(() => session.plan);
@@ -95,15 +97,17 @@ export default function Run() {
         {q.st.map((s, k) => {
           const on = ticks[i][k];
           return (
-            <Pressable key={k} onPress={() => toggle(k)}>
-              <View style={{ flexDirection: 'row', gap: 10, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: radius.md, borderWidth: 1,
-                backgroundColor: on ? c.checked : c.surface, borderColor: on ? c.text : c.cardBorder }}>
-                <View style={{ width: 15, height: 15, marginTop: 5, borderRadius: 2, borderWidth: 1, borderColor: on ? c.accent : c.text, backgroundColor: on ? c.accent : c.surface }} />
+            <Pressable key={k} onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
+              <LiquidGlass r={18} interactive tint={on ? (dark ? 'rgba(31,106,165,0.38)' : 'rgba(2,71,118,0.13)') : undefined}
+                style={{ flexDirection: 'row', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', ...(on ? { borderColor: c.accent, borderWidth: 1.5 } : {}) }}>
+                <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                  {on ? <Svg width={12} height={12} viewBox="0 0 12 12"><Path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#fff" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" /></Svg> : null}
+                </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <L style={{ fontSize: 16.5, lineHeight: 23 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                   {showFa && s.fa ? <T style={{ color: c.muted, fontSize: 14 }}>{s.fa}</T> : null}
                 </View>
-              </View>
+              </LiquidGlass>
             </Pressable>
           );
         })}
