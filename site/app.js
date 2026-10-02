@@ -1297,6 +1297,7 @@
       <div class="card opts">
         <button class="opt opt-link" id="openSaved"><span class="opt-ico">${ICON.bookmark(true)}</span><div class="opt-main">سؤالات ذخیره‌شده</div><span class="opt-go">${state.saved.length ? `<b>${faNum(state.saved.length)}</b>` : ''}${ICON.chevL}</span></button>
         <button class="opt opt-link" id="openWords"><span class="opt-ico">${ICON.book}</span><div class="opt-main">لغات ذخیره‌شده</div><span class="opt-go">${(state.words || []).length ? `<b>${faNum(state.words.length)}</b>` : ''}${ICON.chevL}</span></button>
+        ${state.user.admin ? `<button class="opt opt-link" id="openImgGen"><span class="opt-ico">${ICON.ai}</span><div class="opt-main">ساخت تصاویر جدید سؤال‌ها</div><span class="opt-go">${ICON.chevL}</span></button>` : ''}
         ${state.user.admin ? `<button class="opt opt-link" id="openAdmin"><span class="opt-ico">${ICON.chart}</span><div class="opt-main">پنل مدیریت</div><span class="opt-go">${ICON.chevL}</span></button>` : ''}
         <div class="opt"><div>زبان آزمون<small>سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند؛ ترجمه‌ی فارسی در هر دو حالت هست.</small></div>
           <div class="seg" role="group" aria-label="زبان آزمون">${Object.entries(LANGS).map(([k, v]) => `<button data-lang="${k}" class="${examLang() === k ? 'on' : ''}">${v}</button>`).join('')}</div></div>
@@ -1325,6 +1326,7 @@
     document.getElementById('openSaved').onclick = () => savedView();
     document.getElementById('openStudy').onclick = () => studyList();
     const oa = document.getElementById('openAdmin'); if (oa) oa.onclick = adminView;
+    const og = document.getElementById('openImgGen'); if (og) og.onclick = imgGenView;
     const se = document.getElementById('statExams');
     if (se && state.attempts.length) { se.onclick = () => historyView(); se.onkeydown = e => { if (e.key === 'Enter') historyView(); }; }
     const sm = document.getElementById('startM'); if (sm) sm.onclick = () => askSize('mistakes');
@@ -1691,16 +1693,26 @@
           <td>${fmtDateTime(u.lastActive)}</td><td>${faNum(u.activeDays)}</td><td>${fmtDate(u.created)}</td>
           <td>${u.lang ? LANGS[u.lang] : '–'}</td><td>${faNum(u.words)}</td></tr>`).join('')}</tbody>
       </table></div>
-      <div class="section-title">تصاویر جدید سؤال‌ها <small class="muted">(ساخته‌شده با هوش مصنوعی از روی توضیح متنی؛ تصویر اصلی همیشه نگه داشته می‌شود)</small></div>
-      <div class="card panel" id="imgGen"><div class="muted">در حال بارگذاری…</div></div>
     </section>`;
     document.getElementById('back').onclick = home;
     document.getElementById('reloadAdmin').onclick = adminView;
-    imgGenPanel();
     document.getElementById('hourDay').onchange = e => { document.getElementById('hourChart').innerHTML = hourBars(d.visitHours, e.target.value); };
     window.scrollTo({ top: 0 });
   }
 
+  // Own page for the new question pictures (admin only), opened from «تنظیمات و امکانات».
+  function imgGenView() {
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    $app.innerHTML = `<section class="view">
+      <button class="back-link" id="back">→ بازگشت به داشبورد</button>
+      <div class="words-head"><h1><span class="h-ico">${ICON.ai}</span>ساخت تصاویر جدید سؤال‌ها</h1></div>
+      <p class="muted" style="margin:0 0 12px">تصویر از روی توضیح متنیِ صحنه ساخته می‌شود؛ تصویر اصلی همیشه نگه داشته می‌شود و با یک کلیک برمی‌گردد.</p>
+      <div class="card panel" id="imgGen"><div class="muted">در حال بارگذاری…</div></div>
+    </section>`;
+    document.getElementById('back').onclick = home;
+    imgGenPanel();
+    window.scrollTo({ top: 0 });
+  }
   // New question pictures (admin): start one, watch its progress, and choose which picture the site shows.
   async function imgGenPanel() {
     const box = document.getElementById('imgGen'); if (!box) return;
