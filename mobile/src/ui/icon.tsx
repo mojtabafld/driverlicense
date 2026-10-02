@@ -77,6 +77,27 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
         </G>
       );
       break;
+    case 'clipboard':
+      body = (
+        <G>
+          <Path d="M8.5 4.5H6.8A1.8 1.8 0 0 0 5 6.3v13.4a1.8 1.8 0 0 0 1.8 1.8h10.4a1.8 1.8 0 0 0 1.8-1.8V6.3a1.8 1.8 0 0 0-1.8-1.8h-1.7" {...(filled ? { ...solid, strokeWidth: sw } : line)} />
+          <Path d="M9.5 3h5a1 1 0 0 1 1 1v1.2a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" {...line} />
+          <Path d="M8.6 11h.01M8.6 14.5h.01M8.6 18h.01" {...line} stroke={filled ? contrast : color} strokeWidth={2.4} />
+          <Path d="M11.5 11h4M11.5 14.5h4M11.5 18h2.5" {...line} stroke={filled ? contrast : color} />
+        </G>
+      );
+      break;
+    case 'warning': {
+      const d = 'M10.3 4.3a2 2 0 0 1 3.4 0l7.4 12.9a2 2 0 0 1-1.7 3H4.6a2 2 0 0 1-1.7-3z';
+      body = (
+        <G>
+          <Path d={d} {...(filled ? solid : line)} />
+          <Path d="M12 9.5v4" {...line} stroke={filled ? contrast : color} strokeWidth={2} />
+          <Circle cx={12} cy={16.9} r={1.1} fill={filled ? contrast : color} />
+        </G>
+      );
+      break;
+    }
   }
   return <Svg width={size} height={size} viewBox="0 0 24 24">{body}</Svg>;
 }
