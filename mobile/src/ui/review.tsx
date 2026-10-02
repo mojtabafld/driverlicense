@@ -17,8 +17,8 @@ import { DA_FONT, useColors, useIsDark } from './theme';
 
 const AI = '#7c5cff';
 const UI = {
-  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste' },
-  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next' },
+  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever' },
+  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in' },
 };
 export const uiText = (lang: 'da' | 'en') => UI[lang];
 
