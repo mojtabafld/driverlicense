@@ -45,11 +45,11 @@ export function Logo({ size = 28 }: { size?: number }) {
   );
 }
 
-// Light / dark switch, like the site's moon button in its top bar.
+// Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
 export function ThemeButton() {
-  const c = useColors(), { theme, setTheme } = useTheme(), dark = theme === 'dark';
+  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark';
   return (
-    <Pressable onPress={() => { tap(); setTheme(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
+    <Pressable onPress={() => { tap(); setMode(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : 'transparent' })}>
       {dark ? <Icon name="sun" size={20} color={c.link} /> : <Icon name="moon" size={19} color={c.muted} />}
     </Pressable>

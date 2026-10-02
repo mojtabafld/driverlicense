@@ -2,7 +2,7 @@
 import { createContext, useContext } from 'react';
 import { Platform } from 'react-native';
 
-import type { ThemeName } from '@/lib/prefs';
+import type { ThemeMode, ThemeName } from '@/lib/prefs';
 
 const light = {
   bg: '#ecf1f5', surface: '#ffffff', surface2: '#f2f5f8', line: '#d9e4ec',
@@ -25,8 +25,9 @@ const dark: typeof light = {
   bgGradient: ['#172431', '#111a22', '#0c141b'] as readonly [string, string, string],
 };
 export type Colors = typeof light;
-// The theme the user chose (light by default, like the site); set by ThemeModeProvider in src/ui/theme-mode.tsx.
-export const ThemeContext = createContext<{ theme: ThemeName; setTheme: (t: ThemeName) => void }>({ theme: 'light', setTheme: () => {} });
+// The theme in use (light or dark) and the mode it comes from (follow the system by default, or fixed); set by
+// ThemeModeProvider in src/ui/theme-mode.tsx.
+export const ThemeContext = createContext<{ theme: ThemeName; mode: ThemeMode; setMode: (m: ThemeMode) => void }>({ theme: 'light', mode: 'system', setMode: () => {} });
 export const useTheme = () => useContext(ThemeContext);
 export const useIsDark = () => useContext(ThemeContext).theme === 'dark';
 export const useColors = (): Colors => (useIsDark() ? dark : light);
