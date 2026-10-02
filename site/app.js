@@ -244,23 +244,34 @@
   function authView(mode) {
     clearInterval(state.timerId); setExamMode(false);
     const reg = mode === 'register';
+    const ico = d => `<svg class="in-ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+    const userIco = ico('<circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>');
+    const lockIco = ico('<rect x="5" y="10.5" width="14" height="10" rx="2.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke="currentColor" stroke-width="1.8" fill="none"/>');
+    const nameIco = ico('<path d="M4 20l1-4L16 5l3 3L8 19z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linejoin="round"/>');
+    const keyIco = ico('<circle cx="8" cy="15" r="4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M11 12l8-8M16 7l2 2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/>');
+    const eye = '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.8" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>';
     $app.innerHTML = `<section class="view auth">
-      <div class="auth-intro">
-        <span class="eyebrow">🇩🇰 آزمون تئوری گواهینامه‌ی B دانمارک</span>
-        <h1>با حساب خودت وارد شو و <span>پیشرفتت را دنبال کن</span></h1>
-        <p>بیش از هزار سؤال از ۴۴ آزمون، با ظاهری مشابه آزمون دیجیتال واقعی، ترجمه‌ی فارسی، آموزش کوتاه و تخمین احتمال قبولی.</p>
-      </div>
-      <form class="card auth-card" id="authForm" autocomplete="on">
+      <form class="auth-card" id="authForm" autocomplete="on">
+        <div class="auth-head">
+          <svg viewBox="0 0 32 32" width="48" height="48" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="9" fill="var(--accent)"/><path d="M9 20.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="16" cy="20.5" r="2.2" fill="#fff"/><path d="M16 20.5l3.2-3.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <h1>${reg ? 'ساخت حساب کاربری' : 'خوش آمدید'}</h1>
+          <p>${reg ? 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید' : 'برای ادامه‌ی تمرین وارد حساب خود شوید'}</p>
+        </div>
         <div class="tabs full"><button type="button" data-m="login" class="${reg ? '' : 'on'}">ورود</button><button type="button" data-m="register" class="${reg ? 'on' : ''}">ثبت‌نام</button></div>
-        ${reg ? `<label class="field"><span>نام نمایشی</span><input name="name" maxlength="40" placeholder="مثلاً سارا" required></label>` : ''}
-        <label class="field user-field"><span>نام کاربری</span><input name="username" class="da" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username" maxlength="32" ${reg ? 'minlength="3"' : ''} lang="en" dir="ltr" required>
+        ${reg ? `<label class="field"><span>نام نمایشی</span><span class="in-wrap">${nameIco}<input name="name" maxlength="40" placeholder="مثلاً سارا" required></span></label>` : ''}
+        <label class="field user-field"><span>نام کاربری</span><span class="in-wrap">${userIco}<input name="username" class="da" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username" maxlength="32" ${reg ? 'minlength="3"' : ''} lang="en" dir="ltr" required></span>
           <span class="field-tip" role="alert" hidden>نام کاربری فقط با حروف انگلیسی، عدد و . _ - نوشته می‌شود</span></label>
-        <label class="field"><span>رمز عبور</span><input name="password" type="password" class="da" autocomplete="${reg ? 'new-password' : 'current-password'}" required></label>
-        ${reg && state.inviteRequired ? `<label class="field"><span>کد دعوت</span><input name="invite" class="da" autocomplete="off" autocapitalize="off" spellcheck="false" required></label>` : ''}
+        <label class="field"><span>رمز عبور</span><span class="in-wrap">${lockIco}<input name="password" type="password" class="da" dir="ltr" placeholder="••••••••" autocomplete="${reg ? 'new-password' : 'current-password'}" required><button type="button" class="in-eye" id="pwEye" aria-label="نمایش رمز" aria-pressed="false">${eye}</button></span></label>
+        ${reg && state.inviteRequired ? `<label class="field"><span>کد دعوت</span><span class="in-wrap">${keyIco}<input name="invite" class="da" dir="ltr" autocomplete="off" autocapitalize="off" spellcheck="false" required></span></label>` : ''}
         <div class="form-err" id="authErr"></div>
-        <button class="btn btn-primary wide" type="submit">${reg ? 'ساخت حساب' : 'ورود'}</button>
+        <button class="btn btn-primary wide auth-submit" type="submit">${reg ? 'ساخت حساب' : 'ورود'}</button>
       </form>
+      <ul class="auth-feats">
+        <li>🇩🇰 آزمون تئوری گواهینامه‌ی B</li><li>بیش از ۱۰۰۰ سؤال در ۴۴ آزمون</li><li>ترجمه‌ی فارسی و آموزش</li>
+      </ul>
     </section>`;
+    const pw = $app.querySelector('input[name=password]'), pe = document.getElementById('pwEye');
+    pe.onclick = () => { const show = pw.type === 'password'; pw.type = show ? 'text' : 'password'; pe.setAttribute('aria-pressed', show); pe.setAttribute('aria-label', show ? 'پنهان کردن رمز' : 'نمایش رمز'); pe.classList.toggle('on', show); pw.focus(); };
     $app.querySelectorAll('[data-m]').forEach(b => b.onclick = () => authView(b.dataset.m));
     // Username: English letters, digits and . _ - only. Anything else (e.g. typed with a Persian keyboard)
     // is removed as it is typed or pasted, and a tooltip next to the box says why.
