@@ -1,6 +1,7 @@
-// Home: progress at a glance (chance of passing, counts, progress chart).
+// Home: progress at a glance (chance of passing, counts, progress chart), fitted to the screen without scrolling:
+// the chart takes the height left, and on shorter screens the cards get more compact.
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
 import { faNum, isFull, isPass, mistakeIds, passEstimate, pctOf } from '@/lib/logic';
@@ -13,16 +14,17 @@ import { useColors } from '@/ui/theme';
 
 // A count card: the icon tile with the label beside it, then the number and one short line of detail; it opens
 // its own page (exams, lessons, mistakes).
-function Stat({ icon, label, value, extra, sub, tone, onPress }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok'; onPress: () => void }) {
+function Stat({ icon, label, value, extra, sub, tone, onPress, short }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean }) {
   const c = useColors();
+  const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   return (
-    <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: 10 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <View style={{ width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
-          <Icon name={icon} size={16} color={fg} weight="semibold" />
+    <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: narrow ? 5 : 6 }}>
+        <View style={{ width: narrow ? 24 : 28, height: narrow ? 24 : 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
+          <Icon name={icon} size={narrow ? 14 : 16} color={fg} weight="semibold" />
         </View>
-        <T style={{ flexShrink: 1, color: c.text, fontSize: 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
+        <T style={{ flexShrink: 1, color: c.text, fontSize: narrow ? 12 : 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
         <T style={{ flex: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
@@ -30,13 +32,17 @@ function Stat({ icon, label, value, extra, sub, tone, onPress }: { icon: IconNam
         </T>
         <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
       </View>
-      <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>
+      {short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
     </Card>
   );
 }
 
 export default function Home() {
   const c = useColors();
+  // Screen height decides how compact the page is: below 800 points less padding and a smaller ring, below 680 the
+  // secondary lines go too, so everything stays on one screen.
+  const { height } = useWindowDimensions();
+  const compact = height < 800, tight = height < 680;
   const { user, attempts, bank } = useApp();
   const est = passEstimate(attempts);
   const exams = attempts.filter(a => a.mode !== 'lesson');
@@ -51,17 +57,17 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <Screen title={`سلام ${user?.name ?? ''}`} subtitle="آماده‌ی تمرین امروز هستید؟">
-      <Card style={{ gap: 14 }}>
+    <Screen fill gap={compact ? 10 : 14} title={`سلام ${user?.name ?? ''}`} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}>
+      <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <Ring value={est ? est.prob : 0} size={96} stroke={9} color={probColor} label={est ? pctText(est.prob) : '–'} />
-          <View style={{ flex: 1, gap: 6, alignItems: 'flex-start' }}>
+          <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} />
+          <View style={{ flex: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
             <Pill text={probWord} fg={probColor} bg={probSoft} />
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12 }}>
+        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: compact ? 8 : 12 }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
@@ -77,11 +83,11 @@ export default function Home() {
         </View>
       </Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Stat onPress={() => router.navigate('/exam')} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'هنوز آزمون کاملی نیست'} />
-        <Stat onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
-        <Stat onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'اشتباهی نمانده'} />
+        <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'هنوز آزمون کاملی نیست'} />
+        <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
+        <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'اشتباهی نمانده'} />
       </View>
-      <Card style={{ gap: 12 }}>
+      <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -89,7 +95,7 @@ export default function Home() {
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.ok, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
-        <ProgressChart attempts={attempts} onOpen={openAttempt} />
+        <ProgressChart fill attempts={attempts} onOpen={openAttempt} />
       </Card>
     </Screen>
   );
