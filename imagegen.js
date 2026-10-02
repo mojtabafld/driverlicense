@@ -71,16 +71,18 @@ async function describe(q) {
 }
 
 // Starts a new picture for question `qid` with model 'sunburst' | 'flare'. Returns the job.
-async function start(qid, model = 'sunburst', by = '') {
+// `prompt`: a scene description written or edited by the admin; without it Claude writes one.
+async function start(qid, model = 'sunburst', by = '', prompt = '') {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   if (!MODELS[model]) throw Object.assign(new Error('مدل نامعتبر'), { status: 400 });
   const item = images()[q.id] = images()[q.id] || { active: null, v: '', jobs: [] };
-  const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: 'describing', done: false };
+  prompt = String(prompt || '').trim().slice(0, 20000);
+  const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}) };
   item.jobs.push(job); await save();
   try {
-    job.prompt = await describe(q);
+    job.prompt = prompt || await describe(q);
     job.state = 'queued'; await save();
     const d = await kie('POST', '/jobs/createTask', { model: MODELS[model], callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
     job.taskId = d.taskId; job.state = 'generating'; await save();
@@ -156,4 +158,11 @@ const list = () => ({ available: available(), models: Object.keys(MODELS), items
 
 const firstQuestion = () => BANK.tests[0].qs[0];
 
-module.exports = { firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available };
+// A scene description only (Claude), for the admin to edit before making a picture.
+async function draft(qid) {
+  const q = Q.get(+qid);
+  if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
+  return describe(q);
+}
+
+module.exports = { draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available };
