@@ -1725,24 +1725,27 @@
     const sel = imgGenPanel.sel = imgGenPanel.sel || { i: 0, k: 0 };
     // Edited scene descriptions survive the panel's own refreshes: drafts by key ('new' = the form, else a job id).
     const drafts = imgGenPanel.drafts = imgGenPanel.drafts || {}, openSet = imgGenPanel.open = imgGenPanel.open || new Set();
+    // Made pictures are listed by lesson and question only; a row opens to show its pictures (kept open on refresh).
+    const exp = imgGenPanel.exp = imgGenPanel.exp || new Set();
     const lessonOpts = BANK.tests.map((t, i) => `<option value="${i}" ${i === sel.i ? 'selected' : ''}>درس ${faNum(studyNum(t, i))}</option>`).join('');
     const qOpts = i => BANK.tests[i].qs.map((id, k) => `<option value="${k}" ${k === sel.k ? 'selected' : ''}>سؤال ${faNum(k + 1)}${d.items[id] ? ' ✓' : ''}</option>`).join('');
     const pending = rows.some(([, x]) => x.jobs.some(j => !j.done));
     box.innerHTML = `${d.available ? '' : '<div class="form-err">KIE_API_KEY روی سرور تنظیم نشده است.</div>'}
       <form class="ig-form" id="igForm"><label>درس <select name="lesson" id="igLesson">${lessonOpts}</select></label>
         <label>سؤال <select name="q" id="igQ">${qOpts(sel.i)}</select></label>
-        <label>مدل <select name="model">${d.models.map(m => `<option value="${m}">${m === 'flare' ? 'GPT Image 2.5 Flare' : 'GPT Image 2.5 Sunburst'}</option>`).join('')}</select></label>
-        <button class="btn btn-primary" ${d.available ? '' : 'disabled'}>ساخت تصویر جدید</button>
-        <button type="button" class="tr-toggle" id="igDraft">نوشتن توضیح صحنه برای ویرایش</button>
         <div class="ig-pick" id="igPick"></div>
+        <label>مدل <select name="model">${d.models.map(m => `<option value="${m}" ${m === imgGenPanel.model ? 'selected' : ''}>${m === 'flare' ? 'GPT Image 2.5 Flare' : 'GPT Image 2.5 Sunburst'}</option>`).join('')}</select></label>
+        <button type="button" class="tr-toggle ig-draft-btn" id="igDraft">نوشتن توضیح صحنه برای ویرایش</button>
         <div class="ig-edit" id="igNewEdit" ${drafts.new != null ? '' : 'hidden'}>
           <label>توضیح صحنه <small class="muted">— متن را کم یا زیاد کنید؛ «ساخت تصویر جدید» تصویر را از همین متن می‌سازد</small></label>
           <textarea class="da" dir="ltr" data-draft="new" rows="8">${esc(drafts.new || '')}</textarea>
           <button type="button" class="tr-toggle" id="igNewClear">بستن و برگشت به توضیح خودکار</button>
-        </div></form>
-      ${rows.length ? rows.map(([qid, x]) => `<div class="ig-q">
-        <div class="ig-h"><b>${whereFa(qid)}</b><small class="muted da">#${qid}</small><small class="muted">${x.active ? 'روی سایت: تصویر جدید' : 'روی سایت: تصویر اصلی'}</small></div>
-        <div class="ig-row">
+        </div>
+        <button class="btn btn-primary ig-go" ${d.available ? '' : 'disabled'}>ساخت تصویر جدید</button></form>
+      ${rows.length ? '<div class="ig-list-h">تصاویر ساخته‌شده</div>' : ''}
+      ${rows.length ? rows.map(([qid, x]) => `<div class="ig-q ${exp.has(qid) ? 'open' : ''}">
+        <button type="button" class="ig-h" data-ig-exp="${qid}" aria-expanded="${exp.has(qid)}"><b>${whereFa(qid)}</b>${x.jobs.some(j => !j.done) ? '<span class="ig-spin sm"></span>' : ''}<svg class="hs-chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+        <div class="ig-row" ${exp.has(qid) ? '' : 'hidden'}>
           <div class="ig-cell ${x.active ? '' : 'on'}"><img src="img/q${qid}.jpg?orig=1" alt=""><span>تصویر اصلی</span>
             ${x.active ? `<button class="tr-toggle" data-ig-set="${qid}" data-job="">برگرداندن تصویر اصلی</button>` : '<em>نمایش داده می‌شود</em>'}</div>
           ${x.jobs.slice().reverse().map(j => `<div class="ig-cell ${x.active === j.id ? 'on' : ''}">
@@ -1768,10 +1771,15 @@
       e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); e.target.querySelector('button').disabled = true;
       toast('در حال شروع… (نوشتن توضیح صحنه چند ثانیه طول می‌کشد)');
       const prompt = drafts.new != null && drafts.new.trim() ? drafts.new : undefined;
-      try { await api('POST', 'imggenstart', { qid: BANK.tests[sel.i].qs[sel.k], model: f.model, prompt }); delete drafts.new; } catch (err) { toast(err.message); }
+      try { await api('POST', 'imggenstart', { qid: BANK.tests[sel.i].qs[sel.k], model: f.model, prompt }); delete drafts.new; exp.add(String(BANK.tests[sel.i].qs[sel.k])); } catch (err) { toast(err.message); }
       imgGenPanel();
     };
     box.querySelectorAll('[data-draft]').forEach(t => t.oninput = () => { drafts[t.dataset.draft] = t.value; });
+    box.querySelectorAll('[data-ig-exp]').forEach(b => b.onclick = () => {
+      const q = b.dataset.igExp, on = !exp.has(q); on ? exp.add(q) : exp.delete(q);
+      b.setAttribute('aria-expanded', on); b.parentNode.classList.toggle('open', on); b.nextElementSibling.hidden = !on;
+    });
+    document.querySelector('#igForm [name=model]').onchange = e => { imgGenPanel.model = e.target.value; };
     box.querySelectorAll('details[data-open]').forEach(x => x.ontoggle = () => { x.open ? openSet.add(x.dataset.open) : openSet.delete(x.dataset.open); });
     document.getElementById('igDraft').onclick = async e => {
       e.target.disabled = true; toast('در حال نوشتن توضیح صحنه…');
