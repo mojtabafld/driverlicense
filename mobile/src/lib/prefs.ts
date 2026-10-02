@@ -1,10 +1,12 @@
-// The chosen theme on iOS/Android, kept on the device.
+// The chosen theme mode on iOS/Android, kept on the device: follow the system (default), or always light / dark.
 import * as SecureStore from 'expo-secure-store';
 
 export type ThemeName = 'light' | 'dark';
-const KEY = 'tp_theme';
-export const initialTheme = (): ThemeName | null => null;
-export const loadTheme = async (): Promise<ThemeName | null> => {
-  try { const v = await SecureStore.getItemAsync(KEY); return v === 'dark' || v === 'light' ? v : null; } catch { return null; }
+export type ThemeMode = 'system' | ThemeName;
+const KEY = 'tp_theme_mode';
+const valid = (v: unknown): v is ThemeMode => v === 'system' || v === 'light' || v === 'dark';
+export const initialMode = (): ThemeMode | null => null;
+export const loadMode = async (): Promise<ThemeMode | null> => {
+  try { const v = await SecureStore.getItemAsync(KEY); return valid(v) ? v : null; } catch { return null; }
 };
-export const saveTheme = (t: ThemeName) => SecureStore.setItemAsync(KEY, t).catch(() => {});
+export const saveMode = (m: ThemeMode) => SecureStore.setItemAsync(KEY, m).catch(() => {});

@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform } from 'react-native';
@@ -27,14 +28,20 @@ function Root() {
   const [fontsLoaded, fontError] = useFonts(FA_FONTS);
   const fonts = fontsLoaded || !!fontError;
   useEffect(() => { if (ready && fonts) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts]);
-  // The page behind the app follows the chosen theme on the web.
+  // On the web the page behind the app, and the browser's own bar (theme-color), take the top colour of the
+  // background gradient, so the top of the screen runs into the page.
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-    document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; document.body.style.backgroundColor = c.bg;
-  }, [dark, c.bg]);
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; document.body.style.backgroundColor = c.bgGradient[0];
+    let m = document.querySelector('meta[name="theme-color"]');
+    if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
+    m.setAttribute('content', c.bgGradient[0]);
+  }, [dark, c.bgGradient]);
   if (!ready || !fonts || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
+      {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
+      <StatusBar style={dark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />

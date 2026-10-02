@@ -7,8 +7,10 @@ https://kore.mintcloud.info. Design: the same look as the web site (colours, bac
 exams and lessons, and the tab bar at the bottom. On iOS the tab bar is Apple's own (`expo-router/unstable-native-tabs`),
 on the web a copy of the iOS 26 floating glass bar, on Android Material tabs.
 
-Theme: light by default; the moon / sun button in the top bar or «ظاهر» in the settings switches to dark. The choice is
-kept on the device (on the web in the site's own `tp.theme` entry, so the site and `/app` share it). Persian text is set
+Theme: «خودکار» by default (follows the device's light / dark setting, live); «ظاهر» in the settings also offers «روشن»
+and «تیره», and the moon / sun button in the top bar sets one of those. The choice is kept on the device (on the web
+in `tp.appTheme`; a fixed light / dark choice is also written to the site's `tp.theme`). The top of the screen (the
+browser's theme-color, the phone's status bar) takes the top colour of the background gradient. Persian text is set
 in **Vazirmatn**, bundled with the app (`src/ui/fonts.ts`, five weights), so it does not depend on Google Fonts.
 
 Icons (`src/ui/icon.ios.tsx` / `src/ui/icon.tsx`): on iOS Apple's **SF Symbols** through `expo-symbols`, so each phone shows its own system's

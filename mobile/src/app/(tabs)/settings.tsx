@@ -23,7 +23,7 @@ function Row({ title, sub, right }: { title: string; sub?: string; right: React.
 export default function Settings() {
   const c = useColors();
   const { user, settings, setSettings, logout, attempts } = useApp();
-  const { theme, setTheme } = useTheme();
+  const { mode, setMode } = useTheme();
   const confirmLogout = () => {
     if (Platform.OS === 'web') { if (window.confirm('از حساب کاربری خارج می‌شوید؟')) logout(); return; }
     Alert.alert('خروج از حساب', 'از حساب کاربری خارج می‌شوید؟', [{ text: 'انصراف', style: 'cancel' }, { text: 'خروج', style: 'destructive', onPress: logout }]);
@@ -42,8 +42,8 @@ export default function Settings() {
         </View>
       </Card>
       <Card style={{ gap: 10 }}>
-        <Row title="ظاهر" sub="روشن (پیش‌فرض) یا تیره." right={null} />
-        <Segmented value={theme} onChange={setTheme} options={[{ value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
+        <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />
+        <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
       </Card>
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
