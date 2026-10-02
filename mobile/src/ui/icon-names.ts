@@ -1,0 +1,21 @@
+// Icon names shared by src/ui/icon.tsx (web, Android) and src/ui/icon.ios.tsx (SF Symbols).
+import type { SymbolWeight } from 'expo-symbols';
+
+export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles';
+
+export type IconProps = { name: IconName; size?: number; color: string; filled?: boolean; weight?: SymbolWeight; contrast?: string };
+
+// SF Symbol per icon: [outline, filled].
+export const SF: Record<IconName, [string, string]> = {
+  house: ['house', 'house.fill'],
+  exam: ['checkmark.circle', 'checkmark.circle.fill'],
+  learn: ['book', 'book.fill'],
+  settings: ['gearshape', 'gearshape.fill'],
+  moon: ['moon.fill', 'moon.fill'],
+  sun: ['sun.max.fill', 'sun.max.fill'],
+  check: ['checkmark', 'checkmark'],
+  checkCircle: ['checkmark.circle.fill', 'checkmark.circle.fill'],
+  xCircle: ['xmark.circle.fill', 'xmark.circle.fill'],
+  chevronLeft: ['chevron.left', 'chevron.left'],
+  sparkles: ['sparkles', 'sparkles'],
+};

@@ -7,6 +7,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Button, Card, Ring, Screen, T } from '@/ui/kit';
 import { ProgressChart } from '@/ui/progress-chart';
+import { Icon } from '@/ui/icon';
 import { useColors } from '@/ui/theme';
 
 export default function Home() {
@@ -50,7 +51,7 @@ export default function Home() {
             <T style={{ fontWeight: '700' }}>{a.mode === 'lesson' ? 'درس' : 'آزمون'} · {faNum(scoreOf(a))} از {faNum(a.items.length)} درست</T>
             <T style={{ color: c.muted, fontSize: 13 }}>{fmtDate(a.at)}{isFull(a) ? (isPass(a) ? ' · قبول' : ' · مردود') : ''}</T>
           </View>
-          <T style={{ color: c.link, fontWeight: '700' }}>مرور</T>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><T style={{ color: c.link, fontWeight: '700' }}>مرور</T><Icon name="chevronLeft" size={15} color={c.link} weight="semibold" /></View>
         </Card>
       ))}
     </Screen>

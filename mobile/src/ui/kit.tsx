@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { faFamily } from './fonts';
+import { Icon } from './icon';
 import { Glass } from './glass';
 import { DA_FONT, radius, useColors, useTheme } from './theme';
 
@@ -35,11 +36,7 @@ export function ThemeButton() {
   return (
     <Pressable onPress={() => { tap(); setTheme(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : 'transparent' })}>
-      <Svg width={20} height={20} viewBox="0 0 24 24">
-        {dark
-          ? <><Circle cx={12} cy={12} r={4.5} fill={c.link} /><Path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke={c.link} strokeWidth={2} strokeLinecap="round" /></>
-          : <Path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill={c.muted} />}
-      </Svg>
+      {dark ? <Icon name="sun" size={20} color={c.link} /> : <Icon name="moon" size={19} color={c.muted} />}
     </Pressable>
   );
 }

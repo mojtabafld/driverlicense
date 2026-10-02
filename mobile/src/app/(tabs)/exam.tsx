@@ -7,6 +7,7 @@ import { FULL, SIZES, faNum, fmtDate, isFull, isPass, mistakeIds, randomIds, sco
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Glass } from '@/ui/glass';
+import { Icon } from '@/ui/icon';
 import { Button, Card, Screen, T, tap } from '@/ui/kit';
 import { radius, useColors } from '@/ui/theme';
 
@@ -55,7 +56,7 @@ export default function Exam() {
             <T style={{ fontWeight: '700' }}>{a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش بر اساس دسته‌بندی' : 'آزمون تصادفی'}{isFull(a) ? (isPass(a) ? ' · قبول' : ' · مردود') : ''}</T>
             <T style={{ color: c.muted, fontSize: 13 }}>{fmtDate(a.at)}</T>
           </View>
-          <T style={{ color: c.link, fontWeight: '700' }}>مرور</T>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><T style={{ color: c.link, fontWeight: '700' }}>مرور</T><Icon name="chevronLeft" size={15} color={c.link} weight="semibold" /></View>
         </Card>
       ))}
     </Screen>
