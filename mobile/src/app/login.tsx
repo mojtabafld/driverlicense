@@ -1,25 +1,25 @@
-// Sign in / sign up on a single glass card.
+// Sign in / sign up on one card, like the site's sign-in page.
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { useApp } from '@/lib/store';
-import { Glass } from '@/ui/glass';
-import { Backdrop, Button, Segmented, T } from '@/ui/kit';
+import { Backdrop, Button, Logo, Segmented, TopBar, T } from '@/ui/kit';
 import { radius, useColors } from '@/ui/theme';
 
 function Field({ label, value, onChange, secure, ltr, placeholder }: { label: string; value: string; onChange: (v: string) => void; secure?: boolean; ltr?: boolean; placeholder?: string }) {
   const c = useColors();
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(false), [focus, setFocus] = useState(false);
   return (
-    <View style={{ gap: 6 }}>
-      <T style={{ color: c.muted, fontSize: 13, fontWeight: '600' }}>{label}</T>
-      <Glass r={radius.md} strong style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14 }}>
+    <View style={{ gap: 7 }}>
+      <T style={{ color: c.muted, fontSize: 13 }}>{label}</T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: radius.field, borderWidth: 1.5,
+        borderColor: focus ? c.accent : 'transparent', backgroundColor: focus ? c.surface : c.surface2,
+        ...(Platform.OS === 'web' && focus ? { boxShadow: `0 0 0 4px ${c.accentSoft}` } as any : {}) }}>
         <TextInput value={value} onChangeText={onChange} secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false}
-          placeholder={placeholder} placeholderTextColor={c.faint}
-          style={{ flex: 1, height: 50, fontSize: 16, color: c.text, textAlign: ltr ? 'left' : 'right', writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
-        {secure ? <Pressable onPress={() => setShow(!show)} hitSlop={10}><T style={{ color: c.accent, fontWeight: '700', fontSize: 13 }}>{show ? 'پنهان' : 'نمایش'}</T></Pressable> : null}
-      </Glass>
+          placeholder={placeholder} placeholderTextColor={c.faint} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
+          style={{ flex: 1, height: 47, fontSize: 15.5, color: c.text, textAlign: ltr ? 'left' : 'right', writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
+        {secure ? <Pressable onPress={() => setShow(!show)} hitSlop={10}><T style={{ color: c.link, fontWeight: '600', fontSize: 13 }}>{show ? 'پنهان' : 'نمایش'}</T></Pressable> : null}
+      </View>
     </View>
   );
 }
@@ -37,11 +37,13 @@ export default function Login() {
   };
   return (
     <Backdrop>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
-        <Glass r={radius.xl} style={{ padding: 24, gap: 16, width: '100%', maxWidth: 420, alignSelf: 'center' }}>
-          <View style={{ alignItems: 'center', gap: 6 }}>
-            <Svg width={56} height={56} viewBox="0 0 32 32"><Rect x={2} y={2} width={28} height={28} rx={9} fill={c.accent} /><Path d="M9 20.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5" stroke="#fff" strokeWidth={2.4} fill="none" strokeLinecap="round" /><Circle cx={16} cy={20.5} r={2.2} fill="#fff" /><Path d="M16 20.5l3.2-3.8" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" /></Svg>
-            <T style={{ fontSize: 24, fontWeight: '800', textAlign: 'center' }}>{mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}</T>
+      <TopBar />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, justifyContent: 'center', padding: 16 }}>
+        <View style={{ padding: 28, paddingTop: 32, gap: 16, width: '100%', maxWidth: 400, alignSelf: 'center', borderRadius: radius.xl, backgroundColor: c.surface,
+          shadowColor: '#10283c', shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 3 }}>
+          <View style={{ alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <View style={{ marginBottom: 6 }}><Logo size={48} /></View>
+            <T style={{ fontSize: 23, lineHeight: 34, fontWeight: '700', textAlign: 'center' }}>{mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}</T>
             <T style={{ color: c.muted, textAlign: 'center', fontSize: 13.5 }}>آزمون تئوری گواهینامه‌ی B دانمارک، با ترجمه‌ی فارسی</T>
           </View>
           <Segmented value={mode} onChange={m => { setMode(m); setErr(''); }} options={[{ value: 'login', label: 'ورود' }, { value: 'register', label: 'ثبت‌نام' }]} />
@@ -49,8 +51,8 @@ export default function Login() {
           <Field label="نام کاربری" value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr placeholder="username" />
           <Field label="رمز عبور" value={pw} onChange={setPw} secure ltr placeholder="••••••••" />
           {err ? <T style={{ color: c.bad, fontSize: 13.5 }}>{err}</T> : null}
-          <Button label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={busy || !user || !pw} />
-        </Glass>
+          <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={busy || !user || !pw} style={{ marginTop: 4 }} />
+        </View>
       </KeyboardAvoidingView>
     </Backdrop>
   );

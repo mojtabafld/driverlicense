@@ -1,8 +1,9 @@
 # TeoriPrøve — iOS, Android and web app
 
 One Expo (React Native) code base for iOS, Android and the web. It uses the same server and accounts as
-https://kore.mintcloud.info. Design: Apple's **Liquid Glass**, i.e. real glass on iOS 26 (`expo-glass-effect`, native
-tab bar via `expo-router/unstable-native-tabs`) and a matching frosted-glass look on Android and the web.
+https://kore.mintcloud.info. Design: the same look as the web site (colours, background, cards, buttons and fonts from
+`site/style.css`, copied into `src/ui/theme.ts`), plus a tab bar at the bottom that separates the parts of the app
+(system tab bar via `expo-router/unstable-native-tabs` on iOS and Android, a site-style bar on the web).
 
 ## Parts of the app (tabs at the bottom)
 - **خانه**: chance of passing, counts, latest activity.
@@ -19,7 +20,6 @@ npm install
 npx expo start            # scan the QR code with Expo Go (iOS/Android), or press w for the web
 ```
 - The app talks to `https://kore.mintcloud.info`. For a local server: `EXPO_PUBLIC_API_URL=http://<your-ip>:3000 npx expo start`.
-- Liquid Glass needs a device on **iOS 26**. Older iOS, Android and the web show the frosted-glass fallback.
 - Right-to-left layout is forced with the `expo-localization` plugin (`forcesRTL`). This applies in development builds and
   store builds; Expo Go may show left-to-right. For the real look build a development build:
   `npx eas-cli@latest build --profile development --platform ios`.

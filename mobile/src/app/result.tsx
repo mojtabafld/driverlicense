@@ -29,7 +29,7 @@ export default function Result() {
       <ScrollView contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 22 }}>
           <Ring value={pctOf(a)} size={120} stroke={11} color={full ? (pass ? c.ok : c.bad) : c.accent} label={full ? `${faNum(right)}/${faNum(n)}` : `${faNum(Math.round(pctOf(a) * 100))}٪`} />
-          <T style={{ fontSize: 24, fontWeight: '800', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.text }}>
+          <T style={{ fontSize: 24, fontWeight: '700', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.text }}>
             {full ? (pass ? (fresh ? '🎉 قبول شدید!' : '✓ قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : '✗ مردود')) : `${faNum(right)} از ${faNum(n)} درست`}
           </T>
           <T style={{ color: c.muted, textAlign: 'center', fontSize: 13.5 }}>{full ? `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.` : 'آزمون تمرینی'} · {fmtDate(a.at)}</T>
@@ -40,7 +40,7 @@ export default function Result() {
             <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
               <Image source={imgSource(pic(q!))} style={{ width: 92, aspectRatio: 4 / 3, borderRadius: radius.sm }} contentFit="cover" />
               <View style={{ flex: 1, gap: 2 }}>
-                <T style={{ fontWeight: '800', color: it.ok ? c.ok : c.bad }}>سؤال {faNum(k + 1)} {it.ok ? '✓' : '✗'}</T>
+                <T style={{ fontWeight: '700', color: it.ok ? c.ok : c.bad }}>سؤال {faNum(k + 1)} {it.ok ? '✓' : '✗'}</T>
                 <L numberOfLines={2} style={{ fontSize: 14, lineHeight: 20 }}>{lang === 'en' && q!.sen ? q!.sen : q!.sda}</L>
               </View>
             </View>

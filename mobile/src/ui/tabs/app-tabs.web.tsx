@@ -1,12 +1,11 @@
-// Web version of the tab bar: a floating Liquid Glass pill at the bottom of the screen.
+// Web version of the tab bar: a bar fixed to the bottom of the page, in the site's colours (surface, top line, navy when chosen).
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { forwardRef } from 'react';
 import { Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { Glass } from '../glass';
 import { T } from '../kit';
-import { radius, useColors } from '../theme';
+import { useColors } from '../theme';
 import { TABS } from './tabs';
 
 const ICONS: Record<string, string> = {
@@ -20,9 +19,9 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
   const c = useColors();
   return (
     <Pressable ref={ref} {...props} style={{ flex: 1 }}>
-      <View style={{ alignItems: 'center', gap: 2, paddingVertical: 8, borderRadius: radius.pill, backgroundColor: isFocused ? c.accentSoft : 'transparent' }}>
-        <Svg width={24} height={24} viewBox="0 0 24 24"><Path d={ICONS[name]} fill={isFocused ? c.accent : c.muted} /></Svg>
-        <T style={{ fontSize: 11.5, lineHeight: 16, textAlign: 'center', fontWeight: isFocused ? '800' : '600', color: isFocused ? c.accent : c.muted }}>{label}</T>
+      <View style={{ alignItems: 'center', gap: 2, paddingTop: 7, paddingBottom: 6, borderTopWidth: 3, borderTopColor: isFocused ? c.accent : 'transparent' }}>
+        <Svg width={22} height={22} viewBox="0 0 24 24"><Path d={ICONS[name]} fill={isFocused ? c.link : c.muted} /></Svg>
+        <T style={{ fontSize: 12, lineHeight: 16, textAlign: 'center', fontWeight: isFocused ? '700' : '600', color: isFocused ? c.link : c.muted }}>{label}</T>
       </View>
     </Pressable>
   );
@@ -30,10 +29,11 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
 TabButton.displayName = 'TabButton';
 
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
-function GlassBar({ children, ...props }: { children?: React.ReactNode }) {
+function BottomBar({ children, ...props }: { children?: React.ReactNode }) {
+  const c = useColors();
   return (
-    <View {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: 18, left: 0, right: 0, alignItems: 'center' }}>
-      <Glass r={radius.pill} strong style={{ flexDirection: 'row', width: 360, maxWidth: '92%' as any, padding: 6 }}>{children}</Glass>
+    <View {...props} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: c.surface, borderTopWidth: 1, borderTopColor: c.line }}>
+      <View style={{ flexDirection: 'row', width: '100%', maxWidth: 560, alignSelf: 'center' }}>{children}</View>
     </View>
   );
 }
@@ -43,13 +43,13 @@ export default function AppTabs() {
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
       <TabList asChild>
-        <GlassBar>
+        <BottomBar>
           {TABS.map(t => (
             <TabTrigger key={t.name} name={t.name} href={t.href as any} asChild>
               <TabButton name={t.name} label={t.label} />
             </TabTrigger>
           ))}
-        </GlassBar>
+        </BottomBar>
       </TabList>
     </Tabs>
   );

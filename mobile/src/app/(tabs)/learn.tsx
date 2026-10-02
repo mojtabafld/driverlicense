@@ -38,7 +38,7 @@ export default function Learn() {
                   <Glass r={radius.lg} style={{ padding: 8, gap: 6, borderColor: state, borderWidth: r.length ? 1.5 : undefined }}>
                     {q ? <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="cover" /> : null}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
-                      <T style={{ fontWeight: '800' }}>درس {faNum(lessonNumber(t.title, i))}</T>
+                      <T style={{ fontWeight: '700' }}>درس {faNum(lessonNumber(t.title, i))}</T>
                       <View style={{ flexDirection: 'row', gap: 4 }}>
                         {r.slice(-3).map(a => <View key={a.at} style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: isPass(a) ? c.ok : c.bad }} />)}
                       </View>
@@ -55,9 +55,9 @@ export default function Learn() {
           {bank.sections.map((s, i) => {
             const on = chosen.includes(s.n), n = bank.questions.filter(q => sectionOf(q.c) === s.n).length;
             return (
-              <Card key={s.n} onPress={() => setChosen(on ? chosen.filter(x => x !== s.n) : [...chosen, s.n])} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, ...(on ? { backgroundColor: c.accentSoft } : {}) }}>
-                <Glass r={radius.sm} tint={on ? c.accent : undefined} style={{ width: 34, height: 34, alignItems: 'center', justifyContent: 'center', ...(on ? { backgroundColor: c.accent } : {}) }}>
-                  <T style={{ textAlign: 'center', fontWeight: '800', color: on ? c.accentText : c.accent }}>{faNum(i + 1)}</T>
+              <Card key={s.n} onPress={() => setChosen(on ? chosen.filter(x => x !== s.n) : [...chosen, s.n])} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, ...(on ? { borderColor: c.accent } : {}) }}>
+                <Glass r={radius.md} tint={on ? c.accent : c.accentSoft} style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                  <T style={{ textAlign: 'center', fontWeight: '700', color: on ? c.accentText : c.link }}>{faNum(i + 1)}</T>
                 </Glass>
                 <View style={{ flex: 1 }}>
                   <T style={{ fontWeight: '700' }}>{s.fa}</T>
