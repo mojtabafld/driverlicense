@@ -13,8 +13,8 @@ const path = require('node:path');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
-// Sunburst (more detail) is the default; Flare is faster and cheaper.
-const MODELS = { sunburst: 'gpt-image-2-5-sunburst-text-to-image', flare: 'gpt-image-2-5-flare-text-to-image' };
+// Flare (faster, cheaper) is the default; Sunburst gives more detail.
+const MODELS = { flare: 'gpt-image-2-5-flare-text-to-image', sunburst: 'gpt-image-2-5-sunburst-text-to-image' };
 const CLAUDE = process.env.LESSON_MODEL || 'claude-opus-5-5';
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://kore.mintcloud.info').replace(/\/$/, '');
 
@@ -70,14 +70,16 @@ async function describe(q) {
   return text;
 }
 
-// Starts a new picture for question `qid` with model 'sunburst' | 'flare'. Returns the job.
+// Starts ONE new picture for question `qid` with the chosen model ('flare' | 'sunburst'). Returns the job.
 // `prompt`: a scene description written or edited by the admin; without it Claude writes one.
-async function start(qid, model = 'sunburst', by = '', prompt = '') {
+async function start(qid, model = 'flare', by = '', prompt = '') {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   if (!MODELS[model]) throw Object.assign(new Error('مدل نامعتبر'), { status: 400 });
   const item = images()[q.id] = images()[q.id] || { active: null, v: '', jobs: [] };
+  // One picture at a time per question, so a double click or a second tab never makes two.
+  if (item.jobs.some(j => !j.done)) throw Object.assign(new Error('برای این سؤال یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
   prompt = String(prompt || '').trim().slice(0, 20000);
   const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}) };
   item.jobs.push(job); await save();
