@@ -1,9 +1,10 @@
 // Settings and account.
-import { Alert, Linking, Platform, Pressable, Switch, View } from 'react-native';
+import Constants from 'expo-constants';
+import { Alert, Platform, Pressable, Switch, View } from 'react-native';
 
-import { API_URL } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
+import { Icon } from '@/ui/icon';
 import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 
@@ -40,6 +41,10 @@ export default function Settings() {
           <T style={{ fontWeight: '700', fontSize: 17 }}>{user?.name}</T>
           <T style={{ color: c.muted, fontSize: 13, writingDirection: 'ltr', textAlign: 'right' }}>@{user?.username} · {faNum(attempts.length)} آزمون</T>
         </View>
+        <Pressable onPress={() => { tap(); confirmLogout(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از حساب"
+          style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
+          <Icon name="exit" size={20} color={c.bad} weight="semibold" />
+        </Pressable>
       </Card>
       <Card style={{ gap: 10 }}>
         <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />
@@ -51,9 +56,8 @@ export default function Settings() {
         <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Switch {...sw} value={settings.showFa} onValueChange={v => { tap(); setSettings({ showFa: v }); }} />} />
         <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Switch {...sw} value={settings.timer} onValueChange={v => { tap(); setSettings({ timer: v }); }} />} />
       </Card>
-      <Card style={{ gap: 6 }}>
-        <Pressable onPress={() => Linking.openURL(API_URL)}><Row title="نسخه‌ی وب سایت" sub={API_URL.replace(/^https?:\/\//, '')} right={<T style={{ color: c.link }}>باز کردن</T>} /></Pressable>
-        <Pressable onPress={confirmLogout}><Row title="خروج از حساب" right={<T style={{ color: c.bad, fontWeight: '700' }}>خروج</T>} /></Pressable>
+      <Card>
+        <Row title="نسخه‌ی نرم‌افزار" right={<T style={{ color: c.muted, writingDirection: 'ltr' }}>{faNum(Constants.expoConfig?.version ?? '1.0.0')}</T>} />
       </Card>
     </Screen>
   );

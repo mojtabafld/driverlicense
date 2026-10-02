@@ -21,7 +21,7 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
   const [sel, setSel] = useState<number | null>(null);
   const box = useRef<View>(null);
   if (attempts.length < 2) {
-    return <T style={{ color: c.muted, fontSize: 13.5, textAlign: 'center', paddingVertical: 24 }}>بعد از دست‌کم ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>;
+    return <T style={{ color: c.muted, fontSize: 13.5, textAlign: 'center', paddingVertical: 24 }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>;
   }
   const data = attempts.slice(-30), offset = attempts.length - data.length;
   const x = (i: number) => L + i * (W - L - R) / (data.length - 1);
