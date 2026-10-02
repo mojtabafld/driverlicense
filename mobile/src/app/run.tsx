@@ -1,4 +1,4 @@
-// Taking an exam or a lesson: one picture at a time, statements to tick, glass controls at the bottom.
+// Taking an exam or a lesson: one picture at a time, statements to tick, the site's exam strip on top and its footer buttons at the bottom.
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -9,8 +9,7 @@ import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
-import { Glass } from '@/ui/glass';
-import { Backdrop, Button, L, T, tap } from '@/ui/kit';
+import { Backdrop, L, T, tap } from '@/ui/kit';
 import { radius, useColors } from '@/ui/theme';
 
 const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
@@ -61,57 +60,73 @@ export default function Run() {
 
   return (
     <Backdrop>
-      <View style={{ paddingTop: ins.top + 8, paddingHorizontal: 14, gap: 10 }}>
-        <Glass r={radius.pill} strong style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 6, gap: 8 }}>
-          <Pressable onPress={quit} hitSlop={8} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.hairline }}>
-            <T style={{ fontSize: 18, textAlign: 'center', lineHeight: 22 }}>✕</T>
+      <View style={{ paddingTop: ins.top, backgroundColor: c.bg, borderBottomWidth: 1, borderBottomColor: c.line }}>
+        <View style={{ height: 48, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 10 }}>
+          <Pressable onPress={quit} hitSlop={8} style={{ height: 32, paddingHorizontal: 12, borderRadius: radius.btn, justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
+            <T style={{ fontSize: 14, fontWeight: '600', color: c.link }}>خروج</T>
           </Pressable>
           <View style={{ flex: 1 }}>
-            <T style={{ fontWeight: '800', fontSize: 15 }}>{plan.title}</T>
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 18 }}>سؤال {faNum(i + 1)} از {faNum(qs.length)}</T>
+            <T style={{ fontWeight: '600', fontSize: 15, lineHeight: 20 }} numberOfLines={1}>{plan.title}</T>
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 17 }}>سؤال {faNum(i + 1)} از {faNum(qs.length)}</T>
           </View>
-          {settings.timer ? <Glass r={radius.pill} tint={left < 60 ? c.badSoft : c.accentSoft} style={{ paddingHorizontal: 12, paddingVertical: 6 }}><T style={{ fontWeight: '800', color: left < 60 ? c.bad : c.accent }}>{mm}</T></Glass> : null}
-        </Glass>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-          {qs.map((_, k) => (
-            <Pressable key={k} onPress={() => { tap(); setI(k); }}>
-              <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: k === i ? c.accent : ticks[k].some(Boolean) ? c.accentSoft : c.glass, borderWidth: 1, borderColor: c.glassBorder }}>
-                <T style={{ fontSize: 12, lineHeight: 16, textAlign: 'center', fontWeight: '700', color: k === i ? c.accentText : c.text }}>{faNum(k + 1)}</T>
-              </View>
-            </Pressable>
-          ))}
+          {settings.timer ? <T style={{ fontWeight: left < 60 ? '700' : '600', color: left < 60 ? c.bad : c.link, fontVariant: ['tabular-nums'] }}>{mm}</T> : null}
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 12, paddingBottom: 10 }}>
+          {qs.map((_, k) => {
+            const cur = k === i, done = ticks[k].some(Boolean);
+            return (
+              <Pressable key={k} onPress={() => { tap(); setI(k); }}>
+                <View style={{ width: 34, height: 34, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: cur ? c.accent : done ? c.checked : c.surface, borderWidth: 1, borderColor: cur ? c.accent : done ? c.text : c.checked }}>
+                  <T style={{ fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '600', color: cur ? c.accentText : c.text }}>{faNum(k + 1)}</T>
+                </View>
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 14, paddingBottom: ins.bottom + 110, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.lg }} contentFit="contain" transition={200} />
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: ins.bottom + 90, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+        <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" transition={200} />
         <View style={{ gap: 4 }}>
-          <L style={{ fontSize: 18, fontWeight: '700', lineHeight: 26 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
+          <L style={{ fontSize: 20, fontWeight: '600', lineHeight: 27 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
-          <Pressable onPress={() => setShowFa(!showFa)} hitSlop={6}><T style={{ color: c.accent, fontWeight: '700', fontSize: 13 }}>{showFa ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}</T></Pressable>
+          <Pressable onPress={() => setShowFa(!showFa)} hitSlop={6}><T style={{ color: c.link, fontWeight: '600', fontSize: 13 }}>{showFa ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}</T></Pressable>
         </View>
         {q.st.map((s, k) => {
           const on = ticks[i][k];
           return (
-            <Pressable key={k} onPress={() => toggle(k)} style={({ pressed }) => pressed && { transform: [{ scale: 0.985 }] }}>
-              <Glass r={radius.md} interactive tint={on ? c.accentSoft : undefined} style={{ flexDirection: 'row', gap: 12, padding: 14, alignItems: 'flex-start', ...(on ? { borderColor: c.accent, borderWidth: 1.5 } : {}) }}>
-                <View style={{ width: 26, height: 26, borderRadius: 8, borderWidth: 2, borderColor: on ? c.accent : c.faint, backgroundColor: on ? c.accent : 'transparent', alignItems: 'center', justifyContent: 'center', marginTop: 2 }}>
-                  {on ? <T style={{ color: '#fff', fontWeight: '900', textAlign: 'center', lineHeight: 20 }}>✓</T> : null}
-                </View>
+            <Pressable key={k} onPress={() => toggle(k)}>
+              <View style={{ flexDirection: 'row', gap: 10, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: radius.md, borderWidth: 1,
+                backgroundColor: on ? c.checked : c.surface, borderColor: on ? c.text : c.cardBorder }}>
+                <View style={{ width: 15, height: 15, marginTop: 5, borderRadius: 2, borderWidth: 1, borderColor: on ? c.accent : c.text, backgroundColor: on ? c.accent : c.surface }} />
                 <View style={{ flex: 1, gap: 4 }}>
-                  <L>{lang === 'en' && s.en ? s.en : s.da}</L>
+                  <L style={{ fontSize: 16.5, lineHeight: 23 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                   {showFa && s.fa ? <T style={{ color: c.muted, fontSize: 14 }}>{s.fa}</T> : null}
                 </View>
-              </Glass>
+              </View>
             </Pressable>
           );
         })}
       </ScrollView>
-      <View style={{ position: 'absolute', left: 14, right: 14, bottom: ins.bottom + 12, alignItems: 'center' }}>
-        <Glass r={radius.pill} strong style={{ flexDirection: 'row', gap: 8, padding: 6, width: '100%', maxWidth: 520 }}>
-          <Button kind="glass" label="قبلی" disabled={i === 0} onPress={() => setI(i - 1)} style={{ flex: 1 }} />
-          {last ? <Button label="تحویل آزمون" onPress={handIn} style={{ flex: 1.4 }} /> : <Button label="بعدی" onPress={() => setI(i + 1)} style={{ flex: 1.4 }} />}
-        </Glass>
+      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, paddingBottom: ins.bottom, backgroundColor: c.surface, borderTopWidth: 1, borderTopColor: c.line }}>
+        <View style={{ height: 60, flexDirection: 'row', alignItems: 'stretch', width: '100%', maxWidth: 760, alignSelf: 'center' }}>
+          <FootBtn label="قبلی" disabled={i === 0} onPress={() => setI(i - 1)} />
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><T style={{ color: c.link, fontSize: 16, textAlign: 'center' }}>{faNum(i + 1)} / {faNum(qs.length)}</T></View>
+          {last ? <FootBtn label="تحویل آزمون" submit onPress={handIn} /> : <FootBtn label="بعدی" onPress={() => setI(i + 1)} />}
+        </View>
       </View>
     </Backdrop>
+  );
+}
+
+// The site's footer buttons in an exam: navy, and green for handing in.
+function FootBtn({ label, onPress, disabled, submit }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean }) {
+  const c = useColors();
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.4 : pressed ? 0.85 : 1 })}>
+      <View style={{ flex: 1, minWidth: 110, paddingHorizontal: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: submit ? c.submit : c.accent }}>
+        <T style={{ color: '#fff', fontWeight: '600', fontSize: 16, textAlign: 'center' }}>{label}</T>
+      </View>
+    </Pressable>
   );
 }

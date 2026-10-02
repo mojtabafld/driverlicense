@@ -8,11 +8,11 @@ import { Backdrop } from '@/ui/kit';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// The web version is a right-to-left Persian page with a Persian web font.
+// The web version is a right-to-left Persian page with the site's fonts (Vazirmatn, IBM Plex Sans for Danish).
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl'; document.documentElement.lang = 'fa';
   const l = document.createElement('link'); l.rel = 'stylesheet';
-  l.href = 'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700;800&display=swap'; document.head.appendChild(l);
+  l.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap'; document.head.appendChild(l);
   const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%}body,div,span,input,textarea{font-family:Vazirmatn,system-ui,sans-serif}'; document.head.appendChild(s);
 }
 
