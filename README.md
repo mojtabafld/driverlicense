@@ -80,4 +80,4 @@ python3 build.py
 
 ## Mobile app
 
-`mobile/` holds the iOS / Android / web app (Expo, Liquid Glass design) on the same server and accounts; see `mobile/README.md`.
+`mobile/` holds the iOS / Android / web app (Expo, Liquid Glass design) on the same server and accounts; see `mobile/README.md`. Its web build (`app-web/`, made with `cd mobile && npm run build:web`) is served at `/app`.
