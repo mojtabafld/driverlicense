@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, type IconName } from './icon';
 import { L, tap } from './kit';
 import { LiquidGlass, useIOSBar } from './liquid';
+import { useColors } from './theme';
 
 export function GlassBar({ start, middle, end }: { start: React.ReactNode; middle: React.ReactNode; end: React.ReactNode }) {
   const ins = useSafeAreaInsets();
@@ -26,15 +27,15 @@ export function BarCount({ n, of }: { n: number; of: number }) {
   return <L style={{ fontSize: 20, lineHeight: 26, color: ios.label, fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] }}>{n} / {of}</L>;
 }
 
-// Buttons of the bar, as iOS 26/27 draws bar buttons: next filled in the system blue, hand in in the system green,
-// previous a grey capsule with blue text. `lead`: icon before the label.
-export function FootBtn({ label, onPress, disabled, submit, primary, icon, lead }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean }) {
-  const ios = useIOSBar();
-  const solid = submit || primary, fg = solid ? '#fff' : ios.tint;
+// Buttons of the bar, capsules like iOS 26/27's bar buttons in the colour of «شروع آزمون» (the site's navy), hand in
+// in the system green. `lead`: icon before the label.
+export function FootBtn({ label, onPress, disabled, submit, icon, lead }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean }) {
+  const ios = useIOSBar(), c = useColors();
+  const fg = '#fff';
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.35 : pressed ? 0.8 : 1 })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 46, minWidth: 104, paddingHorizontal: 18, borderRadius: 23, justifyContent: 'center',
-        backgroundColor: submit ? ios.green : primary ? ios.tint : ios.fill }}>
+        backgroundColor: submit ? ios.green : c.accent }}>
         {lead ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
         <L style={{ color: fg, fontWeight: '700', fontSize: 15.5, lineHeight: 22, textAlign: 'center' }}>{label}</L>
         {!lead ? <Icon name={icon} size={16} color={fg} weight={icon === 'check' ? 'bold' : 'semibold'} /> : null}
