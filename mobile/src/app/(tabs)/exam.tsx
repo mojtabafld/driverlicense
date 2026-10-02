@@ -1,0 +1,63 @@
+// Exams: a random exam like the real one, or practice with your mistakes.
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, View } from 'react-native';
+
+import { FULL, SIZES, faNum, fmtDate, isFull, isPass, mistakeIds, randomIds, scoreOf, shuffle } from '@/lib/logic';
+import { session } from '@/lib/session';
+import { useApp } from '@/lib/store';
+import { Glass } from '@/ui/glass';
+import { Button, Card, Screen, T, tap } from '@/ui/kit';
+import { radius, useColors } from '@/ui/theme';
+
+export default function Exam() {
+  const c = useColors();
+  const { bank, attempts, settings } = useApp();
+  const [size, setSize] = useState(FULL);
+  const mistakes = mistakeIds(attempts);
+  const exams = attempts.filter(a => a.mode !== 'lesson').slice().reverse();
+  const start = (mode: 'random' | 'mistakes') => {
+    if (!bank) return;
+    const ids = mode === 'random' ? randomIds(bank, size) : shuffle(mistakes).slice(0, size);
+    session.plan = { mode, ids, title: mode === 'random' ? 'آزمون تصادفی' : 'تمرین اشتباهات' };
+    router.push('/run');
+  };
+  return (
+    <Screen title="آزمون" subtitle="مثل آزمون واقعی: ۲۵ تصویر، حداقل ۲۰ درست برای قبولی">
+      <Card style={{ gap: 14 }}>
+        <T style={{ fontWeight: '800', fontSize: 18 }}>آزمون تصادفی</T>
+        <T style={{ color: c.muted, fontSize: 13.5 }}>{settings.timer ? `برای هر سؤال ${faNum(1)} دقیقه زمان دارید.` : 'بدون زمان‌سنج.'}</T>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {SIZES.map(n => (
+            <Pressable key={n} style={{ flex: 1 }} onPress={() => { tap(); setSize(n); }}>
+              <Glass r={radius.pill} strong={n === size} tint={n === size ? c.accent : undefined} style={{ paddingVertical: 9, alignItems: 'center', ...(n === size ? { backgroundColor: c.accent } : {}) }}>
+                <T style={{ textAlign: 'center', fontWeight: '800', color: n === size ? c.accentText : c.text }}>{faNum(n)}</T>
+              </Glass>
+            </Pressable>
+          ))}
+        </View>
+        <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={() => start('random')} />
+      </Card>
+      {mistakes.length ? (
+        <Card style={{ gap: 10 }}>
+          <T style={{ fontWeight: '800', fontSize: 18 }}>تمرین اشتباهات</T>
+          <T style={{ color: c.muted, fontSize: 13.5 }}>{faNum(mistakes.length)} سؤال که آخرین بار اشتباه جواب داده‌اید.</T>
+          <Button kind="glass" label="شروع تمرین" onPress={() => start('mistakes')} />
+        </Card>
+      ) : null}
+      {exams.length ? <T style={{ fontWeight: '800', fontSize: 18, marginTop: 6 }}>آزمون‌های قبلی</T> : null}
+      {exams.slice(0, 10).map(a => (
+        <Card key={a.at} onPress={() => { session.result = a; session.fresh = false; router.push('/result'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Glass r={radius.sm} tint={isFull(a) ? (isPass(a) ? c.okSoft : c.badSoft) : c.accentSoft} style={{ paddingHorizontal: 10, paddingVertical: 6 }}>
+            <T style={{ fontWeight: '800', color: isFull(a) ? (isPass(a) ? c.ok : c.bad) : c.accent }}>{faNum(scoreOf(a))}/{faNum(a.items.length)}</T>
+          </Glass>
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '700' }}>{a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش بر اساس دسته‌بندی' : 'آزمون تصادفی'}{isFull(a) ? (isPass(a) ? ' · قبول' : ' · مردود') : ''}</T>
+            <T style={{ color: c.muted, fontSize: 13 }}>{fmtDate(a.at)}</T>
+          </View>
+          <T style={{ color: c.accent, fontWeight: '700' }}>مرور</T>
+        </Card>
+      ))}
+    </Screen>
+  );
+}
