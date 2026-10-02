@@ -1,6 +1,7 @@
-// «بیشترین اشتباهات», like the site's mistakes page: how each topic is going (weakest first), then every question
-// answered wrong at least once, grouped by topic, as a review card with the last answer given. Tabs: still wrong /
-// fixed (right the last time) / all. Each topic has its short lesson and «تمرین این مبحث».
+// «بیشترین اشتباهات»: three panels (still wrong / fixed, i.e. right the last time / topics) and below them what the
+// chosen panel stands for. At first, and with «مبحث», the topics (weakest first); with «هنوز اشتباه» or «اصلاح‌شده»
+// those questions grouped by topic; a tapped topic shows its own questions. Questions are review cards with the last
+// answer given; each topic has its short lesson and «تمرین این مبحث». No question is shown until something is chosen.
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -17,7 +18,7 @@ import { Backdrop, Button, Card, T, tap } from '@/ui/kit';
 import { ReviewCard } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
-type Filter = 'open' | 'fixed' | 'all';
+type View_ = 'topics' | 'open' | 'fixed' | { topic: string };
 type Group = { c: string; list: MistakeStat[]; open: number; fixed: number; wrong: number };
 
 // Accuracy per topic over every answer given in it, and the questions answered wrong at least once grouped by
@@ -44,30 +45,28 @@ function practice(ids: number[], title: string) { session.plan = { mode: 'mistak
 export default function Mistakes() {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
   const { attempts, bank, Q, settings } = useApp();
-  const [filter, setFilter] = useState<Filter>('open');
+  const [view, setView] = useState<View_>('topics');
   const [lessonOpen, setLessonOpen] = useState<Record<string, boolean>>({});
   const scroll = useRef<ScrollView>(null);
-  const groupY = useRef<Record<string, number>>({});
+  const bodyY = useRef(0);
   if (!bank) return null;
   const lang = settings.lang === 'en' ? 'en' : 'da';
 
   const { acc, sorted } = topicGroups(attempts, Q);
   const accOf = (code: string) => { const x = acc.get(code); return x && x.n ? x.ok / x.n : 0; };
   const open = sorted.reduce((n, g) => n + g.open, 0), fixed = sorted.reduce((n, g) => n + g.fixed, 0);
-  const keep = (st: MistakeStat) => filter === 'all' || (filter === 'open' ? !st.lastOk : st.lastOk);
+  const keep = (st: MistakeStat) => typeof view === 'object' || (view === 'open' ? !st.lastOk : st.lastOk);
   const tone = (p: number) => (p >= 0.8 ? c.ok : p >= 0.6 ? c.warn : c.bad);
 
   const practiceAll = () => practice(shuffle(sorted.flatMap(g => g.list.filter(st => !st.lastOk).map(st => st.id))).slice(0, 25), 'تمرین اشتباهات');
   const practiceTopic = (code: string) => practice(topicPracticeIds(bank, sorted.find(g => g.c === code)?.list ?? [], code), topicFa(bank, code));
-  const jump = (code: string) => {
-    tap();
-    const go = () => { const y = groupY.current[code]; if (y != null) scroll.current?.scrollTo({ y: y - 8, animated: true }); };
-    if (!sorted.find(g => g.c === code)?.list.some(keep)) { setFilter('all'); setTimeout(go, 50); } else go();
+  // Show what a panel or a topic stands for, and bring it into view.
+  const choose = (v: View_) => {
+    tap(); setView(v);
+    setTimeout(() => scroll.current?.scrollTo({ y: Math.max(0, bodyY.current - 8), animated: true }), 50);
   };
-
-  const tabs: { v: Filter; label: string }[] = [
-    { v: 'open', label: `هنوز اشتباه (${faNum(open)})` }, { v: 'fixed', label: `اصلاح‌شده (${faNum(fixed)})` }, { v: 'all', label: `همه (${faNum(open + fixed)})` },
-  ];
+  const sel = (v: 'topics' | 'open' | 'fixed') => view === v;
+  const shown = typeof view === 'object' ? sorted.filter(g => g.c === view.topic) : view === 'topics' ? [] : sorted.filter(g => g.list.some(keep));
   return (
     <Backdrop>
       <ScrollView ref={scroll} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
@@ -85,60 +84,59 @@ export default function Mistakes() {
             <Card style={{ gap: 12 }}>
               <View style={{ gap: 2 }}>
                 <T style={{ fontSize: 16, fontWeight: '700' }}>وضعیت مباحث</T>
-                <T style={{ fontSize: 12.5, color: c.muted }}>ضعیف‌ترین مبحث بالا — روی هر مبحث بزنید</T>
+                <T style={{ fontSize: 12.5, color: c.muted }}>روی هر بخش بزنید تا سؤال‌هایش نمایش داده شود</T>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {[[faNum(open), 'سؤال هنوز اشتباه', c.bad], [faNum(fixed), 'سؤال اصلاح‌شده', c.ok], [faNum(sorted.length), 'مبحث', c.text]].map(([n, l, col]) => (
-                  <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: c.surface2 }}>
-                    <T style={{ fontSize: 18, fontWeight: '800', color: col, textAlign: 'center' }}>{n}</T>
-                    <T style={{ fontSize: 11.5, color: c.muted, textAlign: 'center' }}>{l}</T>
-                  </View>
-                ))}
-              </View>
-              <View>
-                {sorted.map((g, i) => {
-                  const p = accOf(g.c);
+                {([['open', faNum(open), 'سؤال هنوز اشتباه', c.bad], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok], ['topics', faNum(sorted.length), 'مبحث', c.text]] as const).map(([v, n, l, col]) => {
+                  const on = sel(v) || (v === 'topics' && typeof view === 'object');
                   return (
-                    <Pressable key={g.c} onPress={() => jump(g.c)} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-                      <View style={{ gap: 6, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }} numberOfLines={1}>{topicFa(bank, g.c)}</T>
-                          <T style={{ fontSize: 12.5, fontWeight: '700', color: tone(p) }}>{faNum(Math.round(p * 100))}٪ دقت</T>
-                          <Icon name="chevronLeft" size={14} color={c.faint} />
-                        </View>
-                        <View style={{ height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
-                          <View style={{ width: `${Math.max(p * 100, 2)}%`, borderRadius: 3, backgroundColor: tone(p) }} />
-                        </View>
-                        <T style={{ fontSize: 12, color: c.muted }}>
-                          {g.open ? <T style={{ fontSize: 12, color: c.bad, fontWeight: '700' }}>{faNum(g.open)} مورد</T> : <T style={{ fontSize: 12, color: c.ok, fontWeight: '700' }}>همه اصلاح شد ✓</T>}
-                          {g.fixed && g.open ? <T style={{ fontSize: 12, color: c.ok }}>، {faNum(g.fixed)} اصلاح‌شده</T> : null}
-                        </T>
+                    <Pressable key={v} onPress={() => choose(v)} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+                      <View style={{ alignItems: 'center', paddingVertical: 8, borderRadius: 8, borderWidth: 1.5, borderColor: on ? (dark ? c.link : c.accent) : 'transparent', backgroundColor: on ? c.checked : c.surface2 }}>
+                        <T style={{ fontSize: 18, fontWeight: '800', color: col, textAlign: 'center' }}>{n}</T>
+                        <T style={{ fontSize: 11.5, color: on ? c.link : c.muted, fontWeight: on ? '700' : '400', textAlign: 'center' }}>{l}</T>
                       </View>
                     </Pressable>
                   );
                 })}
               </View>
-              <T style={{ fontSize: 12.5, lineHeight: 21, color: c.muted }}>پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «هنوز اشتباه» به «اصلاح‌شده» بروند.</T>
             </Card>
-            {/* Tabs */}
-            <View style={{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: 8, backgroundColor: c.surface2 }}>
-              {tabs.map(o => {
-                const on = o.v === filter;
-                return (
-                  <Pressable key={o.v} onPress={() => { tap(); setFilter(o.v); }} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-                    <View style={{ paddingVertical: 7, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }}>
-                      <T style={{ fontSize: 13, fontWeight: '600', color: on ? c.link : c.muted, textAlign: 'center' }}>{o.label}</T>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
+            {/* What the chosen panel stands for */}
+            <View onLayout={e => { bodyY.current = e.nativeEvent.layout.y; }} style={{ marginTop: -14 }} />
+            {view === 'topics' ? (
+              <Card style={{ gap: 6 }}>
+                <T style={{ fontSize: 12.5, color: c.muted }}>ضعیف‌ترین مبحث بالا — روی هر مبحث بزنید</T>
+                <View>
+                  {sorted.map((g, i) => {
+                    const p = accOf(g.c);
+                    return (
+                      <Pressable key={g.c} onPress={() => choose({ topic: g.c })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+                        <View style={{ gap: 6, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }} numberOfLines={1}>{topicFa(bank, g.c)}</T>
+                            <T style={{ fontSize: 12.5, fontWeight: '700', color: tone(p) }}>{faNum(Math.round(p * 100))}٪ دقت</T>
+                            <Icon name="chevronLeft" size={14} color={c.faint} />
+                          </View>
+                          <View style={{ height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
+                            <View style={{ width: `${Math.max(p * 100, 2)}%`, borderRadius: 3, backgroundColor: tone(p) }} />
+                          </View>
+                          <T style={{ fontSize: 12, color: c.muted }}>
+                            {g.open ? <T style={{ fontSize: 12, color: c.bad, fontWeight: '700' }}>{faNum(g.open)} مورد</T> : <T style={{ fontSize: 12, color: c.ok, fontWeight: '700' }}>همه اصلاح شد ✓</T>}
+                            {g.fixed && g.open ? <T style={{ fontSize: 12, color: c.ok }}>، {faNum(g.fixed)} اصلاح‌شده</T> : null}
+                          </T>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <T style={{ fontSize: 12.5, lineHeight: 21, color: c.muted }}>پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «هنوز اشتباه» به «اصلاح‌شده» بروند.</T>
+              </Card>
+            ) : null}
             {/* Groups */}
-            {sorted.some(g => g.list.some(keep)) ? sorted.map(g => {
+            {view === 'topics' ? null : shown.length ? shown.map(g => {
               const list = g.list.filter(keep), t = bank.topics[g.c];
               if (!list.length) return null;
               return (
-                <View key={g.c} onLayout={e => { groupY.current[g.c] = e.nativeEvent.layout.y; }} style={{ gap: 10 }}>
+                <View key={g.c} style={{ gap: 10 }}>
                   <View style={{ gap: 6, marginTop: 10, marginHorizontal: 2 }}>
                     <T style={{ fontSize: 16, fontWeight: '700' }}>{topicFa(bank, g.c)}</T>
                     <T style={{ fontSize: 12.5, color: c.muted }}>دقت {faNum(Math.round(accOf(g.c) * 100))}٪، {faNum(g.open)} مورد، {faNum(g.fixed)} اصلاح‌شده</T>
@@ -162,13 +160,13 @@ export default function Mistakes() {
                     </View>
                   ) : null}
                   {list.map(st => (
-                    <ReviewCard key={`${filter}-${st.id}`} q={Q.get(st.id)!} it={{ ok: st.lastOk, a: st.lastA }} lang={lang} fa={settings.showFa}
+                    <ReviewCard key={`${typeof view === 'object' ? view.topic : view}-${st.id}`} q={Q.get(st.id)!} it={{ ok: st.lastOk, a: st.lastA }} lang={lang} fa={settings.showFa}
                       badge={{ text: `${faNum(st.wrong)} اشتباه در ${faNum(st.seen)} آزمون`, fg: st.lastOk ? c.ok : c.warn, bg: st.lastOk ? c.okSoft : c.warnSoft }} />
                   ))}
                 </View>
               );
-            }) : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{filter === 'open' ? 'هیچ سؤالی در حالت «هنوز اشتباه» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
-            <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>«شما انتخاب کردید / انتخاب نکردید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</T>
+            }) : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{view === 'open' ? 'هیچ سؤالی در حالت «هنوز اشتباه» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
+            {view === 'topics' ? null : <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>«شما انتخاب کردید / انتخاب نکردید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</T>}
           </>
         )}
       </ScrollView>
