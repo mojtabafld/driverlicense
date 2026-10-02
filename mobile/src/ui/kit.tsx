@@ -44,11 +44,11 @@ export function ThemeButton() {
   );
 }
 
-// The site's top bar: white strip with a bottom line, the TeoriPrøve brand and the theme button.
+// Top bar with the TeoriPrøve brand and the theme button, in the page's own background so it reads as one surface.
 export function TopBar({ right }: { right?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   return (
-    <View style={{ paddingTop: ins.top, backgroundColor: c.surface, borderBottomWidth: 1, borderBottomColor: c.line }}>
+    <View style={{ paddingTop: ins.top, backgroundColor: c.bg }}>
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
           <Logo />
