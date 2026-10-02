@@ -77,7 +77,7 @@ export default function Exam() {
     router.push('/run');
   };
   return (
-    <Screen title="آزمون" subtitle="مثل آزمون واقعی: ۲۵ تصویر، حداقل ۲۰ درست برای قبولی">
+    <Screen title="آزمون">
       <Card style={{ gap: 14 }}>
         <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
         <T style={{ color: c.muted, fontSize: 13.5 }}>{settings.timer ? `برای هر سؤال ${faNum(1)} دقیقه زمان دارید.` : 'بدون زمان‌سنج.'}</T>
