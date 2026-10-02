@@ -21,7 +21,11 @@ platforms, so the web and Android use our own drawings in the same style (outlin
 - **آموزش**: the 44 lessons one by one, or practice by the official sections.
 - **تنظیمات**: exam language, Persian translation, timer, account.
 
-The exam (`src/app/run.tsx`) and its result/review (`src/app/result.tsx`) open over the tabs.
+The exam (`src/app/run.tsx`) and its result/review (`src/app/result.tsx`) open over the tabs. The review is laid out
+like the site's (`src/ui/review.tsx`): a past exam or lesson is reviewed question by question (tabs, a result line that
+fades after 5 s, «پاسخ شما» / «پاسخ صحیح» with explanations, «نکات سؤال» and the summary of mistakes from the AI, or the
+topic's short lesson when the server has no AI), and one just handed in shows the site's result card and review list.
+The bookmark on a picture saves the question to the same «سؤالات ذخیره‌شده» as the site.
 
 ## Run it
 ```bash

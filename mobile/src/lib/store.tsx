@@ -6,10 +6,14 @@ import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL } from './config';
 import { loadToken, saveToken } from './token';
 
-type Me = { user: User; attempts: Attempt[]; settings: Partial<Settings>; imgv?: Record<string, string> };
+export type Saved = { id: number; a?: number[]; at: number };
+type Me = { user: User; attempts: Attempt[]; settings: Partial<Settings>; saved?: Saved[]; imgv?: Record<string, string> };
 type Ctx = {
   ready: boolean; user: User | null; attempts: Attempt[]; settings: Settings; bank: Bank | null; Q: Map<number, Question>;
   imgv: Record<string, string>; token: string | null;
+  // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
+  saved: Saved[]; aiLessons: boolean;
+  toggleSaved: (id: number, a?: number[]) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -25,10 +29,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [bank, setBank] = useState<Bank | null>(null);
+  const [aiLessons, setAiLessons] = useState(false);
 
   const load = useCallback(async () => {
     const d = await api<Me>('GET', 'me');
     setMe(d);
+    api<{ aiLessons?: boolean }>('GET', 'config').then(x => setAiLessons(!!x.aiLessons)).catch(() => {});
     if (!bank) setBank(await fetchBank<Bank>());
   }, [bank]);
 
@@ -48,6 +54,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
+    saved: me?.saved ?? [], aiLessons,
+    toggleSaved: async (id, a) => {
+      const on = !(me?.saved ?? []).some(x => x.id === id);
+      const before = me?.saved ?? [];
+      setMe(m => (m ? { ...m, saved: on ? [...(m.saved ?? []).filter(x => x.id !== id), { id, a, at: Date.now() }] : (m.saved ?? []).filter(x => x.id !== id) } : m));
+      try { if (on) await api('POST', 'saved', { id, a }); else await api('DELETE', 'saved', { id }); }
+      catch (e) { setMe(m => (m ? { ...m, saved: before } : m)); throw e; }
+    },
     Q: new Map((bank?.questions || []).map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
     register: async (name, username, password) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password }); await signedIn(d.token); },
@@ -60,7 +74,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank]);
+  }), [ready, token, me, bank, aiLessons]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
