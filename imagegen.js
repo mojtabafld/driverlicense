@@ -13,8 +13,8 @@ const path = require('node:path');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
-// Flare (faster, cheaper) is the default; Sunburst gives more detail.
-const MODELS = { flare: 'gpt-image-2-5-flare-text-to-image', sunburst: 'gpt-image-2-5-sunburst-text-to-image' };
+// Sunburst (more detail) is the default; Flare is faster and cheaper.
+const MODELS = { sunburst: 'gpt-image-2-5-sunburst-text-to-image', flare: 'gpt-image-2-5-flare-text-to-image' };
 // Editing one of OUR generated pictures (never the original): image-to-image with a short instruction.
 const EDIT_MODELS = { flare: 'gpt-image-2-5-flare-image-to-image', sunburst: 'gpt-image-2-5-sunburst-image-to-image' };
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
@@ -75,7 +75,7 @@ async function describe(q) {
 
 // Starts ONE new picture for question `qid` with the chosen model ('flare' | 'sunburst'). Returns the job.
 // `prompt`: a scene description written or edited by the admin; without it Claude writes one.
-async function start(qid, model = 'flare', by = '', prompt = '') {
+async function start(qid, model = 'sunburst', by = '', prompt = '') {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
@@ -175,7 +175,7 @@ async function upload(b, name) {
 }
 
 // Changes only what `instruction` says in generated picture `fromJob`; the rest must stay as it is.
-async function edit(qid, fromJob, instruction, model = 'flare', by = '') {
+async function edit(qid, fromJob, instruction, model = 'sunburst', by = '') {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const item = images()[+qid], src = item && item.jobs.find(j => j.id === fromJob && j.blob);
   if (!src) throw Object.assign(new Error('تصویر پیدا نشد.'), { status: 404 });
