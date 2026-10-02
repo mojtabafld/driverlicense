@@ -1,6 +1,6 @@
 // Home: progress at a glance (chance of passing, counts, progress chart) and the latest activity.
 import { router } from 'expo-router';
-import { Platform, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import type { Attempt, Bank } from '@/lib/bank';
 import { faNum, fmtDate, isFull, isPass, mistakeIds, passEstimate, pctOf, scoreOf } from '@/lib/logic';
@@ -12,8 +12,6 @@ import { Card, Ring, Screen, T, tap } from '@/ui/kit';
 import { ProgressChart } from '@/ui/progress-chart';
 import { useColors, type Colors } from '@/ui/theme';
 
-// Right edge in this right-to-left app: RN web ignores the page's dir for 'start', phones flip it.
-const RTL_START = Platform.OS === 'web' ? { right: 0 } : { start: 0 };
 const openAttempt = (a: Attempt) => { session.result = a; session.fresh = false; router.push('/result'); };
 const pctText = (p: number) => `${faNum(Math.round(p * 100))}٪`;
 // A small coloured label, like the site's .pill.
@@ -21,27 +19,22 @@ function Pill({ text, fg, bg }: { text: string; fg: string; bg: string }) {
   return <View style={{ paddingHorizontal: 9, paddingVertical: 2, borderRadius: 99, backgroundColor: bg }}><T style={{ color: fg, fontSize: 12, lineHeight: 19, fontWeight: '700' }}>{text}</T></View>;
 }
 
-// A count card: icon tile, big number, label and one line of detail.
-function Stat({ icon, label, value, extra, sub, tone, progress }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok'; progress?: number }) {
+// A count card: the icon tile with the number beside it, then the label and one short line of detail.
+function Stat({ icon, label, value, extra, sub, tone }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok' }) {
   const c = useColors();
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   return (
-    <Card style={{ flex: 1, gap: 8, padding: 12 }}>
-      <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
-        <Icon name={icon} size={19} color={fg} weight="semibold" />
-      </View>
-      <View>
-        <T style={{ fontSize: 24, lineHeight: 32, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }}>
-          {value}{extra ? <T style={{ color: c.muted, fontSize: 13, fontWeight: '600' }}>{extra}</T> : null}
-        </T>
-        <T style={{ color: c.text, fontSize: 13, fontWeight: '700' }} numberOfLines={1}>{label}</T>
-      </View>
-      {progress != null ? (
-        <View style={{ height: 5, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden' }}>
-          <View style={{ position: 'absolute', top: 0, bottom: 0, ...RTL_START, width: `${Math.round(progress * 100)}%`, borderRadius: 3, backgroundColor: c.accent }} />
+    <Card style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
+          <Icon name={icon} size={18} color={fg} weight="semibold" />
         </View>
-      ) : null}
-      <T style={{ color: c.muted, fontSize: 11.5, lineHeight: 17 }} numberOfLines={2}>{sub}</T>
+        <T style={{ flexShrink: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
+          {value}{extra ? <T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
+        </T>
+      </View>
+      <T style={{ color: c.text, fontSize: 13, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
+      <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>
     </Card>
   );
 }
@@ -124,7 +117,7 @@ export default function Home() {
       </Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'هنوز آزمون کاملی نیست'} />
-        <Stat icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
+        <Stat icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
         <Stat icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'اشتباهی نمانده'} />
       </View>
       <Card style={{ gap: 12 }}>

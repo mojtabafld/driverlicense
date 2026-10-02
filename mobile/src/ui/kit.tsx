@@ -80,11 +80,11 @@ export function Screen({ title, subtitle, children, right }: { title: string; su
   return (
     <Backdrop>
       <TopBar />
-      <ScrollView contentContainerStyle={{ paddingTop: 22, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 14, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
+      <ScrollView contentContainerStyle={{ paddingTop: 2, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 14, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
           <View style={{ flex: 1 }}>
-            <T style={{ fontSize: 26, lineHeight: 38, fontWeight: '700', color: c.text }}>{title}</T>
-            {subtitle ? <T style={{ color: c.muted, marginTop: 2, fontSize: 14 }}>{subtitle}</T> : null}
+            <T style={{ fontSize: 26, lineHeight: 34, fontWeight: '700', color: c.text }}>{title}</T>
+            {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
           </View>
           {right}
         </View>
