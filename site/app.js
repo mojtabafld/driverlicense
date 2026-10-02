@@ -1707,13 +1707,21 @@
     let d; try { d = await api('GET', 'imggen'); } catch (e) { box.innerHTML = `<div class="muted">${esc(e.message)}</div>`; return; }
     const stateFa = { describing: 'در حال نوشتن توضیح صحنه…', queued: 'در صف…', generating: 'در حال ساخت تصویر…', done: 'آماده', fail: 'ناموفق' };
     const rows = Object.entries(d.items).sort((a, b) => b[1].jobs.slice(-1)[0].at - a[1].jobs.slice(-1)[0].at);
+    // Questions are chosen by lesson and number in the lesson; the question's id is only shown small.
+    const where = qid => { for (let i = 0; i < BANK.tests.length; i++) { const k = BANK.tests[i].qs.indexOf(+qid); if (k >= 0) return { i, k }; } return null; };
+    const whereFa = qid => { const w = where(qid); return w ? `درس ${faNum(studyNum(BANK.tests[w.i], w.i))} · سؤال ${faNum(w.k + 1)}` : `سؤال ${faNum(qid)}`; };
+    const sel = imgGenPanel.sel = imgGenPanel.sel || { i: 0, k: 0 };
+    const lessonOpts = BANK.tests.map((t, i) => `<option value="${i}" ${i === sel.i ? 'selected' : ''}>درس ${faNum(studyNum(t, i))}</option>`).join('');
+    const qOpts = i => BANK.tests[i].qs.map((id, k) => `<option value="${k}" ${k === sel.k ? 'selected' : ''}>سؤال ${faNum(k + 1)}${d.items[id] ? ' ✓' : ''}</option>`).join('');
     const pending = rows.some(([, x]) => x.jobs.some(j => !j.done));
     box.innerHTML = `${d.available ? '' : '<div class="form-err">KIE_API_KEY روی سرور تنظیم نشده است.</div>'}
-      <form class="ig-form" id="igForm"><label>شماره‌ی سؤال <input name="qid" type="number" min="1" value="${BANK.tests[0].qs[0]}" class="da" required></label>
+      <form class="ig-form" id="igForm"><label>درس <select name="lesson" id="igLesson">${lessonOpts}</select></label>
+        <label>سؤال <select name="q" id="igQ">${qOpts(sel.i)}</select></label>
         <label>مدل <select name="model">${d.models.map(m => `<option value="${m}">${m === 'flare' ? 'GPT Image 2.5 Flare' : 'GPT Image 2.5 Sunburst'}</option>`).join('')}</select></label>
-        <button class="btn btn-primary" ${d.available ? '' : 'disabled'}>ساخت تصویر جدید</button></form>
+        <button class="btn btn-primary" ${d.available ? '' : 'disabled'}>ساخت تصویر جدید</button>
+        <div class="ig-pick" id="igPick"></div></form>
       ${rows.length ? rows.map(([qid, x]) => `<div class="ig-q">
-        <div class="ig-h"><b>سؤال ${faNum(qid)}</b><small class="muted">${x.active ? 'روی سایت: تصویر جدید' : 'روی سایت: تصویر اصلی'}</small></div>
+        <div class="ig-h"><b>${whereFa(qid)}</b><small class="muted da">#${qid}</small><small class="muted">${x.active ? 'روی سایت: تصویر جدید' : 'روی سایت: تصویر اصلی'}</small></div>
         <div class="ig-row">
           <div class="ig-cell ${x.active ? '' : 'on'}"><img src="img/q${qid}.jpg?orig=1" alt=""><span>تصویر اصلی</span>
             ${x.active ? `<button class="tr-toggle" data-ig-set="${qid}" data-job="">برگرداندن تصویر اصلی</button>` : '<em>نمایش داده می‌شود</em>'}</div>
@@ -1723,10 +1731,19 @@
             ${j.blob ? (x.active === j.id ? '<em>نمایش داده می‌شود</em>' : `<button class="tr-toggle" data-ig-set="${qid}" data-job="${j.id}">نمایش این تصویر در سایت</button>`) : ''}
             ${j.prompt ? `<details><summary>توضیح صحنه</summary><p class="da" dir="ltr">${esc(j.prompt)}</p></details>` : ''}</div>`).join('')}
         </div></div>`).join('') : '<div class="muted">هنوز تصویری ساخته نشده است.</div>'}`;
+    // Preview of the chosen question: its current picture and text, so the right one is picked.
+    const ls = document.getElementById('igLesson'), qs = document.getElementById('igQ'), pick = document.getElementById('igPick');
+    const showPick = () => {
+      const id = BANK.tests[sel.i].qs[sel.k], q = Q.get(id);
+      pick.innerHTML = q ? `<img src="${q.img}" alt=""><span><b>${whereFa(id)}</b> <small class="muted da">#${id}</small><br><span class="da">${esc(q.sda)}</span></span>` : '';
+    };
+    ls.onchange = () => { sel.i = +ls.value; sel.k = 0; qs.innerHTML = qOpts(sel.i); showPick(); };
+    qs.onchange = () => { sel.k = +qs.value; showPick(); };
+    showPick();
     document.getElementById('igForm').onsubmit = async e => {
       e.preventDefault(); const f = Object.fromEntries(new FormData(e.target)); e.target.querySelector('button').disabled = true;
       toast('در حال شروع… (نوشتن توضیح صحنه چند ثانیه طول می‌کشد)');
-      try { await api('POST', 'imggenstart', { qid: +f.qid, model: f.model }); } catch (err) { toast(err.message); }
+      try { await api('POST', 'imggenstart', { qid: BANK.tests[sel.i].qs[sel.k], model: f.model }); } catch (err) { toast(err.message); }
       imgGenPanel();
     };
     box.querySelectorAll('[data-ig-set]').forEach(b => b.onclick = async () => {
