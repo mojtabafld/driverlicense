@@ -77,7 +77,7 @@ main{max-width:980px;margin:0 auto;padding:24px 16px 80px}
 .auth-card .field{gap:7px;font-size:13px;color:var(--muted)}
 .in-wrap{position:relative;display:block}
 .in-ico{position:absolute;top:50%;right:14px;transform:translateY(-50%);color:var(--muted);pointer-events:none;transition:color .2s}
-.auth-card .field input{width:100%;height:50px;padding:0 44px;border-radius:12px;border:1.5px solid transparent;background:var(--surface-2);font-size:15.5px;box-shadow:none}
+.auth-card .field input{width:100%;height:50px;padding:0 44px;border-radius:12px;border:1.5px solid transparent;background:var(--surface-2);font-size:16px;box-shadow:none}
 .auth-card .field input:hover{border-color:var(--line)}
 .auth-card .field input:focus{background:var(--surface);border-color:var(--navy);box-shadow:0 0 0 4px var(--accent-soft)}
 .in-wrap:focus-within .in-ico{color:var(--navy)}
@@ -917,3 +917,6 @@ body.focus-mode .topbar{display:none}
 .ig-cell details p{font-size:12px;line-height:1.6;white-space:pre-wrap;margin:6px 0 0}
 .ig-spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--navy);animation:igs 1s linear infinite}
 @keyframes igs{to{transform:rotate(360deg)}}
+/* iPhone Safari zooms the page into any text field under 16px when it gets focus, and the zoom stays after
+   signing in; on touch screens keep every field at 16px or more. */
+@media (pointer:coarse){input,select,textarea{font-size:max(16px,1em)}}
