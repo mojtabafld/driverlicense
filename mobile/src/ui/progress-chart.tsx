@@ -6,6 +6,7 @@ import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } 
 
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
+import { Icon } from './icon';
 import { T, tap } from './kit';
 import { useColors } from './theme';
 
@@ -75,7 +76,7 @@ export function ProgressChart({ attempts, onOpen }: { attempts: Attempt[]; onOpe
                 {fmtDate(a.at)} · {isFull(a) ? `نمره ${faNum(scoreOf(a))}/${faNum(a.items.length)} · ${isPass(a) ? 'قبول' : 'مردود'}` : `${faNum(a.items.length)} سؤالی · ${faNum(Math.round(pctOf(a) * 100))}٪ درست`}
               </T>
             </View>
-            <T style={{ color: c.link, fontWeight: '700' }}>مرور</T>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><T style={{ color: c.link, fontWeight: '700' }}>مرور</T><Icon name="chevronLeft" size={15} color={c.link} weight="semibold" /></View>
           </View>
         </Pressable>
       ) : <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>برای دیدن جزئیات هر آزمون، روی نمودار بزنید.</T>}

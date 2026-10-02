@@ -3,13 +3,13 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
+import { Icon } from '@/ui/icon';
 import { Backdrop, L, T, tap } from '@/ui/kit';
 import { LiquidGlass } from '@/ui/liquid';
 import { radius, useColors, useIsDark } from '@/ui/theme';
@@ -101,7 +101,7 @@ export default function Run() {
               <LiquidGlass r={18} interactive tint={on ? (dark ? 'rgba(31,106,165,0.38)' : 'rgba(2,71,118,0.13)') : undefined}
                 style={{ flexDirection: 'row', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', ...(on ? { borderColor: c.accent, borderWidth: 1.5 } : {}) }}>
                 <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
-                  {on ? <Svg width={12} height={12} viewBox="0 0 12 12"><Path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#fff" strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" /></Svg> : null}
+                  {on ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
                 </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <L style={{ fontSize: 16.5, lineHeight: 23 }}>{lang === 'en' && s.en ? s.en : s.da}</L>

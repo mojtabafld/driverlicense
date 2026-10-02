@@ -10,6 +10,7 @@ import { faNum, fmtDate, isFull, isPass, passMin, pctOf, scoreOf } from '@/lib/l
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Glass } from '@/ui/glass';
+import { Icon } from '@/ui/icon';
 import { Backdrop, Button, Card, L, Ring, Segmented, T } from '@/ui/kit';
 import { radius, useColors } from '@/ui/theme';
 
@@ -29,9 +30,12 @@ export default function Result() {
       <ScrollView contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <Card style={{ alignItems: 'center', gap: 8, paddingVertical: 22 }}>
           <Ring value={pctOf(a)} size={120} stroke={11} color={full ? (pass ? c.ok : c.bad) : c.accent} label={full ? `${faNum(right)}/${faNum(n)}` : `${faNum(Math.round(pctOf(a) * 100))}٪`} />
-          <T style={{ fontSize: 24, fontWeight: '700', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.text }}>
-            {full ? (pass ? (fresh ? '🎉 قبول شدید!' : '✓ قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : '✗ مردود')) : `${faNum(right)} از ${faNum(n)} درست`}
-          </T>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {full ? <Icon name={pass ? 'checkCircle' : 'xCircle'} size={26} color={pass ? c.ok : c.bad} contrast={c.surface} /> : null}
+            <T style={{ fontSize: 24, fontWeight: '700', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.text }}>
+              {full ? (pass ? (fresh ? 'قبول شدید!' : 'قبول') : (fresh ? 'مردود — دوباره تلاش کنید' : 'مردود')) : `${faNum(right)} از ${faNum(n)} درست`}
+            </T>
+          </View>
           <T style={{ color: c.muted, textAlign: 'center', fontSize: 13.5 }}>{full ? `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.` : 'آزمون تمرینی'} · {fmtDate(a.at)}</T>
         </Card>
         <Segmented value={filter} onChange={setFilter} options={[{ value: 'wrong', label: `اشتباهات (${faNum(n - right)})` }, { value: 'all', label: `همه (${faNum(n)})` }]} />
@@ -40,7 +44,10 @@ export default function Result() {
             <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
               <Image source={imgSource(pic(q!))} style={{ width: 92, aspectRatio: 4 / 3, borderRadius: radius.sm }} contentFit="cover" />
               <View style={{ flex: 1, gap: 2 }}>
-                <T style={{ fontWeight: '700', color: it.ok ? c.ok : c.bad }}>سؤال {faNum(k + 1)} {it.ok ? '✓' : '✗'}</T>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Icon name={it.ok ? 'checkCircle' : 'xCircle'} size={17} color={it.ok ? c.ok : c.bad} contrast={c.surface} />
+                  <T style={{ fontWeight: '700', color: it.ok ? c.ok : c.bad }}>سؤال {faNum(k + 1)}</T>
+                </View>
                 <L numberOfLines={2} style={{ fontSize: 14, lineHeight: 20 }}>{lang === 'en' && q!.sen ? q!.sen : q!.sda}</L>
               </View>
             </View>
@@ -63,7 +70,7 @@ export default function Result() {
               </View>
             ) : null}
           </Card>
-        )) : <Card><T style={{ textAlign: 'center' }}>هیچ اشتباهی نداشتید ✨</T></Card>}
+        )) : <Card style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}><Icon name="sparkles" size={20} color={c.warn} /><T style={{ textAlign: 'center' }}>هیچ اشتباهی نداشتید</T></Card>}
         <Button label="بستن" kind="glass" onPress={() => router.back()} />
       </ScrollView>
     </Backdrop>
