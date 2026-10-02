@@ -3,7 +3,8 @@
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review),
-// LESSON_MODEL (Claude model for those lessons, default claude-opus-5-5). See README.md for all variables.
+// LESSON_MODEL (Claude model for those lessons, default claude-opus-5-5), KIE_API_KEY (new question pictures, admin panel).
+// See README.md for all variables.
 'use strict';
 process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
 const http = require('node:http');
@@ -12,6 +13,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
 const { getLesson, getSummary, lessonsAvailable } = require('./lesson');
+const imagegen = require('./imagegen');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
@@ -223,6 +225,20 @@ function serveStatic(req, res) {
     return res.end(req.method === 'HEAD' ? undefined : INDEX_HTML);
   }
   if (isProtected(p) && !sessionUser(req)) { res.writeHead(401, { 'Cache-Control': 'no-store' }); return res.end('Sign in first'); }
+  // A question picture replaced by a generated one (the original file stays; ?orig=1 still shows it), and the generated
+  // versions themselves at /img/gen/<qid>/<job> for the admin panel.
+  const qm = /^\/img\/q(\d+)\.jpg$/.exec(p), gm = /^\/img\/gen\/(\d+)\/([a-z0-9]+)$/.exec(p);
+  if (gm || (qm && !new URL(req.url, 'http://x').searchParams.has('orig'))) {
+    return (gm ? imagegen.jobBlob(gm[1], gm[2]) : imagegen.activeBlob(qm[1])).then(b => {
+      if (!b) { if (gm) { res.writeHead(404); return res.end(); } return serveFile(req, res, p); }
+      res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=604800', 'X-Content-Type-Options': 'nosniff' });
+      res.end(req.method === 'HEAD' ? undefined : b.data);
+    }).catch(() => serveFile(req, res, p));
+  }
+  return serveFile(req, res, p);
+}
+
+function serveFile(req, res, p) {
   const file = path.normalize(path.join(SITE, p));
   if (!file.startsWith(SITE + path.sep)) { res.writeHead(403); return res.end(); }
   fs.stat(file, (err, st) => {
@@ -279,6 +295,9 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user) });
   }
 
+  // kie.ai calls this when a picture is ready; the body is not trusted, it only makes the server check its jobs now.
+  if (req.method === 'POST' && route === 'kiecallback') { imagegen.poll().catch(() => {}); return send(res, 200, { ok: true }); }
+
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
   const user = s.user;
@@ -333,6 +352,16 @@ async function api(req, res, route) {
       throw e;
     }
   }
+  // New question pictures (admin): list, start one (qid, model), choose which picture is shown (job id or null = original).
+  if (route === 'imggen' || route === 'imggenstart' || route === 'imggenset') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    try {
+      if (req.method === 'GET' && route === 'imggen') return send(res, 200, imagegen.list());
+      const b = await readBody(req);
+      if (req.method === 'POST' && route === 'imggenstart') return send(res, 200, { job: await imagegen.start(+b.qid, b.model, user.username) });
+      if (req.method === 'POST' && route === 'imggenset') { await imagegen.setActive(+b.qid, b.job || null); return send(res, 200, imagegen.list()); }
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+  }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, adminStats());
@@ -342,7 +371,7 @@ async function api(req, res, route) {
       if (user.draft.lesson) (user.lessonDrafts = user.lessonDrafts || {})[user.draft.lesson] = user.draft;
       delete user.draft; await store.saveUser(user);
     }
-    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], draft: user.draft || null, lessonDrafts: user.lessonDrafts || {} });
+    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], draft: user.draft || null, lessonDrafts: user.lessonDrafts || {}, imgv: imagegen.versions() });
   }
   if (req.method === 'POST' && route === 'attempts') {
     const b = await readBody(req);
@@ -468,6 +497,12 @@ async function api(req, res, route) {
 
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
+  imagegen.init(store, SITE);
+  // One-time first picture (question 1 of lesson 1), made automatically once the kie.ai key is set.
+  if (imagegen.available() && lessonsAvailable() && !store.meta.imagesBoot) {
+    store.meta.imagesBoot = { at: Date.now() }; await store.saveMeta('imagesBoot', store.meta.imagesBoot);
+    imagegen.start(imagegen.firstQuestion(), 'flare', 'auto').catch(e => console.error('first picture', e.message));
+  }
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });

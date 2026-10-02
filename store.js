@@ -3,6 +3,7 @@
 // - otherwise         → a local JSON file (data/db.json), handy for running on your own computer.
 // Everything is kept in memory; writes go through saveUser / saveSession / deleteSession / saveMeta.
 // meta holds small site-wide documents by key (e.g. 'visits' for the admin panel's visit counts).
+// Blobs (generated question pictures) are binary files kept apart from meta and read on demand: saveBlob / getBlob.
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -27,6 +28,7 @@ async function openStore({ dbFile }) {
       await p.query(`CREATE TABLE IF NOT EXISTS tp_users (username TEXT PRIMARY KEY, data JSONB NOT NULL)`);
       await p.query(`CREATE TABLE IF NOT EXISTS tp_sessions (token TEXT PRIMARY KEY, username TEXT NOT NULL, exp BIGINT NOT NULL)`);
       await p.query(`CREATE TABLE IF NOT EXISTS tp_meta (key TEXT PRIMARY KEY, data JSONB NOT NULL)`);
+      await p.query(`CREATE TABLE IF NOT EXISTS tp_blobs (key TEXT PRIMARY KEY, mime TEXT NOT NULL, data BYTEA NOT NULL)`);
     };
     let pool = makePool();
     try {
@@ -59,6 +61,9 @@ async function openStore({ dbFile }) {
       deleteSession: token => pool.query('DELETE FROM tp_sessions WHERE token = $1', [token]),
       saveMeta: (key, data) => pool.query(
         'INSERT INTO tp_meta (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data', [key, data]),
+      saveBlob: (key, mime, buf) => pool.query(
+        'INSERT INTO tp_blobs (key, mime, data) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET mime = EXCLUDED.mime, data = EXCLUDED.data', [key, mime, buf]),
+      getBlob: async key => { const r = (await pool.query('SELECT mime, data FROM tp_blobs WHERE key = $1', [key])).rows[0]; return r ? { mime: r.mime, data: r.data } : null; },
     };
   }
 
@@ -79,7 +84,11 @@ async function openStore({ dbFile }) {
   });
   console.log(`Storage: ${path.relative(process.cwd(), dbFile) || dbFile} (${Object.keys(mem.users).length} users)`);
   mem.meta = mem.meta || {};
-  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); } };
+  // Blobs as files next to the JSON file (data/blobs/<key>), with the type in a small sidecar.
+  const blobDir = path.join(path.dirname(dbFile), 'blobs'), blobPath = key => path.join(blobDir, key.replace(/[^a-zA-Z0-9_.-]/g, '_'));
+  const saveBlob = async (key, mime, buf) => { fs.mkdirSync(blobDir, { recursive: true }); fs.writeFileSync(blobPath(key), buf); fs.writeFileSync(blobPath(key) + '.mime', mime); };
+  const getBlob = async key => { try { return { data: fs.readFileSync(blobPath(key)), mime: fs.readFileSync(blobPath(key) + '.mime', 'utf8') }; } catch { return null; } };
+  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); }, saveBlob, getBlob };
 }
 
 module.exports = { openStore };
