@@ -61,17 +61,22 @@ export default function Run() {
   };
   const quit = () => ask('خروج از آزمون؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'خروج', () => router.back());
   const ui = uiText(lang === 'en' ? 'en' : 'da');
-  const mm = `${faNum(Math.floor(left / 60))}:${faNum(String(left % 60).padStart(2, '0'))}`;
+  const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
 
   return (
     <Backdrop>
-      {/* Top: exit (icon) with the exam's name beside it, the position (Latin digits) in the middle of the screen, and
+      {/* Top: exit (icon) with the exam's name beside it, the timer (Latin digits) in the middle of the screen, and
           the theme switch. SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
           stale), and the web gets extra room at the top. */}
       <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: c.line }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-            <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: c.text, fontVariant: ['tabular-nums'] }}>{i + 1} / {qs.length}</L>
+            {settings.timer ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, direction: 'ltr' } as any}>
+                <Icon name="clock" size={16} color={left < 60 ? c.bad : c.muted} />
+                <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: left < 60 ? c.bad : c.text, fontVariant: ['tabular-nums'] }}>{mm}</L>
+              </View>
+            ) : null}
           </View>
           <Pressable onPress={quit} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از آزمون"
             style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1, borderColor: c.line })}>
@@ -114,17 +119,12 @@ export default function Run() {
         })}
       </ScrollView>
       {/* A floating Liquid Glass bar in the questions' language (Danish / English, left to right): previous on the left,
-          the timer between, next / hand in on the right. */}
+          the position (Latin digits) between, next / hand in on the right. */}
       <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: ins.bottom + 14, paddingHorizontal: 16, alignItems: 'center' }}>
         <LiquidGlass bar r={30} style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, padding: 6, width: '100%', maxWidth: 520 } as any}>
           <FootBtn label={ui.prev} icon="arrowLeft" lead disabled={i === 0} onPress={() => setI(i - 1)} />
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            {settings.timer ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                <Icon name="clock" size={15} color={left < 60 ? ios.red : ios.secondary} />
-                <T style={{ fontSize: 17, lineHeight: 24, fontWeight: '800', textAlign: 'center', color: left < 60 ? ios.red : ios.label, fontVariant: ['tabular-nums'] }}>{mm}</T>
-              </View>
-            ) : null}
+            <L style={{ fontSize: 20, lineHeight: 26, color: ios.label, fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] }}>{i + 1} / {qs.length}</L>
           </View>
           {last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => setI(i + 1)} />}
         </LiquidGlass>
