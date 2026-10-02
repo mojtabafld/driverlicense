@@ -65,21 +65,21 @@ export default function Run() {
 
   return (
     <Backdrop>
-      {/* Top: exit (icon), the exam's name and the position, and the theme switch. SafeAreaView measures the top inset
-          itself (in a full-screen modal the hook's value can be stale), and the web gets extra room at the top. */}
+      {/* Top: exit (icon) with the exam's name beside it, the position (Latin digits) in the middle of the screen, and
+          the theme switch. SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
+          stale), and the web gets extra room at the top. */}
       <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: c.line }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
+          <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+            <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: c.text, fontVariant: ['tabular-nums'] }}>{i + 1} / {qs.length}</L>
+          </View>
           <Pressable onPress={quit} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از آزمون"
             style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1, borderColor: c.line })}>
             <Icon name="exit" size={20} color={c.link} />
           </Pressable>
-          {/* The exam's name in the middle, with the counter (Latin digits) in front of it. */}
-          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <T style={{ fontWeight: '700', fontSize: 16, lineHeight: 26, textAlign: 'center', flexShrink: 1 }} numberOfLines={1}>{plan.title}</T>
-            <View style={{ paddingHorizontal: 8, paddingVertical: 1, borderRadius: 99, backgroundColor: c.accentSoft }}>
-              <L style={{ fontSize: 13, lineHeight: 20, fontWeight: '700', color: c.link, fontVariant: ['tabular-nums'] }}>{i + 1}/{qs.length}</L>
-            </View>
-          </View>
+          {/* Kept clear of the counter in the middle. */}
+          <T style={{ fontWeight: '700', fontSize: 15, lineHeight: 24, maxWidth: '30%' }} numberOfLines={1}>{plan.title}</T>
+          <View style={{ flex: 1 }} />
           <ThemeButton />
         </View>
       </SafeAreaView>
@@ -114,7 +114,7 @@ export default function Run() {
         })}
       </ScrollView>
       {/* A floating Liquid Glass bar in the questions' language (Danish / English, left to right): previous on the left,
-          the timer (or the position) between, next / hand in on the right. */}
+          the timer between, next / hand in on the right. */}
       <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: ins.bottom + 14, paddingHorizontal: 16, alignItems: 'center' }}>
         <LiquidGlass bar r={30} style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, padding: 6, width: '100%', maxWidth: 520 } as any}>
           <FootBtn label={ui.prev} icon="arrowLeft" lead disabled={i === 0} onPress={() => setI(i - 1)} />
@@ -125,7 +125,6 @@ export default function Run() {
                 <T style={{ fontSize: 17, lineHeight: 24, fontWeight: '800', textAlign: 'center', color: left < 60 ? ios.red : ios.label, fontVariant: ['tabular-nums'] }}>{mm}</T>
               </View>
             ) : null}
-            <L style={{ fontSize: settings.timer ? 15 : 20, lineHeight: settings.timer ? 19 : 26, color: settings.timer ? ios.secondary : ios.label, fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] }}>{i + 1} / {qs.length}</L>
           </View>
           {last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => setI(i + 1)} />}
         </LiquidGlass>
