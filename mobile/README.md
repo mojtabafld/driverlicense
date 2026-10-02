@@ -5,7 +5,7 @@ https://kore.mintcloud.info. Design: the same look as the web site (colours, bac
 `site/style.css`, copied into `src/ui/theme.ts`). Two parts use Apple's **Liquid Glass** in the site's colours
 (`src/ui/liquid.tsx`: real glass via `expo-glass-effect` on iOS 26, a frosted look elsewhere): the answer options in
 exams and lessons, and the tab bar at the bottom. On iOS the tab bar is Apple's own (`expo-router/unstable-native-tabs`),
-on the web a copy of the iOS 26 floating glass bar, on Android Material tabs.
+on the web a copy of the iOS 26/27 floating glass bar (system blue, label colours, grey capsule for the chosen tab, light and dark), on Android Material tabs.
 
 Theme: «خودکار» by default (follows the device's light / dark setting, live); «ظاهر» in the settings also offers «روشن»
 and «تیره», and the moon / sun button in the top bar sets one of those. The choice is kept on the device (on the web
