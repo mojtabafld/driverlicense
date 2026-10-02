@@ -1744,8 +1744,13 @@
             ${x.active ? `<button class="tr-toggle" data-ig-set="${qid}" data-job="">برگرداندن تصویر اصلی</button>` : '<em>نمایش داده می‌شود</em>'}</div>
           ${x.jobs.slice().reverse().map(j => `<div class="ig-cell ${x.active === j.id ? 'on' : ''}">
             ${j.blob ? `<img src="img/gen/${qid}/${j.id}" alt="">` : `<div class="ig-wait">${j.done ? '✗' : '<span class="ig-spin"></span>'}</div>`}
-            <span>${j.model === 'sunburst' ? 'Sunburst' : 'Flare'} · ${fmtDateTime(j.at)} · ${stateFa[j.state] || j.state}${j.error && j.state === 'fail' ? ` <small class="da">(${esc(j.error)})</small>` : ''}</span>
+            <span>${j.model === 'sunburst' ? 'Sunburst' : 'Flare'}${j.kind === 'edit' ? ' · ویرایش' : ''} · ${fmtDateTime(j.at)} · ${stateFa[j.state] || j.state}${j.error && j.state === 'fail' ? ` <small class="da">(${esc(j.error)})</small>` : ''}</span>
+            ${j.instruction ? `<small class="ig-instr">دستور ویرایش: <span class="da" dir="auto">${esc(j.instruction)}</span></small>` : ''}
             ${j.blob ? (x.active === j.id ? '<em>نمایش داده می‌شود</em>' : `<button class="tr-toggle" data-ig-set="${qid}" data-job="${j.id}">نمایش این تصویر در سایت</button>`) : ''}
+            ${j.blob ? `<div class="ig-fix">
+              <textarea data-draft="e:${j.id}" rows="2" dir="auto" placeholder="فقط چه چیزی در این تصویر عوض شود؟ مثلاً: the traffic light should show red">${esc(drafts['e:' + j.id] || '')}</textarea>
+              <button type="button" class="btn btn-primary ig-regen" data-ig-edit="${qid}" data-job="${j.id}" ${d.available ? '' : 'disabled'}>اعمال این ویرایش</button></div>` : ''}
+            ${j.done ? `<button type="button" class="ig-del" data-ig-del="${qid}" data-job="${j.id}">حذف این تصویر</button>` : ''}
             ${j.prompt ? `<details data-open="${j.id}" ${openSet.has(j.id) ? 'open' : ''}><summary>توضیح صحنه${j.edited ? ' <small class="muted">(ویرایش‌شده)</small>' : ''}</summary>
               <textarea class="da" dir="ltr" data-draft="${j.id}" rows="8">${esc(drafts[j.id] != null ? drafts[j.id] : j.prompt)}</textarea>
               <button type="button" class="btn btn-primary ig-regen" data-ig-regen="${qid}" data-job="${j.id}" ${d.available ? '' : 'disabled'}>ساخت مجدد تصویر براساس این متن</button></details>` : ''}</div>`).join('')}
@@ -1779,6 +1784,17 @@
       try { await api('POST', 'imggenstart', { qid: +b.dataset.igRegen, model: document.querySelector('#igForm [name=model]').value, prompt: text }); delete drafts[b.dataset.job]; } catch (err) { toast(err.message); }
       imgGenPanel();
     });
+    box.querySelectorAll('[data-ig-edit]').forEach(b => b.onclick = async () => {
+      const key = 'e:' + b.dataset.job, text = (drafts[key] || '').trim();
+      if (!text) return toast('بنویسید چه چیزی در تصویر عوض شود.');
+      b.disabled = true; toast('در حال ویرایش تصویر…');
+      try { await api('POST', 'imggenedit', { qid: +b.dataset.igEdit, job: b.dataset.job, text, model: document.querySelector('#igForm [name=model]').value }); delete drafts[key]; } catch (err) { toast(err.message); }
+      imgGenPanel();
+    });
+    box.querySelectorAll('[data-ig-del]').forEach(b => b.onclick = () => confirmBox('حذف این تصویر؟', 'این تصویر ساخته‌شده برای همیشه حذف می‌شود. اگر روی سایت نمایش داده می‌شد، جدیدترین تصویر باقی‌مانده و اگر نبود، تصویر اصلی نمایش داده می‌شود.', 'حذف', async () => {
+      try { await api('POST', 'imggendel', { qid: +b.dataset.igDel, job: b.dataset.job }); await loadMe(); toast('تصویر حذف شد'); } catch (err) { toast(err.message); }
+      imgGenPanel();
+    }));
     box.querySelectorAll('[data-ig-set]').forEach(b => b.onclick = async () => {
       try { await api('POST', 'imggenset', { qid: +b.dataset.igSet, job: b.dataset.job || null }); await loadMe(); toast('تصویر سایت عوض شد'); } catch (err) { toast(err.message); }
       imgGenPanel();

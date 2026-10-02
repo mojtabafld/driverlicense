@@ -63,6 +63,7 @@ async function openStore({ dbFile }) {
         'INSERT INTO tp_meta (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data', [key, data]),
       saveBlob: (key, mime, buf) => pool.query(
         'INSERT INTO tp_blobs (key, mime, data) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET mime = EXCLUDED.mime, data = EXCLUDED.data', [key, mime, buf]),
+      deleteBlob: key => pool.query('DELETE FROM tp_blobs WHERE key = $1', [key]),
       getBlob: async key => { const r = (await pool.query('SELECT mime, data FROM tp_blobs WHERE key = $1', [key])).rows[0]; return r ? { mime: r.mime, data: r.data } : null; },
     };
   }
@@ -88,7 +89,8 @@ async function openStore({ dbFile }) {
   const blobDir = path.join(path.dirname(dbFile), 'blobs'), blobPath = key => path.join(blobDir, key.replace(/[^a-zA-Z0-9_.-]/g, '_'));
   const saveBlob = async (key, mime, buf) => { fs.mkdirSync(blobDir, { recursive: true }); fs.writeFileSync(blobPath(key), buf); fs.writeFileSync(blobPath(key) + '.mime', mime); };
   const getBlob = async key => { try { return { data: fs.readFileSync(blobPath(key)), mime: fs.readFileSync(blobPath(key) + '.mime', 'utf8') }; } catch { return null; } };
-  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); }, saveBlob, getBlob };
+  const deleteBlob = async key => { for (const f of [blobPath(key), blobPath(key) + '.mime']) try { fs.unlinkSync(f); } catch {} };
+  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); }, saveBlob, getBlob, deleteBlob };
 }
 
 module.exports = { openStore };
