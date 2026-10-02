@@ -1,5 +1,7 @@
 // The four parts of the app as native tabs: on iOS Apple's own tab bar exactly as the system draws it (Liquid Glass,
 // system tint and colours, light and dark); on Android Material tabs in the site's colours.
+// The screens pad for the status bar and the tab bar themselves (Screen), so iOS must not add its own inset to their
+// first scroll view as well: that pushed the content down twice under a blurred band.
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Platform } from 'react-native';
 
@@ -14,7 +16,7 @@ export default function AppTabs() {
   return (
     <NativeTabs {...android}>
       {TABS.map(t => (
-        <NativeTabs.Trigger key={t.name} name={t.name}>
+        <NativeTabs.Trigger key={t.name} name={t.name} disableAutomaticContentInsets={Platform.OS === 'ios'}>
           <NativeTabs.Trigger.Label>{t.label}</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon sf={{ default: t.sf, selected: `${t.sf}.fill` as any }} md={t.md as any} />
         </NativeTabs.Trigger>
