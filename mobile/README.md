@@ -16,8 +16,8 @@ symbols (iOS 27's on iOS 27); the native tab bar uses them too. Apple licenses S
 platforms, so the web and Android use our own drawings in the same style (outline, and filled when chosen).
 
 ## Parts of the app (tabs at the bottom)
-- **خانه**: chance of passing, counts, progress chart (percent correct of the last 30 attempts, 80% pass line; tap for details), latest activity.
-- **آزمون**: random exam (5–25 questions, timer), practice of mistakes, previous exams.
+- **خانه**: chance of passing, counts, progress chart (percent correct of the last 30 attempts, 80% pass line; tap for details).
+- **آزمون**: random exam (5–25 questions, timer), practice of mistakes, and «آخرین فعالیت‌ها» (all exams and lessons, green or red by result).
 - **آموزش**: the 44 lessons one by one, or practice by the official sections.
 - **تنظیمات**: exam language, Persian translation, timer, account.
 
