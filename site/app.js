@@ -682,9 +682,9 @@
       })()}
         ${stepMode ? `<div class="rev-tools">${tabsHtml}<button class="det-link" id="detLink" ${ctx.lineGone == null ? 'hidden' : ''} aria-expanded="${!ctx.lineGone}">${ICON.chart}<span>${ctx.lineGone === false ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</span></button></div>` : ''}</div>`}
       ${stepMode ? `<div class="res-line ${full ? (pass ? 'ok' : 'bad') : 'neutral'} ${ctx.lineGone ? 'gone' : ''}" id="resLine">
-        <span class="rl-side"><span class="mini-ring" title="${faNum(pctN)}٪ پاسخ درست"><svg width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" class="mr-bg"/><circle cx="23" cy="23" r="19" class="mr-fg" stroke-dasharray="${2 * Math.PI * 19}" stroke-dashoffset="${2 * Math.PI * 19}" style="--off:${2 * Math.PI * 19 * (1 - pct)}"/></svg><i>${faNum(pctN)}٪</i></span>
+        <span class="mini-ring rl-ring" title="${faNum(pctN)}٪ پاسخ درست"><svg viewBox="0 0 46 46"><circle cx="23" cy="23" r="19" class="mr-bg"/><circle cx="23" cy="23" r="19" class="mr-fg" stroke-dasharray="${2 * Math.PI * 19}" stroke-dashoffset="${2 * Math.PI * 19}" style="--off:${2 * Math.PI * 19 * (1 - pct)}"/></svg><i>${faNum(pctN)}٪</i></span>
+        <span class="rl-main"><span class="rl-top"><b>${full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span></span>
           <small>${modeName(mode, lesson)}، ${fmtDate(at)}</small></span>
-        <span class="rl-main"><b>${full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</b><span>${n - correct ? `${faNum(n - correct)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</span></span>
       </div>` : `<div class="card result-hero">
         <div class="ring">
           <svg width="170" height="170" viewBox="0 0 170 170">
