@@ -4,14 +4,15 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { Backdrop, L, T, tap } from '@/ui/kit';
+import { Backdrop, L, T, ThemeButton, tap } from '@/ui/kit';
+import { uiText } from '@/ui/review';
 import { LiquidGlass, useIOSBar } from '@/ui/liquid';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
@@ -59,12 +60,14 @@ export default function Run() {
     if (empty) ask('تحویل آزمون؟', `در ${faNum(empty)} سؤال هیچ گزینه‌ای انتخاب نشده است.`, 'تحویل', finish); else finish();
   };
   const quit = () => ask('خروج از آزمون؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'خروج', () => router.back());
+  const ui = uiText(lang === 'en' ? 'en' : 'da');
   const mm = `${faNum(Math.floor(left / 60))}:${faNum(String(left % 60).padStart(2, '0'))}`;
 
   return (
     <Backdrop>
-      {/* Top: exit (icon), the exam's name and the position; its height follows its text, below the safe area. */}
-      <View style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 10 : 6), paddingBottom: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: c.line }}>
+      {/* Top: exit (icon), the exam's name and the position, and the theme switch. SafeAreaView measures the top inset
+          itself (in a full-screen modal the hook's value can be stale), and the web gets extra room at the top. */}
+      <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: c.line }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
           <Pressable onPress={quit} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از آزمون"
             style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1, borderColor: c.line })}>
@@ -74,14 +77,19 @@ export default function Run() {
             <T style={{ fontWeight: '700', fontSize: 16, lineHeight: 26 }} numberOfLines={1}>{plan.title}</T>
             <T style={{ color: c.muted, fontSize: 13, lineHeight: 20 }}>سؤال {faNum(i + 1)} از {faNum(qs.length)}</T>
           </View>
+          <ThemeButton />
         </View>
-      </View>
+      </SafeAreaView>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" transition={200} />
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 20, fontWeight: '600', lineHeight: 27 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
-          <Pressable onPress={() => setShowFa(!showFa)} hitSlop={6}><T style={{ color: c.link, fontWeight: '600', fontSize: 13 }}>{showFa ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}</T></Pressable>
+          <Pressable onPress={() => { tap(); setShowFa(!showFa); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: showFa }}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: c.accentSoft }}>
+            <Icon name="translate" size={15} color={c.link} />
+            <T style={{ color: c.link, fontWeight: '600', fontSize: 13 }}>{showFa ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}</T>
+          </Pressable>
         </View>
         {q.st.map((s, k) => {
           const on = ticks[i][k];
@@ -102,10 +110,11 @@ export default function Run() {
           );
         })}
       </ScrollView>
-      {/* A floating Liquid Glass bar: previous, the timer (or the position) between, next / hand in. */}
+      {/* A floating Liquid Glass bar in the questions' language (Danish / English, left to right): previous on the left,
+          the timer (or the position) between, next / hand in on the right. */}
       <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: ins.bottom + 14, paddingHorizontal: 16, alignItems: 'center' }}>
-        <LiquidGlass bar r={30} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 6, width: '100%', maxWidth: 520 }}>
-          <FootBtn label="قبلی" icon="arrowRight" disabled={i === 0} onPress={() => setI(i - 1)} />
+        <LiquidGlass bar r={30} style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, padding: 6, width: '100%', maxWidth: 520 } as any}>
+          <FootBtn label={ui.prev} icon="arrowLeft" lead disabled={i === 0} onPress={() => setI(i - 1)} />
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             {settings.timer ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -115,25 +124,25 @@ export default function Run() {
             ) : null}
             <T style={{ fontSize: settings.timer ? 11.5 : 15, lineHeight: settings.timer ? 16 : 22, color: settings.timer ? ios.secondary : ios.label, fontWeight: settings.timer ? '600' : '700', textAlign: 'center' }}>{faNum(i + 1)} / {faNum(qs.length)}</T>
           </View>
-          {last ? <FootBtn label="تحویل" icon="check" submit onPress={handIn} /> : <FootBtn label="بعدی" icon="arrowLeft" primary onPress={() => setI(i + 1)} />}
+          {last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => setI(i + 1)} />}
         </LiquidGlass>
       </View>
     </Backdrop>
   );
 }
 
-// Buttons of the exam's glass bar, as iOS 26/27 draws bar buttons: «بعدی» filled in the system blue, «تحویل» in the
-// system green, «قبلی» a grey capsule with blue text.
-function FootBtn({ label, onPress, disabled, submit, primary, icon }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName }) {
+// Buttons of the exam's glass bar, as iOS 26/27 draws bar buttons, labelled in the questions' language: next filled in
+// the system blue, hand in in the system green, previous a grey capsule with blue text. `lead`: icon before the label.
+function FootBtn({ label, onPress, disabled, submit, primary, icon, lead }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean }) {
   const ios = useIOSBar();
   const solid = submit || primary, fg = solid ? '#fff' : ios.tint;
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.35 : pressed ? 0.8 : 1 })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 46, minWidth: 104, paddingHorizontal: 18, borderRadius: 23, justifyContent: 'center',
         backgroundColor: submit ? ios.green : primary ? ios.tint : ios.fill }}>
-        {icon === 'arrowRight' ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
-        <T style={{ color: fg, fontWeight: '700', fontSize: 15.5, textAlign: 'center' }}>{label}</T>
-        {icon !== 'arrowRight' ? <Icon name={icon} size={16} color={fg} weight={icon === 'check' ? 'bold' : 'semibold'} /> : null}
+        {lead ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
+        <L style={{ color: fg, fontWeight: '700', fontSize: 15.5, lineHeight: 22, textAlign: 'center' }}>{label}</L>
+        {!lead ? <Icon name={icon} size={16} color={fg} weight={icon === 'check' ? 'bold' : 'semibold'} /> : null}
       </View>
     </Pressable>
   );
