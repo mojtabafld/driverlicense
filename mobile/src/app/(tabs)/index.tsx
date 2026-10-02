@@ -22,12 +22,14 @@ function Stat({ icon, label, value, extra, sub, tone, onPress }: { icon: IconNam
         <View style={{ width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
           <Icon name={icon} size={16} color={fg} weight="semibold" />
         </View>
-        <T style={{ flex: 1, color: c.text, fontSize: 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
-        <Icon name="chevronLeft" size={13} color={c.faint} weight="semibold" />
+        <T style={{ flexShrink: 1, color: c.text, fontSize: 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
-      <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
-        {value}{extra ? <T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
-      </T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        <T style={{ flex: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
+          {value}{extra ? <T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
+        </T>
+        <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
+      </View>
       <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>
     </Card>
   );
