@@ -875,7 +875,6 @@ body.focus-mode .topbar{display:none}
 .ig-form{display:grid;gap:12px;margin-bottom:18px}
 .ig-form label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
 .ig-form input,.ig-form select{width:100%;font:inherit;font-size:15px;padding:11px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--text)}
-.ig-draft-btn{justify-self:center;padding:8px 16px;border-radius:8px}
 .ig-go{width:100%;height:48px;border-radius:10px;font-size:16px}
 .ig-list-h{font-weight:700;margin:4px 0 8px}
 
@@ -887,7 +886,13 @@ body.focus-mode .topbar{display:none}
 .ig-edit textarea,.ig-cell details textarea{width:100%;font:inherit;font-size:12.5px;line-height:1.6;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);resize:vertical}
 .ig-edit textarea:focus,.ig-cell details textarea:focus{outline:none;border-color:var(--navy)}
 .ig-edit .tr-toggle{justify-self:start}
-.ig-cell details{display:grid;gap:6px}
+.ig-cell details{display:grid;gap:8px}
+.ig-regen{display:block;width:fit-content;max-width:100%;white-space:normal;margin:10px auto 2px;padding:12px 24px;border-radius:10px;font-size:15px}
+.ig-cell,.ig-cell details,.ig-cell textarea{min-width:0}
+@media (max-width:560px){.ig-row{grid-template-columns:minmax(0,1fr)}}
+/* an opened description takes the whole row, so the text is easy to edit and the button sits in the middle */
+.ig-cell:has(details[open]){grid-column:1/-1}
+.ig-cell:has(details[open])>img{max-width:420px;justify-self:center}
 .ig-q{border-radius:10px;box-shadow:inset 0 0 0 1.5px var(--line);margin-top:8px;overflow:hidden}
 .ig-q.open{box-shadow:inset 0 0 0 1.5px var(--navy)}
 .ig-q.open .hs-chev{transform:rotate(180deg)}
