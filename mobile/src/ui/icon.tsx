@@ -139,6 +139,9 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
         </G>
       );
       break;
+    case 'clock':
+      body = <G><Circle cx={12} cy={12} r={8.6} {...line} /><Path d="M12 7.5V12l3 2" {...line} /></G>;
+      break;
   }
   return <Svg width={size} height={size} viewBox="0 0 24 24">{body}</Svg>;
 }
