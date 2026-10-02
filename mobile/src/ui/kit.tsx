@@ -60,7 +60,7 @@ export function ThemeButton() {
 export function TopBar({ right }: { right?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   return (
-    <View style={{ paddingTop: ins.top }}>
+    <View style={{ paddingTop: ins.top + 6 }}>
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
           <Logo />
@@ -94,7 +94,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { t
     <Backdrop>
       <TopBar />
       {fill
-        ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 96 : ins.bottom + 10 }]}>{head}{children}</View>
+        ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
         : <ScrollView contentContainerStyle={[box, { paddingBottom: ins.bottom + 100 }]}>{head}{children}</ScrollView>}
     </Backdrop>
   );
