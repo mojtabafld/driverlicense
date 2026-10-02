@@ -1,5 +1,6 @@
 // Small building blocks shared by all screens, styled like the web site.
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -11,10 +12,15 @@ import { DA_FONT, radius, useColors, useTheme } from './theme';
 
 export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
-// The site's plain page background.
+// Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes.
 export function Backdrop({ children }: { children?: React.ReactNode }) {
   const c = useColors();
-  return <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>{children}</View>;
+  return (
+    <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
+      <LinearGradient colors={c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
+      {children}
+    </View>
+  );
 }
 
 // The site's logo: a rounded navy square with a speedometer.
@@ -45,7 +51,7 @@ export function ThemeButton() {
 export function TopBar({ right }: { right?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   return (
-    <View style={{ paddingTop: ins.top, backgroundColor: c.bg }}>
+    <View style={{ paddingTop: ins.top }}>
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
           <Logo />

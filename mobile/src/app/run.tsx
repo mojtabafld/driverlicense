@@ -62,7 +62,7 @@ export default function Run() {
 
   return (
     <Backdrop>
-      <View style={{ paddingTop: ins.top, backgroundColor: c.bg, borderBottomWidth: 1, borderBottomColor: c.line }}>
+      <View style={{ paddingTop: ins.top, borderBottomWidth: 1, borderBottomColor: c.line }}>
         <View style={{ height: 48, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 10 }}>
           <Pressable onPress={quit} hitSlop={8} style={{ height: 32, paddingHorizontal: 12, borderRadius: radius.btn, justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
             <T style={{ fontSize: 14, fontWeight: '600', color: c.link }}>خروج</T>

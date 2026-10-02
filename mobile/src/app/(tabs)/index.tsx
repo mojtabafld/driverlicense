@@ -1,29 +1,90 @@
-// Home: progress at a glance (chance of passing, counts, progress chart) and the next step.
+// Home: progress at a glance (chance of passing, counts, progress chart), the next step and the latest activity.
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
-import { faNum, fmtDate, isFull, isPass, mistakeIds, passEstimate, pctOf, scoreOf } from '@/lib/logic';
+import type { Attempt, Bank } from '@/lib/bank';
+import { faNum, fmtDate, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, scoreOf } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
-import { Button, Card, Ring, Screen, T } from '@/ui/kit';
-import { ProgressChart } from '@/ui/progress-chart';
 import { Icon, type IconName } from '@/ui/icon';
-import { useColors } from '@/ui/theme';
+import { Button, Card, Ring, Screen, T, tap } from '@/ui/kit';
+import { ProgressChart } from '@/ui/progress-chart';
+import { useColors, type Colors } from '@/ui/theme';
 
-// A count card with an icon before its label (the icon sits on a soft tile, like the site's .opt-ico).
-function Stat({ icon, label, value, extra, tone }: { icon: IconName; label: string; value: string; extra?: string; tone?: 'bad' }) {
+// Right edge in this right-to-left app: RN web ignores the page's dir for 'start', phones flip it.
+const RTL_START = Platform.OS === 'web' ? { right: 0 } : { start: 0 };
+const openAttempt = (a: Attempt) => { session.result = a; session.fresh = false; router.push('/result'); };
+const pctText = (p: number) => `${faNum(Math.round(p * 100))}٪`;
+// A small coloured label, like the site's .pill.
+function Pill({ text, fg, bg }: { text: string; fg: string; bg: string }) {
+  return <View style={{ paddingHorizontal: 9, paddingVertical: 2, borderRadius: 99, backgroundColor: bg }}><T style={{ color: fg, fontSize: 12, lineHeight: 19, fontWeight: '700' }}>{text}</T></View>;
+}
+
+// A count card: icon tile, big number, label and one line of detail.
+function Stat({ icon, label, value, extra, sub, tone, progress }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok'; progress?: number }) {
   const c = useColors();
-  const fg = tone === 'bad' ? c.bad : c.link;
+  const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   return (
-    <Card style={{ flex: 1, gap: 6, paddingHorizontal: 12 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <View style={{ width: 26, height: 26, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: tone === 'bad' ? c.badSoft : c.accentSoft }}>
-          <Icon name={icon} size={16} color={fg} weight="semibold" />
-        </View>
-        <T style={{ color: c.muted, fontSize: 13, flexShrink: 1 }} numberOfLines={1}>{label}</T>
+    <Card style={{ flex: 1, gap: 8, padding: 12 }}>
+      <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
+        <Icon name={icon} size={19} color={fg} weight="semibold" />
       </View>
-      <T style={{ fontSize: 26, fontWeight: '700', color: tone === 'bad' ? c.bad : c.text }}>{value}{extra ? <T style={{ color: c.muted, fontSize: 14 }}>{extra}</T> : null}</T>
+      <View>
+        <T style={{ fontSize: 24, lineHeight: 32, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }}>
+          {value}{extra ? <T style={{ color: c.muted, fontSize: 13, fontWeight: '600' }}>{extra}</T> : null}
+        </T>
+        <T style={{ color: c.text, fontSize: 13, fontWeight: '700' }} numberOfLines={1}>{label}</T>
+      </View>
+      {progress != null ? (
+        <View style={{ height: 5, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden' }}>
+          <View style={{ position: 'absolute', top: 0, bottom: 0, ...RTL_START, width: `${Math.round(progress * 100)}%`, borderRadius: 3, backgroundColor: c.accent }} />
+        </View>
+      ) : null}
+      <T style={{ color: c.muted, fontSize: 11.5, lineHeight: 17 }} numberOfLines={2}>{sub}</T>
     </Card>
+  );
+}
+
+// Name of an attempt, e.g. «آزمون تصادفی» or «درس ۱۲».
+function attemptName(a: Attempt, bank: Bank | null) {
+  if (a.mode === 'lesson') {
+    const i = bank ? bank.tests.findIndex(t => t.id === a.lesson) : -1;
+    return i >= 0 ? `درس ${faNum(lessonNumber(bank!.tests[i].title, i))}` : 'درس';
+  }
+  return a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی';
+}
+// Green or red for an attempt: a full 25-question one by the real pass rule, a shorter one by the same 80%.
+const passed = (a: Attempt) => (isFull(a) ? isPass(a) : pctOf(a) >= 0.8);
+const fmtSecs = (s: number) => `${faNum(Math.floor(s / 60))}:${faNum(String(Math.round(s % 60)).padStart(2, '0'))}`;
+const fmtClock = (t: number) => new Date(t).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+
+function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: Colors; last: boolean }) {
+  const ok = passed(a), fg = ok ? c.ok : c.bad, soft = ok ? c.okSoft : c.badSoft;
+  const wrong = a.items.length - scoreOf(a);
+  return (
+    <Pressable onPress={() => { tap(); openAttempt(a); }} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: last ? 0 : 1, borderBottomColor: c.line }}>
+        <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: fg }} />
+        <View style={{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
+          <Icon name={ok ? 'checkCircle' : 'xCircle'} size={22} color={fg} contrast={soft} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <T style={{ fontWeight: '700' }}>{attemptName(a, bank)}</T>
+            <Pill text={isFull(a) ? (ok ? 'قبول' : 'مردود') : ok ? 'خوب' : 'نیاز به تمرین'} fg={fg} bg={soft} />
+          </View>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{fmtDate(a.at)} · ساعت {fmtClock(a.at)}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
+            {a.secs ? `زمان ${fmtSecs(a.secs)} · ` : ''}{wrong ? `${faNum(wrong)} اشتباه از ${faNum(a.items.length)}` : 'بدون اشتباه'}
+          </T>
+        </View>
+        <View style={{ alignItems: 'center', minWidth: 58 }}>
+          <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '800', color: fg, textAlign: 'center' }}>{faNum(scoreOf(a))}/{faNum(a.items.length)}</T>
+          <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{pctText(pctOf(a))}</T>
+        </View>
+        <Icon name="chevronLeft" size={15} color={c.faint} weight="semibold" />
+      </View>
+    </Pressable>
   );
 }
 
@@ -32,22 +93,46 @@ export default function Home() {
   const { user, attempts, bank } = useApp();
   const est = passEstimate(attempts);
   const exams = attempts.filter(a => a.mode !== 'lesson');
-  const lessonsDone = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size;
+  const fullN = attempts.filter(isFull).length, passN = attempts.filter(isPass).length;
+  const lessonsDone = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, lessonsAll = bank?.tests.length ?? 44;
   const mistakes = mistakeIds(attempts).length;
-  const recent = attempts.slice(-3).reverse();
+  const recent = attempts.slice(-5).reverse();
+  // Average of the last 5 attempts and its change against the 5 before.
+  const avg = (xs: Attempt[]) => (xs.length ? xs.reduce((s, a) => s + pctOf(a), 0) / xs.length : null);
+  const avg5 = avg(attempts.slice(-5)), prev5 = avg(attempts.slice(-10, -5));
+  const trend = avg5 != null && prev5 != null ? avg5 - prev5 : null;
+  const probColor = !est ? c.faint : est.prob >= 0.7 ? c.ok : est.prob >= 0.4 ? c.warn : c.bad;
+  const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
+  const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     <Screen title={`سلام ${user?.name ?? ''}`} subtitle="آماده‌ی تمرین امروز هستید؟">
-      <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-        <Ring value={est ? est.prob : 0} size={92} stroke={9} color={!est ? c.faint : est.prob >= 0.7 ? c.ok : est.prob >= 0.4 ? c.warn : c.bad} label={est ? `${faNum(Math.round(est.prob * 100))}٪` : '–'} />
-        <View style={{ flex: 1, gap: 2 }}>
-          <T style={{ fontWeight: '700', fontSize: 17 }}>احتمال قبولی</T>
-          <T style={{ color: c.muted, fontSize: 13.5 }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+      <Card style={{ gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <Ring value={est ? est.prob : 0} size={96} stroke={9} color={probColor} label={est ? pctText(est.prob) : '–'} />
+          <View style={{ flex: 1, gap: 6, alignItems: 'flex-start' }}>
+            <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
+            <Pill text={probWord} fg={probColor} bg={probSoft} />
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+          </View>
+        </View>
+        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12 }}>
+          <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
+            <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
+            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avg5 != null ? pctText(avg5) : '–'}</T>
+            {trend != null ? <T style={{ fontSize: 12, fontWeight: '700', textAlign: 'center', color: trend >= 0 ? c.ok : c.bad }}>{trend >= 0 ? '▲' : '▼'} {pctText(Math.abs(trend))}</T> : null}
+          </View>
+          <View style={{ width: 1, backgroundColor: c.line }} />
+          <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
+            <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>قبولی در آزمون کامل</T>
+            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–'}</T>
+            {fullN ? <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{pctText(passN / fullN)}</T> : null}
+          </View>
         </View>
       </Card>
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        <Stat icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} />
-        <Stat icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(bank?.tests.length ?? 44)}`} />
-        <Stat icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : undefined} />
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <Stat icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'هنوز آزمون کاملی نیست'} />
+        <Stat icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
+        <Stat icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'اشتباهی نمانده'} />
       </View>
       <Card style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
@@ -57,20 +142,20 @@ export default function Home() {
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.ok, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
-        <ProgressChart attempts={attempts} onOpen={a => { session.result = a; session.fresh = false; router.push('/result'); }} />
+        <ProgressChart attempts={attempts} onOpen={openAttempt} />
       </Card>
       <Button label="شروع آزمون تصادفی" onPress={() => router.navigate('/exam')} />
-      {recent.length ? <T style={{ fontWeight: '700', fontSize: 18, marginTop: 6 }}>آخرین فعالیت‌ها</T> : null}
-      {recent.map(a => (
-        <Card key={a.at} onPress={() => { session.result = a; session.fresh = false; router.push('/result'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Ring value={pctOf(a)} size={48} stroke={5} color={isFull(a) ? (isPass(a) ? c.ok : c.bad) : c.accent} label={`${faNum(Math.round(pctOf(a) * 100))}`} />
-          <View style={{ flex: 1 }}>
-            <T style={{ fontWeight: '700' }}>{a.mode === 'lesson' ? 'درس' : 'آزمون'} · {faNum(scoreOf(a))} از {faNum(a.items.length)} درست</T>
-            <T style={{ color: c.muted, fontSize: 13 }}>{fmtDate(a.at)}{isFull(a) ? (isPass(a) ? ' · قبول' : ' · مردود') : ''}</T>
+      {recent.length ? (
+        <Card style={{ paddingVertical: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 4 }}>
+            <T style={{ fontWeight: '700', fontSize: 16 }}>آخرین فعالیت‌ها</T>
+            <Pressable onPress={() => { tap(); router.navigate('/exam'); }} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              <T style={{ color: c.link, fontWeight: '700', fontSize: 13 }}>همه‌ی آزمون‌ها</T><Icon name="chevronLeft" size={14} color={c.link} weight="semibold" />
+            </Pressable>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><T style={{ color: c.link, fontWeight: '700' }}>مرور</T><Icon name="chevronLeft" size={15} color={c.link} weight="semibold" /></View>
+          {recent.map((a, i) => <ActivityRow key={a.at} a={a} bank={bank} c={c} last={i === recent.length - 1} />)}
         </Card>
-      ))}
+      ) : null}
     </Screen>
   );
 }
