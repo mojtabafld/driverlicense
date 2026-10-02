@@ -4,8 +4,9 @@ import { Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { faFamily } from './fonts';
 import { Glass } from './glass';
-import { DA_FONT, radius, useColors } from './theme';
+import { DA_FONT, radius, useColors, useTheme } from './theme';
 
 export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
@@ -28,7 +29,22 @@ export function Logo({ size = 28 }: { size?: number }) {
   );
 }
 
-// The site's top bar: white strip with a bottom line and the TeoriPrøve brand.
+// Light / dark switch, like the site's moon button in its top bar.
+export function ThemeButton() {
+  const c = useColors(), { theme, setTheme } = useTheme(), dark = theme === 'dark';
+  return (
+    <Pressable onPress={() => { tap(); setTheme(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : 'transparent' })}>
+      <Svg width={20} height={20} viewBox="0 0 24 24">
+        {dark
+          ? <><Circle cx={12} cy={12} r={4.5} fill={c.link} /><Path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke={c.link} strokeWidth={2} strokeLinecap="round" /></>
+          : <Path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill={c.muted} />}
+      </Svg>
+    </Pressable>
+  );
+}
+
+// The site's top bar: white strip with a bottom line, the TeoriPrøve brand and the theme button.
 export function TopBar({ right }: { right?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   return (
@@ -40,7 +56,7 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
             <Text style={{ fontWeight: '700' }}>Teori</Text>Prøve
           </Text>
         </View>
-        {right}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>{right}<ThemeButton /></View>
       </View>
     </View>
   );
@@ -67,9 +83,12 @@ export function Screen({ title, subtitle, children, right }: { title: string; su
 }
 
 // Persian text (right to left).
+// Set in Vazirmatn; the weight picks the font file, so fontWeight itself is reset (no faux bold).
 export function T({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
   const c = useColors();
-  return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style]} />;
+  const flat = StyleSheet.flatten(style) ?? {};
+  const font = flat.fontFamily ? null : { fontFamily: faFamily(flat.fontWeight), fontWeight: 'normal' as const };
+  return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font]} />;
 }
 // Danish / English text (left to right).
 export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {

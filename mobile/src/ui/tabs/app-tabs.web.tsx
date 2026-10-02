@@ -2,12 +2,12 @@
 // sits on a lighter glass pill in the site's navy, with a filled icon (outlined for the others).
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { forwardRef } from 'react';
-import { Pressable, View, useColorScheme } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { T } from '../kit';
 import { LiquidGlass } from '../liquid';
-import { useColors } from '../theme';
+import { useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
 
 const ICONS: Record<string, string> = {
@@ -18,7 +18,7 @@ const ICONS: Record<string, string> = {
 };
 
 const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, ...props }, ref) => {
-  const c = useColors(), dark = useColorScheme() === 'dark';
+  const c = useColors(), dark = useIsDark();
   const color = isFocused ? c.link : c.text;
   return (
     <Pressable ref={ref} {...props} style={{ flex: 1 }}>

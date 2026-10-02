@@ -42,7 +42,8 @@
         {
           "forcesRTL": true
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, TextInput, View } from 'reac
 
 import { useApp } from '@/lib/store';
 import { Backdrop, Button, Logo, Segmented, TopBar, T } from '@/ui/kit';
-import { radius, useColors } from '@/ui/theme';
+import { DA_FONT, radius, useColors } from '@/ui/theme';
 
 function Field({ label, value, onChange, secure, ltr, placeholder }: { label: string; value: string; onChange: (v: string) => void; secure?: boolean; ltr?: boolean; placeholder?: string }) {
   const c = useColors();
@@ -17,7 +17,7 @@ function Field({ label, value, onChange, secure, ltr, placeholder }: { label: st
         ...(Platform.OS === 'web' && focus ? { boxShadow: `0 0 0 4px ${c.accentSoft}` } as any : {}) }}>
         <TextInput value={value} onChangeText={onChange} secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false}
           placeholder={placeholder} placeholderTextColor={c.faint} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
-          style={{ flex: 1, height: 47, fontSize: 15.5, color: c.text, textAlign: ltr ? 'left' : 'right', writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
+          style={{ flex: 1, height: 47, fontSize: 15.5, fontFamily: ltr ? DA_FONT : 'Vazirmatn-400', color: c.text, textAlign: ltr ? 'left' : 'right', writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {secure ? <Pressable onPress={() => setShow(!show)} hitSlop={10}><T style={{ color: c.link, fontWeight: '600', fontSize: 13 }}>{show ? 'پنهان' : 'نمایش'}</T></Pressable> : null}
       </View>
     </View>
