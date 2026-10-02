@@ -1,5 +1,5 @@
-// «بیشترین اشتباهات»: three panels (still wrong / fixed, i.e. right the last time / topics) and below them what the
-// chosen panel stands for. At first, and with «مبحث», the topics (weakest first); with «هنوز اشتباه» or «اصلاح‌شده»
+// «بیشترین اشتباهات»: three panels (topics / fixed, i.e. right the last time / not fixed yet) and below them what the
+// chosen panel stands for. At first, and with «مبحث», the topics (weakest first); with «اصلاح‌نشده» or «اصلاح‌شده»
 // those questions grouped by topic; a tapped topic shows its own questions. Questions are review cards with the last
 // answer given; each topic has its short lesson and «تمرین این مبحث». No question is shown until something is chosen.
 import { router } from 'expo-router';
@@ -87,7 +87,7 @@ export default function Mistakes() {
                 <T style={{ fontSize: 12.5, color: c.muted }}>روی هر بخش بزنید تا سؤال‌هایش نمایش داده شود</T>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {([['open', faNum(open), 'سؤال هنوز اشتباه', c.bad], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok], ['topics', faNum(sorted.length), 'مبحث', c.text]] as const).map(([v, n, l, col]) => {
+                {([['topics', faNum(sorted.length), 'مبحث', c.text], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok], ['open', faNum(open), 'سؤال اصلاح‌نشده', c.bad]] as const).map(([v, n, l, col]) => {
                   const on = sel(v) || (v === 'topics' && typeof view === 'object');
                   return (
                     <Pressable key={v} onPress={() => choose(v)} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
@@ -128,7 +128,7 @@ export default function Mistakes() {
                     );
                   })}
                 </View>
-                <T style={{ fontSize: 12.5, lineHeight: 21, color: c.muted }}>پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «هنوز اشتباه» به «اصلاح‌شده» بروند.</T>
+                <T style={{ fontSize: 12.5, lineHeight: 21, color: c.muted }}>پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «اصلاح‌نشده» به «اصلاح‌شده» بروند.</T>
               </Card>
             ) : null}
             {/* Groups */}
@@ -165,7 +165,7 @@ export default function Mistakes() {
                   ))}
                 </View>
               );
-            }) : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{view === 'open' ? 'هیچ سؤالی در حالت «هنوز اشتباه» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
+            }) : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{view === 'open' ? 'هیچ سؤالی در حالت «اصلاح‌نشده» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
             {view === 'topics' ? null : <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>«شما انتخاب کردید / انتخاب نکردید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</T>}
           </>
         )}
