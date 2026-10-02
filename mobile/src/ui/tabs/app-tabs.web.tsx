@@ -3,6 +3,7 @@
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { forwardRef } from 'react';
 import { Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { T } from '../kit';
 import { Icon, type IconName } from '../icon';
@@ -28,9 +29,11 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
 TabButton.displayName = 'TabButton';
 
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
+// Above the iPhone's home indicator when the page runs full screen (added to the home screen).
 function GlassTabBar({ children, ...props }: { children?: React.ReactNode }) {
+  const ins = useSafeAreaInsets();
   return (
-    <View {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: 16, left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
+    <View {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
       <LiquidGlass bar r={32} style={{ flexDirection: 'row', width: '100%', maxWidth: 420, padding: 4 }}>{children}</LiquidGlass>
     </View>
   );
