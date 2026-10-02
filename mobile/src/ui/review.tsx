@@ -12,8 +12,9 @@ import { faNum } from '@/lib/logic';
 import { srcLabels, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
+import { LiquidGlass } from './liquid';
 import { L, T, physical, tap } from './kit';
-import { DA_FONT, useColors, useIsDark } from './theme';
+import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const AI = '#7c5cff';
 const UI = {
@@ -166,6 +167,20 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
 }
 export const hasSummary = (items: Item[], ai: boolean) => ai && items.some(it => !it.ok && it.a);
 
+// One statement of a reviewed question: a glass row like the exam's in the flat layout, else the list's bordered box.
+// A wrong tick or a missing one is shown in red.
+function Statement({ flat, mark, children }: { flat: boolean; mark: boolean; children: React.ReactNode }) {
+  const c = useColors();
+  if (flat) {
+    return (
+      <LiquidGlass r={18} tint={mark ? c.badSoft : undefined} style={{ paddingVertical: 15, paddingHorizontal: 14, ...(mark ? { borderColor: c.bad, borderWidth: 1.5 } : {}) }}>
+        {children}
+      </LiquidGlass>
+    );
+  }
+  return <View style={{ padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
+}
+
 type CardProps = {
   q: Question; it: Pick<Item, 'ok' | 'a'>; index?: number; lang: 'da' | 'en'; fa: boolean; at?: number;
   // Step-by-step review: always open, without the «جزئیات و توضیحات» switch at the bottom.
@@ -184,13 +199,16 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
   const t = bank?.topics[q.c];
   const ui = UI[lang];
   const on = open || alwaysOpen;
+  // Step-by-step review is laid out like the exam itself: no card around it, the full width for the picture, the
+  // question in the exam's size and the statements on glass rows. The list keeps its cards.
+  const flat = !!alwaysOpen;
   return (
-    <View style={{ backgroundColor: c.surface, borderRadius: 10, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
+    <View style={flat ? { gap: 4 } : { backgroundColor: c.surface, borderRadius: 10, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
       shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
       {/* Head: picture, badges, question */}
-      <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: 12, gap: 10 }}>
+      <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: flat ? 0 : 12, gap: flat ? 12 : 10 }}>
         <View>
-          <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 6, backgroundColor: c.surface2 }} contentFit="contain" />
+          <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.md : 6, backgroundColor: c.surface2 }} contentFit="contain" />
           {index != null ? (
             <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(38,57,69,0.82)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
               <T style={{ color: '#fff', fontSize: 12, lineHeight: 20, fontWeight: '600' }}>سؤال {faNum(index + 1)}</T>
@@ -223,7 +241,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </Pressable>
         </View>
         <View style={{ gap: 8 }}>
-          <L style={{ fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
+          <L style={flat ? { fontSize: 20, lineHeight: 27, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
           {fa && q.sfa ? (
             <View style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, backgroundColor: c.surface2, ...physical({ borderRightWidth: 3, borderRightColor: dark ? c.link : c.accent }) }}>
               <T style={{ fontSize: 14.5, lineHeight: 25 }}>{q.sfa}</T>
@@ -233,7 +251,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       </Pressable>
       {/* Body: your answer / the right answer, explanations, tips */}
       {on ? (
-        <View style={{ marginHorizontal: 12, marginBottom: 12, padding: 12, backgroundColor: c.bg, borderWidth: 1, borderColor: c.line, borderRadius: 12 }}>
+        <View style={flat ? { marginTop: 8 } : { marginHorizontal: 12, marginBottom: 12, padding: 12, backgroundColor: c.bg, borderWidth: 1, borderColor: c.line, borderRadius: 12 }}>
           {it.a ? (
             <View style={{ flexDirection: 'row', gap: 3, padding: 3, marginTop: 2, marginBottom: 14, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: 8 }}>
               {(['mine', 'right'] as const).map(v => {
@@ -249,7 +267,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               })}
             </View>
           ) : <T style={{ fontWeight: '700', color: c.ok, marginTop: 4, marginBottom: 12 }}>پاسخ صحیح</T>}
-          <View style={{ gap: 6, marginBottom: 12 }}>
+          <View style={{ gap: flat ? 10 : 6, marginBottom: 12 }}>
             {q.st.map((s, k) => {
               const me = !!(it.a && it.a[k]);
               const mark = view === 'mine' && it.a && (me ? !s.ok : !!s.ok); // a wrong tick or a missing one
@@ -257,7 +275,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               const eda = (lang === 'en' ? s.een || s.eda : s.eda || '').trim() || (s.ok ? ui.yes : ui.no);
               const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
               return (
-                <View key={k} style={{ padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>
+                <Statement key={k} flat={flat} mark={!!mark}>
                   <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', direction: 'ltr' } as any}>
                     <View style={{ width: 22, height: 22, marginTop: 1, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center',
                       borderColor: checked ? c.accent : c.muted, backgroundColor: checked ? c.accent : c.surface }}>
@@ -274,7 +292,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                       {fa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>توضیح: {efa}</T> : null}
                     </View>
                   ) : null}
-                </View>
+                </Statement>
               );
             })}
           </View>
