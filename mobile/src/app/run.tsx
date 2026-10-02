@@ -2,7 +2,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, View, useColorScheme } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,7 +12,7 @@ import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Backdrop, L, T, tap } from '@/ui/kit';
 import { LiquidGlass } from '@/ui/liquid';
-import { radius, useColors } from '@/ui/theme';
+import { radius, useColors, useIsDark } from '@/ui/theme';
 
 const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
   if (Platform.OS === 'web') { if (window.confirm(`${title}\n${msg}`)) onOk(); return; }
@@ -20,7 +20,7 @@ const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
 };
 
 export default function Run() {
-  const c = useColors(), ins = useSafeAreaInsets(), dark = useColorScheme() === 'dark';
+  const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
   const { Q, settings, saveAttempt } = useApp();
   const pic = useQuestionImage();
   const [plan] = useState(() => session.plan);

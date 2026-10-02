@@ -5,7 +5,7 @@ import { API_URL } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
-import { useColors } from '@/ui/theme';
+import { useColors, useTheme } from '@/ui/theme';
 
 function Row({ title, sub, right }: { title: string; sub?: string; right: React.ReactNode }) {
   const c = useColors();
@@ -23,6 +23,7 @@ function Row({ title, sub, right }: { title: string; sub?: string; right: React.
 export default function Settings() {
   const c = useColors();
   const { user, settings, setSettings, logout, attempts } = useApp();
+  const { theme, setTheme } = useTheme();
   const confirmLogout = () => {
     if (Platform.OS === 'web') { if (window.confirm('از حساب کاربری خارج می‌شوید؟')) logout(); return; }
     Alert.alert('خروج از حساب', 'از حساب کاربری خارج می‌شوید؟', [{ text: 'انصراف', style: 'cancel' }, { text: 'خروج', style: 'destructive', onPress: logout }]);
@@ -39,6 +40,10 @@ export default function Settings() {
           <T style={{ fontWeight: '700', fontSize: 17 }}>{user?.name}</T>
           <T style={{ color: c.muted, fontSize: 13, writingDirection: 'ltr', textAlign: 'right' }}>@{user?.username} · {faNum(attempts.length)} آزمون</T>
         </View>
+      </Card>
+      <Card style={{ gap: 10 }}>
+        <Row title="ظاهر" sub="روشن (پیش‌فرض) یا تیره." right={null} />
+        <Segmented value={theme} onChange={setTheme} options={[{ value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
       </Card>
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />

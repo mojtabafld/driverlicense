@@ -1,13 +1,15 @@
 // Liquid Glass surface in the site's colours: Apple's real glass (UIGlassEffect) on iOS 26+, and elsewhere a
 // translucent, blurred surface with the same bright edge and soft shadow.
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
-import { Platform, View, useColorScheme, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, View, type StyleProp, type ViewStyle } from 'react-native';
+
+import { useIsDark } from './theme';
 
 const nativeGlass = Platform.OS === 'ios' && (() => { try { return isLiquidGlassAvailable(); } catch { return false; } })();
 
 type Props = { style?: StyleProp<ViewStyle>; children?: React.ReactNode; r?: number; tint?: string; interactive?: boolean };
 export function LiquidGlass({ style, children, r = 22, tint, interactive }: Props) {
-  const dark = useColorScheme() === 'dark';
+  const dark = useIsDark();
   if (nativeGlass) {
     return (
       <GlassView style={[{ borderRadius: r, overflow: 'hidden' }, style]} glassEffectStyle="regular" isInteractive={interactive} tintColor={tint}>

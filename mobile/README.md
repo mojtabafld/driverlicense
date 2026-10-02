@@ -7,6 +7,10 @@ https://kore.mintcloud.info. Design: the same look as the web site (colours, bac
 exams and lessons, and the tab bar at the bottom. On iOS the tab bar is Apple's own (`expo-router/unstable-native-tabs`),
 on the web a copy of the iOS 26 floating glass bar, on Android Material tabs.
 
+Theme: light by default; the moon / sun button in the top bar or «ظاهر» in the settings switches to dark. The choice is
+kept on the device (on the web in the site's own `tp.theme` entry, so the site and `/app` share it). Persian text is set
+in **Vazirmatn**, bundled with the app (`src/ui/fonts.ts`, five weights), so it does not depend on Google Fonts.
+
 ## Parts of the app (tabs at the bottom)
 - **خانه**: chance of passing, counts, latest activity.
 - **آزمون**: random exam (5–25 questions, timer), practice of mistakes, previous exams.
