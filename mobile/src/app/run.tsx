@@ -10,10 +10,11 @@ import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
-import { Icon, type IconName } from '@/ui/icon';
+import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
+import { Icon } from '@/ui/icon';
 import { Backdrop, L, T, ThemeButton, tap } from '@/ui/kit';
 import { uiText } from '@/ui/review';
-import { LiquidGlass, useIOSBar } from '@/ui/liquid';
+import { LiquidGlass } from '@/ui/liquid';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
 const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
@@ -22,7 +23,7 @@ const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
 };
 
 export default function Run() {
-  const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark(), ios = useIOSBar();
+  const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
   const { Q, settings, saveAttempt } = useApp();
   const pic = useQuestionImage();
   const [plan] = useState(() => session.plan);
@@ -118,34 +119,11 @@ export default function Run() {
           );
         })}
       </ScrollView>
-      {/* A floating Liquid Glass bar in the questions' language (Danish / English, left to right): previous on the left,
-          the position (Latin digits) between, next / hand in on the right. */}
-      <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: ins.bottom + 14, paddingHorizontal: 16, alignItems: 'center' }}>
-        <LiquidGlass bar r={30} style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, padding: 6, width: '100%', maxWidth: 520 } as any}>
-          <FootBtn label={ui.prev} icon="arrowLeft" lead disabled={i === 0} onPress={() => setI(i - 1)} />
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <L style={{ fontSize: 20, lineHeight: 26, color: ios.label, fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] }}>{i + 1} / {qs.length}</L>
-          </View>
-          {last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => setI(i + 1)} />}
-        </LiquidGlass>
-      </View>
+      {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
+      <GlassBar
+        start={<FootBtn label={ui.prev} icon="arrowLeft" lead disabled={i === 0} onPress={() => setI(i - 1)} />}
+        middle={<BarCount n={i + 1} of={qs.length} />}
+        end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => setI(i + 1)} />} />
     </Backdrop>
-  );
-}
-
-// Buttons of the exam's glass bar, as iOS 26/27 draws bar buttons, labelled in the questions' language: next filled in
-// the system blue, hand in in the system green, previous a grey capsule with blue text. `lead`: icon before the label.
-function FootBtn({ label, onPress, disabled, submit, primary, icon, lead }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean }) {
-  const ios = useIOSBar();
-  const solid = submit || primary, fg = solid ? '#fff' : ios.tint;
-  return (
-    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.35 : pressed ? 0.8 : 1 })}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 46, minWidth: 104, paddingHorizontal: 18, borderRadius: 23, justifyContent: 'center',
-        backgroundColor: submit ? ios.green : primary ? ios.tint : ios.fill }}>
-        {lead ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
-        <L style={{ color: fg, fontWeight: '700', fontSize: 15.5, lineHeight: 22, textAlign: 'center' }}>{label}</L>
-        {!lead ? <Icon name={icon} size={16} color={fg} weight={icon === 'check' ? 'bold' : 'semibold'} /> : null}
-      </View>
-    </Pressable>
   );
 }
