@@ -12,7 +12,7 @@ kept on the device (on the web in the site's own `tp.theme` entry, so the site a
 in **Vazirmatn**, bundled with the app (`src/ui/fonts.ts`, five weights), so it does not depend on Google Fonts.
 
 ## Parts of the app (tabs at the bottom)
-- **خانه**: chance of passing, counts, latest activity.
+- **خانه**: chance of passing, counts, progress chart (percent correct of the last 30 attempts, 80% pass line; tap for details), latest activity.
 - **آزمون**: random exam (5–25 questions, timer), practice of mistakes, previous exams.
 - **آموزش**: the 44 lessons one by one, or practice by the official sections.
 - **تنظیمات**: exam language, Persian translation, timer, account.

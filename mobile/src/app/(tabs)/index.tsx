@@ -1,4 +1,4 @@
-// Home: progress at a glance and the next step.
+// Home: progress at a glance (chance of passing, counts, progress chart) and the next step.
 import { router } from 'expo-router';
 import { View } from 'react-native';
 
@@ -6,6 +6,7 @@ import { faNum, fmtDate, isFull, isPass, mistakeIds, passEstimate, pctOf, scoreO
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Button, Card, Ring, Screen, T } from '@/ui/kit';
+import { ProgressChart } from '@/ui/progress-chart';
 import { useColors } from '@/ui/theme';
 
 export default function Home() {
@@ -30,6 +31,16 @@ export default function Home() {
         <Card style={{ flex: 1, gap: 2 }}><T style={{ color: c.muted, fontSize: 13 }}>درس‌ها</T><T style={{ fontSize: 26, fontWeight: '700' }}>{faNum(lessonsDone)}<T style={{ color: c.muted, fontSize: 14 }}> / {faNum(bank?.tests.length ?? 44)}</T></T></Card>
         <Card style={{ flex: 1, gap: 2 }}><T style={{ color: c.muted, fontSize: 13 }}>اشتباهات</T><T style={{ fontSize: 26, fontWeight: '700', color: mistakes ? c.bad : c.text }}>{faNum(mistakes)}</T></Card>
       </View>
+      <Card style={{ gap: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ width: 14, height: 2, backgroundColor: c.accent }} /><T style={{ color: c.muted, fontSize: 12 }}>نمره هر آزمون</T>
+            <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.ok, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
+          </View>
+        </View>
+        <ProgressChart attempts={attempts} onOpen={a => { session.result = a; session.fresh = false; router.push('/result'); }} />
+      </Card>
       <Button label="شروع آزمون تصادفی" onPress={() => router.navigate('/exam')} />
       {recent.length ? <T style={{ fontWeight: '700', fontSize: 18, marginTop: 6 }}>آخرین فعالیت‌ها</T> : null}
       {recent.map(a => (
