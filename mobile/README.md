@@ -17,6 +17,7 @@ platforms, so the web and Android use our own drawings in the same style (outlin
 
 ## Parts of the app (tabs at the bottom)
 - **خانه**: chance of passing, counts, progress chart (percent correct of the last 30 attempts, 80% pass line; tap for details).
+  The page fits the screen without scrolling: the chart takes the height left, and shorter screens get a more compact layout.
   The counts open their pages: exams → the exam tab, lessons → the learn tab, mistakes → «بیشترین اشتباهات»
   (`src/app/mistakes.tsx`, like the site's page: topics weakest first, still wrong / fixed / all, the topic's short
   lesson and «تمرین این مبحث», and every wrong question with the last answer given).
