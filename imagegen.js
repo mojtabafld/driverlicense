@@ -15,6 +15,9 @@ const Anthropic = require('@anthropic-ai/sdk');
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
 // Flare (faster, cheaper) is the default; Sunburst gives more detail.
 const MODELS = { flare: 'gpt-image-2-5-flare-text-to-image', sunburst: 'gpt-image-2-5-sunburst-text-to-image' };
+// Editing one of OUR generated pictures (never the original): image-to-image with a short instruction.
+const EDIT_MODELS = { flare: 'gpt-image-2-5-flare-image-to-image', sunburst: 'gpt-image-2-5-sunburst-image-to-image' };
+const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
 const CLAUDE = process.env.LESSON_MODEL || 'claude-opus-5-5';
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://kore.mintcloud.info').replace(/\/$/, '');
 
@@ -156,9 +159,59 @@ const jobBlob = async (qid, jobId) => {
 };
 // Picture versions the page adds to the image URL (?v=…), for every question whose picture was ever switched.
 const versions = () => Object.fromEntries(Object.entries(store.meta.images || {}).filter(([, x]) => x.v).map(([k, x]) => [k, x.v]));
-const list = () => ({ available: available(), models: Object.keys(MODELS), items: store.meta.images || {} });
+const list = () => ({ available: available(), models: Object.keys(MODELS),
+  items: Object.fromEntries(Object.entries(store.meta.images || {}).filter(([, x]) => x.jobs.length)) });
 
 const firstQuestion = () => BANK.tests[0].qs[0];
+
+// Uploads a generated picture to kie.ai's temporary file store (kept 3 days) and returns its URL.
+async function upload(b, name) {
+  const r = await fetch(`${UPLOAD}/api/file-base64-upload`, { method: 'POST', headers: { Authorization: `Bearer ${process.env.KIE_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ base64Data: `data:${b.mime};base64,${b.data.toString('base64')}`, uploadPath: 'teoriprove', fileName: name }) });
+  const d = await r.json().catch(() => ({}));
+  const url = d.data && (d.data.downloadUrl || d.data.fileUrl);
+  if (!r.ok || !url) throw new Error(`upload ${r.status}: ${d.msg || 'failed'}`);
+  return url;
+}
+
+// Changes only what `instruction` says in generated picture `fromJob`; the rest must stay as it is.
+async function edit(qid, fromJob, instruction, model = 'flare', by = '') {
+  if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
+  const item = images()[+qid], src = item && item.jobs.find(j => j.id === fromJob && j.blob);
+  if (!src) throw Object.assign(new Error('تصویر پیدا نشد.'), { status: 404 });
+  if (!EDIT_MODELS[model]) throw Object.assign(new Error('مدل نامعتبر'), { status: 400 });
+  instruction = String(instruction || '').trim().slice(0, 2000);
+  if (!instruction) throw Object.assign(new Error('دستور ویرایش خالی است.'), { status: 400 });
+  if (item.jobs.some(j => !j.done)) throw Object.assign(new Error('برای این سؤال یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
+  const prompt = `Edit this image. Change ONLY the following and keep everything else exactly as it is — the same composition, camera angle, framing, lighting, colours, road, markings, signs, vehicles, people and every other detail must stay unchanged:\n${instruction}\nNo logos, no watermarks, no new text.`;
+  const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: 'queued', done: false, kind: 'edit', from: fromJob, instruction, prompt: src.prompt };
+  item.jobs.push(job); await save();
+  try {
+    const url = await upload(await blob(src.blob), `q${qid}-${src.id}.png`);
+    const d = await kie('POST', '/jobs/createTask', { model: EDIT_MODELS[model], callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt, input_urls: [url], aspect_ratio: '4:3', resolution: '2K' } });
+    job.taskId = d.taskId; job.state = 'generating'; await save();
+    schedule();
+  } catch (e) {
+    job.state = 'fail'; job.error = e.message; job.done = true; await save();
+    console.error('imagegen edit', qid, e.message);
+  }
+  return job;
+}
+
+// Deletes a generated picture. If it was shown, the newest remaining picture is shown instead, or the original.
+async function remove(qid, jobId) {
+  const item = images()[+qid], k = item ? item.jobs.findIndex(j => j.id === jobId) : -1;
+  if (k < 0) throw Object.assign(new Error('تصویر پیدا نشد.'), { status: 404 });
+  const job = item.jobs[k];
+  if (!job.done) throw Object.assign(new Error('این تصویر هنوز در حال ساخت است.'), { status: 409 });
+  if (job.blob) { await store.deleteBlob(job.blob); cache.delete(job.blob); }
+  item.jobs.splice(k, 1);
+  if (item.active === jobId) {
+    const next = item.jobs.filter(j => j.blob).sort((a, b) => b.at - a.at)[0];
+    item.active = next ? next.id : null; item.v = (item.active || 'o') + '.' + Date.now().toString(36);
+  }
+  await save();
+}
 
 // A scene description only (Claude), for the admin to edit before making a picture.
 async function draft(qid) {
@@ -167,4 +220,4 @@ async function draft(qid) {
   return describe(q);
 }
 
-module.exports = { draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available };
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available };

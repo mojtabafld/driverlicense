@@ -889,6 +889,13 @@ body.focus-mode .topbar{display:none}
 .ig-cell details{display:grid;gap:8px}
 .ig-regen{display:block;width:fit-content;max-width:100%;white-space:normal;margin:10px auto 2px;padding:12px 24px;border-radius:10px;font-size:15px}
 .ig-cell,.ig-cell details,.ig-cell textarea{min-width:0}
+.ig-fix{display:grid;gap:6px;margin-top:4px}
+.ig-fix textarea{width:100%;min-width:0;font:inherit;font-size:13px;line-height:1.6;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--text);resize:vertical}
+.ig-fix textarea:focus{outline:none;border-color:var(--navy)}
+.ig-fix .ig-regen{width:100%;margin:2px 0 0;padding:10px 14px;font-size:14.5px}
+.ig-instr{color:var(--muted);line-height:1.6}
+.ig-del{justify-self:center;font:inherit;font-size:12.5px;font-weight:600;color:var(--bad);background:none;border:0;padding:4px 8px;border-radius:6px;cursor:pointer}
+@media (hover:hover){.ig-del:hover{background:var(--bad-soft)}}
 @media (max-width:560px){.ig-row{grid-template-columns:minmax(0,1fr)}}
 /* an opened description takes the whole row, so the text is easy to edit and the button sits in the middle */
 .ig-cell:has(details[open]){grid-column:1/-1}

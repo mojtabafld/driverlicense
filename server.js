@@ -354,12 +354,14 @@ async function api(req, res, route) {
   }
   // New question pictures (admin): list, start one (qid, model, optional edited prompt), write a description only,
   // choose which picture is shown (job id or null = original).
-  if (route === 'imggen' || route === 'imggenstart' || route === 'imggenset' || route === 'imggendraft') {
+  if (['imggen', 'imggenstart', 'imggenset', 'imggendraft', 'imggenedit', 'imggendel'].includes(route)) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     try {
       if (req.method === 'GET' && route === 'imggen') return send(res, 200, imagegen.list());
       const b = await readBody(req);
       if (req.method === 'POST' && route === 'imggenstart') return send(res, 200, { job: await imagegen.start(+b.qid, b.model, user.username, b.prompt) });
+      if (req.method === 'POST' && route === 'imggenedit') return send(res, 200, { job: await imagegen.edit(+b.qid, b.job, b.text, b.model, user.username) });
+      if (req.method === 'POST' && route === 'imggendel') { await imagegen.remove(+b.qid, b.job); return send(res, 200, imagegen.list()); }
       if (req.method === 'POST' && route === 'imggendraft') return send(res, 200, { prompt: await imagegen.draft(+b.qid) });
       if (req.method === 'POST' && route === 'imggenset') { await imagegen.setActive(+b.qid, b.job || null); return send(res, 200, imagegen.list()); }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
