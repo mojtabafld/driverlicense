@@ -5,3 +5,5 @@ data/imglist.txt
 .DS_Store
 .env
 data/blobs/
+# The web build (app-web) keeps bundled assets such as fonts under assets/node_modules; publish them.
+!app-web/assets/node_modules/
