@@ -24,6 +24,14 @@ npx expo start            # scan the QR code with Expo Go (iOS/Android), or pres
   store builds; Expo Go may show left-to-right. For the real look build a development build:
   `npx eas-cli@latest build --profile development --platform ios`.
 
+## Web version on the site
+The web build is served by the main server at **https://kore.mintcloud.info/app** (the site itself is unchanged).
+After changing the app, rebuild it and commit `app-web/`:
+```bash
+cd mobile && npm run build:web     # writes ../app-web (base URL /app)
+```
+On the web the app talks to the server it is opened from.
+
 ## Checks
 ```bash
 npx tsc --noEmit
