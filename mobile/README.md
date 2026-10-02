@@ -21,7 +21,7 @@ platforms, so the web and Android use our own drawings in the same style (outlin
   The counts open their pages: exams → the exam tab, lessons → the learn tab, mistakes → «بیشترین اشتباهات»
   (`src/app/mistakes.tsx`, like the site's page: topics weakest first, still wrong / fixed / all, the topic's short
   lesson and «تمرین این مبحث», and every wrong question with the last answer given).
-- **آزمون**: random exam (5–25 questions, timer), practice of mistakes, and «آخرین فعالیت‌ها» (the 3 latest exams and lessons, the rest behind «نمایش همه»; green or red by result).
+- **آزمون**: random exam (5–25 questions, timer), «تمرین اشتباهات» (still-wrong count, the two weakest topics to practise, a quick practice of the 10 most-missed, all of them, and a link to the mistakes page), and «آخرین فعالیت‌ها» (the 3 latest exams and lessons, the rest behind «نمایش همه»; green or red by result).
 - **آموزش**: the 44 lessons one by one, or practice by the official sections.
 - **تنظیمات**: exam language, Persian translation, timer, account.
 
