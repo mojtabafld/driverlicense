@@ -1,26 +1,11 @@
-// App icons. On iOS they are Apple's SF Symbols (expo-symbols), so each phone shows its own system's version of the
-// symbol (iOS 27's on iOS 27). Apple licenses SF Symbols only for apps on Apple platforms, so the web and Android get our
-// own drawings in the same style: rounded line ends, one stroke weight, an outline and a filled form.
-import { SymbolView, type SymbolWeight } from 'expo-symbols';
-import { Platform } from 'react-native';
+// App icons on the web and Android: our own drawings in the style of Apple's SF Symbols (rounded line ends, one stroke
+// weight, an outline and a filled form). Apple licenses SF Symbols only for apps on Apple platforms; iOS uses the real
+// ones (src/ui/icon.ios.tsx).
 import Svg, { Circle, G, Path } from 'react-native-svg';
 
-export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles';
+import type { IconProps } from './icon-names';
 
-// SF Symbol per icon: [outline, filled].
-const SF: Record<IconName, [string, string]> = {
-  house: ['house', 'house.fill'],
-  exam: ['checkmark.circle', 'checkmark.circle.fill'],
-  learn: ['book', 'book.fill'],
-  settings: ['gearshape', 'gearshape.fill'],
-  moon: ['moon.fill', 'moon.fill'],
-  sun: ['sun.max.fill', 'sun.max.fill'],
-  check: ['checkmark', 'checkmark'],
-  checkCircle: ['checkmark.circle.fill', 'checkmark.circle.fill'],
-  xCircle: ['xmark.circle.fill', 'xmark.circle.fill'],
-  chevronLeft: ['chevron.left', 'chevron.left'],
-  sparkles: ['sparkles', 'sparkles'],
-};
+export type { IconName } from './icon-names';
 
 // A gear with 8 rounded teeth around a hole, on a 24 grid.
 const gear = (() => {
@@ -35,11 +20,7 @@ const gear = (() => {
   return `M${pts.join(' L')} Z`;
 })();
 
-type Props = { name: IconName; size?: number; color: string; filled?: boolean; weight?: SymbolWeight; contrast?: string };
-export function Icon({ name, size = 24, color, filled = false, weight = 'regular', contrast = '#fff' }: Props) {
-  if (Platform.OS === 'ios') {
-    return <SymbolView name={SF[name][filled ? 1 : 0] as any} size={size} tintColor={color} weight={weight} type="monochrome" />;
-  }
+export function Icon({ name, size = 24, color, filled = false, weight = 'regular', contrast = '#fff' }: IconProps) {
   const sw = weight === 'bold' || weight === 'semibold' ? 2.4 : 1.8;
   const line = { stroke: color, strokeWidth: sw, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, fill: 'none' };
   const solid = { fill: color, stroke: color, strokeWidth: 1, strokeLinejoin: 'round' as const };

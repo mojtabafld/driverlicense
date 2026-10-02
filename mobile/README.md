@@ -11,7 +11,7 @@ Theme: light by default; the moon / sun button in the top bar or «ظاهر» in
 kept on the device (on the web in the site's own `tp.theme` entry, so the site and `/app` share it). Persian text is set
 in **Vazirmatn**, bundled with the app (`src/ui/fonts.ts`, five weights), so it does not depend on Google Fonts.
 
-Icons (`src/ui/icon.tsx`): on iOS Apple's **SF Symbols** through `expo-symbols`, so each phone shows its own system's
+Icons (`src/ui/icon.ios.tsx` / `src/ui/icon.tsx`): on iOS Apple's **SF Symbols** through `expo-symbols`, so each phone shows its own system's
 symbols (iOS 27's on iOS 27); the native tab bar uses them too. Apple licenses SF Symbols only for apps on Apple
 platforms, so the web and Android use our own drawings in the same style (outline, and filled when chosen).
 
