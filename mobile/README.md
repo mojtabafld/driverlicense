@@ -17,7 +17,7 @@ platforms, so the web and Android use our own drawings in the same style (outlin
 
 ## Parts of the app (tabs at the bottom)
 - **خانه**: chance of passing, counts, progress chart (percent correct of the last 30 attempts, 80% pass line; tap for details).
-- **آزمون**: random exam (5–25 questions, timer), practice of mistakes, and «آخرین فعالیت‌ها» (all exams and lessons, green or red by result).
+- **آزمون**: random exam (5–25 questions, timer), practice of mistakes, and «آخرین فعالیت‌ها» (the 3 latest exams and lessons, the rest behind «نمایش همه»; green or red by result).
 - **آموزش**: the 44 lessons one by one, or practice by the official sections.
 - **تنظیمات**: exam language, Persian translation, timer, account.
 
