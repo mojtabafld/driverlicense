@@ -63,9 +63,15 @@ async function newSession(req, res, username) {
   store.sessions[token] = s;
   await store.saveSession(token, s);
   res.setHeader('Set-Cookie', cookie(req, token, SESSION_DAYS * 86400));
+  return token;
 }
+// The mobile app (X-Client: app) gets its session token in the response and sends it back as
+// "Authorization: Bearer <token>"; the web site keeps using the HttpOnly cookie only.
+const isApp = req => req.headers['x-client'] === 'app';
 function sessionUser(req) {
-  const m = /(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '');
+  const m = /(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '') || /^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '')
+    // pictures in the app's web version (an <img> cannot send headers): ?t=<token>, only for /img/
+    || (/^\/img\//.test(new URL(req.url, 'http://x').pathname) && /^([a-f0-9]{64})$/.exec(new URL(req.url, 'http://x').searchParams.get('t') || ''));
   const s = m && store.sessions[m[1]];
   if (!s) return null;
   if (s.exp < Date.now()) {
@@ -279,8 +285,8 @@ async function api(req, res, route) {
       created: Date.now(), attempts: [], settings: {} };
     store.users[u] = user;
     await store.saveUser(user);
-    await newSession(req, res, u);
-    return send(res, 200, { user: publicUser(user) });
+    const token = await newSession(req, res, u);
+    return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
   if (req.method === 'POST' && route === 'login') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -291,8 +297,8 @@ async function api(req, res, route) {
       return send(res, 401, { error: 'نام کاربری یا رمز عبور اشتباه است.' });
     }
     fails.delete(ip);
-    await newSession(req, res, user.username);
-    return send(res, 200, { user: publicUser(user) });
+    const token = await newSession(req, res, user.username);
+    return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
 
   // kie.ai calls this when a picture is ready; the body is not trusted, it only makes the server check its jobs now.
@@ -508,6 +514,14 @@ async function main() {
   http.createServer(async (req, res) => {
     let pathname;
     try { pathname = new URL(req.url, 'http://x').pathname; } catch { res.writeHead(400); return res.end(); }
+    // The app's web version runs on another origin and authenticates with a Bearer token (never cookies),
+    // so cross-origin requests are allowed without credentials.
+    if (req.headers.origin) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Client');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+    }
     const m = /^\/api\/([a-z]+)$/.exec(pathname);
     if (m) {
       try { await api(req, res, m[1]); }

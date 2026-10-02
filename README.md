@@ -77,3 +77,7 @@ teaching plan (Undervisningsplan for kategori B, e.g. `7.19`); prove.dk's catego
 ```bash
 python3 build.py
 ```
+
+## Mobile app
+
+`mobile/` holds the iOS / Android / web app (Expo, Liquid Glass design) on the same server and accounts; see `mobile/README.md`.
