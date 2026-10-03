@@ -68,8 +68,7 @@ function MistakesCard() {
 }
 
 export default function Exam() {
-  const c = useColors();
-  const { bank, attempts, settings } = useApp();
+  const { bank, attempts } = useApp();
   const [size, setSize] = useState(FULL);
   const start = () => {
     if (!bank) return;
@@ -80,7 +79,6 @@ export default function Exam() {
     <Screen title="آزمون">
       <Card style={{ gap: 14 }}>
         <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
-        <T style={{ color: c.muted, fontSize: 13.5 }}>{settings.timer ? `برای هر سؤال ${faNum(1)} دقیقه زمان دارید.` : 'بدون زمان‌سنج.'}</T>
         <SizeSlider value={size} values={SIZES} onChange={setSize} />
         <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" />
       </Card>
