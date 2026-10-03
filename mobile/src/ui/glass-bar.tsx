@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
 import { L, T, tap } from './kit';
-import { LiquidGlass, useIOSBar } from './liquid';
+import { LiquidGlass } from './liquid';
 import { useColors, useIsDark } from './theme';
 
 export function GlassBar({ start, middle, end }: { start: React.ReactNode; middle: React.ReactNode; end: React.ReactNode }) {
@@ -29,16 +29,16 @@ export function BarCount({ n, of }: { n: number; of: number }) {
 }
 
 // Buttons of the bar. Previous / next are round teal buttons with an arrow (`round`; the label is for screen
-// readers), pale when they cannot be used; hand in is a round green check (`submit`). Without `round`, a labelled
-// capsule, in green with `submit`. `lead`: icon before the label.
+// readers), pale when they cannot be used; hand in is a round check in the submit colour (`submit`). Without `round`, a labelled
+// capsule, in the submit colour with `submit`. `lead`: icon before the label.
 export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean; round?: boolean }) {
-  const ios = useIOSBar(), c = useColors();
+  const c = useColors();
   const fg = '#fff';
   if (round) {
     return (
       <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
         style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: disabled ? c.accentSoft : submit ? ios.green : c.accent, opacity: pressed ? 0.8 : 1 })}>
+          backgroundColor: disabled ? c.accentSoft : submit ? c.submit : c.accent, opacity: pressed ? 0.8 : 1 })}>
         <Icon name={icon} size={icon === 'check' ? 22 : 20} color={disabled ? c.faint : fg} weight={icon === 'check' ? 'bold' : 'semibold'} />
       </Pressable>
     );
@@ -46,7 +46,7 @@ export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }:
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.35 : pressed ? 0.8 : 1 })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 48, minWidth: 104, paddingHorizontal: 18, borderRadius: 24, justifyContent: 'center',
-        backgroundColor: submit ? ios.green : c.accent }}>
+        backgroundColor: submit ? c.submit : c.accent }}>
         {lead ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
         <L style={{ color: fg, fontWeight: '700', fontSize: 15.5, lineHeight: 22, textAlign: 'center' }}>{label}</L>
         {!lead ? <Icon name={icon} size={16} color={fg} weight={icon === 'check' ? 'bold' : 'semibold'} /> : null}
