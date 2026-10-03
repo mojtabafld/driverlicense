@@ -48,6 +48,7 @@ function init(s, siteDir) {
   BANK = JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, ''));
   Q = new Map(BANK.questions.map(q => [q.id, q]));
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
+  startIntro().catch(e => console.error('intro pictures', e.message));
 }
 
 async function kie(method, url, body) {
@@ -127,6 +128,7 @@ async function poll() {
     }
     await save();
   }
+  if (await pollIntro().catch(() => true)) pending = true;
   if (pending) schedule();
 }
 
@@ -220,4 +222,62 @@ async function draft(qid) {
   return describe(q);
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available };
+// ---------- pictures for the app's intro (four slides) ----------
+// Made once by the same image model when the server starts with KIE_API_KEY set: a detailed 3D isometric scene per
+// slide on a plain navy background, so the app can lay it on its navy intro. Kept in store.meta.intro and served at
+// /intro/<n>.png; the app falls back to its own drawings until a picture is there. Changing INTRO_SET makes new ones.
+const INTRO_SET = 'v1';
+const INTRO_STYLE = 'Style: high-quality 3D isometric illustration, soft studio lighting, smooth matte clay-like materials, rich detail, gentle soft shadows. Colour palette: navy blue, sky blue (#8cc3ef), white and light grey, with small accents of green, red and warm yellow. The whole background is ONE plain, flat, solid deep navy blue (#024776) with no gradient, no floor, no horizon and no frame; the scene floats in the centre with a wide empty margin of that navy all around. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
+const INTRO_PROMPTS = [
+  'A modern smartphone standing upright in the centre; its screen shows a driving-theory quiz: a small road picture and three answer rows with tick boxes. Around the phone, linked to it by softly glowing light-blue curved lines with small round dots at their ends: a small sky-blue hatchback car, a driving licence card (white and pale pink card with a photo silhouette, no readable text), a red octagonal stop sign on a pole, a red-and-white triangular give-way sign on a pole and a round blue mandatory-direction sign.',
+  'A test day scene: a large white clipboard exam sheet standing at a slight angle, with a road picture at the top and three answer rows below, two of them ticked in navy; beside it a big stopwatch with a sky-blue rim, and a green rosette badge with a white check mark and yellow ribbons. A young person sits on a stack of books next to the clipboard, calmly studying on a tablet.',
+  'A friendly AI tutor: a smartphone lying slightly tilted, its screen showing a road picture, an answer marked with a small red cross and below it a large sky-blue explanation bubble with lines of placeholder text bars (no readable text). Above the phone floats a small, cute, rounded white robot assistant with a glowing sky-blue face, pointing helpfully at the explanation; four-pointed sparkles and small glowing stars float around.',
+  'Progress and success: a floating white dashboard card with rising sky-blue bars and a navy line graph climbing upward over a dashed green pass line; next to it a red-and-white target with an arrow in the bullseye; in front, a small sky-blue car drives up a curved road that turns into an upward arrow; a few pieces of confetti and a small yellow trophy.',
+];
+const intro = () => (store.meta.intro = store.meta.intro && store.meta.intro.set === INTRO_SET ? store.meta.intro : { set: INTRO_SET, items: {} });
+const saveIntro = () => store.saveMeta('intro', intro());
+async function startIntro() {
+  if (!available()) return;
+  const it = intro().items;
+  for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
+    const x = it[n];
+    if (x && (x.blob || !x.done || (x.tries || 0) >= 3)) continue;   // done, running, or given up after 3 tries
+    const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt: `${INTRO_PROMPTS[n - 1]}
+${INTRO_STYLE}` };
+    try {
+      const d = await kie('POST', '/jobs/createTask', { model: MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '1:1', resolution: '2K' } });
+      job.taskId = d.taskId; job.state = 'generating';
+    } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error('intro picture', n, e.message); }
+    await saveIntro();
+  }
+  if (Object.values(it).some(j => !j.done && j.taskId)) schedule();
+}
+// One poll round for the intro pictures; true while some are still being made.
+async function pollIntro() {
+  if (!store.meta.intro) return false;
+  let pending = false;
+  for (const [n, job] of Object.entries(intro().items)) {
+    if (job.done || !job.taskId) continue;
+    try {
+      const d = await kie('GET', `/jobs/recordInfo?taskId=${encodeURIComponent(job.taskId)}`);
+      if (d.state === 'success') {
+        const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
+        if (!url) throw new Error('no result url');
+        const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
+        const buf = Buffer.from(await r.arrayBuffer());
+        job.blob = `intro-${INTRO_SET}-${n}`;
+        await store.saveBlob(job.blob, r.headers.get('content-type') || 'image/png', buf);
+        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: buf.length });
+      } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
+      else pending = true;
+      if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
+    } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
+    await saveIntro();
+  }
+  return pending;
+}
+// For /api/config: slide number → picture version, for the pictures that are ready.
+const introVersions = () => Object.fromEntries(Object.entries((store.meta.intro || {}).items || {}).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
+const introBlob = async n => { const j = ((store.meta.intro || {}).items || {})[n]; return j && j.blob ? blob(j.blob) : null; };
+
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introBlob };

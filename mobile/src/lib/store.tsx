@@ -13,6 +13,8 @@ type Ctx = {
   imgv: Record<string, string>; token: string | null;
   // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
   saved: Saved[]; aiLessons: boolean;
+  // The intro's pictures that the server has made: slide number → version.
+  intro: Record<string, string>;
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
@@ -30,13 +32,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [bank, setBank] = useState<Bank | null>(null);
   const [aiLessons, setAiLessons] = useState(false);
+  const [intro, setIntro] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     const d = await api<Me>('GET', 'me');
     setMe(d);
-    api<{ aiLessons?: boolean }>('GET', 'config').then(x => setAiLessons(!!x.aiLessons)).catch(() => {});
+    api<{ aiLessons?: boolean; intro?: Record<string, string> }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setIntro(x.intro || {}); }).catch(() => {});
     if (!bank) setBank(await fetchBank<Bank>());
   }, [bank]);
+
+  // The intro comes before signing in, so the pictures it can show are read at start too.
+  useEffect(() => { api<{ intro?: Record<string, string> }>('GET', 'config').then(x => setIntro(x.intro || {})).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
@@ -54,7 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
-    saved: me?.saved ?? [], aiLessons,
+    saved: me?.saved ?? [], aiLessons, intro,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
@@ -74,7 +80,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons]);
+  }), [ready, token, me, bank, aiLessons, intro]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
