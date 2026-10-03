@@ -148,6 +148,9 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
     case 'trash':
       body = <G><Path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5" {...line} /><Path d="M6.5 6.5l.8 12.2A2 2 0 0 0 9.3 20.5h5.4a2 2 0 0 0 2-1.8l.8-12.2M10 10.5v6M14 10.5v6" {...line} /></G>;
       break;
+    case 'shuffle':
+      body = <G><Path d="M3.5 7h3.2c2 0 3.2 1 4.3 2.8l2 3.4c1.1 1.8 2.3 2.8 4.3 2.8h3.2M3.5 17h3.2c1.6 0 2.7-.6 3.6-1.8M13.9 8.8c.9-1.2 2-1.8 3.6-1.8h3" {...line} /><Path d="M18 4.5L20.5 7 18 9.5M18 14.5l2.5 2.5-2.5 2.5" {...line} /></G>;
+      break;
     case 'edit':
       body = <G><Path d="M15.2 5.3l3.5 3.5L9 18.5l-4.3.8.8-4.3z" {...line} /><Path d="M13.4 7.1l3.5 3.5" {...line} /></G>;
       break;
