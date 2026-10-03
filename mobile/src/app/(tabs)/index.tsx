@@ -13,10 +13,12 @@ import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
 
 // A count card: the icon tile with the label beside it, then the number and one short line of detail (or, with
-// `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes).
+// `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
+// `progress` (every lesson done) turns the icon, the number and the bar green.
 function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number }) {
   const c = useColors();
   const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
+  if (progress != null && progress >= 1) tone = 'ok';
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   return (
     <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 }}>
@@ -27,17 +29,17 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
         <T style={{ flexShrink: 1, color: c.text, fontSize: narrow ? 12 : 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        <T style={{ flex: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : c.text }} numberOfLines={1}>
-          {value}{extra ? <T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
+        <T style={{ flex: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : progress != null && tone === 'ok' ? c.ok : c.text }} numberOfLines={1}>
+          {value}{extra ? <T style={{ color: progress != null && tone === 'ok' ? c.ok : c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
         </T>
         <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
       </View>
       {progress != null ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 16 }}>
           <View style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
-            <View style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`, borderRadius: 3, backgroundColor: c.link }} />
+            <View style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`, borderRadius: 3, backgroundColor: fg }} />
           </View>
-          <T style={{ color: c.muted, fontSize: 10.5, lineHeight: 16, fontWeight: '600' }}>{pctText(progress)}</T>
+          <T style={{ color: tone === 'ok' ? c.ok : c.muted, fontSize: 10.5, lineHeight: 16, fontWeight: '600' }}>{pctText(progress)}</T>
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
     </Card>
