@@ -1,14 +1,16 @@
 // Small building blocks shared by all screens, styled like the web site.
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
-import { DA_FONT, radius, useColors, useTheme } from './theme';
+import { DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 
 // A style given in physical left/right terms. Phones running right-to-left swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -21,13 +23,29 @@ export function physical<S extends Record<string, any>>(style: S): S {
 
 export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
-// Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes.
-export function Backdrop({ children }: { children?: React.ReactNode }) {
+// A page's content coming in: a quick fade and a short rise each time the page is shown (opened, or its tab chosen),
+// the light motion of Uber Eats between screens.
+export function PageIn({ children }: { children?: React.ReactNode }) {
+  const [v] = useState(() => new Animated.Value(0));
+  useFocusEffect(useCallback(() => {
+    v.setValue(0);
+    Animated.timing(v, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [v]));
+  return (
+    <Animated.View style={{ flex: 1, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+      {children}
+    </Animated.View>
+  );
+}
+
+// Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes. `enter`: the
+// content comes in with PageIn (only inside a screen of the navigator).
+export function Backdrop({ children, enter }: { children?: React.ReactNode; enter?: boolean }) {
   const c = useColors();
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
       <LinearGradient colors={c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
-      {children}
+      {enter ? <PageIn>{children}</PageIn> : children}
     </View>
   );
 }
@@ -64,8 +82,9 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
           {/* The logo first in the page's reading order: at the outer (right) edge, the name inside it. */}
+          {/* uber: «Teori» in the text colour and «Prøve» in green, like «Uber Eats» */}
           <Text style={{ fontFamily: DA_FONT, fontSize: 18, color: c.link }}>
-            <Text style={{ fontWeight: '700' }}>Teori</Text>Prøve
+            <Text style={{ fontWeight: '700', color: UBER ? c.text : c.link }}>Teori</Text>Prøve
           </Text>
           <Logo />
         </View>
@@ -94,9 +113,11 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { t
   return (
     <Backdrop>
       <TopBar />
+      <PageIn>
       {fill
         ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
         : <ScrollView contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: ins.bottom + 100 }]}>{head}{children}</ScrollView>}
+      </PageIn>
     </Backdrop>
   );
 }
@@ -123,7 +144,7 @@ export function Card({ children, style, onPress }: { children: React.ReactNode; 
   const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, ...rest } = StyleSheet.flatten(style) ?? {};
   const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf };
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [outer, pressed && { opacity: 0.85 }]}>
+    <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [outer, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }]}>
       <Glass style={[{ padding: 16 }, rest, flex != null || flexGrow != null ? { flex: 1 } : null]}>{children}</Glass>
     </Pressable>
   );
@@ -137,7 +158,7 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
   const primary = kind === 'primary';
   const fg = primary ? c.accentText : kind === 'danger' ? c.bad : c.link;
   return (
-    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }, style]}>
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
       <View style={{
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
         paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: big ? radius.field : radius.btn,

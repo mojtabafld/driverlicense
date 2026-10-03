@@ -18,7 +18,7 @@ export function Confirm({ open, title, text, children, cancel, ok, danger, onCan
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable onPress={onCancel} accessibilityLabel={cancel}
-        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(20,40,40,0.35)' }}>
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
         {/* The card itself does not close the dialog. */}
         <Pressable onPress={() => {}} accessibilityRole="alert"
           style={{ width: '100%', maxWidth: 360, padding: 20, gap: 14, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder,

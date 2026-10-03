@@ -138,7 +138,7 @@ export default function Run() {
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); router.back(); }} />
       <Modal visible={dialog === 'handin'} transparent animationType="fade" onRequestClose={() => setDialog(null)}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(20,40,40,0.35)' }}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
           <View style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
             borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
             <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>

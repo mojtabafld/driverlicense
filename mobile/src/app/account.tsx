@@ -47,7 +47,7 @@ export default function Account() {
   };
 
   return (
-    <Backdrop>
+    <Backdrop enter>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
