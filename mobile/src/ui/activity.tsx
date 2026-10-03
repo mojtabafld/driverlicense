@@ -35,10 +35,7 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
           <Icon name={ok ? 'checkCircle' : 'xCircle'} size={22} color={fg} contrast={soft} />
         </View>
         <View style={{ flex: 1, gap: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <T style={{ fontWeight: '700' }}>{modeName(a, bank)}</T>
-            <Pill text={isFull(a) ? (ok ? 'قبول' : 'مردود') : ok ? 'خوب' : 'نیاز به تمرین'} fg={fg} bg={soft} />
-          </View>
+          <T style={{ fontWeight: '700' }}>{modeName(a, bank)}</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{fmtDate(a.at)} · ساعت {fmtClock(a.at)}</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
             {a.secs ? `زمان ${fmtSecs(a.secs)} · ` : ''}{wrong ? `${faNum(wrong)} اشتباه از ${faNum(a.items.length)}` : 'بدون اشتباه'}
