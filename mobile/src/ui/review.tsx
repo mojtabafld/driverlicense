@@ -238,7 +238,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
         <View style={{ gap: 8 }}>
           <L style={flat ? { fontSize: 20, lineHeight: 27, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
           {fa && q.sfa ? (
-            <View style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, backgroundColor: c.surface2, ...physical({ borderRightWidth: 3, borderRightColor: dark ? c.link : c.accent }) }}>
+            // The Persian translation on a soft teal tint, no side line.
+            <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: dark ? 'rgba(124,203,205,0.12)' : 'rgba(60,170,150,0.13)' }}>
               <T style={{ fontSize: 14.5, lineHeight: 25 }}>{q.sfa}</T>
             </View>
           ) : null}
