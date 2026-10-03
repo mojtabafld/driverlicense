@@ -104,9 +104,9 @@ export default function Run() {
           return (
             <Pressable key={k} onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               {/* The statements are Danish / English, so the row runs left to right: the check box on the left. */}
-              {/* Flat cards on the page's own background with a white border; the chosen ones in the app's teal. */}
+              {/* Flat white cards with a thin border; the chosen ones in the app's teal. */}
               <View style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: 16,
-                borderWidth: 1.5, borderColor: on ? c.accent : dark ? 'rgba(255,255,255,0.16)' : '#ffffff', backgroundColor: on ? c.accentSoft : 'transparent' } as any}>
+                borderWidth: 1.5, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : c.surface } as any}>
                 <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {on ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
                 </View>
