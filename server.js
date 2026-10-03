@@ -227,7 +227,7 @@ const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 // bundles are cached for a year. The earlier site (site/) lives on at /app/.
 const APP_WEB = path.join(__dirname, 'app-web');
 const APP_INDEX = path.join(APP_WEB, 'index.html');
-const APP_MIME = { ...MIME, '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
+const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
 function serveAppWeb(req, res, p) {
   let file = path.normalize(path.join(APP_WEB, p));
   if (file !== APP_WEB && !file.startsWith(APP_WEB + path.sep)) { res.writeHead(403); return res.end(); }
