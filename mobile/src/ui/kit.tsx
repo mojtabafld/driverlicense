@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { faFamily } from './fonts';
-import { Icon } from './icon';
+import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
 import { DA_FONT, radius, useColors, useTheme } from './theme';
 
@@ -130,7 +130,8 @@ export function Card({ children, style, onPress }: { children: React.ReactNode; 
 }
 
 // The site's .btn-primary (navy) and .btn-ghost (surface with a line border); danger is a ghost in red.
-type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; icon?: React.ReactNode; big?: boolean };
+type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; icon?: IconName; big?: boolean };
+// Every button carries a flat icon before its label, in the label's colour.
 export function Button({ label, onPress, kind = 'primary', disabled, style, icon, big }: BtnProps) {
   const c = useColors();
   const primary = kind === 'primary';
@@ -142,7 +143,7 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
         paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: big ? radius.field : radius.btn,
         backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
       }}>
-        {icon}<T style={{ color: fg, fontWeight: '600', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
+        {icon ? <Icon name={icon} size={18} color={fg} weight="semibold" /> : null}<T style={{ color: fg, fontWeight: '600', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
       </View>
     </Pressable>
   );

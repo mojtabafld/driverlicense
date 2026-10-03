@@ -148,6 +148,18 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
     case 'trash':
       body = <G><Path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5" {...line} /><Path d="M6.5 6.5l.8 12.2A2 2 0 0 0 9.3 20.5h5.4a2 2 0 0 0 2-1.8l.8-12.2M10 10.5v6M14 10.5v6" {...line} /></G>;
       break;
+    case 'play':
+      body = <Path d="M8 5.6v12.8a1 1 0 0 0 1.5.86l10.2-6.4a1 1 0 0 0 0-1.72L9.5 4.74A1 1 0 0 0 8 5.6z" {...solid} />;
+      break;
+    case 'personAdd':
+      body = <G><Circle cx={10} cy={8} r={3.6} {...line} /><Path d="M3 20c.8-3.4 3.6-5.3 7-5.3 1.4 0 2.7.3 3.8.9M18.5 13.5v6M15.5 16.5h6" {...line} /></G>;
+      break;
+    case 'chevronUp':
+      body = <Path d="M6 14.5l6-6 6 6" {...line} strokeWidth={2.2} />;
+      break;
+    case 'xmark':
+      body = <Path d="M6.5 6.5l11 11M17.5 6.5l-11 11" {...line} strokeWidth={2.2} />;
+      break;
     case 'filter':
       body = <Path d="M4.5 7h15M7.5 12h9M10.5 17h3" {...line} strokeWidth={2.2} />;
       break;
