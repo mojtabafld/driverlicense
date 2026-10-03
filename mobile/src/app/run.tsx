@@ -108,10 +108,9 @@ export default function Run() {
           <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" transition={200} />
           {/* Mark the question to look at it again before handing in. */}
           <Pressable onPress={flag} hitSlop={6} accessibilityRole="button" accessibilityLabel="علامت برای بازبینی" accessibilityState={{ selected: flagged }}
-            style={{ position: 'absolute', top: 8, ...physical({ left: 8 }), flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18,
+            style={{ position: 'absolute', top: 8, ...physical({ left: 8 }), width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center',
               backgroundColor: flagged ? c.accent : dark ? 'rgba(20,30,30,0.6)' : 'rgba(255,255,255,0.85)' }}>
-            <Icon name="bookmark" size={16} filled={flagged} color={flagged ? '#fff' : dark ? '#fff' : c.accent} />
-            <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: flagged ? '#fff' : dark ? '#fff' : c.accent }}>{flagged ? 'علامت‌خورده' : 'بازبینی بعداً'}</T>
+            <Icon name="bookmark" size={18} filled={flagged} color={flagged ? '#fff' : dark ? '#fff' : c.accent} />
           </Pressable>
         </View>
         <View style={{ gap: 4 }}>
