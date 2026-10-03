@@ -1,7 +1,7 @@
 // App state: the signed-in user, their exams and settings, and the question bank.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { api, fetchBank, setApiToken } from './api';
+import { ApiError, api, fetchBank, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL } from './config';
 import { loadToken, saveToken } from './token';
@@ -54,7 +54,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const t = await loadToken();
       if (t) {
         setApiToken(t); setToken(t);
-        try { await load(); } catch { setApiToken(null); setToken(null); await saveToken(null); }
+        // Only a refused session signs out; without a connection the token stays (the app shows its offline page and
+        // loads again when the connection is back).
+        try { await load(); } catch (e) { if (e instanceof ApiError && e.status === 401) { setApiToken(null); setToken(null); await saveToken(null); } }
       }
       setReady(true);
     })();

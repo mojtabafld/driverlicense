@@ -1,15 +1,17 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
+import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
 import { FA_FONTS } from '@/ui/fonts';
 import { Backdrop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
+import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
 import { INTRO_BG, Onboarding } from '@/ui/onboarding';
 import { useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
@@ -26,7 +28,20 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 }
 
 function Root() {
-  const { ready, user, bank, settings } = useApp();
+  const { ready, user, bank, settings, refresh } = useApp();
+  // No internet while the app has nothing loaded yet (at start, or before signing in): a page of its own; when the
+  // connection is back the app loads again (the web page reloads, the phone app reads the account again). Losing the
+  // connection later (e.g. in an exam) does not interrupt anything.
+  const { online, check } = useOnline();
+  const blocked = !online && !bank;
+  const wasBlocked = useRef(false);
+  useEffect(() => {
+    if (blocked) { wasBlocked.current = true; return; }
+    if (!online || !wasBlocked.current) return;
+    wasBlocked.current = false;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
+    else refresh().catch(() => {});
+  }, [blocked, online, refresh]);
   const dark = useIsDark(), c = useColors();
   const [fontsLoaded, fontError] = useFonts(FA_FONTS);
   const fonts = fontsLoaded || !!fontError;
@@ -38,7 +53,7 @@ function Root() {
   // background gradient, so the top of the screen runs into the page; over the intro and the language screen, their
   // navy (the intro's changes with its picture).
   const [introTop, setIntroTop] = useState<string | null>(null);
-  const cover = onboarded === false ? introTop ?? INTRO_BG[0] : user && !settings.langChosen ? INTRO_BG[0] : null;
+  const cover = blocked ? OFFLINE_TOP : onboarded === false ? introTop ?? INTRO_BG[0] : user && !settings.langChosen ? INTRO_BG[0] : null;
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
     const top = cover ?? c.bgGradient[0];
@@ -47,9 +62,11 @@ function Root() {
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
     m.setAttribute('content', top);
   }, [dark, c.bgGradient, cover]);
+  if (blocked) return <Offline onRetry={check} />;
   if (!ready || !fonts || onboarded === null || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
+      {Platform.OS === 'web' ? <OfflinePreload /> : null}
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
       <StatusBar style={dark || !onboarded || (user && !settings.langChosen) ? 'light' : 'dark'} />
       {/* While the intro is open the screens (sign-in included) are not there at all: hidden password fields behind it

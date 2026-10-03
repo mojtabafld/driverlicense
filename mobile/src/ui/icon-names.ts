@@ -3,7 +3,7 @@ import type { SymbolWeight } from 'expo-symbols';
 
 export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles' | 'clipboard' | 'warning'
   | 'arrowRight' | 'arrowLeft' | 'bookmark' | 'chevronDown' | 'chart' | 'translate'
-  | 'person' | 'lock' | 'eye' | 'eyeSlash' | 'clock' | 'exit' | 'trash';
+  | 'person' | 'lock' | 'eye' | 'eyeSlash' | 'clock' | 'exit' | 'trash' | 'refresh';
 
 export type IconProps = { name: IconName; size?: number; color: string; filled?: boolean; weight?: SymbolWeight; contrast?: string };
 
@@ -11,6 +11,7 @@ export type IconProps = { name: IconName; size?: number; color: string; filled?:
 export const SF: Record<IconName, [string, string]> = {
   house: ['house', 'house.fill'],
   trash: ['trash', 'trash.fill'],
+  refresh: ['arrow.clockwise', 'arrow.clockwise'],
   exam: ['checkmark.circle', 'checkmark.circle.fill'],
   learn: ['book', 'book.fill'],
   settings: ['gearshape', 'gearshape.fill'],
