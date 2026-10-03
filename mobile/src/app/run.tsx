@@ -14,8 +14,7 @@ import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { Backdrop, L, T, ThemeButton, tap } from '@/ui/kit';
 import { uiText } from '@/ui/review';
-import { LiquidGlass } from '@/ui/liquid';
-import { radius, useColors, useIsDark } from '@/ui/theme';
+import { radius, useColors } from '@/ui/theme';
 
 const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
   if (Platform.OS === 'web') { if (window.confirm(`${title}\n${msg}`)) onOk(); return; }
@@ -23,7 +22,7 @@ const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
 };
 
 export default function Run() {
-  const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
+  const c = useColors(), ins = useSafeAreaInsets();
   const { Q, settings, saveAttempt } = useApp();
   const pic = useQuestionImage();
   const [plan] = useState(() => session.plan);
@@ -105,8 +104,9 @@ export default function Run() {
           return (
             <Pressable key={k} onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               {/* The statements are Danish / English, so the row runs left to right: the check box on the left. */}
-              <LiquidGlass r={18} interactive tint={on ? (dark ? 'rgba(31,106,165,0.38)' : 'rgba(2,71,118,0.13)') : undefined}
-                style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', ...(on ? { borderColor: c.accent, borderWidth: 1.5 } : {}) }}>
+              {/* Flat white cards with a thin border; the chosen ones in the app's teal. */}
+              <View style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: 16,
+                borderWidth: 1.5, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : c.surface } as any}>
                 <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {on ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
                 </View>
@@ -114,16 +114,16 @@ export default function Run() {
                   <L style={{ fontSize: 16.5, lineHeight: 23 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                   {showFa && s.fa ? <T style={{ color: c.muted, fontSize: 14 }}>{s.fa}</T> : null}
                 </View>
-              </LiquidGlass>
+              </View>
             </Pressable>
           );
         })}
       </ScrollView>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar
-        start={<FootBtn label={ui.prev} icon="arrowLeft" lead disabled={i === 0} onPress={() => setI(i - 1)} />}
+        start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
         middle={<BarCount n={i + 1} of={qs.length} />}
-        end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => setI(i + 1)} />} />
+        end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => setI(i + 1)} />} />
     </Backdrop>
   );
 }

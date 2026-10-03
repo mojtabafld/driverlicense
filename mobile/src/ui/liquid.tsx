@@ -49,13 +49,13 @@ export function LiquidGlass({ style, children, r = 22, tint, interactive, bar }:
     backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)',
     boxShadow: dark
       ? 'inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.04), 0 10px 28px -10px rgba(0,0,0,.6)'
-      : 'inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(255,255,255,.45), 0 10px 28px -12px rgba(16,40,60,.28)',
+      : 'inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(255,255,255,.45), 0 10px 28px -12px rgba(20,60,60,.26)',
   } as any) : null;
   return (
     <View style={[
-      { borderRadius: r, borderWidth: 1, backgroundColor: tint ?? (dark ? 'rgba(34,48,61,0.70)' : 'rgba(255,255,255,0.72)'),
+      { borderRadius: r, borderWidth: 1, backgroundColor: tint ?? (dark ? 'rgba(28,48,49,0.70)' : 'rgba(255,255,255,0.72)'),
         borderColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.85)' },
-      web ?? { shadowColor: '#10283c', shadowOpacity: dark ? 0.5 : 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
+      web ?? { shadowColor: '#103c3c', shadowOpacity: dark ? 0.5 : 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
       style,
     ]}>
       {children}

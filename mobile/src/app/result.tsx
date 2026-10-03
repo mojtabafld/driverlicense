@@ -120,11 +120,11 @@ export default function Result() {
     // The floating glass bar, as in the exam: previous / the position / next (the summary, then «from the start»).
     const nav = (
       <GlassBar
-        start={<FootBtn label={ui.prev} icon="arrowLeft" lead disabled={!k} onPress={() => step(k - 1)} />}
+        start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!k} onPress={() => step(k - 1)} />}
         middle={end ? null : <BarCount n={k + 1} of={total} />}
         end={end ? <FootBtn label={ui.restart} icon="arrowRight" onPress={() => step(0)} />
           : k === total - 1 ? <FootBtn label={ui.summary} icon="arrowRight" primary onPress={() => step(k + 1)} />
-          : <FootBtn label={ui.next} icon="arrowRight" primary onPress={() => step(k + 1)} />} />
+          : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => step(k + 1)} />} />
     );
     return (
       <Backdrop>

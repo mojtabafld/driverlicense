@@ -1,5 +1,5 @@
 // The intro shown once on a device: four slides about what the app does, each a picture with a large title and a
-// short line, on the app's navy gradient. «رد شدن» skips it, «بعدی» goes on and the last slide's «شروع کنید» closes
+// short line, on the app's teal gradient. «رد شدن» skips it, «بعدی» goes on and the last slide's «شروع کنید» closes
 // it; a sideways swipe also turns the slides (right to left, as the page reads).
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,10 +19,10 @@ const SLIDES = [
   { Art: ArtAi, title: 'معلم هوش مصنوعی همراه شما', text: 'برای هر اشتباه توضیحی ساده به فارسی بگیرید و در پایان هر آزمون جمع‌بندی نکته‌هایی را که باید مرور کنید.' },
   { Art: ArtProgress, title: 'پیشرفت‌تان را ببینید', text: 'نمودار پیشرفت، احتمال قبولی و تمرین هدفمند همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید.' },
 ];
-// Flat navy at the top, the colour the server's intro pictures are made on, so they sit in the page seamlessly.
-export const INTRO_BG = ['#024776', '#024776', '#012f4f'] as const;
+// Flat teal at the top, the colour the server's intro pictures are made on, so they sit in the page seamlessly.
+export const INTRO_BG = ['#3f8c8f', '#3f8c8f', '#2a6a6d'] as const;
 const BG = INTRO_BG;
-const BUTTON = '#8cc3ef', BUTTON_TEXT = '#012a45';
+const BUTTON = '#ffffff', BUTTON_TEXT = '#2a7679';
 
 // `onTop`: the colour at the top of the screen, for the browser's own bar on the web.
 export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: string) => void }) {

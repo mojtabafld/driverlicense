@@ -12,7 +12,6 @@ import { faNum } from '@/lib/logic';
 import { srcLabels, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
-import { LiquidGlass } from './liquid';
 import { L, T, physical, tap } from './kit';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
@@ -167,16 +166,12 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
 }
 export const hasSummary = (items: Item[], ai: boolean) => ai && items.some(it => !it.ok && it.a);
 
-// One statement of a reviewed question: a glass row like the exam's in the flat layout, else the list's bordered box.
+// One statement of a reviewed question: a flat card like the exam's in the flat layout, else the list's bordered box.
 // A wrong tick or a missing one is shown in red.
 function Statement({ flat, mark, children }: { flat: boolean; mark: boolean; children: React.ReactNode }) {
   const c = useColors();
   if (flat) {
-    return (
-      <LiquidGlass r={18} tint={mark ? c.badSoft : undefined} style={{ paddingVertical: 15, paddingHorizontal: 14, ...(mark ? { borderColor: c.bad, borderWidth: 1.5 } : {}) }}>
-        {children}
-      </LiquidGlass>
-    );
+    return <View style={{ paddingVertical: 15, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
   }
   return <View style={{ padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
 }
@@ -210,7 +205,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
         <View>
           <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.md : 6, backgroundColor: c.surface2 }} contentFit="contain" />
           {index != null ? (
-            <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(38,57,69,0.82)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
+            <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(34,56,58,0.82)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
               <T style={{ color: '#fff', fontSize: 12, lineHeight: 20, fontWeight: '600' }}>سؤال {faNum(index + 1)}</T>
             </View>
           ) : null}
