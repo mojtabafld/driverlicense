@@ -279,8 +279,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                 <Statement key={k} flat={flat} mark={!!mark}>
                   <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', direction: 'ltr' } as any}>
                     <View style={{ width: 22, height: 22, marginTop: 1, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center',
-                      borderColor: checked ? c.accent : c.muted, backgroundColor: checked ? c.accent : c.surface }}>
-                      {checked ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
+                      borderColor: checked ? c.pick : c.muted, backgroundColor: checked ? c.pick : c.surface }}>
+                      {checked ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
                     </View>
                     <View style={{ flex: 1, gap: 4 }}>
                       <L style={{ fontSize: 14.5, lineHeight: 22 }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>

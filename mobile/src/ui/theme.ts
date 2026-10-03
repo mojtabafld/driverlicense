@@ -6,8 +6,8 @@ import type { ThemeMode, ThemeName } from '@/lib/prefs';
 
 // Two looks; STYLE picks the one in use. «teal» is the app's look until October 2026 (main at ed597e7), kept whole so
 // it can come back by setting STYLE = 'teal'. «uber» follows Uber Eats: black and white surfaces, flat cards with soft
-// corners, and one accent for buttons and icons. The accent is Uber's blue, not its green: in an exam app green and red
-// mean right and wrong, so the accent stays clear of both.
+// corners, and one accent for buttons and icons: a jade green, bluer than the green of right answers, and a chosen
+// answer is marked in black / white rather than in the accent (see `pick`), so nothing reads as «right» but a result.
 const STYLE: 'teal' | 'uber' = 'uber';
 
 // The app's teal (from its intro and store pictures): a deeper teal for filled buttons so white text reads well,
@@ -20,6 +20,8 @@ const tealLight = {
   submit: '#2c5525', checked: '#d4e9e9', cardBorder: 'rgba(0,0,0,0.08)', hairline: '#d4e5e5',
   // Older names still used by some screens; on the site's look they are plain surfaces.
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#d4e5e5',
+  // A chosen answer in an exam: its border / check box and its tint.
+  pick: '#2e8285', pickSoft: '#dcefef',
   // Page background: a very soft top-to-bottom gradient around bg, with a hint of the teal.
   bgGradient: ['#f5fafa', '#edf4f4', '#e1eded'] as readonly [string, string, string],
 };
@@ -30,26 +32,29 @@ const tealDark: typeof tealLight = {
   ok: '#5cc47a', okSoft: '#15301e', bad: '#f07167', badSoft: '#3a1715', warn: '#f0b24a', warnSoft: '#33260d',
   submit: '#3d7a33', checked: '#244241', cardBorder: 'rgba(255,255,255,0.06)', hairline: '#2c4547',
   glass: '#172a2b', glassStrong: '#172a2b', glassBorder: '#2c4547',
+  pick: '#2f8f92', pickSoft: '#163637',
   bgGradient: ['#152a2b', '#0f1c1d', '#0a1415'] as readonly [string, string, string],
 };
-// Uber Eats: near-white page, white cards, near-black text, no tints of colour in the surfaces; the accent is Uber's
-// blue (white text on it), lighter in dark mode on near-black with charcoal cards. Green and red only for right / wrong.
+// Uber Eats: near-white page, white cards, near-black text, no tints of colour in the surfaces; the accent is a jade
+// green (white text on it), lighter in dark mode on near-black with charcoal cards. `pick`: a chosen answer.
 const uberLight: typeof tealLight = {
   bg: '#f3f3f3', surface: '#ffffff', surface2: '#f3f3f3', line: '#e2e2e2',
   text: '#141414', muted: '#5e5e5e', faint: '#9b9b9b',
-  accent: '#276ef1', accentText: '#FFFFFF', accentSoft: '#eaf1fe', link: '#1f5fd6',
+  accent: '#0d8a73', accentText: '#FFFFFF', accentSoft: '#e3f3ef', link: '#0b7563',
   ok: '#23803f', okSoft: '#e6f4ea', bad: '#d43b30', badSoft: '#fdecea', warn: '#b26a00', warnSoft: '#fff4e0',
-  submit: '#276ef1', checked: '#e4edfd', cardBorder: 'rgba(0,0,0,0.06)', hairline: '#e2e2e2',
+  submit: '#0d8a73', checked: '#ddf0eb', cardBorder: 'rgba(0,0,0,0.06)', hairline: '#e2e2e2',
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e2e2e2',
+  pick: '#141414', pickSoft: '#ececec',
   bgGradient: ['#f3f3f3', '#f3f3f3', '#f3f3f3'] as readonly [string, string, string],
 };
 const uberDark: typeof tealLight = {
   bg: '#0c0c0c', surface: '#181818', surface2: '#222222', line: '#2e2e2e',
   text: '#f6f6f6', muted: '#a7a7a7', faint: '#6f6f6f',
-  accent: '#3d7ff2', accentText: '#FFFFFF', accentSoft: '#152238', link: '#7eabff',
+  accent: '#1fa489', accentText: '#FFFFFF', accentSoft: '#11292a', link: '#4fd1b4',
   ok: '#5fc179', okSoft: '#16281b', bad: '#f06a5f', badSoft: '#361715', warn: '#f0b24a', warnSoft: '#33260d',
-  submit: '#3d7ff2', checked: '#1a2c4b', cardBorder: 'rgba(255,255,255,0.05)', hairline: '#2e2e2e',
+  submit: '#1fa489', checked: '#163230', cardBorder: 'rgba(255,255,255,0.05)', hairline: '#2e2e2e',
   glass: '#181818', glassStrong: '#181818', glassBorder: '#2e2e2e',
+  pick: '#f2f2f2', pickSoft: '#2a2a2a',
   bgGradient: ['#0c0c0c', '#0c0c0c', '#0c0c0c'] as readonly [string, string, string],
 };
 const light = STYLE === 'uber' ? uberLight : tealLight;
