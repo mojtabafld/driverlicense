@@ -1,13 +1,14 @@
 // Settings and account.
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { Alert, Platform, Pressable, Switch, View } from 'react-native';
+import { Alert, Platform, Pressable, View } from 'react-native';
 
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
+import { Toggle } from '@/ui/toggle';
 
 function Row({ title, sub, right }: { title: string; sub?: string; right: React.ReactNode }) {
   const c = useColors();
@@ -31,7 +32,6 @@ export default function Settings() {
     Alert.alert('خروج از حساب', 'از حساب کاربری خارج می‌شوید؟', [{ text: 'انصراف', style: 'cancel' }, { text: 'خروج', style: 'destructive', onPress: logout }]);
   };
   // Switches in the app's teal.
-  const sw = { trackColor: { false: c.line, true: c.accent }, thumbColor: '#fff', activeThumbColor: '#fff' } as const;
   return (
     <Screen title="تنظیمات">
       <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -59,8 +59,8 @@ export default function Settings() {
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
-        <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Switch {...sw} value={settings.showFa} onValueChange={v => { tap(); setSettings({ showFa: v }); }} />} />
-        <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Switch {...sw} value={settings.timer} onValueChange={v => { tap(); setSettings({ timer: v }); }} />} />
+        <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />
+        <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
       <Card>
         <Row title="نسخه‌ی نرم‌افزار" right={<T style={{ color: c.muted, writingDirection: 'ltr' }}>{faNum(Constants.expoConfig?.version ?? '1.0.0')}</T>} />
