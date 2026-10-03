@@ -521,7 +521,9 @@ async function api(req, res, route) {
   if (req.method === 'PUT' && route === 'settings') {
     const b = await readBody(req);
     const lang = ['da', 'en'].includes(b.lang) ? b.lang : (user.settings || {}).lang;
-    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}) };
+    // langChosen: the app asked which language the questions should be in (once per user); it stays set.
+    const langChosen = !!b.langChosen || !!(user.settings || {}).langChosen;
+    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}) };
     await store.saveUser(user);
     return send(res, 200, { settings: user.settings });
   }

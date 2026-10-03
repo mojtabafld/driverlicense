@@ -9,6 +9,7 @@ import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
 import { FA_FONTS } from '@/ui/fonts';
 import { Backdrop } from '@/ui/kit';
+import { LangPick } from '@/ui/lang-pick';
 import { Onboarding } from '@/ui/onboarding';
 import { useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
@@ -25,7 +26,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 }
 
 function Root() {
-  const { ready, user, bank } = useApp();
+  const { ready, user, bank, settings } = useApp();
   const dark = useIsDark(), c = useColors();
   const [fontsLoaded, fontError] = useFonts(FA_FONTS);
   const fonts = fontsLoaded || !!fontError;
@@ -46,7 +47,7 @@ function Root() {
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
-      <StatusBar style={dark || !onboarded ? 'light' : 'dark'} />
+      <StatusBar style={dark || !onboarded || (user && !settings.langChosen) ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />
@@ -62,6 +63,9 @@ function Root() {
         <View style={StyleSheet.absoluteFill}>
           <Onboarding onDone={() => { saveOnboarded(); setOnboarded(true); }} />
         </View>
+      ) : user && !settings.langChosen ? (
+        // After the intro and signing in: the questions' language, asked once per user.
+        <View style={StyleSheet.absoluteFill}><LangPick /></View>
       ) : null}
     </ThemeProvider>
   );
