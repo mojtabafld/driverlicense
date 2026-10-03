@@ -299,7 +299,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </View>
           {aiLessons ? <AiTips q={q} a={it.a} at={at} lang={lang} />
             : t ? (
-              <View style={{ marginTop: 14, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 6, backgroundColor: c.accentSoft, ...physical({ borderRightWidth: 4, borderRightColor: dark ? c.link : c.accent }) }}>
+              <View style={{ marginTop: 14, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.accentSoft }}>
                 <T style={{ fontSize: 15, fontWeight: '700', marginBottom: 6 }}>📘 آموزش کوتاه: {bank ? topicFa(bank, q.c) : ''} <T style={{ fontSize: 12.5, fontWeight: '500', color: c.muted, fontFamily: DA_FONT }}>({t.da})</T></T>
                 {t.lesson.map((l, i) => (
                   <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 3 }}><T style={{ fontSize: 14 }}>•</T><T style={{ flex: 1, fontSize: 14 }}>{l}</T></View>
