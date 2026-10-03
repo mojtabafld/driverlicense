@@ -11,6 +11,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const Anthropic = require('@anthropic-ai/sdk');
+const png = require('./png');
 
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
 // Sunburst (more detail) is the default; Flare is faster and cheaper.
@@ -48,7 +49,7 @@ function init(s, siteDir) {
   BANK = JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, ''));
   Q = new Map(BANK.questions.map(q => [q.id, q]));
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
-  startIntro().catch(e => console.error('intro pictures', e.message));
+  fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message));
 }
 
 async function kie(method, url, body) {
@@ -234,6 +235,25 @@ const INTRO_PROMPTS = [
   'A friendly AI tutor: a smartphone lying slightly tilted, its screen showing a road picture, an answer marked with a small red cross and below it a large sky-blue explanation bubble with lines of placeholder text bars (no readable text). Above the phone floats a small, cute, rounded white robot assistant with a glowing sky-blue face, pointing helpfully at the explanation; four-pointed sparkles and small glowing stars float around.',
   'Progress and success: a floating white dashboard card with rising sky-blue bars and a navy line graph climbing upward over a dashed green pass line; next to it a red-and-white target with an arrow in the bullseye; in front, a small sky-blue car drives up a curved road that turns into an upward arrow; a few pieces of confetti and a small yellow trophy.',
 ];
+// A new picture at half size (2048 → 1024 px, about a quarter of the bytes) and its background colour, which the app
+// paints behind it so the picture's edge does not show. A file it cannot read is kept as it is.
+function shrinkIntro(buf, mime) {
+  try {
+    const im = png.decode(buf); if (!im) return { buf, mime };
+    const small = im.w > 1200 ? png.half(im) : im;
+    return { buf: png.encode(small), mime: 'image/png', bg: png.edgeColour(small) };
+  } catch (e) { console.error('intro picture shrink', e.message); return { buf, mime }; }
+}
+// Pictures made before shrinking existed: shrunk once.
+async function fixIntro() {
+  for (const job of Object.values(((store.meta.intro || {}).items) || {})) {
+    if (!job.blob || job.bg) continue;
+    const b = await store.getBlob(job.blob); if (!b) continue;
+    const s = shrinkIntro(b.data, b.mime);
+    if (s.bg) { await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob); Object.assign(job, { bg: s.bg, size: s.buf.length, v: Date.now().toString(36) }); await saveIntro(); }
+    await new Promise(r => setImmediate(r));
+  }
+}
 const intro = () => (store.meta.intro = store.meta.intro && store.meta.intro.set === INTRO_SET ? store.meta.intro : { set: INTRO_SET, items: {} });
 const saveIntro = () => store.saveMeta('intro', intro());
 async function startIntro() {
@@ -264,10 +284,10 @@ async function pollIntro() {
         const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
         if (!url) throw new Error('no result url');
         const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
-        const buf = Buffer.from(await r.arrayBuffer());
+        const s = shrinkIntro(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
         job.blob = `intro-${INTRO_SET}-${n}`;
-        await store.saveBlob(job.blob, r.headers.get('content-type') || 'image/png', buf);
-        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: buf.length });
+        await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob);
+        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: s.buf.length, ...(s.bg ? { bg: s.bg } : {}) });
       } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
       else pending = true;
       if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
@@ -278,6 +298,8 @@ async function pollIntro() {
 }
 // For /api/config: slide number → picture version, for the pictures that are ready.
 const introVersions = () => Object.fromEntries(Object.entries((store.meta.intro || {}).items || {}).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
+// Slide number → the picture's background colour.
+const introColours = () => Object.fromEntries(Object.entries((store.meta.intro || {}).items || {}).filter(([, j]) => j.blob && j.bg).map(([n, j]) => [n, j.bg]));
 const introBlob = async n => { const j = ((store.meta.intro || {}).items || {})[n]; return j && j.blob ? blob(j.blob) : null; };
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introBlob };
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob };

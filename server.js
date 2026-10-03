@@ -298,7 +298,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), intro: imagegen.introVersions() });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), intro: imagegen.introVersions(), introBg: imagegen.introColours() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
