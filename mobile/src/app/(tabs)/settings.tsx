@@ -1,11 +1,13 @@
 // Settings and account.
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { Alert, Platform, Pressable, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, View } from 'react-native';
 
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp } from '@/lib/store';
+import { Confirm } from '@/ui/confirm';
 import { Icon } from '@/ui/icon';
 import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
@@ -28,13 +30,14 @@ export default function Settings() {
   const c = useColors();
   const { user, settings, setSettings, logout } = useApp();
   const { mode, setMode } = useTheme();
-  const confirmLogout = () => {
-    if (Platform.OS === 'web') { if (window.confirm('از حساب کاربری خارج می‌شوید؟')) logout(); return; }
-    Alert.alert('خروج از حساب', 'از حساب کاربری خارج می‌شوید؟', [{ text: 'انصراف', style: 'cancel' }, { text: 'خروج', style: 'destructive', onPress: logout }]);
-  };
+  // Sign-out asks first, in the app's own dialog.
+  const [askOut, setAskOut] = useState(false);
+  const confirmLogout = () => setAskOut(true);
   // Switches in the app's teal.
   return (
     <Screen title="تنظیمات">
+      <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
+        cancel="ماندن" ok="خروج" okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
       <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         {/* The name opens the account page (name and password); sign-out stays at the end. */}
         <Pressable onPress={() => { tap(); router.push('/account'); }} accessibilityRole="button" accessibilityLabel="حساب کاربری"
