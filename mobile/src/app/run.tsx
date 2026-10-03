@@ -74,7 +74,7 @@ export default function Run() {
             {settings.timer ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, direction: 'ltr' } as any}>
                 <Icon name="clock" size={17} color={left < 60 ? c.bad : dark ? c.link : c.accent} weight="semibold" />
-                <L style={{ fontSize: 20, lineHeight: 27, fontWeight: '800', color: left < 60 ? c.bad : dark ? c.link : c.accent, fontVariant: ['tabular-nums'], fontFamily: NUM_FONT }}>{mm}</L>
+                <L style={{ fontSize: 20, lineHeight: 27, fontWeight: '500', color: left < 60 ? c.bad : dark ? c.link : c.accent, fontVariant: ['tabular-nums'], fontFamily: NUM_FONT }}>{mm}</L>
               </View>
             ) : null}
           </View>

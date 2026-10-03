@@ -1,6 +1,6 @@
 // Answer review, drawn like the site's review cards (.rcard): the picture with «سؤال n» and the bookmark, the prove.dk
 // badges and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
-// «نکات سؤال» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
+// «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, View } from 'react-native';
@@ -78,7 +78,7 @@ function AiLoading({ text }: { text: string }) {
   );
 }
 
-// The site's «نکات سؤال» / «جمع‌بندی آموزشی اشتباهات» button: outlined in navy, filled while its text is shown.
+// The site's «تحلیل پاسخ شما» / «جمع‌بندی آموزشی اشتباهات» button: outlined in navy, filled while its text is shown.
 function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; shown: boolean; onPress: () => void }) {
   const c = useColors(), dark = useIsDark();
   const fg = shown ? (dark ? '#0b1520' : '#fff') : c.link;
@@ -121,7 +121,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   };
   return (
     <View style={{ marginTop: 14 }}>
-      <AiButton title="نکات سؤال" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
+      <AiButton title="تحلیل پاسخ شما" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
         <View style={{ marginTop: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 10, backgroundColor: c.accentSoft }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />

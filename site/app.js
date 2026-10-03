@@ -878,7 +878,7 @@
       v.querySelectorAll('.rseg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
       v.nextElementSibling.className = `rstmts v-${b.dataset.v}`;
     });
-    // «نکات سؤال»: the first click prepares the tips, later clicks hide and show them.
+    // «تحلیل پاسخ شما»: the first click prepares the tips, later clicks hide and show them.
     root.querySelectorAll('.rcard .ai-start').forEach(b => b.onclick = () => {
       const box = b.closest('.ai-lesson'), body = box.querySelector('.ai-body');
       if (box.dataset.state === 'loading') return;
@@ -923,7 +923,7 @@
   }
 
   // AI tips for a reviewed question (server: /api/lesson, Claude, cached per question + mistakes), prepared when
-  // the user asks for them with «نکات سؤال». Without AI lessons, the topic's fixed lesson is shown instead.
+  // the user asks for them with «تحلیل پاسخ شما». Without AI lessons, the topic's fixed lesson is shown instead.
   // Older cached tips said «تیک زدید / نزدید»; the site says «انتخاب کردید / نکردید» everywhere.
   const pickWords = t => t.replace(/تیک(?:\s|\u200c)*نزد/g, 'انتخاب نکرد').replace(/تیک(?:\s|\u200c)*زد/g, 'انتخاب کرد').replace(/تیک(?:\s|\u200c)*نخورد/g, 'انتخاب نشد').replace(/تیک(?:\s|\u200c)*خورد/g, 'انتخاب شد');
   const lessonHtml = text => {
@@ -1018,7 +1018,7 @@
         }).join('')}
         </div>
         ${lessons && state.aiLessons ? `<div class="ai-lesson ai-click" data-q="${q.id}" data-a="${r.a ? r.a.map(v => (v ? 1 : 0)).join('') : ''}">
-          <button class="ai-start" type="button" aria-expanded="false"><span class="ai-spark">${ICON.ai}</span><span class="ai-txt"><b>نکات سؤال</b><small>با استفاده از هوش مصنوعی</small></span><svg class="ai-chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+          <button class="ai-start" type="button" aria-expanded="false"><span class="ai-spark">${ICON.ai}</span><span class="ai-txt"><b>تحلیل پاسخ شما</b><small>با استفاده از هوش مصنوعی</small></span><svg class="ai-chev" width="18" height="18" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
           <div class="ai-body" hidden></div></div>` : ''}
         ${lessons && t ? `<div class="lesson topic-lesson" ${state.aiLessons ? 'hidden' : ''}><h4>📘 آموزش کوتاه: ${esc(topicFa(q.c))} <span class="da" style="font-weight:500;color:var(--muted);font-size:12.5px">(${esc(t.da)})</span></h4>
           <ul>${t.lesson.map(l => `<li>${esc(l)}</li>`).join('')}</ul></div>` : ''}

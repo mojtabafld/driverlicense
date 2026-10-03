@@ -24,7 +24,7 @@ export function GlassBar({ start, middle, end }: { start: React.ReactNode; middl
 // The position in the middle of the bar (Latin digits), in the app's teal.
 export function BarCount({ n, of }: { n: number; of: number }) {
   const c = useColors(), dark = useIsDark();
-  return <L style={{ fontSize: 21, lineHeight: 28, color: dark ? c.link : c.accent, fontWeight: '800', textAlign: 'center', fontVariant: ['tabular-nums'], fontFamily: NUM_FONT }}>{n} / {of}</L>;
+  return <L style={{ fontSize: 21, lineHeight: 28, color: dark ? c.link : c.accent, fontWeight: '500', textAlign: 'center', fontVariant: ['tabular-nums'], fontFamily: NUM_FONT }}>{n} / {of}</L>;
 }
 
 // Buttons of the bar. Previous / next are round teal buttons with an arrow (`round`; the label is for screen
