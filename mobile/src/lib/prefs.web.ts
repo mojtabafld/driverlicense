@@ -12,3 +12,12 @@ export const loadMode = async () => initialMode();
 export const saveMode = async (m: ThemeMode) => {
   try { localStorage.setItem(KEY, JSON.stringify(m)); if (m !== 'system') localStorage.setItem(SITE_KEY, JSON.stringify(m)); } catch {}
 };
+
+// Whether the intro (src/ui/onboarding.tsx) was seen in this browser; missing on the first visit and for anyone who
+// used a version without it, so both get it once.
+const ONBOARDED = 'tp.onboarded';
+export const initialOnboarded = (): boolean | null => {
+  try { return localStorage.getItem(ONBOARDED) === '1'; } catch { return false; }
+};
+export const loadOnboarded = async () => initialOnboarded() ?? false;
+export const saveOnboarded = async () => { try { localStorage.setItem(ONBOARDED, '1'); } catch {} };

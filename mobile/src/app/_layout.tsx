@@ -1,13 +1,15 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useFonts } from 'expo-font';
-import { ActivityIndicator, Platform } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
+import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
 import { FA_FONTS } from '@/ui/fonts';
 import { Backdrop } from '@/ui/kit';
+import { Onboarding } from '@/ui/onboarding';
 import { useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
 
@@ -27,7 +29,10 @@ function Root() {
   const dark = useIsDark(), c = useColors();
   const [fontsLoaded, fontError] = useFonts(FA_FONTS);
   const fonts = fontsLoaded || !!fontError;
-  useEffect(() => { if (ready && fonts) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts]);
+  // The intro, once per device (also on devices that ran a version without it): over everything until it is closed.
+  const [onboarded, setOnboarded] = useState<boolean | null>(initialOnboarded);
+  useEffect(() => { if (onboarded === null) loadOnboarded().then(setOnboarded); }, [onboarded]);
+  useEffect(() => { if (ready && fonts && onboarded !== null) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts, onboarded]);
   // On the web the page behind the app, and the browser's own bar (theme-color), take the top colour of the
   // background gradient, so the top of the screen runs into the page.
   useEffect(() => {
@@ -37,11 +42,11 @@ function Root() {
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
     m.setAttribute('content', c.bgGradient[0]);
   }, [dark, c.bgGradient]);
-  if (!ready || !fonts || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
+  if (!ready || !fonts || onboarded === null || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
-      <StatusBar style={dark ? 'light' : 'dark'} />
+      <StatusBar style={dark || !onboarded ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />
@@ -53,6 +58,11 @@ function Root() {
           <Stack.Screen name="login" />
         </Stack.Protected>
       </Stack>
+      {!onboarded ? (
+        <View style={StyleSheet.absoluteFill}>
+          <Onboarding onDone={() => { saveOnboarded(); setOnboarded(true); }} />
+        </View>
+      ) : null}
     </ThemeProvider>
   );
 }
