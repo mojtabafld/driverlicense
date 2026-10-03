@@ -269,9 +269,9 @@ export default function Result() {
             ))}
           </View>
           <View style={{ width: '100%', gap: 10, marginTop: 4 }}>
-            <Button label="بازبینی آزمون" onPress={() => review(0)} />
-            {wrongN ? <Button kind="glass" label="تمرین اشتباهات" onPress={retry} /> : null}
-            {isLesson && nextLesson ? <Button kind="glass" label="درس بعدی" onPress={startNext} /> : null}
+            <Button label="بازبینی آزمون" icon="eye" onPress={() => review(0)} />
+            {wrongN ? <Button kind="glass" label="تمرین اشتباهات" icon="refresh" onPress={retry} /> : null}
+            {isLesson && nextLesson ? <Button kind="glass" label="درس بعدی" icon="arrowLeft" onPress={startNext} /> : null}
           </View>
         </Card>
       </ScrollView>

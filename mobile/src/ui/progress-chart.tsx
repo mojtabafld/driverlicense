@@ -28,7 +28,7 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
     return (
       <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 14, paddingVertical: 20 }, fill && { flex: 1 }]}>
         <T style={{ color: c.muted, fontSize: 13.5, textAlign: 'center' }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>
-        <Button label="شروع آزمون" onPress={() => router.navigate('/exam')} icon={<Icon name="exam" size={18} color="#fff" />} />
+        <Button label="شروع آزمون" onPress={() => router.navigate('/exam')} icon="play" />
       </View>
     );
   }

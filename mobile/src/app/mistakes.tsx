@@ -94,7 +94,7 @@ export default function Mistakes() {
           </Pressable>
           <T style={{ flex: 1, fontSize: 24, lineHeight: 34, fontWeight: '700' }}>بیشترین اشتباهات</T>
         </View>
-        {open ? <Button label="تمرین همه‌ی اشتباهات" onPress={practiceAll} /> : null}
+        {open ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
         {!sorted.length ? <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>هنوز اشتباهی ثبت نشده است.</T></Card> : (
           <>
             {/* «وضعیت مباحث»: every topic with mistakes, weakest first */}
@@ -159,12 +159,14 @@ export default function Mistakes() {
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       {t?.lesson ? (
                         <Pressable onPress={() => { tap(); setLessonOpen({ ...lessonOpen, [g.c]: !lessonOpen[g.c] }); }}
-                          style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: lessonOpen[g.c] ? (dark ? c.link : c.accent) : c.line, backgroundColor: lessonOpen[g.c] ? c.checked : c.surface }}>
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: lessonOpen[g.c] ? (dark ? c.link : c.accent) : c.line, backgroundColor: lessonOpen[g.c] ? c.checked : c.surface }}>
+                          <Icon name="learn" size={15} color={c.link} weight="semibold" />
                           <T style={{ fontSize: 13, fontWeight: '600', color: c.link }}>آموزش کوتاه</T>
                         </Pressable>
                       ) : null}
                       <Pressable onPress={() => { tap(); practiceTopic(g.c); }}
-                        style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface }}>
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface }}>
+                        <Icon name="refresh" size={15} color={c.link} weight="semibold" />
                         <T style={{ fontSize: 13, fontWeight: '600', color: c.link }}>تمرین این مبحث</T>
                       </Pressable>
                     </View>
@@ -228,13 +230,15 @@ export default function Mistakes() {
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <Pressable onPress={() => { tap(); setSheet(cats.map(x => x.n)); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-                <View style={{ height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+                  <Icon name="checkCircle" size={17} color={c.link} contrast={c.accentSoft} />
                   <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>همه</T>
                 </View>
               </Pressable>
               <Pressable disabled={!pickedN} onPress={() => { tap(); setSecs(pickedN >= cats.length ? [] : picked); setK(0); setSheet(null); }} accessibilityRole="button"
                 accessibilityState={{ disabled: !pickedN }} style={({ pressed }) => ({ flex: 2, opacity: !pickedN ? 0.45 : pressed ? 0.85 : 1 })}>
-                <View style={{ height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent }}>
+                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent }}>
+                  <Icon name="eye" size={17} color="#fff" weight="semibold" />
                   <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>
                     {pickedN ? `نمایش ${faNum(cats.filter(x => picked.includes(x.n)).reduce((t, x) => t + x.count, 0))} سؤال` : 'یک دسته را انتخاب کنید'}
                   </T>

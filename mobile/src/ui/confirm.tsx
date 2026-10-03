@@ -2,14 +2,17 @@
 // line of text, optional content, and two buttons (stay / go on). The second one is red when it is `danger`.
 import { Modal, Pressable, View } from 'react-native';
 
+import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 
 type Props = {
   open: boolean; title: string; text?: string; children?: React.ReactNode;
   cancel: string; ok: string; danger?: boolean; onCancel: () => void; onOk: () => void;
+  // Flat icons before the two labels.
+  cancelIcon?: IconName; okIcon?: IconName;
 };
-export function Confirm({ open, title, text, children, cancel, ok, danger, onCancel, onOk }: Props) {
+export function Confirm({ open, title, text, children, cancel, ok, danger, onCancel, onOk, cancelIcon = 'xmark', okIcon = 'check' }: Props) {
   const c = useColors(), dark = useIsDark();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onCancel}>
@@ -26,12 +29,14 @@ export function Confirm({ open, title, text, children, cancel, ok, danger, onCan
           {children}
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Pressable onPress={() => { tap(); onCancel(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-              <View style={{ height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+              <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+                <Icon name={cancelIcon} size={17} color={c.link} weight="semibold" />
                 <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>{cancel}</T>
               </View>
             </Pressable>
             <Pressable onPress={() => { tap(); onOk(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}>
-              <View style={{ height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? c.bad : c.accent }}>
+              <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? c.bad : c.accent }}>
+                <Icon name={okIcon} size={17} color="#fff" weight="semibold" />
                 <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>{ok}</T>
               </View>
             </Pressable>

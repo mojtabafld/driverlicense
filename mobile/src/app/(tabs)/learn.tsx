@@ -57,7 +57,7 @@ export default function Learn() {
               );
             })}
           </View>
-          <Button kind="glass" label={all ? 'نمایش کمتر' : `نمایش همه‌ی ${faNum(bank.tests.length)} درس`} onPress={() => setAll(!all)} />
+          <Button kind="glass" label={all ? 'نمایش کمتر' : `نمایش همه‌ی ${faNum(bank.tests.length)} درس`} onPress={() => setAll(!all)} icon={all ? 'chevronUp' : 'chevronDown'} />
         </>
       ) : (
         <>
@@ -88,7 +88,7 @@ export default function Learn() {
                 </View>
                 <Toggle label="بدون سؤال تکراری" value={fresh} onChange={setFresh} />
               </View>
-              <Button label={count ? `شروع آموزش (${faNum(count)} سؤال)` : 'سؤالی برای آموزش نیست'} disabled={!count}
+              <Button label={count ? `شروع آموزش (${faNum(count)} سؤال)` : 'سؤالی برای آموزش نیست'} disabled={!count} icon="play"
                 onPress={() => { session.plan = { mode: 'sections', ids: shuffle(usable).slice(0, count), title: 'آموزش بر اساس دسته‌بندی' }; router.push('/run'); }} />
             </Card>
           ) : (

@@ -72,7 +72,7 @@ export default function Account() {
             <T style={{ fontWeight: '700' }}>نام</T>
             <Field icon="person" label="نام شما" value={name} onChange={v => { setName(v); setNameMsg(null); }} onSubmit={saveName} />
             <Note msg={nameMsg} />
-            <Button label={busy === 'name' ? 'در حال ذخیره…' : 'ذخیره‌ی نام'} onPress={saveName} disabled={!!busy || name.trim() === (user?.name ?? '')} />
+            <Button label={busy === 'name' ? 'در حال ذخیره…' : 'ذخیره‌ی نام'} onPress={saveName} disabled={!!busy || name.trim() === (user?.name ?? '')} icon="check" />
           </Card>
 
           <Card style={{ gap: 10 }}>
@@ -81,7 +81,7 @@ export default function Account() {
             <Field icon="lock" label="رمز عبور جدید" value={pw} onChange={v => { setPw(v); setPwMsg(null); }} secure ltr />
             <Field icon="lock" label="تکرار رمز عبور جدید" value={pw2} onChange={v => { setPw2(v); setPwMsg(null); }} secure ltr onSubmit={savePw} />
             <Note msg={pwMsg} />
-            <Button label={busy === 'pw' ? 'در حال ذخیره…' : 'تغییر رمز عبور'} onPress={savePw} disabled={!!busy} />
+            <Button label={busy === 'pw' ? 'در حال ذخیره…' : 'تغییر رمز عبور'} onPress={savePw} disabled={!!busy} icon="lock" />
           </Card>
         </ScrollView>
       </KeyboardAvoidingView>

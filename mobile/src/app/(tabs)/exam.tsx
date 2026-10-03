@@ -82,7 +82,7 @@ export default function Exam() {
         <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
         <T style={{ color: c.muted, fontSize: 13.5 }}>{settings.timer ? `برای هر سؤال ${faNum(1)} دقیقه زمان دارید.` : 'بدون زمان‌سنج.'}</T>
         <SizeSlider value={size} values={SIZES} onChange={setSize} />
-        <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} />
+        <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" />
       </Card>
       <MistakesCard />
       <ActivityList attempts={attempts} limit={3} />

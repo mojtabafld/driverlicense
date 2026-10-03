@@ -136,7 +136,7 @@ export default function Run() {
         middle={<BarCount n={i + 1} of={qs.length} />}
         end={last ? <FootBtn label={ui.handin} icon="check" submit round onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
-        cancel="ادامه‌ی آزمون" ok="خروج" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); router.back(); }} />
+        cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); router.back(); }} />
       <Modal visible={dialog === 'handin'} transparent animationType="fade" onRequestClose={() => setDialog(null)}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(20,40,40,0.35)' }}>
           <View style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
@@ -178,12 +178,14 @@ export default function Run() {
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <Pressable onPress={() => { tap(); setDialog(null); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-                <View style={{ height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+                  <Icon name="arrowRight" size={17} color={c.link} weight="semibold" />
                   <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>بازگشت به آزمون</T>
                 </View>
               </Pressable>
               <Pressable onPress={() => { tap(); setDialog(null); finish(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}>
-                <View style={{ height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
+                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
+                  <Icon name="check" size={18} color="#fff" weight="bold" />
                   <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>تحویل و پایان</T>
                 </View>
               </Pressable>

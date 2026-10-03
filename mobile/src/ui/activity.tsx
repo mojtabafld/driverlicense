@@ -70,7 +70,7 @@ export function ActivityList({ attempts, limit = 10 }: { attempts: Attempt[]; li
         </Pressable>
       </View>
       <Confirm open={ask} title="حذف تاریخچه؟" text={`همه‌ی ${faNum(rows.length)} آزمون و درس انجام‌شده و نتیجه‌هایشان پاک می‌شوند. این کار برگشت‌پذیر نیست.`}
-        cancel="انصراف" ok={busy ? 'در حال حذف…' : 'حذف همه'} danger onCancel={() => setAsk(false)}
+        cancel="انصراف" ok={busy ? 'در حال حذف…' : 'حذف همه'} okIcon="trash" danger onCancel={() => setAsk(false)}
         onOk={() => { if (busy) return; setBusy(true); clearAttempts().then(() => setAsk(false)).catch(() => {}).finally(() => setBusy(false)); }} />
       {shown.map((a, i) => <ActivityRow key={a.at} a={a} bank={bank} c={c} last={i === shown.length - 1} />)}
       {rows.length > limit ? (

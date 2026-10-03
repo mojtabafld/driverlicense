@@ -3,7 +3,8 @@ import type { SymbolWeight } from 'expo-symbols';
 
 export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles' | 'clipboard' | 'warning'
   | 'arrowRight' | 'arrowLeft' | 'bookmark' | 'chevronDown' | 'chart' | 'translate'
-  | 'person' | 'lock' | 'eye' | 'eyeSlash' | 'clock' | 'exit' | 'trash' | 'refresh' | 'filter';
+  | 'person' | 'lock' | 'eye' | 'eyeSlash' | 'clock' | 'exit' | 'trash' | 'refresh' | 'filter'
+  | 'play' | 'personAdd' | 'chevronUp' | 'xmark';
 
 export type IconProps = { name: IconName; size?: number; color: string; filled?: boolean; weight?: SymbolWeight; contrast?: string };
 
@@ -11,6 +12,10 @@ export type IconProps = { name: IconName; size?: number; color: string; filled?:
 export const SF: Record<IconName, [string, string]> = {
   house: ['house', 'house.fill'],
   trash: ['trash', 'trash.fill'],
+  play: ['play.fill', 'play.fill'],
+  personAdd: ['person.badge.plus', 'person.badge.plus.fill'],
+  chevronUp: ['chevron.up', 'chevron.up'],
+  xmark: ['xmark', 'xmark'],
   filter: ['line.3.horizontal.decrease.circle', 'line.3.horizontal.decrease.circle.fill'],
   refresh: ['arrow.clockwise', 'arrow.clockwise'],
   exam: ['checkmark.circle', 'checkmark.circle.fill'],
