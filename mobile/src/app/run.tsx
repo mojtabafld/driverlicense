@@ -103,14 +103,18 @@ export default function Run() {
             <Icon name="bookmark" size={18} filled={flagged} color={flagged ? '#fff' : dark ? '#fff' : c.accent} />
           </Pressable>
         </Enter>
+        {/* Translation on / off: an icon under the picture, on its right (filled while the translation shows). */}
+        <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-end', marginTop: -4, marginBottom: -4 } as any}>
+          <Pressable onPress={() => { tap(); setShowFa(!showFa); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: showFa }}
+            accessibilityLabel={showFa ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}
+            style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
+              backgroundColor: showFa ? c.accent : c.accentSoft })}>
+            <Icon name="translate" size={19} color={showFa ? '#fff' : c.link} />
+          </Pressable>
+        </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
-          <Pressable onPress={() => { tap(); setShowFa(!showFa); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: showFa }}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: c.accentSoft }}>
-            <Icon name="translate" size={15} color={c.link} />
-            <T style={{ color: c.link, fontWeight: '600', fontSize: 13 }}>{showFa ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}</T>
-          </Pressable>
         </View>
         {q.st.map((s, k) => {
           const on = ticks[i][k];
