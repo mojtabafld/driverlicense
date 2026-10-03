@@ -225,7 +225,7 @@ async function draft(qid) {
 
 // ---------- pictures for the app's intro (four slides) ----------
 // Made once by the same image model when the server starts with KIE_API_KEY set: a detailed 3D isometric scene per
-// slide on a plain teal background, so the app can lay it on its teal intro. Kept in store.meta.intro and served at
+// slide (and one for the app's «no internet» page) on a plain teal background, so the app can lay it on its teal intro. Kept in store.meta.intro and served at
 // /intro/<n>.png; the app falls back to its own drawings until a picture is there. Changing INTRO_SET makes new ones.
 const INTRO_SET = 'v3';
 const INTRO_STYLE = 'Style: a modern, minimal 3D isometric illustration like the onboarding art of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft ambient light, subtle soft shadows, no clutter, no fine texture; people are small, stylised and faceless. Palette: white, light teal (#9fd3d4), warm coral (#e8957a) and periwinkle blue (#5b74c4), with one or two small accents of green, red or warm yellow. The background is ONE plain, flat, solid muted teal (#3f8c8f) with no gradient, no floor, no horizon and no frame. The group of objects is compact, centred and fills about three quarters of the image. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
@@ -234,6 +234,8 @@ const INTRO_PROMPTS = [
   'A giant closed periwinkle-blue theory book lying flat at an isometric angle, with a winding grey road with white dashes printed across its cover. Two small faceless people sit on the book: one studies on a tablet, the other holds a small clipboard with ticked boxes; a third stands beside the book looking at a phone. A small green round badge with a white check mark rests on the corner of the book.',
   'A large smartphone lying flat at an isometric angle, used as a stage. On its screen stands a small, friendly, rounded white robot with a softly glowing light-teal face, next to a big coral speech bubble with three white placeholder lines, and a small white card showing a red-and-white triangular warning road sign; two four-pointed sparkles float above.',
   'A winding road with white dashes climbs from the lower left to the upper right like a rising path; a small rounded coral car drives up it. At the top of the road stands a small podium with a yellow trophy and a green flag; beside the road floats a simple white card with three rising periwinkle-blue bars.',
+  // 5: the app's «no internet» page (bundled into the app, since it shows when the server cannot be reached).
+  'No internet connection: a large rounded white Wi-Fi symbol with a small coral circle and a white diagonal slash over it, floating above a small smartphone lying at an isometric angle whose screen shows a soft grey cloud with a little white x; a thin cable with an unplugged plug lies loose beside the phone.',
 ];
 // A new picture at half size (2048 → 1024 px, about a quarter of the bytes) and its background colour, which the app
 // paints behind it so the picture's edge does not show. A file it cannot read is kept as it is.
