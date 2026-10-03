@@ -128,7 +128,7 @@ export default function Result() {
     );
     return (
       <Backdrop>
-        <ScrollView ref={scroll} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+        <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .rev-top: back button, tabs, «جزئیات آزمون» */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
             <Pressable onPress={() => { tap(); router.back(); }} accessibilityLabel="بازگشت" hitSlop={6}
@@ -185,7 +185,7 @@ export default function Result() {
   };
   return (
     <Backdrop>
-      <ScrollView ref={scroll} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* .result-hero */}
         <Card style={{ alignItems: 'center', gap: 14, padding: 22 }}>
           <View style={{ width: 170, height: 170, alignItems: 'center', justifyContent: 'center' }}>

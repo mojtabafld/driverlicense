@@ -16,13 +16,13 @@ import { ThemeModeProvider } from '@/ui/theme-mode';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// The web version is a right-to-left Persian page. Vazirmatn comes with the app (src/ui/fonts.ts); IBM Plex Sans for
+// The web version is a right-to-left Persian page, with no visible scroll bars. Vazirmatn comes with the app (src/ui/fonts.ts); IBM Plex Sans for
 // Danish text is loaded like on the site.
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl'; document.documentElement.lang = 'fa';
   const l = document.createElement('link'); l.rel = 'stylesheet';
   l.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap'; document.head.appendChild(l);
-  const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%}body,div,span,input,textarea{font-family:Vazirmatn-400,system-ui,sans-serif}'; document.head.appendChild(s);
+  const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%}body,div,span,input,textarea{font-family:Vazirmatn-400,system-ui,sans-serif}*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0}'; document.head.appendChild(s);
 }
 
 function Root() {
@@ -58,6 +58,7 @@ function Root() {
           <Stack.Screen name="run" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="result" options={{ presentation: 'modal' }} />
           <Stack.Screen name="mistakes" />
+          <Stack.Screen name="account" />
         </Stack.Protected>
         <Stack.Protected guard={!user}>
           <Stack.Screen name="login" />
