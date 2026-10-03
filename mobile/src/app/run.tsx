@@ -185,7 +185,7 @@ export default function Run() {
                 </View>
               </Pressable>
               <Pressable onPress={() => { tap(); setDialog(null); finish(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}>
-                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
+                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.submit }}>
                   <Icon name="check" size={18} color="#fff" weight="bold" />
                   <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>تحویل و پایان</T>
                 </View>

@@ -107,7 +107,7 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
           {/* The logo first in the page's reading order: at the outer (right) edge, the name inside it. */}
-          {/* uber: «Teori» in the text colour and «Prøve» in green, like «Uber Eats» */}
+          {/* uber: «Teori» in the text colour and «Prøve» in the accent, like «Uber Eats» */}
           <Text style={{ fontFamily: DA_FONT, fontSize: 18, color: c.link }}>
             <Text style={{ fontWeight: '700', color: UBER ? c.text : c.link }}>Teori</Text>Prøve
           </Text>
