@@ -28,8 +28,8 @@ export function BarCount({ n, of }: { n: number; of: number }) {
 }
 
 // Buttons of the bar. Previous / next are round teal buttons with an arrow (`round`; the label is for screen
-// readers), pale when they cannot be used; hand in, the summary and «from the start» are labelled capsules, hand in
-// in green. `lead`: icon before the label.
+// readers), pale when they cannot be used; hand in is a round green check (`submit`). Without `round`, a labelled
+// capsule, in green with `submit`. `lead`: icon before the label.
 export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean; round?: boolean }) {
   const ios = useIOSBar(), c = useColors();
   const fg = '#fff';
@@ -37,8 +37,8 @@ export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }:
     return (
       <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
         style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: disabled ? c.accentSoft : c.accent, opacity: pressed ? 0.8 : 1 })}>
-        <Icon name={icon} size={20} color={disabled ? c.faint : fg} weight="semibold" />
+          backgroundColor: disabled ? c.accentSoft : submit ? ios.green : c.accent, opacity: pressed ? 0.8 : 1 })}>
+        <Icon name={icon} size={icon === 'check' ? 22 : 20} color={disabled ? c.faint : fg} weight={icon === 'check' ? 'bold' : 'semibold'} />
       </Pressable>
     );
   }
