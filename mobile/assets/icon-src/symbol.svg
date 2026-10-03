@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- TeoriPrøve: a speedometer whose needle points up to «pass», with a check in its hub. White on any background;
+       the needle in the app's coral. -->
+  <g transform="translate(0 34)">
+  <path d="M232 676 A300 300 0 1 1 792 676" fill="none" stroke="#ffffff" stroke-width="84" stroke-linecap="round"/>
+  <g stroke="#ffffff" stroke-width="30" stroke-linecap="round" opacity="0.9">
+    <path d="M512 296 V350"/>
+    <path d="M300 384 L338 422"/>
+  </g>
+  <path d="M512 600 L690 400" stroke="#ff9d7e" stroke-width="56" stroke-linecap="round"/>
+  <circle cx="512" cy="600" r="92" fill="#ffffff"/>
+  <path d="M470 600 L500 630 L556 572" fill="none" stroke="#2e8285" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

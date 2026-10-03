@@ -37,7 +37,8 @@ export default function Run() {
 
   const finish = async () => {
     if (done.current || !plan) return; done.current = true;
-    const items = qs.map((q, k) => { const g = grade(q, ticks[k]); return { id: g.id, ok: g.ok, w: g.w, a: g.a }; });
+    // Marked questions are saved as such (m), so the result shows them.
+    const items = qs.map((q, k) => { const g = grade(q, ticks[k]); return { id: g.id, ok: g.ok, w: g.w, a: g.a, ...(flags.includes(k) ? { m: 1 as const } : {}) }; });
     const secs = Math.round((Date.now() - started) / 1000);
     const attempt = { secs, mode: plan.mode, ...(plan.lesson ? { lesson: plan.lesson } : {}), items };
     session.result = { at: Date.now(), ...attempt }; session.fresh = true;
@@ -62,19 +63,6 @@ export default function Run() {
   const flagged = flags.includes(i);
   const flag = () => { tap(); setFlags(f => (f.includes(i) ? f.filter(x => x !== i) : [...f, i].sort((a, b) => a - b))); };
   const goTo = (k: number) => { tap(); setDialog(null); setI(k); };
-  // The marked questions as small numbered buttons that open them.
-  const flagChips = (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', direction: 'ltr' } as any}>
-      {flags.map(k => (
-        <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
-          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99,
-            backgroundColor: c.accentSoft, opacity: pressed ? 0.75 : 1 })}>
-          <Icon name="bookmark" size={14} filled color={dark ? c.link : c.accent} />
-          <L style={{ fontSize: 15, lineHeight: 20, fontWeight: '600', color: dark ? c.link : c.accent, fontFamily: NUM_FONT }}>{k + 1}</L>
-        </Pressable>
-      ))}
-    </View>
-  );
   const ui = uiText(lang === 'en' ? 'en' : 'da');
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
 
@@ -141,13 +129,6 @@ export default function Run() {
             </Pressable>
           );
         })}
-        {/* On the last question: the marked ones, to look at again before handing in. */}
-        {last && flags.length ? (
-          <View style={{ gap: 10, marginTop: 6, padding: 14, borderRadius: 16, backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
-            <T style={{ fontSize: 14, fontWeight: '700', textAlign: 'center' }}>سؤال‌های علامت‌خورده برای بازبینی</T>
-            {flagChips}
-          </View>
-        ) : null}
       </ScrollView>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar
