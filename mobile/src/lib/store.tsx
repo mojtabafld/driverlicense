@@ -19,6 +19,8 @@ type Ctx = {
   login: (username: string, password: string) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  // Change the shown name and / or the password (with the current one); the username stays.
+  updateAccount: (b: { name?: string; current?: string; password?: string }) => Promise<void>;
   refresh: () => Promise<void>;
   saveAttempt: (a: Omit<Attempt, 'at'>) => Promise<void>;
   setSettings: (s: Partial<Settings>) => Promise<void>;
@@ -73,6 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
     register: async (name, username, password) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password }); await signedIn(d.token); },
     logout: async () => { try { await api('POST', 'logout'); } catch {} setApiToken(null); setToken(null); await saveToken(null); setMe(null); },
+    updateAccount: async b => { const d = await api<{ user: User }>('PUT', 'account', b); setMe(m => (m ? { ...m, user: d.user } : m)); },
     refresh: load,
     saveAttempt: async a => { const d = await api<{ attempt: Attempt }>('POST', 'attempts', a); setMe(m => (m ? { ...m, attempts: [...m.attempts, d.attempt] } : m)); },
     setSettings: async s => {

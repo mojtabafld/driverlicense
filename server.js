@@ -347,6 +347,26 @@ async function api(req, res, route) {
     res.setHeader('Set-Cookie', cookie(req, '', 0));
     return send(res, 200, { ok: true });
   }
+  // The account: { name } changes the shown name; { current, password } the password, only with the current one
+  // (failed tries count like failed sign-ins); the username never changes. A new password signs out the user's
+  // other sessions.
+  if (req.method === 'PUT' && route === 'account') {
+    const b = await readBody(req);
+    if (b.name !== undefined) {
+      const name = String(b.name || '').trim().slice(0, 40);
+      if (!name) return send(res, 400, { error: 'نام را وارد کنید.' });
+      user.name = name;
+    }
+    if (b.password !== undefined) {
+      if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+      if (typeof b.current !== 'string' || !checkPw(b.current, user)) { addFail(ip); return send(res, 403, { error: 'رمز عبور فعلی درست نیست.' }); }
+      if (typeof b.password !== 'string' || !b.password.length) return send(res, 400, { error: 'رمز عبور جدید را وارد کنید.' });
+      user.salt = crypto.randomBytes(16).toString('hex'); user.hash = hashPw(b.password, user.salt);
+      for (const [t, x] of Object.entries(store.sessions)) if (x.username === user.username && t !== s.token) { delete store.sessions[t]; await store.deleteSession(t); }
+    }
+    await store.saveUser(user);
+    return send(res, 200, { user: publicUser(user) });
+  }
   // AI lesson for one reviewed question: { qid, a: ticks per statement (optional), lang }.
   // AI lessons and summaries made while reviewing a past exam (`at`) are also linked to that exam
   // (attempt.ai: cache keys, not the texts), so reviewing it again shows them without a new AI call,

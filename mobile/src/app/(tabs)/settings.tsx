@@ -1,5 +1,6 @@
 // Settings and account.
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { Alert, Platform, Pressable, Switch, View } from 'react-native';
 
 import { faNum } from '@/lib/logic';
@@ -29,18 +30,23 @@ export default function Settings() {
     if (Platform.OS === 'web') { if (window.confirm('از حساب کاربری خارج می‌شوید؟')) logout(); return; }
     Alert.alert('خروج از حساب', 'از حساب کاربری خارج می‌شوید؟', [{ text: 'انصراف', style: 'cancel' }, { text: 'خروج', style: 'destructive', onPress: logout }]);
   };
-  // Switches in the site's navy.
+  // Switches in the app's teal.
   const sw = { trackColor: { false: c.line, true: c.accent }, thumbColor: '#fff', activeThumbColor: '#fff' } as const;
   return (
     <Screen title="تنظیمات">
       <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-        <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
-          <T style={{ color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center' }}>{(user?.name || '?').slice(0, 1).toUpperCase()}</T>
-        </View>
-        <View style={{ flex: 1 }}>
-          <T style={{ fontWeight: '700', fontSize: 17 }}>{user?.name}</T>
-          <T style={{ color: c.muted, fontSize: 13, writingDirection: 'ltr', textAlign: 'right' }}>@{user?.username} · {faNum(attempts.length)} آزمون</T>
-        </View>
+        {/* The name opens the account page (name and password); sign-out stays at the end. */}
+        <Pressable onPress={() => { tap(); router.push('/account'); }} accessibilityRole="button" accessibilityLabel="حساب کاربری"
+          style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? 0.7 : 1 })}>
+          <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
+            <T style={{ color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center' }}>{(user?.name || '?').slice(0, 1).toUpperCase()}</T>
+          </View>
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '700', fontSize: 17 }}>{user?.name}</T>
+            <T style={{ color: c.muted, fontSize: 13, writingDirection: 'ltr', textAlign: 'right' }}>@{user?.username} · {faNum(attempts.length)} آزمون</T>
+          </View>
+          <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
+        </Pressable>
         <Pressable onPress={() => { tap(); confirmLogout(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از حساب"
           style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
           <Icon name="exit" size={20} color={c.bad} weight="semibold" />

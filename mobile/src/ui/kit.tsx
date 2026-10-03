@@ -95,7 +95,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { t
       <TopBar />
       {fill
         ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
-        : <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={[box, { paddingBottom: ins.bottom + 100 }]}>{head}{children}</ScrollView>}
+        : <ScrollView contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: ins.bottom + 100 }]}>{head}{children}</ScrollView>}
     </Backdrop>
   );
 }
