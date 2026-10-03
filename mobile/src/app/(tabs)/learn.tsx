@@ -2,7 +2,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Switch, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { imgSource } from '@/lib/img-source';
 import { FULL, SIZES, faNum, isPass, lessonNumber, shuffle } from '@/lib/logic';
@@ -12,6 +12,7 @@ import { Glass } from '@/ui/glass';
 import { Button, Card, Screen, Segmented, T, tap } from '@/ui/kit';
 import { SizeSlider } from '@/ui/size-slider';
 import { radius, useColors } from '@/ui/theme';
+import { Toggle } from '@/ui/toggle';
 
 export default function Learn() {
   const c = useColors();
@@ -85,7 +86,7 @@ export default function Learn() {
                   <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
                   <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{`${faNum(unseen.length)} سؤال غیرتکراری از ${faNum(pool.length)} سؤال دسته‌های انتخاب‌شده`}</T>
                 </View>
-                <Switch value={fresh} onValueChange={v => { tap(); setFresh(v); }} trackColor={{ false: c.line, true: c.accent }} thumbColor="#fff" {...{ activeThumbColor: '#fff' }} />
+                <Toggle label="بدون سؤال تکراری" value={fresh} onChange={setFresh} />
               </View>
               <Button label={count ? `شروع آموزش (${faNum(count)} سؤال)` : 'سؤالی برای آموزش نیست'} disabled={!count}
                 onPress={() => { session.plan = { mode: 'sections', ids: shuffle(usable).slice(0, count), title: 'آموزش بر اساس دسته‌بندی' }; router.push('/run'); }} />
