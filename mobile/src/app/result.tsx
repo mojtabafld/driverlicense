@@ -4,7 +4,7 @@
 // One just handed in: the site's result card (ring, verdict, numbers, next steps) and the list of review cards.
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
+import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -29,21 +29,25 @@ const goTo = (path: '/' | '/exam' | '/learn') => {
 };
 
 // The site's .tabs: wrong / saved (only when some were bookmarked during the exam) / all.
+// The review's tabs, sized to the screen so they stay on one row with the back and details buttons: smaller text and
+// padding on narrow phones, and a shorter «ذخیره» there.
 function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: (f: Filter) => void; n: number; wrong: number; savedN: number }) {
   const c = useColors();
+  const w = useWindowDimensions().width;
+  const fs = w < 360 ? 12 : w < 410 ? 13 : 14, px = w < 360 ? 7 : w < 410 ? 10 : 14;
   const opts: { v: Filter; label: string }[] = [
     { v: 'wrong', label: `اشتباهات (${faNum(wrong)})` },
-    ...(savedN ? [{ v: 'saved' as Filter, label: `ذخیره‌شده‌ها (${faNum(savedN)})` }] : []),
+    ...(savedN ? [{ v: 'saved' as Filter, label: `${w < 430 ? 'ذخیره' : 'ذخیره‌شده‌ها'} (${faNum(savedN)})` }] : []),
     { v: 'all', label: `همه (${faNum(n)})` },
   ];
   return (
-    <View style={{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: 8, backgroundColor: c.surface2, alignSelf: 'flex-start' }}>
+    <View style={{ flexDirection: 'row', flexShrink: 1, padding: 3, gap: 3, borderRadius: 8, backgroundColor: c.surface2 }}>
       {opts.map(o => {
         const on = o.v === value;
         return (
-          <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-            <View style={{ paddingVertical: 7, paddingHorizontal: 14, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }}>
-              <T style={{ fontSize: 14, fontWeight: '600', color: on ? c.link : c.muted, textAlign: 'center' }}>{o.label}</T>
+          <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flexShrink: 1 }}>
+            <View style={{ paddingVertical: 7, paddingHorizontal: px, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }}>
+              <T numberOfLines={1} style={{ fontSize: fs, fontWeight: '600', color: on ? c.link : c.muted, textAlign: 'center' }}>{o.label}</T>
             </View>
           </Pressable>
         );
@@ -80,6 +84,7 @@ export default function Result() {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
   const { Q, settings, bank, aiLessons } = useApp();
   const motion = usePageMotion('push');
+  const wide = useWindowDimensions().width >= 480; // «جزئیات آزمون» with its label; an icon on phones
   const [a] = useState<Attempt | null>(() => session.result);
   const [fresh, setFresh] = useState(() => session.fresh);
   const n = a?.items.length ?? 0, right = a ? scoreOf(a) : 0, wrongN = n - right;
@@ -156,20 +161,23 @@ export default function Result() {
     return (
       <Backdrop anim={motion.style}>
         <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-          {/* .rev-top: back button, tabs, «جزئیات آزمون» */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+          {/* .rev-top: back button, tabs, «جزئیات آزمون», always on one row (the details button is an icon on phones) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
               style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1.5, borderColor: c.line })}>
               <Icon name="arrowRight" size={20} color={c.link} />
             </Pressable>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', flexShrink: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
               <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
               {faded ? (
                 <Animated.View ref={btnRef} style={{ opacity: btnIn, transform: [{ scale: btnIn.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }] }}>
                   <Pressable onPress={() => { tap(); fade.setValue(1); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.accentSoft }}>
-                    <Icon name="chart" size={16} color={c.link} />
-                    <T style={{ fontSize: 13.5, fontWeight: '700', color: c.link }}>{line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T>
+                    accessibilityRole="button" accessibilityLabel={line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}
+                    style={wide
+                      ? { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.accentSoft }
+                      : { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: line === 'shown' && !flying ? c.accent : c.accentSoft }}>
+                    <Icon name="chart" size={wide ? 16 : 18} color={!wide && line === 'shown' && !flying ? '#fff' : c.link} />
+                    {wide ? <T style={{ fontSize: 13.5, fontWeight: '700', color: c.link }}>{line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T> : null}
                   </Pressable>
                 </Animated.View>
               ) : null}
