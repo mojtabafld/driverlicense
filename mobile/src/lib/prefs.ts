@@ -14,8 +14,10 @@ export const saveMode = (m: ThemeMode) => SecureStore.setItemAsync(KEY, m).catch
 // Whether the intro (src/ui/onboarding.tsx) was seen on this device; missing on first launch and on devices that
 // ran a version without it, so both get it once.
 const ONBOARDED = 'tp_onboarded';
+// The value marking the intro as seen; a new value shows the intro to everyone once more (2: after the teal redesign).
+const SEEN = '2';
 export const initialOnboarded = (): boolean | null => null;
 export const loadOnboarded = async (): Promise<boolean> => {
-  try { return (await SecureStore.getItemAsync(ONBOARDED)) === '1'; } catch { return false; }
+  try { return (await SecureStore.getItemAsync(ONBOARDED)) === SEEN; } catch { return false; }
 };
-export const saveOnboarded = () => SecureStore.setItemAsync(ONBOARDED, '1').catch(() => {});
+export const saveOnboarded = () => SecureStore.setItemAsync(ONBOARDED, SEEN).catch(() => {});
