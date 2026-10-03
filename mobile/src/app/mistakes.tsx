@@ -120,7 +120,7 @@ export default function Mistakes() {
                         <View style={{ gap: 6, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }} numberOfLines={1}>{topicFa(bank, g.c)}</T>
-                            <T style={{ fontSize: 12.5, fontWeight: '700', color: tone(p) }}>{faNum(Math.round(p * 100))}٪ دقت</T>
+                            <T style={{ fontSize: 12.5, fontWeight: '700', color: tone(p) }}>{faNum(Math.round(p * 100))}٪ پاسخ درست</T>
                             <Icon name="chevronLeft" size={14} color={c.faint} />
                           </View>
                           <View style={{ height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
@@ -145,7 +145,7 @@ export default function Mistakes() {
                 <View style={{ gap: 10 }}>
                   <View style={{ gap: 6, marginTop: 10, marginHorizontal: 2 }}>
                     <T style={{ fontSize: 16, fontWeight: '700' }}>{topicFa(bank, g.c)}</T>
-                    <T style={{ fontSize: 12.5, color: c.muted }}>دقت {faNum(Math.round(accOf(g.c) * 100))}٪، {faNum(g.open)} مورد، {faNum(g.fixed)} اصلاح‌شده</T>
+                    <T style={{ fontSize: 12.5, color: c.muted }}>{faNum(Math.round(accOf(g.c) * 100))}٪ پاسخ درست، {faNum(g.open)} مورد، {faNum(g.fixed)} اصلاح‌شده</T>
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       {t?.lesson ? (
                         <Pressable onPress={() => { tap(); setLessonOpen({ ...lessonOpen, [g.c]: !lessonOpen[g.c] }); }}

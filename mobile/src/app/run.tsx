@@ -7,7 +7,7 @@ import { Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
-import { SECONDS_PER_Q, grade } from '@/lib/logic';
+import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
@@ -15,7 +15,7 @@ import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { Backdrop, L, T, ThemeButton, physical, tap } from '@/ui/kit';
 import { uiText } from '@/ui/review';
-import { NUM_FONT, radius, useColors, useIsDark } from '@/ui/theme';
+import { radius, useColors, useIsDark } from '@/ui/theme';
 
 export default function Run() {
   const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
@@ -68,7 +68,7 @@ export default function Run() {
 
   return (
     <Backdrop>
-      {/* Top: exit (icon) with the exam's name beside it, the timer (Latin digits) in the middle of the screen, and
+      {/* Top: exit (icon) with the exam's name beside it, the timer (Persian digits) in the middle of the screen, and
           the theme switch. SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
           stale), and the web gets extra room at the top. */}
       <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: c.line }}>
@@ -77,7 +77,7 @@ export default function Run() {
             {settings.timer ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, direction: 'ltr' } as any}>
                 <Icon name="clock" size={17} color={left < 60 ? c.bad : dark ? c.link : c.accent} weight="semibold" />
-                <L style={{ fontSize: 20, lineHeight: 27, fontWeight: '500', color: left < 60 ? c.bad : dark ? c.link : c.accent, fontVariant: ['tabular-nums'], fontFamily: NUM_FONT }}>{mm}</L>
+                <T style={{ fontSize: 20, lineHeight: 28, fontWeight: '500', color: left < 60 ? c.bad : dark ? c.link : c.accent, writingDirection: 'ltr' }}>{faNum(mm)}</T>
               </View>
             ) : null}
           </View>
@@ -145,7 +145,7 @@ export default function Run() {
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {([[answered, 'پاسخ داده‌شده', dark ? c.link : c.accent], [empty, 'بی‌پاسخ', empty ? c.bad : c.muted], [flags.length, 'علامت‌خورده', c.warn]] as const).map(([n, l, col]) => (
                 <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: c.surface2 }}>
-                  <L style={{ fontSize: 22, lineHeight: 28, fontWeight: '600', color: col, fontFamily: NUM_FONT }}>{n}</L>
+                  <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '600', color: col, textAlign: 'center' }}>{faNum(n)}</T>
                   <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{l}</T>
                 </View>
               ))}
@@ -158,7 +158,7 @@ export default function Run() {
                   <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
                     style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
                       backgroundColor: ans ? c.accent : c.surface, borderWidth: 1.5, borderColor: ans ? c.accent : marked ? c.warn : c.line })}>
-                    <L style={{ fontSize: 16, lineHeight: 22, fontWeight: '600', color: ans ? '#fff' : c.text, fontFamily: NUM_FONT }}>{k + 1}</L>
+                    <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? '#fff' : c.text, textAlign: 'center' }}>{faNum(k + 1)}</T>
                     {marked ? (
                       <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
                         <Icon name="bookmark" size={11} filled color="#fff" />

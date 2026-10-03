@@ -4,9 +4,10 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from './icon';
-import { L, tap } from './kit';
+import { faNum } from '@/lib/logic';
+import { L, T, tap } from './kit';
 import { LiquidGlass, useIOSBar } from './liquid';
-import { NUM_FONT, useColors, useIsDark } from './theme';
+import { useColors, useIsDark } from './theme';
 
 export function GlassBar({ start, middle, end }: { start: React.ReactNode; middle: React.ReactNode; end: React.ReactNode }) {
   const ins = useSafeAreaInsets();
@@ -21,10 +22,10 @@ export function GlassBar({ start, middle, end }: { start: React.ReactNode; middl
   );
 }
 
-// The position in the middle of the bar (Latin digits), in the app's teal.
+// The position in the middle of the bar (Persian digits), in the app's teal.
 export function BarCount({ n, of }: { n: number; of: number }) {
   const c = useColors(), dark = useIsDark();
-  return <L style={{ fontSize: 21, lineHeight: 28, color: dark ? c.link : c.accent, fontWeight: '500', textAlign: 'center', fontVariant: ['tabular-nums'], fontFamily: NUM_FONT }}>{n} / {of}</L>;
+  return <T style={{ fontSize: 21, lineHeight: 30, color: dark ? c.link : c.accent, fontWeight: '500', textAlign: 'center', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>;
 }
 
 // Buttons of the bar. Previous / next are round teal buttons with an arrow (`round`; the label is for screen
