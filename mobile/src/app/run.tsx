@@ -14,7 +14,7 @@ import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { Backdrop, L, T, ThemeButton, tap } from '@/ui/kit';
 import { uiText } from '@/ui/review';
-import { radius, useColors } from '@/ui/theme';
+import { NUM_FONT, radius, useColors, useIsDark } from '@/ui/theme';
 
 const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
   if (Platform.OS === 'web') { if (window.confirm(`${title}\n${msg}`)) onOk(); return; }
@@ -22,7 +22,7 @@ const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
 };
 
 export default function Run() {
-  const c = useColors(), ins = useSafeAreaInsets();
+  const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
   const { Q, settings, saveAttempt } = useApp();
   const pic = useQuestionImage();
   const [plan] = useState(() => session.plan);
@@ -73,8 +73,8 @@ export default function Run() {
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
             {settings.timer ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, direction: 'ltr' } as any}>
-                <Icon name="clock" size={16} color={left < 60 ? c.bad : c.muted} />
-                <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: left < 60 ? c.bad : c.text, fontVariant: ['tabular-nums'] }}>{mm}</L>
+                <Icon name="clock" size={17} color={left < 60 ? c.bad : dark ? c.link : c.accent} weight="semibold" />
+                <L style={{ fontSize: 20, lineHeight: 27, fontWeight: '800', color: left < 60 ? c.bad : dark ? c.link : c.accent, fontVariant: ['tabular-nums'], fontFamily: NUM_FONT }}>{mm}</L>
               </View>
             ) : null}
           </View>
@@ -104,9 +104,9 @@ export default function Run() {
           return (
             <Pressable key={k} onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               {/* The statements are Danish / English, so the row runs left to right: the check box on the left. */}
-              {/* Flat white cards with a thin border; the chosen ones in the app's teal. */}
+              {/* Flat cards on the page's own background with a white border; the chosen ones in the app's teal. */}
               <View style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: 16,
-                borderWidth: 1.5, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : c.surface } as any}>
+                borderWidth: 1.5, borderColor: on ? c.accent : dark ? 'rgba(255,255,255,0.16)' : '#ffffff', backgroundColor: on ? c.accentSoft : 'transparent' } as any}>
                 <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {on ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
                 </View>

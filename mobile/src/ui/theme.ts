@@ -38,3 +38,5 @@ export const radius = { btn: 4, sm: 8, md: 10, lg: 10, field: 12, xl: 20, pill: 
 export const space = (n: number) => n * 4;
 // Danish text uses IBM Plex Sans on the web, like the site.
 export const DA_FONT = Platform.OS === 'web' ? "'IBM Plex Sans', Vazirmatn-400, Verdana, Helvetica, sans-serif" : undefined;
+// Numbers that stand out (the exam's timer and position): Poppins on the web, the system's font on phones.
+export const NUM_FONT = Platform.OS === 'web' ? "Poppins, 'IBM Plex Sans', system-ui, sans-serif" : undefined;

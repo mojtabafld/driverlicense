@@ -169,9 +169,9 @@ export const hasSummary = (items: Item[], ai: boolean) => ai && items.some(it =>
 // One statement of a reviewed question: a flat card like the exam's in the flat layout, else the list's bordered box.
 // A wrong tick or a missing one is shown in red.
 function Statement({ flat, mark, children }: { flat: boolean; mark: boolean; children: React.ReactNode }) {
-  const c = useColors();
+  const c = useColors(), dark = useIsDark();
   if (flat) {
-    return <View style={{ paddingVertical: 15, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
+    return <View style={{ paddingVertical: 15, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1.5, borderColor: mark ? c.bad : dark ? 'rgba(255,255,255,0.16)' : '#ffffff', backgroundColor: mark ? c.badSoft : 'transparent' }}>{children}</View>;
   }
   return <View style={{ padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
 }
