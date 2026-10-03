@@ -9,7 +9,7 @@ import { FULL, SIZES, faNum, isPass, lessonNumber, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Glass } from '@/ui/glass';
-import { Button, Card, Screen, Segmented, T, tap } from '@/ui/kit';
+import { Button, Card, Enter, Screen, Segmented, T, tap } from '@/ui/kit';
 import { SizeSlider } from '@/ui/size-slider';
 import { radius, useColors } from '@/ui/theme';
 import { Toggle } from '@/ui/toggle';
@@ -43,7 +43,8 @@ export default function Learn() {
               const r = runs(t.id), q = Q.get(t.thumb ?? t.qs[0]);
               const state = r.some(isPass) ? c.ok : r.length ? c.bad : c.glassBorder;
               return (
-                <Pressable key={t.id} style={{ width: '47.5%' }} onPress={() => { tap(); session.plan = { mode: 'lesson', ids: t.qs.filter(id => Q.has(id)), lesson: t.id, title: `درس ${faNum(lessonNumber(t.title, i))}` }; router.push('/run'); }}>
+                <Enter key={t.id} style={{ width: '47.5%' }}>
+                <Pressable onPress={() => { tap(); session.plan = { mode: 'lesson', ids: t.qs.filter(id => Q.has(id)), lesson: t.id, title: `درس ${faNum(lessonNumber(t.title, i))}` }; router.push('/run'); }}>
                   <Glass r={radius.lg} style={{ padding: 8, gap: 6, borderColor: state, borderWidth: r.length ? 1.5 : undefined }}>
                     {q ? <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="cover" /> : null}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
@@ -54,6 +55,7 @@ export default function Learn() {
                     </View>
                   </Glass>
                 </Pressable>
+                </Enter>
               );
             })}
           </View>

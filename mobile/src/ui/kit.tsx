@@ -2,7 +2,7 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -55,6 +55,29 @@ export function usePageMotion(motion: Motion) {
     : { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) };
   const style = { flex: 1, opacity: motion === 'sheet' ? v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) : v, transform: [shift] };
   return { style, leave };
+}
+
+// Each part of a page coming in on its own: a fade and a 12px rise (320 ms). Parts that appear together come one after
+// another (55 ms apart, at most 8 steps), so a page builds up from the top, as in Uber Eats.
+let enterSeq = 0, enterReset: ReturnType<typeof setTimeout> | null = null;
+function nextEnterDelay() {
+  const d = Math.min(enterSeq, 8) * 55;
+  enterSeq++;
+  if (enterReset) clearTimeout(enterReset);
+  enterReset = setTimeout(() => { enterSeq = 0; }, 120);
+  return d;
+}
+export function useEnter() {
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    Animated.timing(v, { toValue: 1, duration: 320, delay: nextEnterDelay(), easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [v]);
+  return { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] };
+}
+// A part of a page that comes in with useEnter; `style` for its place in the layout (e.g. a width).
+export function Enter({ children, style }: { children?: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  const anim = useEnter();
+  return <Animated.View style={[style, anim] as any}>{children}</Animated.View>;
 }
 
 // A tab page's content coming in (see usePageMotion).
@@ -164,14 +187,20 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
 // The site's .card.
 // A tappable card hands its own size (flex, width, alignSelf) to the touch area around it and fills that, so cards
 // side by side in a row keep the sizes they ask for.
+// Cards come in with useEnter; their place in the layout (flex, width, margins) stays on the outer box.
 export function Card({ children, style, onPress }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void }) {
-  if (!onPress) return <Glass style={[{ padding: 16 }, style]}>{children}</Glass>;
-  const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, ...rest } = StyleSheet.flatten(style) ?? {};
-  const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf };
+  const anim = useEnter();
+  const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical, ...rest } = StyleSheet.flatten(style) ?? {};
+  const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical };
+  const fill = flex != null || flexGrow != null ? { flex: 1 } : null;
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [outer, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }]}>
-      <Glass style={[{ padding: 16 }, rest, flex != null || flexGrow != null ? { flex: 1 } : null]}>{children}</Glass>
-    </Pressable>
+    <Animated.View style={[outer, anim] as any}>
+      {onPress ? (
+        <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [fill, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }]}>
+          <Glass style={[{ padding: 16 }, rest, fill]}>{children}</Glass>
+        </Pressable>
+      ) : <Glass style={[{ padding: 16 }, rest, fill]}>{children}</Glass>}
+    </Animated.View>
   );
 }
 

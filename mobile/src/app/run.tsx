@@ -13,7 +13,7 @@ import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
-import { Backdrop, L, T, ThemeButton, physical, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Enter, L, T, ThemeButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
@@ -93,7 +93,8 @@ export default function Run() {
         </View>
       </SafeAreaView>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        <View>
+        {/* The picture comes in again with each question. */}
+        <Enter key={`pic-${i}`}>
           <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" transition={200} />
           {/* Mark the question to look at it again before handing in. */}
           <Pressable onPress={flag} hitSlop={6} accessibilityRole="button" accessibilityLabel="علامت برای بازبینی" accessibilityState={{ selected: flagged }}
@@ -101,7 +102,7 @@ export default function Run() {
               backgroundColor: flagged ? c.accent : dark ? 'rgba(20,30,30,0.6)' : 'rgba(255,255,255,0.85)' }}>
             <Icon name="bookmark" size={18} filled={flagged} color={flagged ? '#fff' : dark ? '#fff' : c.accent} />
           </Pressable>
-        </View>
+        </Enter>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
@@ -114,7 +115,9 @@ export default function Run() {
         {q.st.map((s, k) => {
           const on = ticks[i][k];
           return (
-            <Pressable key={k} onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
+            // Keyed by question too, so each new question's statements come in one after another.
+            <Enter key={`${i}-${k}`}>
+            <Pressable onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               {/* The statements are Danish / English, so the row runs left to right: the check box on the left. */}
               {/* Flat cards with a thin border; the chosen ones marked in `pick` (black / white in the Uber look). */}
               <View style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: 16,
@@ -128,6 +131,7 @@ export default function Run() {
                 </View>
               </View>
             </Pressable>
+            </Enter>
           );
         })}
       </ScrollView>

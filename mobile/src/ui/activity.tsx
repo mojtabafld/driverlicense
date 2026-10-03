@@ -11,7 +11,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Confirm } from './confirm';
 import { Icon } from './icon';
-import { Card, T, tap } from './kit';
+import { Card, Enter, T, tap } from './kit';
 import { useColors, type Colors } from './theme';
 
 export const openAttempt = (a: Attempt) => { session.result = a; session.fresh = false; router.push('/result'); };
@@ -72,7 +72,7 @@ export function ActivityList({ attempts, limit = 10 }: { attempts: Attempt[]; li
       <Confirm open={ask} icon="trash" title="حذف تاریخچه؟" text={`همه‌ی ${faNum(rows.length)} آزمون و درس انجام‌شده و نتیجه‌هایشان پاک می‌شوند. این کار برگشت‌پذیر نیست.`}
         cancel="انصراف" ok={busy ? 'در حال حذف…' : 'حذف همه'} okIcon="trash" danger onCancel={() => setAsk(false)}
         onOk={() => { if (busy) return; setBusy(true); clearAttempts().then(() => setAsk(false)).catch(() => {}).finally(() => setBusy(false)); }} />
-      {shown.map((a, i) => <ActivityRow key={a.at} a={a} bank={bank} c={c} last={i === shown.length - 1} />)}
+      {shown.map((a, i) => <Enter key={a.at}><ActivityRow a={a} bank={bank} c={c} last={i === shown.length - 1} /></Enter>)}
       {rows.length > limit ? (
         <Pressable onPress={() => { tap(); setAll(!all); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
           <T style={{ color: c.link, fontWeight: '700', fontSize: 13.5 }}>{all ? 'نمایش کمتر' : `نمایش همه (${faNum(rows.length)})`}</T>
