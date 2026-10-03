@@ -116,11 +116,11 @@ export default function Run() {
           return (
             <Pressable key={k} onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               {/* The statements are Danish / English, so the row runs left to right: the check box on the left. */}
-              {/* Flat white cards with a thin border; the chosen ones in the app's teal. */}
+              {/* Flat cards with a thin border; the chosen ones marked in `pick` (black / white in the Uber look). */}
               <View style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: 16,
-                borderWidth: 1.5, borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accentSoft : c.surface } as any}>
-                <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
-                  {on ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
+                borderWidth: 1.5, borderColor: on ? c.pick : c.line, backgroundColor: on ? c.pickSoft : c.surface } as any}>
+                <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.pick : c.muted, backgroundColor: on ? c.pick : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
+                  {on ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
                 </View>
                 <View style={{ flex: 1, gap: 4 }}>
                   <L style={{ fontSize: 15.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
