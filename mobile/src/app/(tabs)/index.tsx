@@ -12,9 +12,9 @@ import { ProgressChart } from '@/ui/progress-chart';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
 
-// A count card: the icon tile with the label beside it, then the number and one short line of detail; it opens
-// its own page (exams, lessons, mistakes).
-function Stat({ icon, label, value, extra, sub, tone, onPress, short }: { icon: IconName; label: string; value: string; extra?: string; sub: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean }) {
+// A count card: the icon tile with the label beside it, then the number and one short line of detail (or, with
+// `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes).
+function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number }) {
   const c = useColors();
   const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
@@ -32,7 +32,14 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short }: { icon: 
         </T>
         <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
       </View>
-      {short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
+      {progress != null ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 16 }}>
+          <View style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
+            <View style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`, borderRadius: 3, backgroundColor: c.link }} />
+          </View>
+          <T style={{ color: c.muted, fontSize: 10.5, lineHeight: 16, fontWeight: '600' }}>{pctText(progress)}</T>
+        </View>
+      ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
     </Card>
   );
 }
@@ -84,7 +91,7 @@ export default function Home() {
       </Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'آزمون نداده‌اید'} />
-        <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} sub={`${pctText(lessonsDone / lessonsAll)} انجام شده`} />
+        <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
         <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
       </View>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: compact ? 12 : 16 }}>
