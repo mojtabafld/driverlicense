@@ -283,7 +283,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                       {checked ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
                     </View>
                     <View style={{ flex: 1, gap: 4 }}>
-                      <L style={{ fontSize: 15.5, lineHeight: 23 }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>
+                      <L style={{ fontSize: 14.5, lineHeight: 22 }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>
                       {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{s.fa}</T> : null}
                     </View>
                   </View>
