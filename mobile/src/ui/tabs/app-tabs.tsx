@@ -18,7 +18,7 @@ export default function AppTabs() {
       {TABS.map(t => (
         <NativeTabs.Trigger key={t.name} name={t.name} disableAutomaticContentInsets={Platform.OS === 'ios'}>
           <NativeTabs.Trigger.Label>{t.label}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf={{ default: t.sf, selected: `${t.sf}.fill` as any }} md={t.md as any} />
+          <NativeTabs.Trigger.Icon sf={{ default: t.sf as any, selected: t.sf as any }} md={t.md as any} />
         </NativeTabs.Trigger>
       ))}
     </NativeTabs>
