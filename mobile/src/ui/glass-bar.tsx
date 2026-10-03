@@ -7,7 +7,7 @@ import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
 import { L, T, tap } from './kit';
 import { LiquidGlass } from './liquid';
-import { useColors, useIsDark } from './theme';
+import { useColors } from './theme';
 
 export function GlassBar({ start, middle, end }: { start: React.ReactNode; middle: React.ReactNode; end: React.ReactNode }) {
   const ins = useSafeAreaInsets();
@@ -22,10 +22,10 @@ export function GlassBar({ start, middle, end }: { start: React.ReactNode; middl
   );
 }
 
-// The position in the middle of the bar (Persian digits), in the app's teal.
+// The position in the middle of the bar (Persian digits), in the grey of the previous / next buttons (`navNum`).
 export function BarCount({ n, of }: { n: number; of: number }) {
-  const c = useColors(), dark = useIsDark();
-  return <T style={{ fontSize: 21, lineHeight: 30, color: dark ? c.link : c.accent, fontWeight: '500', textAlign: 'center', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>;
+  const c = useColors();
+  return <T style={{ fontSize: 21, lineHeight: 30, color: c.navNum, fontWeight: '500', textAlign: 'center', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>;
 }
 
 // Buttons of the bar. Previous / next are round grey buttons with an arrow (`round`; the label is for screen
