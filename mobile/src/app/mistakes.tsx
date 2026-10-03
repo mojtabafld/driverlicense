@@ -21,6 +21,8 @@ import { Backdrop, Button, Card, T, tap } from '@/ui/kit';
 import { ReviewCard, uiText } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
+const TOPICS_SHOWN = 5; // topics listed before «نمایش همه»
+
 type View_ = 'topics' | 'open' | 'fixed' | { topic: string };
 type Group = { c: string; list: MistakeStat[]; open: number; fixed: number; wrong: number };
 
@@ -51,6 +53,7 @@ export default function Mistakes() {
   const [view, setView] = useState<View_>('topics');
   const [lessonOpen, setLessonOpen] = useState<Record<string, boolean>>({});
   const [k, setK] = useState(0); // the question shown
+  const [allTopics, setAllTopics] = useState(false); // the topic list: the weakest 5, or all of them
   // The chosen categories (section numbers; none = all), and the category sheet with its ticks before applying them:
   // it opens with every category ticked when there is no filter, and «همه» ticks them all again.
   const [secs, setSecs] = useState<number[]>([]);
@@ -67,7 +70,7 @@ export default function Mistakes() {
   const tone = (p: number) => (p >= 0.8 ? c.ok : p >= 0.6 ? c.warn : c.bad);
 
   const practiceAll = () => practice(shuffle(sorted.flatMap(g => g.list.filter(st => !st.lastOk).map(st => st.id))).slice(0, 25), 'تمرین اشتباهات');
-  const practiceTopic = (code: string) => practice(topicPracticeIds(bank, sorted.find(g => g.c === code)?.list ?? [], code), topicFa(bank, code));
+  const practiceTopic = (code: string) => practice(topicPracticeIds(sorted.find(g => g.c === code)?.list ?? []), topicFa(bank, code));
   // Show what a panel or a topic stands for, and bring it into view.
   const choose = (v: View_) => {
     tap(); setView(v); setK(0); setSecs([]);
@@ -123,7 +126,7 @@ export default function Mistakes() {
               <Card style={{ gap: 6 }}>
                 <T style={{ fontSize: 12.5, color: c.muted }}>ضعیف‌ترین مبحث بالا — روی هر مبحث بزنید</T>
                 <View>
-                  {sorted.map((g, i) => {
+                  {(allTopics ? sorted : sorted.slice(0, TOPICS_SHOWN)).map((g, i) => {
                     const p = accOf(g.c);
                     return (
                       <Pressable key={g.c} onPress={() => choose({ topic: g.c })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
@@ -145,6 +148,10 @@ export default function Mistakes() {
                     );
                   })}
                 </View>
+                {sorted.length > TOPICS_SHOWN ? (
+                  <Button kind="glass" label={allTopics ? 'نمایش کمتر' : `نمایش همه‌ی ${faNum(sorted.length)} مبحث`} icon={allTopics ? 'chevronUp' : 'chevronDown'}
+                    onPress={() => setAllTopics(!allTopics)} />
+                ) : null}
                 <T style={{ fontSize: 12.5, lineHeight: 21, color: c.muted }}>پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «اصلاح‌نشده» به «اصلاح‌شده» بروند.</T>
               </Card>
             ) : null}

@@ -51,7 +51,7 @@ function MistakesCard() {
           {/* All topics with mistakes, weakest first, in one row that scrolls sideways. */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
             {topics.filter(g => g.open).map(g => (
-              <Pressable key={g.c} onPress={() => { tap(); practice(topicPracticeIds(bank, g.list, g.c), topicFa(bank, g.c)); }}
+              <Pressable key={g.c} onPress={() => { tap(); practice(topicPracticeIds(g.list), topicFa(bank, g.c)); }}
                 accessibilityLabel={`تمرین ${topicFa(bank, g.c)}`}
                 style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface2 })}>
                 <T style={{ fontSize: 13, fontWeight: '600' }} numberOfLines={1}>{bank.topics[g.c]?.fa ?? topicFa(bank, g.c)}</T>
