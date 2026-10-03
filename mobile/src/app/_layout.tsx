@@ -80,6 +80,7 @@ function Root() {
           <Stack.Screen name="run" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="result" options={{ presentation: 'modal' }} />
           <Stack.Screen name="mistakes" />
+          <Stack.Screen name="mistakes-view" />
           <Stack.Screen name="account" />
         </Stack.Protected>
         <Stack.Protected guard={!user}>
