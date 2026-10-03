@@ -102,7 +102,7 @@ export default function Run() {
           </Pressable>
         </View>
         <View style={{ gap: 4 }}>
-          <L style={{ fontSize: 20, fontWeight: '600', lineHeight: 27 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
+          <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
           <Pressable onPress={() => { tap(); setShowFa(!showFa); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: showFa }}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: c.accentSoft }}>
