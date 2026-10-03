@@ -208,7 +208,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
         <View>
           <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.md : 6, backgroundColor: c.surface2 }} contentFit="contain" />
           {index != null ? (
-            <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(34,56,58,0.82)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
+            <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
               <T style={{ color: '#fff', fontSize: 12, lineHeight: 20, fontWeight: '600' }}>سؤال {faNum(index + 1)}</T>
             </View>
           ) : null}
@@ -244,7 +244,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
           {fa && q.sfa ? (
             // The Persian translation on a soft teal tint, no side line.
-            <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: dark ? 'rgba(124,203,205,0.12)' : 'rgba(60,170,150,0.13)' }}>
+            <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accentSoft }}>
               <T style={{ fontSize: 14.5, lineHeight: 25 }}>{q.sfa}</T>
             </View>
           ) : null}

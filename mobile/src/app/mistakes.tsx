@@ -90,7 +90,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const ui = uiText(lang);
   const step = (to: number) => { setK(to); scroll.current?.scrollTo({ y: 0, animated: true }); };
   return (
-    <Backdrop>
+    <Backdrop enter>
       <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Pressable onPress={() => { tap(); router.back(); }} accessibilityLabel="بازگشت" hitSlop={6}
@@ -208,7 +208,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       ) : null}
       {/* The categories of these mistakes, to choose from */}
       <Modal visible={!!sheet} transparent animationType="fade" onRequestClose={() => setSheet(null)}>
-        <Pressable onPress={() => setSheet(null)} style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(20,40,40,0.35)' }}>
+        <Pressable onPress={() => setSheet(null)} style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
           <Pressable onPress={() => {}} style={{ maxHeight: '85%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 12,
             borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
             <View style={{ gap: 2 }}>
