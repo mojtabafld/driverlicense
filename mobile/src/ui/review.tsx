@@ -15,7 +15,6 @@ import { Icon } from './icon';
 import { L, T, physical, tap } from './kit';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
-const AI = '#7c5cff';
 const UI = {
   da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever', restart: 'Forfra', summary: 'Opsummering' },
   en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in', restart: 'Start over', summary: 'Summary' },
@@ -68,7 +67,7 @@ function AiLoading({ text }: { text: string }) {
   return (
     <View style={{ gap: 12, paddingVertical: 4 }} accessibilityRole="progressbar">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Animated.View style={{ opacity: pulse, width: 34, height: 34, borderRadius: 8, backgroundColor: AI, alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" size={18} color="#fff" /></Animated.View>
+        <Animated.View style={{ opacity: pulse, width: 34, height: 34, borderRadius: 8, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" size={18} color="#fff" /></Animated.View>
         <T style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>{text}…</T>
       </View>
       <Animated.View style={{ opacity: pulse, gap: 9, ...physical({ paddingRight: 44 }) }}>
@@ -78,7 +77,7 @@ function AiLoading({ text }: { text: string }) {
   );
 }
 
-// The site's «تحلیل پاسخ شما» / «جمع‌بندی آموزشی اشتباهات» button: outlined in navy, filled while its text is shown.
+// The site's «تحلیل پاسخ شما» / «جمع‌بندی آموزشی اشتباهات» button: outlined in teal, filled while its text is shown.
 function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; shown: boolean; onPress: () => void }) {
   const c = useColors(), dark = useIsDark();
   const fg = shown ? (dark ? '#0b1520' : '#fff') : c.link;
@@ -87,7 +86,11 @@ function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; 
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.99 : 1 }] })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, borderWidth: 1.5,
         borderColor: dark ? c.link : c.accent, backgroundColor: shown ? (dark ? c.link : c.accent) : c.surface }}>
-        <View style={{ width: 34, height: 34, borderRadius: 8, backgroundColor: AI, alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" size={18} color="#fff" /></View>
+        {/* The AI mark in the theme's teal; on the filled (open) button a see-through tile in the label's colour. */}
+        <View style={{ width: 34, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
+          backgroundColor: shown ? (dark ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.22)') : c.accent }}>
+          <Icon name="sparkles" size={18} color={shown ? fg : '#fff'} />
+        </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontSize: 15, fontWeight: '700', color: fg }}>{title}</T>
           <T style={{ fontSize: 11.5, lineHeight: 17, color: fg, opacity: 0.75 }}>{sub}</T>
