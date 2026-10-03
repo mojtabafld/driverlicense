@@ -3,23 +3,19 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
+import { Confirm } from '@/ui/confirm';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
-import { Backdrop, L, T, ThemeButton, tap } from '@/ui/kit';
+import { Backdrop, L, T, ThemeButton, physical, tap } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { NUM_FONT, radius, useColors, useIsDark } from '@/ui/theme';
-
-const ask = (title: string, msg: string, ok: string, onOk: () => void) => {
-  if (Platform.OS === 'web') { if (window.confirm(`${title}\n${msg}`)) onOk(); return; }
-  Alert.alert(title, msg, [{ text: 'انصراف', style: 'cancel' }, { text: ok, onPress: onOk }]);
-};
 
 export default function Run() {
   const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
@@ -30,7 +26,11 @@ export default function Run() {
   const [i, setI] = useState(0);
   const [ticks, setTicks] = useState<boolean[][]>(() => qs.map(q => q.st.map(() => false)));
   const [left, setLeft] = useState(qs.length * SECONDS_PER_Q);
-  const [showFa, setShowFa] = useState(settings.showFa);
+  // The Persian translation starts hidden in an exam; the button under the question shows it.
+  const [showFa, setShowFa] = useState(false);
+  // Questions marked for a second look before handing in, and the open question (exit / hand in).
+  const [flags, setFlags] = useState<number[]>([]);
+  const [dialog, setDialog] = useState<'quit' | 'handin' | null>(null);
   const [started] = useState(() => Date.now());
   const done = useRef(false);
   const lang = settings.lang === 'en' ? 'en' : 'da';
@@ -55,11 +55,25 @@ export default function Run() {
   const q = qs[i], last = i === qs.length - 1;
   const answered = ticks.filter(t => t.some(Boolean)).length;
   const toggle = (k: number) => { tap(); setTicks(t => t.map((row, r) => (r === i ? row.map((v, j) => (j === k ? !v : v)) : row))); };
-  const handIn = () => {
-    const empty = qs.length - answered;
-    if (empty) ask('تحویل آزمون؟', `در ${faNum(empty)} سؤال هیچ گزینه‌ای انتخاب نشده است.`, 'تحویل', finish); else finish();
-  };
-  const quit = () => ask('خروج از آزمون؟', 'پاسخ‌های این آزمون ذخیره نمی‌شوند.', 'خروج', () => router.back());
+  const empty = qs.length - answered;
+  const handIn = () => { if (empty || flags.length) setDialog('handin'); else finish(); };
+  const quit = () => { tap(); setDialog('quit'); };
+  const flagged = flags.includes(i);
+  const flag = () => { tap(); setFlags(f => (f.includes(i) ? f.filter(x => x !== i) : [...f, i].sort((a, b) => a - b))); };
+  const goTo = (k: number) => { tap(); setDialog(null); setI(k); };
+  // The marked questions as small numbered buttons that open them.
+  const flagChips = (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', direction: 'ltr' } as any}>
+      {flags.map(k => (
+        <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99,
+            backgroundColor: c.accentSoft, opacity: pressed ? 0.75 : 1 })}>
+          <Icon name="bookmark" size={14} filled color={dark ? c.link : c.accent} />
+          <L style={{ fontSize: 15, lineHeight: 20, fontWeight: '600', color: dark ? c.link : c.accent, fontFamily: NUM_FONT }}>{k + 1}</L>
+        </Pressable>
+      ))}
+    </View>
+  );
   const ui = uiText(lang === 'en' ? 'en' : 'da');
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
 
@@ -89,7 +103,16 @@ export default function Run() {
         </View>
       </SafeAreaView>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" transition={200} />
+        <View>
+          <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" transition={200} />
+          {/* Mark the question to look at it again before handing in. */}
+          <Pressable onPress={flag} hitSlop={6} accessibilityRole="button" accessibilityLabel="علامت برای بازبینی" accessibilityState={{ selected: flagged }}
+            style={{ position: 'absolute', top: 8, ...physical({ left: 8 }), flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 18,
+              backgroundColor: flagged ? c.accent : dark ? 'rgba(20,30,30,0.6)' : 'rgba(255,255,255,0.85)' }}>
+            <Icon name="bookmark" size={16} filled={flagged} color={flagged ? '#fff' : dark ? '#fff' : c.accent} />
+            <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: flagged ? '#fff' : dark ? '#fff' : c.accent }}>{flagged ? 'علامت‌خورده' : 'بازبینی بعداً'}</T>
+          </Pressable>
+        </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 20, fontWeight: '600', lineHeight: 27 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
@@ -118,12 +141,31 @@ export default function Run() {
             </Pressable>
           );
         })}
+        {/* On the last question: the marked ones, to look at again before handing in. */}
+        {last && flags.length ? (
+          <View style={{ gap: 10, marginTop: 6, padding: 14, borderRadius: 16, backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
+            <T style={{ fontSize: 14, fontWeight: '700', textAlign: 'center' }}>سؤال‌های علامت‌خورده برای بازبینی</T>
+            {flagChips}
+          </View>
+        ) : null}
       </ScrollView>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
         middle={<BarCount n={i + 1} of={qs.length} />}
         end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => setI(i + 1)} />} />
+      <Confirm open={dialog === 'quit'} title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
+        cancel="ادامه‌ی آزمون" ok="خروج" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); router.back(); }} />
+      <Confirm open={dialog === 'handin'} title="تحویل آزمون؟"
+        text={empty ? `در ${faNum(empty)} سؤال هیچ گزینه‌ای انتخاب نشده است.` : flags.length ? 'این سؤال‌ها را برای بازبینی علامت زده‌اید:' : undefined}
+        cancel="بازبینی" ok="تحویل" onCancel={() => setDialog(null)} onOk={() => { setDialog(null); finish(); }}>
+        {flags.length ? (
+          <View style={{ gap: 8 }}>
+            {empty ? <T style={{ fontSize: 13.5, color: c.muted, textAlign: 'center' }}>سؤال‌های علامت‌خورده:</T> : null}
+            {flagChips}
+          </View>
+        ) : null}
+      </Confirm>
     </Backdrop>
   );
 }
