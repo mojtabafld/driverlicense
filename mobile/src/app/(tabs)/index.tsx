@@ -66,7 +66,7 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <Screen fill gap={compact ? 10 : 14} title={`سلام ${user?.name ?? ''} 👋`} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}>
+    <Screen fill gap={compact ? 10 : 14} title={`سلام ${user?.name ?? ''}`} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}>
       <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} />
