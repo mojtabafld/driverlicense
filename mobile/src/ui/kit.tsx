@@ -23,29 +23,54 @@ export function physical<S extends Record<string, any>>(style: S): S {
 
 export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
-// A page's content coming in: a quick fade and a short rise each time the page is shown (opened, or its tab chosen),
-// the light motion of Uber Eats between screens.
-export function PageIn({ children }: { children?: React.ReactNode }) {
+// The light motion of Uber Eats between screens, the same on every platform:
+// - tab: a page whose tab is chosen comes in with a quick fade and a short rise;
+// - push: an inner page (mistakes, account, a past exam) slides in from the side and fades in, and slides back out
+//   when left with its back button; the page returned to comes in from the other side;
+// - sheet: the exam comes up from the bottom when it starts and goes back down when it is left.
+// On phones the native stack already moves pushed pages and the exam, so there only the fade of a tab plays.
+export type Motion = 'tab' | 'push' | 'sheet';
+let goingBack = false; // set by leave(): the next page shown is the one returned to
+export function usePageMotion(motion: Motion) {
   const [v] = useState(() => new Animated.Value(0));
+  const [from, setFrom] = useState<1 | -1>(1);
+  const own = motion === 'tab' || Platform.OS === 'web';
   useFocusEffect(useCallback(() => {
+    const back = goingBack; goingBack = false;
+    if (!own) { v.setValue(1); return; }
+    setFrom(back ? -1 : 1);
     v.setValue(0);
-    Animated.timing(v, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  }, [v]));
-  return (
-    <Animated.View style={{ flex: 1, opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
-      {children}
-    </Animated.View>
-  );
+    Animated.timing(v, { toValue: 1, duration: motion === 'sheet' ? 320 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [v, own, motion]));
+  // Play the way out, then go (`then`, e.g. router.back()); on phones the native stack moves the page itself.
+  const leave = useCallback((then: () => void) => {
+    goingBack = true;
+    if (Platform.OS !== 'web' || motion === 'tab') { then(); return; }
+    setFrom(1);
+    Animated.timing(v, { toValue: 0, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => then());
+  }, [v, motion]);
+  // Right to left: a new page comes in from the left (and goes back out there), as Persian reads.
+  const shift = motion === 'sheet' ? { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [70, 0] }) }
+    : motion === 'push' ? { translateX: v.interpolate({ inputRange: [0, 1], outputRange: [-36 * from, 0] }) }
+    : { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) };
+  const style = { flex: 1, opacity: motion === 'sheet' ? v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) : v, transform: [shift] };
+  return { style, leave };
 }
 
-// Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes. `enter`: the
-// content comes in with PageIn (only inside a screen of the navigator).
-export function Backdrop({ children, enter }: { children?: React.ReactNode; enter?: boolean }) {
+// A tab page's content coming in (see usePageMotion).
+export function PageIn({ children, motion = 'tab' }: { children?: React.ReactNode; motion?: Motion }) {
+  const { style } = usePageMotion(motion);
+  return <Animated.View style={style as any}>{children}</Animated.View>;
+}
+
+// Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes. `anim`: the
+// style from usePageMotion, for the page's content.
+export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?: object }) {
   const c = useColors();
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
       <LinearGradient colors={c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
-      {enter ? <PageIn>{children}</PageIn> : children}
+      {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
     </View>
   );
 }

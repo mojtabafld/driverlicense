@@ -14,7 +14,7 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, L, T, physical, tap } from '@/ui/kit';
+import { Backdrop, Button, Card, L, T, physical, tap, usePageMotion } from '@/ui/kit';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
 import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
@@ -79,6 +79,7 @@ const Empty = ({ text }: { text: string }) => {
 export default function Result() {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
   const { Q, settings, bank, aiLessons } = useApp();
+  const motion = usePageMotion('push');
   const [a] = useState<Attempt | null>(() => session.result);
   const [fresh, setFresh] = useState(() => session.fresh);
   const n = a?.items.length ?? 0, right = a ? scoreOf(a) : 0, wrongN = n - right;
@@ -153,11 +154,11 @@ export default function Result() {
           : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => step(k + 1)} />} />
     );
     return (
-      <Backdrop>
+      <Backdrop anim={motion.style}>
         <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .rev-top: back button, tabs, «جزئیات آزمون» */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-            <Pressable onPress={() => { tap(); router.back(); }} accessibilityLabel="بازگشت" hitSlop={6}
+            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
               style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1.5, borderColor: c.line })}>
               <Icon name="arrowRight" size={20} color={c.link} />
             </Pressable>
@@ -222,7 +223,7 @@ export default function Result() {
   const review = (at = 0) => { tap(); setFilter('all'); setK(Math.max(0, at)); setFresh(false); };
   const marked = a.items.filter(it => it.m).length;
   return (
-    <Backdrop>
+    <Backdrop anim={motion.style}>
       <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 24, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
         {/* «خلاصه‌ی آزمون»: the only thing shown after handing in. */}
         <Card style={{ alignItems: 'center', gap: 14, padding: 20, paddingTop: 22, borderRadius: 24 }}>
