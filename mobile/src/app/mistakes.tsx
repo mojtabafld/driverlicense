@@ -1,6 +1,7 @@
-// «بیشترین اشتباهات»: «تمرین همه‌ی اشتباهات» and three panels (topics / fixed, i.e. right the last time / not fixed
-// yet). A panel opens its own page (/mistakes-view, with a back button): «مبحث» the topics (weakest first),
-// «اصلاح‌نشده» or «اصلاح‌شده» those questions by topic; a tapped topic opens its own questions. The questions are shown one at a time, as in the
+// «بیشترین اشتباهات»: «تمرین همه‌ی اشتباهات», three panels (topics / fixed, i.e. right the last time / not fixed
+// yet) and the weakest 5 topics. A panel opens its own page (/mistakes-view, with a back button): «مبحث» (or «نمایش
+// همه») all the topics, «اصلاح‌نشده» or «اصلاح‌شده» those questions by topic; a tapped topic opens its own
+// questions. The questions are shown one at a time, as in the
 // review, with previous / next on the floating glass bar; above each is its topic, with its short lesson and «تمرین این
 // مبحث». The filter button beside the position opens a sheet of the categories (official sections) these mistakes are
 // in, with their counts; only the chosen ones are then shown. No question is shown until something is chosen.
@@ -21,7 +22,7 @@ import { Backdrop, Button, Card, T, tap } from '@/ui/kit';
 import { ReviewCard, uiText } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
-const TOPICS_SHOWN = 5; // topics listed before «نمایش همه»
+const TOPICS_SHOWN = 5; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
 
 export type View_ = 'topics' | 'open' | 'fixed' | { topic: string };
 type Group = { c: string; list: MistakeStat[]; open: number; fixed: number; wrong: number };
@@ -56,7 +57,6 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const view = detail;
   const [lessonOpen, setLessonOpen] = useState<Record<string, boolean>>({});
   const [k, setK] = useState(0); // the question shown
-  const [allTopics, setAllTopics] = useState(false); // the topic list: the weakest 5, or all of them
   // The chosen categories (section numbers; none = all), and the category sheet with its ticks before applying them:
   // it opens with every category ticked when there is no filter, and «همه» ticks them all again.
   const [secs, setSecs] = useState<number[]>([]);
@@ -119,11 +119,12 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                 ))}
               </View>
             </Card>}
-            {view === 'topics' ? (
+            {/* The topics, weakest first: the first 5 on the overview, all of them on the topics page */}
+            {!view || view === 'topics' ? (
               <Card style={{ gap: 6 }}>
                 <T style={{ fontSize: 12.5, color: c.muted }}>ضعیف‌ترین مبحث بالا — روی هر مبحث بزنید</T>
                 <View>
-                  {(allTopics ? sorted : sorted.slice(0, TOPICS_SHOWN)).map((g, i) => {
+                  {(view ? sorted : sorted.slice(0, TOPICS_SHOWN)).map((g, i) => {
                     const p = accOf(g.c);
                     return (
                       <Pressable key={g.c} onPress={() => choose({ topic: g.c })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
@@ -145,11 +146,10 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                     );
                   })}
                 </View>
-                {sorted.length > TOPICS_SHOWN ? (
-                  <Button kind="glass" label={allTopics ? 'نمایش کمتر' : `نمایش همه‌ی ${faNum(sorted.length)} مبحث`} icon={allTopics ? 'chevronUp' : 'chevronDown'}
-                    onPress={() => setAllTopics(!allTopics)} />
+                {!view && sorted.length > TOPICS_SHOWN ? (
+                  <Button kind="glass" label={`نمایش همه‌ی ${faNum(sorted.length)} مبحث`} icon="chevronLeft" onPress={() => choose('topics')} />
                 ) : null}
-                <T style={{ fontSize: 12.5, lineHeight: 21, color: c.muted }}>پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «اصلاح‌نشده» به «اصلاح‌شده» بروند.</T>
+                {view ? <T style={{ fontSize: 12.5, lineHeight: 21, color: c.muted }}>پیشنهاد: از بالای این فهرست شروع کنید؛ آموزش کوتاه هر مبحث را بخوانید و سپس با «تمرین این مبحث» سؤال‌های همان مبحث را دوباره جواب دهید تا از «اصلاح‌نشده» به «اصلاح‌شده» بروند.</T> : null}
               </Card>
             ) : null}
             {/* The chosen question with its topic above it */}
