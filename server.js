@@ -253,6 +253,15 @@ function serveStatic(req, res) {
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
     return res.end(req.method === 'HEAD' ? undefined : INDEX_HTML);
   }
+  // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
+  const im = /^\/intro\/([1-9])\.png$/.exec(p);
+  if (im) {
+    return imagegen.introBlob(im[1]).then(b => {
+      if (!b) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff' });
+      res.end(req.method === 'HEAD' ? undefined : b.data);
+    }).catch(() => { res.writeHead(500); res.end(); });
+  }
   if (isProtected(p) && !sessionUser(req)) { res.writeHead(401, { 'Cache-Control': 'no-store' }); return res.end('Sign in first'); }
   // A question picture replaced by a generated one (the original file stays; ?orig=1 still shows it), and the generated
   // versions themselves at /img/gen/<qid>/<job> for the admin panel.
@@ -289,7 +298,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable() });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), intro: imagegen.introVersions() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });

@@ -10,8 +10,8 @@ import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { L, T, tap } from './kit';
+import { INTRO_BG as BG } from './onboarding';
 
-const BG = ['#0b5d91', '#024776', '#012f4f'] as const;
 const BUTTON = '#8cc3ef', BUTTON_TEXT = '#012a45';
 
 function FlagDK() {
@@ -49,7 +49,7 @@ export function LangPick() {
   const save = () => { tap(); setBusy(true); setSettings({ lang, langChosen: true }).catch(() => setBusy(false)); };
   return (
     <View style={{ flex: 1 }}>
-      <LinearGradient colors={BG} locations={[0, 0.5, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={BG} locations={[0, 0.62, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <View style={{ flex: 1, justifyContent: 'center', gap: 28 }}>
           <View style={{ gap: 12 }}>
