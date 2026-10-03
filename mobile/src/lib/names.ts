@@ -11,19 +11,11 @@ export function modeName(a: Pick<Attempt, 'mode' | 'lesson'>, bank: Bank | null)
   return ({ mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات', sections: 'آموزش بر اساس دسته‌بندی' } as Record<string, string>)[a.mode] || 'آزمون تصادفی';
 }
 
-// Where a question appears on prove.dk, e.g. «prove.dk 1 · #2» (test number and position), like the site's badges.
-const srcCache = new WeakMap<Bank, Map<number, string[]>>();
-export function srcLabels(bank: Bank, qid: number): string[] {
-  let m = srcCache.get(bank);
-  if (!m) {
-    m = new Map();
-    for (const t of bank.tests) t.qs.forEach((id, i) => {
-      const l = `prove.dk ${(t.title.match(/\d+/) || [String(t.id)])[0]} · #${i + 1}`;
-      m!.set(id, [...(m!.get(id) || []), l]);
-    });
-    srcCache.set(bank, m);
-  }
-  return m.get(qid) || [];
+// The official section (the category of the learn page) a question belongs to, e.g. «قواعد پایه‌ی ترافیک»; its
+// topic code starts with the section number (7.18 → 7).
+export function sectionFa(bank: Bank, c: string): string | null {
+  const n = +String(c).split('.')[0];
+  return bank.sections.find(s => s.n === n)?.fa ?? null;
 }
 
 export const topicFa = (bank: Bank, c: string) => (bank.topics[c] ? `${faNum(c)} ${bank.topics[c].fa}` : 'سایر');
