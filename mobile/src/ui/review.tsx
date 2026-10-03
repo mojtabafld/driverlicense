@@ -16,8 +16,8 @@ import { L, T, physical, tap } from './kit';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const UI = {
-  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever', restart: 'Forfra', summary: 'Opsummering', home: 'Forside' },
-  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in', restart: 'Start over', summary: 'Summary', home: 'Home' },
+  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever', restart: 'Forfra', summary: 'Opsummering', exams: 'Prøver', lessons: 'Lektioner' },
+  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in', restart: 'Start over', summary: 'Summary', exams: 'Exams', lessons: 'Lessons' },
 };
 export const uiText = (lang: 'da' | 'en') => UI[lang];
 
