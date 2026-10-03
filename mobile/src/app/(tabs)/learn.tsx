@@ -29,7 +29,8 @@ export default function Learn() {
   const sectionOf = (code: string) => +String(code).split('.')[0];
   const pool = bank.questions.filter(q => chosen.includes(sectionOf(q.c))).map(q => q.id);
   const seen = new Set(attempts.flatMap(a => a.items.map(it => it.id)));
-  const usable = fresh ? pool.filter(id => !seen.has(id)) : pool;
+  const unseen = pool.filter(id => !seen.has(id));
+  const usable = fresh ? unseen : pool;
   const count = Math.min(size, usable.length);
   return (
     <Screen title="آموزش" subtitle="درس‌به‌درس یا بر اساس دسته‌بندی رسمی">
@@ -82,7 +83,7 @@ export default function Learn() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ flex: 1 }}>
                   <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
-                  <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>فقط سؤال‌هایی که در آزمون‌ها و درس‌های قبلی ندیده‌اید</T>
+                  <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{`${faNum(unseen.length)} سؤال تکراری‌نشده از ${faNum(pool.length)} سؤال دسته‌های انتخاب‌شده`}</T>
                 </View>
                 <Switch value={fresh} onValueChange={v => { tap(); setFresh(v); }} trackColor={{ false: c.line, true: c.accent }} thumbColor="#fff" {...{ activeThumbColor: '#fff' }} />
               </View>
