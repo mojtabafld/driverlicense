@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Alert, Platform, Pressable, View } from 'react-native';
 
 import { faNum } from '@/lib/logic';
+import { fmtDay } from '@/lib/names';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
@@ -25,7 +26,7 @@ function Row({ title, sub, right }: { title: string; sub?: string; right: React.
 
 export default function Settings() {
   const c = useColors();
-  const { user, settings, setSettings, logout, attempts } = useApp();
+  const { user, settings, setSettings, logout } = useApp();
   const { mode, setMode } = useTheme();
   const confirmLogout = () => {
     if (Platform.OS === 'web') { if (window.confirm('از حساب کاربری خارج می‌شوید؟')) logout(); return; }
@@ -43,7 +44,8 @@ export default function Settings() {
           </View>
           <View style={{ flex: 1 }}>
             <T style={{ fontWeight: '700', fontSize: 17 }}>{user?.name}</T>
-            <T style={{ color: c.muted, fontSize: 13, writingDirection: 'ltr', textAlign: 'right' }}>@{user?.username} · {faNum(attempts.length)} آزمون</T>
+            {/* The day the account was made */}
+            {user?.created ? <T style={{ color: c.muted, fontSize: 13 }} numberOfLines={1}>عضو از {fmtDay(user.created)}</T> : null}
           </View>
           <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
         </Pressable>
