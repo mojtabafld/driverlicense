@@ -69,19 +69,27 @@ async function newSession(req, res, username) {
 // "Authorization: Bearer <token>"; the web site keeps using the HttpOnly cookie only.
 const isApp = req => req.headers['x-client'] === 'app';
 function sessionUser(req) {
-  // The app's own token (Bearer) first, then the site's cookie: a leftover cookie never overrides the app's session.
-  const m = /^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '') || /(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '')
-    // pictures in the app's web version (an <img> cannot send headers): ?t=<token>, only for /img/
-    || (/^\/img\//.test(new URL(req.url, 'http://x').pathname) && /^([a-f0-9]{64})$/.exec(new URL(req.url, 'http://x').searchParams.get('t') || ''));
-  const s = m && store.sessions[m[1]];
-  if (!s) return null;
-  if (s.exp < Date.now()) {
-    delete store.sessions[m[1]];
-    store.deleteSession(m[1]).catch(() => {});
-    return null;
+  // Every credential the request carries, in this order: the app's own token (Bearer), the token of a picture in the
+  // app's web version (an <img> cannot send headers: ?t=<token>, only for /img/), then the site's cookie. The first one
+  // that is a live session wins, so a leftover cookie (e.g. one whose session was signed out) never blocks a valid token.
+  const url = new URL(req.url, 'http://x');
+  const tokens = [
+    (/^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '') || [])[1],
+    /^\/img\//.test(url.pathname) ? (/^([a-f0-9]{64})$/.exec(url.searchParams.get('t') || '') || [])[1] : undefined,
+    (/(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '') || [])[1],
+  ].filter(Boolean);
+  for (const token of tokens) {
+    const s = store.sessions[token];
+    if (!s) continue;
+    if (s.exp < Date.now()) {
+      delete store.sessions[token];
+      store.deleteSession(token).catch(() => {});
+      continue;
+    }
+    const user = store.users[s.username];
+    if (user) return { token, user };
   }
-  const user = store.users[s.username];
-  return user ? { token: m[1], user } : null;
+  return null;
 }
 const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined });
 
