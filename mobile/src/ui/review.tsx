@@ -12,7 +12,7 @@ import { faNum } from '@/lib/logic';
 import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
-import { L, T, physical, tap } from './kit';
+import { Enter, L, T, physical, tap } from './kit';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const UI = {
@@ -276,7 +276,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               const eda = (lang === 'en' ? s.een || s.eda : s.eda || '').trim() || (s.ok ? ui.yes : ui.no);
               const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
               return (
-                <Statement key={k} flat={flat} mark={!!mark}>
+                <Enter key={k}><Statement flat={flat} mark={!!mark}>
                   <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', direction: 'ltr' } as any}>
                     <View style={{ width: 22, height: 22, marginTop: 1, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center',
                       borderColor: checked ? c.pick : c.muted, backgroundColor: checked ? c.pick : c.surface }}>
@@ -293,7 +293,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                       {fa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>توضیح: {efa}</T> : null}
                     </View>
                   ) : null}
-                </Statement>
+                </Statement></Enter>
               );
             })}
           </View>

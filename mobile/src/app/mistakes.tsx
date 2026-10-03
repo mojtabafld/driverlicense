@@ -18,7 +18,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
-import { Backdrop, Button, Card, T, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
 import { ReviewCard, uiText } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
@@ -128,7 +128,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                   {(view ? sorted : sorted.slice(0, TOPICS_SHOWN)).map((g, i) => {
                     const p = accOf(g.c);
                     return (
-                      <Pressable key={g.c} onPress={() => choose({ topic: g.c })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+                      <Enter key={g.c}>
+                      <Pressable onPress={() => choose({ topic: g.c })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
                         <View style={{ gap: 6, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }} numberOfLines={1}>{topicFa(bank, g.c)}</T>
@@ -144,6 +145,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                           </T>
                         </View>
                       </Pressable>
+                      </Enter>
                     );
                   })}
                 </View>
