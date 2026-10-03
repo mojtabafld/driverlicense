@@ -3,11 +3,11 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
-import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
+import { SECONDS_PER_Q, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
@@ -56,7 +56,8 @@ export default function Run() {
   const answered = ticks.filter(t => t.some(Boolean)).length;
   const toggle = (k: number) => { tap(); setTicks(t => t.map((row, r) => (r === i ? row.map((v, j) => (j === k ? !v : v)) : row))); };
   const empty = qs.length - answered;
-  const handIn = () => { if (empty || flags.length) setDialog('handin'); else finish(); };
+  // Hand in opens a summary of every question (answered / not / marked) first; the exam ends from there.
+  const handIn = () => { tap(); setDialog('handin'); };
   const quit = () => { tap(); setDialog('quit'); };
   const flagged = flags.includes(i);
   const flag = () => { tap(); setFlags(f => (f.includes(i) ? f.filter(x => x !== i) : [...f, i].sort((a, b) => a - b))); };
@@ -156,16 +157,60 @@ export default function Run() {
         end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); router.back(); }} />
-      <Confirm open={dialog === 'handin'} title="تحویل آزمون؟"
-        text={empty ? `در ${faNum(empty)} سؤال هیچ گزینه‌ای انتخاب نشده است.` : flags.length ? 'این سؤال‌ها را برای بازبینی علامت زده‌اید:' : undefined}
-        cancel="بازبینی" ok="تحویل" onCancel={() => setDialog(null)} onOk={() => { setDialog(null); finish(); }}>
-        {flags.length ? (
-          <View style={{ gap: 8 }}>
-            {empty ? <T style={{ fontSize: 13.5, color: c.muted, textAlign: 'center' }}>سؤال‌های علامت‌خورده:</T> : null}
-            {flagChips}
+      <Modal visible={dialog === 'handin'} transparent animationType="fade" onRequestClose={() => setDialog(null)}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(20,40,40,0.35)' }}>
+          <View style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
+            borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
+            <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {([[answered, 'پاسخ داده‌شده', dark ? c.link : c.accent], [empty, 'بی‌پاسخ', empty ? c.bad : c.muted], [flags.length, 'علامت‌خورده', c.warn]] as const).map(([n, l, col]) => (
+                <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: c.surface2 }}>
+                  <L style={{ fontSize: 22, lineHeight: 28, fontWeight: '600', color: col, fontFamily: NUM_FONT }}>{n}</L>
+                  <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{l}</T>
+                </View>
+              ))}
+            </View>
+            {/* Every question by number: filled when answered, outlined when not, a bookmark when marked; a tap opens it. */}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', direction: 'ltr' } as any}>
+              {qs.map((_, k) => {
+                const ans = ticks[k].some(Boolean), marked = flags.includes(k);
+                return (
+                  <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
+                    style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
+                      backgroundColor: ans ? c.accent : c.surface, borderWidth: 1.5, borderColor: ans ? c.accent : marked ? c.warn : c.line })}>
+                    <L style={{ fontSize: 16, lineHeight: 22, fontWeight: '600', color: ans ? '#fff' : c.text, fontFamily: NUM_FONT }}>{k + 1}</L>
+                    {marked ? (
+                      <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
+                        <Icon name="bookmark" size={11} filled color="#fff" />
+                      </View>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
+              {([['پاسخ داده‌شده', c.accent, c.accent], ['بی‌پاسخ', c.surface, c.line], ['علامت‌خورده', c.surface, c.warn]] as const).map(([l, bg, bd]) => (
+                <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: bg, borderWidth: 1.5, borderColor: bd }} />
+                  <T style={{ fontSize: 12, color: c.muted }}>{l}</T>
+                </View>
+              ))}
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Pressable onPress={() => { tap(); setDialog(null); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
+                <View style={{ height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+                  <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>بازگشت به آزمون</T>
+                </View>
+              </Pressable>
+              <Pressable onPress={() => { tap(); setDialog(null); finish(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}>
+                <View style={{ height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
+                  <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>تحویل و پایان</T>
+                </View>
+              </Pressable>
+            </View>
           </View>
-        ) : null}
-      </Confirm>
+        </View>
+      </Modal>
     </Backdrop>
   );
 }
