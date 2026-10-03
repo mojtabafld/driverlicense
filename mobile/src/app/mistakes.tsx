@@ -51,7 +51,8 @@ export default function Mistakes() {
   const [view, setView] = useState<View_>('topics');
   const [lessonOpen, setLessonOpen] = useState<Record<string, boolean>>({});
   const [k, setK] = useState(0); // the question shown
-  // The chosen categories (section numbers; none = all), and the category sheet with its choice before «اعمال».
+  // The chosen categories (section numbers; none = all), and the category sheet with its ticks before applying them:
+  // it opens with every category ticked when there is no filter, and «همه» ticks them all again.
   const [secs, setSecs] = useState<number[]>([]);
   const [sheet, setSheet] = useState<number[] | null>(null);
   const scroll = useRef<ScrollView>(null);
@@ -78,6 +79,7 @@ export default function Mistakes() {
   const all = shown.flatMap(g => g.list.filter(keep).map(st => ({ g, st })));
   const items = secs.length ? all.filter(x => secs.includes(sectionOf(x.g.c))) : all;
   // The categories of the questions on show, with how many of them each has.
+  const picked = sheet ?? [], pickedN = picked.length;
   const cats = bank.sections.map(sec => ({ ...sec, count: all.filter(x => sectionOf(x.g.c) === sec.n).length })).filter(x => x.count);
   const at = Math.min(k, Math.max(0, items.length - 1)), cur = items[at];
   const ui = uiText(lang);
@@ -189,7 +191,7 @@ export default function Mistakes() {
           middle={
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <BarCount n={at + 1} of={items.length} />
-              <Pressable onPress={() => { tap(); setSheet(secs); }} hitSlop={6} accessibilityRole="button" accessibilityLabel="انتخاب دسته‌بندی‌ها"
+              <Pressable onPress={() => { tap(); setSheet(secs.length ? secs : cats.map(x => x.n)); }} hitSlop={6} accessibilityRole="button" accessibilityLabel="انتخاب دسته‌بندی‌ها"
                 style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
                   backgroundColor: secs.length ? c.accent : c.accentSoft })}>
                 <Icon name="filter" size={20} color={secs.length ? '#fff' : c.link} />
@@ -209,9 +211,9 @@ export default function Mistakes() {
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
               {cats.map(sec => {
-                const on = !!sheet?.includes(sec.n);
+                const on = picked.includes(sec.n);
                 return (
-                  <Pressable key={sec.n} onPress={() => { tap(); setSheet(on ? sheet!.filter(x => x !== sec.n) : [...(sheet || []), sec.n]); }}
+                  <Pressable key={sec.n} onPress={() => { tap(); setSheet(on ? picked.filter(x => x !== sec.n) : [...picked, sec.n]); }}
                     accessibilityRole="checkbox" accessibilityState={{ checked: on }}
                     style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5,
                       borderColor: on ? c.accent : c.line, backgroundColor: on ? c.checked : c.surface, opacity: pressed ? 0.85 : 1 })}>
@@ -225,15 +227,16 @@ export default function Mistakes() {
               })}
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable onPress={() => { tap(); setSheet([]); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
+              <Pressable onPress={() => { tap(); setSheet(cats.map(x => x.n)); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
                 <View style={{ height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
                   <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>همه</T>
                 </View>
               </Pressable>
-              <Pressable onPress={() => { tap(); setSecs(sheet || []); setK(0); setSheet(null); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 2, opacity: pressed ? 0.85 : 1 })}>
+              <Pressable disabled={!pickedN} onPress={() => { tap(); setSecs(pickedN >= cats.length ? [] : picked); setK(0); setSheet(null); }} accessibilityRole="button"
+                accessibilityState={{ disabled: !pickedN }} style={({ pressed }) => ({ flex: 2, opacity: !pickedN ? 0.45 : pressed ? 0.85 : 1 })}>
                 <View style={{ height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent }}>
                   <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>
-                    {`نمایش ${faNum((sheet && sheet.length ? cats.filter(x => sheet.includes(x.n)) : cats).reduce((t, x) => t + x.count, 0))} سؤال`}
+                    {pickedN ? `نمایش ${faNum(cats.filter(x => picked.includes(x.n)).reduce((t, x) => t + x.count, 0))} سؤال` : 'یک دسته را انتخاب کنید'}
                   </T>
                 </View>
               </Pressable>
