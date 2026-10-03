@@ -1,4 +1,4 @@
-// One part of «بیشترین اشتباهات» on its own page, with a back button to it: the topics (?v=topics), the not-fixed or
+// One part of «اشتباهات» on its own page, with a back button to it: the topics (?v=topics), the not-fixed or
 // fixed questions (?v=open / ?v=fixed), or one topic's questions (?topic=7.18).
 import { useLocalSearchParams } from 'expo-router';
 
