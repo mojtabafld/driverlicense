@@ -83,15 +83,10 @@ export default function Learn() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ flex: 1 }}>
                   <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
-                  <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{`${faNum(unseen.length)} سؤال تکراری‌نشده از ${faNum(pool.length)} سؤال دسته‌های انتخاب‌شده`}</T>
+                  <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{`${faNum(unseen.length)} سؤال غیرتکراری از ${faNum(pool.length)} سؤال دسته‌های انتخاب‌شده`}</T>
                 </View>
                 <Switch value={fresh} onValueChange={v => { tap(); setFresh(v); }} trackColor={{ false: c.line, true: c.accent }} thumbColor="#fff" {...{ activeThumbColor: '#fff' }} />
               </View>
-              {fresh && usable.length < size ? (
-                <T style={{ fontSize: 13, color: usable.length ? c.warn : c.bad }}>
-                  {usable.length ? `در این دسته‌ها فقط ${faNum(usable.length)} سؤال تازه مانده است.` : 'همه‌ی سؤال‌های این دسته‌ها را قبلاً دیده‌اید.'}
-                </T>
-              ) : null}
               <Button label={count ? `شروع آموزش (${faNum(count)} سؤال)` : 'سؤالی برای آموزش نیست'} disabled={!count}
                 onPress={() => { session.plan = { mode: 'sections', ids: shuffle(usable).slice(0, count), title: 'آموزش بر اساس دسته‌بندی' }; router.push('/run'); }} />
             </Card>
