@@ -14,10 +14,10 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, T, tap } from '@/ui/kit';
+import { Backdrop, Button, Card, L, T, physical, tap } from '@/ui/kit';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
-import { useColors, useIsDark } from '@/ui/theme';
+import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
 
 type Filter = 'wrong' | 'saved' | 'all';
 type Row = { it: Item; i: number };
@@ -80,7 +80,7 @@ export default function Result() {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
   const { Q, settings, bank, aiLessons } = useApp();
   const [a] = useState<Attempt | null>(() => session.result);
-  const [fresh] = useState(() => session.fresh);
+  const [fresh, setFresh] = useState(() => session.fresh);
   const n = a?.items.length ?? 0, right = a ? scoreOf(a) : 0, wrongN = n - right;
   const [filter, setFilter] = useState<Filter>(() => (fresh || wrongN ? 'wrong' : 'all'));
   const [k, setK] = useState(0);
@@ -183,63 +183,62 @@ export default function Result() {
     session.plan = { mode: 'lesson', ids: nextLesson.qs.filter(id => Q.has(id)), lesson: nextLesson.id, title: modeName({ mode: 'lesson', lesson: nextLesson.id }, bank) };
     router.replace('/run');
   };
+  // From the summary into the question-by-question review (all questions, from `at`).
+  const review = (at = 0) => { tap(); setFilter('all'); setK(Math.max(0, at)); setFresh(false); };
+  const marked = a.items.filter(it => it.m).length;
   return (
     <Backdrop>
-      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        {/* .result-hero */}
-        <Card style={{ alignItems: 'center', gap: 14, padding: 22 }}>
-          <View style={{ width: 170, height: 170, alignItems: 'center', justifyContent: 'center' }}>
-            <RingSvg size={170} stroke={14} pct={pct} color={full ? (pass ? c.ok : c.bad) : c.accent} track={c.surface2} />
+      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 24, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
+        {/* «خلاصه‌ی آزمون»: the only thing shown after handing in. */}
+        <Card style={{ alignItems: 'center', gap: 14, padding: 20, paddingTop: 22, borderRadius: 24 }}>
+          {/* Back to the exam (or lessons) page: an icon in the top right corner. */}
+          <Pressable onPress={() => { tap(); goTo(isLesson ? '/learn' : '/exam'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={isLesson ? 'بازگشت به درس‌ها' : 'بازگشت به صفحه‌ی آزمون'}
+            style={({ pressed }) => ({ position: 'absolute', top: 14, ...physical({ right: 14 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', zIndex: 2,
+              backgroundColor: pressed ? c.accentSoft : c.surface2 })}>
+            <Icon name="arrowRight" size={20} color={c.link} />
+          </Pressable>
+          <T style={{ fontSize: 19, lineHeight: 30, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
+          <View style={{ width: 150, height: 150, alignItems: 'center', justifyContent: 'center' }}>
+            <RingSvg size={150} stroke={12} pct={pct} color={full ? (pass ? c.ok : c.bad) : c.accent} track={c.surface2} />
             {full
-              ? <><T style={{ fontSize: 42, lineHeight: 50, fontWeight: '700', textAlign: 'center' }}>{faNum(right)}</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>از {faNum(n)}</T></>
-              : <><T style={{ fontSize: 36, lineHeight: 46, fontWeight: '700', textAlign: 'center' }}>{faNum(pctN)}٪</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{faNum(right)} از {faNum(n)}</T></>}
+              ? <><T style={{ fontSize: 38, lineHeight: 46, fontWeight: '700', textAlign: 'center' }}>{faNum(right)}</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>از {faNum(n)}</T></>
+              : <><T style={{ fontSize: 32, lineHeight: 42, fontWeight: '700', textAlign: 'center' }}>{faNum(pctN)}٪</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{faNum(right)} از {faNum(n)}</T></>}
           </View>
-          <View style={{ width: '100%', alignItems: 'center', gap: 4 }}>
-            <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)} · {fmtDateTime(a.at)}</T>
-            <T style={{ fontSize: 26, lineHeight: 38, fontWeight: '800', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.link }}>
+          <View style={{ alignItems: 'center', gap: 2 }}>
+            <T style={{ fontSize: 22, lineHeight: 34, fontWeight: '800', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.link }}>
               {full ? (pass ? '🎉 قبول شدید!' : 'مردود — دوباره تلاش کنید') : `${faNum(pctN)}٪ پاسخ درست`}
             </T>
-            <T style={{ color: c.muted, textAlign: 'center', fontSize: 14 }}>
-              {full ? (pass ? `حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} کاملاً درست بود.` : `برای قبولی حداقل ${faNum(passMin(n))} تصویر از ${faNum(n)} باید کاملاً درست باشد.`)
-                : `آزمون تمرینی ${faNum(n)} سؤالی؛ فقط درصد پاسخ‌های درست ثبت می‌شود. قبولی/مردودی فقط برای آزمون کامل ۲۵ سؤالی تعیین می‌شود.`}
-            </T>
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 14, marginBottom: 4, width: '100%' }}>
-              {[['تصاویر درست', faNum(right)], ['تصاویر اشتباه', faNum(wrongN)], ['زمان', fmtTime(a.secs)]].map(([k1, v]) => (
-                <View key={k1} style={{ flex: 1, paddingVertical: 8, paddingHorizontal: 6, borderRadius: 6, backgroundColor: c.surface2 }}>
-                  <T style={{ fontSize: 13, textAlign: 'center' }}>{k1}: <T style={{ fontSize: 13, fontWeight: '700' }}>{v}</T></T>
-                </View>
-              ))}
-            </View>
+            <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)} · {fmtDateTime(a.at)}</T>
           </View>
-          {/* .res-actions */}
-          <View style={{ width: '100%', gap: 10 }}>
-            {isLesson ? <Button kind="glass" label="داشبورد" onPress={() => goTo('/')} /> : null}
-            {wrongN ? <Button label="تمرین دوباره‌ی همین اشتباهات" onPress={retry} /> : null}
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              {isLesson ? (
-                <>
-                  {nextLesson ? <Button style={{ flex: 1 }} kind={wrongN ? 'glass' : 'primary'} label="درس بعدی" onPress={startNext} /> : null}
-                  <Button style={{ flex: 1 }} kind="glass" label="فهرست درس‌ها" onPress={() => goTo('/learn')} />
-                </>
-              ) : (
-                <>
-                  <Button style={{ flex: 1 }} kind={wrongN ? 'glass' : 'primary'} label="آزمون جدید" onPress={() => goTo('/exam')} />
-                  <Button style={{ flex: 1 }} kind="glass" label="داشبورد" onPress={() => goTo('/')} />
-                </>
-              )}
-            </View>
+          <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
+            {([['درست', faNum(right), c.ok], ['اشتباه', faNum(wrongN), wrongN ? c.bad : c.muted], ['علامت‌خورده', faNum(marked), c.warn], ['زمان', fmtTime(a.secs), c.text]] as const).map(([l, v, col]) => (
+              <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 12, backgroundColor: c.surface2 }}>
+                <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '700', color: col, textAlign: 'center' }}>{v}</T>
+                <T style={{ fontSize: 11.5, color: c.muted, textAlign: 'center' }}>{l}</T>
+              </View>
+            ))}
+          </View>
+          {/* Every question: green right, red wrong, a bookmark when marked; a tap opens its review. */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 7, justifyContent: 'center', direction: 'ltr' } as any}>
+            {a.items.map((it, j) => (
+              <Pressable key={j} onPress={() => review(rows.findIndex(r => r.i === j))} accessibilityLabel={`سؤال ${j + 1}`}
+                style={({ pressed }) => ({ width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
+                  backgroundColor: it.ok ? c.okSoft : c.badSoft, borderWidth: 1.5, borderColor: it.m ? c.warn : it.ok ? c.okSoft : c.badSoft })}>
+                <L style={{ fontSize: 15, lineHeight: 20, fontWeight: '600', color: it.ok ? c.ok : c.bad, fontFamily: NUM_FONT }}>{j + 1}</L>
+                {it.m ? (
+                  <View style={{ position: 'absolute', top: -5, right: -5, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
+                    <Icon name="bookmark" size={10} filled color="#fff" />
+                  </View>
+                ) : null}
+              </Pressable>
+            ))}
+          </View>
+          <View style={{ width: '100%', gap: 10, marginTop: 4 }}>
+            <Button label="بازبینی آزمون" onPress={() => review(0)} />
+            {wrongN ? <Button kind="glass" label="تمرین اشتباهات" onPress={retry} /> : null}
+            {isLesson && nextLesson ? <Button kind="glass" label="درس بعدی" onPress={startNext} /> : null}
           </View>
         </Card>
-        {/* .section-title: «مرور پاسخ‌ها» and the tabs */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginTop: 16, marginHorizontal: 2 }}>
-          <T style={{ fontSize: 16, fontWeight: '700' }}>مرور پاسخ‌ها</T>
-          <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
-        </View>
-        {anyOld ? <OldNote /> : null}
-        {list.length ? list.map((r, j) => (
-          <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} startOpen={filter === 'wrong' && j < 3} />
-        )) : <Empty text={filter === 'wrong' ? 'هیچ اشتباهی نداشتید! 👏' : 'موردی نیست.'} />}
-        {showSummary ? <AiSummary items={a.items} at={a.at} lang={lang} onQuestion={() => { setFilter('all'); toTop(); }} /> : null}
       </ScrollView>
     </Backdrop>
   );
