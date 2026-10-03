@@ -28,8 +28,8 @@ export function BarCount({ n, of }: { n: number; of: number }) {
   return <T style={{ fontSize: 21, lineHeight: 30, color: dark ? c.link : c.accent, fontWeight: '500', textAlign: 'center', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>;
 }
 
-// Buttons of the bar. Previous / next are round teal buttons with an arrow (`round`; the label is for screen
-// readers), pale when they cannot be used; hand in is a round check in the submit colour (`submit`). Without `round`, a labelled
+// Buttons of the bar. Previous / next are round grey buttons with an arrow (`round`; the label is for screen
+// readers; `nav` colours), pale when they cannot be used; hand in is a round check in the submit colour (`submit`). Without `round`, a labelled
 // capsule, in the submit colour with `submit`. `lead`: icon before the label.
 export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean; round?: boolean }) {
   const c = useColors();
@@ -38,8 +38,8 @@ export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }:
     return (
       <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
         style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: disabled ? c.accentSoft : submit ? c.submit : c.accent, opacity: pressed ? 0.8 : 1 })}>
-        <Icon name={icon} size={icon === 'check' ? 22 : 20} color={disabled ? c.faint : fg} weight={icon === 'check' ? 'bold' : 'semibold'} />
+          backgroundColor: disabled ? c.navOff : submit ? c.submit : c.nav, opacity: pressed ? 0.8 : 1 })}>
+        <Icon name={icon} size={icon === 'check' ? 22 : 20} color={disabled ? c.faint : submit ? fg : c.navFg} weight={icon === 'check' ? 'bold' : 'semibold'} />
       </Pressable>
     );
   }

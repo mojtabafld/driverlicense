@@ -22,6 +22,8 @@ const tealLight = {
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#d4e5e5',
   // A chosen answer in an exam: its border / check box and its tint.
   pick: '#2e8285', pickSoft: '#dcefef',
+  // The round previous / next buttons of the glass bar: fill, arrow, and fill when they cannot be used.
+  nav: '#2e8285', navFg: '#ffffff', navOff: '#dcefef',
   // Page background: a very soft top-to-bottom gradient around bg, with a hint of the teal.
   bgGradient: ['#f5fafa', '#edf4f4', '#e1eded'] as readonly [string, string, string],
 };
@@ -33,6 +35,7 @@ const tealDark: typeof tealLight = {
   submit: '#3d7a33', checked: '#244241', cardBorder: 'rgba(255,255,255,0.06)', hairline: '#2c4547',
   glass: '#172a2b', glassStrong: '#172a2b', glassBorder: '#2c4547',
   pick: '#2f8f92', pickSoft: '#163637',
+  nav: '#2f8f92', navFg: '#ffffff', navOff: '#163637',
   bgGradient: ['#152a2b', '#0f1c1d', '#0a1415'] as readonly [string, string, string],
 };
 // Uber Eats: near-white page, white cards, near-black text, no tints of colour in the surfaces; the accent is a jade
@@ -45,6 +48,7 @@ const uberLight: typeof tealLight = {
   submit: '#0d8a73', checked: '#ddf0eb', cardBorder: 'rgba(0,0,0,0.06)', hairline: '#e2e2e2',
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e2e2e2',
   pick: '#141414', pickSoft: '#ececec',
+  nav: '#e4e4e4', navFg: '#141414', navOff: '#f0f0f0',
   bgGradient: ['#f3f3f3', '#f3f3f3', '#f3f3f3'] as readonly [string, string, string],
 };
 const uberDark: typeof tealLight = {
@@ -55,6 +59,7 @@ const uberDark: typeof tealLight = {
   submit: '#1fa489', checked: '#163230', cardBorder: 'rgba(255,255,255,0.05)', hairline: '#2e2e2e',
   glass: '#181818', glassStrong: '#181818', glassBorder: '#2e2e2e',
   pick: '#f2f2f2', pickSoft: '#2a2a2a',
+  nav: '#3a3a3a', navFg: '#ffffff', navOff: '#262626',
   bgGradient: ['#0c0c0c', '#0c0c0c', '#0c0c0c'] as readonly [string, string, string],
 };
 const light = STYLE === 'uber' ? uberLight : tealLight;
