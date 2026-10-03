@@ -69,7 +69,8 @@ async function newSession(req, res, username) {
 // "Authorization: Bearer <token>"; the web site keeps using the HttpOnly cookie only.
 const isApp = req => req.headers['x-client'] === 'app';
 function sessionUser(req) {
-  const m = /(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '') || /^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '')
+  // The app's own token (Bearer) first, then the site's cookie: a leftover cookie never overrides the app's session.
+  const m = /^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '') || /(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '')
     // pictures in the app's web version (an <img> cannot send headers): ?t=<token>, only for /img/
     || (/^\/img\//.test(new URL(req.url, 'http://x').pathname) && /^([a-f0-9]{64})$/.exec(new URL(req.url, 'http://x').searchParams.get('t') || ''));
   const s = m && store.sessions[m[1]];
@@ -350,8 +351,9 @@ async function api(req, res, route) {
   await touch(user);
 
   if (req.method === 'POST' && route === 'logout') {
-    delete store.sessions[s.token];
-    await store.deleteSession(s.token);
+    // The session used, and the cookie's one too when it differs: signing out leaves neither behind.
+    const ck = /(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '');
+    for (const t of new Set([s.token, ck && ck[1]].filter(Boolean))) { delete store.sessions[t]; await store.deleteSession(t); }
     res.setHeader('Set-Cookie', cookie(req, '', 0));
     return send(res, 200, { ok: true });
   }

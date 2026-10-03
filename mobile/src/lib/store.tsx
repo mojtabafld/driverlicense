@@ -1,7 +1,7 @@
 // App state: the signed-in user, their exams and settings, and the question bank.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { ApiError, api, fetchBank, setApiToken } from './api';
+import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL } from './config';
 import { loadToken, saveToken } from './token';
@@ -39,8 +39,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [intro, setIntro] = useState<Record<string, string>>({});
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
 
+  // Bumped on sign-out: an account read that was still on its way then is dropped, so it cannot sign the user back in.
+  const gen = useRef(0);
   const load = useCallback(async () => {
+    const g = gen.current;
     const d = await api<Me>('GET', 'me');
+    if (g !== gen.current) return;
     setMe(d);
     api<{ aiLessons?: boolean }>('GET', 'config').then(x => setAiLessons(!!x.aiLessons)).catch(() => {});
     if (!bank) setBank(await fetchBank<Bank>());
@@ -78,7 +82,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     Q: new Map((bank?.questions || []).map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
     register: async (name, username, password) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password }); await signedIn(d.token); },
-    logout: async () => { try { await api('POST', 'logout'); } catch {} setApiToken(null); setToken(null); await saveToken(null); setMe(null); },
+    // Signed out on the device at once; the server is told in the background (with the old token), so a slow or
+    // missing connection never keeps the user signed in.
+    logout: async () => {
+      const old = getApiToken();
+      gen.current++;
+      setApiToken(null); setToken(null); setMe(null);
+      await saveToken(null);
+      if (old) api('POST', 'logout', undefined, old).catch(() => {});
+    },
     clearAttempts: async () => { await api('DELETE', 'attempts'); setMe(m => (m ? { ...m, attempts: [] } : m)); },
     updateAccount: async b => { const d = await api<{ user: User }>('PUT', 'account', b); setMe(m => (m ? { ...m, user: d.user } : m)); },
     refresh: load,
