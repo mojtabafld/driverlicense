@@ -142,6 +142,9 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
     case 'exit':
       body = <G><Path d="M13.5 4.5H7a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 7 19.5h6.5" {...line} /><Path d="M10.5 12h10M17 8.5l3.5 3.5-3.5 3.5" {...line} /></G>;
       break;
+    case 'refresh':
+      body = <G><Path d="M19 12a7 7 0 1 1-2.05-4.95" {...line} strokeWidth={2.2} /><Path d="M19.5 4.5V9H15" {...line} strokeWidth={2.2} /></G>;
+      break;
     case 'trash':
       body = <G><Path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5" {...line} /><Path d="M6.5 6.5l.8 12.2A2 2 0 0 0 9.3 20.5h5.4a2 2 0 0 0 2-1.8l.8-12.2M10 10.5v6M14 10.5v6" {...line} /></G>;
       break;
