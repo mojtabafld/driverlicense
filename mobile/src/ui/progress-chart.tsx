@@ -17,6 +17,8 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 
 export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean }) {
   const c = useColors();
+  // «قبول» in green / «مردود» in red, only the word, for the picked exam.
+  const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
   const H = fill ? Math.max(fillH, 60) : 210;
   const [sel, setSel] = useState<number | null>(null);
@@ -85,7 +87,7 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
                 <T style={{ flex: 1, fontSize: 13 }} numberOfLines={1}>
                   <T style={{ fontSize: 13, fontWeight: '700' }}>آزمون {faNum(sel! + 1 + offset)}</T>
-                  {' · '}{isFull(a) ? `${faNum(scoreOf(a))}/${faNum(a.items.length)} ${isPass(a) ? 'قبول' : 'مردود'}` : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`} · {fmtDate(a.at)}
+                  {' · '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`} · {fmtDate(a.at)}
                 </T>
                 <T style={{ color: c.link, fontWeight: '700', fontSize: 13 }}>مرور</T><Icon name="chevronLeft" size={14} color={c.link} weight="semibold" />
               </View>
@@ -98,7 +100,7 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
             <View style={{ flex: 1 }}>
               <T style={{ fontWeight: '700' }}>آزمون {faNum(sel! + 1 + offset)} · {modeName(a)}</T>
               <T style={{ color: c.muted, fontSize: 13 }}>
-                {fmtDate(a.at)} · {isFull(a) ? `نمره ${faNum(scoreOf(a))}/${faNum(a.items.length)} · ${isPass(a) ? 'قبول' : 'مردود'}` : `${faNum(a.items.length)} سؤالی · ${faNum(Math.round(pctOf(a) * 100))}٪ درست`}
+                {fmtDate(a.at)} · {isFull(a) ? <>{`نمره ${faNum(scoreOf(a))}/${faNum(a.items.length)} · `}{verdict(a)}</> : `${faNum(a.items.length)} سؤالی · ${faNum(Math.round(pctOf(a) * 100))}٪ درست`}
               </T>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><T style={{ color: c.link, fontWeight: '700' }}>مرور</T><Icon name="chevronLeft" size={15} color={c.link} weight="semibold" /></View>
