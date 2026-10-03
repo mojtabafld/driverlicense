@@ -241,7 +241,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </Pressable>
         </View>
         <View style={{ gap: 8 }}>
-          <L style={flat ? { fontSize: 20, lineHeight: 27, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
+          <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
           {fa && q.sfa ? (
             // The Persian translation on a soft teal tint, no side line.
             <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: dark ? 'rgba(124,203,205,0.12)' : 'rgba(60,170,150,0.13)' }}>
