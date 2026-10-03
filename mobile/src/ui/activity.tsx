@@ -9,6 +9,7 @@ import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import { modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
+import { Confirm } from './confirm';
 import { Icon } from './icon';
 import { Card, T, tap } from './kit';
 import { useColors, type Colors } from './theme';
@@ -54,16 +55,23 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
 // The card with the latest `limit` attempts, newest first, and «نمایش همه» when there are more.
 export function ActivityList({ attempts, limit = 10 }: { attempts: Attempt[]; limit?: number }) {
   const c = useColors();
-  const { bank } = useApp();
-  const [all, setAll] = useState(false);
+  const { bank, clearAttempts } = useApp();
+  const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
   const rows = attempts.slice().reverse(), shown = all ? rows : rows.slice(0, limit);
   if (!rows.length) return null;
   return (
     <Card style={{ paddingVertical: 6 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 4 }}>
         <T style={{ fontWeight: '700', fontSize: 16 }}>آخرین فعالیت‌ها</T>
-        <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(rows.length)} آزمون و درس</T>
+        {/* Delete the whole history, after a question. */}
+        <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
+          style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
+          <Icon name="trash" size={18} color={c.bad} />
+        </Pressable>
       </View>
+      <Confirm open={ask} title="حذف تاریخچه؟" text={`همه‌ی ${faNum(rows.length)} آزمون و درس انجام‌شده و نتیجه‌هایشان پاک می‌شوند. این کار برگشت‌پذیر نیست.`}
+        cancel="انصراف" ok={busy ? 'در حال حذف…' : 'حذف همه'} danger onCancel={() => setAsk(false)}
+        onOk={() => { if (busy) return; setBusy(true); clearAttempts().then(() => setAsk(false)).catch(() => {}).finally(() => setBusy(false)); }} />
       {shown.map((a, i) => <ActivityRow key={a.at} a={a} bank={bank} c={c} last={i === shown.length - 1} />)}
       {rows.length > limit ? (
         <Pressable onPress={() => { tap(); setAll(!all); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
