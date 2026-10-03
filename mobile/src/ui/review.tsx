@@ -1,5 +1,5 @@
-// Answer review, drawn like the site's review cards (.rcard): the picture with «سؤال n» and the bookmark, the prove.dk
-// badges and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
+// Answer review, drawn like the site's review cards (.rcard): the picture with «سؤال n» and the bookmark, the category
+// badge and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
@@ -9,7 +9,7 @@ import { api } from '@/lib/api';
 import type { Item, Question } from '@/lib/bank';
 import { imgSource } from '@/lib/img-source';
 import { faNum } from '@/lib/logic';
-import { srcLabels, topicFa } from '@/lib/names';
+import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
 import { L, T, physical, tap } from './kit';
@@ -183,7 +183,7 @@ type CardProps = {
   q: Question; it: Pick<Item, 'ok' | 'a'>; index?: number; lang: 'da' | 'en'; fa: boolean; at?: number;
   // Step-by-step review: always open, without the «جزئیات و توضیحات» switch at the bottom.
   alwaysOpen?: boolean; startOpen?: boolean;
-  // An extra badge before the prove.dk ones, e.g. «۳ اشتباه در ۴ آزمون» on the mistakes page.
+  // An extra badge before the category, e.g. «۳ اشتباه در ۴ آزمون» on the mistakes page.
   badge?: { text: string; fg: string; bg: string };
 };
 export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, startOpen, badge }: CardProps) {
@@ -225,11 +225,12 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '700', color: badge.fg }}>{badge.text}</T>
             </View>
           ) : null}
-          {bank ? srcLabels(bank, q.id).map(l => (
-            <View key={l} style={{ paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
-              <L style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.muted }}>{l}</L>
+          {/* The question's category (official section) */}
+          {bank && sectionFa(bank, q.c) ? (
+            <View style={{ paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
+              <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.muted }}>{sectionFa(bank, q.c)}</T>
             </View>
-          )) : null}
+          ) : null}
           <View style={{ flex: 1 }} />
           <Pressable onPress={() => { tap(); setFa(!fa); }} accessibilityRole="button" accessibilityState={{ selected: fa }}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 2, borderRadius: 999, borderWidth: 1,
