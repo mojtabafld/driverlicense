@@ -7,17 +7,19 @@ import { tap } from './kit';
 import { SizeTicks } from './size-ticks';
 import { useColors } from './theme';
 
-type Props = { value: number; values: number[]; onChange: (v: number) => void };
-export function SizeSlider({ value, values, onChange }: Props) {
+// `grey`: in the neutral grey of the exam's position (navNum) instead of the accent.
+type Props = { value: number; values: number[]; onChange: (v: number) => void; grey?: boolean };
+export function SizeSlider({ value, values, onChange, grey }: Props) {
   const c = useColors();
+  const tint = grey ? c.navNum : c.accent;
   const step = values[1] - values[0];
   return (
     <View style={{ gap: 2 }}>
       <Slider value={value} minimumValue={values[0]} maximumValue={values[values.length - 1]} step={step}
         onValueChange={v => { if (v !== value) { tap(); onChange(v); } }}
-        minimumTrackTintColor={c.accent} maximumTrackTintColor={c.line} thumbTintColor={c.accent}
+        minimumTrackTintColor={tint} maximumTrackTintColor={c.line} thumbTintColor={tint}
         accessibilityLabel="تعداد سؤال‌ها" style={{ height: 40 }} />
-      <SizeTicks value={value} values={values} />
+      <SizeTicks value={value} values={values} color={grey ? c.navNum : undefined} />
     </View>
   );
 }

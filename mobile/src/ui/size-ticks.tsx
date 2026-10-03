@@ -5,12 +5,13 @@ import { faNum } from '@/lib/logic';
 import { T } from './kit';
 import { useColors } from './theme';
 
-export function SizeTicks({ value, values }: { value: number; values: number[] }) {
+// `color`: the chosen size's colour (the accent's link colour by default).
+export function SizeTicks({ value, values, color }: { value: number; values: number[]; color?: string }) {
   const c = useColors();
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 }}>
       {values.map(n => (
-        <T key={n} style={{ width: 26, textAlign: 'center', fontSize: 12.5, fontWeight: n === value ? '800' : '500', color: n === value ? c.link : c.muted }}>{faNum(n)}</T>
+        <T key={n} style={{ width: 26, textAlign: 'center', fontSize: 12.5, fontWeight: n === value ? '800' : '500', color: n === value ? color ?? c.link : c.muted }}>{faNum(n)}</T>
       ))}
     </View>
   );
