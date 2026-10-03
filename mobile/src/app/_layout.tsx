@@ -52,6 +52,11 @@ function Root() {
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
       <StatusBar style={dark || !onboarded || (user && !settings.langChosen) ? 'light' : 'dark'} />
+      {/* While the intro is open the screens (sign-in included) are not there at all: hidden password fields behind it
+          made iOS / Android offer saved passwords during the intro. */}
+      {!onboarded ? (
+        <Onboarding onTop={setIntroTop} onDone={() => { saveOnboarded(); setOnboarded(true); }} />
+      ) : (
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />
@@ -64,11 +69,8 @@ function Root() {
           <Stack.Screen name="login" />
         </Stack.Protected>
       </Stack>
-      {!onboarded ? (
-        <View style={StyleSheet.absoluteFill}>
-          <Onboarding onTop={setIntroTop} onDone={() => { saveOnboarded(); setOnboarded(true); }} />
-        </View>
-      ) : user && !settings.langChosen ? (
+      )}
+      {onboarded && user && !settings.langChosen ? (
         // After the intro and signing in: the questions' language, asked once per user.
         <View style={StyleSheet.absoluteFill}><LangPick /></View>
       ) : null}
