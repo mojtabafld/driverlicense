@@ -222,21 +222,24 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 // The question bank and pictures are only served to signed-in users.
 const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 
-// The mobile app's web version (mobile/, built into app-web/ with `npm run build:web`) at /app. It is a single-page
-// app: unknown paths get its index.html; its hashed bundles are cached for a year.
+// The app's web version (mobile/, built into app-web/ with `npm run build:web`) is the site at the root: a
+// single-page app, so a path that is no file of it (and nothing else of the server's) gets its index.html; its hashed
+// bundles are cached for a year. The earlier site (site/) lives on at /app/.
 const APP_WEB = path.join(__dirname, 'app-web');
+const APP_INDEX = path.join(APP_WEB, 'index.html');
 const APP_MIME = { ...MIME, '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
 function serveAppWeb(req, res, p) {
-  let file = path.normalize(path.join(APP_WEB, p.replace(/^\/app/, '') || '/'));
+  let file = path.normalize(path.join(APP_WEB, p));
   if (file !== APP_WEB && !file.startsWith(APP_WEB + path.sep)) { res.writeHead(403); return res.end(); }
   fs.stat(file, (err, st) => {
     const index = err || !st.isFile();
-    if (index) file = path.join(APP_WEB, 'index.html');
+    if (index) file = APP_INDEX;
+    if (index && req.method === 'GET') recordVisit(req);
     fs.readFile(file, (e, buf) => {
       if (e) { res.writeHead(404); return res.end('Not found'); }
       res.writeHead(200, {
         'Content-Type': APP_MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
-        'Cache-Control': index || file.endsWith('index.html') ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
+        'Cache-Control': file === APP_INDEX ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
         'X-Content-Type-Options': 'nosniff',
       });
       res.end(req.method === 'HEAD' ? undefined : buf);
@@ -247,12 +250,17 @@ function serveAppWeb(req, res, p) {
 function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
-  if (p === '/app' || p.startsWith('/app/')) return serveAppWeb(req, res, p);
-  if (p === '/' || p === '/index.html') {
+  // The earlier site at /app/: its page, and its own files and the shared ones (data.js, img/) under /app/ too.
+  if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
+  if (p === '/app/' || p === '/app/index.html') {
     if (req.method === 'GET') recordVisit(req);
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
     return res.end(req.method === 'HEAD' ? undefined : INDEX_HTML);
   }
+  const fromSite = p.startsWith('/app/');
+  if (fromSite) p = p.slice(4);
+  // The app at the root (everything that is not the earlier site's, the API's or a shared file).
+  if (!fromSite && !p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/')) return serveAppWeb(req, res, p);
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   const im = /^\/intro\/([1-9])\.png$/.exec(p);
   if (im) {
