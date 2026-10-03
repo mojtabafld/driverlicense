@@ -118,12 +118,13 @@ export default function Result() {
   if (!fresh) {
     const total = list.length, end = k >= total, r = list[k];
     // The floating glass bar, as in the exam: previous / the position / next; on the last question the summary (AI
-    // sparkles, or a list), and at the summary the home page. All round icon buttons.
+    // sparkles, or a list), and at the summary the exam page (the lessons page after a lesson). All round icon buttons.
     const nav = (
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!k} onPress={() => step(k - 1)} />}
         middle={end ? null : <BarCount n={k + 1} of={total} />}
-        end={end ? <FootBtn label={ui.home} icon="house" round onPress={() => goTo('/')} />
+        end={end ? (isLesson ? <FootBtn label={ui.lessons} icon="learn" round onPress={() => goTo('/learn')} />
+            : <FootBtn label={ui.exams} icon="exam" round onPress={() => goTo('/exam')} />)
           : k === total - 1 ? <FootBtn label={ui.summary} icon={showSummary ? 'sparkles' : 'clipboard'} round onPress={() => step(k + 1)} />
           : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => step(k + 1)} />} />
     );
