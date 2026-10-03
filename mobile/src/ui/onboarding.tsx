@@ -24,6 +24,25 @@ export const INTRO_BG = ['#3f8c8f', '#3f8c8f', '#2a6a6d'] as const;
 const BG = INTRO_BG;
 const BUTTON = '#ffffff', BUTTON_TEXT = '#2a7679';
 
+// The slide's title on one line: measured once at full size in an invisible, very wide box, then set just small
+// enough to fit the width it has (never larger than `size`).
+function FitTitle({ text, size }: { text: string; size: number }) {
+  const [full, setFull] = useState<{ text: string; w: number } | null>(null);
+  const [room, setRoom] = useState(0);
+  const w = full && full.text === text ? full.w : 0;
+  const fs = w && room ? Math.max(16, Math.min(size, Math.floor(size * room / w * 0.98))) : size;
+  return (
+    <View onLayout={e => setRoom(e.nativeEvent.layout.width)} style={{ overflow: 'hidden' }}>
+      <View pointerEvents="none" style={{ position: 'absolute', opacity: 0, top: 0, right: 0, width: 4000, flexDirection: 'row', justifyContent: 'flex-end' }}>
+        <View onLayout={e => setFull({ text, w: e.nativeEvent.layout.width })} style={{ flexShrink: 0, flexGrow: 0 }}>
+          <T style={{ fontSize: size, lineHeight: size * 1.45, fontWeight: '800' }}>{text}</T>
+        </View>
+      </View>
+      <T numberOfLines={1} style={{ color: '#fff', fontSize: fs, lineHeight: Math.round(fs * 1.45), fontWeight: '800', opacity: w && room ? 1 : 0 }}>{text}</T>
+    </View>
+  );
+}
+
 // `onTop`: the colour at the top of the screen, for the browser's own bar on the web.
 export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: string) => void }) {
   const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
@@ -71,7 +90,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
             ) : <View style={{ width: Math.min(width - 40, 380), height: artH }}><Art /></View>}
           </View>
           <View style={{ gap: 12, paddingBottom: 28, minHeight: 190 }}>
-            <T style={{ color: '#fff', fontSize: 30, lineHeight: 44, fontWeight: '800' }}>{title}</T>
+            <FitTitle text={title} size={30} />
             <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>{text}</T>
           </View>
         </Animated.View>
