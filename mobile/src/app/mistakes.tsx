@@ -1,4 +1,4 @@
-// «بیشترین اشتباهات»: «تمرین همه‌ی اشتباهات», three panels (topics / fixed, i.e. right the last time / not fixed
+// «اشتباهات»: «تمرین همه‌ی اشتباهات», three panels (topics / fixed, i.e. right the last time / not fixed
 // yet) and the weakest 5 topics. A panel opens its own page (/mistakes-view, with a back button): «مبحث» (or «نمایش
 // همه») all the topics, «اصلاح‌نشده» or «اصلاح‌شده» those questions by topic; a tapped topic opens its own
 // questions. The questions are shown one at a time, as in the
@@ -79,7 +79,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
     router.push({ pathname: '/mistakes-view', params: typeof v === 'object' ? { topic: v.topic } : { v } });
   };
   const shown = !view || view === 'topics' ? [] : typeof view === 'object' ? sorted.filter(g => g.c === view.topic) : sorted.filter(g => g.list.some(keep));
-  const title = !view ? 'بیشترین اشتباهات' : view === 'topics' ? 'مباحث' : view === 'open' ? 'سؤال‌های اصلاح‌نشده' : view === 'fixed' ? 'سؤال‌های اصلاح‌شده' : topicFa(bank, view.topic);
+  const title = !view ? 'اشتباهات' : view === 'topics' ? 'مباحث' : view === 'open' ? 'سؤال‌های اصلاح‌نشده' : view === 'fixed' ? 'سؤال‌های اصلاح‌شده' : topicFa(bank, view.topic);
   const sectionOf = (code: string) => +String(code).split('.')[0];
   const all = shown.flatMap(g => g.list.filter(keep).map(st => ({ g, st })));
   const items = secs.length ? all.filter(x => secs.includes(sectionOf(x.g.c))) : all;
