@@ -63,10 +63,11 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
     <View style={{ paddingTop: ins.top + 6 }}>
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
-          <Logo />
+          {/* The logo first in the page's reading order: at the outer (right) edge, the name inside it. */}
           <Text style={{ fontFamily: DA_FONT, fontSize: 18, color: c.link }}>
             <Text style={{ fontWeight: '700' }}>Teori</Text>Prøve
           </Text>
+          <Logo />
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>{right}<ThemeButton /></View>
       </View>
