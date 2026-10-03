@@ -16,8 +16,10 @@ export const saveMode = async (m: ThemeMode) => {
 // Whether the intro (src/ui/onboarding.tsx) was seen in this browser; missing on the first visit and for anyone who
 // used a version without it, so both get it once.
 const ONBOARDED = 'tp.onboarded';
+// The value marking the intro as seen; a new value shows the intro to everyone once more (2: after the teal redesign).
+const SEEN = '2';
 export const initialOnboarded = (): boolean | null => {
-  try { return localStorage.getItem(ONBOARDED) === '1'; } catch { return false; }
+  try { return localStorage.getItem(ONBOARDED) === SEEN; } catch { return false; }
 };
 export const loadOnboarded = async () => initialOnboarded() ?? false;
-export const saveOnboarded = async () => { try { localStorage.setItem(ONBOARDED, '1'); } catch {} };
+export const saveOnboarded = async () => { try { localStorage.setItem(ONBOARDED, SEEN); } catch {} };

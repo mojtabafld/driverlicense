@@ -569,6 +569,11 @@ async function api(req, res, route) {
 
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
+  // One-time: everyone is asked again which language the questions are in (with the app's renewed intro).
+  if (store.meta.langAskReset !== 1) {
+    for (const u of Object.values(store.users)) if (u.settings && u.settings.langChosen) { delete u.settings.langChosen; await store.saveUser(u); }
+    await store.saveMeta('langAskReset', 1);
+  }
   imagegen.init(store, SITE);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
