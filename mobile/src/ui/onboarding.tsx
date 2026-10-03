@@ -3,7 +3,7 @@
 // it; a sideways swipe also turns the slides (right to left, as the page reads).
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,7 +24,8 @@ export const INTRO_BG = ['#024776', '#024776', '#012f4f'] as const;
 const BG = INTRO_BG;
 const BUTTON = '#8cc3ef', BUTTON_TEXT = '#012a45';
 
-export function Onboarding({ onDone }: { onDone: () => void }) {
+// `onTop`: the colour at the top of the screen, for the browser's own bar on the web.
+export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: string) => void }) {
   const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
   const { intro, introBg } = useApp();
@@ -50,17 +51,22 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
   };
   const { Art, title, text } = SLIDES[i];
   // The server's picture for this slide, laid on its own background colour so its edge does not show.
-  const pic = intro[i + 1];
+  const pic = intro[i + 1], top = pic && introBg[i + 1] ? introBg[i + 1] : BG[0];
+  useEffect(() => { onTop?.(top); }, [top, onTop]);
+  // The picture takes all the room above the text (the full width, under the side padding).
+  const [box, setBox] = useState({ w: 0, h: 0 });
+  const side = Math.max(0, Math.min(box.w, box.h));
   const artH = Math.min(height * 0.42, 340), shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
   return (
     <View style={{ flex: 1 }} {...swipe}>
-      <LinearGradient colors={pic && introBg[i + 1] ? [introBg[i + 1], introBg[i + 1], BG[2]] : BG} locations={[0, 0.62, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={[top, top, BG[2]]} locations={[0, 0.62, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -28 }}
+            onLayout={e => { const { width: w, height: h } = e.nativeEvent.layout; setBox({ w, h }); }}>
             {/* The server's 3D picture for this slide when it has one, else the app's own drawing. */}
             {pic ? (
-              <Image source={{ uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` }} style={{ width: Math.min(width - 24, artH * 1.15, 420), aspectRatio: 1 }}
+              <Image source={{ uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` }} style={{ width: Math.min(side, 520), height: Math.min(side, 520) }}
                 contentFit="contain" transition={250} cachePolicy="memory-disk" />
             ) : <View style={{ width: Math.min(width - 40, 380), height: artH }}><Art /></View>}
           </View>

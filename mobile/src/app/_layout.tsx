@@ -10,7 +10,7 @@ import { AppProvider, useApp } from '@/lib/store';
 import { FA_FONTS } from '@/ui/fonts';
 import { Backdrop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
-import { Onboarding } from '@/ui/onboarding';
+import { INTRO_BG, Onboarding } from '@/ui/onboarding';
 import { useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
 
@@ -35,14 +35,18 @@ function Root() {
   useEffect(() => { if (onboarded === null) loadOnboarded().then(setOnboarded); }, [onboarded]);
   useEffect(() => { if (ready && fonts && onboarded !== null) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts, onboarded]);
   // On the web the page behind the app, and the browser's own bar (theme-color), take the top colour of the
-  // background gradient, so the top of the screen runs into the page.
+  // background gradient, so the top of the screen runs into the page; over the intro and the language screen, their
+  // navy (the intro's changes with its picture).
+  const [introTop, setIntroTop] = useState<string | null>(null);
+  const cover = onboarded === false ? introTop ?? INTRO_BG[0] : user && !settings.langChosen ? INTRO_BG[0] : null;
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-    document.documentElement.style.colorScheme = dark ? 'dark' : 'light'; document.body.style.backgroundColor = c.bgGradient[0];
+    const top = cover ?? c.bgGradient[0];
+    document.documentElement.style.colorScheme = cover || dark ? 'dark' : 'light'; document.body.style.backgroundColor = top;
     let m = document.querySelector('meta[name="theme-color"]');
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
-    m.setAttribute('content', c.bgGradient[0]);
-  }, [dark, c.bgGradient]);
+    m.setAttribute('content', top);
+  }, [dark, c.bgGradient, cover]);
   if (!ready || !fonts || onboarded === null || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
@@ -61,7 +65,7 @@ function Root() {
       </Stack>
       {!onboarded ? (
         <View style={StyleSheet.absoluteFill}>
-          <Onboarding onDone={() => { saveOnboarded(); setOnboarded(true); }} />
+          <Onboarding onTop={setIntroTop} onDone={() => { saveOnboarded(); setOnboarded(true); }} />
         </View>
       ) : user && !settings.langChosen ? (
         // After the intro and signing in: the questions' language, asked once per user.

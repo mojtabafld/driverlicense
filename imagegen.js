@@ -227,13 +227,13 @@ async function draft(qid) {
 // Made once by the same image model when the server starts with KIE_API_KEY set: a detailed 3D isometric scene per
 // slide on a plain navy background, so the app can lay it on its navy intro. Kept in store.meta.intro and served at
 // /intro/<n>.png; the app falls back to its own drawings until a picture is there. Changing INTRO_SET makes new ones.
-const INTRO_SET = 'v1';
-const INTRO_STYLE = 'Style: high-quality 3D isometric illustration, soft studio lighting, smooth matte clay-like materials, rich detail, gentle soft shadows. Colour palette: navy blue, sky blue (#8cc3ef), white and light grey, with small accents of green, red and warm yellow. The whole background is ONE plain, flat, solid deep navy blue (#024776) with no gradient, no floor, no horizon and no frame; the scene floats in the centre with a wide empty margin of that navy all around. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
+const INTRO_SET = 'v2';
+const INTRO_STYLE = 'Style: a modern, minimal 3D isometric illustration like the onboarding art of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft ambient light, subtle soft shadows, no clutter, no fine texture; people are small, stylised and faceless. Limited palette: sky blue (#8cc3ef), mid blue (#3d8fd1), white and light grey, with one or two small accents of green, red or warm yellow. The background is ONE plain, flat, solid deep navy blue (#024776) with no gradient, no floor, no horizon and no frame. The group of objects is compact, centred and fills about three quarters of the image. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
 const INTRO_PROMPTS = [
-  'A modern smartphone standing upright in the centre; its screen shows a driving-theory quiz: a small road picture and three answer rows with tick boxes. Around the phone, linked to it by softly glowing light-blue curved lines with small round dots at their ends: a small sky-blue hatchback car, a driving licence card (white and pale pink card with a photo silhouette, no readable text), a red octagonal stop sign on a pole, a red-and-white triangular give-way sign on a pole and a round blue mandatory-direction sign.',
-  'A test day scene: a large white clipboard exam sheet standing at a slight angle, with a road picture at the top and three answer rows below, two of them ticked in navy; beside it a big stopwatch with a sky-blue rim, and a green rosette badge with a white check mark and yellow ribbons. A young person sits on a stack of books next to the clipboard, calmly studying on a tablet.',
-  'A friendly AI tutor: a smartphone lying slightly tilted, its screen showing a road picture, an answer marked with a small red cross and below it a large sky-blue explanation bubble with lines of placeholder text bars (no readable text). Above the phone floats a small, cute, rounded white robot assistant with a glowing sky-blue face, pointing helpfully at the explanation; four-pointed sparkles and small glowing stars float around.',
-  'Progress and success: a floating white dashboard card with rising sky-blue bars and a navy line graph climbing upward over a dashed green pass line; next to it a red-and-white target with an arrow in the bullseye; in front, a small sky-blue car drives up a curved road that turns into an upward arrow; a few pieces of confetti and a small yellow trophy.',
+  'A smartphone standing upright in the centre with a plain white screen showing a small rounded app tile with a speedometer symbol. Around it, joined to it by thin softly glowing light-blue curved lines with small dots at their ends: a small rounded sky-blue car, a simple driving licence card with a faceless photo silhouette, a red octagonal stop sign and a red-and-white triangular give-way sign on short poles.',
+  'A giant closed theory book lying flat at an isometric angle, with a winding grey road with white dashes printed across its cover. Two small faceless people sit on the book: one studies on a tablet, the other holds a small clipboard with ticked boxes; a third stands beside the book looking at a phone. A small green round badge with a white check mark rests on the corner of the book.',
+  'A large smartphone lying flat at an isometric angle, used as a stage. On its screen stands a small, friendly, rounded white robot with a softly glowing sky-blue face, next to a big sky-blue speech bubble with three white placeholder lines, and a small road-sign picture card; two four-pointed sparkles float above.',
+  'A winding road with white dashes climbs from the lower left to the upper right like a rising path; a small rounded sky-blue car drives up it. At the top of the road stands a small podium with a yellow trophy and a green flag; beside the road floats a simple white card with three rising sky-blue bars.',
 ];
 // A new picture at half size (2048 → 1024 px, about a quarter of the bytes) and its background colour, which the app
 // paints behind it so the picture's edge does not show. A file it cannot read is kept as it is.
@@ -258,6 +258,9 @@ const intro = () => (store.meta.intro = store.meta.intro && store.meta.intro.set
 const saveIntro = () => store.saveMeta('intro', intro());
 async function startIntro() {
   if (!available()) return;
+  // A new set replaces the old one: its pictures are removed.
+  const prev = store.meta.intro;
+  if (prev && prev.set !== INTRO_SET) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
   const it = intro().items;
   for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
     const x = it[n];
@@ -297,9 +300,10 @@ async function pollIntro() {
   return pending;
 }
 // For /api/config: slide number → picture version, for the pictures that are ready.
-const introVersions = () => Object.fromEntries(Object.entries((store.meta.intro || {}).items || {}).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
+const introNow = () => (store.meta.intro && store.meta.intro.set === INTRO_SET ? store.meta.intro.items || {} : {});
+const introVersions = () => Object.fromEntries(Object.entries(introNow()).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
 // Slide number → the picture's background colour.
-const introColours = () => Object.fromEntries(Object.entries((store.meta.intro || {}).items || {}).filter(([, j]) => j.blob && j.bg).map(([n, j]) => [n, j.bg]));
-const introBlob = async n => { const j = ((store.meta.intro || {}).items || {})[n]; return j && j.blob ? blob(j.blob) : null; };
+const introColours = () => Object.fromEntries(Object.entries(introNow()).filter(([, j]) => j.blob && j.bg).map(([n, j]) => [n, j.bg]));
+const introBlob = async n => { const j = introNow()[n]; return j && j.blob ? blob(j.blob) : null; };
 
 module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob };
