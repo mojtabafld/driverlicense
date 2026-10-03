@@ -18,7 +18,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
-import { Backdrop, Button, Card, T, tap } from '@/ui/kit';
+import { Backdrop, Button, Card, T, tap, usePageMotion } from '@/ui/kit';
 import { ReviewCard, uiText } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
@@ -55,6 +55,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
   const { attempts, bank, Q, settings } = useApp();
   const view = detail;
+  const motion = usePageMotion('push');
   const [lessonOpen, setLessonOpen] = useState<Record<string, boolean>>({});
   const [k, setK] = useState(0); // the question shown
   // The chosen categories (section numbers; none = all), and the category sheet with its ticks before applying them:
@@ -90,10 +91,10 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const ui = uiText(lang);
   const step = (to: number) => { setK(to); scroll.current?.scrollTo({ y: 0, animated: true }); };
   return (
-    <Backdrop enter>
+    <Backdrop anim={motion.style}>
       <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Pressable onPress={() => { tap(); router.back(); }} accessibilityLabel="بازگشت" hitSlop={6}
+          <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
             style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
             <Icon name="arrowRight" size={20} color={c.link} />
           </Pressable>

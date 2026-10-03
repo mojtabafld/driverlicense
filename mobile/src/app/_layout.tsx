@@ -77,7 +77,7 @@ function Root() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="run" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
+          <Stack.Screen name="run" options={{ presentation: 'fullScreenModal', gestureEnabled: false, animation: 'slide_from_bottom' }} />
           <Stack.Screen name="result" options={{ presentation: 'modal' }} />
           <Stack.Screen name="mistakes" />
           <Stack.Screen name="mistakes-view" />

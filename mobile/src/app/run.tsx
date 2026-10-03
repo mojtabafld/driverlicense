@@ -13,13 +13,14 @@ import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
-import { Backdrop, L, T, ThemeButton, physical, tap } from '@/ui/kit';
+import { Backdrop, L, T, ThemeButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
 export default function Run() {
   const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
   const { Q, settings, saveAttempt } = useApp();
+  const motion = usePageMotion('sheet');
   const pic = useQuestionImage();
   const [plan] = useState(() => session.plan);
   const qs = useMemo(() => (plan ? plan.ids.map(id => Q.get(id)!).filter(Boolean) : []), [plan, Q]);
@@ -67,7 +68,7 @@ export default function Run() {
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
 
   return (
-    <Backdrop>
+    <Backdrop anim={motion.style}>
       {/* Top: exit (icon) with the exam's name beside it, the timer (Persian digits) in the middle of the screen, and
           the theme switch. SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
           stale), and the web gets extra room at the top. */}
@@ -136,7 +137,7 @@ export default function Run() {
         middle={<BarCount n={i + 1} of={qs.length} />}
         end={last ? <FootBtn label={ui.handin} icon="check" submit round onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
-        cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); router.back(); }} />
+        cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => router.back()); }} />
       <Modal visible={dialog === 'handin'} transparent animationType="fade" onRequestClose={() => setDialog(null)}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
           <View style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
