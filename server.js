@@ -574,6 +574,18 @@ async function main() {
     for (const u of Object.values(store.users)) if (u.settings && u.settings.langChosen) { delete u.settings.langChosen; await store.saveUser(u); }
     await store.saveMeta('langAskReset', 1);
   }
+  // One-time, asked by the owner: remove user negin's 22nd and 23rd attempts (as numbered on the progress chart,
+  // oldest first). A copy is kept in meta (`removed:negin:22-23`) so they can be restored.
+  if (store.meta.removeNegin2223 !== 1) {
+    const u = Object.values(store.users).find(x => x.username === 'negin');
+    if (u && Array.isArray(u.attempts) && u.attempts.length >= 23) {
+      const gone = u.attempts.splice(21, 2);
+      await store.saveMeta('removed:negin:22-23', { attempts: gone });
+      await store.saveUser(u);
+      console.log('removed negin attempts 22-23', gone.map(x => ({ at: new Date(x.at).toISOString(), mode: x.mode, n: x.items.length })));
+    }
+    await store.saveMeta('removeNegin2223', 1);
+  }
   imagegen.init(store, SITE);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.

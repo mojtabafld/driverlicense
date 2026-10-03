@@ -148,6 +148,9 @@ export function Icon({ name, size = 24, color, filled = false, weight = 'regular
     case 'trash':
       body = <G><Path d="M4.5 6.5h15M9.5 6.5V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v1.5" {...line} /><Path d="M6.5 6.5l.8 12.2A2 2 0 0 0 9.3 20.5h5.4a2 2 0 0 0 2-1.8l.8-12.2M10 10.5v6M14 10.5v6" {...line} /></G>;
       break;
+    case 'filter':
+      body = <Path d="M4.5 7h15M7.5 12h9M10.5 17h3" {...line} strokeWidth={2.2} />;
+      break;
     case 'clock':
       body = <G><Circle cx={12} cy={12} r={8.6} {...line} /><Path d="M12 7.5V12l3 2" {...line} /></G>;
       break;

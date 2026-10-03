@@ -219,21 +219,22 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
             <Icon name="bookmark" size={17} filled={isSaved} color={dark ? (isSaved ? c.link : '#fff') : c.accent} />
           </Pressable>
         </View>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+        {/* One line: a long category name is cut with «…» so «ترجمه» stays beside it. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {badge ? (
-            <View style={{ paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
+            <View style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
               <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '700', color: badge.fg }}>{badge.text}</T>
             </View>
           ) : null}
           {/* The question's category (official section) */}
           {bank && sectionFa(bank, q.c) ? (
-            <View style={{ paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
-              <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.muted }}>{sectionFa(bank, q.c)}</T>
+            <View style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
+              <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.muted }} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
             </View>
           ) : null}
-          <View style={{ flex: 1 }} />
+          <View style={{ flex: 1, minWidth: 4 }} />
           <Pressable onPress={() => { tap(); setFa(!fa); }} accessibilityRole="button" accessibilityState={{ selected: fa }}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 2, borderRadius: 999, borderWidth: 1,
+            style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 2, borderRadius: 999, borderWidth: 1,
               borderColor: fa ? (dark ? c.link : c.accent) : c.line, backgroundColor: fa ? c.checked : 'transparent' }}>
             <Icon name="translate" size={14} color={fa ? c.link : c.muted} />
             <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: fa ? '600' : '400', color: fa ? c.link : c.muted }}>ترجمه</T>
