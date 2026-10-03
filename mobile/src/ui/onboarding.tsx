@@ -27,7 +27,7 @@ const BUTTON = '#8cc3ef', BUTTON_TEXT = '#012a45';
 export function Onboarding({ onDone }: { onDone: () => void }) {
   const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
-  const { intro } = useApp();
+  const { intro, introBg } = useApp();
   const [fade] = useState(() => new Animated.Value(1));
   const last = i === SLIDES.length - 1;
   const go = (n: number) => {
@@ -49,16 +49,18 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
     },
   };
   const { Art, title, text } = SLIDES[i];
+  // The server's picture for this slide, laid on its own background colour so its edge does not show.
+  const pic = intro[i + 1];
   const artH = Math.min(height * 0.42, 340), shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
   return (
     <View style={{ flex: 1 }} {...swipe}>
-      <LinearGradient colors={BG} locations={[0, 0.62, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={pic && introBg[i + 1] ? [introBg[i + 1], introBg[i + 1], BG[2]] : BG} locations={[0, 0.62, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             {/* The server's 3D picture for this slide when it has one, else the app's own drawing. */}
-            {intro[i + 1] ? (
-              <Image source={{ uri: `${API_URL}/intro/${i + 1}.png?v=${intro[i + 1]}` }} style={{ width: Math.min(width - 24, artH * 1.15, 420), aspectRatio: 1 }}
+            {pic ? (
+              <Image source={{ uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` }} style={{ width: Math.min(width - 24, artH * 1.15, 420), aspectRatio: 1 }}
                 contentFit="contain" transition={250} cachePolicy="memory-disk" />
             ) : <View style={{ width: Math.min(width - 40, 380), height: artH }}><Art /></View>}
           </View>
