@@ -742,7 +742,7 @@ a.badge.src:hover{color:var(--navy);background:var(--accent-soft)}
 @keyframes aiShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.ai-loading .ai-spark,.ai-loading .ai-spark .ai-ico,.ai-dots i,.ai-skel i{animation:none}}
 :root[data-theme="dark"] 
-/* «نکات سؤال»: a flat, full-width button; the tips open under it and the same button hides / shows them */
+/* «تحلیل پاسخ شما»: a flat, full-width button; the tips open under it and the same button hides / shows them */
 .ai-click{margin-top:14px}
 .ai-start{width:100%;display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;text-align:right;font:inherit;cursor:pointer;
   background:var(--surface);color:var(--navy);border:1.5px solid var(--navy);transition:background .18s,color .18s,transform .12s}
