@@ -205,18 +205,19 @@ export function Card({ children, style, onPress }: { children: React.ReactNode; 
 }
 
 // The site's .btn-primary (navy) and .btn-ghost (surface with a line border); danger is a ghost in red.
-type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; icon?: IconName; big?: boolean };
+type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass' | 'danger' | 'grey'; disabled?: boolean; style?: StyleProp<ViewStyle>; icon?: IconName; big?: boolean };
 // Every button carries a flat icon before its label, in the label's colour.
 export function Button({ label, onPress, kind = 'primary', disabled, style, icon, big }: BtnProps) {
   const c = useColors();
-  const primary = kind === 'primary';
-  const fg = primary ? c.accentText : kind === 'danger' ? c.bad : c.link;
+  // grey: filled in the neutral grey of the glass bar's previous / next buttons.
+  const primary = kind === 'primary', grey = kind === 'grey';
+  const fg = primary ? c.accentText : grey ? c.navFg : kind === 'danger' ? c.bad : c.link;
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
       <View style={{
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
         paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: big ? radius.field : radius.btn,
-        backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
+        backgroundColor: primary ? c.accent : grey ? c.nav : c.surface, borderWidth: primary || grey ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
       }}>
         {icon ? <Icon name={icon} size={18} color={fg} weight="semibold" /> : null}<T style={{ color: fg, fontWeight: '600', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
       </View>

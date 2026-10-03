@@ -87,7 +87,7 @@ export default function Exam() {
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
         </View>
         <SizeSlider value={size} values={SIZES} onChange={setSize} />
-        <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" />
+        <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />
       </Card>
       <MistakesCard />
       <ActivityList attempts={attempts} limit={3} />
