@@ -27,14 +27,24 @@ export function BarCount({ n, of }: { n: number; of: number }) {
   return <L style={{ fontSize: 20, lineHeight: 26, color: ios.label, fontWeight: '700', textAlign: 'center', fontVariant: ['tabular-nums'] }}>{n} / {of}</L>;
 }
 
-// Buttons of the bar, capsules like iOS 26/27's bar buttons in the colour of «شروع آزمون» (the site's navy), hand in
-// in the system green. `lead`: icon before the label.
-export function FootBtn({ label, onPress, disabled, submit, icon, lead }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean }) {
+// Buttons of the bar. Previous / next are round teal buttons with an arrow (`round`; the label is for screen
+// readers), pale when they cannot be used; hand in, the summary and «from the start» are labelled capsules, hand in
+// in green. `lead`: icon before the label.
+export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean; round?: boolean }) {
   const ios = useIOSBar(), c = useColors();
   const fg = '#fff';
+  if (round) {
+    return (
+      <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
+        style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
+          backgroundColor: disabled ? c.accentSoft : c.accent, opacity: pressed ? 0.8 : 1 })}>
+        <Icon name={icon} size={20} color={disabled ? c.faint : fg} weight="semibold" />
+      </Pressable>
+    );
+  }
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.35 : pressed ? 0.8 : 1 })}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 46, minWidth: 104, paddingHorizontal: 18, borderRadius: 23, justifyContent: 'center',
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 48, minWidth: 104, paddingHorizontal: 18, borderRadius: 24, justifyContent: 'center',
         backgroundColor: submit ? ios.green : c.accent }}>
         {lead ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
         <L style={{ color: fg, fontWeight: '700', fontSize: 15.5, lineHeight: 22, textAlign: 'center' }}>{label}</L>

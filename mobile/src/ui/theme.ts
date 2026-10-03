@@ -4,25 +4,27 @@ import { Platform } from 'react-native';
 
 import type { ThemeMode, ThemeName } from '@/lib/prefs';
 
+// The app's teal (from its intro and store pictures): a deeper teal for filled buttons so white text reads well,
+// the brighter one for links and highlights in dark mode.
 const light = {
-  bg: '#ecf1f5', surface: '#ffffff', surface2: '#f2f5f8', line: '#d9e4ec',
-  text: '#263945', muted: '#5f7280', faint: '#8a9aa6',
-  accent: '#024776', accentText: '#FFFFFF', accentSoft: '#e3ebf2', link: '#024776',
+  bg: '#edf4f4', surface: '#ffffff', surface2: '#f1f7f7', line: '#d4e5e5',
+  text: '#22383a', muted: '#5b7375', faint: '#88a0a1',
+  accent: '#2e8285', accentText: '#FFFFFF', accentSoft: '#dcefef', link: '#2a7679',
   ok: '#2c7a3f', okSoft: '#e4f2e7', bad: '#c62828', badSoft: '#fdeceb', warn: '#a86400', warnSoft: '#fff3df',
-  submit: '#2c5525', checked: '#d9e4ec', cardBorder: 'rgba(0,0,0,0.08)', hairline: '#d9e4ec',
+  submit: '#2c5525', checked: '#d4e9e9', cardBorder: 'rgba(0,0,0,0.08)', hairline: '#d4e5e5',
   // Older names still used by some screens; on the site's look they are plain surfaces.
-  glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#d9e4ec',
-  // Page background: a very soft top-to-bottom gradient around bg, with a hint of the navy.
-  bgGradient: ['#f5f8fb', '#ecf1f5', '#e2eaf2'] as readonly [string, string, string],
+  glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#d4e5e5',
+  // Page background: a very soft top-to-bottom gradient around bg, with a hint of the teal.
+  bgGradient: ['#f5fafa', '#edf4f4', '#e1eded'] as readonly [string, string, string],
 };
 const dark: typeof light = {
-  bg: '#111a22', surface: '#1a2631', surface2: '#22303d', line: '#2f4050',
-  text: '#e4ecf2', muted: '#9db0bf', faint: '#71859a',
-  accent: '#1f6aa5', accentText: '#FFFFFF', accentSoft: '#1d3346', link: '#8cc3ef',
+  bg: '#0f1c1d', surface: '#172a2b', surface2: '#1f3536', line: '#2c4547',
+  text: '#e3eeee', muted: '#9bb5b6', faint: '#6f8a8b',
+  accent: '#2f8f92', accentText: '#FFFFFF', accentSoft: '#163637', link: '#7ccbcd',
   ok: '#5cc47a', okSoft: '#15301e', bad: '#f07167', badSoft: '#3a1715', warn: '#f0b24a', warnSoft: '#33260d',
-  submit: '#3d7a33', checked: '#2a3d4f', cardBorder: 'rgba(255,255,255,0.06)', hairline: '#2f4050',
-  glass: '#1a2631', glassStrong: '#1a2631', glassBorder: '#2f4050',
-  bgGradient: ['#172431', '#111a22', '#0c141b'] as readonly [string, string, string],
+  submit: '#3d7a33', checked: '#244241', cardBorder: 'rgba(255,255,255,0.06)', hairline: '#2c4547',
+  glass: '#172a2b', glassStrong: '#172a2b', glassBorder: '#2c4547',
+  bgGradient: ['#152a2b', '#0f1c1d', '#0a1415'] as readonly [string, string, string],
 };
 export type Colors = typeof light;
 // The theme in use (light or dark) and the mode it comes from (follow the system by default, or fixed); set by

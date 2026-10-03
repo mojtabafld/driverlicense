@@ -17,9 +17,9 @@ function Field({ icon, label, value, onChange, secure, ltr, onSubmit }: {
   return (
     <View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 54, borderRadius: 14, borderWidth: 1.5,
-        borderColor: focus ? c.accent : dark ? 'rgba(255,255,255,0.06)' : 'rgba(2,71,118,0.08)',
+        borderColor: focus ? c.accent : dark ? 'rgba(255,255,255,0.06)' : 'rgba(46,130,133,0.12)',
         backgroundColor: focus ? c.surface : dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)',
-        ...(Platform.OS === 'web' ? { boxShadow: focus ? `0 0 0 4px ${c.accentSoft}` : '0 1px 2px rgba(16,40,60,.05)', transition: 'border-color .15s, box-shadow .15s, background-color .15s' } as any : {}) }}>
+        ...(Platform.OS === 'web' ? { boxShadow: focus ? `0 0 0 4px ${c.accentSoft}` : '0 1px 2px rgba(20,60,60,.05)', transition: 'border-color .15s, box-shadow .15s, background-color .15s' } as any : {}) }}>
         <Icon name={icon} size={19} color={focus ? c.link : c.faint} />
         <TextInput value={value} onChangeText={onChange} secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false}
           placeholder={label} accessibilityLabel={label} placeholderTextColor={c.muted} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
@@ -40,13 +40,13 @@ function Field({ icon, label, value, onChange, secure, ltr, onSubmit }: {
 function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
   const c = useColors(), dark = useIsDark();
   return (
-    <View style={{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(2,71,118,0.07)' }}>
+    <View style={{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(46,130,133,0.08)' }}>
       {(['login', 'register'] as const).map(m => {
         const on = m === mode;
         return (
           <Pressable key={m} onPress={() => { tap(); onChange(m); }} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
             <View style={{ paddingVertical: 9, borderRadius: 10, backgroundColor: on ? c.surface : 'transparent',
-              ...(on ? { shadowColor: '#10283c', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 } : {}) }}>
+              ...(on ? { shadowColor: '#103c3c', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 } : {}) }}>
               <T style={{ textAlign: 'center', fontSize: 14.5, fontWeight: on ? '700' : '600', color: on ? c.link : c.muted }}>{m === 'login' ? 'ورود' : 'ثبت‌نام'}</T>
             </View>
           </Pressable>
