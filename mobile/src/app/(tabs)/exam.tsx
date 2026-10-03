@@ -68,6 +68,7 @@ function MistakesCard() {
 }
 
 export default function Exam() {
+  const c = useColors();
   const { bank, attempts } = useApp();
   const [size, setSize] = useState(FULL);
   const start = () => {
@@ -78,7 +79,13 @@ export default function Exam() {
   return (
     <Screen title="آزمون">
       <Card style={{ gap: 14 }}>
-        <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
+        {/* The title with its icon, in a tile like the mistakes card's */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+            <Icon name="shuffle" size={19} color={c.link} weight="semibold" />
+          </View>
+          <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
+        </View>
         <SizeSlider value={size} values={SIZES} onChange={setSize} />
         <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" />
       </Card>
