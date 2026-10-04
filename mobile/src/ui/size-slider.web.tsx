@@ -7,18 +7,19 @@ import { tap } from './kit';
 import { SizeTicks } from './size-ticks';
 import { useColors } from './theme';
 
-// `grey`: in the solid neutral (`strong`) of the exam tab's start button instead of the accent.
-type Props = { value: number; values: number[]; onChange: (v: number) => void; grey?: boolean };
-export function SizeSlider({ value, values, onChange, grey }: Props) {
+// `grey`: in the solid neutral (`strong`) of the exam tab's start button instead of the accent. `disabled`: pale and
+// not movable (e.g. when fewer questions are left than the smallest choice needs).
+type Props = { value: number; values: number[]; onChange: (v: number) => void; grey?: boolean; disabled?: boolean };
+export function SizeSlider({ value, values, onChange, grey, disabled }: Props) {
   const c = useColors();
   const tint = grey ? c.strong : c.accent;
   return (
-    <View style={{ gap: 2 }}>
+    <View style={{ gap: 2, opacity: disabled ? 0.35 : 1 }} pointerEvents={disabled ? 'none' : 'auto'} accessibilityState={{ disabled }}>
       {createElement('input', {
-        type: 'range', min: values[0], max: values[values.length - 1], step: values[1] - values[0], value,
+        type: 'range', disabled, min: values[0], max: values[values.length - 1], step: values[1] - values[0], value,
         'aria-label': 'تعداد سؤال‌ها',
         onChange: (e: { target: { value: string } }) => { tap(); onChange(+e.target.value); },
-        style: { width: '100%', height: 32, margin: 0, accentColor: tint, cursor: 'pointer' },
+        style: { width: '100%', height: 32, margin: 0, accentColor: tint, cursor: disabled ? 'default' : 'pointer' },
       })}
       <SizeTicks value={value} values={values} color={grey ? c.text : undefined} />
     </View>
