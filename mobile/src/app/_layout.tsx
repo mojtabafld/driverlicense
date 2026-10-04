@@ -63,6 +63,16 @@ function Root() {
     let m = document.querySelector('meta[name="theme-color"]');
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
     m.setAttribute('content', top);
+    // The strip under the status bar (as tall as the iPhone reports it; nothing in a browser tab): blurred glass over
+    // the page, like the top bars. iOS draws the clock and battery white there, so in the light theme the glass is a
+    // smoky grey that keeps them readable; in the dark theme it is the page's own dark.
+    let g = document.getElementById('status-glass');
+    if (!g) {
+      g = document.createElement('div'); g.id = 'status-glass';
+      g.style.cssText = 'position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);z-index:2147483000;pointer-events:none;-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%)';
+      document.body.appendChild(g);
+    }
+    g.style.backgroundColor = cover ? 'transparent' : dark ? 'rgba(12,12,12,0.62)' : 'rgba(28,28,30,0.46)';
   }, [dark, c.bgGradient, cover]);
   if (blocked) return <Offline onRetry={check} />;
   if (!ready || !fonts || onboarded === null || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
