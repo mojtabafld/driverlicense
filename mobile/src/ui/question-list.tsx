@@ -42,13 +42,15 @@ export function QuestionSheet({ open, items, current, onPick, onClose }: { open:
           <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>سؤال‌ها</T>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, width: cols * 58 - 8, alignSelf: 'center' }}>
             {items.map((q, k) => {
-              const filled = q.tone === 'answered', ok = q.tone === 'ok', bad = q.tone === 'bad';
+              // Solid grey: the answered ones in the dark theme, the unanswered ones in the light theme (answered stay
+              // white there, like the dark theme's answered ones).
+              const ok = q.tone === 'ok', bad = q.tone === 'bad', filled = dark ? q.tone === 'answered' : q.tone === 'empty';
               const bg = filled ? c.strong : ok ? c.okSoft : bad ? c.badSoft : c.surface;
               const fg = filled ? c.strongFg : ok ? c.ok : bad ? c.bad : c.text;
               return (
                 <Pressable key={k} onPress={() => { tap(); onPick(k); }} accessibilityRole="button" accessibilityLabel={`سؤال ${faNum(q.n)}`}
                   style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1, backgroundColor: bg,
-                    borderWidth: k === current ? 2.5 : 1.5, borderColor: k === current ? c.text : filled ? c.strong : ok ? c.ok : bad ? c.bad : c.line })}>
+                    borderWidth: k === current ? 2.5 : 1.5, borderColor: k === current ? c.accent : filled ? c.strong : ok ? c.ok : bad ? c.bad : c.line })}>
                   <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: fg, textAlign: 'center' }}>{faNum(q.n)}</T>
                   {q.marked ? (
                     <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
