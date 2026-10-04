@@ -21,6 +21,13 @@ export function physical<S extends Record<string, any>>(style: S): S {
   return out as S;
 }
 
+// A text alignment given as the physical edge. On phones a right-to-left layout swaps textAlign's left and right (like
+// the styles physical() fixes), so there it is given swapped; for text laid out right to left only.
+export function physicalAlign<A extends TextStyle['textAlign']>(a: A): A {
+  if (Platform.OS === 'web') return a;
+  return (a === 'left' ? 'right' : a === 'right' ? 'left' : a) as A;
+}
+
 export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
 
 // The light motion of Uber Eats between screens, the same on every platform:
@@ -177,7 +184,10 @@ export function T({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
   const c = useColors();
   const flat = StyleSheet.flatten(style) ?? {};
   const font = flat.fontFamily ? null : { fontFamily: faFamily(flat.fontWeight), fontWeight: 'normal' as const };
-  return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font]} />;
+  // On phones the text is laid out right to left wherever it sits (also in a row set to 'ltr'), so its alignment,
+  // the physical edge as on the web, is always swapped the same way.
+  const side = Platform.OS === 'web' ? null : { direction: 'rtl' as const, textAlign: physicalAlign(flat.textAlign ?? 'right') };
+  return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font, side]} />;
 }
 // Danish / English text (left to right).
 // In the Latin font (src/ui/fonts.ts), its weight (and italic) picked by family as for T; on the web Vazirmatn follows
@@ -187,7 +197,9 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
   const flat = StyleSheet.flatten(style) ?? {};
   const { family, slant } = daFamily(flat.fontWeight, flat.fontStyle === 'italic');
   const font = { fontFamily: Platform.OS === 'web' ? `${family}, Vazirmatn-400, sans-serif` : family, fontWeight: 'normal' as const, fontStyle: slant ? 'italic' as const : 'normal' as const };
-  return <Text {...p} style={[{ color: c.text, fontSize: 16, lineHeight: 24, writingDirection: 'ltr', textAlign: 'left' }, style, font]} />;
+  // Laid out left to right on phones too, so its alignment is the physical edge as given.
+  const side = Platform.OS === 'web' ? null : { direction: 'ltr' as const };
+  return <Text {...p} style={[{ color: c.text, fontSize: 16, lineHeight: 24, writingDirection: 'ltr', textAlign: 'left' }, style, font, side]} />;
 }
 
 // The site's .card.

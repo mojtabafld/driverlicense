@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Platform, Pressable, TextInput, View } from 'react-native';
 
 import { Icon, type IconName } from './icon';
-import { tap } from './kit';
+import { physicalAlign, tap } from './kit';
 import { DA_FONT, useColors, useIsDark } from './theme';
 
 export function Field({ icon, label, value, onChange, secure, ltr, onSubmit }: {
@@ -22,7 +22,7 @@ export function Field({ icon, label, value, onChange, secure, ltr, onSubmit }: {
         <TextInput value={value} onChangeText={onChange} secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false}
           placeholder={label} accessibilityLabel={label} placeholderTextColor={c.muted} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
           onSubmitEditing={onSubmit} returnKeyType={onSubmit ? 'go' : 'next'}
-          style={{ flex: 1, height: 50, fontSize: 16, fontFamily: ltr && value ? DA_FONT : 'Vazirmatn-400', color: c.text, textAlign: ltr && value ? 'left' : 'right',
+          style={{ flex: 1, height: 50, fontSize: 16, fontFamily: ltr && value ? DA_FONT : 'Vazirmatn-400', color: c.text, textAlign: physicalAlign(ltr && value ? 'left' : 'right'),
             writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {secure ? (
           <Pressable onPress={() => { tap(); setShow(!show); }} hitSlop={10} accessibilityLabel={show ? 'پنهان کردن رمز' : 'نمایش رمز'}>
