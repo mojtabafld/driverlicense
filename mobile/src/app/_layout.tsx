@@ -8,7 +8,7 @@ import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
-import { FA_FONTS } from '@/ui/fonts';
+import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
 import { Backdrop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
@@ -19,12 +19,12 @@ import { ThemeModeProvider } from '@/ui/theme-mode';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// The web version is a right-to-left Persian page, with no visible scroll bars. Vazirmatn comes with the app (src/ui/fonts.ts); IBM Plex Sans for
-// Danish text is loaded like on the site.
+// The web version is a right-to-left Persian page, with no visible scroll bars. Vazirmatn comes with the app (src/ui/fonts.ts); Inter for
+// Danish text too; Poppins (numbers) is loaded from Google Fonts.
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl'; document.documentElement.lang = 'fa';
   const l = document.createElement('link'); l.rel = 'stylesheet';
-  l.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap'; document.head.appendChild(l);
+  l.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap'; document.head.appendChild(l);
   const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%}body,div,span,input,textarea{font-family:Vazirmatn-400,system-ui,sans-serif}*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0}'; document.head.appendChild(s);
 }
 
@@ -45,7 +45,7 @@ function Root() {
     else refresh().catch(() => {});
   }, [blocked, online, refresh]);
   const dark = useIsDark(), c = useColors();
-  const [fontsLoaded, fontError] = useFonts(FA_FONTS);
+  const [fontsLoaded, fontError] = useFonts({ ...FA_FONTS, ...DA_FONTS });
   const fonts = fontsLoaded || !!fontError;
   // The intro, once per device (also on devices that ran a version without it): over everything until it is closed.
   const [onboarded, setOnboarded] = useState<boolean | null>(initialOnboarded);

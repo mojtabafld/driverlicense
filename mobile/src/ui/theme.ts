@@ -84,7 +84,7 @@ export const radius = STYLE === 'uber'
   ? { btn: 12, sm: 10, md: 14, lg: 14, field: 12, xl: 20, pill: 999 }
   : { btn: 4, sm: 8, md: 10, lg: 10, field: 12, xl: 20, pill: 999 };
 export const space = (n: number) => n * 4;
-// Danish text uses IBM Plex Sans on the web, like the site.
-export const DA_FONT = Platform.OS === 'web' ? "'IBM Plex Sans', Vazirmatn-400, Verdana, Helvetica, sans-serif" : undefined;
+// Danish / English text: Inter, bundled with the app (src/ui/fonts.ts); L picks the weight, this is its regular.
+export const DA_FONT = Platform.OS === 'web' ? 'Inter-400, Vazirmatn-400, Helvetica, sans-serif' : 'Inter-400';
 // Numbers that stand out (the exam's timer and position, in a regular weight): Poppins on the web, the system's font on phones.
-export const NUM_FONT = Platform.OS === 'web' ? "Poppins, 'IBM Plex Sans', system-ui, sans-serif" : undefined;
+export const NUM_FONT = Platform.OS === 'web' ? 'Poppins, Inter-500, system-ui, sans-serif' : undefined;
