@@ -3,7 +3,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Animated, Easing, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
@@ -18,6 +18,21 @@ import { Icon } from '@/ui/icon';
 import { Backdrop, Enter, L, T, ThemeButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { radius, useColors, useIsDark } from '@/ui/theme';
+
+// The timer's clock icon; with `pulse` it fades out and in again (the last two minutes).
+function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
+  const [o] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (!pulse) { o.setValue(1); return; }
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(o, { toValue: 0.2, duration: 600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      Animated.timing(o, { toValue: 1, duration: 600, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, [pulse, o]);
+  return <Animated.View style={{ opacity: o }}><Icon name="clock" size={17} color={color} weight="semibold" /></Animated.View>;
+}
 
 export default function Run() {
   const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
@@ -69,10 +84,11 @@ export default function Run() {
   const goTo = (k: number) => { tap(); setDialog(null); setI(k); };
   const ui = uiText(lang === 'en' ? 'en' : 'da');
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
-  // The clock's colour: the theme's while more than two thirds of the time is left, warning (amber) up to one third,
-  // danger (red) in the last third; each change on a whole minute (25 minutes: amber from 16:00, red from 8:00).
+  // The clock's colour: the theme's while more than two thirds of the time is left (on a whole minute: 16:00 of 25),
+  // then warning (amber), and danger (red) under the last two minutes, when its icon also fades in and out.
   const total = qs.length * SECONDS_PER_Q, atMin = (x: number) => Math.floor(x / 60) * 60;
-  const clock = left <= atMin(total / 3) ? c.bad : left <= atMin((total * 2) / 3) ? c.warn : dark ? c.link : c.accent;
+  const urgent = left < 120; // under two minutes: red, the clock icon pulsing
+  const clock = urgent ? c.bad : left <= atMin((total * 2) / 3) ? c.warn : dark ? c.link : c.accent;
 
   return (
     <Backdrop anim={motion.style}>
@@ -86,7 +102,7 @@ export default function Run() {
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
             {settings.timer ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, direction: 'ltr' } as any}>
-                <Icon name="clock" size={17} color={clock} weight="semibold" />
+                <ClockIcon color={clock} pulse={urgent} />
                 <T style={{ fontSize: 20, lineHeight: 28, fontWeight: '500', color: clock, writingDirection: 'ltr' }}>{faNum(mm)}</T>
               </View>
             ) : null}
