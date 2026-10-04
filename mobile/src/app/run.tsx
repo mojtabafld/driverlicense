@@ -12,6 +12,7 @@ import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
+import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Enter, L, T, ThemeButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
@@ -31,7 +32,7 @@ export default function Run() {
   const [showFa, setShowFa] = useState(false);
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
   const [flags, setFlags] = useState<number[]>([]);
-  const [dialog, setDialog] = useState<'quit' | 'handin' | null>(null);
+  const [dialog, setDialog] = useState<'quit' | 'handin' | 'list' | null>(null);
   const [started] = useState(() => Date.now());
   const done = useRef(false);
   const lang = settings.lang === 'en' ? 'en' : 'da';
@@ -142,8 +143,10 @@ export default function Run() {
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
-        middle={<BarCount n={i + 1} of={qs.length} />}
+        middle={<View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><BarCount n={i + 1} of={qs.length} /><ListButton onPress={() => setDialog('list')} /></View>}
         end={last ? <FootBtn label={ui.handin} icon="check" submit round onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => setI(i + 1)} />} />
+      <QuestionSheet open={dialog === 'list'} current={i} onClose={() => setDialog(null)} onPick={goTo}
+        items={qs.map((_, k) => ({ n: k + 1, tone: ticks[k].some(Boolean) ? 'answered' : 'empty', marked: flags.includes(k) }))} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => router.back()); }} />
       <Modal visible={dialog === 'handin'} transparent animationType="fade" onRequestClose={() => setDialog(null)}>

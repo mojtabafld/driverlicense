@@ -80,16 +80,16 @@ function AiLoading({ text }: { text: string }) {
 // The site's «تحلیل پاسخ شما» / «جمع‌بندی آموزشی اشتباهات» button: outlined in teal, filled while its text is shown.
 function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; shown: boolean; onPress: () => void }) {
   const c = useColors(), dark = useIsDark();
-  const fg = shown ? (dark ? '#0b1520' : '#fff') : c.link;
+  // In the neutral `strong` grey: outlined while closed (the AI mark on a solid tile), filled while its text shows.
+  const fg = shown ? c.strongFg : c.text;
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ expanded: shown }}
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.99 : 1 }] })}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 10, borderWidth: 1.5,
-        borderColor: dark ? c.link : c.accent, backgroundColor: shown ? (dark ? c.link : c.accent) : c.surface }}>
-        {/* The AI mark in the theme's teal; on the filled (open) button a see-through tile in the label's colour. */}
-        <View style={{ width: 34, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: shown ? (dark ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.22)') : c.accent }}>
-          <Icon name="sparkles" size={18} color={shown ? fg : '#fff'} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5,
+        borderColor: shown ? c.strong : c.line, backgroundColor: shown ? c.strong : c.surface }}>
+        <View style={{ width: 34, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center',
+          backgroundColor: shown ? (dark ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.14)') : c.strong }}>
+          <Icon name="sparkles" size={18} color={c.strongFg} />
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontSize: 15, fontWeight: '700', color: fg }}>{title}</T>
@@ -259,9 +259,9 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                 const sel = view === v;
                 return (
                   <Pressable key={v} onPress={() => { tap(); setView(v); }} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: sel }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 7, borderRadius: 6, backgroundColor: sel ? c.accent : 'transparent' }}>
-                      {v === 'mine' ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: it.ok ? c.ok : c.bad, ...(sel ? { borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.85)', width: 10, height: 10, borderRadius: 5 } : {}) }} /> : null}
-                      <T style={{ fontSize: 14, fontWeight: '600', color: sel ? '#fff' : c.muted, textAlign: 'center' }}>{v === 'mine' ? 'پاسخ شما' : 'پاسخ صحیح'}</T>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 7, borderRadius: 6, backgroundColor: sel ? c.strong : 'transparent' }}>
+                      {v === 'mine' ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: it.ok ? c.ok : c.bad, ...(sel ? { borderWidth: 1.5, borderColor: c.strongFg, width: 10, height: 10, borderRadius: 5 } : {}) }} /> : null}
+                      <T style={{ fontSize: 14, fontWeight: '600', color: sel ? c.strongFg : c.muted, textAlign: 'center' }}>{v === 'mine' ? 'پاسخ شما' : 'پاسخ صحیح'}</T>
                     </View>
                   </Pressable>
                 );
