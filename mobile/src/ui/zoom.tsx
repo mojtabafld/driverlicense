@@ -1,7 +1,7 @@
 // A question picture, tappable: a tap opens it full screen on black, where it can be looked at closely. Two fingers
 // spread or pinch it (1× to 4×), a double tap zooms in on that spot or back out, one finger moves it while zoomed, and
-// on the web the mouse wheel zooms too. The close button, the phone's back button or Esc closes it. Built on
-// PanResponder and Animated only, so it needs no extra native module.
+// on the web the mouse wheel zooms too. A tap outside the picture, the close button, the phone's back button or Esc
+// closes it. Built on PanResponder and Animated only, so it needs no extra native module.
 import { Image, type ImageSource } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Modal, PanResponder, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
@@ -36,7 +36,7 @@ type Dims = { W: number; H: number; w: number; h: number };
 type Touch = { pageX: number; pageY: number };
 
 // The viewer's gestures, made once per opening. The screen and the picture's size at 1× are read when needed.
-function makeZoom(ratio: number) {
+function makeZoom(ratio: number, close: () => void) {
   const dims = (): Dims => {
     const { width: W, height: H } = Dimensions.get('window'), w = Math.min(W, H * ratio);
     return { W, H, w, h: w / ratio };
@@ -95,8 +95,11 @@ function makeZoom(ratio: number) {
         go(s <= 1.01 ? { s: 1, x: 0, y: 0 } : clamp(s, now.x, now.y));
         return;
       }
-      // A tap: a second one soon after zooms in on that spot, or back out.
+      // A tap outside the picture (on the black around it, zoomed or not) closes the viewer.
       const t = Date.now(), { pageX, pageY } = e.nativeEvent;
+      const { W, H, w, h } = dims();
+      if (Math.abs(pageX - (W / 2 + now.x)) > (w * now.s) / 2 || Math.abs(pageY - (H / 2 + now.y)) > (h * now.s) / 2) { close(); return; }
+      // A tap on it: a second one soon after zooms in on that spot, or back out.
       if (t - g.lastTap < 300) {
         g.lastTap = 0;
         go(now.s > 1.01 ? { s: 1, x: 0, y: 0 } : zoomAt(DOUBLE, pageX, pageY));
@@ -115,7 +118,7 @@ export function ImageViewer({ source, ratio = 4 / 3, onClose }: { source: ImageS
   const { width: W, height: H } = useWindowDimensions(), ins = useSafeAreaInsets();
   // The picture's size at 1×: as large as fits the screen.
   const w = Math.min(W, H * ratio), h = w / ratio;
-  const [z] = useState(() => makeZoom(ratio));
+  const [z] = useState(() => makeZoom(ratio, onClose));
   const [hint, setHint] = useState(true);
   useEffect(() => { const t = setTimeout(() => setHint(false), 2600); return () => clearTimeout(t); }, []);
 

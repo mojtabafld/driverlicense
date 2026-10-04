@@ -185,8 +185,12 @@ export function T({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
   const flat = StyleSheet.flatten(style) ?? {};
   const font = flat.fontFamily ? null : { fontFamily: faFamily(flat.fontWeight), fontWeight: 'normal' as const };
   // On phones the text is laid out right to left wherever it sits (also in a row set to 'ltr'), so its alignment,
-  // the physical edge as on the web, is always swapped the same way.
-  const side = Platform.OS === 'web' ? null : { direction: 'rtl' as const, textAlign: physicalAlign(flat.textAlign ?? 'right') };
+  // the physical edge as on the web, is always swapped the same way. Text asking for writingDirection 'ltr' (counts
+  // like «۱ / ۲۵», the clock, Danish words) is laid out left to right instead, so it reads in its own order there too,
+  // and its alignment is the edge it names.
+  const ltr = flat.writingDirection === 'ltr';
+  const side = Platform.OS === 'web' ? null
+    : ltr ? { direction: 'ltr' as const } : { direction: 'rtl' as const, textAlign: physicalAlign(flat.textAlign ?? 'right') };
   return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font, side]} />;
 }
 // Danish / English text (left to right).
