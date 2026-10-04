@@ -11,7 +11,7 @@ import { faNum } from '@/lib/logic';
 import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
-import { Enter, L, T, physical, tap } from './kit';
+import { Enter, L, T, TranslateButton, physical, tap } from './kit';
 import { ZoomableImage } from './zoom';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
@@ -352,7 +352,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
             <Icon name="bookmark" size={17} filled={isSaved} color={dark ? (isSaved ? c.link : '#fff') : c.accent} />
           </Pressable>
         </View>
-        {/* One line: a long category name is cut with «…» so «ترجمه» stays beside it. */}
+        {/* One line: a long category name is cut with «…» so the translation switch stays beside it. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {badge ? (
             <View style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
@@ -366,12 +366,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
             </View>
           ) : null}
           <View style={{ flex: 1, minWidth: 4 }} />
-          <Pressable onPress={() => { tap(); setFa(!fa); }} accessibilityRole="button" accessibilityState={{ selected: fa }}
-            style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 2, borderRadius: 999, borderWidth: 1,
-              borderColor: fa ? c.strong : c.line, backgroundColor: fa ? c.strong : 'transparent' }}>
-            <Icon name="translate" size={14} color={fa ? c.strongFg : c.muted} />
-            <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: fa ? '600' : '400', color: fa ? c.strongFg : c.muted }}>ترجمه</T>
-          </Pressable>
+          {/* The translation switch at the row's left end, the same round button as in the exam. */}
+          <TranslateButton on={fa} onPress={() => setFa(!fa)} />
         </View>
         <View style={{ gap: 8 }}>
           <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
