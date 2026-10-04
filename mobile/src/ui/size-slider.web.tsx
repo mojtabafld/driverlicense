@@ -7,11 +7,11 @@ import { tap } from './kit';
 import { SizeTicks } from './size-ticks';
 import { useColors } from './theme';
 
-// `grey`: in the neutral grey of the exam's position (navNum) instead of the accent.
+// `grey`: in the solid neutral (`strong`) of the exam tab's start button instead of the accent.
 type Props = { value: number; values: number[]; onChange: (v: number) => void; grey?: boolean };
 export function SizeSlider({ value, values, onChange, grey }: Props) {
   const c = useColors();
-  const tint = grey ? c.navNum : c.accent;
+  const tint = grey ? c.strong : c.accent;
   return (
     <View style={{ gap: 2 }}>
       {createElement('input', {
@@ -20,7 +20,7 @@ export function SizeSlider({ value, values, onChange, grey }: Props) {
         onChange: (e: { target: { value: string } }) => { tap(); onChange(+e.target.value); },
         style: { width: '100%', height: 32, margin: 0, accentColor: tint, cursor: 'pointer' },
       })}
-      <SizeTicks value={value} values={values} color={grey ? c.navNum : undefined} />
+      <SizeTicks value={value} values={values} color={grey ? c.text : undefined} />
     </View>
   );
 }

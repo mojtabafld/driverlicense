@@ -7,7 +7,7 @@ import type { Attempt } from '@/lib/bank';
 import { faNum, isFull, isPass, mistakeIds, passEstimate, pctOf } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { Card, Ring, Screen, T } from '@/ui/kit';
+import { Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
 import { ProgressChart } from '@/ui/progress-chart';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
@@ -19,6 +19,7 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
   const c = useColors();
   const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
   if (progress != null && progress >= 1) tone = 'ok';
+  const bar = useCountUp(progress != null ? Math.min(1, Math.max(0, progress)) : 0); // the bar fills when the app opens
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   return (
     <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 }}>
@@ -37,9 +38,9 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
       {progress != null ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 16 }}>
           <View style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
-            <View style={{ width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`, borderRadius: 3, backgroundColor: fg }} />
+            <View style={{ width: `${bar * 100}%`, borderRadius: 3, backgroundColor: fg }} />
           </View>
-          <T style={{ color: tone === 'ok' ? c.ok : c.muted, fontSize: 10.5, lineHeight: 16, fontWeight: '600' }}>{pctText(progress)}</T>
+          <T style={{ color: tone === 'ok' ? c.ok : c.muted, fontSize: 10.5, lineHeight: 16, fontWeight: '600' }}>{pctText(bar)}</T>
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
     </Card>
@@ -69,7 +70,7 @@ export default function Home() {
     <Screen fill gap={compact ? 10 : 14} title={`سلام ${user?.name ?? ''}`} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}>
       <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} />
+          <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
           <View style={{ flex: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
             <Pill text={probWord} fg={probColor} bg={probSoft} />

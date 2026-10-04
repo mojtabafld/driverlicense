@@ -209,15 +209,15 @@ type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass'
 // Every button carries a flat icon before its label, in the label's colour.
 export function Button({ label, onPress, kind = 'primary', disabled, style, icon, big }: BtnProps) {
   const c = useColors();
-  // grey: filled in the neutral grey of the glass bar's previous / next buttons.
+  // grey: a solid neutral (charcoal in light mode, light grey in dark), so it never looks disabled.
   const primary = kind === 'primary', grey = kind === 'grey';
-  const fg = primary ? c.accentText : grey ? c.navFg : kind === 'danger' ? c.bad : c.link;
+  const fg = primary ? c.accentText : grey ? c.strongFg : kind === 'danger' ? c.bad : c.link;
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
       <View style={{
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
         paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: big ? radius.field : radius.btn,
-        backgroundColor: primary ? c.accent : grey ? c.nav : c.surface, borderWidth: primary || grey ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
+        backgroundColor: primary ? c.accent : grey ? c.strong : c.surface, borderWidth: primary || grey ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
       }}>
         {icon ? <Icon name={icon} size={18} color={fg} weight="semibold" /> : null}<T style={{ color: fg, fontWeight: '600', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
       </View>
@@ -245,16 +245,36 @@ export function Segmented<V extends string>({ value, options, onChange }: { valu
 }
 
 // Percent ring.
-export function Ring({ value, size = 76, stroke = 8, color, label }: { value: number; size?: number; stroke?: number; color?: string; label?: string }) {
+// A number easing from 0 to `target` (and on to a new target from where it is), about 0.9 s, slowing at the end: the
+// home page's chance ring and its percent count up, and the lessons bar fills, when the app opens.
+export function useCountUp(target: number, ms = 900) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    let raf = 0; const from = v, t0 = Date.now();
+    const step = () => {
+      const k = Math.min(1, (Date.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      setV(from + (target - from) * e);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, ms]);
+  return v;
+}
+
+// `format`: the label from the ring's value as it fills (so the number counts up with it); else the fixed `label`.
+export function Ring({ value, size = 76, stroke = 8, color, label, format }: { value: number; size?: number; stroke?: number; color?: string; label?: string; format?: (v: number) => string }) {
   const c = useColors(), r = (size - stroke) / 2, C = 2 * Math.PI * r;
+  const shown = useCountUp(Math.max(0, Math.min(1, value)));
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.line} strokeWidth={stroke} fill="none" />
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={color ?? c.accent} strokeWidth={stroke} fill="none" strokeLinecap="round"
-          strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - Math.max(0, Math.min(1, value)))} />
+          strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - shown)} />
       </Svg>
-      <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{label}</T>
+      <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{format ? format(shown) : label}</T>
     </View>
   );
 }
