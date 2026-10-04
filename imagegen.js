@@ -43,11 +43,20 @@ const available = () => !!process.env.KIE_API_KEY;
 const images = () => (store.meta.images = store.meta.images || {});
 const save = () => store.saveMeta('images', images());
 
+// A job left unfinished without a kie.ai task (e.g. the server stopped while Claude was writing its description) is
+// never polled; after 30 minutes it counts as failed, so it no longer blocks a new picture for its question.
+function unstick(item) {
+  let n = 0;
+  for (const j of item.jobs) if (!j.done && !j.taskId && Date.now() - j.at > 30 * 60e3) { Object.assign(j, { state: 'fail', done: true, error: j.error || 'stuck' }); n++; }
+  return n;
+}
+
 function init(s, siteDir) {
   store = s; SITE = siteDir;
   const js = fs.readFileSync(path.join(SITE, 'data.js'), 'utf8');
   BANK = JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, ''));
   Q = new Map(BANK.questions.map(q => [q.id, q]));
+  if (Object.values(images()).reduce((n, x) => n + unstick(x), 0)) save().catch(() => {});
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
   fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message))
     .then(() => seedOwn()).catch(e => console.error('own pictures', e.message));
@@ -84,13 +93,14 @@ async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '') {
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   if (!MODELS[model]) throw Object.assign(new Error('مدل نامعتبر'), { status: 400 });
   const item = images()[q.id] = images()[q.id] || { active: null, v: '', jobs: [] };
+  unstick(item);
   // One picture at a time per question, so a double click or a second tab never makes two.
   if (item.jobs.some(j => !j.done)) throw Object.assign(new Error('برای این سؤال یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
   prompt = String(prompt || '').trim().slice(0, 20000);
   const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}), ...(seed ? { seed } : {}) };
   item.jobs.push(job); await save();
   try {
-    job.prompt = prompt || await describe(q);
+    job.prompt = prompt || ownPrompt(q.id) || await describe(q);
     job.state = 'queued'; await save();
     const d = await kie('POST', '/jobs/createTask', { model: MODELS[model], callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
     job.taskId = d.taskId; job.state = 'generating'; await save();
@@ -223,7 +233,7 @@ async function remove(qid, jobId) {
 async function draft(qid) {
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
-  return describe(q);
+  return ownPrompt(q.id) || describe(q);
 }
 
 // ---------- our own questions' pictures (data/original_*.json) ----------
@@ -276,6 +286,9 @@ const ownPrompts = () => {
   }
   return out;
 };
+// For one of our own questions, its scene description with the style line: a new picture made from the admin panel
+// then follows the new text, not the original picture (which may show other things, e.g. another car's colour).
+const ownPrompt = qid => { const t = ownPrompts()[qid]; return t ? `${t}\n${SEED_STYLE}` : ''; };
 // A 2048-px picture at half size (about a quarter of the bytes); a file it cannot read is kept as it is.
 function shrink(buf, mime) {
   try { const im = png.decode(buf); return im && im.w > 1200 ? { buf: png.encode(png.half(im)), mime: 'image/png' } : { buf, mime }; }
