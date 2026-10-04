@@ -51,8 +51,8 @@ export default function Settings() {
             {user?.created ? <T style={{ color: c.muted, fontSize: 13 }} numberOfLines={1}>عضو از {fmtDay(user.created)}</T> : null}
           </View>
           {/* Edit: the name opens the account page (name and password). */}
-          <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-            <Icon name="edit" size={19} color={c.link} weight="semibold" />
+          <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
+            <Icon name="edit" size={19} color={c.navFg} weight="semibold" />
           </View>
         </Pressable>
         <Pressable onPress={() => { tap(); confirmLogout(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از حساب"

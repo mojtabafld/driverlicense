@@ -55,7 +55,7 @@ export default function Account() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
               style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
-              <Icon name="arrowRight" size={20} color={c.link} />
+              <Icon name="arrowRight" size={20} color={c.text} />
             </Pressable>
             <T style={{ flex: 1, fontSize: 24, lineHeight: 34, fontWeight: '700' }}>حساب کاربری</T>
           </View>

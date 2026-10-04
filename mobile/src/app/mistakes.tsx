@@ -97,7 +97,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
             style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
-            <Icon name="arrowRight" size={20} color={c.link} />
+            <Icon name="arrowRight" size={20} color={c.text} />
           </Pressable>
           <T style={{ flex: 1, fontSize: 24, lineHeight: 34, fontWeight: '700' }} numberOfLines={1}>{title}</T>
         </View>
@@ -167,15 +167,15 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                     <View style={{ flexDirection: 'row', gap: 8 }}>
                       {t?.lesson ? (
                         <Pressable onPress={() => { tap(); setLessonOpen({ ...lessonOpen, [g.c]: !lessonOpen[g.c] }); }}
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: lessonOpen[g.c] ? (dark ? c.link : c.accent) : c.line, backgroundColor: lessonOpen[g.c] ? c.checked : c.surface }}>
-                          <Icon name="learn" size={15} color={c.link} weight="semibold" />
-                          <T style={{ fontSize: 13, fontWeight: '600', color: c.link }}>آموزش کوتاه</T>
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: lessonOpen[g.c] ? c.strong : c.line, backgroundColor: lessonOpen[g.c] ? c.strong : c.surface }}>
+                          <Icon name="learn" size={15} color={lessonOpen[g.c] ? c.strongFg : c.text} weight="semibold" />
+                          <T style={{ fontSize: 13, fontWeight: '600', color: lessonOpen[g.c] ? c.strongFg : c.text }}>آموزش کوتاه</T>
                         </Pressable>
                       ) : null}
                       <Pressable onPress={() => { tap(); practiceTopic(g.c); }}
                         style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface }}>
-                        <Icon name="refresh" size={15} color={c.link} weight="semibold" />
-                        <T style={{ fontSize: 13, fontWeight: '600', color: c.link }}>تمرین این مبحث</T>
+                        <Icon name="refresh" size={15} color={c.text} weight="semibold" />
+                        <T style={{ fontSize: 13, fontWeight: '600', color: c.text }}>تمرین این مبحث</T>
                       </Pressable>
                     </View>
                   </View>
@@ -217,9 +217,9 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                   <Pressable key={sec.n} onPress={() => { tap(); setSheet(on ? picked.filter(x => x !== sec.n) : [...picked, sec.n]); }}
                     accessibilityRole="checkbox" accessibilityState={{ checked: on }}
                     style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5,
-                      borderColor: on ? c.accent : c.line, backgroundColor: on ? c.checked : c.surface, opacity: pressed ? 0.85 : 1 })}>
-                    <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center', borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent' }}>
-                      {on ? <Icon name="check" size={13} color="#fff" weight="bold" /> : null}
+                      borderColor: on ? c.strong : c.line, backgroundColor: on ? c.surface2 : c.surface, opacity: pressed ? 0.85 : 1 })}>
+                    <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center', borderColor: on ? c.strong : c.muted, backgroundColor: on ? c.strong : 'transparent' }}>
+                      {on ? <Icon name="check" size={13} color={c.strongFg} weight="bold" /> : null}
                     </View>
                     <T style={{ flex: 1, fontSize: 15, fontWeight: '600' }} numberOfLines={1}>{sec.fa}</T>
                     <T style={{ fontSize: 13.5, fontWeight: '700', color: c.bad }}>{faNum(sec.count)}</T>
@@ -229,16 +229,16 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <Pressable onPress={() => { tap(); setSheet(cats.map(x => x.n)); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-                  <Icon name="checkCircle" size={17} color={c.link} contrast={c.accentSoft} />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>همه</T>
+                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
+                  <Icon name="checkCircle" size={17} color={c.navFg} contrast={c.nav} />
+                  <T style={{ fontSize: 15, fontWeight: '700', color: c.navFg, textAlign: 'center' }}>همه</T>
                 </View>
               </Pressable>
               <Pressable disabled={!pickedN} onPress={() => { tap(); setSecs(pickedN >= cats.length ? [] : picked); setK(0); setSheet(null); }} accessibilityRole="button"
                 accessibilityState={{ disabled: !pickedN }} style={({ pressed }) => ({ flex: 2, opacity: !pickedN ? 0.45 : pressed ? 0.85 : 1 })}>
-                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent }}>
-                  <Icon name="eye" size={17} color="#fff" weight="semibold" />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>
+                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.strong }}>
+                  <Icon name="eye" size={17} color={c.strongFg} weight="semibold" />
+                  <T style={{ fontSize: 15, fontWeight: '700', color: c.strongFg, textAlign: 'center' }}>
                     {pickedN ? `نمایش ${faNum(cats.filter(x => picked.includes(x.n)).reduce((t, x) => t + x.count, 0))} سؤال` : 'یک دسته را انتخاب کنید'}
                   </T>
                 </View>

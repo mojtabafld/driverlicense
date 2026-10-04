@@ -166,8 +166,8 @@ export default function Result() {
           {/* .rev-top: back button, tabs, «جزئیات آزمون», always on one row (the details button is an icon on phones) */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
-              style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1.5, borderColor: c.line })}>
-              <Icon name="arrowRight" size={20} color={c.link} />
+              style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
+              <Icon name="arrowRight" size={20} color={c.text} />
             </Pressable>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
               <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
@@ -176,10 +176,10 @@ export default function Result() {
                   <Pressable onPress={() => { tap(); fade.setValue(1); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
                     accessibilityRole="button" accessibilityLabel={line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}
                     style={wide
-                      ? { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.accentSoft }
-                      : { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: line === 'shown' && !flying ? c.accent : c.accentSoft }}>
-                    <Icon name="chart" size={wide ? 16 : 18} color={!wide && line === 'shown' && !flying ? '#fff' : c.link} />
-                    {wide ? <T style={{ fontSize: 13.5, fontWeight: '700', color: c.link }}>{line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T> : null}
+                      ? { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.nav }
+                      : { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: line === 'shown' && !flying ? c.strong : c.nav }}>
+                    <Icon name="chart" size={wide ? 16 : 18} color={!wide && line === 'shown' && !flying ? c.strongFg : c.navFg} />
+                    {wide ? <T style={{ fontSize: 13.5, fontWeight: '700', color: c.navFg }}>{line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T> : null}
                   </Pressable>
                 </Animated.View>
               ) : null}
@@ -243,8 +243,8 @@ export default function Result() {
           {/* Back to the exam (or lessons) page: an icon in the top right corner. */}
           <Pressable onPress={() => { tap(); goTo(isLesson ? '/learn' : '/exam'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={isLesson ? 'بازگشت به درس‌ها' : 'بازگشت به صفحه‌ی آزمون'}
             style={({ pressed }) => ({ position: 'absolute', top: 14, ...physical({ right: 14 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', zIndex: 2,
-              backgroundColor: pressed ? c.accentSoft : c.surface2 })}>
-            <Icon name="arrowRight" size={20} color={c.link} />
+              backgroundColor: pressed ? c.surface2 : c.surface2 })}>
+            <Icon name="arrowRight" size={20} color={c.text} />
           </Pressable>
           <T style={{ fontSize: 19, lineHeight: 30, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
           <View style={{ width: 150, height: 150, alignItems: 'center', justifyContent: 'center' }}>

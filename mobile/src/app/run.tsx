@@ -84,8 +84,8 @@ export default function Run() {
             ) : null}
           </View>
           <Pressable onPress={quit} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از آزمون"
-            style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : c.surface, borderWidth: 1, borderColor: c.line })}>
-            <Icon name="exit" size={20} color={c.link} />
+            style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
+            <Icon name="exit" size={20} color={c.text} />
           </Pressable>
           {/* Kept clear of the counter in the middle. */}
           <T style={{ fontWeight: '700', fontSize: 15, lineHeight: 24, maxWidth: '30%' }} numberOfLines={1}>{plan.title}</T>
@@ -100,8 +100,8 @@ export default function Run() {
           {/* Mark the question to look at it again before handing in. */}
           <Pressable onPress={flag} hitSlop={6} accessibilityRole="button" accessibilityLabel="علامت برای بازبینی" accessibilityState={{ selected: flagged }}
             style={{ position: 'absolute', top: 8, ...physical({ left: 8 }), width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center',
-              backgroundColor: flagged ? c.accent : dark ? 'rgba(20,30,30,0.6)' : 'rgba(255,255,255,0.85)' }}>
-            <Icon name="bookmark" size={18} filled={flagged} color={flagged ? '#fff' : dark ? '#fff' : c.accent} />
+              backgroundColor: flagged ? c.strong : dark ? 'rgba(20,20,20,0.6)' : 'rgba(255,255,255,0.85)' }}>
+            <Icon name="bookmark" size={18} filled={flagged} color={flagged ? c.strongFg : dark ? '#fff' : c.text} />
           </Pressable>
         </Enter>
         {/* Translation on / off: an icon under the picture, on its right (filled while the translation shows). */}
@@ -109,8 +109,8 @@ export default function Run() {
           <Pressable onPress={() => { tap(); setShowFa(!showFa); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: showFa }}
             accessibilityLabel={showFa ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}
             style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
-              backgroundColor: showFa ? c.accent : c.accentSoft })}>
-            <Icon name="translate" size={19} color={showFa ? '#fff' : c.link} />
+              backgroundColor: showFa ? c.strong : c.nav })}>
+            <Icon name="translate" size={19} color={showFa ? c.strongFg : c.navFg} />
           </Pressable>
         </View>
         <View style={{ gap: 4 }}>
@@ -169,8 +169,8 @@ export default function Run() {
                 return (
                   <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
                     style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
-                      backgroundColor: ans ? c.accent : c.surface, borderWidth: 1.5, borderColor: ans ? c.accent : marked ? c.warn : c.line })}>
-                    <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? '#fff' : c.text, textAlign: 'center' }}>{faNum(k + 1)}</T>
+                      backgroundColor: ans ? c.strong : c.surface, borderWidth: 1.5, borderColor: ans ? c.strong : marked ? c.warn : c.line })}>
+                    <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? c.strongFg : c.text, textAlign: 'center' }}>{faNum(k + 1)}</T>
                     {marked ? (
                       <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
                         <Icon name="bookmark" size={11} filled color="#fff" />
@@ -190,15 +190,15 @@ export default function Run() {
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <Pressable onPress={() => { tap(); setDialog(null); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-                  <Icon name="arrowRight" size={17} color={c.link} weight="semibold" />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>بازگشت به آزمون</T>
+                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
+                  <Icon name="arrowRight" size={17} color={c.navFg} weight="semibold" />
+                  <T style={{ fontSize: 15, fontWeight: '700', color: c.navFg, textAlign: 'center' }}>بازگشت به آزمون</T>
                 </View>
               </Pressable>
               <Pressable onPress={() => { tap(); setDialog(null); finish(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}>
                 <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.submit }}>
-                  <Icon name="check" size={18} color="#fff" weight="bold" />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>تحویل و پایان</T>
+                  <Icon name="check" size={18} color={c.strongFg} weight="bold" />
+                  <T style={{ fontSize: 15, fontWeight: '700', color: c.strongFg, textAlign: 'center' }}>تحویل و پایان</T>
                 </View>
               </Pressable>
             </View>
