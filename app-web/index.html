@@ -8,20 +8,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <!-- black-translucent: added to the Home Screen, the page runs under the iPhone's status bar (clock, battery), which
-         the app covers with a blurred glass strip of its own (src/app/_layout.tsx); iOS draws those icons white. -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="TeoriPrøve" />
     <!-- Home-screen icon (iOS «Add to Home Screen») and the web app manifest (Android / installs). -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>TeoriPrøve</title>
     <style id="expo-reset">
-      /* Under the translucent status bar of a Home Screen app, iOS makes 100% short by the status bar's height,
-         which left an empty band at the bottom; the inset is added back (it is 0 in a browser tab). */
       html,
       body {
-        height: calc(100% + env(safe-area-inset-top));
+        height: 100%;
       }
       body {
         overflow: hidden;
@@ -39,6 +35,6 @@
       You need to enable JavaScript to run this app.
     </noscript>
     <div id="root"></div>
-  <script src="/_expo/static/js/web/entry-0bbf761db01188dba7b6aa8b55ae366e.js" defer></script>
+  <script src="/_expo/static/js/web/entry-d053ecc37dd39509851354319534f71e.js" defer></script>
 </body>
 </html>
