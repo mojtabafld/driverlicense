@@ -21,3 +21,11 @@ export const loadOnboarded = async (): Promise<boolean> => {
   try { return (await SecureStore.getItemAsync(ONBOARDED)) === SEEN; } catch { return false; }
 };
 export const saveOnboarded = () => SecureStore.setItemAsync(ONBOARDED, SEEN).catch(() => {});
+
+// Whether this phone has asked for the questions' language: asked once on every new device after signing in (the
+// account's own choice preselected), even when the account chose one elsewhere.
+const LANG_ASKED = 'tp_lang_asked';
+export const loadLangAsked = async (): Promise<boolean> => {
+  try { return (await SecureStore.getItemAsync(LANG_ASKED)) === '1'; } catch { return false; }
+};
+export const saveLangAsked = () => SecureStore.setItemAsync(LANG_ASKED, '1').catch(() => {});

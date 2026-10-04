@@ -43,10 +43,12 @@
       [
         "expo-localization",
         {
+          "supportsRTL": true,
           "forcesRTL": true
         }
       ],
-      "expo-font"
+      "expo-font",
+      "./plugins/with-force-rtl"
     ],
     "experiments": {
       "typedRoutes": true,

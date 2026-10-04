@@ -198,7 +198,9 @@ export function Card({ children, style, onPress }: { children: React.ReactNode; 
   const anim = useEnter();
   const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical, ...rest } = StyleSheet.flatten(style) ?? {};
   const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical };
-  const fill = flex != null || flexGrow != null ? { flex: 1 } : null;
+  // Grows to the size the card is given; flexGrow, not flex: 1, so that inside a box of no set height (a row of cards)
+  // phones keep the content's own height instead of collapsing it to nothing.
+  const fill = flex != null || flexGrow != null ? { flexGrow: 1 } : null;
   return (
     <Animated.View style={[outer, anim] as any}>
       {onPress ? (

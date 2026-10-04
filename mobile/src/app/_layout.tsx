@@ -6,7 +6,7 @@ import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import { useOnline } from '@/lib/online';
-import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
+import { initialOnboarded, loadLangAsked, loadOnboarded, saveLangAsked, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
 import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
 import { Backdrop } from '@/ui/kit';
@@ -50,12 +50,16 @@ function Root() {
   // The intro, once per device (also on devices that ran a version without it): over everything until it is closed.
   const [onboarded, setOnboarded] = useState<boolean | null>(initialOnboarded);
   useEffect(() => { if (onboarded === null) loadOnboarded().then(setOnboarded); }, [onboarded]);
+  // The questions' language: asked once per account, and on a phone once per device too.
+  const [langAsked, setLangAsked] = useState<boolean | null>(null);
+  useEffect(() => { if (langAsked === null) loadLangAsked().then(setLangAsked); }, [langAsked]);
+  const askLang = !!user && (!settings.langChosen || langAsked === false);
   useEffect(() => { if (ready && fonts && onboarded !== null) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts, onboarded]);
   // On the web the page behind the app, and the browser's own bar (theme-color), take the top colour of the
   // background gradient, so the top of the screen runs into the page; over the intro and the language screen, their
   // navy (the intro's changes with its picture).
   const [introTop, setIntroTop] = useState<string | null>(null);
-  const cover = blocked ? OFFLINE_TOP : onboarded === false ? introTop ?? INTRO_BG[0] : user && !settings.langChosen ? INTRO_BG[0] : null;
+  const cover = blocked ? OFFLINE_TOP : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
     const top = cover ?? c.bgGradient[0];
@@ -70,7 +74,7 @@ function Root() {
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
       {Platform.OS === 'web' ? <OfflinePreload /> : null}
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
-      <StatusBar style={dark || !onboarded || (user && !settings.langChosen) ? 'light' : 'dark'} />
+      <StatusBar style={dark || !onboarded || askLang ? 'light' : 'dark'} />
       {/* While the intro is open the screens (sign-in included) are not there at all: hidden password fields behind it
           made iOS / Android offer saved passwords during the intro. */}
       {!onboarded ? (
@@ -90,9 +94,9 @@ function Root() {
         </Stack.Protected>
       </Stack>
       )}
-      {onboarded && user && !settings.langChosen ? (
-        // After the intro and signing in: the questions' language, asked once per user.
-        <View style={StyleSheet.absoluteFill}><LangPick /></View>
+      {onboarded && askLang ? (
+        // After the intro and signing in: the questions' language (once per account, and once on each phone).
+        <View style={StyleSheet.absoluteFill}><LangPick onDone={() => { saveLangAsked(); setLangAsked(true); }} /></View>
       ) : null}
     </ThemeProvider>
   );
