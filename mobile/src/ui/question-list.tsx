@@ -6,20 +6,24 @@ import { Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { faNum } from '@/lib/logic';
-import { Icon } from './icon';
+import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 
 export type QItem = { n: number; tone: 'answered' | 'empty' | 'ok' | 'bad'; marked?: boolean };
 
-export function ListButton({ n, of, onPress }: { n: number; of: number; onPress: () => void }) {
+// One capsule: an icon (the list, or the mistakes page's filter) and the position («۷ / ۲۵») together, so the number is
+// part of the button. `dot`: a small accent dot on the icon (a filter in use).
+export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست سؤال‌ها', dot }: { n: number; of: number; onPress: () => void; icon?: IconName; label?: string; dot?: boolean }) {
   const c = useColors();
-  // One capsule: the list icon and the position («۷ / ۲۵») together, so the number is part of the button.
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={`فهرست سؤال‌ها، سؤال ${faNum(n)} از ${faNum(of)}`}
+    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${label}، سؤال ${faNum(n)} از ${faNum(of)}`}
       style={({ pressed }) => ({ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, height: 44, paddingLeft: 14, paddingRight: 18, borderRadius: 22,
         opacity: pressed ? 0.75 : 1, transform: [{ scale: pressed ? 0.97 : 1 }], backgroundColor: c.nav } as any)}>
-      <Icon name="list" size={19} color={c.navFg} />
+      <View>
+        <Icon name={icon} size={19} color={c.navFg} />
+        {dot ? <View style={{ position: 'absolute', top: -3, right: -4, width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent, borderWidth: 1.5, borderColor: c.nav }} /> : null}
+      </View>
       <T style={{ fontSize: 18, lineHeight: 26, color: c.navFg, fontWeight: '600', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>
     </Pressable>
   );
