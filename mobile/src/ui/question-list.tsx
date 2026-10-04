@@ -12,12 +12,15 @@ import { useColors, useIsDark } from './theme';
 
 export type QItem = { n: number; tone: 'answered' | 'empty' | 'ok' | 'bad'; marked?: boolean };
 
-export function ListButton({ onPress }: { onPress: () => void }) {
+export function ListButton({ n, of, onPress }: { n: number; of: number; onPress: () => void }) {
   const c = useColors();
+  // One capsule: the list icon and the position («۷ / ۲۵») together, so the number is part of the button.
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel="فهرست سؤال‌ها"
-      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1, backgroundColor: c.nav })}>
+    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={`فهرست سؤال‌ها، سؤال ${faNum(n)} از ${faNum(of)}`}
+      style={({ pressed }) => ({ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, height: 44, paddingLeft: 14, paddingRight: 18, borderRadius: 22,
+        opacity: pressed ? 0.75 : 1, transform: [{ scale: pressed ? 0.97 : 1 }], backgroundColor: c.nav } as any)}>
       <Icon name="list" size={19} color={c.navFg} />
+      <T style={{ fontSize: 18, lineHeight: 26, color: c.navFg, fontWeight: '600', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>
     </Pressable>
   );
 }

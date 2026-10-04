@@ -15,7 +15,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Button, Card, L, T, physical, tap, usePageMotion } from '@/ui/kit';
-import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
+import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
 import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
@@ -154,7 +154,7 @@ export default function Result() {
     const nav = (
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!k} onPress={() => step(k - 1)} />}
-        middle={end ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><BarCount n={k + 1} of={total} /><ListButton onPress={() => setListOpen(true)} /></View>}
+        middle={end ? null : <ListButton n={k + 1} of={total} onPress={() => setListOpen(true)} />}
         end={end ? (isLesson ? <FootBtn label={ui.lessons} icon="learn" round onPress={() => goTo('/learn')} />
             : <FootBtn label={ui.exams} icon="exam" round onPress={() => goTo('/exam')} />)
           : k === total - 1 ? <FootBtn label={ui.summary} icon={showSummary ? 'sparkles' : 'clipboard'} round onPress={() => step(k + 1)} />
