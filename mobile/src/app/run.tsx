@@ -11,6 +11,7 @@ import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
+import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { Icon } from '@/ui/icon';
@@ -28,6 +29,7 @@ export default function Run() {
   const [i, setI] = useState(0);
   const [ticks, setTicks] = useState<boolean[][]>(() => qs.map(q => q.st.map(() => false)));
   const [left, setLeft] = useState(qs.length * SECONDS_PER_Q);
+  const [headH, setHeadH] = useState(0); // the glass top bar's height, the page's top padding
   // The Persian translation starts hidden in an exam; the button under the question shows it.
   const [showFa, setShowFa] = useState(false);
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
@@ -77,7 +79,9 @@ export default function Run() {
       {/* Top: exit (icon) with the exam's name beside it, the timer (Persian digits) in the middle of the screen, and
           the theme switch. SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
           stale), and the web gets extra room at the top. */}
-      <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: c.line }}>
+      {/* Fixed over the page on Liquid Glass: the question scrolls under it, blurred. */}
+      <GlassTop onHeight={setHeadH}>
+      <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
             {settings.timer ? (
@@ -97,7 +101,8 @@ export default function Run() {
           <ThemeButton />
         </View>
       </SafeAreaView>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+      </GlassTop>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The picture comes in again with each question. */}
         <Enter key={`pic-${i}`}>
           <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="contain" transition={200} />

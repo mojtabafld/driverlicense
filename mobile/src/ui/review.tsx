@@ -2,7 +2,7 @@
 // badge and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { Image } from 'expo-image';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import { api } from '@/lib/api';
@@ -47,9 +47,10 @@ function useTyped(text: string, on: boolean) {
   return `${part}${(part.match(/\*\*/g) ?? []).length % 2 ? '**' : ''} ▍`;
 }
 
-function Rich({ text: full, onQuestion, typing = false }: { text: string; onQuestion?: (n: number) => void; typing?: boolean }) {
+function Rich({ text: full, onQuestion, typing = false, onGrow }: { text: string; onQuestion?: (n: number) => void; typing?: boolean; onGrow?: () => void }) {
   const c = useColors();
   const text = useTyped(full, typing);
+  useEffect(() => { if (typing) onGrow?.(); }, [text, typing, onGrow]); // each typed step: keep the line in view
   const inline = (s: string, key: string) => s.split(/(\*\*.+?\*\*)/g).flatMap((part, i) => {
     const bold = /^\*\*.+\*\*$/.test(part), body = bold ? part.slice(2, -2) : part;
     // «سؤال ۳» in the summary opens that question.
@@ -58,7 +59,7 @@ function Rich({ text: full, onQuestion, typing = false }: { text: string; onQues
       const k = `${key}-${i}-${j}`;
       if (m && onQuestion) {
         const n = +m[1].replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
-        return <T key={k} onPress={() => onQuestion(n)} style={{ color: c.text, fontWeight: '700', textDecorationLine: 'underline' }}>{seg}</T>;
+        return <T key={k} onPress={() => onQuestion(n)} style={{ color: c.text, fontWeight: '700' }}>{seg}</T>;
       }
       return bold ? <T key={k} style={{ fontWeight: '700' }}>{seg}</T> : seg;
     });
@@ -124,18 +125,29 @@ function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; 
   );
 }
 
-// When an AI button opens, the page glides down so the button sits near the top and its text shows below it (and
-// again once the text has come). Web: the browser's smooth scrollIntoView on the block's node; native keeps its place.
-function useReveal(open: boolean, ready: boolean) {
-  const ref = useRef<View>(null);
+// When an AI button opens, the page glides down so the button sits near the top, just under the glass top bar, with
+// its panel below it; while the answer is being typed the page follows its last line (`follow`), as chat apps do,
+// keeping it above the bottom bar. Web: the browser's own scrolling on the nodes; native keeps its place.
+function useReveal(open: boolean) {
+  const ref = useRef<View>(null), panel = useRef<View>(null);
   useEffect(() => {
     if (!open || Platform.OS !== 'web') return;
     const el = ref.current as unknown as HTMLElement | null;
     if (!el?.scrollIntoView) return;
-    const t = setTimeout(() => { el.style.scrollMarginTop = '16px'; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+    const t = setTimeout(() => { el.style.scrollMarginTop = 'calc(env(safe-area-inset-top) + 76px)'; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
     return () => clearTimeout(t);
-  }, [open, ready]);
-  return ref;
+  }, [open]);
+  const follow = useCallback(() => {
+    if (Platform.OS !== 'web') return;
+    const el = panel.current as unknown as HTMLElement | null;
+    if (!el?.getBoundingClientRect) return;
+    const over = el.getBoundingClientRect().bottom - (window.innerHeight - 110);
+    if (over <= 0) return;
+    let p = el.parentElement;
+    while (p && !(p.scrollHeight > p.clientHeight && /(auto|scroll)/.test(getComputedStyle(p).overflowY))) p = p.parentElement;
+    p?.scrollBy({ top: over });
+  }, []);
+  return { ref, panel, follow };
 }
 
 // Closing an AI panel folds it away (height and fade) instead of cutting it off, so a page scrolled to the bottom
@@ -145,7 +157,7 @@ function useFold() {
   const [anim] = useState(() => new Animated.Value(1));
   const close = (then: () => void) => {
     setClosing(true);
-    Animated.timing(anim, { toValue: 0, duration: 450, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })
+    Animated.timing(anim, { toValue: 0, duration: 520, easing: Easing.inOut(Easing.quad), useNativeDriver: false })
       .start(() => { then(); setClosing(false); anim.setValue(1); });
   };
   const style = closing ? { height: anim.interpolate({ inputRange: [0, 1], outputRange: [0, h] }), opacity: anim, overflow: 'hidden' as const } : undefined;
@@ -180,16 +192,16 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
     if (shown && !next) fold.close(() => setShown(false));
     else setShown(next);
   };
-  const ref = useReveal(shown, !!text);
+  const { ref, panel, follow } = useReveal(shown);
   return (
     <View ref={ref} style={{ marginTop: 14 }}>
       <AiButton title="تحلیل پاسخ شما" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
         <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
-        <View style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
+        <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} typing={typing} /> : null}
+            : text ? <Rich text={text} typing={typing} onGrow={follow} /> : null}
         </View>
         </View></Animated.View>
       ) : null}
@@ -221,16 +233,16 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
     if (shown && !next) fold.close(() => setShown(false));
     else setShown(next);
   };
-  const ref = useReveal(shown, !!text);
+  const { ref, panel, follow } = useReveal(shown);
   return (
     <View ref={ref} style={{ marginTop: 22 }}>
       <AiButton title="جمع‌بندی آموزشی اشتباهات" sub="خلاصه‌ی آموزشی همه‌ی اشتباهات این آزمون، با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
         <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
-        <View style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
+        <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} onQuestion={onQuestion} typing={typing} /> : null}
+            : text ? <Rich text={text} onQuestion={onQuestion} typing={typing} onGrow={follow} /> : null}
         </View>
         </View></Animated.View>
       ) : null}
