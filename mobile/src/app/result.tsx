@@ -198,13 +198,16 @@ export default function Result() {
         {/* .rev-top, fixed on Liquid Glass over the page: back button, tabs, «جزئیات آزمون» on one row */}
         <GlassTop onHeight={setHeadH}>
           <View style={{ paddingTop: ins.top + 10, paddingBottom: 10, paddingHorizontal: 16, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          {/* Three parts: the back button and «جزئیات آزمون» on equal sides, so the tabs sit in the middle of the screen. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ flex: 1, flexBasis: 0, alignItems: 'flex-start' }}>
             <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
               style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
               <Icon name="arrowRight" size={20} color={c.text} />
             </Pressable>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
-              <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
+            </View>
+            <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
+            <View style={{ flex: 1, flexBasis: 0, alignItems: 'flex-end' }}>
               {faded ? (
                 <Animated.View ref={btnRef} style={{ opacity: btnIn, transform: [{ scale: btnIn.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }] }}>
                   <Pressable onPress={() => { tap(); fade.setValue(1); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
