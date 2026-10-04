@@ -58,7 +58,7 @@ function Rich({ text: full, onQuestion, typing = false }: { text: string; onQues
       const k = `${key}-${i}-${j}`;
       if (m && onQuestion) {
         const n = +m[1].replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
-        return <T key={k} onPress={() => onQuestion(n)} style={{ color: c.link, fontWeight: '700', textDecorationLine: 'underline' }}>{seg}</T>;
+        return <T key={k} onPress={() => onQuestion(n)} style={{ color: c.text, fontWeight: '700', textDecorationLine: 'underline' }}>{seg}</T>;
       }
       return bold ? <T key={k} style={{ fontWeight: '700' }}>{seg}</T> : seg;
     });
@@ -138,6 +138,21 @@ function useReveal(open: boolean, ready: boolean) {
   return ref;
 }
 
+// Closing an AI panel folds it away (height and fade) instead of cutting it off, so a page scrolled to the bottom
+// glides back up with it rather than jumping. `close(then)` runs the fold, then `then` (which hides the panel).
+function useFold() {
+  const [h, setH] = useState(0), [closing, setClosing] = useState(false);
+  const [anim] = useState(() => new Animated.Value(1));
+  const close = (then: () => void) => {
+    setClosing(true);
+    Animated.timing(anim, { toValue: 0, duration: 450, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })
+      .start(() => { then(); setClosing(false); anim.setValue(1); });
+  };
+  const style = closing ? { height: anim.interpolate({ inputRange: [0, 1], outputRange: [0, h] }), opacity: anim, overflow: 'hidden' as const } : undefined;
+  const onLayout = (e: { nativeEvent: { layout: { height: number } } }) => { if (!closing) setH(e.nativeEvent.layout.height); };
+  return { close, closing, style, onLayout };
+}
+
 // Lessons already fetched while the app is open (the server also keeps them, so a new visit costs no AI call).
 const lessonCache = new Map<string, string>();
 
@@ -155,22 +170,28 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
       .then(d => { lessonCache.set(key, d.text); setTyping(true); setText(d.text); setState('idle'); })
       .catch((e: any) => { setErr(e.status === 429 ? e.message : 'نکات الان آماده نشد؛ دوباره امتحان کنید.'); setState('error'); });
   };
+  const fold = useFold();
   const press = () => {
     if (state === 'loading') return;
     if (!shown && !text) load();
+    if (fold.closing) return;
+    const next = !shown || (!text && state === 'error');
     if (shown) setTyping(false); // typed once: shown whole when opened again
-    setShown(!shown || (!text && state === 'error'));
+    if (shown && !next) fold.close(() => setShown(false));
+    else setShown(next);
   };
   const ref = useReveal(shown, !!text);
   return (
     <View ref={ref} style={{ marginTop: 14 }}>
       <AiButton title="تحلیل پاسخ شما" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
-        <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
+        <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
+        <View style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
             : text ? <Rich text={text} typing={typing} /> : null}
         </View>
+        </View></Animated.View>
       ) : null}
     </View>
   );
@@ -185,6 +206,7 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [err, setErr] = useState('');
   const wrong = items.map((it, i) => ({ it, n: i + 1 })).filter(x => !x.it.ok && x.it.a).map(({ it, n }) => ({ id: it.id, a: it.a!.map(v => (v ? 1 : 0)), n }));
+  const fold = useFold();
   const press = () => {
     if (state === 'loading') return;
     if (!shown && !text) {
@@ -193,19 +215,24 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
         .then(d => { setTyping(true); setText(d.text); setState('idle'); })
         .catch((e: any) => { setErr(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message); setState('error'); });
     }
+    if (fold.closing) return;
+    const next = !shown || (!text && state === 'error');
     if (shown) setTyping(false); // typed once: shown whole when opened again
-    setShown(!shown || (!text && state === 'error'));
+    if (shown && !next) fold.close(() => setShown(false));
+    else setShown(next);
   };
   const ref = useReveal(shown, !!text);
   return (
     <View ref={ref} style={{ marginTop: 22 }}>
       <AiButton title="جمع‌بندی آموزشی اشتباهات" sub="خلاصه‌ی آموزشی همه‌ی اشتباهات این آزمون، با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
-        <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
+        <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
+        <View style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
             : text ? <Rich text={text} onQuestion={onQuestion} typing={typing} /> : null}
         </View>
+        </View></Animated.View>
       ) : null}
     </View>
   );
@@ -353,8 +380,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       ) : null}
       {!alwaysOpen ? (
         <Pressable onPress={() => { tap(); setOpen(!open); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: c.line }}>
-          <T style={{ fontSize: 13, fontWeight: '600', color: on ? c.muted : c.link }}>جزئیات و توضیحات</T>
-          <View style={{ transform: [{ rotate: on ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={18} color={on ? c.muted : c.link} /></View>
+          <T style={{ fontSize: 13, fontWeight: '600', color: on ? c.muted : c.text }}>جزئیات و توضیحات</T>
+          <View style={{ transform: [{ rotate: on ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={18} color={on ? c.muted : c.text} /></View>
         </Pressable>
       ) : null}
     </View>

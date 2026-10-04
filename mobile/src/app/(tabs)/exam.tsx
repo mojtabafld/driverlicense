@@ -41,7 +41,7 @@ function MistakesCard() {
         </View>
         {topics.length ? (
           <Pressable onPress={() => { tap(); router.push('/mistakes'); }} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <T style={{ color: c.link, fontWeight: '700', fontSize: 13 }}>همه</T><Icon name="chevronLeft" size={14} color={c.link} weight="semibold" />
+            <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>همه</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
           </Pressable>
         ) : null}
       </View>
