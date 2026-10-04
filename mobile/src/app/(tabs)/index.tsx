@@ -1,7 +1,8 @@
 // Home: progress at a glance (chance of passing, counts, progress chart), fitted to the screen without scrolling:
 // the chart takes the height left, and on shorter screens the cards get more compact.
 import { router } from 'expo-router';
-import { View, useWindowDimensions } from 'react-native';
+import { useState } from 'react';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
 import { faNum, isFull, isPass, mistakeIds, passEstimate, pctOf } from '@/lib/logic';
@@ -53,6 +54,7 @@ export default function Home() {
   const { height } = useWindowDimensions();
   const compact = height < 800, tight = height < 680;
   const { user, attempts, bank } = useApp();
+  const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
   const exams = attempts.filter(a => a.mode !== 'lesson');
   const fullN = attempts.filter(isFull).length, passN = attempts.filter(isPass).length;
@@ -96,6 +98,8 @@ export default function Home() {
         <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
         <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
       </View>
+      {/* A tap anywhere in the chart's card, off the bars, clears the picked attempt. */}
+      <Pressable onPress={() => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
@@ -105,8 +109,9 @@ export default function Home() {
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.ok, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
-        <ProgressChart fill attempts={attempts} onOpen={openAttempt} />
+        <ProgressChart fill attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
       </Card>
+      </Pressable>
     </Screen>
   );
 }

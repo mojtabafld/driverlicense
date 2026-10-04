@@ -16,13 +16,15 @@ import { useColors } from './theme';
 const L = 38, R = 12, TOP = 14, B = 24;
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی');
 
-export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean }) {
+// `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
   const H = fill ? Math.max(fillH, 60) : 210;
-  const [sel, setSel] = useState<number | null>(null);
+  const [selIn, setSelIn] = useState<number | null>(null);
+  const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
   const grow = useCountUp(1, 900);
   if (attempts.length < 2) {
@@ -67,12 +69,21 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
               onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })}>
               <View style={{ width: CW, height: H }}>
+                {/* A tap between the bars clears the pick. */}
+                <Pressable onPress={() => setSel(null)} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
                 <Svg width={CW} height={H} pointerEvents="none">
                   {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
                   {/* The picked bar stays full strength, the others fade a little. */}
                   {data.map((d, i) => (
-                    <Path key={i} d={bar(x(i), tops[i])} fill={good(d) ? c.ok : c.faint} fillOpacity={(good(d) ? 1 : 0.55) * (sel == null || sel === i ? 1 : 0.45)} />
+                    <Path key={i} d={bar(x(i), tops[i])} fill={good(d) ? c.ok : sel === i ? c.muted : c.faint}
+                      fillOpacity={sel === i ? 1 : (good(d) ? 1 : 0.55) * (sel == null ? 1 : 0.3)} />
                   ))}
+                  {/* The picked bar: full strength (a grey one darker) with its percent above it. */}
+                  {sel != null && data[sel] ? (
+                    <SvgText x={x(sel)} y={Math.max(11, tops[sel] - 6)} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
+                      {`${faNum(Math.round(pctOf(data[sel]) * 100))}٪`}
+                    </SvgText>
+                  ) : null}
                   <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.ok} strokeWidth={1.5} strokeDasharray="5 5" />
                   {data.map((_, i) => ((data.length - 1 - i) % every === 0
                     ? <SvgText key={`x${i}`} x={x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
@@ -80,8 +91,8 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
                 </Svg>
                 {/* A tap on an attempt's column picks it (a drag scrolls instead). */}
                 {data.map((_, i) => (
-                  <Pressable key={`p${i}`} onPress={() => { tap(); setSel(i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
-                    style={{ position: 'absolute', left: i * slot, top: 0, width: slot, height: H }} />
+                  <Pressable key={`p${i}`} onPress={() => { tap(); setSel(sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
+                    style={{ position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
                 ))}
               </View>
             </ScrollView>
