@@ -48,7 +48,7 @@ function FitTitle({ text, size }: { text: string; size: number }) {
 export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: string) => void }) {
   const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
-  const { intro, introBg } = useApp();
+  const { intro } = useApp();
   const [fade] = useState(() => new Animated.Value(1));
   const last = i === SLIDES.length - 1;
   const go = (n: number) => {
@@ -70,8 +70,9 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
     },
   };
   const { Art, title, text } = SLIDES[i];
-  // The server's picture for this slide, laid on its own background colour so its edge does not show.
-  const pic = intro[i + 1], top = pic && introBg[i + 1] ? introBg[i + 1] : BG[0];
+  // The server's picture for this slide: see-through around its objects (the server cuts its background out), so it
+  // lies on the page's one colour and nothing changes colour from slide to slide.
+  const pic = intro[i + 1], top = BG[0];
   useEffect(() => { onTop?.(top); }, [top, onTop]);
   // Every slide's picture is fetched up front, so a new slide never shows the previous picture on its own colour while
   // the next one loads (that was a brief mismatch of the picture's background).
@@ -79,24 +80,13 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
     const urls = SLIDES.map((_, k) => intro[k + 1] ? `${API_URL}/intro/${k + 1}.png?v=${intro[k + 1]}` : null).filter((u): u is string => !!u);
     if (urls.length) Image.prefetch(urls).catch(() => {});
   }, [intro]);
-  // The pictures' own background shades differ a little from slide to slide; the page glides from one to the next
-  // instead of jumping (the top colour sits under a gradient that only darkens the bottom).
-  const [bgFrom, setBgFrom] = useState(top), [bgTo, setBgTo] = useState(top);
-  const [bgMix] = useState(() => new Animated.Value(1));
-  if (top !== bgTo) { setBgFrom(bgTo); setBgTo(top); } // a new slide's colour: glide to it from the current one
-  useEffect(() => {
-    bgMix.setValue(0);
-    Animated.timing(bgMix, { toValue: 1, duration: 300, easing: Easing.inOut(Easing.quad), useNativeDriver: false }).start();
-  }, [bgTo, bgMix]);
-  const bg = bgMix.interpolate({ inputRange: [0, 1], outputRange: [bgFrom, bgTo] });
   // The picture takes all the room above the text (the full width, under the side padding).
   const [box, setBox] = useState({ w: 0, h: 0 });
   const side = Math.max(0, Math.min(box.w, box.h));
   const artH = Math.min(height * 0.42, 340), shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
   return (
     <View style={{ flex: 1 }} {...swipe}>
-      <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: bg }} />
-      <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={[BG[0], BG[0], BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -28 }}

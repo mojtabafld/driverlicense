@@ -72,4 +72,37 @@ function edgeColour({ w, h, ch, px }) {
   return '#' + [med(r), med(g), med(b)].map(v => v.toString(16).padStart(2, '0')).join('');
 }
 
-module.exports = { decode, encode, half, edgeColour };
+// The picture with its plain background made see-through (RGBA): starting from the four edges, every pixel joined to
+// them that is close to the background colour `bg` (#rrggbb) is taken as background seen through: fully clear when it
+// is the background colour, partly clear when a little off it (soft shadows, anti-aliased object edges), its colour
+// unmixed from the background so it looks the same over any page of that colour. The objects stay solid.
+function cutout({ w, h, ch, px }, bg, near = 16, far = 72) {
+  const B = [1, 3, 5].map(i => parseInt(bg.slice(i, i + 2), 16));
+  const BL = B[1] - (B[0] + B[2]) / 2;
+  const out = Buffer.alloc(w * h * 4), dist = new Float32Array(w * h), seen = new Uint8Array(w * h), queue = new Int32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const o = i * ch;
+    // How far from the background: the largest channel difference, plus (three times) the difference in how much the
+    // colour leans to the background's hue, so dark objects of another hue (hair, tyres) are not taken for its shade.
+    const lean = px[o + 1] - (px[o] + px[o + 2]) / 2;
+    dist[i] = Math.max(Math.abs(px[o] - B[0]), Math.abs(px[o + 1] - B[1]), Math.abs(px[o + 2] - B[2])) + 3 * Math.abs(lean - BL);
+    out[i * 4] = px[o]; out[i * 4 + 1] = px[o + 1]; out[i * 4 + 2] = px[o + 2]; out[i * 4 + 3] = 255;
+  }
+  let head = 0, tail = 0;
+  const add = i => { if (!seen[i] && dist[i] <= far) { seen[i] = 1; queue[tail++] = i; } };
+  for (let x = 0; x < w; x++) { add(x); add((h - 1) * w + x); }
+  for (let y = 0; y < h; y++) { add(y * w); add(y * w + w - 1); }
+  while (head < tail) {
+    const i = queue[head++], x = i % w, y = (i / w) | 0;
+    if (x > 0) add(i - 1); if (x < w - 1) add(i + 1); if (y > 0) add(i - w); if (y < h - 1) add(i + w);
+  }
+  for (let i = 0; i < w * h; i++) {
+    if (!seen[i]) continue;
+    const a = Math.min(1, Math.max(0, (dist[i] - near) / (far - near)));
+    out[i * 4 + 3] = Math.round(a * 255);
+    for (let k = 0; k < 3; k++) out[i * 4 + k] = a ? Math.min(255, Math.max(0, Math.round((out[i * 4 + k] - (1 - a) * B[k]) / a))) : B[k];
+  }
+  return { w, h, ch: 4, px: out };
+}
+
+module.exports = { decode, encode, half, edgeColour, cutout };
