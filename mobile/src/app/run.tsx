@@ -190,12 +190,12 @@ export default function Run() {
             {/* Every question by number: filled when answered, outlined when not, a bookmark when marked; a tap opens it. */}
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', direction: 'ltr' } as any}>
               {qs.map((_, k) => {
-                const ans = ticks[k].some(Boolean), marked = flags.includes(k), solid = dark ? ans : !ans; // as in the question list
+                const ans = ticks[k].some(Boolean), marked = flags.includes(k); // as in the question list
                 return (
                   <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
                     style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
-                      backgroundColor: solid ? c.strong : c.surface, borderWidth: 1.5, borderColor: marked ? c.warn : solid ? c.strong : c.line })}>
-                    <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: solid ? c.strongFg : c.text, textAlign: 'center' }}>{faNum(k + 1)}</T>
+                      backgroundColor: ans ? c.strong : c.nav, borderWidth: 1.5, borderColor: marked ? c.warn : ans ? c.strong : c.nav })}>
+                    <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? c.strongFg : c.navFg, textAlign: 'center' }}>{faNum(k + 1)}</T>
                     {marked ? (
                       <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
                         <Icon name="bookmark" size={11} filled color="#fff" />
@@ -206,7 +206,7 @@ export default function Run() {
               })}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
-              {([['پاسخ داده‌شده', dark ? c.strong : c.surface, dark ? c.strong : c.line], ['بی‌پاسخ', dark ? c.surface : c.strong, dark ? c.line : c.strong], ['علامت‌خورده', c.surface, c.warn]] as const).map(([l, bg, bd]) => (
+              {([['پاسخ داده‌شده', c.strong, c.strong], ['بی‌پاسخ', c.nav, c.nav], ['علامت‌خورده', c.surface, c.warn]] as const).map(([l, bg, bd]) => (
                 <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: bg, borderWidth: 1.5, borderColor: bd }} />
                   <T style={{ fontSize: 12, color: c.muted }}>{l}</T>

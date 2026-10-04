@@ -7,6 +7,6 @@
   </g>
   <path d="M512 600 L690 400" stroke="#ff9d7e" stroke-width="56" stroke-linecap="round"/>
   <circle cx="512" cy="600" r="92" fill="#ffffff"/>
-  <path d="M470 600 L500 630 L556 572" fill="none" stroke="#2e8285" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M470 600 L500 630 L556 572" fill="none" stroke="#228B22" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>
