@@ -1,13 +1,16 @@
 // Questions read aloud by ElevenLabs: the question and its statements, in the exam's language (Danish or English),
 // as one MP3. Made once per question + language + voice + model and kept in the store's blobs, so later listens are
-// free and shared by everyone. Needs ELEVENLABS_API_KEY; ELEVENLABS_VOICE_ID and ELEVENLABS_MODEL choose another
-// voice or model (default: the multilingual v2 model, which speaks Danish).
+// free and shared by everyone. Needs ELEVENLABS_API_KEY; the voice per language and the model can be chosen (see
+// voiceOf; default model: multilingual v2, which speaks Danish).
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
 
 const API = `${(process.env.ELEVENLABS_BASE || 'https://api.elevenlabs.io').replace(/\/$/, '')}/v1/text-to-speech`;
-const VOICE = process.env.ELEVENLABS_VOICE_ID || 'JBFqnCBsd6RMkjVDRZzb';
+// The voice follows the language of the text read: ELEVENLABS_VOICE_ID_DA for Danish, ELEVENLABS_VOICE_ID_EN for
+// English, else ELEVENLABS_VOICE_ID for both, else a default voice.
+const voiceOf = lang => (lang === 'en' ? process.env.ELEVENLABS_VOICE_ID_EN : process.env.ELEVENLABS_VOICE_ID_DA)
+  || process.env.ELEVENLABS_VOICE_ID || 'JBFqnCBsd6RMkjVDRZzb';
 const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
 const PER_USER_PER_HOUR = 60; // new (not yet made) recordings a user may cause per hour
 
@@ -42,14 +45,15 @@ async function get({ store, siteDir, qid, lang, username }) {
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   lang = lang === 'en' ? 'en' : 'da';
   // A question written new (`rev`) gets a new recording.
-  const key = `tts-v1-${q.id}${q.rev ? `r${q.rev}` : ''}-${lang}-${VOICE}-${MODEL}`;
+  const voice = voiceOf(lang);
+  const key = `tts-v1-${q.id}${q.rev ? `r${q.rev}` : ''}-${lang}-${voice}-${MODEL}`;
   const have = await store.getBlob(key);
   if (have) return have;
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (inflight.has(key)) return inflight.get(key);
   if (!allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
   const job = (async () => {
-    const r = await fetch(`${API}/${encodeURIComponent(VOICE)}?output_format=mp3_44100_128`, {
+    const r = await fetch(`${API}/${encodeURIComponent(voice)}?output_format=mp3_44100_128`, {
       method: 'POST',
       headers: { 'xi-api-key': process.env.ELEVENLABS_API_KEY, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
       body: JSON.stringify({ text: script(q, lang), model_id: MODEL, language_code: lang }),
