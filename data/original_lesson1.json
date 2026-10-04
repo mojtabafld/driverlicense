@@ -1,0 +1,963 @@
+{
+  "_about": "Our own questions for lesson 1 (prove.dk's Teoriprøve 1), written new, inspired by the topics of the originals. Each keeps its question id, its topic, the number of statements and which of them are right, so earlier answers and statistics stay valid. build.py puts them in place of prove.dk's text; `img` is the prompt the server gives the image model (kie.ai) to draw the new picture (imagegen.js, seed 'lesson1-v1').",
+  "26": {
+    "sda": "Du har holdt parkeret i vejsiden på en villavej og vil gerne køre ud. Hvad gør du?",
+    "sen": "You have been parked at the side of a residential street and want to pull out. What do you do?",
+    "sfa": "کنار یک خیابان مسکونی پارک کرده‌اید و می‌خواهید وارد خیابان شوید. چه می‌کنید؟",
+    "st": [
+      {
+        "da": "Jeg blinker til venstre og kører ud med det samme.",
+        "en": "I indicate left and pull out straight away.",
+        "fa": "راهنمای چپ می‌زنم و بلافاصله وارد خیابان می‌شوم.",
+        "eda": "Nej. Blinklyset giver dig ikke ret til at køre ud. Du skal først kigge over venstre skulder for at tjekke den blinde vinkel.",
+        "een": "No. Indicating does not give you the right to pull out. First look over your left shoulder to check the blind spot.",
+        "efa": "خیر. راهنما زدن به شما حق ورود نمی‌دهد. اول باید از روی شانه‌ی چپ نگاه کنید تا نقطه‌ی کور را بررسی کنید."
+      },
+      {
+        "da": "Jeg kigger over venstre skulder, før jeg kører ud.",
+        "en": "I look over my left shoulder before I pull out.",
+        "fa": "قبل از حرکت، از روی شانه‌ی چپ به عقب نگاه می‌کنم.",
+        "eda": "Ja. Spejlene viser ikke alt. Den blinde vinkel tjekker du ved at dreje hovedet.",
+        "een": "Yes. The mirrors do not show everything. You check the blind spot by turning your head.",
+        "efa": "بله. آینه‌ها همه‌چیز را نشان نمی‌دهند. نقطه‌ی کور را با چرخاندن سر بررسی می‌کنید."
+      },
+      {
+        "da": "Jeg kører først ud, når der er frit bagfra.",
+        "en": "I only pull out when the road behind me is clear.",
+        "fa": "فقط وقتی پشت سرم خالی است وارد خیابان می‌شوم.",
+        "eda": "Ja. Du må ikke genere trafikken bagfra, når du kører ud.",
+        "een": "Yes. When you pull out you must not get in the way of traffic coming from behind.",
+        "efa": "بله. هنگام ورود به خیابان نباید مزاحم ترافیکی شوید که از پشت می‌آید."
+      }
+    ],
+    "img": "VIEWPOINT: from the driver's seat of a small car that is PARKED, standing still at the right-hand kerb, at the driver's eye height, looking straight ahead along the street.\nCAR INTERIOR (must be visible): the top of a dark dashboard across the bottom fifth of the picture with one round analogue speedometer showing 0 in the centre; the interior rear-view mirror at the top centre; the LEFT door mirror at the lower left and the RIGHT door mirror at the lower right. The left door mirror shows the street behind the car: EMPTY, no vehicles, no cyclists.\nROAD: a quiet, straight, two-way residential street about 6 metres wide, grey asphalt, no centre line, a granite kerb and a paved pavement on the right right next to the car.\nSURROUNDINGS: detached one-storey Danish houses with yellow and red brick walls and red tile roofs, low trimmed hedges and young trees on both sides; parked cars only far ahead on the left.\nTRAFFIC: none on the road ahead and none behind.\nLIGHT AND WEATHER: late morning, light white clouds, dry road.\nMUST NOT APPEAR: moving vehicles, people on the road, road signs, text."
+  },
+  "27": {
+    "sda": "Du kører 40 km/t gennem et vejarbejde. Hvordan vil du fortsætte?",
+    "sen": "You are driving at 40 km/h through roadworks. How will you continue?",
+    "sfa": "با سرعت ۴۰ کیلومتر در ساعت از محدوده‌ی کارهای راه‌سازی می‌گذرید. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på, at bilen foran bremser.",
+        "en": "I pay particular attention to the car in front braking.",
+        "fa": "به‌ویژه به ترمز کردن خودروی جلویی توجه می‌کنم.",
+        "eda": "Ja. Bremselygterne på bilen foran lyser.",
+        "een": "Yes. The brake lights of the car in front are on.",
+        "efa": "بله. چراغ‌های ترمز خودروی جلویی روشن است."
+      },
+      {
+        "da": "Jeg holder 40 km/t, indtil jeg er forbi vejarbejdet.",
+        "en": "I keep to 40 km/h until I am past the roadworks.",
+        "fa": "تا عبور از محدوده‌ی راه‌سازی با همان ۴۰ کیلومتر ادامه می‌دهم.",
+        "eda": "Nej. Bilen foran bremser, så du skal også sætte farten ned.",
+        "een": "No. The car in front is braking, so you must slow down too.",
+        "efa": "خیر. خودروی جلویی ترمز می‌کند، پس شما هم باید سرعت را کم کنید."
+      },
+      {
+        "da": "Jeg sætter farten ned.",
+        "en": "I slow down.",
+        "fa": "سرعتم را کم می‌کنم.",
+        "eda": "Ja. Både vejarbejdet og bilen foran kræver lavere fart.",
+        "een": "Yes. Both the roadworks and the car in front call for a lower speed.",
+        "efa": "بله. هم راه‌سازی و هم خودروی جلویی سرعت کمتری می‌طلبند."
+      },
+      {
+        "da": "Jeg følger de hvide kørebanestriber.",
+        "en": "I follow the white lane markings.",
+        "fa": "از خط‌کشی‌های سفید پیروی می‌کنم.",
+        "eda": "Nej. Ved vejarbejde gælder de gule, midlertidige striber, når de er afmærket.",
+        "een": "No. At roadworks the temporary yellow markings apply where they are painted.",
+        "efa": "خیر. در محدوده‌ی راه‌سازی، خط‌کشی‌های موقت زرد معتبرند، هرجا که کشیده شده باشند."
+      }
+    ],
+    "img": "VIEWPOINT: from a car driving in town, at the driver's eye height, looking straight ahead.\nROAD: a straight urban road with originally two lanes in our direction, grey asphalt. ROADWORKS close the RIGHT lane for about 80 metres: a continuous row of red-and-white striped barrier boards on feet, orange traffic cones between them and small round amber warning lamps on top of the boards.\nMARKINGS (important): temporary BRIGHT YELLOW lane lines guide the traffic into the left lane past the roadworks (a solid yellow edge line along the barriers and a broken yellow line on the left). The old WHITE lane markings are still visible but faded underneath and point into the closed lane.\nVEHICLES: about 20 metres ahead, in the yellow-marked lane, a dark blue five-door hatchback seen from behind with BOTH red brake lights and the high third brake light clearly ON. No other vehicles close by.\nSURROUNDINGS: modern three-storey buildings, tall street lamps, a few trees, a pavement on the left.\nLIGHT AND WEATHER: sunny afternoon, dry asphalt.\nMUST NOT APPEAR: workers on the road, other text than small markings on the barriers."
+  },
+  "28": {
+    "sda": "Du kører ca. 80 km/t på en smal landevej og nærmer dig et sving. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 80 km/h on a narrow country road and approaching a bend. There is no traffic behind you. How will you continue?",
+    "sfa": "با حدود ۸۰ کیلومتر در ساعت در یک جاده‌ی باریک بین‌شهری به یک پیچ نزدیک می‌شوید. پشت سرتان خودرویی نیست. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg skærer svinget over midterlinjen for at køre mere lige.",
+        "en": "I cut the bend across the centre line to drive straighter.",
+        "fa": "پیچ را از روی خط وسط میان‌بر می‌زنم تا مستقیم‌تر برانم.",
+        "eda": "Nej. Du skal blive i din egen vognbane hele vejen gennem svinget.",
+        "een": "No. You must stay in your own lane all the way through the bend.",
+        "efa": "خیر. باید در تمام طول پیچ در خط خودتان بمانید."
+      },
+      {
+        "da": "Jeg kører helt ude ved den højre vejkant.",
+        "en": "I drive right at the edge of the road on the right.",
+        "fa": "کاملاً لبه‌ی سمت راست جاده می‌رانم.",
+        "eda": "Nej. Så kommer de højre hjul for tæt på rabatten. Hold dig til højre, men inden for din vognbane.",
+        "een": "No. Then the right wheels get too close to the verge. Keep to the right, but within your lane.",
+        "efa": "خیر. در این صورت چرخ‌های راست بیش از حد به شانه‌ی خاکی نزدیک می‌شوند. سمت راست بمانید، ولی داخل خط خودتان."
+      },
+      {
+        "da": "Jeg holder bilen midt i min vognbane.",
+        "en": "I keep the car in the middle of my lane.",
+        "fa": "خودرو را وسط خط خودم نگه می‌دارم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg sætter farten ned før svinget.",
+        "en": "I slow down before the bend.",
+        "fa": "قبل از پیچ سرعتم را کم می‌کنم.",
+        "eda": "Ja. 80 km/t er for hurtigt til dette sving.",
+        "een": "Yes. 80 km/h is too fast for this bend.",
+        "efa": "بله. ۸۰ کیلومتر برای این پیچ زیاد است."
+      }
+    ],
+    "img": "VIEWPOINT: from a car on a country road, at the driver's eye height, in the middle of the right-hand lane, looking ahead.\nROAD: a narrow two-lane rural road, each lane about 3 metres wide, grey asphalt. About 60 metres ahead the road turns clearly to the LEFT in a medium-sharp bend that partly hides the road beyond it.\nMARKINGS (important): a BROKEN white centre line (long dashes with gaps); thin SOLID white edge lines on both sides close to the grass.\nVERGES: narrow grass verges with wild flowers, no kerbs; on the outer (right) side of the bend a low hedge and three birch trees; open green and yellow fields beyond.\nTRAFFIC: none ahead, none oncoming.\nLIGHT AND WEATHER: bright summer day, dry asphalt.\nMUST NOT APPEAR: road signs, buildings close to the road, vehicles, text."
+  },
+  "29": {
+    "sda": "Du kører ca. 60 km/t en kold vintermorgen. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 60 km/h on a cold winter morning. How will you continue?",
+    "sfa": "در یک صبح سرد زمستانی با حدود ۶۰ کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg fortsætter med 60 km/t.",
+        "en": "I continue at 60 km/h.",
+        "fa": "با ۶۰ کیلومتر در ساعت ادامه می‌دهم.",
+        "eda": "Nej. Forholdene kræver lavere fart.",
+        "een": "No. The conditions call for a lower speed.",
+        "efa": "خیر. شرایط سرعت کمتری می‌طلبد."
+      },
+      {
+        "da": "Jeg sætter farten ned.",
+        "en": "I slow down.",
+        "fa": "سرعتم را کم می‌کنم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg er særligt opmærksom på, at vejen kan være glat.",
+        "en": "I pay particular attention to the road possibly being slippery.",
+        "fa": "به‌ویژه توجه دارم که جاده ممکن است لغزنده باشد.",
+        "eda": "Ja. Vejen er våd, og der ligger sne i rabatten. På broer og nær vand dannes der let is.",
+        "een": "Yes. The road is wet and there is snow on the verges. Ice forms easily on bridges and near water.",
+        "efa": "بله. جاده خیس است و کنار جاده برف نشسته. روی پل‌ها و نزدیک آب به‌راحتی یخ می‌زند."
+      },
+      {
+        "da": "Jeg er særligt opmærksom på svinget efter broen.",
+        "en": "I pay particular attention to the bend after the bridge.",
+        "fa": "به‌ویژه به پیچ بعد از پل توجه می‌کنم.",
+        "eda": "Ja. Vejen drejer lige efter broen.",
+        "een": "Yes. The road turns just after the bridge.",
+        "efa": "بله. جاده درست بعد از پل می‌پیچد."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, driving towards and onto a bridge, looking ahead.\nROAD: a two-lane road that crosses a low, 60-metre-long concrete bridge over a wide river; right after the end of the bridge the road curves to the RIGHT.\nSURFACE (important): the asphalt is wet and dark with clearly visible SHINY PATCHES OF ICE, especially on the bridge deck; thin slush at the edges.\nMARKINGS: a broken white centre line and solid white edge lines, partly hidden by slush.\nBRIDGE: grey metal railings on both sides with snow on their top rails.\nSURROUNDINGS: snow on the river banks, on the verges and on bare trees and fir trees; light mist hanging over the dark river water.\nTRAFFIC: none.\nLIGHT AND WEATHER: grey overcast early morning in winter, cold.\nMUST NOT APPEAR: sunshine, vehicles, people, text."
+  },
+  "30": {
+    "sda": "Du kører fra motorvejen ad en afkørsel. Hvad skal du være særligt opmærksom på?",
+    "sen": "You are leaving the motorway on an exit ramp. What should you pay particular attention to?",
+    "sfa": "از طریق یک خروجی از بزرگراه خارج می‌شوید. به چه چیزی باید به‌ویژه توجه کنید؟",
+    "st": [
+      {
+        "da": "Det skarpe sving på afkørslen.",
+        "en": "The sharp bend on the exit ramp.",
+        "fa": "پیچ تند خروجی.",
+        "eda": "Ja. Tavlerne og pilene viser et skarpt sving.",
+        "een": "Yes. The signs and the chevrons show a sharp bend.",
+        "efa": "بله. تابلوها و فلش‌ها یک پیچ تند را نشان می‌دهند."
+      },
+      {
+        "da": "Det er forbudt at køre over 40 km/t i svinget.",
+        "en": "It is forbidden to drive faster than 40 km/h in the bend.",
+        "fa": "رانندگی با سرعت بیش از ۴۰ کیلومتر در این پیچ ممنوع است.",
+        "eda": "Nej. Tavlen med svingpilen og 40 viser en anbefalet hastighed, ikke en grænse.",
+        "een": "No. The sign with the bend arrow and 40 shows a recommended speed, not a limit.",
+        "efa": "خیر. تابلوی فلش پیچ با عدد ۴۰ سرعت توصیه‌شده را نشان می‌دهد، نه محدودیت سرعت."
+      },
+      {
+        "da": "Det kan være farligt at køre hurtigere end 40 km/t.",
+        "en": "It can be dangerous to drive faster than 40 km/h.",
+        "fa": "رانندگی با سرعت بیش از ۴۰ کیلومتر می‌تواند خطرناک باشد.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Det anbefales at køre højst 40 km/t gennem svinget.",
+        "en": "It is recommended to drive at most 40 km/h through the bend.",
+        "fa": "توصیه می‌شود با حداکثر ۴۰ کیلومتر از پیچ عبور کنید.",
+        "eda": "Ja. Det er det, tavlen fortæller.",
+        "een": "Yes. That is what the sign tells you.",
+        "efa": "بله. این همان چیزی است که تابلو می‌گوید."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a motorway EXIT RAMP, looking ahead.\nROAD: a single-lane exit ramp, about 4 metres wide, grey asphalt, that bends SHARPLY to the LEFT about 50 metres ahead.\nMARKINGS: a SOLID white edge line on both sides.\nSIGNS (exact and clearly visible):\n1) On the right side, before the bend, on a grey post: a white SQUARE sign with a thin black border, showing a thick black arrow that bends to the LEFT and, below the arrow, the black number \"40\" (a Danish advisory-speed sign for the bend).\n2) On the outer side of the bend, straight ahead of the viewer: a tall rectangular board with RED AND WHITE CHEVRON STRIPES pointing to the left.\nBARRIERS: a steel crash barrier along the right side of the ramp; a grass embankment beyond.\nTRAFFIC: none.\nLIGHT AND WEATHER: clear blue sky, dry road.\nMUST NOT APPEAR: any other signs, numbers or text; vehicles."
+  },
+  "31": {
+    "sda": "Du kører ca. 45 km/t i en by. Der er is og sne på kørebanen. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 45 km/h in town. There is ice and snow on the road. How will you continue?",
+    "sfa": "در شهر با حدود ۴۵ کیلومتر در ساعت رانندگی می‌کنید. روی سواره‌رو یخ و برف است. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på, at vejgrebet er dårligt.",
+        "en": "I pay particular attention to the poor grip.",
+        "fa": "به‌ویژه توجه دارم که چسبندگی لاستیک به جاده کم است.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg holder farten på ca. 45 km/t.",
+        "en": "I keep my speed at about 45 km/h.",
+        "fa": "سرعتم را حدود ۴۵ کیلومتر نگه می‌دارم.",
+        "eda": "Nej. Det er alt for hurtigt på glat føre.",
+        "een": "No. That is far too fast on a slippery road.",
+        "efa": "خیر. روی جاده‌ی لغزنده این سرعت خیلی زیاد است."
+      },
+      {
+        "da": "Jeg sætter farten ned til ca. 35 km/t.",
+        "en": "I slow down to about 35 km/h.",
+        "fa": "سرعتم را به حدود ۳۵ کیلومتر کم می‌کنم.",
+        "eda": "Nej. Det er stadig for hurtigt her.",
+        "een": "No. That is still too fast here.",
+        "efa": "خیر. این هم اینجا هنوز زیاد است."
+      },
+      {
+        "da": "Jeg sætter farten ned til ca. 20 km/t.",
+        "en": "I slow down to about 20 km/h.",
+        "fa": "سرعتم را به حدود ۲۰ کیلومتر کم می‌کنم.",
+        "eda": "Ja. Vejen er glat, og der holder biler tæt på begge sider.",
+        "een": "Yes. The road is slippery and cars are parked close on both sides.",
+        "efa": "بله. جاده لغزنده است و دو طرف خیابان خودروها نزدیک پارک شده‌اند."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, in the middle of a narrow city street, looking ahead along it.\nROAD: a straight one-carriageway street, about 7 metres between the parked cars, between four- and five-storey apartment buildings with plaster facades in cream and light grey.\nSURFACE (important): the whole road is covered with packed white snow and shiny grey ice; two dark, wet, slushy tyre tracks run along the middle.\nPARKED CARS: a continuous row of small and medium cars parked close together along BOTH kerbs, some with snow on their roofs and bonnets.\nPEOPLE: one person in a dark winter coat and hat walks on the snowy pavement on the left.\nTRAFFIC: no moving vehicles.\nLIGHT AND WEATHER: grey winter afternoon, light snowfall, snow piled at the kerbs.\nMUST NOT APPEAR: road signs, sunshine, text."
+  },
+  "32": {
+    "sda": "Du kører forbi tavlen og ind i en by. Der er ingen andre hastighedstavler. Hvad er den højeste tilladte hastighed?",
+    "sen": "You drive past the sign and into a town. There are no other speed signs. What is the maximum permitted speed?",
+    "sfa": "از کنار این تابلو می‌گذرید و وارد شهر می‌شوید. تابلوی سرعت دیگری وجود ندارد. حداکثر سرعت مجاز چقدر است؟",
+    "st": [
+      {
+        "da": "50 km/t.",
+        "en": "50 km/h.",
+        "fa": "۵۰ کیلومتر در ساعت.",
+        "eda": "Ja. Tavlen viser, at du kører ind i byzone, hvor den generelle hastighedsgrænse er 50 km/t.",
+        "een": "Yes. The sign shows that you are entering a built-up area, where the general speed limit is 50 km/h.",
+        "efa": "بله. تابلو نشان می‌دهد وارد محدوده‌ی شهری می‌شوید و محدودیت سرعت عمومی آنجا ۵۰ کیلومتر در ساعت است."
+      },
+      {
+        "da": "60 km/t.",
+        "en": "60 km/h.",
+        "fa": "۶۰ کیلومتر در ساعت.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      },
+      {
+        "da": "70 km/t.",
+        "en": "70 km/h.",
+        "fa": "۷۰ کیلومتر در ساعت.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      },
+      {
+        "da": "80 km/t.",
+        "en": "80 km/h.",
+        "fa": "۸۰ کیلومتر در ساعت.",
+        "eda": "Nej. 80 km/t er den generelle grænse uden for byzone.",
+        "een": "No. 80 km/h is the general limit outside built-up areas.",
+        "efa": "خیر. ۸۰ کیلومتر محدودیت عمومی خارج از محدوده‌ی شهری است."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, on a two-lane road just before it enters a small town, looking ahead.\nSIGN (exact and clearly visible, the main subject): on the right verge, about 15 metres ahead, on two grey posts, the Danish BUILT-UP AREA sign: a WHITE RECTANGULAR sign, wider than tall, with a thin black border and a BLACK SILHOUETTE of a small town (pitched house roofs and a church tower). It has NO text and NO numbers.\nROAD: a straight two-lane road with a BROKEN white centre line and solid white edge lines; a pavement and street lamps begin right after the sign.\nSURROUNDINGS: after the sign, the first red-brick one-storey houses with gardens and hedges on both sides; fields behind the viewer.\nTRAFFIC: none.\nLIGHT AND WEATHER: sunny spring day, dry road.\nMUST NOT APPEAR: any speed-limit sign or any other sign, numbers, text, vehicles."
+  },
+  "33": {
+    "sda": "Du kører i et krybespor op ad en lang bakke. Hvordan vil du fortsætte?",
+    "sen": "You are driving in a crawler lane up a long hill. How will you continue?",
+    "sfa": "در خط کندرو (krybespor) از یک سربالایی طولانی بالا می‌روید. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på tavlen, der viser, at krybesporet ender.",
+        "en": "I pay particular attention to the sign showing that the crawler lane ends.",
+        "fa": "به‌ویژه به تابلویی توجه می‌کنم که پایان خط کندرو را نشان می‌دهد.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg er særligt opmærksom på trafikken bagfra i vognbanen til venstre.",
+        "en": "I pay particular attention to traffic coming from behind in the lane to the left.",
+        "fa": "به‌ویژه به ترافیکی توجه می‌کنم که از پشت در خط سمت چپ می‌آید.",
+        "eda": "Ja. Du skal kigge bagud, før du skifter vognbane.",
+        "een": "Yes. You must look behind before you change lanes.",
+        "efa": "بله. قبل از تغییر خط باید به عقب نگاه کنید."
+      },
+      {
+        "da": "Reglen om vognbaneskift gælder, hvor krybesporet ender.",
+        "en": "The rule for changing lanes applies where the crawler lane ends.",
+        "fa": "جایی که خط کندرو تمام می‌شود، قاعده‌ی تغییر خط اعمال می‌شود.",
+        "eda": "Ja. Du skal holde tilbage for trafikken i den vognbane, du skifter til.",
+        "een": "Yes. You must give way to the traffic in the lane you are moving into.",
+        "efa": "بله. باید به ترافیک خطی که به آن وارد می‌شوید حق تقدم بدهید."
+      },
+      {
+        "da": "Reglen om sammenfletning (lynlås) gælder, hvor krybesporet ender.",
+        "en": "The rule for merging (zip merging) applies where the crawler lane ends.",
+        "fa": "جایی که خط کندرو تمام می‌شود، قاعده‌ی ادغام زیپی اعمال می‌شود.",
+        "eda": "Nej. Når et krybespor ender, er det et vognbaneskift.",
+        "een": "No. When a crawler lane ends, it is a lane change.",
+        "efa": "خیر. وقتی خط کندرو تمام می‌شود، این یک تغییر خط است."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, driving in the RIGHT lane (a crawler lane) of a road that climbs a long, gentle hill, looking ahead up the hill.\nROAD: two lanes in our uphill direction: the right crawler lane where the viewer is, and the normal left lane. A broken white line separates them. A solid white edge line on the right. (The opposite direction is beyond a wide grass strip on the far left.)\nSIGN (exact and clearly visible): on the right verge, about 40 metres ahead, a BLUE RECTANGULAR sign, taller than wide, showing TWO WHITE ARROWS pointing up; the RIGHT arrow is shorter and bends into the LEFT arrow, showing that the right lane ends.\nLANE END: further up the hill, past the sign, the right lane narrows and ends; the broken line ends there.\nVEHICLES: a silver car in the LEFT lane about 50 metres ahead, overtaking. Nothing in front of the viewer in the right lane.\nSURROUNDINGS: a steel crash barrier on the right; rolling green Danish fields, a farm and a wind turbine in the distance.\nLIGHT AND WEATHER: overcast day, dry road.\nMUST NOT APPEAR: other signs, text."
+  },
+  "34": {
+    "sda": "Du er kørt forkert og vil gerne vende bilen. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+    "sen": "You have taken a wrong turn and want to turn the car around. There is no traffic behind you. How will you continue?",
+    "sfa": "راه را اشتباه آمده‌اید و می‌خواهید دور بزنید. پشت سرتان خودرویی نیست. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på, at bakken og svinget giver dårligt udsyn.",
+        "en": "I pay particular attention to the poor view caused by the hill and the bend.",
+        "fa": "به‌ویژه توجه دارم که سربالایی و پیچ دید را کم کرده‌اند.",
+        "eda": "Ja. Modkørende kan ikke se dig i tide.",
+        "een": "Yes. Oncoming traffic cannot see you in time.",
+        "efa": "بله. خودروهای روبه‌رو نمی‌توانند شما را به‌موقع ببینند."
+      },
+      {
+        "da": "Jeg kører ind til højre og vender bilen her.",
+        "en": "I pull in to the right and turn the car around here.",
+        "fa": "کنار سمت راست می‌روم و همین‌جا دور می‌زنم.",
+        "eda": "Nej. Du må ikke vende, hvor udsynet er dårligt.",
+        "een": "No. You must not turn around where the view is poor.",
+        "efa": "خیر. جایی که دید کم است نباید دور بزنید."
+      },
+      {
+        "da": "Jeg kører ud i rabatten og vender derfra.",
+        "en": "I drive onto the verge and turn around from there.",
+        "fa": "روی شانه‌ی خاکی می‌روم و از آنجا دور می‌زنم.",
+        "eda": "Nej. Udsynet er lige så dårligt fra rabatten.",
+        "een": "No. The view is just as poor from the verge.",
+        "efa": "خیر. از شانه‌ی جاده هم دید به همان اندازه کم است."
+      },
+      {
+        "da": "Jeg kører videre og vender et sted med godt udsyn.",
+        "en": "I drive on and turn around somewhere with a good view.",
+        "fa": "ادامه می‌دهم و جایی با دید خوب دور می‌زنم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a country road, looking ahead up a hill.\nROAD: a two-lane rural road, grey asphalt, climbing to a HILL CREST about 70 metres ahead; exactly at the crest the road also BENDS TO THE LEFT and disappears from view, so nothing beyond the crest can be seen.\nMARKINGS: a BROKEN white centre line; solid white edge lines.\nVERGES: narrow grass verges; on the left a brown wooden post-and-rail fence along a meadow; on the right a dense row of tall trees and bushes that blocks the view into the bend.\nTRAFFIC: none visible.\nLIGHT AND WEATHER: summer day, slightly overcast, dry road.\nMUST NOT APPEAR: road signs, driveways, vehicles, text."
+  },
+  "35": {
+    "sda": "Hvornår er det lygtetændingstid, så du skal køre med lys?",
+    "sen": "When is it lighting-up time, so you must drive with your lights on?",
+    "sfa": "چه زمانی «زمان روشن کردن چراغ‌ها» است و باید با چراغ روشن رانندگی کنید؟",
+    "st": [
+      {
+        "da": "Hele døgnet.",
+        "en": "All day and night.",
+        "fa": "در تمام شبانه‌روز.",
+        "eda": "Nej. Du skal altid køre med lys, men lygtetændingstid er kun en del af døgnet.",
+        "een": "No. You must always drive with lights, but lighting-up time is only part of the day.",
+        "efa": "خیر. همیشه باید با چراغ رانندگی کنید، اما «زمان روشن کردن چراغ‌ها» فقط بخشی از شبانه‌روز است."
+      },
+      {
+        "da": "Fra en time før solnedgang til en time efter solopgang.",
+        "en": "From one hour before sunset to one hour after sunrise.",
+        "fa": "از یک ساعت قبل از غروب تا یک ساعت بعد از طلوع.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      },
+      {
+        "da": "Fra solnedgang til solopgang.",
+        "en": "From sunset to sunrise.",
+        "fa": "از غروب تا طلوع آفتاب.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Når sigtbarheden er nedsat, fx ved tåge, kraftig regn eller snevejr.",
+        "en": "When visibility is reduced, for example in fog, heavy rain or snow.",
+        "fa": "وقتی دید کم است، مثلاً در مه، باران شدید یا برف.",
+        "eda": "Ja. Så skal du have lys på for at se og blive set.",
+        "een": "Yes. Then you need your lights to see and be seen.",
+        "efa": "بله. در این صورت برای دیدن و دیده شدن باید چراغ روشن باشد."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a country road at dusk, looking ahead.\nTIME (important): just after sunset: the sky is deep blue with a faint orange band low on the horizon; it is getting dark.\nWEATHER (important): a band of light grey FOG lies low over the fields and partly over the road further ahead.\nROAD: a straight two-lane rural road, damp dark asphalt, a broken white centre line and solid white edge lines.\nVEHICLES: one oncoming car about 80 metres ahead in the opposite lane with its HEADLIGHTS clearly ON, the light beams visible in the fog.\nROADSIDE: white reflector posts with small reflectors along both edges, catching the light.\nMUST NOT APPEAR: street lights, signs, text."
+  },
+  "36": {
+    "sda": "Du kører bag to cyklister på en smal vej. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+    "sen": "You are driving behind two cyclists on a narrow road. There is no traffic behind you. How will you continue?",
+    "sfa": "در یک جاده‌ی باریک پشت سر دو دوچرخه‌سوار هستید. پشت سرتان خودرویی نیست. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på den fuldt optrukne midterlinje.",
+        "en": "I pay particular attention to the solid centre line.",
+        "fa": "به‌ویژه به خط ممتد وسط جاده توجه می‌کنم.",
+        "eda": "Ja. Der er ikke plads til at overhale uden at køre over spærrelinjen.",
+        "een": "Yes. There is no room to overtake without crossing the solid line.",
+        "efa": "بله. بدون عبور از خط ممتد، جایی برای سبقت نیست."
+      },
+      {
+        "da": "Jeg dytter, så cyklisterne kører ind til siden.",
+        "en": "I sound the horn so the cyclists move over.",
+        "fa": "بوق می‌زنم تا دوچرخه‌سوارها کنار بروند.",
+        "eda": "Nej. Hornet må kun bruges for at afværge fare.",
+        "een": "No. The horn may only be used to prevent danger.",
+        "efa": "خیر. از بوق فقط برای جلوگیری از خطر استفاده می‌شود."
+      },
+      {
+        "da": "Jeg overhaler cyklisterne nu.",
+        "en": "I overtake the cyclists now.",
+        "fa": "همین حالا از دوچرخه‌سوارها سبقت می‌گیرم.",
+        "eda": "Nej. Du skal vente med at overhale.",
+        "een": "No. You must wait before overtaking.",
+        "efa": "خیر. باید برای سبقت صبر کنید."
+      },
+      {
+        "da": "Jeg bliver bag cyklisterne, indtil der er plads til at overhale.",
+        "en": "I stay behind the cyclists until there is room to overtake.",
+        "fa": "تا وقتی جا برای سبقت باشد، پشت دوچرخه‌سوارها می‌مانم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, driving slowly on a narrow road through a village, looking ahead.\nROAD: a narrow two-lane road, each lane about 2.8 metres wide, that curves gently to the RIGHT about 60 metres ahead.\nMARKINGS (important): a SOLID, UNBROKEN white centre line along the whole visible road (no overtaking); solid white edge lines.\nCYCLISTS: about 15 metres ahead, two cyclists ride ONE BEHIND THE OTHER close to the right edge of our lane: first a woman in a yellow jacket and helmet, then a man in a grey hoodie with a black backpack. They take up the right part of the lane, so a car cannot pass them without crossing the centre line.\nSURROUNDINGS: white-painted village houses with red tile roofs, a low stone wall and hedges on the right, trees on the left.\nTRAFFIC: no other vehicles.\nLIGHT AND WEATHER: sunny day, dry road.\nMUST NOT APPEAR: signs, text."
+  },
+  "37": {
+    "sda": "Du kører 40 km/t og nærmer dig et fodgængerfelt. Hvordan vil du fortsætte?",
+    "sen": "You are driving at 40 km/h and approaching a pedestrian crossing. How will you continue?",
+    "sfa": "با ۴۰ کیلومتر در ساعت به گذرگاه عابر پیاده نزدیک می‌شوید. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på manden ved fodgængerfeltet.",
+        "en": "I pay particular attention to the man at the pedestrian crossing.",
+        "fa": "به‌ویژه به مردی که کنار گذرگاه عابر پیاده است توجه می‌کنم.",
+        "eda": "Ja. Han er ved at gå ud på fodgængerfeltet.",
+        "een": "Yes. He is stepping out onto the crossing.",
+        "efa": "بله. او در حال وارد شدن به گذرگاه است."
+      },
+      {
+        "da": "Jeg holder farten, for fodgængeren kan vente.",
+        "en": "I keep my speed, because the pedestrian can wait.",
+        "fa": "سرعتم را حفظ می‌کنم، چون عابر می‌تواند صبر کند.",
+        "eda": "Nej. Du skal holde tilbage for fodgængere på vej ud på fodgængerfeltet.",
+        "een": "No. You must give way to pedestrians stepping onto the crossing.",
+        "efa": "خیر. باید به عابرانی که وارد گذرگاه می‌شوند حق تقدم بدهید."
+      },
+      {
+        "da": "Jeg bremser.",
+        "en": "I brake.",
+        "fa": "ترمز می‌کنم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg holder tilbage, så manden kan gå over.",
+        "en": "I give way so the man can cross.",
+        "fa": "حق تقدم می‌دهم تا آن مرد عبور کند.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a city street, looking ahead.\nROAD: a straight two-lane city street (one lane each way) with a broken white centre line, lined with plane trees and five-storey apartment buildings.\nCROSSING (important): about 25 metres ahead a ZEBRA CROSSING with broad white stripes across the whole street.\nSIGN AND LIGHT (exact): on a grey pole on the right at the crossing, a BLUE SQUARE sign with a WHITE TRIANGLE in which a BLACK figure walks on stripes (Danish pedestrian-crossing sign), and above it a round AMBER beacon that is lit.\nPEDESTRIAN (important): an elderly man in a grey coat with a shopping bag is STEPPING OFF THE RIGHT KERB onto the crossing, one foot on the first white stripe.\nOTHER: a cyclist waits at the far side of the crossing; parked cars along the left kerb.\nLIGHT AND WEATHER: sunny morning, dry road.\nMUST NOT APPEAR: traffic lights, other signs, text."
+  },
+  "38": {
+    "sda": "Du kører ca. 40 km/t på en landevej og nærmer dig en rytter. Der er ingen modkørende og ingen bagude. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 40 km/h on a country road and approaching a horse rider. There is no oncoming traffic and nobody behind you. How will you continue?",
+    "sfa": "با حدود ۴۰ کیلومتر در ساعت در جاده‌ای بین‌شهری به یک سوارکار نزدیک می‌شوید. نه خودروی روبه‌رو هست و نه پشت سرتان. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg dytter, så rytteren ved, at jeg kommer.",
+        "en": "I sound the horn so the rider knows I am coming.",
+        "fa": "بوق می‌زنم تا سوارکار بداند که دارم می‌آیم.",
+        "eda": "Nej. Hornet kan skræmme hesten.",
+        "een": "No. The horn can frighten the horse.",
+        "efa": "خیر. بوق می‌تواند اسب را بترساند."
+      },
+      {
+        "da": "Jeg bremser og bliver bag rytteren lidt endnu.",
+        "en": "I brake and stay behind the rider a little longer.",
+        "fa": "ترمز می‌کنم و کمی بیشتر پشت سوارکار می‌مانم.",
+        "eda": "Nej. Der er god plads og frit udsyn, så du kan overhale nu.",
+        "een": "No. There is plenty of room and a clear view, so you can overtake now.",
+        "efa": "خیر. جای کافی و دید باز وجود دارد، پس همین حالا می‌توانید سبقت بگیرید."
+      },
+      {
+        "da": "Jeg overhaler roligt og med god afstand til hesten.",
+        "en": "I overtake calmly, keeping a good distance from the horse.",
+        "fa": "با آرامش و با فاصله‌ی کافی از اسب سبقت می‌گیرم.",
+        "eda": "Ja. Hold god sideafstand og kør roligt forbi, så hesten ikke bliver skræmt.",
+        "een": "Yes. Keep a good distance to the side and pass calmly so the horse is not frightened.",
+        "efa": "بله. فاصله‌ی جانبی کافی بگذارید و آرام عبور کنید تا اسب نترسد."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a country road, looking ahead.\nROAD: a straight, fairly wide two-lane rural road with a BROKEN white centre line and solid white edge lines; the view ahead is clear for several hundred metres.\nRIDER (important): about 40 metres ahead, a rider in a dark jacket and a riding helmet sits on a GREY HORSE that is walking calmly along the RIGHT edge of our lane.\nTRAFFIC: no oncoming vehicles and no other vehicles at all.\nSURROUNDINGS: open green fields on both sides, a farmhouse with a red roof far away, a few trees.\nLIGHT AND WEATHER: sunny summer day, dry road.\nMUST NOT APPEAR: signs, text."
+  },
+  "39": {
+    "sda": "Du kører ca. 35 km/t på en villavej med sne. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 35 km/h on a snowy residential street. How will you continue?",
+    "sfa": "با حدود ۳۵ کیلومتر در ساعت در یک خیابان مسکونی برفی رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg fortsætter med ca. 35 km/t.",
+        "en": "I continue at about 35 km/h.",
+        "fa": "با حدود ۳۵ کیلومتر ادامه می‌دهم.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      },
+      {
+        "da": "Jeg er særligt opmærksom på den modkørende bil.",
+        "en": "I pay particular attention to the oncoming car.",
+        "fa": "به‌ویژه به خودروی روبه‌رو توجه می‌کنم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg er særligt opmærksom på varevognen, der holder i min side af vejen.",
+        "en": "I pay particular attention to the van parked on my side of the road.",
+        "fa": "به‌ویژه به وَنی توجه می‌کنم که در سمت من پارک کرده است.",
+        "eda": "Ja. Den holdende varevogn står i din side, så du skal holde tilbage for den modkørende.",
+        "een": "Yes. The parked van is on your side, so you must give way to the oncoming car.",
+        "efa": "بله. وَن پارک‌شده در سمت شماست، پس باید به خودروی روبه‌رو حق تقدم بدهید."
+      },
+      {
+        "da": "Jeg sætter farten ned og lader den modkørende bil komme forbi først.",
+        "en": "I slow down and let the oncoming car pass first.",
+        "fa": "سرعتم را کم می‌کنم و اجازه می‌دهم خودروی روبه‌رو اول عبور کند.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a narrow residential street in winter, looking ahead.\nROAD: a two-way street about 6 metres wide between detached houses, covered with packed snow; snowbanks along both edges narrow the road further.\nOBSTACLE (important): about 25 metres ahead a WHITE VAN is PARKED on the RIGHT side of the road, on OUR side, taking up about half of our lane.\nONCOMING CAR (important): a RED car drives towards the viewer in the opposite lane, about 50 metres ahead, with its headlights ON; it will reach the van at about the same time as we would.\nSURROUNDINGS: houses with snow-covered roofs, snow-laden fir trees and bare birches, garden fences.\nTRACKS: tyre tracks in the snow.\nLIGHT AND WEATHER: cold, bright winter day.\nMUST NOT APPEAR: signs, text."
+  },
+  "40": {
+    "sda": "Du kører ca. 40 km/t i byen. Bussen forude blinker til venstre ved stoppestedet. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 40 km/h in town. The bus ahead is indicating left at the bus stop. How will you continue?",
+    "sfa": "در شهر با حدود ۴۰ کیلومتر در ساعت رانندگی می‌کنید. اتوبوس جلویی در ایستگاه راهنمای چپ زده است. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på, at bussen skal bruge meget plads, når den kører ud.",
+        "en": "I pay particular attention to the bus needing a lot of room when it pulls out.",
+        "fa": "به‌ویژه توجه دارم که اتوبوس هنگام حرکت به فضای زیادی نیاز دارد.",
+        "eda": "Ja. En bus er lang og kører langsomt i gang.",
+        "een": "Yes. A bus is long and slow to get going.",
+        "efa": "بله. اتوبوس طولانی است و آهسته راه می‌افتد."
+      },
+      {
+        "da": "Jeg holder farten på ca. 40 km/t.",
+        "en": "I keep my speed at about 40 km/h.",
+        "fa": "سرعتم را حدود ۴۰ کیلومتر نگه می‌دارم.",
+        "eda": "Nej. Det er for hurtigt, når bussen er ved at køre ud.",
+        "een": "No. That is too fast when the bus is about to pull out.",
+        "efa": "خیر. وقتی اتوبوس در حال حرکت است، این سرعت زیاد است."
+      },
+      {
+        "da": "Jeg bremser.",
+        "en": "I brake.",
+        "fa": "ترمز می‌کنم.",
+        "eda": "Ja. I byzone skal du give en bus, der blinker ud fra et stoppested, mulighed for at køre ud.",
+        "een": "Yes. In a built-up area you must let a bus that indicates out of a bus stop pull out.",
+        "efa": "بله. در محدوده‌ی شهری باید به اتوبوسی که از ایستگاه راهنما می‌زند اجازه‌ی حرکت بدهید."
+      },
+      {
+        "da": "Jeg giver plads, så bussen kan komme ud.",
+        "en": "I make room so the bus can pull out.",
+        "fa": "جا باز می‌کنم تا اتوبوس بتواند حرکت کند.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a city street, in the right-hand lane, looking ahead.\nROAD: a straight two-lane city street (one lane each way), broken white centre line.\nBUS (important): about 30 metres ahead on the RIGHT, a YELLOW city bus stands at a bus stop with a glass shelter; its LEFT INDICATOR is visibly FLASHING (amber light on), and its front has just started to turn out into our lane.\nOTHER: cars parked along the LEFT kerb; a few pedestrians on the pavements; older apartment buildings with shops on the ground floor.\nTRAFFIC: no oncoming traffic close by.\nLIGHT AND WEATHER: sunny afternoon, dry road.\nMUST NOT APPEAR: readable text or numbers on the bus, other signs except the bus-stop pole."
+  },
+  "41": {
+    "sda": "Du nærmer dig et lyskryds, hvor der er rødt. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+    "sen": "You are approaching a junction with traffic lights showing red. There is no traffic behind you. How will you continue?",
+    "sfa": "به چهارراهی چراغ‌دار نزدیک می‌شوید که چراغش قرمز است. پشت سرتان خودرویی نیست. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på lyssignalet.",
+        "en": "I pay particular attention to the traffic light.",
+        "fa": "به‌ویژه به چراغ راهنمایی توجه می‌کنم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg er særligt opmærksom på, at lastbilen foran er langsom til at sætte i gang.",
+        "en": "I pay particular attention to the lorry in front being slow to get going.",
+        "fa": "به‌ویژه توجه دارم که کامیون جلویی آهسته راه می‌افتد.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg bliver i min vognbane og stiller mig bag lastbilen.",
+        "en": "I stay in my lane and stop behind the lorry.",
+        "fa": "در خط خودم می‌مانم و پشت کامیون می‌ایستم.",
+        "eda": "Nej. Der er ingen bag dig, så det er bedre at skifte til den anden ligeudbane.",
+        "een": "No. There is nobody behind you, so it is better to move to the other straight-ahead lane.",
+        "efa": "خیر. پشت سرتان کسی نیست، پس بهتر است به خط مستقیم دیگر بروید."
+      },
+      {
+        "da": "Jeg skifter vognbane og stiller mig bag den grå personbil.",
+        "en": "I change lanes and stop behind the grey car.",
+        "fa": "خطم را عوض می‌کنم و پشت خودروی سواری خاکستری می‌ایستم.",
+        "eda": "Ja. Så kommer du hurtigere af sted, når der bliver grønt.",
+        "een": "Yes. Then you get going faster when the light turns green.",
+        "efa": "بله. این‌طور وقتی چراغ سبز شود سریع‌تر راه می‌افتید."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height on a wide city road, approaching a junction with traffic lights about 40 metres ahead.\nLANES (important): TWO lanes for straight ahead in our direction, each with a large WHITE STRAIGHT-AHEAD ARROW painted on the asphalt; a broken white line between them; a white stop line across both lanes at the junction.\nTRAFFIC LIGHTS (exact): three-aspect traffic lights with black housings on poles at the stop line on the right and on the left, the RED light clearly lit on all of them.\nVEHICLES (important): in the RIGHT lane, directly in front of the viewer, a LARGE WHITE BOX LORRY is stopped at the stop line; in the LEFT lane a GREY hatchback car is stopped at the stop line. There is room behind the grey car.\nSURROUNDINGS: modern office buildings, street lamps, a pavement on both sides.\nLIGHT AND WEATHER: clear day, dry road.\nMUST NOT APPEAR: text, logos on the lorry."
+  },
+  "42": {
+    "sda": "Du kører ca. 110 km/t på motorvejen. Den hvide bil kører pludselig ind foran dig. Hvad vil du gøre?",
+    "sen": "You are driving at about 110 km/h on the motorway. The white car suddenly pulls in front of you. What will you do?",
+    "sfa": "در بزرگراه با حدود ۱۱۰ کیلومتر در ساعت رانندگی می‌کنید. خودروی سفید ناگهان جلوی شما می‌پیچد. چه می‌کنید؟",
+    "st": [
+      {
+        "da": "Jeg dytter kraftigt ad den hvide bil.",
+        "en": "I sound the horn loudly at the white car.",
+        "fa": "برای خودروی سفید بوق محکمی می‌زنم.",
+        "eda": "Nej. Hornet bruges kun for at afværge fare, ikke for at irettesætte andre bagefter.",
+        "een": "No. The horn is only used to prevent danger, not to tell others off afterwards.",
+        "efa": "خیر. بوق فقط برای جلوگیری از خطر است، نه برای تذکر دادن به دیگران بعد از اتفاق."
+      },
+      {
+        "da": "Jeg holder farten på ca. 110 km/t.",
+        "en": "I keep my speed at about 110 km/h.",
+        "fa": "سرعتم را حدود ۱۱۰ کیلومتر نگه می‌دارم.",
+        "eda": "Nej. Afstanden til den hvide bil er for kort.",
+        "een": "No. The distance to the white car is too short.",
+        "efa": "خیر. فاصله با خودروی سفید خیلی کم است."
+      },
+      {
+        "da": "Jeg sætter farten lidt ned for at få større afstand.",
+        "en": "I slow down a little to get a bigger gap.",
+        "fa": "سرعتم را کمی کم می‌کنم تا فاصله‌ام بیشتر شود.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Jeg skifter straks til vognbanen til højre.",
+        "en": "I immediately move to the lane on the right.",
+        "fa": "بلافاصله به خط سمت راست می‌روم.",
+        "eda": "Nej. Du skal altid kigge bagud, før du skifter vognbane.",
+        "een": "No. You must always look behind before you change lanes.",
+        "efa": "خیر. همیشه قبل از تغییر خط باید به عقب نگاه کنید."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, in the MIDDLE lane of a three-lane motorway, looking ahead.\nROAD: three lanes in our direction separated by broken white lines, a solid white edge line on the right; a central reservation with a steel crash barrier and tall street lamps on the left.\nCAR (important): a WHITE ESTATE CAR has just moved in from the left lane and is now in OUR middle lane VERY CLOSE in front of the viewer, about 10 metres ahead, seen from behind, its RIGHT INDICATOR still FLASHING (amber light on).\nOTHER TRAFFIC: a lorry and two cars further ahead in the right lane; the left lane is clear behind the white car.\nSURROUNDINGS: noise barriers and trees on the right.\nLIGHT AND WEATHER: bright, slightly hazy day, dry road.\nMUST NOT APPEAR: signs with text."
+  },
+  "43": {
+    "sda": "Du kører ca. 50 km/t med nærlys på en mørk landevej uden gadelys. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 50 km/h with dipped headlights on a dark country road without street lights. How will you continue?",
+    "sfa": "با حدود ۵۰ کیلومتر در ساعت و نور پایین در جاده‌ای تاریک و بدون چراغ خیابان رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg fortsætter med nærlys.",
+        "en": "I continue with dipped headlights.",
+        "fa": "با نور پایین ادامه می‌دهم.",
+        "eda": "Nej. Der er ingen modkørende, så du skal bruge fjernlys.",
+        "een": "No. There is no oncoming traffic, so you should use full beam.",
+        "efa": "خیر. خودروی روبه‌رو نیست، پس باید از نور بالا استفاده کنید."
+      },
+      {
+        "da": "Jeg fortsætter med ca. 50 km/t og nærlys.",
+        "en": "I continue at about 50 km/h with dipped headlights.",
+        "fa": "با حدود ۵۰ کیلومتر و نور پایین ادامه می‌دهم.",
+        "eda": "Nej. Vejen er lige og fri. Skift til fjernlys og sæt farten op.",
+        "een": "No. The road is straight and clear. Switch to full beam and speed up.",
+        "efa": "خیر. جاده مستقیم و خالی است. نور بالا را روشن کنید و سرعت را بالا ببرید."
+      },
+      {
+        "da": "Jeg tænder fjernlyset og sætter farten op.",
+        "en": "I switch on full beam and speed up.",
+        "fa": "نور بالا را روشن می‌کنم و سرعتم را بالا می‌برم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height at NIGHT on a country road, looking ahead.\nLIGHT (important): there are NO street lights. Only the car's own DIPPED HEADLIGHTS light the road: a bright area on the asphalt for about 30 metres ahead, with a sharp cut-off; beyond that the road disappears into darkness.\nROAD: a straight, EMPTY two-lane rural road; in the lit area a broken white centre line and a solid white edge line on the right are clearly visible.\nROADSIDE: white reflector posts with red reflectors along the right verge, the nearest ones lit by the headlights.\nTRAFFIC: no other vehicles, no lights from oncoming traffic anywhere.\nSKY: deep dark blue night sky, black silhouettes of a few trees.\nMUST NOT APPEAR: moon glare, signs, text."
+  },
+  "44": {
+    "sda": "Du kommer op bag en traktor, der kører meget langsomt. Der er ingen kørende bagude. Hvad vil du gøre?",
+    "sen": "You come up behind a tractor that is driving very slowly. There is no traffic behind you. What will you do?",
+    "sfa": "پشت سر یک تراکتور می‌رسید که خیلی آهسته حرکت می‌کند. پشت سرتان خودرویی نیست. چه می‌کنید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på eventuelle modkørende.",
+        "en": "I pay particular attention to any oncoming traffic.",
+        "fa": "به‌ویژه به خودروهای احتمالی روبه‌رو توجه می‌کنم.",
+        "eda": "Ja. Du skal altid holde øje med modkørende, når du overhaler.",
+        "een": "Yes. You must always watch out for oncoming traffic when you overtake.",
+        "efa": "بله. هنگام سبقت همیشه باید مراقب خودروهای روبه‌رو باشید."
+      },
+      {
+        "da": "Jeg sætter farten ned og opgiver at overhale.",
+        "en": "I slow down and give up overtaking.",
+        "fa": "سرعتم را کم می‌کنم و از سبقت منصرف می‌شوم.",
+        "eda": "Nej. Der er langt og frit udsyn fremad.",
+        "een": "No. You have a long, clear view ahead.",
+        "efa": "خیر. دید جلو طولانی و باز است."
+      },
+      {
+        "da": "Jeg overhaler nu.",
+        "en": "I overtake now.",
+        "fa": "همین حالا سبقت می‌گیرم.",
+        "eda": "Ja. Traktoren kører meget langsomt, og vejen er fri.",
+        "een": "Yes. The tractor is very slow and the road is clear.",
+        "efa": "بله. تراکتور خیلی آهسته است و جاده خالی است."
+      }
+    ],
+    "img": "VIEWPOINT: from the driver's seat of a car on a country road, at the driver's eye height, looking ahead.\nCAR INTERIOR (must be visible): the top of a dark dashboard across the bottom fifth of the picture with one round analogue speedometer showing about 60 km/h; the interior rear-view mirror at the top centre and both door mirrors at the lower left and lower right, all showing an EMPTY road behind.\nROAD: a long, STRAIGHT two-lane rural road with a BROKEN white centre line and solid white edge lines; the view ahead is clear for at least 500 metres.\nTRACTOR (important): about 30 metres ahead, a GREEN FARM TRACTOR drives slowly near the RIGHT edge of our lane, seen from behind, with an orange flashing beacon on its cab roof.\nTRAFFIC: no oncoming vehicles, the opposite lane is empty as far as the eye can see.\nSURROUNDINGS: flat fields on both sides.\nLIGHT AND WEATHER: sunny day, dry road.\nMUST NOT APPEAR: signs, text."
+  },
+  "45": {
+    "sda": "Hvad er den højeste promille, du må have i blodet, når du kører bil?",
+    "sen": "What is the highest blood alcohol level you may have when you drive a car?",
+    "sfa": "حداکثر میزان الکل خون (پرومیل) که هنگام رانندگی مجاز است چقدر است؟",
+    "st": [
+      {
+        "da": "1,0 promille.",
+        "en": "1.0 per mille.",
+        "fa": "۱٫۰ پرومیل.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      },
+      {
+        "da": "0,8 promille.",
+        "en": "0.8 per mille.",
+        "fa": "۰٫۸ پرومیل.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      },
+      {
+        "da": "0,5 promille.",
+        "en": "0.5 per mille.",
+        "fa": "۰٫۵ پرومیل.",
+        "eda": "Ja. Grænsen er 0,5 promille. Men alkohol påvirker dig allerede før – det sikreste er slet ikke at drikke, når du skal køre.",
+        "een": "Yes. The limit is 0.5 per mille. But alcohol affects you even below that – the safest is not to drink at all when you are going to drive.",
+        "efa": "بله. حد مجاز ۰٫۵ پرومیل است. اما الکل حتی کمتر از این هم روی شما اثر می‌گذارد؛ امن‌ترین کار این است که وقتی قرار است رانندگی کنید، اصلاً ننوشید."
+      },
+      {
+        "da": "0,1 promille.",
+        "en": "0.1 per mille.",
+        "fa": "۰٫۱ پرومیل.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      }
+    ],
+    "img": "A simple, clean still life, seen from slightly above, on a light oak table: a modern car key with a black remote fob lies in front; next to it an EMPTY wine glass and a full glass of water. Soft daylight from a window on the left, a plain light grey wall behind.\nCalm, informative mood, photo-realistic.\nMUST NOT APPEAR: bottles with labels, text, letters, logos, people."
+  },
+  "46": {
+    "sda": "Du kører ca. 110 km/t i midterste vognbane på motorvejen, ligesom den blå bil foran dig. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 110 km/h in the middle lane of the motorway, like the blue car in front of you. How will you continue?",
+    "sfa": "در خط وسط بزرگراه با حدود ۱۱۰ کیلومتر در ساعت رانندگی می‌کنید، مثل خودروی آبی جلوی شما. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg holder farten på ca. 110 km/t.",
+        "en": "I keep my speed at about 110 km/h.",
+        "fa": "سرعتم را حدود ۱۱۰ کیلومتر نگه می‌دارم.",
+        "eda": "Nej. Bilen til højre er ved at skifte ind i din vognbane.",
+        "een": "No. The car on the right is moving into your lane.",
+        "efa": "خیر. خودروی سمت راست در حال ورود به خط شماست."
+      },
+      {
+        "da": "Jeg er særligt opmærksom på den røde bil i vognbanen til højre for mig.",
+        "en": "I pay particular attention to the red car in the lane to my right.",
+        "fa": "به‌ویژه به خودروی قرمز در خط سمت راستم توجه می‌کنم.",
+        "eda": "Ja. Den blinker og er på vej ind i din vognbane.",
+        "een": "Yes. It is indicating and moving into your lane.",
+        "efa": "بله. راهنما زده و دارد وارد خط شما می‌شود."
+      },
+      {
+        "da": "Jeg skifter straks til vognbanen til venstre for mig.",
+        "en": "I immediately move to the lane to my left.",
+        "fa": "بلافاصله به خط سمت چپم می‌روم.",
+        "eda": "Nej. Den er ikke fri, og du har ikke kigget bagud.",
+        "een": "No. It is not clear, and you have not looked behind.",
+        "efa": "خیر. آن خط خالی نیست و شما به عقب هم نگاه نکرده‌اید."
+      },
+      {
+        "da": "Jeg sætter farten ned for at få større afstand til bilerne foran.",
+        "en": "I slow down to get a bigger gap to the cars in front.",
+        "fa": "سرعتم را کم می‌کنم تا فاصله‌ام با خودروهای جلو بیشتر شود.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, in the MIDDLE lane of a three-lane motorway, looking ahead.\nROAD: three lanes in our direction separated by broken white lines; a central reservation with a steel crash barrier and street lamps on the left; green noise barriers on the right.\nVEHICLES (important, exact positions):\n1) about 30 metres ahead in OUR middle lane: a BLUE saloon seen from behind;\n2) in the RIGHT lane, slightly ahead of the viewer: a RED SUV with its LEFT INDICATOR clearly FLASHING (amber light on), its front wheels already turning towards our lane, starting to move into the middle lane;\n3) in the LEFT lane, almost alongside the viewer: a BLACK car;\n4) further ahead in the right lane: a lorry.\nLIGHT AND WEATHER: clear day, dry road.\nMUST NOT APPEAR: signs with text."
+  },
+  "47": {
+    "sda": "Du vil svinge til højre i lyskrydset og har sat farten ned. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+    "sen": "You want to turn right at the traffic lights and have slowed down. There is no traffic behind you. How will you continue?",
+    "sfa": "می‌خواهید در چهارراه چراغ‌دار به راست بپیچید و سرعتتان را کم کرده‌اید. پشت سرتان خودرویی نیست. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på cyklisten på cykelstien til højre.",
+        "en": "I pay particular attention to the cyclist on the cycle track to the right.",
+        "fa": "به‌ویژه به دوچرخه‌سواری که در مسیر دوچرخه سمت راست است توجه می‌کنم.",
+        "eda": "Ja. Cyklisten kører stadig og kan fortsætte ligeud, selv om der er rødt for cyklister.",
+        "een": "Yes. The cyclist is still riding and may carry on straight ahead even though the cycle light is red.",
+        "efa": "بله. دوچرخه‌سوار هنوز در حرکت است و ممکن است با وجود چراغ قرمز دوچرخه مستقیم ادامه دهد."
+      },
+      {
+        "da": "Jeg svinger til højre med det samme.",
+        "en": "I turn right straight away.",
+        "fa": "بلافاصله به راست می‌پیچم.",
+        "eda": "Nej.",
+        "een": "No.",
+        "efa": "خیر."
+      },
+      {
+        "da": "Jeg standser ved stoplinjen.",
+        "en": "I stop at the stop line.",
+        "fa": "پشت خط ایست توقف می‌کنم.",
+        "eda": "Nej. Du har grønt lys, så du skal ikke standse, men køre langsomt frem.",
+        "een": "No. You have a green light, so you should not stop but drive forward slowly.",
+        "efa": "خیر. چراغ شما سبز است، پس نباید بایستید، بلکه آهسته جلو بروید."
+      },
+      {
+        "da": "Jeg kører langsomt frem i krydset.",
+        "en": "I drive slowly forward into the junction.",
+        "fa": "آهسته وارد تقاطع می‌شوم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, in a RIGHT-TURN lane, about 10 metres before a junction with traffic lights.\nMARKINGS (important): a large WHITE RIGHT-TURN ARROW painted on the asphalt in our lane just in front of the viewer; a white stop line across the lane at the junction.\nTRAFFIC LIGHTS (exact): the car signal for our lane on a pole on the right shows GREEN. Next to the road on the right is a raised CYCLE TRACK with its own small cycle signal (bicycle symbols) showing RED.\nCYCLIST (important): a young man on a city bike rides on the cycle track towards the junction, BOTH FEET ON THE PEDALS, still moving, about level with the car's front.\nSIDE ROAD: across the side road to the right a zebra crossing with white stripes.\nSURROUNDINGS: low houses, trees, more traffic lights for the other directions.\nLIGHT AND WEATHER: sunny day, dry road.\nMUST NOT APPEAR: text."
+  },
+  "48": {
+    "sda": "Du holder midt i lyskrydset og venter på at svinge til venstre. Lyset skifter til gult. Hvordan vil du fortsætte?",
+    "sen": "You are waiting in the middle of the junction to turn left. The light changes to amber. How will you continue?",
+    "sfa": "وسط چهارراه چراغ‌دار منتظرید تا به چپ بپیچید. چراغ زرد می‌شود. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på lyssignalet.",
+        "en": "I pay particular attention to the traffic light.",
+        "fa": "به‌ویژه به چراغ راهنمایی توجه می‌کنم.",
+        "eda": "Ja. Når lyset skifter, skal du gøre svinget færdigt og forlade krydset. Hold samtidig øje med fodgængere på din venstre side.",
+        "een": "Yes. When the light changes you must finish the turn and leave the junction. At the same time watch for pedestrians on your left.",
+        "efa": "بله. وقتی چراغ عوض می‌شود باید پیچیدن را تمام کنید و از تقاطع خارج شوید. هم‌زمان مراقب عابران سمت چپ باشید."
+      },
+      {
+        "da": "Jeg bliver holdende lidt endnu.",
+        "en": "I stay where I am a little longer.",
+        "fa": "کمی بیشتر همان‌جا می‌مانم.",
+        "eda": "Nej. Du skal ud af krydset nu.",
+        "een": "No. You must leave the junction now.",
+        "efa": "خیر. باید همین حالا از تقاطع خارج شوید."
+      },
+      {
+        "da": "Jeg svinger til venstre nu.",
+        "en": "I turn left now.",
+        "fa": "همین حالا به چپ می‌پیچم.",
+        "eda": "Ja. Der er ingen modkørende, og du skal forlade krydset.",
+        "een": "Yes. There is no oncoming traffic, and you must leave the junction.",
+        "efa": "بله. خودروی روبه‌رو نیست و باید از تقاطع خارج شوید."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, standing still IN THE MIDDLE of a large city junction, waiting to turn LEFT; the car is angled slightly to the left.\nTRAFFIC LIGHT (important): across the junction, on the far corner, a three-aspect traffic light with a black housing shows AMBER (the yellow middle light lit).\nTRAFFIC: NO oncoming cars in the opposite lanes.\nLEFT SIDE (important): the road we will turn into has a ZEBRA CROSSING with white stripes; a few pedestrians wait on the pavement at its edge, not yet crossing.\nMARKINGS: a blue-painted cycle crossing across the junction; white lane lines.\nSURROUNDINGS: old five-storey red-brick apartment buildings with a corner tower, trees.\nLIGHT AND WEATHER: bright afternoon, dry road.\nMUST NOT APPEAR: text."
+  },
+  "49": {
+    "sda": "Du kører ca. 100 km/t i venstre vognbane på motorvejen og vil tage den næste afkørsel. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+    "sen": "You are driving at about 100 km/h in the left lane of the motorway and want to take the next exit. There is no traffic behind you. How will you continue?",
+    "sfa": "در خط چپ بزرگراه با حدود ۱۰۰ کیلومتر در ساعت رانندگی می‌کنید و می‌خواهید از خروجی بعدی خارج شوید. پشت سرتان خودرویی نیست. چطور ادامه می‌دهید؟",
+    "st": [
+      {
+        "da": "Jeg er særligt opmærksom på kørebanestriberne.",
+        "en": "I pay particular attention to the lane markings.",
+        "fa": "به‌ویژه به خط‌کشی‌های جاده توجه می‌کنم.",
+        "eda": "Ja. Du skal skifte vognbane, før stregen bliver fuldt optrukket.",
+        "een": "Yes. You must change lanes before the line becomes solid.",
+        "efa": "بله. باید قبل از اینکه خط ممتد شود، تغییر خط بدهید."
+      },
+      {
+        "da": "Jeg bliver i min vognbane.",
+        "en": "I stay in my lane.",
+        "fa": "در خط خودم می‌مانم.",
+        "eda": "Nej. Der er frit, så du skal skifte til højre nu.",
+        "een": "No. The way is clear, so you should move to the right now.",
+        "efa": "خیر. مسیر باز است، پس همین حالا باید به راست بروید."
+      },
+      {
+        "da": "Jeg skifter vognbane til højre nu.",
+        "en": "I move to the right lane now.",
+        "fa": "همین حالا به خط سمت راست می‌روم.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      },
+      {
+        "da": "Reglen om vognbaneskift gælder her.",
+        "en": "The rule for changing lanes applies here.",
+        "fa": "اینجا قاعده‌ی تغییر خط اعمال می‌شود.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from a car at the driver's eye height, in the LEFT lane of a two-lane motorway, looking ahead.\nSIGN (exact): about 150 metres ahead, an overhead gantry spans the motorway; above the right lane hangs a BLUE rectangular Danish exit sign with a WHITE DIAGONAL ARROW pointing up and to the right; it has no readable place names (only short blurred white shapes).\nMARKINGS (important): the BROKEN white line between our left lane and the right lane changes to a SOLID white line about 100 metres ahead, before the exit lane splits off to the right.\nTRAFFIC: the right lane next to the viewer and behind is EMPTY; one silver car is far ahead in the right lane.\nSURROUNDINGS: tall street lamps, grass embankments, a few trees, a central crash barrier on the left.\nLIGHT AND WEATHER: clear sunny day, dry road.\nMUST NOT APPEAR: readable text."
+  },
+  "50": {
+    "sda": "Du har stillet den blå bil her langs kantstenen. Hvad gælder for standsning og parkering?",
+    "sen": "You have left the blue car here along the kerb. What applies to stopping and parking?",
+    "sfa": "خودروی آبی را اینجا کنار جدول گذاشته‌اید. درباره‌ی توقف و پارک چه قاعده‌ای اعمال می‌شود؟",
+    "st": [
+      {
+        "da": "Jeg må parkere her.",
+        "en": "I may park here.",
+        "fa": "می‌توانم اینجا پارک کنم.",
+        "eda": "Nej. Den fuldt optrukne gule kantlinje betyder, at standsning er forbudt.",
+        "een": "No. The solid yellow kerb line means that stopping is prohibited.",
+        "efa": "خیر. خط زرد ممتد کنار جدول یعنی توقف ممنوع است."
+      },
+      {
+        "da": "Jeg må standse her i højst 3 minutter.",
+        "en": "I may stop here for at most 3 minutes.",
+        "fa": "می‌توانم اینجا حداکثر ۳ دقیقه توقف کنم.",
+        "eda": "Nej. Fuldt optrukket gul kantlinje: standsning forbudt. Brudt gul kantlinje: parkering forbudt (standsning tilladt).",
+        "een": "No. Solid yellow kerb line: stopping prohibited. Broken yellow kerb line: parking prohibited (stopping allowed).",
+        "efa": "خیر. خط زرد ممتد: توقف ممنوع. خط زرد منقطع: پارک ممنوع (توقف مجاز)."
+      },
+      {
+        "da": "Jeg må sætte passagerer af eller læsse varer, så længe det tager.",
+        "en": "I may drop off passengers or load goods for as long as it takes.",
+        "fa": "می‌توانم هر قدر طول بکشد مسافر پیاده کنم یا بار بزنم.",
+        "eda": "Nej. Her er standsning forbudt.",
+        "een": "No. Stopping is prohibited here.",
+        "efa": "خیر. اینجا توقف ممنوع است."
+      },
+      {
+        "da": "Det er forbudt at standse her.",
+        "en": "Stopping is prohibited here.",
+        "fa": "توقف در اینجا ممنوع است.",
+        "eda": "Ja.",
+        "een": "Yes.",
+        "efa": "بله."
+      }
+    ],
+    "img": "VIEWPOINT: from slightly above and behind a parked car, about 6 metres behind it, looking along a city street.\nCAR (important): a BLUE SUV stands still along the RIGHT kerb, seen from behind; the number plate shows no readable text.\nMARKING (important): a SOLID, UNBROKEN YELLOW LINE is painted on the road along the kerb, running under and past the car in both directions.\nSTREET: a straight one-carriageway city street; a few cars drive further ahead in the lane; a granite kerb and a pavement on the right.\nSURROUNDINGS: four-storey apartment buildings and a few trees along the pavement.\nLIGHT AND WEATHER: sunny day, dry road.\nMUST NOT APPEAR: parking signs, other signs, text."
+  }
+}

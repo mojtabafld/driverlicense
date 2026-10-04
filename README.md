@@ -78,6 +78,18 @@ teaching plan (Undervisningsplan for kategori B, e.g. `7.19`); prove.dk's catego
 python3 build.py
 ```
 
+### Our own questions
+
+`data/original_lesson1.json` holds new questions for lesson 1 (Teoriprøve 1), written new from the topics of prove.dk's,
+in Danish, English and Persian. `build.py` puts them in place of prove.dk's text (same ids, topics and right answers, so
+earlier answers stay valid). Each has an `img` scene description: when the server starts with `KIE_API_KEY` set, it
+has the image model (GPT Image 2.5 Sunburst on kie.ai) draw one new picture per question from that text, once, and
+shows it instead of the original (see `SEED` in `imagegen.js`). Claude then checks each picture against its description
+(signs, markings, lit lights, vehicles' positions); one with a wrong detail is made again, up to 3 pictures per question,
+and the findings show in the admin panel's job list. More lessons can be added as `data/original_<name>.json`.
+prove.dk's original text of these questions is kept in `data/raw.json` and `data/backup/lesson1-prove-original.json`,
+and the original pictures stay in `site/img` (shown again with one click in the admin panel, or with `?orig=1`).
+
 ## Mobile app
 
 `mobile/` holds the iOS / Android / web app (Expo, same look as the site; Liquid Glass tab bar and answer options) on the same server and accounts; see `mobile/README.md`. Its web build (`app-web/`, made with `cd mobile && npm run build:web`) is the site at the root (`/`); the earlier site (`site/`) is served at `/app/`.

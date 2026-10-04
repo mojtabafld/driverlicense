@@ -1,0 +1,1108 @@
+{
+ "26": {
+  "id": 26,
+  "img": "img/q26.jpg",
+  "c": "7.1",
+  "sda": "Du holder stille ved kantstenen og vil gerne sætte i gang. Hvad vil du gøre?",
+  "sfa": "کنار جدول توقف کرده‌اید و می‌خواهید راه بیفتید. چه می‌کنید؟",
+  "sen": "You are staying by the curb and would like to set off. What will you do?",
+  "st": [
+   {
+    "da": "Jeg sætter forsigtig i gang med det samme.",
+    "fa": "بلافاصله با احتیاط راه می‌افتم.",
+    "ok": 0,
+    "eda": "Nej, du skal kigge bagud til venstre for at tjekke din blinde vinkel.",
+    "efa": "خیر، باید پشت سر سمت چپ را نگاه کنید تا نقطه‌ی کور را بررسی کنید.",
+    "en": "I carefully set off straight away.",
+    "een": "No. Before you set off you must check your blind spot/angle."
+   },
+   {
+    "da": "Jeg kigger bagud til venstre.",
+    "fa": "پشت سر سمت چپ را نگاه می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I make orientation in the blind angles behind on my left.",
+    "een": "Yes."
+   },
+   {
+    "da": "Hvis der er frit bagude, sætter jeg i gang.",
+    "fa": "اگر پشت سر خالی باشد، راه می‌افتم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "If there is no traffic, I will set off.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "27": {
+  "id": 27,
+  "img": "img/q27.jpg",
+  "c": "7.2",
+  "sda": "Du kører 30 km/t. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت 30 کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving 30 km/h. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på vejarbejde.",
+    "fa": "به کارهای راه‌سازی توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I pay special attention to the road work.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg fortsætter med samme eller næsten samme hastighed 30 km/t.",
+    "fa": "با همان سرعت یا تقریباً همان سرعت 30 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej. Den forankørende bremser.",
+    "efa": "خیر. خودروی جلویی ترمز می‌کند.",
+    "en": "I continue with the same or almost the same speed of 30 km/h.",
+    "een": "No. The vehicle in front is braking."
+   },
+   {
+    "da": "Jeg bremser.",
+    "fa": "ترمز می‌کنم.",
+    "ok": 1,
+    "eda": "Ja. Fordi den forankørende bremser.",
+    "efa": "بله. چون خودروی جلویی ترمز می‌کند.",
+    "en": "I brake.",
+    "een": "Yes. Because the car in front brakes."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på de hvide vejafmærkninger.",
+    "fa": "به خط‌کشی‌های سفید جاده توجه ویژه دارم.",
+    "ok": 0,
+    "eda": "Nej. De gule vognbanelinjer gælder her.",
+    "efa": "خیر. اینجا خطوط زرد لاین‌ها معتبر است.",
+    "en": "I pay special attention to the white road markings.",
+    "een": "No. The yellow road markings apply in this situation. (temporary markings)"
+   }
+  ]
+ },
+ "28": {
+  "id": 28,
+  "img": "img/q28.jpg",
+  "c": "7.2",
+  "sda": "Du kører omkring 70 km/t. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت حدود 70 کیلومتر در ساعت رانندگی می‌کنید. هیچ خودرویی پشت سر شما نیست. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at about 70 km/h. There is no traffic from behind. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg krydser vognbanelinjerne for at flade svinget ud.",
+    "fa": "از خطوط لاین عبور می‌کنم تا پیچ را صاف‌تر بگیرم.",
+    "ok": 0,
+    "eda": "Nej, du skal altid holde din bane gennem svinget.",
+    "efa": "خیر، همیشه باید در طول پیچ داخل لاین خودتان بمانید.",
+    "en": "I cross the broken lines in the middle of the road to flatten the bend.",
+    "een": "No, it is extremely important to keep your lane in situations where the view is poor. You should always keep your lane through the bend."
+   },
+   {
+    "da": "Jeg trækker helt ud til den højre vejkant.",
+    "fa": "کاملاً به لبه‌ی راست جاده می‌روم.",
+    "ok": 0,
+    "eda": "Nej. Du skal ikke trække helt ud til den højre vejkant, da det betyder, at du kører meget tæt på grænsen mellem asfalt og græs med dit højre hjulpar. \nDu skal placere dig i midten af din vognbane. Der er forskel på udtryk så langt til højre som muligt (det skal du normalt altid gøre) og udtryk: jeg trækker helt ud til den højre vejkant.",
+    "efa": "خیر. نباید کاملاً به لبه‌ی راست جاده بروید، چون در این صورت چرخ‌های سمت راست شما خیلی نزدیک به مرز آسفالت و چمن حرکت می‌کنند.\nباید در وسط لاین خودتان قرار بگیرید. بین عبارت «تا جای ممکن سمت راست» (که معمولاً همیشه باید رعایت کنید) و عبارت «کاملاً به لبه‌ی راست جاده می‌روم» فرق وجود دارد.",
+    "en": "I move close to the right edge of the road.",
+    "een": "No, because it could be dangerous to reach the road's edge with speed of 70 km/h. You should keep your lane but as much as possible to the right side."
+   },
+   {
+    "da": "Jeg placerer mig i midten af min vognbane.",
+    "fa": "در وسط لاین خودم قرار می‌گیرم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I stay in the middle of my lane.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg sætter farten ned.",
+    "fa": "سرعتم را کم می‌کنم.",
+    "ok": 1,
+    "eda": "Ja, 70 km/t er for hurtigt at køre her.",
+    "efa": "بله، 70 کیلومتر در ساعت برای رانندگی در اینجا زیاد است.",
+    "en": "I slow down.",
+    "een": "Yes, due to sharp band and poor view conditions the speed of 70 km/h is to fast."
+   }
+  ]
+ },
+ "29": {
+  "id": 29,
+  "img": "img/q29.jpg",
+  "c": "7.3",
+  "sda": "Du kører ca. 70 km/t. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت حدود 70 کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at app. 70 km/h. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg fortsætter med samme hastighed 70 km/t.",
+    "fa": "با همان سرعت 70 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I continue at the same speed of 70 km/h.",
+    "een": "No, you have to reduce your speed due to the road's condition - slippery road (state of the road)."
+   },
+   {
+    "da": "Jeg sætter farten ned.",
+    "fa": "سرعتم را کم می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I slow down and continue at the speed of about 50 km/h.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på kørebanens tilstand.",
+    "fa": "به وضعیت سطح سواره‌رو توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. I denne situation kører du tæt på en flod, og det har indflydelse på din kørsel. Vejen er glat.",
+    "efa": "بله. در این وضعیت نزدیک یک رودخانه رانندگی می‌کنید و این روی رانندگی شما اثر دارد. جاده لغزنده است.",
+    "en": "I pay special attention to the condition of the road.",
+    "een": "Yes. In this situation your driving is effected by winter, river, icicles that makes the road slippery."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på vejsvinget forude.",
+    "fa": "به پیچ جاده در جلو توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. Der er et vejsving forude.",
+    "efa": "بله. جلوتر یک پیچ جاده هست.",
+    "en": "I pay special attention to the road is bending.",
+    "een": "Yes. The bend is sharp."
+   }
+  ]
+ },
+ "30": {
+  "id": 30,
+  "img": "img/q30.jpg",
+  "c": "7.3",
+  "sda": "Du forlader motorvejen. Hvad skal du være særligt opmærksom på?",
+  "sfa": "از بزرگراه خارج می‌شوید. به چه چیزی باید توجه ویژه داشته باشید؟",
+  "sen": "You are leaving the motorway. What should you pay special attention to?",
+  "st": [
+   {
+    "da": "Jeg er særligtt opmærksom på vejsvinget.",
+    "fa": "به پیچ جاده توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. På grund af det skarpe sving.",
+    "efa": "بله. به خاطر پیچ تند.",
+    "en": "I pay special attention to the bend of the road.",
+    "een": "Yes, there is a sharp bend."
+   },
+   {
+    "da": "Det er forbudt at køre hurtigere end 40 km/t.",
+    "fa": "رانندگی با سرعت بیشتر از 40 کیلومتر در ساعت ممنوع است.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "It is forbidden to drive faster than 40 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "Det er farligt at køre hurtigere end 40 km/t.",
+    "fa": "رانندگی با سرعت بیشتر از 40 کیلومتر در ساعت خطرناک است.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "It is dangerous to drive faster than 40 km/h.",
+    "een": "Yes."
+   },
+   {
+    "da": "Det er anbefalet at køre højst 40 km/t gennem svinget.",
+    "fa": "توصیه می‌شود در این پیچ حداکثر با 40 کیلومتر در ساعت رانندگی کنید.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "It is recommended to drive 40 km/h through the bend.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "31": {
+  "id": 31,
+  "img": "img/q31.jpg",
+  "c": "7.3",
+  "sda": "Du kører 40-50 km/t. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت 40 تا 50 کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at 40-50 km/h. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på nedsat vejgreb.",
+    "fa": "به کم بودن چسبندگی جاده توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I pay special attention to the reduced road grip.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg fortsætter med 40-50 km/t.",
+    "fa": "با 40 تا 50 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I continue at 40-50 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg fortsætter med 30-40 km/t.",
+    "fa": "با 30 تا 40 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I continue at 30-40 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg fortsætter med 20-25 km/t.",
+    "fa": "با 20 تا 25 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 1,
+    "eda": "Ja. Vejen er glat.",
+    "efa": "بله. جاده لغزنده است.",
+    "en": "I continue at 20-25 km/h.",
+    "een": "Yes. The road is slippery."
+   }
+  ]
+ },
+ "32": {
+  "id": 32,
+  "img": "img/q32.jpg",
+  "c": "7.3",
+  "sda": "Hvad er den maksimale tilladte hastighed efter disse færdselstavler?",
+  "sfa": "حداکثر سرعت مجاز بعد از این تابلوها چقدر است؟",
+  "sen": "What is the maximum allowed speed after the traffic signs?",
+  "st": [
+   {
+    "da": "50 km/t.",
+    "fa": "50 کیلومتر در ساعت.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "50 km/h.",
+    "een": "Yes."
+   },
+   {
+    "da": "60 km/t.",
+    "fa": "60 کیلومتر در ساعت.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "60 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "70 km/t.",
+    "fa": "70 کیلومتر در ساعت.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "70 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "80 km/t.",
+    "fa": "80 کیلومتر در ساعت.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "80 km/h.",
+    "een": "No."
+   }
+  ]
+ },
+ "33": {
+  "id": 33,
+  "img": "img/q33.jpg",
+  "c": "7.4",
+  "sda": "Du kører ned ad bakke i et krybespor. Hvordan vil du fortsætte?",
+  "sfa": "در یک لاین مخصوص خودروهای کُند (krybespor) در سراشیبی رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving downhill in a crawler lane. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på færdselstavlen.",
+    "fa": "به تابلوی راهنمایی و رانندگی توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I pay special attention to the traffic sign.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på bagfrakommende færdsel.",
+    "fa": "به ترافیکی که از پشت سر می‌آید توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I pay special attention to the traffic from behind.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg skal overholde reglen om vognbaneskift, hvor krybesporet ender.",
+    "fa": "جایی که لاین خودروهای کُند تمام می‌شود، باید قانون تغییر لاین را رعایت کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I must abide by the rules of changing lanes where the crawler lane ends.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg skal overholde reglen om sammenfletning, hvor krybesporet ender.",
+    "fa": "جایی که لاین خودروهای کُند تمام می‌شود، باید قانون ادغام (زیپی) را رعایت کنم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I must abide by the rule of merging where the crawler lane ends.",
+    "een": "No."
+   }
+  ]
+ },
+ "34": {
+  "id": 34,
+  "img": "img/q34.jpg",
+  "c": "7.5",
+  "sda": "Du vil gerne vende bilen om så hurtigt som muligt. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+  "sfa": "می‌خواهید هرچه سریع‌تر دور بزنید. هیچ خودرویی پشت سر شما نیست. چطور ادامه می‌دهید؟",
+  "sen": "You would like to turn the car around as soon as possible. There is no one behind you. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på at jeg nærmer mig bakketoppen.",
+    "fa": "به اینکه به بالای سربالایی نزدیک می‌شوم توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. På grund af svinget og bakke toppen.",
+    "efa": "بله. به خاطر پیچ و بالای سربالایی.",
+    "en": "I am particularly aware that I am approaching the hilltop.",
+    "een": "Yes. Because of the curve and hill top."
+   },
+   {
+    "da": "Jeg trækker ud til vejens højre side og vender bilen derfra.",
+    "fa": "به سمت راست جاده می‌روم و از همان‌جا دور می‌زنم.",
+    "ok": 0,
+    "eda": "Nej. Du må ikke vende bilen her.",
+    "efa": "خیر. اینجا اجازه ندارید دور بزنید.",
+    "en": "I move up to right edge of the road and turn the car from there.",
+    "een": "No, it is dangerous to turn the car around due to poor view condition."
+   },
+   {
+    "da": "Jeg trækker helt ud over kanten i højre side og vender bilen derfra.",
+    "fa": "کاملاً از لبه‌ی سمت راست بیرون می‌روم و از همان‌جا دور می‌زنم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I move all the way into the verge on my right and from there I will turn the car.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg fortsætter lige ud og finder et bedre sted at vende bilen.",
+    "fa": "مستقیم ادامه می‌دهم و جای بهتری برای دور زدن پیدا می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I continue straight ahead and find a better place to turn the car.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "35": {
+  "id": 35,
+  "img": "img/q35.jpg",
+  "c": "7.19",
+  "sda": "Hvornår er det lygtetændingstid?",
+  "sfa": "زمان روشن کردن چراغ‌ها (lygtetændingstid) کی است؟",
+  "sen": "When is it lighting up time?",
+  "st": [
+   {
+    "da": "Altid.",
+    "fa": "همیشه.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "Always.",
+    "een": "No."
+   },
+   {
+    "da": "En time før solnedgang til en time efter solopgang.",
+    "fa": "از یک ساعت قبل از غروب آفتاب تا یک ساعت بعد از طلوع آفتاب.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "One hour before sunset and one hour after sunrise.",
+    "een": "No."
+   },
+   {
+    "da": "Fra solnedgang til solopgang.",
+    "fa": "از غروب آفتاب تا طلوع آفتاب.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "From sunset to sunrise.",
+    "een": "Yes."
+   },
+   {
+    "da": "Når der er tåge, dis, kraftig regn, sne eller lignende, for at se andre eller for at blive set.",
+    "fa": "وقتی مه، غبار، باران شدید، برف یا شرایط مشابه وجود دارد، برای اینکه دیگران را ببینید یا دیده شوید.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "In fog, mist, heavy rain, snow or in order to notice others and to be noticed.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "36": {
+  "id": 36,
+  "img": "img/q36.jpg",
+  "c": "7.6",
+  "sda": "Du nærmer dig cyklisterne. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+  "sfa": "به دوچرخه‌سوارها نزدیک می‌شوید. هیچ خودرویی پشت سر شما نیست. چطور ادامه می‌دهید؟",
+  "sen": "You are catching up with the cyclists. There is no one behind you. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på spærrelinjen.",
+    "fa": "به خط ممتد (spærrelinje) توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. Der er ikke plads nok mellem spærrelinjen og cyklisten til at du kan overhale. Du er nødt til at vente med overhalingen.",
+    "efa": "بله. بین خط ممتد و دوچرخه‌سوار جای کافی برای سبقت نیست. باید برای سبقت صبر کنید.",
+    "en": "I pay special attention to the continuous line.",
+    "een": "Yes. There is not enough space between the line and the cyclist for you to overtake and you have to wait with overtaking."
+   },
+   {
+    "da": "Jeg advarer cyklisterne med hornet.",
+    "fa": "با بوق به دوچرخه‌سوارها هشدار می‌دهم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I use the short horn signal to warn the cyclists.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg overhaler cyklisterne med det samme.",
+    "fa": "بلافاصله از دوچرخه‌سوارها سبقت می‌گیرم.",
+    "ok": 0,
+    "eda": "Nej. Du skal vente med at overhale.",
+    "efa": "خیر. باید برای سبقت صبر کنید.",
+    "en": "I overtake the cyclists straight away.",
+    "een": "No. You have to wait to overtake."
+   },
+   {
+    "da": "Jeg bliver bag cyklisterne.",
+    "fa": "پشت دوچرخه‌سوارها می‌مانم.",
+    "ok": 1,
+    "eda": "Ja. Der er ikke plads nok mellem spærrelinje og cyklisten til at at overhale. Du er nødt til at vente med overhalingen.",
+    "efa": "بله. بین خط ممتد و دوچرخه‌سوار جای کافی برای سبقت نیست. باید برای سبقت صبر کنید.",
+    "en": "I stay behind the cyclists for a while.",
+    "een": "Yes. There is not enough space between the line and cyclist to overtake and you will have to wait with overtaking."
+   }
+  ]
+ },
+ "37": {
+  "id": 37,
+  "img": "img/q37.jpg",
+  "c": "7.6",
+  "sda": "Du kører 50 km/t. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت 50 کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at 50 km/h. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på fodgængeren.",
+    "fa": "به عابر پیاده توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja, du skal holde tilbage for fodgængeren.",
+    "efa": "بله، باید به عابر پیاده حق تقدم بدهید.",
+    "en": "I pay special attention to the pedestrian.",
+    "een": "Yes, you have to wait for the pedestrian."
+   },
+   {
+    "da": "Jeg fortsætter med samme eller næsten samme hastighed 50 km/t.",
+    "fa": "با همان سرعت یا تقریباً همان سرعت 50 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I continue with the same or almost the same speed of 50 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg bremser.",
+    "fa": "ترمز می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I brake.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg holder tilbage for fodgængeren.",
+    "fa": "به عابر پیاده حق تقدم می‌دهم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I will hold for the pedestrian.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "38": {
+  "id": 38,
+  "img": "img/q38.jpg",
+  "c": "7.6",
+  "sda": "Du kører omkring 30-35 km/t. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت حدود 30 تا 35 کیلومتر در ساعت رانندگی می‌کنید. هیچ خودرویی پشت سر شما نیست. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at about 30-35 km/h. There is no one behind you. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg bruger mit horn.",
+    "fa": "بوق می‌زنم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I use my horn.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg sætter farten ned og venter bagved rytteren lidt endnu.",
+    "fa": "سرعتم را کم می‌کنم و کمی بیشتر پشت سوارکار صبر می‌کنم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I slow down and wait behind the rider for now.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg fortsætter med samme hastighed og overhaler rytteren med god sideafstand.",
+    "fa": "با همان سرعت ادامه می‌دهم و با فاصله‌ی جانبی کافی از سوارکار سبقت می‌گیرم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I continue with the same speed and overtake the rider with a good side distance.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "39": {
+  "id": 39,
+  "img": "img/q39.jpg",
+  "c": "7.7",
+  "sda": "Du kører omkring 40 km/t. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت حدود 40 کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at about 40 km/h. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg fortsætter med samme hastighed 40 km/t.",
+    "fa": "با همان سرعت 40 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I continue with the same speed of 40 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på modkørende.",
+    "fa": "به ترافیک روبه‌رو توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I pay special attention to the oncoming vehicle.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på den parkerede bil.",
+    "fa": "به خودروی پارک‌شده توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. På grund af den parkerede bil, er du nødt til at vente på modkørende bil.",
+    "efa": "بله. به خاطر خودروی پارک‌شده، باید منتظر خودروی روبه‌رو بمانید.",
+    "en": "I pay special attention to the parked car.",
+    "een": "Yes. Because of the parked vehicle in the right side of road you will have to hold back for the oncoming traffic."
+   },
+   {
+    "da": "Jeg sætter farten ned og holder tilbage for den modkørende bil.",
+    "fa": "سرعتم را کم می‌کنم و به خودروی روبه‌رو حق تقدم می‌دهم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I slow down and wait for the oncoming car.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "40": {
+  "id": 40,
+  "img": "img/q40.jpg",
+  "c": "7.7",
+  "sda": "Du kører omkring 35-40 km/t. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت حدود 35 تا 40 کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at about 35-40 km/h. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på bussens manøvreegenskaber.",
+    "fa": "به ویژگی‌های مانور اتوبوس توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja, bussen har brug for meget plads ved igangsætning.",
+    "efa": "بله، اتوبوس هنگام راه افتادن به فضای زیادی نیاز دارد.",
+    "en": "I pay special attention to the bus manoeuvre ability.",
+    "een": "Yes, the bus needs a lot of space when setting off."
+   },
+   {
+    "da": "Jeg fortsætter med samme eller næsten samme hastighed på 35-40 km/t.",
+    "fa": "با همان سرعت یا تقریباً همان سرعت 35 تا 40 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej, det er for hurtigt.",
+    "efa": "خیر، این سرعت زیاد است.",
+    "en": "I continue with the same or almost the same speed of 35-40 km/h.",
+    "een": "No, it is too fast."
+   },
+   {
+    "da": "Jeg bremser.",
+    "fa": "ترمز می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I brake.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg flytter mig længere til højre på kørebanen.",
+    "fa": "در سواره‌رو بیشتر به سمت راست می‌روم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I move more to the right.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "41": {
+  "id": 41,
+  "img": "img/q41.jpg",
+  "c": "7.12",
+  "sda": "Du nærmer dig krydset. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+  "sfa": "به تقاطع نزدیک می‌شوید. هیچ خودرویی پشت سر شما نیست. چطور ادامه می‌دهید؟",
+  "sen": "You are approaching a junction and there is a free rear view. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på lyssignalet.",
+    "fa": "به چراغ راهنمایی توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I pay special attention to the traffic light.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på lastbilens fartegenskaber.",
+    "fa": "به ویژگی‌های حرکتی کامیون توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. Lastbilen er langsom om at sætte i gang.",
+    "efa": "بله. کامیون دیر راه می‌افتد.",
+    "en": "I pay special attention to the lorry speed abilities.",
+    "een": "Yes. The lorry is slow to set off."
+   },
+   {
+    "da": "Jeg fortsætter i min vognbane og standser bag lastbilen.",
+    "fa": "در لاین خودم ادامه می‌دهم و پشت کامیون توقف می‌کنم.",
+    "ok": 0,
+    "eda": "Nej. Lastbilen er langsom om at sætte i gang og der er ingen bag dig. Du skal skifte vognbane, så du kan accelerere hurtigere når lyset skifter til grønt.",
+    "efa": "خیر. کامیون دیر راه می‌افتد و کسی پشت شما نیست. باید لاین را عوض کنید تا وقتی چراغ سبز شد بتوانید سریع‌تر شتاب بگیرید.",
+    "en": "I continue in the same lane and stop, behind the lorry.",
+    "een": "No. The lorry is accelerating slowly and since it is free from behind the lane needs to be changed  in order to proceed faster."
+   },
+   {
+    "da": "Jeg skifter vognbane og standser bag den sølvfarvede bil.",
+    "fa": "لاین را عوض می‌کنم و پشت خودروی نقره‌ای توقف می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I change my lane and stop behind the car.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "42": {
+  "id": 42,
+  "img": "img/q42.jpg",
+  "c": "7.16",
+  "sda": "Du kører ca. 90 km/t på motorvejen. Den sølvfarvede bil foran dig vælger pludseligt at skifte vognbane. Hvad vil du gøre?",
+  "sfa": "در بزرگراه با سرعت حدود 90 کیلومتر در ساعت رانندگی می‌کنید. خودروی نقره‌ای جلوی شما ناگهان تصمیم می‌گیرد لاین عوض کند. چه می‌کنید؟",
+  "sen": "You are driving at approximately 90 km/h on the motorway. The silver car in front of you suddenly decides to change lanes. What do you do?",
+  "st": [
+   {
+    "da": "Jeg advarer den sølvfarvede bil med et kraftigt horn signal.",
+    "fa": "با یک بوق محکم به خودروی نقره‌ای هشدار می‌دهم.",
+    "ok": 0,
+    "eda": "Nej, den sølvfarvede bil har allerede ændret banen. Horn bruges kun til at forhindre farlige situationer, men ikke efter at en situation har fundet sted.",
+    "efa": "خیر، خودروی نقره‌ای لاینش را عوض کرده است. بوق فقط برای جلوگیری از موقعیت‌های خطرناک است، نه بعد از اینکه موقعیت پیش آمده است.",
+    "en": "I warn the silver car with a strong horn signal.",
+    "een": "No. The silver car has already changed the lane. The horn is only used to prevent dangerous situations, but not after the situation has occurred."
+   },
+   {
+    "da": "Jeg fortsætter med samme hastighed ca. 90 km/t.",
+    "fa": "با همان سرعت حدود 90 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I continue with the same speed of app. 90 km/h.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg sætter farten lidt ned for at få bedre afstand til den sølvfarvede bil.",
+    "fa": "سرعتم را کمی کم می‌کنم تا فاصله‌ی بیشتری با خودروی نقره‌ای داشته باشم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I slow down in order to get a better distance to the silver car.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg skifter til vognbanen på min højre side med det samme.",
+    "fa": "بلافاصله به لاین سمت راستم می‌روم.",
+    "ok": 0,
+    "eda": "Nej. Du skal altid kigge bagud før du skifter bane.",
+    "efa": "خیر. همیشه قبل از تغییر لاین باید پشت سر را نگاه کنید.",
+    "en": "I change to the lane on my right immediately.",
+    "een": "No. You need to look behind before you change your lane."
+   }
+  ]
+ },
+ "43": {
+  "id": 43,
+  "img": "img/q43.jpg",
+  "c": "7.19",
+  "sda": "Du kører ca. 40 km/t med nærlyset tændt. Hvordan vil du fortsætte?",
+  "sfa": "با چراغ نور پایین روشن و با سرعت حدود 40 کیلومتر در ساعت رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at about 40 km/h with the low beam on. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg fortsætter med nærlyset tændt.",
+    "fa": "با نور پایین روشن ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej, her skal du bruge fjernlys.",
+    "efa": "خیر، اینجا باید از نور بالا استفاده کنید.",
+    "en": "I continue with the low beam on.",
+    "een": "No, here you have to use the high beam."
+   },
+   {
+    "da": "Jeg fortsætter med samme hastighed 40 km/t, med nærlyset tændt.",
+    "fa": "با همان سرعت 40 کیلومتر در ساعت و با نور پایین روشن ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej. Der er ikke nogen modkørende, og vejen er lige, så du skal skifte til fjernlys og sætte farten op.",
+    "efa": "خیر. هیچ خودروی روبه‌رویی نیست و جاده مستقیم است، پس باید به نور بالا تغییر دهید و سرعتتان را زیاد کنید.",
+    "en": "I continue with the same speed of 40 km/h with the high beams on.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg skifter til fjernlys og sætter farten op.",
+    "fa": "نور بالا را روشن می‌کنم و سرعتم را زیاد می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I switch to the high beam and speed up.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "44": {
+  "id": 44,
+  "img": "img/q44.jpg",
+  "c": "7.9",
+  "sda": "Du er ved at indhente bilen foran dig, som kører meget langsomt. Der er ingen kørende bagude. Hvad vil du gøre?",
+  "sfa": "دارید به خودروی جلویی که خیلی آهسته می‌رود می‌رسید. هیچ خودرویی پشت سر شما نیست. چه می‌کنید؟",
+  "sen": "You are catching up with the vehicle in front of you that is driving very slowly. There is nobody behind you. What will you do?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på eventuelle modkørende biler.",
+    "fa": "به خودروهای احتمالی روبه‌رو توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja, du skal altid være særligt opmærksom på eventuelle modkørende biler, når du overhaler.",
+    "efa": "بله، هنگام سبقت همیشه باید به خودروهای احتمالی روبه‌رو توجه ویژه داشته باشید.",
+    "en": "I pay special attention to the potential oncoming traffic.",
+    "een": "Yes, you always have to pay special attention to eventual / potential oncoming traffic while overtaking."
+   },
+   {
+    "da": "Jeg sætter farten ned og afbryder overhalingen.",
+    "fa": "سرعتم را کم می‌کنم و از سبقت منصرف می‌شوم.",
+    "ok": 0,
+    "eda": "Nej, her er der godt udsyn langt frem.",
+    "efa": "خیر، اینجا دید تا فاصله‌ی دور خوب است.",
+    "en": "I slow down and I stop with overtaking.",
+    "een": "No The view is good and there is no oncoming traffic."
+   },
+   {
+    "da": "Jeg overhaler lige nu.",
+    "fa": "همین حالا سبقت می‌گیرم.",
+    "ok": 1,
+    "eda": "Ja. Den forankørende kører meget langsomt.",
+    "efa": "بله. خودروی جلویی خیلی آهسته می‌رود.",
+    "en": "I overtake right away.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "45": {
+  "id": 45,
+  "img": "img/q45.jpg",
+  "c": "4.4",
+  "sda": "Hvad er den højeste alkoholpromille, man må have i blodet, hvis man kører sikkert?",
+  "sfa": "بیشترین میزان الکل خون که با آن هنوز می‌توان رانندگی کرد چقدر است؟",
+  "sen": "What is the maximum blood alcohol level allowed to have in the system, if you are driving in a safe way?",
+  "st": [
+   {
+    "da": "1,2 promille.",
+    "fa": "1,2 پرومیل (در هزار).",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "1,2 promille.",
+    "een": "No."
+   },
+   {
+    "da": "0,8 promille.",
+    "fa": "0,8 پرومیل (در هزار).",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "0,8 promille.",
+    "een": "No."
+   },
+   {
+    "da": "0,5 promille.",
+    "fa": "0,5 پرومیل (در هزار).",
+    "ok": 1,
+    "eda": "Ja. Dog for førstegangserhverver af kørekort er max grænsen 0,2 promille i de første 3 år.",
+    "efa": "بله. البته برای کسانی که تازه گواهینامه گرفته‌اند، در 3 سال اول حداکثر مجاز 0,2 پرومیل است.",
+    "en": "0,5 promille.",
+    "een": "Yes. However, for first-time driving licence holders, the maximum limit is 0.2 per mille for the first three years."
+   },
+   {
+    "da": "0,05 promille.",
+    "fa": "0,05 پرومیل (در هزار).",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "0,05 promille.",
+    "een": "No."
+   }
+  ]
+ },
+ "46": {
+  "id": 46,
+  "img": "img/q46.jpg",
+  "c": "7.17",
+  "sda": "Du kører omkring 120 km/t på en motorvej, ligesom den sorte bil foran dig. Hvordan vil du fortsætte?",
+  "sfa": "مثل خودروی مشکی جلوی خود، با سرعت حدود 120 کیلومتر در ساعت در بزرگراه رانندگی می‌کنید. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at about 120 km/h on a motorway like the black car in front of you. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg fortsætter med samme eller næsten samme hastighed 120 km/t.",
+    "fa": "با همان سرعت یا تقریباً همان سرعت 120 کیلومتر در ساعت ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej, bilen på din højre side skifter vognbane.",
+    "efa": "خیر، خودروی سمت راست شما دارد لاین عوض می‌کند.",
+    "en": "I continue with the same or almost the same speed of 120 km/h.",
+    "een": "No, the car on your right is changing lane."
+   },
+   {
+    "da": "Jeg er særligt opmærksom på den sølvfarvede bil på min højre side.",
+    "fa": "به خودروی نقره‌ای سمت راستم توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I pay special attention to the silver car on my right side.",
+    "een": "Yes."
+   },
+   {
+    "da": "Jeg skifter min vognbane til venstre for mig med det samme.",
+    "fa": "بلافاصله به لاین سمت چپم می‌روم.",
+    "ok": 0,
+    "eda": "Nej, der er ikke frit og du har heller ikke kigget bagud.",
+    "efa": "خیر، لاین خالی نیست و پشت سر را هم نگاه نکرده‌اید.",
+    "en": "I change my lane to the lane on my left immediately.",
+    "een": "No, the lane is not free."
+   },
+   {
+    "da": "Jeg sætter farten ned for at få bedre afstand til forankørende.",
+    "fa": "سرعتم را کم می‌کنم تا فاصله‌ی بیشتری با خودروی جلویی داشته باشم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I slow down in order to get a better distance to the vehicles in front.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "47": {
+  "id": 47,
+  "img": "img/q47.jpg",
+  "c": "7.13",
+  "sda": "Du har sat farten ned for at svinge til højre her. Der er ingen kørende bagude. Hvordan vil du fortsætte?",
+  "sfa": "سرعتتان را کم کرده‌اید تا اینجا به راست بپیچید. هیچ خودرویی پشت سر شما نیست. چطور ادامه می‌دهید؟",
+  "sen": "You have slowed down to turn right here. There is no traffic behind you. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på cyklisten.",
+    "fa": "به دوچرخه‌سوار توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. Cyklisten er i bevægelse, begge fødder er på pedalerne og der er risiko for at cyklisten vil fortsætte lige ud, selvom der er rødt lys for cyklister.",
+    "efa": "بله. دوچرخه‌سوار در حال حرکت است، هر دو پایش روی پدال‌هاست و این خطر وجود دارد که با وجود چراغ قرمز دوچرخه‌ها مستقیم ادامه دهد.",
+    "en": "I pay special attention to the cyclist.",
+    "een": "Yes, the cyclist is in motion, both feet are on the pedals and there is a risk that the cyclist will continue straight ahead even if there is a red light for cyclists."
+   },
+   {
+    "da": "Jeg svinger til højre med det samme.",
+    "fa": "بلافاصله به راست می‌پیچم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I turn right straight away.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg standser før stoplinjen.",
+    "fa": "قبل از خط توقف می‌ایستم.",
+    "ok": 0,
+    "eda": "Nej. Du har grønt lys og her skal du køre langsomt ind i krydset.",
+    "efa": "خیر. چراغ شما سبز است و اینجا باید آهسته وارد تقاطع شوید.",
+    "en": "I stop before the stop line.",
+    "een": "No, the green arrow is for you and you will slowly enter the junction."
+   },
+   {
+    "da": "Jeg kører langsomt ind i krydset.",
+    "fa": "آهسته وارد تقاطع می‌شوم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I slowly enter the junction and turn when it is free.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "48": {
+  "id": 48,
+  "img": "img/q48.jpg",
+  "c": "7.14",
+  "sda": "Du holder stille midt i krydset og vil gerne svinge til venstre. Hvordan vil du fortsætte?",
+  "sfa": "وسط تقاطع ایستاده‌اید و می‌خواهید به چپ بپیچید. چطور ادامه می‌دهید؟",
+  "sen": "You are holding still in the middle of the intersection and want to turn left. How do you want to proceed?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på lyssignalet.",
+    "fa": "به چراغ راهنمایی توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. Lyssignalet er meget vigtigt for dig i denne situation, da du skal reagere og gøre noget - og sætte i gang, når lyssignalet skifter til gult lys. \nNår du er i midten af krydset, skal du være særligt opmærksom på lyssignalet på hjørnet, modkørende biler og eventuelle fodgængere på din venstre side.",
+    "efa": "بله. چراغ راهنمایی در این وضعیت برای شما خیلی مهم است، چون باید واکنش نشان دهید و وقتی چراغ زرد شد حرکت کنید.\nوقتی وسط تقاطع هستید، باید به چراغ راهنمایی گوشه‌ی تقاطع، خودروهای روبه‌رو و عابران پیاده‌ی احتمالی سمت چپتان توجه ویژه داشته باشید.",
+    "en": "I pay special attention to the traffic light.",
+    "een": "Yes. The traffic light signal is very important to you in this situation, as you need to react and take action - and move when the light changes to yellow. When you're in the centre of the intersection, pay special attention to the traffic lights on the corner, oncoming cars and any pedestrians on your left."
+   },
+   {
+    "da": "Jeg venter lidt med at svinge til venstre.",
+    "fa": "کمی صبر می‌کنم و بعد به چپ می‌پیچم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I wait a little bit longer.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg fortsætter med at svinge til venstre lige nu.",
+    "fa": "همین حالا به پیچیدن به چپ ادامه می‌دهم.",
+    "ok": 1,
+    "eda": "Ja. Der er ingen modkørende trafik og du er nødt til at forlade krydset hurtigt.",
+    "efa": "بله. هیچ ترافیک روبه‌رویی نیست و باید سریع از تقاطع خارج شوید.",
+    "en": "I continue to turn left right now.",
+    "een": "Yes. There is no oncoming traffic and you have to leave the junction quickly."
+   }
+  ]
+ },
+ "49": {
+  "id": 49,
+  "img": "img/q49.jpg",
+  "c": "7.16",
+  "sda": "Du kører 90 km/t og vil gerne forlade motorvejen ved den første afkørsel. \nDer er ingen kørende bagude. Hvordan vil du fortsætte?",
+  "sfa": "با سرعت 90 کیلومتر در ساعت رانندگی می‌کنید و می‌خواهید از اولین خروجی از بزرگراه خارج شوید.\nهیچ خودرویی پشت سر شما نیست. چطور ادامه می‌دهید؟",
+  "sen": "You are driving at 90 km/h and would like to exit the motorway at the first exit. \nThere is no one behind you. How will you continue?",
+  "st": [
+   {
+    "da": "Jeg er særligt opmærksom på kørebanestriber.",
+    "fa": "به خط‌کشی‌های سواره‌رو توجه ویژه دارم.",
+    "ok": 1,
+    "eda": "Ja. Du er nødt til at skifte vognbane inden linjen skifter til fuldt optrukket.",
+    "efa": "بله. باید قبل از اینکه خط به خط ممتد تبدیل شود، لاین را عوض کنید.",
+    "en": "I pay special attention to the road markings.",
+    "een": "Yes. You have to change lane before the continuous line."
+   },
+   {
+    "da": "Jeg fortsætter lige ud i den samme bane.",
+    "fa": "در همان لاین مستقیم ادامه می‌دهم.",
+    "ok": 0,
+    "eda": "Nej, det er ingen bagved og du kan skifte vognbanen her.",
+    "efa": "خیر، کسی پشت سر شما نیست و اینجا می‌توانید لاین را عوض کنید.",
+    "en": "I continue straight ahead in the same lane.",
+    "een": "No. It is free from behind and you can change lane right now."
+   },
+   {
+    "da": "Jeg skifter min bane med det samme.",
+    "fa": "بلافاصله لاینم را عوض می‌کنم.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "I change my lane right away.",
+    "een": "Yes."
+   },
+   {
+    "da": "Reglen for vognbaneskift gælder her.",
+    "fa": "اینجا قانون تغییر لاین معتبر است.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "The rule of changing lanes applies here.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "50": {
+  "id": 50,
+  "img": "img/q50.jpg",
+  "c": "7.18",
+  "sda": "Du har forladt den røde bil her. Hvad er reglerne om standsning og parkering her?",
+  "sfa": "خودروی قرمز را اینجا گذاشته‌اید و رفته‌اید. قوانین توقف و پارک در اینجا چیست؟",
+  "sen": "You have just left the red car. What are the rules about stopping and parking here?",
+  "st": [
+   {
+    "da": "Jeg må parkere bilen her.",
+    "fa": "اجازه دارم اینجا پارک کنم.",
+    "ok": 0,
+    "eda": "Nej.",
+    "efa": "خیر.",
+    "en": "I am allowed to park the car here.",
+    "een": "No."
+   },
+   {
+    "da": "Jeg må standse bilen her i 2-3 minutter.",
+    "fa": "اجازه دارم اینجا 2 تا 3 دقیقه توقف کنم.",
+    "ok": 0,
+    "eda": "Nej. Fuldtoptrukket/ubrudt gul kantlinje betyder standsning forbudt.\nPunkterede/brudt gul kantlinje betyder parkering forbudt (standsning tilladt).",
+    "efa": "خیر. خط زرد ممتد (پیوسته) کنار جاده یعنی توقف ممنوع.\nخط زرد نقطه‌چین (بریده) کنار جاده یعنی پارک ممنوع (توقف مجاز است).",
+    "en": "I am allowed to stop the car here for 2-3 minutes.",
+    "een": "No. Solid/unbroken yellow kerb line means no stopping. Punctured/broken yellow kerb line means no parking (but stopping allowed)."
+   },
+   {
+    "da": "Jeg må sætte passagerer eller læsse varer af og på i ubegrænset tid.",
+    "fa": "اجازه دارم بدون محدودیت زمانی مسافر پیاده و سوار کنم یا بار بزنم و خالی کنم.",
+    "ok": 0,
+    "eda": "Nej. Her er standsning forbudt.",
+    "efa": "خیر. اینجا توقف ممنوع است.",
+    "en": "I am allowed to load and unload passengers or goods for an unlimited amount of time.",
+    "een": "No. Stopping is forbidden."
+   },
+   {
+    "da": "Standsning er forbudt her.",
+    "fa": "اینجا توقف ممنوع است.",
+    "ok": 1,
+    "eda": "Ja.",
+    "efa": "بله.",
+    "en": "Stopping is forbidden here.",
+    "een": "Yes."
+   }
+  ]
+ },
+ "_about": "prove.dk's original lesson 1 (Teoriprøve 1) as it was in site/data.js before our own questions replaced it (2026-10-04). The pictures stay in site/img/q<id>.jpg, and the server shows them with ?orig=1."
+}

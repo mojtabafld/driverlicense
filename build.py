@@ -2,7 +2,7 @@
 
 Adds Persian topic lessons and fills in the few missing Persian translations.
 """
-import json, os
+import glob, json, os
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 raw = json.load(open(os.path.join(ROOT, 'data/raw.json'), encoding='utf-8'))
@@ -351,6 +351,22 @@ for k, q in raw['questions'].items():
         'st': items,
     })
 
+# Our own questions in place of prove.dk's (data/original_lesson1.json, …): new text in all three languages, written
+# new from the topics of the originals. Each keeps its id, topic, number of statements and which of them are right, so
+# earlier answers and statistics stay valid (checked here). `rev` tells the AI lessons that the text is new; the new
+# pictures are made by the server (imagegen.js) from each one's `img` prompt.
+for _f in sorted(glob.glob(os.path.join(ROOT, 'data/original_*.json'))):
+    _own = json.load(open(_f, encoding='utf-8'))
+    _by_id = {q['id']: q for q in questions}
+    for _k, _v in _own.items():
+        if _k.startswith('_'):
+            continue
+        q = _by_id[int(_k)]
+        assert len(_v['st']) == len(q['st']), _k
+        q.update({'sda': _v['sda'], 'sen': _v['sen'], 'sfa': _v['sfa'], 'rev': 1})
+        for s, n in zip(q['st'], _v['st']):
+            s.update({k: n[k] for k in ('da', 'en', 'fa', 'eda', 'een', 'efa')})
+
 # Lesson thumbnail: the first question of the test whose picture is a real scene. Text-only questions share a
 # few generic pictures (e.g. the "?!&" card); those are skipped.
 import hashlib
@@ -377,7 +393,6 @@ topics = {c: {'fa': v[0], 'da': v[1], 'lesson': lesson_of(v[2])}
 sections = [{'n': n, 'fa': fa, 'da': da} for n, fa, da in SECTIONS]
 
 # Danish → Persian glossary for every word used in the questions (driving context), data/dict_fa_*.txt
-import glob
 glossary = {}
 for f in sorted(glob.glob(os.path.join(ROOT, 'data/dict_fa_*.txt'))):
     for line in open(f, encoding='utf-8'):
