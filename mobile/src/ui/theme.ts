@@ -27,6 +27,8 @@ const tealLight = {
   nav: '#2e8285', navFg: '#ffffff', navOff: '#dcefef', navNum: '#2e8285', // navNum: the position between them
   // A solid neutral (the exam tab's start button and size slider): not the pale grey of a disabled control.
   strong: '#2e8285', strongFg: '#ffffff',
+  // The main solid button (start exam, sign in): a faint diagonal sheen from `btn[0]` to `btn[1]`, `btnFg` on it.
+  btn: ['#2e8285', '#2e8285'] as readonly [string, string], btnFg: '#ffffff',
   // Page background: a very soft top-to-bottom gradient around bg, with a hint of the teal.
   bgGradient: ['#f5fafa', '#edf4f4', '#e1eded'] as readonly [string, string, string],
 };
@@ -40,6 +42,7 @@ const tealDark: typeof tealLight = {
   pick: '#2f8f92', pickSoft: '#163637',
   nav: '#2f8f92', navFg: '#ffffff', navOff: '#163637', navNum: '#7ccbcd',
   strong: '#2f8f92', strongFg: '#ffffff',
+  btn: ['#2f8f92', '#2f8f92'] as readonly [string, string], btnFg: '#ffffff',
   bgGradient: ['#152a2b', '#0f1c1d', '#0a1415'] as readonly [string, string, string],
 };
 // Uber Eats: near-white page, white cards, near-black text, no tints of colour in the surfaces; one green throughout,
@@ -55,6 +58,7 @@ const uberLight: typeof tealLight = {
   pick: '#141414', pickSoft: '#ececec',
   nav: '#e4e4e4', navFg: '#141414', navOff: '#f0f0f0', navNum: '#5e5e5e',
   strong: '#333333', strongFg: '#ffffff',
+  btn: ['#2c2c2c', '#1e1e1e'] as readonly [string, string], btnFg: '#ffffff', // near-black, the light theme's counterpart
   bgGradient: ['#f3f3f3', '#f3f3f3', '#f3f3f3'] as readonly [string, string, string],
 };
 const uberDark: typeof tealLight = {
@@ -67,6 +71,7 @@ const uberDark: typeof tealLight = {
   pick: '#f2f2f2', pickSoft: '#2a2a2a',
   nav: '#3a3a3a', navFg: '#ffffff', navOff: '#262626', navNum: '#a7a7a7',
   strong: '#e6e6e6', strongFg: '#141414',
+  btn: ['#cacaca', '#bebebe'] as readonly [string, string], btnFg: '#0c0c0c', // soft light grey with black text
   bgGradient: ['#0c0c0c', '#0c0c0c', '#0c0c0c'] as readonly [string, string, string],
 };
 const light = STYLE === 'uber' ? uberLight : tealLight;
