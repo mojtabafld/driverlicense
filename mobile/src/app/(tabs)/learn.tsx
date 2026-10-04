@@ -32,7 +32,10 @@ export default function Learn() {
   const seen = new Set(attempts.flatMap(a => a.items.map(it => it.id)));
   const unseen = pool.filter(id => !seen.has(id));
   const usable = fresh ? unseen : pool;
-  const count = Math.min(size, usable.length);
+  // Fewer than 25 questions to choose from (in the chosen categories, or left unseen with «no repeats»): the number
+  // cannot be chosen, and the practice takes all of them.
+  const few = usable.length < FULL;
+  const count = few ? usable.length : size;
   return (
     <Screen title="آموزش" subtitle="درس‌به‌درس یا بر اساس دسته‌بندی رسمی">
       <Segmented value={tab} onChange={setTab} options={[{ value: 'lessons', label: 'درس‌به‌درس' }, { value: 'sections', label: 'دسته‌بندی' }]} />
@@ -82,7 +85,12 @@ export default function Learn() {
           {chosen.length ? (
             <Card style={{ gap: 14 }}>
               <T style={{ fontWeight: '700', fontSize: 16 }}>چند سؤال؟</T>
-              <SizeSlider value={size} values={SIZES} onChange={setSize} />
+              <SizeSlider value={size} values={SIZES} onChange={setSize} disabled={few} />
+              {few ? (
+                <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>
+                  {usable.length ? `فقط ${faNum(usable.length)} سؤال ${fresh ? 'غیرتکراری ' : ''}هست؛ آموزش با همه‌ی آن‌ها انجام می‌شود.` : 'سؤالی باقی نمانده است.'}
+                </T>
+              ) : null}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={{ flex: 1 }}>
                   <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
