@@ -206,6 +206,20 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
   return <Text {...p} style={[{ color: c.text, fontSize: 16, lineHeight: 24, writingDirection: 'ltr', textAlign: 'left' }, style, font, side]} />;
 }
 
+// The translation switch under a question's picture, the same in the exam and in the review: a round button with the
+// translate icon, grey while off and filled while the Persian translation shows.
+export function TranslateButton({ on, onPress }: { on: boolean; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
+      accessibilityLabel={on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
+        backgroundColor: on ? c.strong : c.nav })}>
+      <Icon name="translate" size={19} color={on ? c.strongFg : c.navFg} />
+    </Pressable>
+  );
+}
+
 // The site's .card.
 // A tappable card hands its own size (flex, width, alignSelf) to the touch area around it and fills that, so cards
 // side by side in a row keep the sizes they ask for.
