@@ -12,7 +12,7 @@ import { ProgressChart } from '@/ui/progress-chart';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
 
-// A count card: the icon tile with the label beside it, then the number and one short line of detail (or, with
+// A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
 // `progress` (every lesson done) turns the icon, the number and the bar green.
 function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number }) {
@@ -20,13 +20,12 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
   const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
   if (progress != null && progress >= 1) tone = 'ok';
   const bar = useCountUp(progress != null ? Math.min(1, Math.max(0, progress)) : 0); // the bar fills when the app opens
-  const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link, soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
+  const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link;
   return (
     <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: narrow ? 5 : 6 }}>
-        <View style={{ width: narrow ? 24 : 28, height: narrow ? 24 : 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
-          <Icon name={icon} size={narrow ? 14 : 16} color={fg} weight="semibold" />
-        </View>
+        {/* A bare line icon in the card's colour, no tile behind it. */}
+        <Icon name={icon} size={narrow ? 18 : 20} color={fg} weight="semibold" />
         <T style={{ flexShrink: 1, color: c.text, fontSize: narrow ? 12 : 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
