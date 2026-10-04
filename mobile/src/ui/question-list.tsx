@@ -29,6 +29,19 @@ export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست 
   );
 }
 
+// The legend's entries: [label, fill, edge, bookmark] for the tile kinds in `items`, and the current question.
+function legend(items: QItem[], c: ReturnType<typeof useColors>): [string, string, string, boolean][] {
+  const has = (t: QItem['tone']) => items.some(q => q.tone === t);
+  return [
+    ...(has('answered') ? [['پاسخ داده‌شده', c.strong, c.strong, false] as [string, string, string, boolean]] : []),
+    ...(has('empty') ? [['بی‌پاسخ', c.nav, c.nav, false] as [string, string, string, boolean]] : []),
+    ...(has('ok') ? [['درست', c.okSoft, c.ok, false] as [string, string, string, boolean]] : []),
+    ...(has('bad') ? [['نادرست', c.badSoft, c.bad, false] as [string, string, string, boolean]] : []),
+    ...(items.some(q => q.marked) || has('answered') || has('empty') ? [['علامت‌خورده', c.surface, c.warn, true] as [string, string, string, boolean]] : []),
+    ['سؤال فعلی', c.surface, c.accent, false],
+  ];
+}
+
 export function QuestionSheet({ open, items, current, onPick, onClose }: { open: boolean; items: QItem[]; current: number; onPick: (k: number) => void; onClose: () => void }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
   // Whole columns of 50-point tiles that fit the sheet; the grid is that wide and centred, so its last row starts at
@@ -61,6 +74,17 @@ export function QuestionSheet({ open, items, current, onPick, onClose }: { open:
               );
             })}
           </ScrollView>
+          {/* What the colours mean, for the kinds of tiles on show. */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 14, rowGap: 6 }}>
+            {legend(items, c).map(([l, bg, bd, mark]) => (
+              <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={{ width: 14, height: 14, borderRadius: 4, backgroundColor: bg, borderWidth: 1.5, borderColor: bd, alignItems: 'center', justifyContent: 'center' }}>
+                  {mark ? <Icon name="bookmark" size={8} filled color={bd} /> : null}
+                </View>
+                <T style={{ fontSize: 12, color: c.muted }}>{l}</T>
+              </View>
+            ))}
+          </View>
         </Pressable>
       </Pressable>
     </Modal>

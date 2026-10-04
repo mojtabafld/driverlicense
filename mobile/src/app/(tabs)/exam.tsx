@@ -104,7 +104,7 @@ export default function Exam() {
         <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />
       </Card>
       <MistakesCard />
-      <ActivityList attempts={attempts} limit={3} />
+      <ActivityList attempts={attempts} limit={3} title="آخرین آزمون‌ها" />
     </Screen>
   );
 }
