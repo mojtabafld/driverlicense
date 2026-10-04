@@ -241,11 +241,11 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </Pressable>
         </View>
         <View style={{ gap: 8 }}>
-          <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
+          <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600', textAlign: 'justify' } : { fontSize: 16, lineHeight: 24, fontWeight: '600', textAlign: 'justify' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
           {fa && q.sfa ? (
             // The Persian translation on a soft teal tint, no side line.
             <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accentSoft }}>
-              <T style={{ fontSize: 14.5, lineHeight: 25 }}>{q.sfa}</T>
+              <T style={{ fontSize: 14.5, lineHeight: 25, textAlign: 'justify' }}>{q.sfa}</T>
             </View>
           ) : null}
         </View>
@@ -283,8 +283,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                       {checked ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
                     </View>
                     <View style={{ flex: 1, gap: 4 }}>
-                      <L style={{ fontSize: 14.5, lineHeight: 22 }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>
-                      {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{s.fa}</T> : null}
+                      <L style={{ fontSize: 14.5, lineHeight: 22, textAlign: 'justify' }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>
+                      {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22, textAlign: 'justify' }}>{s.fa}</T> : null}
                     </View>
                   </View>
                   {view === 'right' ? (
