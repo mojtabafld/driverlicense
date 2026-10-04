@@ -63,6 +63,16 @@ function Root() {
     let m = document.querySelector('meta[name="theme-color"]');
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
     m.setAttribute('content', top);
+    // Under the status bar (as tall as the iPhone reports it; nothing in a browser tab) the page's own glass top bars
+    // run on up, so the clock and battery sit on the same glass. iOS draws them white, so in the light theme a soft
+    // shade fades in behind them only, from the top edge down; in the dark theme nothing is added.
+    let g = document.getElementById('status-glass');
+    if (!g) {
+      g = document.createElement('div'); g.id = 'status-glass';
+      g.style.cssText = 'position:fixed;top:0;left:0;right:0;height:calc(env(safe-area-inset-top) * 1.12);z-index:2147483000;pointer-events:none';
+      document.body.appendChild(g);
+    }
+    g.style.background = cover || dark ? 'transparent' : 'linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.16) 65%, rgba(0,0,0,0))';
   }, [dark, c.bgGradient, cover]);
   if (blocked) return <Offline onRetry={check} />;
   if (!ready || !fonts || onboarded === null || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;

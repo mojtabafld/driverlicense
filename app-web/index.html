@@ -8,7 +8,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- black-translucent: added to the Home Screen, the page runs up under the iPhone's status bar (clock, battery),
+         so the app's glass top bars reach the top edge (iOS draws those icons white; src/app/_layout.tsx shades them in
+         the light theme). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TeoriPrøve" />
     <!-- Home-screen icon (iOS «Add to Home Screen») and the web app manifest (Android / installs). -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -27,6 +30,16 @@
         height: 100%;
         flex: 1;
       }
+      /* iOS 26 (WebKit) in a Home Screen app under the translucent status bar: 100%, 100dvh and innerHeight all come out
+         short by the status bar's height, which left an empty band at the bottom and lifted the bottom bars; only
+         100lvh is the whole screen. Home Screen app only, so the browser tab keeps 100%. */
+      @media (display-mode: standalone) {
+        html,
+        body,
+        #root {
+          height: 100lvh;
+        }
+      }
     </style>
   <link rel="icon" href="/favicon.ico"/></head>
 
@@ -35,6 +48,6 @@
       You need to enable JavaScript to run this app.
     </noscript>
     <div id="root"></div>
-  <script src="/_expo/static/js/web/entry-d053ecc37dd39509851354319534f71e.js" defer></script>
+  <script src="/_expo/static/js/web/entry-80cc1ecdd2d99815da0a6c4397340071.js" defer></script>
 </body>
 </html>

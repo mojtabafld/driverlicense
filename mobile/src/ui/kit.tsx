@@ -179,12 +179,13 @@ export function T({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
   return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font]} />;
 }
 // Danish / English text (left to right).
-// In Inter, its weight (and italic) picked by family as for T; on the web Vazirmatn follows for the Persian digits.
+// In the Latin font (src/ui/fonts.ts), its weight (and italic) picked by family as for T; on the web Vazirmatn follows
+// for the Persian digits.
 export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
   const c = useColors();
   const flat = StyleSheet.flatten(style) ?? {};
-  const fam = daFamily(flat.fontWeight, flat.fontStyle === 'italic');
-  const font = { fontFamily: Platform.OS === 'web' ? `${fam}, Vazirmatn-400, sans-serif` : fam, fontWeight: 'normal' as const, fontStyle: 'normal' as const };
+  const { family, slant } = daFamily(flat.fontWeight, flat.fontStyle === 'italic');
+  const font = { fontFamily: Platform.OS === 'web' ? `${family}, Vazirmatn-400, sans-serif` : family, fontWeight: 'normal' as const, fontStyle: slant ? 'italic' as const : 'normal' as const };
   return <Text {...p} style={[{ color: c.text, fontSize: 16, lineHeight: 24, writingDirection: 'ltr', textAlign: 'left' }, style, font]} />;
 }
 
