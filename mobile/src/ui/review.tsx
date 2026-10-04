@@ -22,7 +22,7 @@ const UI = {
 export const uiText = (lang: 'da' | 'en') => UI[lang];
 
 // Like the site, digits are Persian everywhere in the review, Danish text included (faNum).
-// The AI text as on the site: «# » headings, «- » bullets, **bold**; «تیک زد» is worded «انتخاب کرد».
+// The AI text (in the neutral grey look: a white card, headings in the text colour): «# » headings, «- » bullets, **bold**; «تیک زد» is worded «انتخاب کرد».
 const pickWords = (t: string) => t.replace(/تیک(?:\s|‌)*نزد/g, 'انتخاب نکرد').replace(/تیک(?:\s|‌)*زد/g, 'انتخاب کرد')
   .replace(/تیک(?:\s|‌)*نخورد/g, 'انتخاب نشد').replace(/تیک(?:\s|‌)*خورد/g, 'انتخاب شد');
 function Rich({ text, onQuestion }: { text: string; onQuestion?: (n: number) => void }) {
@@ -42,7 +42,7 @@ function Rich({ text, onQuestion }: { text: string; onQuestion?: (n: number) => 
   });
   const out: React.ReactNode[] = [];
   pickWords(text).split('\n').map(l => l.trim()).filter(Boolean).forEach((line, i) => {
-    if (line.startsWith('#')) out.push(<T key={i} style={{ marginTop: 10, marginBottom: 2, fontSize: 14, fontWeight: '700', color: c.link }}>{inline(line.replace(/^#+\s*/, ''), `h${i}`)}</T>);
+    if (line.startsWith('#')) out.push(<T key={i} style={{ marginTop: 10, marginBottom: 2, fontSize: 14.5, fontWeight: '800', color: c.text }}>{inline(line.replace(/^#+\s*/, ''), `h${i}`)}</T>);
     else if (/^[-•*]\s+/.test(line)) out.push(
       <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 1 }}>
         <T style={{ fontSize: 14, lineHeight: 25 }}>•</T>
@@ -67,7 +67,7 @@ function AiLoading({ text }: { text: string }) {
   return (
     <View style={{ gap: 12, paddingVertical: 4 }} accessibilityRole="progressbar">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <Animated.View style={{ opacity: pulse, width: 34, height: 34, borderRadius: 8, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" size={18} color="#fff" /></Animated.View>
+        <Animated.View style={{ opacity: pulse, width: 34, height: 34, borderRadius: 9, backgroundColor: c.strong, alignItems: 'center', justifyContent: 'center' }}><Icon name="sparkles" size={18} color={c.strongFg} /></Animated.View>
         <T style={{ flex: 1, fontSize: 14, fontWeight: '600' }}>{text}…</T>
       </View>
       <Animated.View style={{ opacity: pulse, gap: 9, ...physical({ paddingRight: 44 }) }}>
@@ -126,7 +126,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
     <View style={{ marginTop: 14 }}>
       <AiButton title="تحلیل پاسخ شما" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
-        <View style={{ marginTop: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 10, backgroundColor: c.accentSoft }}>
+        <View style={{ marginTop: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
             : text ? <Rich text={text} /> : null}
@@ -158,7 +158,7 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
     <View style={{ marginTop: 22 }}>
       <AiButton title="جمع‌بندی آموزشی اشتباهات" sub="خلاصه‌ی آموزشی همه‌ی اشتباهات این آزمون، با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
-        <View style={{ marginTop: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 10, backgroundColor: c.accentSoft }}>
+        <View style={{ marginTop: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface }}>
           {state === 'loading' ? <AiLoading text="در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
             : text ? <Rich text={text} onQuestion={onQuestion} /> : null}
