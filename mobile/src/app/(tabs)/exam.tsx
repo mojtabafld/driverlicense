@@ -95,7 +95,7 @@ export default function Exam() {
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
         </View>
         {/* How to choose the number of questions, then what the chosen number means */}
-        <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را با لغزنده‌ی زیر انتخاب کنید.</T>
+        <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را با کشیدن نوار زیر انتخاب کنید.</T>
         <SizeSlider value={size} values={SIZES} onChange={setSize} grey />
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
           <Icon name={size === FULL ? 'checkCircle' : 'clock'} size={17} color={c.muted} />
