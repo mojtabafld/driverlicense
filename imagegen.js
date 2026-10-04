@@ -243,12 +243,18 @@ async function draft(qid) {
 // place of the original; a question is tried again (up to 3 times) only when its picture failed. Changing SEED makes
 // new pictures for all of them.
 const SEED = 'own-v1';
+// A question whose `imgRev` is raised in its JSON gets new pictures (seed own-v1.r<rev>) with the teaching style below.
+const seedOf = rev => (rev > 1 ? `${SEED}.r${rev}` : SEED);
+// From imgRev 2 on: the pictures are for teaching, so every traffic detail has to be right and easy to read; that
+// matters more than looking like a photograph.
+const TEACH_STYLE = 'PRIORITY: this picture teaches a driving-theory question. Correct, clearly readable traffic details matter MORE than photographic realism: every sign, road marking, light, vehicle and person listed above must be exactly as described, at the described position, distance and side, with the described line types (solid or broken), arrow directions, bend directions and lit lights. Do not add any other signs, markings, vehicles or people. Right-hand traffic, as in Denmark.\nStyle: a clean, clear 3D driving-simulator render made for teaching: crisp, high-contrast road markings and signs, simple uncluttered surroundings, even daylight, sharp focus everywhere, 4:3. No logos, no watermarks, no brand names, no readable text except numbers on traffic signs, no recognisable real people.';
+const styleOf = rev => (rev > 1 ? TEACH_STYLE : SEED_STYLE);
 const SEED_STYLE = 'ACCURACY: this picture is used in a driving-theory test, so every sign, road marking, light, vehicle and person listed above must be clearly visible and exactly as described: their position, colour, shape, which lights are lit, solid or broken lines. Do not add any other signs, markings, vehicles or people. Right-hand traffic, as in Denmark.\nStyle: realistic, modern, high-quality 3D render, sharp details, natural light, 4:3. No logos, no watermarks, no brand names, no readable text except numbers on traffic signs, no recognisable real people.';
 // After a picture is made, Claude checks it against its description; one with a wrong or missing important detail
 // (a sign, a marking, which light is lit, where a vehicle or person is) is made again, up to 3 pictures in all. The
 // last one stays shown either way, with Claude's findings in job.check for the admin panel.
 const CHECK = `You check a picture made for a Danish driving-theory test against the scene description it was made from.
-Only details the test depends on matter: traffic signs (shape, colour, symbol, number), road markings (solid or broken, colour, arrows, zebra crossings), traffic lights and indicators (which lights are lit), the vehicles, cyclists, pedestrians and animals named (type, colour, position, what they do), the road layout (lanes, bends, hills, junction), weather, light and road surface when described, and the viewpoint (e.g. dashboard and mirrors visible). Anything listed under MUST NOT APPEAR must be absent.
+Only details the test depends on matter: traffic signs (shape, colour, symbol, number, which side of the road), road markings (solid or broken, colour, arrows and their direction, stop lines, zebra crossings), traffic lights and indicators (which lights are lit), the vehicles, cyclists, pedestrians and animals named (type, colour, position, lane, side, roughly the distance described, what they do), what the mirrors show when described, the road layout (number of lanes, which way a bend turns, hills, junctions and roughly how far ahead they are), weather, light and road surface when described, and the viewpoint (e.g. dashboard and mirrors visible). Anything listed under MUST NOT APPEAR must be absent. Be strict: a bend turning the wrong way, a solid line drawn broken, a missing or wrong sign, or a vehicle in the wrong lane is an important mismatch.
 Ignore small artistic differences, the look of buildings and trees, and blurred text.
 Answer with JSON only: {"ok": true|false, "problems": ["short description of each important mismatch"]}.`;
 async function check(qid, job) {
@@ -260,7 +266,7 @@ async function check(qid, job) {
     model: CLAUDE, max_tokens: 800, system: CHECK,
     messages: [{ role: 'user', content: [
       { type: 'image', source: { type: 'base64', media_type: b.mime, data: b.data.toString('base64') } },
-      { type: 'text', text: `Scene description:\n${job.prompt.split('\nACCURACY:')[0]}` },
+      { type: 'text', text: `Scene description:\n${job.prompt.split(/\n(?:ACCURACY|PRIORITY):/)[0]}` },
     ] }],
   });
   const text = r.content.filter(x => x.type === 'text').map(x => x.text).join('');
@@ -272,23 +278,27 @@ async function checkSeeded(qid, job) {
     const res = await check(qid, job);
     if (!res) return;
     job.check = { ok: !!res.ok, problems: (res.problems || []).slice(0, 8).map(String), at: Date.now() }; await save();
-    const tries = images()[qid].jobs.filter(j => j.seed === job.seed).length;
-    if (!res.ok && tries < 3) {
+    const item = images()[qid], mine = item.jobs.filter(j => j.seed === job.seed);
+    if (!res.ok && mine.length < 3) {
       console.log('own picture', qid, 'made again:', job.check.problems.join('; '));
       await start(+qid, job.model, 'auto', job.prompt, job.seed);
+    } else if (!res.ok) {
+      // No try was right: show the one with the fewest problems.
+      const best = mine.filter(j => j.blob && j.check).sort((a, b) => a.check.problems.length - b.check.problems.length || b.at - a.at)[0];
+      if (best && item.active !== best.id) { item.active = best.id; item.v = `${best.id}.${Date.now().toString(36)}`; await save(); }
     }
   } catch (e) { console.error('own picture check', qid, e.message); }
 }
 const ownPrompts = () => {
   const out = {};
   for (const f of fs.readdirSync(path.join(__dirname, 'data')).filter(f => /^original_.*\.json$/.test(f)).sort()) {
-    for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(__dirname, 'data', f), 'utf8')))) if (!k.startsWith('_') && v.img) out[k] = v.img;
+    for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(__dirname, 'data', f), 'utf8')))) if (!k.startsWith('_') && v.img) out[k] = { text: v.img, rev: +v.imgRev || 1 };
   }
   return out;
 };
 // For one of our own questions, its scene description with the style line: a new picture made from the admin panel
 // then follows the new text, not the original picture (which may show other things, e.g. another car's colour).
-const ownPrompt = qid => { const t = ownPrompts()[qid]; return t ? `${t}\n${SEED_STYLE}` : ''; };
+const ownPrompt = qid => { const t = ownPrompts()[qid]; return t ? `${t.text}\n${styleOf(t.rev)}` : ''; };
 // A 2048-px picture at half size (about a quarter of the bytes); a file it cannot read is kept as it is.
 function shrink(buf, mime) {
   try { const im = png.decode(buf); return im && im.w > 1200 ? { buf: png.encode(png.half(im)), mime: 'image/png' } : { buf, mime }; }
@@ -296,11 +306,12 @@ function shrink(buf, mime) {
 }
 async function seedOwn() {
   if (!available()) return;
-  for (const [qid, text] of Object.entries(ownPrompts())) {
+  for (const [qid, { text, rev }] of Object.entries(ownPrompts())) {
     if (!Q.has(+qid)) continue;
-    const jobs = ((images()[qid] || {}).jobs || []).filter(j => j.seed === SEED);
+    const seed = seedOf(rev);
+    const jobs = ((images()[qid] || {}).jobs || []).filter(j => j.seed === seed);
     if (jobs.some(j => j.blob || !j.done) || jobs.length >= 3) continue;   // made, being made, or given up
-    await start(+qid, 'sunburst', 'auto', `${text}\n${SEED_STYLE}`, SEED).catch(e => console.error('own picture', qid, e.message));
+    await start(+qid, 'sunburst', 'auto', `${text}\n${styleOf(rev)}`, seed).catch(e => console.error('own picture', qid, e.message));
     await new Promise(r => setTimeout(r, 1500));   // a little apart, not 25 requests at once
   }
 }
