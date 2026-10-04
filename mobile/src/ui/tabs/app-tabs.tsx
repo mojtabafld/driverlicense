@@ -5,14 +5,14 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { Platform } from 'react-native';
 
-import { useColors, useIsDark } from '../theme';
+import { UBER, useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
 
 export default function AppTabs() {
   const c = useColors(), dark = useIsDark();
   const android = Platform.OS === 'android'
-    ? { tintColor: c.link, backgroundColor: c.surface, iconColor: c.muted, labelStyle: { color: c.muted }, indicatorColor: c.accentSoft }
-    : { tintColor: dark ? c.link : c.accent }; // iOS: the system's bar, with the chosen tab in the app's teal
+    ? { tintColor: UBER ? c.text : c.link, backgroundColor: c.surface, iconColor: c.muted, labelStyle: { color: c.muted }, indicatorColor: UBER ? c.surface2 : c.accentSoft }
+    : { tintColor: UBER ? c.text : dark ? c.link : c.accent }; // iOS: the system's bar, the chosen tab in the app's teal (text colour in the Uber look)
   return (
     <NativeTabs {...android}>
       {TABS.map(t => (
