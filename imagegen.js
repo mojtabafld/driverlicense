@@ -237,22 +237,23 @@ const INTRO_PROMPTS = [
   // 5: the app's «no internet» page (bundled into the app, since it shows when the server cannot be reached).
   'No internet connection: a large rounded white Wi-Fi symbol with a small coral circle and a white diagonal slash over it, floating above a small smartphone lying at an isometric angle whose screen shows a soft grey cloud with a little white x; a thin cable with an unplugged plug lies loose beside the phone.',
 ];
-// A new picture at half size (2048 → 1024 px, about a quarter of the bytes) and its background colour, which the app
-// paints behind it so the picture's edge does not show. A file it cannot read is kept as it is.
+// A new picture at half size (2048 → 1024 px, about a quarter of the bytes), with its plain background cut out
+// (see-through, png.cutout), so it lies on the app's own page colour with no edge and no shade of difference; `bg` is
+// the colour that was cut. A file it cannot read is kept as it is.
 function shrinkIntro(buf, mime) {
   try {
     const im = png.decode(buf); if (!im) return { buf, mime };
-    const small = im.w > 1200 ? png.half(im) : im;
-    return { buf: png.encode(small), mime: 'image/png', bg: png.edgeColour(small) };
+    const small = im.w > 1200 ? png.half(im) : im, bg = png.edgeColour(small);
+    return { buf: png.encode(png.cutout(small, bg)), mime: 'image/png', bg, cut: true };
   } catch (e) { console.error('intro picture shrink', e.message); return { buf, mime }; }
 }
-// Pictures made before shrinking existed: shrunk once.
+// Pictures made before shrinking or cutting existed: done once (a cut picture already has no background to cut).
 async function fixIntro() {
   for (const job of Object.values(((store.meta.intro || {}).items) || {})) {
-    if (!job.blob || job.bg) continue;
+    if (!job.blob || job.cut) continue;
     const b = await store.getBlob(job.blob); if (!b) continue;
     const s = shrinkIntro(b.data, b.mime);
-    if (s.bg) { await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob); Object.assign(job, { bg: s.bg, size: s.buf.length, v: Date.now().toString(36) }); await saveIntro(); }
+    if (s.cut) { await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob); Object.assign(job, { bg: s.bg, cut: true, size: s.buf.length, v: Date.now().toString(36) }); await saveIntro(); }
     await new Promise(r => setImmediate(r));
   }
 }
@@ -292,7 +293,7 @@ async function pollIntro() {
         const s = shrinkIntro(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
         job.blob = `intro-${INTRO_SET}-${n}`;
         await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob);
-        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: s.buf.length, ...(s.bg ? { bg: s.bg } : {}) });
+        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: s.buf.length, ...(s.bg ? { bg: s.bg } : {}), ...(s.cut ? { cut: true } : {}) });
       } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
       else pending = true;
       if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });

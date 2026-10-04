@@ -10,8 +10,8 @@ import { Icon } from './icon';
 import { T, tap } from './kit';
 
 const PICTURE = require('../../assets/images/offline.png');
-// The picture's own background colour at the top, so its edge does not show.
-export const OFFLINE_TOP = '#143a1d';
+// The intro's dark forest green (the picture is see-through around its objects).
+export const OFFLINE_TOP = '#14421c';
 
 // On the web the picture is a file from the server: loaded (invisibly) while online, so the offline page has it.
 export function OfflinePreload() {
