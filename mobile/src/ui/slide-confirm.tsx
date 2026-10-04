@@ -1,7 +1,7 @@
 // Slide to confirm, like unlocking a phone: a round-cornered track with a handle at its right end (the start, in the
 // app's right-to-left reading), dragged to the left end to confirm. Let go before the end and it glides back; at the
-// end the track fills, the label turns into a check and `onConfirm` runs a moment later. Flat and minimal, in the
-// main button's colours (ActionButton). Screen readers get one «activate» action instead of dragging.
+// end the label turns into a check and `onConfirm` runs a moment later. It is the main button itself (ActionButton:
+// same height, corners, colour and label), with the handle a slightly darker square inside it. Screen readers get one «activate» action instead of dragging.
 // PanResponder and Animated only, so it needs no extra native module.
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
@@ -11,7 +11,7 @@ import { Icon, type IconName } from './icon';
 import { T } from './kit';
 import { useColors } from './theme';
 
-const H = 60, PAD = 4, KNOB = H - PAD * 2, DONE_AT = 0.85;
+const H = 54, PAD = 4, KNOB = H - PAD * 2, DONE_AT = 0.85; // the main button's height (ActionButton)
 
 const buzz = (kind: 'start' | 'done') => {
   if (Platform.OS === 'web') return;
@@ -57,22 +57,24 @@ export function SlideToConfirm({ label, doneLabel, icon = 'chevronLeft', onConfi
   return (
     <View onLayout={layout} accessible accessibilityRole="button" accessibilityLabel={label}
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={confirm}
-      style={{ height: H, borderRadius: 14, backgroundColor: c.nav, overflow: 'hidden', justifyContent: 'center', direction: 'ltr' } as any}>
+      style={{ height: H, borderRadius: 12, backgroundColor: c.btn, overflow: 'hidden', justifyContent: 'center', direction: 'ltr' } as any}>
       {/* The trail behind the handle, from the right edge to the handle. */}
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: fill, borderRadius: 14, backgroundColor: c.btn, opacity: done ? 1 : 0.22 }} />
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: fill, borderRadius: 12, backgroundColor: c.btnFg, opacity: done ? 0 : 0.07 }} />
       <Animated.View pointerEvents="none" style={{ position: 'absolute', left: KNOB, right: KNOB, opacity: done ? 0 : fade, alignItems: 'center' }}>
-        <T style={{ fontSize: 15.5, lineHeight: 24, fontWeight: '600', color: c.navFg, textAlign: 'center' }} numberOfLines={1}>{label}</T>
+        <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: c.btnFg, textAlign: 'center' }} numberOfLines={1}>{label}</T>
       </Animated.View>
       {done ? (
         <View pointerEvents="none" style={{ position: 'absolute', left: KNOB + PAD * 2, right: 0, alignItems: 'center' }}>
-          <T style={{ fontSize: 15.5, lineHeight: 24, fontWeight: '600', color: c.btnFg, textAlign: 'center' }}>{doneLabel}</T>
+          <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: c.btnFg, textAlign: 'center' }}>{doneLabel}</T>
         </View>
       ) : null}
       {/* The handle, at the right end to begin with. */}
       <Animated.View {...s.pan.panHandlers}
-        style={{ position: 'absolute', top: PAD, right: PAD, width: KNOB, height: KNOB, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: c.btn, transform: [{ translateX: Animated.multiply(s.x, -1) }], ...(Platform.OS === 'web' ? { cursor: 'grab', touchAction: 'none' } as any : {}) }}>
-        <Icon name={done ? 'check' : icon} size={22} color={c.btnFg} weight="bold" />
+        style={{ position: 'absolute', top: PAD, right: PAD, width: KNOB, height: KNOB, borderRadius: 9, alignItems: 'center', justifyContent: 'center',
+          transform: [{ translateX: Animated.multiply(s.x, -1) }], ...(Platform.OS === 'web' ? { cursor: 'grab', touchAction: 'none' } as any : {}) }}>
+        {/* A slightly darker square: the button's text colour, faint, over the button's colour. */}
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 9, backgroundColor: c.btnFg, opacity: done ? 0 : 0.13 }} />
+        <Icon name={done ? 'check' : icon} size={20} color={c.btnFg} weight="bold" />
       </Animated.View>
     </View>
   );
