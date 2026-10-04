@@ -164,9 +164,9 @@ export default function Run() {
             borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
             <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
             <View style={{ flexDirection: 'row', gap: 8 }}>
-              {([[answered, 'پاسخ داده‌شده', dark ? c.link : c.accent], [empty, 'بی‌پاسخ', empty ? c.bad : c.muted], [flags.length, 'علامت‌خورده', c.warn]] as const).map(([n, l, col]) => (
+              {([[answered, 'پاسخ داده‌شده'], [empty, 'بی‌پاسخ'], [flags.length, 'علامت‌خورده']] as const).map(([n, l]) => (
                 <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: c.surface2 }}>
-                  <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '600', color: col, textAlign: 'center' }}>{faNum(n)}</T>
+                  <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '600', color: c.text, textAlign: 'center' }}>{faNum(n)}</T>
                   <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{l}</T>
                 </View>
               ))}
@@ -190,7 +190,7 @@ export default function Run() {
               })}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
-              {([['پاسخ داده‌شده', c.accent, c.accent], ['بی‌پاسخ', c.surface, c.line], ['علامت‌خورده', c.surface, c.warn]] as const).map(([l, bg, bd]) => (
+              {([['پاسخ داده‌شده', c.strong, c.strong], ['بی‌پاسخ', c.surface, c.line], ['علامت‌خورده', c.surface, c.warn]] as const).map(([l, bg, bd]) => (
                 <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <View style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: bg, borderWidth: 1.5, borderColor: bd }} />
                   <T style={{ fontSize: 12, color: c.muted }}>{l}</T>
