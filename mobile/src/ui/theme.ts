@@ -3,6 +3,7 @@ import { createContext, useContext } from 'react';
 import { Platform } from 'react-native';
 
 import type { ThemeMode, ThemeName } from '@/lib/prefs';
+import { DA_REGULAR, LATIN } from './fonts';
 
 // Two looks; STYLE picks the one in use. «teal» is the app's look until October 2026 (main at ed597e7), kept whole so
 // it can come back by setting STYLE = 'teal'. «uber» follows Uber Eats: black and white surfaces, flat cards with soft
@@ -84,7 +85,7 @@ export const radius = STYLE === 'uber'
   ? { btn: 12, sm: 10, md: 14, lg: 14, field: 12, xl: 20, pill: 999 }
   : { btn: 4, sm: 8, md: 10, lg: 10, field: 12, xl: 20, pill: 999 };
 export const space = (n: number) => n * 4;
-// Danish / English text: Inter, bundled with the app (src/ui/fonts.ts); L picks the weight, this is its regular.
-export const DA_FONT = Platform.OS === 'web' ? 'Inter-400, Vazirmatn-400, Helvetica, sans-serif' : 'Inter-400';
+// Danish / English text: the Latin font bundled with the app (src/ui/fonts.ts); L picks the weight, this is its regular.
+export const DA_FONT = Platform.OS === 'web' ? `${DA_REGULAR}, Vazirmatn-400, Helvetica, sans-serif` : DA_REGULAR;
 // Numbers that stand out (the exam's timer and position, in a regular weight): Poppins on the web, the system's font on phones.
-export const NUM_FONT = Platform.OS === 'web' ? 'Poppins, Inter-500, system-ui, sans-serif' : undefined;
+export const NUM_FONT = Platform.OS === 'web' ? (LATIN === 'uber' ? 'UberMove-500, Vazirmatn-400, sans-serif' : 'Poppins, Inter-500, system-ui, sans-serif') : undefined;
