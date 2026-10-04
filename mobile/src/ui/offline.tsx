@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from './icon';
 import { T, tap } from './kit';
-import { INTRO_BG } from './onboarding';
 
 const PICTURE = require('../../assets/images/offline.png');
 // The picture's own background colour at the top, so its edge does not show.
@@ -26,7 +25,7 @@ export function Offline({ onRetry }: { onRetry: () => Promise<void> }) {
   const retry = async () => { tap(); setBusy(true); try { await onRetry(); } finally { setBusy(false); } };
   return (
     <View style={{ flex: 1 }} accessibilityRole="alert">
-      <LinearGradient colors={[OFFLINE_TOP, OFFLINE_TOP, INTRO_BG[2]]} locations={[0, 0.72, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={[OFFLINE_TOP, OFFLINE_TOP, '#2a6a6d']} locations={[0, 0.72, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 24, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -28 }}>
           <Image source={PICTURE} style={{ width: side, height: side }} contentFit="contain" />
