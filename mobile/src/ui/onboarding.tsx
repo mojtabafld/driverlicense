@@ -73,21 +73,38 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
   // The server's picture for this slide, laid on its own background colour so its edge does not show.
   const pic = intro[i + 1], top = pic && introBg[i + 1] ? introBg[i + 1] : BG[0];
   useEffect(() => { onTop?.(top); }, [top, onTop]);
+  // Every slide's picture is fetched up front, so a new slide never shows the previous picture on its own colour while
+  // the next one loads (that was a brief mismatch of the picture's background).
+  useEffect(() => {
+    const urls = SLIDES.map((_, k) => intro[k + 1] ? `${API_URL}/intro/${k + 1}.png?v=${intro[k + 1]}` : null).filter((u): u is string => !!u);
+    if (urls.length) Image.prefetch(urls).catch(() => {});
+  }, [intro]);
+  // The pictures' own background shades differ a little from slide to slide; the page glides from one to the next
+  // instead of jumping (the top colour sits under a gradient that only darkens the bottom).
+  const [bgFrom, setBgFrom] = useState(top), [bgTo, setBgTo] = useState(top);
+  const [bgMix] = useState(() => new Animated.Value(1));
+  if (top !== bgTo) { setBgFrom(bgTo); setBgTo(top); } // a new slide's colour: glide to it from the current one
+  useEffect(() => {
+    bgMix.setValue(0);
+    Animated.timing(bgMix, { toValue: 1, duration: 300, easing: Easing.inOut(Easing.quad), useNativeDriver: false }).start();
+  }, [bgTo, bgMix]);
+  const bg = bgMix.interpolate({ inputRange: [0, 1], outputRange: [bgFrom, bgTo] });
   // The picture takes all the room above the text (the full width, under the side padding).
   const [box, setBox] = useState({ w: 0, h: 0 });
   const side = Math.max(0, Math.min(box.w, box.h));
   const artH = Math.min(height * 0.42, 340), shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
   return (
     <View style={{ flex: 1 }} {...swipe}>
-      <LinearGradient colors={[top, top, BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: bg }} />
+      <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -28 }}
             onLayout={e => { const { width: w, height: h } = e.nativeEvent.layout; setBox({ w, h }); }}>
             {/* The server's 3D picture for this slide when it has one, else the app's own drawing. */}
             {pic ? (
-              <Image source={{ uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` }} style={{ width: Math.min(side, 520), height: Math.min(side, 520) }}
-                contentFit="contain" transition={250} cachePolicy="memory-disk" />
+              <Image key={i} source={{ uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` }} style={{ width: Math.min(side, 520), height: Math.min(side, 520) }}
+                contentFit="contain" transition={0} cachePolicy="memory-disk" />
             ) : <View style={{ width: Math.min(width - 40, 380), height: artH }}><Art /></View>}
           </View>
           <View style={{ gap: 12, paddingBottom: 28, minHeight: 190 }}>
