@@ -1,7 +1,6 @@
 // Answer review, drawn like the site's review cards (.rcard): the picture with «سؤال n» and the bookmark, the category
 // badge and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
-import { Image } from 'expo-image';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { Animated, Easing, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
 
@@ -13,6 +12,7 @@ import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
 import { Enter, L, T, physical, tap } from './kit';
+import { ZoomableImage } from './zoom';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const UI = {
@@ -339,7 +339,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       {/* Head: picture, badges, question */}
       <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: flat ? 0 : 12, gap: flat ? 12 : 10 }}>
         <View>
-          <Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.md : 6, backgroundColor: c.surface2 }} contentFit="contain" />
+          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.md : 6, backgroundColor: c.surface2 }} />
           {index != null ? (
             <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
               <T style={{ color: '#fff', fontSize: 12, lineHeight: 20, fontWeight: '600' }}>سؤال {faNum(index + 1)}</T>
