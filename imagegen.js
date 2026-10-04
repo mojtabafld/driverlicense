@@ -90,7 +90,7 @@ async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '') {
   const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}), ...(seed ? { seed } : {}) };
   item.jobs.push(job); await save();
   try {
-    job.prompt = prompt || await describe(q);
+    job.prompt = prompt || ownPrompt(q.id) || await describe(q);
     job.state = 'queued'; await save();
     const d = await kie('POST', '/jobs/createTask', { model: MODELS[model], callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
     job.taskId = d.taskId; job.state = 'generating'; await save();
@@ -223,7 +223,7 @@ async function remove(qid, jobId) {
 async function draft(qid) {
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
-  return describe(q);
+  return ownPrompt(q.id) || describe(q);
 }
 
 // ---------- our own questions' pictures (data/original_*.json) ----------
@@ -276,6 +276,9 @@ const ownPrompts = () => {
   }
   return out;
 };
+// For one of our own questions, its scene description with the style line: a new picture made from the admin panel
+// then follows the new text, not the original picture (which may show other things, e.g. another car's colour).
+const ownPrompt = qid => { const t = ownPrompts()[qid]; return t ? `${t}\n${SEED_STYLE}` : ''; };
 // A 2048-px picture at half size (about a quarter of the bytes); a file it cannot read is kept as it is.
 function shrink(buf, mime) {
   try { const im = png.decode(buf); return im && im.w > 1200 ? { buf: png.encode(png.half(im)), mime: 'image/png' } : { buf, mime }; }
