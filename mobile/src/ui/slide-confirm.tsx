@@ -1,17 +1,19 @@
-// Slide to confirm, like unlocking a phone: a round-cornered track with a handle at its right end (the start, in the
-// app's right-to-left reading), dragged to the left end to confirm. Let go before the end and it glides back; at the
-// end the label turns into a check and `onConfirm` runs a moment later. It is the main button itself (ActionButton:
-// same height, corners, colour and label), with the handle a slightly darker square inside it. Screen readers get one «activate» action instead of dragging.
-// PanResponder and Animated only, so it needs no extra native module.
+// Slide to confirm, like a delivery app's «Complete pickup»: a grey track with its label, and at its right end (the
+// start, in the app's right-to-left reading) a square handle in the main button's colour with a dotted arrow, dragged
+// to the left end to confirm. While it moves the handle grows into a fill that covers the label, the part of the label
+// under it in the button's text colour. Let go before the end and it glides back; at the end the fill covers it all,
+// the label turns into a check and `onConfirm` runs a moment later. Screen readers get one «activate» action instead
+// of dragging. PanResponder and Animated only, so it needs no extra native module.
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Animated, Easing, PanResponder, Platform, View, type LayoutChangeEvent } from 'react-native';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import { Icon, type IconName } from './icon';
+import { Icon } from './icon';
 import { T } from './kit';
 import { useColors } from './theme';
 
-const H = 54, PAD = 4, KNOB = H - PAD * 2, DONE_AT = 0.85; // the main button's height (ActionButton)
+const H = 56, KNOB = H, R = 12, DONE_AT = 0.85; // the handle is a square as tall as the track
 
 const buzz = (kind: 'start' | 'done') => {
   if (Platform.OS === 'web') return;
@@ -22,7 +24,7 @@ const buzz = (kind: 'start' | 'done') => {
 function makeSlide(onDone: () => void, onFinishing: () => void) {
   const x = new Animated.Value(0);   // 0 … room, as a distance to the LEFT
   const st = { room: 1, done: false, from: 0 };
-  const native = Platform.OS !== 'web';
+  const native = false; // the fill's width follows the same value, and width cannot run on the native driver
   const finish = () => {
     st.done = true; buzz('done'); onFinishing();
     Animated.timing(x, { toValue: st.room, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: native }).start();
@@ -44,34 +46,48 @@ function makeSlide(onDone: () => void, onFinishing: () => void) {
   return { x, pan, finish, setRoom: (r: number) => { st.room = r; }, isDone: () => st.done };
 }
 
-export function SlideToConfirm({ label, doneLabel, icon = 'chevronLeft', onConfirm }: { label: string; doneLabel: string; icon?: IconName; onConfirm: () => void }) {
+// A dotted arrow pointing left (the way to drag): a dot, a short gap, then the arrow.
+function DragArrow({ color }: { color: string }) {
+  const line = { stroke: color, strokeWidth: 2.2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, fill: 'none' };
+  return (
+    <Svg width={26} height={24} viewBox="0 0 26 24">
+      <Path d="M4 12h13M9.5 6.5 4 12l5.5 5.5" {...line} />
+      <Circle cx={21.5} cy={12} r={1.4} fill={color} />
+    </Svg>
+  );
+}
+
+export function SlideToConfirm({ label, doneLabel, onConfirm }: { label: string; doneLabel: string; onConfirm: () => void }) {
   const c = useColors();
   const [done, setDone] = useState(false);
   const [s] = useState(() => makeSlide(onConfirm, () => setDone(true)));
-  const [room, setRoom] = useState(1);
-  const layout = (e: LayoutChangeEvent) => { const r = Math.max(1, e.nativeEvent.layout.width - KNOB - PAD * 2); s.setRoom(r); setRoom(r); };
+  const [w, setW] = useState(KNOB + 1);
+  const layout = (e: LayoutChangeEvent) => { const tw = e.nativeEvent.layout.width; s.setRoom(Math.max(1, tw - KNOB)); setW(tw); };
   const confirm = () => { if (!s.isDone()) s.finish(); };
-  // The label fades as the handle leaves.
-  const fade = s.x.interpolate({ inputRange: [0, room * 0.6], outputRange: [1, 0], extrapolate: 'clamp' });
+  const fill = Animated.add(s.x, KNOB);   // from the right edge to the handle's left side
+  const text = { fontSize: 16, lineHeight: 24, fontWeight: '600' as const, textAlign: 'center' as const };
   return (
     <View onLayout={layout} accessible accessibilityRole="button" accessibilityLabel={label}
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={confirm}
-      style={{ height: H, borderRadius: 12, backgroundColor: c.btn, overflow: 'hidden', justifyContent: 'center', direction: 'ltr' } as any}>
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: KNOB, right: KNOB, opacity: done ? 0 : fade, alignItems: 'center' }}>
-        <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: c.btnFg, textAlign: 'center' }} numberOfLines={1}>{label}</T>
-      </Animated.View>
-      {done ? (
-        <View pointerEvents="none" style={{ position: 'absolute', left: KNOB + PAD * 2, right: 0, alignItems: 'center' }}>
-          <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: c.btnFg, textAlign: 'center' }}>{doneLabel}</T>
-        </View>
-      ) : null}
-      {/* The handle, at the right end to begin with. */}
+      style={{ height: H, borderRadius: R, backgroundColor: c.nav, overflow: 'hidden', justifyContent: 'center', direction: 'ltr' } as any}>
+      {/* The label on the track, beside the handle. */}
+      <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: KNOB, alignItems: 'center' }}>
+        <T style={[text, { color: c.navFg }]} numberOfLines={1}>{label}</T>
+      </View>
+      {/* The handle and the fill it grows into, from the right end. The same label inside it, standing still with the
+          track, shows in the button's text colour where the fill covers it. */}
       <Animated.View {...s.pan.panHandlers}
-        style={{ position: 'absolute', top: PAD, right: PAD, width: KNOB, height: KNOB, borderRadius: 9, alignItems: 'center', justifyContent: 'center',
-          transform: [{ translateX: Animated.multiply(s.x, -1) }], ...(Platform.OS === 'web' ? { cursor: 'grab', touchAction: 'none' } as any : {}) }}>
-        {/* A slightly darker square: the button's text colour, faint, over the button's colour. */}
-        <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 9, backgroundColor: c.btnFg, opacity: done ? 0 : 0.13 }} />
-        <Icon name={done ? 'check' : icon} size={20} color={c.btnFg} weight="bold" />
+        style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: fill, borderRadius: R, backgroundColor: c.btn, overflow: 'hidden',
+          ...(Platform.OS === 'web' ? { cursor: 'grab', touchAction: 'none' } as any : {}) }}>
+        {/* Cut off just before the arrow, as the label runs into the moving handle. */}
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: done ? 0 : KNOB, overflow: 'hidden' }}>
+          <View style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: w, paddingRight: done ? 0 : KNOB, paddingLeft: done ? KNOB : 0, alignItems: 'center', justifyContent: 'center' }}>
+            <T style={[text, { color: c.btnFg }]} numberOfLines={1}>{done ? doneLabel : label}</T>
+          </View>
+        </View>
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: KNOB, alignItems: 'center', justifyContent: 'center' }}>
+          {done ? <Icon name="check" size={22} color={c.btnFg} weight="bold" /> : <DragArrow color={c.btnFg} />}
+        </View>
       </Animated.View>
     </View>
   );
