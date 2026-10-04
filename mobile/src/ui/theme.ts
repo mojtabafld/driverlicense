@@ -17,7 +17,7 @@ const tealLight = {
   bg: '#edf4f4', surface: '#ffffff', surface2: '#f1f7f7', line: '#d4e5e5',
   text: '#22383a', muted: '#5b7375', faint: '#88a0a1',
   accent: '#2e8285', accentText: '#FFFFFF', accentSoft: '#dcefef', link: '#2a7679',
-  ok: '#2c7a3f', okSoft: '#e4f2e7', bad: '#c62828', badSoft: '#fdeceb', warn: '#a86400', warnSoft: '#fff3df',
+  forest: '#228B22', ok: '#2c7a3f', okSoft: '#e4f2e7', bad: '#c62828', badSoft: '#fdeceb', warn: '#a86400', warnSoft: '#fff3df',
   note: '#e3eeee', submit: '#2c5525', checked: '#d4e9e9', cardBorder: 'rgba(0,0,0,0.08)', hairline: '#d4e5e5',
   // Older names still used by some screens; on the site's look they are plain surfaces.
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#d4e5e5',
@@ -34,7 +34,7 @@ const tealDark: typeof tealLight = {
   bg: '#0f1c1d', surface: '#172a2b', surface2: '#1f3536', line: '#2c4547',
   text: '#e3eeee', muted: '#9bb5b6', faint: '#6f8a8b',
   accent: '#2f8f92', accentText: '#FFFFFF', accentSoft: '#163637', link: '#7ccbcd',
-  ok: '#5cc47a', okSoft: '#15301e', bad: '#f07167', badSoft: '#3a1715', warn: '#f0b24a', warnSoft: '#33260d',
+  forest: '#3CA046', ok: '#5cc47a', okSoft: '#15301e', bad: '#f07167', badSoft: '#3a1715', warn: '#f0b24a', warnSoft: '#33260d',
   note: '#1d3233', submit: '#3d7a33', checked: '#244241', cardBorder: 'rgba(255,255,255,0.06)', hairline: '#2c4547',
   glass: '#172a2b', glassStrong: '#172a2b', glassBorder: '#2c4547',
   pick: '#2f8f92', pickSoft: '#163637',
@@ -48,7 +48,7 @@ const uberLight: typeof tealLight = {
   bg: '#f3f3f3', surface: '#ffffff', surface2: '#f3f3f3', line: '#e2e2e2',
   text: '#141414', muted: '#5e5e5e', faint: '#9b9b9b',
   accent: '#0d8a73', accentText: '#FFFFFF', accentSoft: '#e3f3ef', link: '#0b7563',
-  ok: '#23803f', okSoft: '#e6f4ea', bad: '#d43b30', badSoft: '#fdecea', warn: '#b26a00', warnSoft: '#fff4e0',
+  forest: '#228B22', ok: '#23803f', okSoft: '#e6f4ea', bad: '#d43b30', badSoft: '#fdecea', warn: '#b26a00', warnSoft: '#fff4e0',
   note: '#e8e8e8', submit: '#333333', checked: '#ddf0eb', cardBorder: 'rgba(0,0,0,0.06)', hairline: '#e2e2e2',
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e2e2e2',
   pick: '#141414', pickSoft: '#ececec',
@@ -60,7 +60,7 @@ const uberDark: typeof tealLight = {
   bg: '#0c0c0c', surface: '#181818', surface2: '#222222', line: '#2e2e2e',
   text: '#f6f6f6', muted: '#a7a7a7', faint: '#6f6f6f',
   accent: '#1fa489', accentText: '#FFFFFF', accentSoft: '#11292a', link: '#4fd1b4',
-  ok: '#5fc179', okSoft: '#16281b', bad: '#f06a5f', badSoft: '#361715', warn: '#f0b24a', warnSoft: '#33260d',
+  forest: '#3CA046', ok: '#5fc179', okSoft: '#16281b', bad: '#f06a5f', badSoft: '#361715', warn: '#f0b24a', warnSoft: '#33260d',
   note: '#242424', submit: '#e6e6e6', checked: '#163230', cardBorder: 'rgba(255,255,255,0.05)', hairline: '#2e2e2e',
   glass: '#181818', glassStrong: '#181818', glassBorder: '#2e2e2e',
   pick: '#f2f2f2', pickSoft: '#2a2a2a',
@@ -71,6 +71,7 @@ const uberDark: typeof tealLight = {
 const light = STYLE === 'uber' ? uberLight : tealLight;
 const dark = STYLE === 'uber' ? uberDark : tealDark;
 export const UBER = STYLE === 'uber';
+// forest: the progress chart's green (forest green, a little lighter in the dark theme).
 // note: the AI text's panel, a soft neutral fill set apart from the white statement cards.
 export type Colors = typeof light;
 // The theme in use (light or dark) and the mode it comes from (follow the system by default, or fixed); set by
