@@ -41,12 +41,12 @@ const OPTIONS = [
   { v: 'en' as const, Flag: FlagGB, name: 'English', fa: 'انگلیسی', note: 'اگر با انگلیسی راحت‌ترید' },
 ];
 
-export function LangPick() {
+export function LangPick({ onDone }: { onDone?: () => void }) {
   const ins = useSafeAreaInsets();
   const { settings, setSettings } = useApp();
   const [lang, setLang] = useState<'da' | 'en'>(settings.lang === 'en' ? 'en' : 'da');
   const [busy, setBusy] = useState(false);
-  const save = () => { tap(); setBusy(true); setSettings({ lang, langChosen: true }).catch(() => setBusy(false)); };
+  const save = () => { tap(); setBusy(true); setSettings({ lang, langChosen: true }).then(() => onDone?.(), () => setBusy(false)); };
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient colors={BG} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />

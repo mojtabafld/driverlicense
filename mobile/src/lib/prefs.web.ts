@@ -23,3 +23,7 @@ export const initialOnboarded = (): boolean | null => {
 };
 export const loadOnboarded = async () => initialOnboarded() ?? false;
 export const saveOnboarded = async () => { try { localStorage.setItem(ONBOARDED, SEEN); } catch {} };
+
+// The web version asks for the questions' language once per account (settings.langChosen), not per browser.
+export const loadLangAsked = async () => true;
+export const saveLangAsked = async () => {};
