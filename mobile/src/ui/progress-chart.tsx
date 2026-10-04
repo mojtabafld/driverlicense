@@ -1,9 +1,10 @@
-// Progress chart, «نمودار پیشرفت»: a bar for the percent correct of each of the last 30 attempts, green when the
-// attempt passed or reached 80%, else a neutral grey, with the 80% pass line; the bars grow in when it opens. Tap the chart to pick the nearest attempt; its details and a review button show below. With `fill` it takes
-// the height of the space it is given (the home screen fits the screen without scrolling).
+// Progress chart, «نمودار پیشرفت»: a bar for the percent correct of each attempt, ten across the width and older ones
+// by dragging the bars (it opens at the newest); green when the attempt passed or reached 80%, else a neutral grey, with
+// the 80% pass line; the bars grow in when it opens. Tap a bar to pick that attempt; its details and a review button
+// show below. With `fill` it takes the height of the space it is given (the home screen fits the screen without scrolling).
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import Svg, { Line, Path, Text as SvgText } from 'react-native-svg';
 
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
@@ -22,7 +23,7 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
   const H = fill ? Math.max(fillH, 60) : 210;
   const [sel, setSel] = useState<number | null>(null);
-  const box = useRef<View>(null);
+  const scroller = useRef<ScrollView>(null);
   const grow = useCountUp(1, 900);
   if (attempts.length < 2) {
     // Nothing to draw yet: say so, with a button to the exam tab.
@@ -33,52 +34,60 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
       </View>
     );
   }
-  const data = attempts.slice(-30), offset = attempts.length - data.length;
-  // One slot per attempt; the bar sits in its middle, at most 22 points wide.
-  const slot = (W - L - R) / data.length, bw = Math.max(3, Math.min(22, slot * 0.62));
-  const x = (i: number) => L + slot * (i + 0.5);
+  const data = attempts.slice(-200), offset = attempts.length - data.length;
+  // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
+  const VIEW = 10, VW = Math.max(0, W - L - R);
+  const slot = VW / Math.min(VIEW, data.length), CW = slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
+  const x = (i: number) => slot * (i + 0.5);
   const y = (v: number) => TOP + (1 - v / 100) * (H - TOP - B);
-  const pts = data.map((a, i) => [x(i), y(pctOf(a) * 100 * grow)] as const);
+  const tops = data.map(a => y(pctOf(a) * 100 * grow));
   const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
   // A bar with rounded top corners from the baseline up to its value.
   const bar = (cx: number, top: number) => {
-    const l = cx - bw / 2, r = cx + bw / 2, b = y(0), rr = Math.min(4, bw / 2, Math.max(0, b - top));
+    const l = cx - bw / 2, r = cx + bw / 2, b = y(0), rr = Math.min(5, bw / 2, Math.max(0, b - top));
     return `M${l} ${b} L${l} ${top + rr} Q${l} ${top} ${l + rr} ${top} L${r - rr} ${top} Q${r} ${top} ${r} ${top + rr} L${r} ${b} Z`;
   };
-  const every = Math.ceil(data.length / 8);
+  const every = slot >= 26 ? 1 : 2;
   const ticks = H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
   const font = 'Vazirmatn-400';
-  const pick = (px: number) => {
-    let best = 0, bd = Infinity;
-    pts.forEach((p, i) => { const d = Math.abs(p[0] - px); if (d < bd) { bd = d; best = i; } });
-    tap(); setSel(best);
-  };
   const a = sel != null ? data[sel] : null;
   return (
     <View style={fill ? { flex: 1, gap: 8 } : { gap: 10 }}>
-      {/* The tap's x is taken from the page position minus the chart's own, which is reliable on every platform. */}
-      <Pressable ref={box} onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setFillH(e.nativeEvent.layout.height); }}
-        onPress={e => { const px = e.nativeEvent.pageX; box.current?.measureInWindow(left => pick(px - left)); }} style={[fill ? { flex: 1, minHeight: 60 } : { height: H }, { direction: 'ltr' } as any]}
+      <View onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setFillH(e.nativeEvent.layout.height); }}
+        style={[fill ? { flex: 1, minHeight: 60 } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
         accessibilityRole="image" accessibilityLabel="نمودار نمره‌ی آزمون‌ها">
         {W > 0 ? (
-          <Svg width={W} height={H} pointerEvents="none">
-            {ticks.map(v => (
-              <Line key={v} x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />
-            ))}
-            {ticks.map(v => (
-              <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{`${faNum(v)}٪`}</SvgText>
-            ))}
-            {/* The picked bar stays full strength, the others fade a little. */}
-            {pts.map((p, i) => (
-              <Path key={i} d={bar(p[0], p[1])} fill={good(data[i]) ? c.ok : c.faint} fillOpacity={(good(data[i]) ? 1 : 0.55) * (sel == null || sel === i ? 1 : 0.45)} />
-            ))}
-            <Line x1={L} x2={W - R} y1={y(80)} y2={y(80)} stroke={c.ok} strokeWidth={1.5} strokeDasharray="5 5" />
-            {data.map((_, i) => (i % every === 0 || i === data.length - 1
-              ? <SvgText key={`x${i}`} x={x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
-              : null))}
-          </Svg>
+          <>
+            {/* The percent scale stays put on the left. */}
+            <Svg width={L} height={H} pointerEvents="none">
+              {ticks.map(v => (
+                <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{`${faNum(v)}٪`}</SvgText>
+              ))}
+            </Svg>
+            <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
+              onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })}>
+              <View style={{ width: CW, height: H }}>
+                <Svg width={CW} height={H} pointerEvents="none">
+                  {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
+                  {/* The picked bar stays full strength, the others fade a little. */}
+                  {data.map((d, i) => (
+                    <Path key={i} d={bar(x(i), tops[i])} fill={good(d) ? c.ok : c.faint} fillOpacity={(good(d) ? 1 : 0.55) * (sel == null || sel === i ? 1 : 0.45)} />
+                  ))}
+                  <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.ok} strokeWidth={1.5} strokeDasharray="5 5" />
+                  {data.map((_, i) => ((data.length - 1 - i) % every === 0
+                    ? <SvgText key={`x${i}`} x={x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
+                    : null))}
+                </Svg>
+                {/* A tap on an attempt's column picks it (a drag scrolls instead). */}
+                {data.map((_, i) => (
+                  <Pressable key={`p${i}`} onPress={() => { tap(); setSel(i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
+                    style={{ position: 'absolute', left: i * slot, top: 0, width: slot, height: H }} />
+                ))}
+              </View>
+            </ScrollView>
+          </>
         ) : null}
-      </Pressable>
+      </View>
       {fill ? (
         // Fitted to the screen: one fixed line, so the chart keeps its height when an attempt is picked.
         <View style={{ height: 40, justifyContent: 'center' }}>
