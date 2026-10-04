@@ -128,6 +128,9 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'xmark':
       body = <Path d="M6.5 6.5l11 11M17.5 6.5l-11 11" {...line} />;
       break;
+    case 'list':
+      body = <Path d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" {...line} />;
+      break;
     case 'filter':
       body = <Path d="M4.5 7h15M7.5 12h9M10.5 17h3" {...line} />;
       break;

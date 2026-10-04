@@ -266,7 +266,7 @@ export function useCountUp(target: number, ms = 900) {
 // `format`: the label from the ring's value as it fills (so the number counts up with it); else the fixed `label`.
 export function Ring({ value, size = 76, stroke = 8, color, label, format }: { value: number; size?: number; stroke?: number; color?: string; label?: string; format?: (v: number) => string }) {
   const c = useColors(), r = (size - stroke) / 2, C = 2 * Math.PI * r;
-  const shown = useCountUp(Math.max(0, Math.min(1, value)));
+  const shown = useCountUp(Math.max(0, Math.min(1, value)), 1800);
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>

@@ -16,6 +16,7 @@ import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Button, Card, L, T, physical, tap, usePageMotion } from '@/ui/kit';
 import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
+import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
 import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
 
@@ -90,6 +91,7 @@ export default function Result() {
   const n = a?.items.length ?? 0, right = a ? scoreOf(a) : 0, wrongN = n - right;
   const [filter, setFilter] = useState<Filter>(() => (fresh || wrongN ? 'wrong' : 'all'));
   const [k, setK] = useState(0);
+  const [listOpen, setListOpen] = useState(false); // the sheet of the questions, from the glass bar
   // The result line of a past review: shown for 3 s, then it shrinks and fades into the «جزئیات آزمون» button, which
   // fades in as it arrives (and brings the line back). `fade` goes 1 → 0; `to` is the way from the line to the button.
   const [line, setLine] = useState<'shown' | 'hidden'>('shown');
@@ -152,7 +154,7 @@ export default function Result() {
     const nav = (
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!k} onPress={() => step(k - 1)} />}
-        middle={end ? null : <BarCount n={k + 1} of={total} />}
+        middle={end ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><BarCount n={k + 1} of={total} /><ListButton onPress={() => setListOpen(true)} /></View>}
         end={end ? (isLesson ? <FootBtn label={ui.lessons} icon="learn" round onPress={() => goTo('/learn')} />
             : <FootBtn label={ui.exams} icon="exam" round onPress={() => goTo('/exam')} />)
           : k === total - 1 ? <FootBtn label={ui.summary} icon={showSummary ? 'sparkles' : 'clipboard'} round onPress={() => step(k + 1)} />
@@ -214,6 +216,9 @@ export default function Result() {
             ) : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
         </ScrollView>
         {total ? nav : null}
+        {/* The questions on show (this tab's), green when right and red when wrong; a tap opens that one. */}
+        <QuestionSheet open={listOpen} current={k} onClose={() => setListOpen(false)} onPick={j => { setListOpen(false); step(j); }}
+          items={list.map(r => ({ n: r.i + 1, tone: r.it.ok ? 'ok' : 'bad', marked: !!r.it.m }))} />
       </Backdrop>
     );
   }
