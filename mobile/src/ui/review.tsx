@@ -2,8 +2,8 @@
 // badge and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
-import { Animated, Easing, Pressable, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import { api } from '@/lib/api';
 import type { Item, Question } from '@/lib/bank';
@@ -101,6 +101,20 @@ function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; 
   );
 }
 
+// When an AI button opens, the page glides down so the button sits near the top and its text shows below it (and
+// again once the text has come). Web: the browser's smooth scrollIntoView on the block's node; native keeps its place.
+function useReveal(open: boolean, ready: boolean) {
+  const ref = useRef<View>(null);
+  useEffect(() => {
+    if (!open || Platform.OS !== 'web') return;
+    const el = ref.current as unknown as HTMLElement | null;
+    if (!el?.scrollIntoView) return;
+    const t = setTimeout(() => { el.style.scrollMarginTop = '16px'; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+    return () => clearTimeout(t);
+  }, [open, ready]);
+  return ref;
+}
+
 // Lessons already fetched while the app is open (the server also keeps them, so a new visit costs no AI call).
 const lessonCache = new Map<string, string>();
 
@@ -122,8 +136,9 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
     if (!shown && !text) load();
     setShown(!shown || (!text && state === 'error'));
   };
+  const ref = useReveal(shown, !!text);
   return (
-    <View style={{ marginTop: 14 }}>
+    <View ref={ref} style={{ marginTop: 14 }}>
       <AiButton title="تحلیل پاسخ شما" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
         <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
@@ -154,8 +169,9 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
     }
     setShown(!shown || (!text && state === 'error'));
   };
+  const ref = useReveal(shown, !!text);
   return (
-    <View style={{ marginTop: 22 }}>
+    <View ref={ref} style={{ marginTop: 22 }}>
       <AiButton title="جمع‌بندی آموزشی اشتباهات" sub="خلاصه‌ی آموزشی همه‌ی اشتباهات این آزمون، با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
         <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>

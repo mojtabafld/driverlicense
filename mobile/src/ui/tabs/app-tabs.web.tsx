@@ -1,5 +1,5 @@
 // Web version of the tab bar, drawn like iOS 26/27's in light and dark: a floating glass capsule above the bottom edge;
-// the chosen tab sits on a grey capsule in the app's teal with a filled icon, the others in the label colour.
+// the chosen tab sits on a grey capsule with a filled icon (in the app's teal, or the text colour in the Uber look).
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { forwardRef } from 'react';
 import { Pressable, View } from 'react-native';
@@ -8,14 +8,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T } from '../kit';
 import { Icon, type IconName } from '../icon';
 import { LiquidGlass, useIOSBar } from '../liquid';
-import { useColors, useIsDark } from '../theme';
+import { UBER, useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
 
 const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
 
 const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, ...props }, ref) => {
   const ios = useIOSBar(), dark = useIsDark(), c = useColors();
-  const color = isFocused ? (dark ? c.link : c.accent) : ios.label;
+  // Uber look: the chosen tab in the text colour (black / white) on its grey capsule, the others in the muted grey.
+  const color = UBER ? (isFocused ? c.text : c.muted) : isFocused ? (dark ? c.link : c.accent) : ios.label;
   return (
     <Pressable ref={ref} {...props} style={{ flex: 1 }}>
       <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 1, height: 54, borderRadius: 27, transitionProperty: 'background-color', transitionDuration: '200ms' } as any,
