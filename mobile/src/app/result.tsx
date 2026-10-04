@@ -18,7 +18,7 @@ import { Backdrop, Button, Card, L, T, physical, tap, usePageMotion } from '@/ui
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
-import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
+import { AiSummary, ReviewCard, RevealScrollProvider, hasSummary, uiText, useRevealScroll } from '@/ui/review';
 import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
 
 type Filter = 'wrong' | 'saved' | 'all';
@@ -106,6 +106,7 @@ export default function Result() {
   const [panelH, setPanelH] = useState(0);
   const panelRef = useRef<View>(null), btnRef = useRef<View>(null);
   const scroll = useRef<ScrollView>(null);
+  const reveal = useRevealScroll(scroll, headH); // AI panels scroll this page into view
   useEffect(() => {
     if (fresh) return;
     let raf = 0;
@@ -164,7 +165,8 @@ export default function Result() {
     );
     return (
       <Backdrop anim={motion.style}>
-        <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+        <RevealScrollProvider value={reveal.value}>
+        <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .res-line */}
           {line === 'shown' ? (
             <Animated.View onLayout={e => { if (!flying) setPanelH(e.nativeEvent.layout.height); }}
@@ -195,6 +197,7 @@ export default function Result() {
                 : <Empty text={wrongN ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'} />
             ) : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
         </ScrollView>
+        </RevealScrollProvider>
         {/* .rev-top, fixed on Liquid Glass over the page: back button, tabs, «جزئیات آزمون» on one row */}
         <GlassTop onHeight={setHeadH}>
           <View style={{ paddingTop: ins.top + 10, paddingBottom: 10, paddingHorizontal: 16, width: '100%', maxWidth: 760, alignSelf: 'center' }}>

@@ -21,7 +21,7 @@ import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { ListButton } from '@/ui/question-list';
 import { Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
-import { ReviewCard, uiText } from '@/ui/review';
+import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
 const TOPICS_SHOWN = 5; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
@@ -66,6 +66,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const [secs, setSecs] = useState<number[]>([]);
   const [sheet, setSheet] = useState<number[] | null>(null);
   const scroll = useRef<ScrollView>(null);
+  const reveal = useRevealScroll(scroll, headH); // AI panels scroll this page into view
   if (!bank) return null;
   const lang = settings.lang === 'en' ? 'en' : 'da';
 
@@ -95,7 +96,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const step = (to: number) => { setK(to); scroll.current?.scrollTo({ y: 0, animated: true }); };
   return (
     <Backdrop anim={motion.style}>
-      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+      <RevealScrollProvider value={reveal.value}>
+      <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {!view && open ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
         {!sorted.length ? <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>هنوز اشتباهی ثبت نشده است.</T></Card> : (
           <>
@@ -189,6 +191,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
           </>
         )}
       </ScrollView>
+      </RevealScrollProvider>
       {/* The title row, fixed on Liquid Glass over the page. */}
       <GlassTop onHeight={setHeadH}>
         <View style={{ paddingTop: ins.top + 10, paddingBottom: 10, paddingHorizontal: 16, width: '100%', maxWidth: 760, alignSelf: 'center' }}>

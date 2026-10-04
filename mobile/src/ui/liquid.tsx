@@ -16,21 +16,20 @@ export function useIOSBar() {
     : { tint: '#007AFF', label: '#000000', secondary: 'rgba(60,60,67,0.6)', pill: 'rgba(118,118,128,0.14)', green: '#34C759', red: '#FF3B30', fill: 'rgba(118,118,128,0.12)' };
 }
 
-// `bar`: the material of iOS 26/27's floating tab bar where real glass is missing (web, Android, older iOS): very
-// translucent and strongly blurred, a hairline edge, a soft drop shadow.
+// `bar`: the floating bars (the exam's bar, the web's tab bar) where real glass is missing (web, Android, older iOS):
+// a solid surface in the page's card colour, no see-through or blur, with a hairline edge and a soft drop shadow.
 type Props = { style?: StyleProp<ViewStyle>; children?: React.ReactNode; r?: number; tint?: string; interactive?: boolean; bar?: boolean };
 export function LiquidGlass({ style, children, r = 22, tint, interactive, bar }: Props) {
-  const dark = useIsDark();
+  const dark = useIsDark(), c = useColors();
   if (bar && !nativeGlass) {
     const web = Platform.OS === 'web' ? ({
-      backdropFilter: 'blur(30px) saturate(190%)', WebkitBackdropFilter: 'blur(30px) saturate(190%)',
       boxShadow: dark
         ? '0 8px 30px rgba(0,0,0,.55), inset 0 0.5px 0 rgba(255,255,255,.14)'
         : '0 8px 30px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.06), inset 0 0.5px 0 rgba(255,255,255,.9)',
     } as any) : null;
     return (
       <View style={[
-        { borderRadius: r, borderWidth: 0.5, backgroundColor: dark ? 'rgba(30,30,32,0.74)' : 'rgba(250,250,252,0.74)', borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.07)' },
+        { borderRadius: r, borderWidth: 0.5, backgroundColor: c.surface, borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.07)' },
         web ?? { shadowColor: '#000', shadowOpacity: dark ? 0.5 : 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 3 },
         style,
       ]}>
