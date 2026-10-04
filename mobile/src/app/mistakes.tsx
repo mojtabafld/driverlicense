@@ -17,7 +17,8 @@ import { topicPracticeIds } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
+import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { ListButton } from '@/ui/question-list';
 import { Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
 import { ReviewCard, uiText } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
@@ -197,16 +198,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       {cur ? (
         <GlassBar
           start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!at} onPress={() => step(at - 1)} />}
-          middle={
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <BarCount n={at + 1} of={items.length} />
-              <Pressable onPress={() => { tap(); setSheet(secs.length ? secs : cats.map(x => x.n)); }} hitSlop={6} accessibilityRole="button" accessibilityLabel="انتخاب دسته‌بندی‌ها"
-                style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
-                  backgroundColor: secs.length ? c.accent : c.accentSoft })}>
-                <Icon name="filter" size={20} color={secs.length ? '#fff' : c.link} />
-              </Pressable>
-            </View>
-          }
+          middle={<ListButton n={at + 1} of={items.length} icon="filter" label="انتخاب دسته‌بندی‌ها" dot={!!secs.length} onPress={() => setSheet(secs.length ? secs : cats.map(x => x.n))} />}
           end={<FootBtn label={ui.next} icon="arrowRight" round disabled={at === items.length - 1} onPress={() => step(at + 1)} />} />
       ) : null}
       {/* The categories of these mistakes, to choose from */}
