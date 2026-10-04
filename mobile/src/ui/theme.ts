@@ -42,14 +42,15 @@ const tealDark: typeof tealLight = {
   strong: '#2f8f92', strongFg: '#ffffff',
   bgGradient: ['#152a2b', '#0f1c1d', '#0a1415'] as readonly [string, string, string],
 };
-// Uber Eats: near-white page, white cards, near-black text, no tints of colour in the surfaces; the accent is a jade
-// green (white text on it), lighter in dark mode on near-black with charcoal cards. `pick`: a chosen answer.
+// Uber Eats: near-white page, white cards, near-black text, no tints of colour in the surfaces; one green throughout,
+// forest green (the accent, «right» and the chart alike; white text on it), lighter in dark mode on near-black with
+// charcoal cards. `pick`: a chosen answer.
 const uberLight: typeof tealLight = {
   bg: '#f3f3f3', surface: '#ffffff', surface2: '#f3f3f3', line: '#e2e2e2',
   text: '#141414', muted: '#5e5e5e', faint: '#9b9b9b',
-  accent: '#0d8a73', accentText: '#FFFFFF', accentSoft: '#e3f3ef', link: '#0b7563',
-  forest: '#228B22', ok: '#23803f', okSoft: '#e6f4ea', bad: '#d43b30', badSoft: '#fdecea', warn: '#b26a00', warnSoft: '#fff4e0',
-  note: '#e8e8e8', submit: '#333333', checked: '#ddf0eb', cardBorder: 'rgba(0,0,0,0.06)', hairline: '#e2e2e2',
+  accent: '#228B22', accentText: '#FFFFFF', accentSoft: '#e6f2e6', link: '#1d7a1d',
+  forest: '#228B22', ok: '#228B22', okSoft: '#e6f2e6', bad: '#d43b30', badSoft: '#fdecea', warn: '#b26a00', warnSoft: '#fff4e0',
+  note: '#e8e8e8', submit: '#333333', checked: '#dcefdc', cardBorder: 'rgba(0,0,0,0.06)', hairline: '#e2e2e2',
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e2e2e2',
   pick: '#141414', pickSoft: '#ececec',
   nav: '#e4e4e4', navFg: '#141414', navOff: '#f0f0f0', navNum: '#5e5e5e',
@@ -59,9 +60,9 @@ const uberLight: typeof tealLight = {
 const uberDark: typeof tealLight = {
   bg: '#0c0c0c', surface: '#181818', surface2: '#222222', line: '#2e2e2e',
   text: '#f6f6f6', muted: '#a7a7a7', faint: '#6f6f6f',
-  accent: '#1fa489', accentText: '#FFFFFF', accentSoft: '#11292a', link: '#4fd1b4',
-  forest: '#3CA046', ok: '#5fc179', okSoft: '#16281b', bad: '#f06a5f', badSoft: '#361715', warn: '#f0b24a', warnSoft: '#33260d',
-  note: '#242424', submit: '#e6e6e6', checked: '#163230', cardBorder: 'rgba(255,255,255,0.05)', hairline: '#2e2e2e',
+  accent: '#3CA046', accentText: '#FFFFFF', accentSoft: '#14261a', link: '#5cbf68',
+  forest: '#3CA046', ok: '#3CA046', okSoft: '#16281b', bad: '#f06a5f', badSoft: '#361715', warn: '#f0b24a', warnSoft: '#33260d',
+  note: '#242424', submit: '#e6e6e6', checked: '#17301e', cardBorder: 'rgba(255,255,255,0.05)', hairline: '#2e2e2e',
   glass: '#181818', glassStrong: '#181818', glassBorder: '#2e2e2e',
   pick: '#f2f2f2', pickSoft: '#2a2a2a',
   nav: '#3a3a3a', navFg: '#ffffff', navOff: '#262626', navNum: '#a7a7a7',
