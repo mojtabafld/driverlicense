@@ -229,28 +229,40 @@ type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass'
 // Every button carries a flat icon before its label, in the label's colour.
 export function Button({ label, onPress, kind = 'primary', disabled, style, icon, big }: BtnProps) {
   const c = useColors();
-  // grey: the main solid button, like a «Confirm order» button: a soft light grey with black text in dark mode, near-black
-  // with white text in light mode, a faint diagonal sheen, taller with gently rounded corners; never looks disabled.
-  // In the Uber look every main button is that one and outlined ones take the text colour, so no button is green.
+  // grey: the main flat button (ActionButton). In the Uber look every main button is that one and outlined ones take
+  // the text colour, so no button is green.
   const grey = kind === 'grey' || (UBER && kind === 'primary'), primary = kind === 'primary' && !grey;
-  const fg = primary ? c.accentText : grey ? c.btnFg : kind === 'danger' ? c.bad : UBER ? c.text : c.link;
-  const content = (
-    <>
-      {icon ? <Icon name={icon} size={grey ? 19 : 18} color={fg} weight="semibold" /> : null}
-      <T style={{ color: fg, fontWeight: '600', fontSize: grey ? 16.5 : 15, lineHeight: grey ? 24 : 22, textAlign: 'center' }}>{label}</T>
-    </>
-  );
-  const box: ViewStyle = { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 20 };
+  if (grey) return <ActionButton label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} />;
+  const fg = primary ? c.accentText : kind === 'danger' ? c.bad : UBER ? c.text : c.link;
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
-      {grey ? (
-        <LinearGradient colors={c.btn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[box, { minHeight: big ? 56 : 54, paddingVertical: 14, borderRadius: 12 }]}>{content}</LinearGradient>
-      ) : (
-        <View style={[box, {
-          paddingVertical: big ? 14 : 11, minHeight: big ? 50 : undefined, borderRadius: big ? radius.field : radius.btn,
-          backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
-        }]}>{content}</View>
-      )}
+      <View style={{
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+        paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: big ? radius.field : radius.btn,
+        backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
+      }}>
+        {icon ? <Icon name={icon} size={18} color={fg} weight="semibold" /> : null}<T style={{ color: fg, fontWeight: '600', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
+      </View>
+    </Pressable>
+  );
+}
+
+// The flat, minimal action button, like a «Confirm order» button: a solid fill, no border, sheen or shadow, 54 tall
+// with corners rounded 12. main: `btn` (soft light grey with black text in dark mode, near-black with white text in
+// light mode); soft: the grey of the secondary buttons (cancel, back to the exam); danger: red with white text.
+// Start exam, sign in, hand in and the dialogs' buttons all use it.
+export function ActionButton({ label, onPress, icon, tone = 'main', disabled, style, iconWeight = 'semibold' }: {
+  label: string; onPress: () => void; icon?: IconName; tone?: 'main' | 'soft' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; iconWeight?: 'semibold' | 'bold';
+}) {
+  const c = useColors();
+  const bg = tone === 'main' ? c.btn : tone === 'danger' ? c.bad : c.nav, fg = tone === 'main' ? c.btnFg : tone === 'danger' ? '#ffffff' : c.navFg;
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+      style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }, style]}>
+      <View style={{ height: 54, borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: bg }}>
+        {icon ? <Icon name={icon} size={18} color={fg} weight={iconWeight} /> : null}
+        <T numberOfLines={1} style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: fg, textAlign: 'center' }}>{label}</T>
+      </View>
     </Pressable>
   );
 }

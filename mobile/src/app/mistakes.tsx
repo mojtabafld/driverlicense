@@ -20,7 +20,7 @@ import { Icon } from '@/ui/icon';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { ListButton } from '@/ui/question-list';
-import { Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
+import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
@@ -238,21 +238,9 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
               })}
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable onPress={() => { tap(); setSheet(cats.map(x => x.n)); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
-                  <Icon name="checkCircle" size={17} color={c.navFg} contrast={c.nav} />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: c.navFg, textAlign: 'center' }}>همه</T>
-                </View>
-              </Pressable>
-              <Pressable disabled={!pickedN} onPress={() => { tap(); setSecs(pickedN >= cats.length ? [] : picked); setK(0); setSheet(null); }} accessibilityRole="button"
-                accessibilityState={{ disabled: !pickedN }} style={({ pressed }) => ({ flex: 2, opacity: !pickedN ? 0.45 : pressed ? 0.85 : 1 })}>
-                <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.strong }}>
-                  <Icon name="eye" size={17} color={c.strongFg} weight="semibold" />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: c.strongFg, textAlign: 'center' }}>
-                    {pickedN ? `نمایش ${faNum(cats.filter(x => picked.includes(x.n)).reduce((t, x) => t + x.count, 0))} سؤال` : 'یک دسته را انتخاب کنید'}
-                  </T>
-                </View>
-              </Pressable>
+              <ActionButton label="همه" icon="checkCircle" tone="soft" onPress={() => setSheet(cats.map(x => x.n))} style={{ flex: 1 }} />
+              <ActionButton disabled={!pickedN} icon="eye" style={{ flex: 2 }} onPress={() => { setSecs(pickedN >= cats.length ? [] : picked); setK(0); setSheet(null); }}
+                label={pickedN ? `نمایش ${faNum(cats.filter(x => picked.includes(x.n)).reduce((t, x) => t + x.count, 0))} سؤال` : 'یک دسته را انتخاب کنید'} />
             </View>
           </Pressable>
         </Pressable>

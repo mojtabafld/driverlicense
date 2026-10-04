@@ -15,7 +15,7 @@ import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Enter, L, T, ThemeButton, physical, tap, usePageMotion } from '@/ui/kit';
+import { ActionButton, Backdrop, Enter, L, T, ThemeButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
@@ -214,18 +214,8 @@ export default function Run() {
               ))}
             </View>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable onPress={() => { tap(); setDialog(null); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
-                  <Icon name="arrowRight" size={17} color={c.navFg} weight="semibold" />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: c.navFg, textAlign: 'center' }}>بازگشت به آزمون</T>
-                </View>
-              </Pressable>
-              <Pressable onPress={() => { tap(); setDialog(null); finish(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}>
-                <View style={{ height: 50, borderRadius: 25, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.submit }}>
-                  <Icon name="check" size={18} color={c.strongFg} weight="bold" />
-                  <T style={{ fontSize: 15, fontWeight: '700', color: c.strongFg, textAlign: 'center' }}>تحویل و پایان</T>
-                </View>
-              </Pressable>
+              <ActionButton label="بازگشت به آزمون" icon="arrowRight" tone="soft" onPress={() => setDialog(null)} style={{ flex: 1 }} />
+              <ActionButton label="تحویل و پایان" icon="check" iconWeight="bold" onPress={() => { setDialog(null); finish(); }} style={{ flex: 1 }} />
             </View>
           </View>
         </View>
