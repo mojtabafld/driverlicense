@@ -235,9 +235,9 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           <View style={{ flex: 1, minWidth: 4 }} />
           <Pressable onPress={() => { tap(); setFa(!fa); }} accessibilityRole="button" accessibilityState={{ selected: fa }}
             style={{ flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 2, borderRadius: 999, borderWidth: 1,
-              borderColor: fa ? (dark ? c.link : c.accent) : c.line, backgroundColor: fa ? c.checked : 'transparent' }}>
-            <Icon name="translate" size={14} color={fa ? c.link : c.muted} />
-            <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: fa ? '600' : '400', color: fa ? c.link : c.muted }}>ترجمه</T>
+              borderColor: fa ? c.strong : c.line, backgroundColor: fa ? c.strong : 'transparent' }}>
+            <Icon name="translate" size={14} color={fa ? c.strongFg : c.muted} />
+            <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: fa ? '600' : '400', color: fa ? c.strongFg : c.muted }}>ترجمه</T>
           </Pressable>
         </View>
         <View style={{ gap: 8 }}>

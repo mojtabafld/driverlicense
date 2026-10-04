@@ -25,8 +25,8 @@ export function Confirm({ open, title, text, children, cancel, ok, danger, onCan
             shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 8 }}>
           <View style={{ gap: 6, alignItems: 'center' }}>
             {icon ? (
-              <View style={{ width: 56, height: 56, borderRadius: 28, marginBottom: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? c.badSoft : c.accentSoft }}>
-                <Icon name={icon} size={26} color={danger ? c.bad : c.link} weight="semibold" />
+              <View style={{ width: 56, height: 56, borderRadius: 28, marginBottom: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? c.badSoft : c.surface2 }}>
+                <Icon name={icon} size={26} color={danger ? c.bad : c.text} weight="semibold" />
               </View>
             ) : null}
             <T style={{ alignSelf: 'stretch', fontSize: 18, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>{title}</T>
@@ -35,15 +35,15 @@ export function Confirm({ open, title, text, children, cancel, ok, danger, onCan
           {children}
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Pressable onPress={() => { tap(); onCancel(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
-              <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-                <Icon name={cancelIcon} size={17} color={c.link} weight="semibold" />
-                <T style={{ fontSize: 15, fontWeight: '700', color: c.link, textAlign: 'center' }}>{cancel}</T>
+              <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
+                <Icon name={cancelIcon} size={17} color={c.navFg} weight="semibold" />
+                <T style={{ fontSize: 15, fontWeight: '700', color: c.navFg, textAlign: 'center' }}>{cancel}</T>
               </View>
             </Pressable>
             <Pressable onPress={() => { tap(); onOk(); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.85 : 1 })}>
-              <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? c.bad : c.accent }}>
-                <Icon name={okIcon} size={17} color="#fff" weight="semibold" />
-                <T style={{ fontSize: 15, fontWeight: '700', color: '#fff', textAlign: 'center' }}>{ok}</T>
+              <View style={{ height: 48, borderRadius: 24, flexDirection: 'row', gap: 7, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? c.bad : c.strong }}>
+                <Icon name={okIcon} size={17} color={danger ? '#fff' : c.strongFg} weight="semibold" />
+                <T style={{ fontSize: 15, fontWeight: '700', color: danger ? '#fff' : c.strongFg, textAlign: 'center' }}>{ok}</T>
               </View>
             </Pressable>
           </View>

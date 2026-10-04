@@ -33,7 +33,7 @@ export function BarCount({ n, of }: { n: number; of: number }) {
 // capsule, in the submit colour with `submit`. `lead`: icon before the label.
 export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean; round?: boolean }) {
   const c = useColors();
-  const fg = '#fff';
+  const fg = c.strongFg; // on `submit` / `strong` (white, or near-black on the dark Uber look's light grey)
   if (round) {
     return (
       <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
@@ -46,7 +46,7 @@ export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }:
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.35 : pressed ? 0.8 : 1 })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 48, minWidth: 104, paddingHorizontal: 18, borderRadius: 24, justifyContent: 'center',
-        backgroundColor: submit ? c.submit : c.accent }}>
+        backgroundColor: submit ? c.submit : c.strong }}>
         {lead ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
         <L style={{ color: fg, fontWeight: '700', fontSize: 15.5, lineHeight: 22, textAlign: 'center' }}>{label}</L>
         {!lead ? <Icon name={icon} size={16} color={fg} weight={icon === 'check' ? 'bold' : 'semibold'} /> : null}

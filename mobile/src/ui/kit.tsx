@@ -116,8 +116,8 @@ export function ThemeButton() {
   const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark';
   return (
     <Pressable onPress={() => { tap(); setMode(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
-      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.accentSoft : 'transparent' })}>
-      {dark ? <Icon name="sun" size={20} color={c.link} /> : <Icon name="moon" size={19} color={c.muted} />}
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+      {dark ? <Icon name="sun" size={20} color={c.text} /> : <Icon name="moon" size={19} color={c.muted} />}
     </Pressable>
   );
 }
@@ -210,8 +210,9 @@ type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass'
 export function Button({ label, onPress, kind = 'primary', disabled, style, icon, big }: BtnProps) {
   const c = useColors();
   // grey: a solid neutral (charcoal in light mode, light grey in dark), so it never looks disabled.
-  const primary = kind === 'primary', grey = kind === 'grey';
-  const fg = primary ? c.accentText : grey ? c.strongFg : kind === 'danger' ? c.bad : c.link;
+  // In the Uber look every main button is that grey and outlined ones take the text colour, so no button is green.
+  const grey = kind === 'grey' || (UBER && kind === 'primary'), primary = kind === 'primary' && !grey;
+  const fg = primary ? c.accentText : grey ? c.strongFg : kind === 'danger' ? c.bad : UBER ? c.text : c.link;
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
       <View style={{
@@ -235,7 +236,7 @@ export function Segmented<V extends string>({ value, options, onChange }: { valu
         return (
           <Pressable key={o.value} onPress={() => { tap(); onChange(o.value); }} style={{ flex: 1 }}>
             <View style={{ paddingVertical: 7, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }}>
-              <T style={{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? c.link : c.muted }}>{o.label}</T>
+              <T style={{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }}>{o.label}</T>
             </View>
           </Pressable>
         );
