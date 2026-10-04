@@ -21,6 +21,7 @@ import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { ListButton } from '@/ui/question-list';
 import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
+import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
@@ -200,7 +201,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
               style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
               <Icon name="arrowRight" size={20} color={c.text} />
             </Pressable>
-            <T style={{ flex: 1, fontSize: 24, lineHeight: 34, fontWeight: '700' }} numberOfLines={1}>{title}</T>
+            {/* A long title glides to show all of it instead of ending in «…». */}
+            <Marquee text={title} height={34} style={{ fontSize: 24, lineHeight: 34, fontWeight: '700' }} />
           </View>
         </View>
       </GlassTop>
