@@ -35,9 +35,9 @@ export function Offline({ onRetry }: { onRetry: () => Promise<void> }) {
           <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>اتصال اینترنت را بررسی کنید و دوباره وارد شوید. با برقرار شدن اتصال، اپ خودش دوباره باز می‌شود.</T>
         </View>
         <Pressable disabled={busy} onPress={retry} accessibilityRole="button"
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 54, borderRadius: 27, backgroundColor: '#ffffff' })}>
+          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 54, borderRadius: 12, backgroundColor: '#ffffff' })}>
           {busy ? <ActivityIndicator color="#14421c" /> : <Icon name="refresh" size={18} color="#14421c" weight="semibold" />}
-          <T style={{ color: '#14421c', fontSize: 17, fontWeight: '700' }}>تلاش دوباره</T>
+          <T style={{ color: '#14421c', fontSize: 17, fontWeight: '600' }}>تلاش دوباره</T>
         </Pressable>
       </View>
     </View>

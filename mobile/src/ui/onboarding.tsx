@@ -120,8 +120,8 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
             <Pressable onPress={() => (last ? (tap(), onDone()) : go(i + 1))} accessibilityRole="button"
-              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, height: 50, paddingHorizontal: 22, borderRadius: 25, backgroundColor: BUTTON })}>
-              <T style={{ color: BUTTON_TEXT, fontSize: 16, fontWeight: '700' }}>{last ? 'شروع کنید' : 'بعدی'}</T>
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, height: 50, paddingHorizontal: 22, borderRadius: 12, backgroundColor: BUTTON })}>
+              <T style={{ color: BUTTON_TEXT, fontSize: 16, fontWeight: '600' }}>{last ? 'شروع کنید' : 'بعدی'}</T>
               <Icon name="chevronLeft" size={16} color={BUTTON_TEXT} weight="semibold" />
             </Pressable>
           </View>

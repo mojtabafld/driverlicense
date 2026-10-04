@@ -84,8 +84,8 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
           </View>
         </View>
         <Pressable disabled={busy} onPress={save} accessibilityRole="button"
-          style={({ pressed }) => ({ opacity: busy ? 0.6 : pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 54, borderRadius: 27, backgroundColor: BUTTON })}>
-          <T style={{ color: BUTTON_TEXT, fontSize: 17, fontWeight: '700' }}>ادامه</T>
+          style={({ pressed }) => ({ opacity: busy ? 0.6 : pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 54, borderRadius: 12, backgroundColor: BUTTON })}>
+          <T style={{ color: BUTTON_TEXT, fontSize: 17, fontWeight: '600' }}>ادامه</T>
           <Icon name="chevronLeft" size={16} color={BUTTON_TEXT} weight="semibold" />
         </Pressable>
       </View>
