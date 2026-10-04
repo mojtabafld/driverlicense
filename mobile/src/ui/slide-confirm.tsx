@@ -1,9 +1,9 @@
 // Slide to confirm, like a delivery app's «Complete pickup»: a grey track with its label, and at its right end (the
 // start, in the app's right-to-left reading) a square handle in the main button's colour with a dotted arrow, dragged
-// to the left end to confirm. While it moves the handle grows into a fill that covers the label, the part of the label
-// under it in the button's text colour. Let go before the end and it glides back; at the end the fill covers it all,
-// the label turns into a check and `onConfirm` runs a moment later. Screen readers get one «activate» action instead
-// of dragging. PanResponder and Animated only, so it needs no extra native module.
+// to the left end to confirm. While it moves the handle grows into a fill over the track and the label fades out.
+// Let go before the end and it glides back; at the end the fill covers it all, «done» shows with a check and
+// `onConfirm` runs a moment later. Screen readers get one «activate» action instead of dragging. PanResponder and
+// Animated only, so it needs no extra native module.
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Animated, Easing, PanResponder, Platform, View, type LayoutChangeEvent } from 'react-native';
@@ -65,26 +65,27 @@ export function SlideToConfirm({ label, doneLabel, onConfirm }: { label: string;
   const layout = (e: LayoutChangeEvent) => { const tw = e.nativeEvent.layout.width; s.setRoom(Math.max(1, tw - KNOB)); setW(tw); };
   const confirm = () => { if (!s.isDone()) s.finish(); };
   const fill = Animated.add(s.x, KNOB);   // from the right edge to the handle's left side
+  // The label is gone by the time the handle has crossed most of it.
+  const fade = s.x.interpolate({ inputRange: [0, Math.max(1, (w - KNOB) * 0.55)], outputRange: [1, 0], extrapolate: 'clamp' });
   const text = { fontSize: 16, lineHeight: 24, fontWeight: '600' as const, textAlign: 'center' as const };
   return (
     <View onLayout={layout} accessible accessibilityRole="button" accessibilityLabel={label}
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={confirm}
       style={{ height: H, borderRadius: R, backgroundColor: c.nav, overflow: 'hidden', justifyContent: 'center', direction: 'ltr' } as any}>
-      {/* The label on the track, beside the handle. */}
-      <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: KNOB, alignItems: 'center' }}>
+      {/* The label on the track, beside the handle; it fades out as the handle comes over it. */}
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: KNOB, alignItems: 'center', opacity: fade }}>
         <T style={[text, { color: c.navFg }]} numberOfLines={1}>{label}</T>
-      </View>
+      </Animated.View>
       {/* The handle and the fill it grows into, from the right end. The same label inside it, standing still with the
           track, shows in the button's text colour where the fill covers it. */}
       <Animated.View {...s.pan.panHandlers}
         style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: fill, borderRadius: R, backgroundColor: c.btn, overflow: 'hidden',
           ...(Platform.OS === 'web' ? { cursor: 'grab', touchAction: 'none' } as any : {}) }}>
-        {/* Cut off just before the arrow, as the label runs into the moving handle. */}
-        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, left: done ? 0 : KNOB, overflow: 'hidden' }}>
-          <View style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: w, paddingRight: done ? 0 : KNOB, paddingLeft: done ? KNOB : 0, alignItems: 'center', justifyContent: 'center' }}>
-            <T style={[text, { color: c.btnFg }]} numberOfLines={1}>{done ? doneLabel : label}</T>
+        {done ? (
+          <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: w, paddingLeft: KNOB, alignItems: 'center', justifyContent: 'center' }}>
+            <T style={[text, { color: c.btnFg }]} numberOfLines={1}>{doneLabel}</T>
           </View>
-        </View>
+        ) : null}
         <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: KNOB, alignItems: 'center', justifyContent: 'center' }}>
           {done ? <Icon name="check" size={22} color={c.btnFg} weight="bold" /> : <DragArrow color={c.btnFg} />}
         </View>

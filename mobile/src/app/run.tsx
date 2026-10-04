@@ -11,6 +11,7 @@ import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
 import { SlideToConfirm } from '@/ui/slide-confirm';
+import { SpeakButton } from '@/ui/speak';
 import { ZoomableImage } from '@/ui/zoom';
 import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
@@ -131,8 +132,10 @@ export default function Run() {
           </Pressable>
         </Enter>
         {/* Translation on / off: a round icon under the picture, on its left (filled while the translation shows). */}
-        <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', marginTop: -4, marginBottom: -4 } as any}>
+        <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', gap: 10, marginTop: -4, marginBottom: -4 } as any}>
           <TranslateButton on={showFa} onPress={() => setShowFa(!showFa)} />
+          {/* Read the question and its statements aloud, beside the translation switch. */}
+          <SpeakButton key={q.id} qid={q.id} lang={lang} />
         </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>

@@ -97,6 +97,12 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'lock':
       body = <G><Path d="M6.5 10.5h11a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19v-7a1.5 1.5 0 0 1 1.5-1.5z" {...line} /><Path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" {...line} /></G>;
       break;
+    case 'speaker':
+      body = <G><Path d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z" {...line} /><Path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.2 6.5a8 8 0 0 1 0 11" {...line} /></G>;
+      break;
+    case 'stop':
+      body = <Path d="M7.5 6.5h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z" {...line} />;
+      break;
     case 'zoom':
       body = <G><Circle cx={10.5} cy={10.5} r={6.5} {...line} /><Path d="M15.3 15.3 20.5 20.5M10.5 7.8v5.4M7.8 10.5h5.4" {...line} /></G>;
       break;

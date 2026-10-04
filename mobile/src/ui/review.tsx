@@ -12,6 +12,7 @@ import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
 import { Enter, L, T, TranslateButton, physical, tap } from './kit';
+import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
@@ -366,7 +367,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
             </View>
           ) : null}
           <View style={{ flex: 1, minWidth: 4 }} />
-          {/* The translation switch at the row's left end, the same round button as in the exam. */}
+          {/* Read aloud and the translation switch at the row's left end, the same round buttons as in the exam. */}
+          <SpeakButton key={q.id} qid={q.id} lang={lang} />
           <TranslateButton on={fa} onPress={() => setFa(!fa)} />
         </View>
         <View style={{ gap: 8 }}>
