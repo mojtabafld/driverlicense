@@ -2,8 +2,8 @@
 // badge and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, View, type TextStyle } from 'react-native';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { Animated, Easing, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
 
 import { api } from '@/lib/api';
 import type { Item, Question } from '@/lib/bank';
@@ -142,18 +142,54 @@ function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; 
 
 // When an AI button opens, the page glides down so the button sits near the top, just under the glass top bar, with
 // its panel below it; while the answer is being typed the page follows its last line (`follow`), as chat apps do,
-// keeping it above the bottom bar. Web: the browser's own scrolling on the nodes; native keeps its place.
+// keeping it above the bottom bar. Web: the browser's own scrolling on the nodes. Phones: the page's ScrollView,
+// handed down with RevealScroll (useRevealScroll), scrolled by what measureInWindow reports.
+type RevealCtx = { scroll: RefObject<ScrollView | null>; y: { current: number }; top: number };
+const RevealScroll = createContext<RevealCtx | null>(null);
+export const RevealScrollProvider = RevealScroll.Provider;
+// For a page whose ScrollView holds review cards or the AI summary: the value for RevealScrollProvider and the
+// ScrollView's props that keep its scroll position known. `top`: the height of the bar over the page's top.
+export function useRevealScroll(scroll: RefObject<ScrollView | null>, top: number) {
+  const y = useRef(0);
+  const value = useMemo(() => ({ scroll, y, top }), [scroll, top]);
+  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => { y.current = e.nativeEvent.contentOffset.y; }, []);
+  return { value, scrollProps: { onScroll, scrollEventThrottle: 16 } };
+}
+// The ScrollView's box on the screen: x, y, width, height.
+function measureScroll(ctx: RevealCtx, then: (sy: number, sh: number) => void) {
+  const sv = ctx.scroll.current as any, node = sv?.getNativeScrollRef?.() ?? sv;
+  if (!node?.measureInWindow) return;
+  node.measureInWindow((_x: number, sy: number, _w: number, sh: number) => then(sy, sh));
+}
 function useReveal(open: boolean) {
   const ref = useRef<View>(null), panel = useRef<View>(null);
+  const ctx = useContext(RevealScroll);
   useEffect(() => {
-    if (!open || Platform.OS !== 'web') return;
+    if (!open) return;
+    if (Platform.OS !== 'web') {
+      if (!ctx) return;
+      const t = setTimeout(() => measureScroll(ctx, sy => ref.current?.measureInWindow((_x, ey) => {
+        const to = Math.max(0, ctx.y.current + ey - sy - ctx.top - 10);
+        if (Math.abs(to - ctx.y.current) > 4) ctx.scroll.current?.scrollTo({ y: to, animated: true });
+      })), 60);
+      return () => clearTimeout(t);
+    }
     const el = ref.current as unknown as HTMLElement | null;
     if (!el?.scrollIntoView) return;
     const t = setTimeout(() => { el.style.scrollMarginTop = 'calc(env(safe-area-inset-top) + 76px)'; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
     return () => clearTimeout(t);
-  }, [open]);
+  }, [open, ctx]);
   const follow = useCallback(() => {
-    if (Platform.OS !== 'web') return;
+    if (Platform.OS !== 'web') {
+      if (!ctx) return;
+      measureScroll(ctx, (sy, sh) => panel.current?.measureInWindow((_x, py, _w, ph) => {
+        const over = py + ph - (sy + sh - 110);
+        if (over <= 0) return;
+        ctx.y.current += over;
+        ctx.scroll.current?.scrollTo({ y: ctx.y.current, animated: false });
+      }));
+      return;
+    }
     const el = panel.current as unknown as HTMLElement | null;
     if (!el?.getBoundingClientRect) return;
     const over = el.getBoundingClientRect().bottom - (window.innerHeight - 110);
@@ -161,7 +197,7 @@ function useReveal(open: boolean) {
     let p = el.parentElement;
     while (p && !(p.scrollHeight > p.clientHeight && /(auto|scroll)/.test(getComputedStyle(p).overflowY))) p = p.parentElement;
     p?.scrollBy({ top: over });
-  }, []);
+  }, [ctx]);
   return { ref, panel, follow };
 }
 
