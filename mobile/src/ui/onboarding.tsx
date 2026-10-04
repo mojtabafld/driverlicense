@@ -1,5 +1,5 @@
 // The intro shown once on a device: four slides about what the app does, each a picture with a large title and a
-// short line, on the app's teal gradient. «رد شدن» skips it, «بعدی» goes on and the last slide's «شروع کنید» closes
+// short line, on the app's forest-green gradient. «رد شدن» skips it, «بعدی» goes on and the last slide's «شروع کنید» closes
 // it; a sideways swipe also turns the slides (right to left, as the page reads).
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,10 +19,11 @@ const SLIDES = [
   { Art: ArtAi, title: 'هوش مصنوعی، همراه شما', text: 'برای هر اشتباه توضیحی ساده به فارسی بگیرید و در پایان هر آزمون جمع‌بندی نکته‌هایی را که باید مرور کنید.' },
   { Art: ArtProgress, title: 'پیشرفت‌تان را ببینید', text: 'نمودار پیشرفت، احتمال قبولی و تمرین هدفمند همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید.' },
 ];
-// Flat teal at the top, the colour the server's intro pictures are made on, so they sit in the page seamlessly.
-export const INTRO_BG = ['#3f8c8f', '#3f8c8f', '#2a6a6d'] as const;
+// Flat forest green at the top (the chart's green), the colour the server's intro pictures are made on, so they sit in
+// the page seamlessly.
+export const INTRO_BG = ['#228B22', '#228B22', '#17661a'] as const;
 const BG = INTRO_BG;
-const BUTTON = '#ffffff', BUTTON_TEXT = '#2a7679';
+const BUTTON = '#ffffff', BUTTON_TEXT = '#1d6e1d';
 
 // The slide's title on one line: measured once at full size in an invisible, very wide box, then set just small
 // enough to fit the width it has (never larger than `size`).

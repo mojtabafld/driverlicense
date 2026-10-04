@@ -12,7 +12,7 @@ import { Icon } from './icon';
 import { L, T, tap } from './kit';
 import { INTRO_BG as BG } from './onboarding';
 
-const BUTTON = '#ffffff', BUTTON_TEXT = '#2a7679';
+const BUTTON = '#ffffff', BUTTON_TEXT = '#1d6e1d';
 
 function FlagDK() {
   return (
@@ -69,13 +69,13 @@ export function LangPick() {
                   <View style={{ borderRadius: 5, overflow: 'hidden' }}><Flag /></View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-                      <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: on ? '#1d4a4c' : '#fff' }}>{name}</L>
-                      <T style={{ fontSize: 14, color: on ? '#456264' : 'rgba(255,255,255,0.75)' }}>{fa}</T>
+                      <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: on ? '#143f14' : '#fff' }}>{name}</L>
+                      <T style={{ fontSize: 14, color: on ? '#3f5e3f' : 'rgba(255,255,255,0.75)' }}>{fa}</T>
                     </View>
-                    <T style={{ fontSize: 12.5, lineHeight: 20, color: on ? '#5b7375' : 'rgba(255,255,255,0.7)' }}>{note}</T>
+                    <T style={{ fontSize: 12.5, lineHeight: 20, color: on ? '#557055' : 'rgba(255,255,255,0.7)' }}>{note}</T>
                   </View>
                   <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 2,
-                    borderColor: on ? '#2e8285' : 'rgba(255,255,255,0.5)', backgroundColor: on ? '#2e8285' : 'transparent' }}>
+                    borderColor: on ? '#228B22' : 'rgba(255,255,255,0.5)', backgroundColor: on ? '#228B22' : 'transparent' }}>
                     {on ? <Icon name="check" size={14} color="#fff" weight="bold" /> : null}
                   </View>
                 </Pressable>

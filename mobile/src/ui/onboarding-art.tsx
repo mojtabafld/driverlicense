@@ -1,9 +1,9 @@
-// Flat illustrations for the intro slides, drawn in the app's own colours on its teal background (a 300 × 260 grid).
+// Flat illustrations for the intro slides, drawn in the app's own colours on its forest-green background (a 300 × 260 grid).
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 const C = {
-  white: '#ffffff', pale: '#e3f1f1', sky: '#9fd3d4', mid: '#5b74c4', navy: '#2e8285', ink: '#163334', phone: '#1f3a3b',
-  green: '#5cc47a', red: '#e5534b', yellow: '#f0b24a', shadow: 'rgba(0,0,0,0.16)', line: '#d6f2f2',
+  white: '#ffffff', pale: '#e6f3e6', sky: '#bfe3bf', mid: '#5b74c4', navy: '#1d7a1d', ink: '#123312', phone: '#1c361c',
+  green: '#5cc47a', red: '#e5534b', yellow: '#f0b24a', shadow: 'rgba(0,0,0,0.16)', line: '#dcf0dc',
 };
 
 // A dotted connector from the phone to one of the things around it.
@@ -139,7 +139,7 @@ export function ArtAi() {
     <Svg width="100%" height="100%" viewBox="0 0 300 260">
       <Defs>
         <LinearGradient id="ai" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#7fc9cb" /><Stop offset="1" stopColor="#2e8285" />
+          <Stop offset="0" stopColor="#8fd08f" /><Stop offset="1" stopColor="#1d7a1d" />
         </LinearGradient>
       </Defs>
       <Phone x={96} y={30} w={108} h={196}>
