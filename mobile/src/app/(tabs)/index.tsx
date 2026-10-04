@@ -100,7 +100,8 @@ export default function Home() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ width: 14, height: 2, backgroundColor: c.accent }} /><T style={{ color: c.muted, fontSize: 12 }}>نمره هر آزمون</T>
+            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c.ok }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
+            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c.faint, opacity: 0.55, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>زیر حد</T>
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.ok, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>

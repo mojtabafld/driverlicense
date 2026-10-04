@@ -118,8 +118,8 @@ export default function Run() {
           </Pressable>
         </View>
         <View style={{ gap: 4 }}>
-          <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25, textAlign: 'justify' }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
-          {showFa && q.sfa ? <T style={{ color: c.muted, textAlign: 'justify' }}>{q.sfa}</T> : null}
+          <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
+          {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
         </View>
         {q.st.map((s, k) => {
           const on = ticks[i][k];
@@ -135,8 +135,8 @@ export default function Run() {
                   {on ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
                 </View>
                 <View style={{ flex: 1, gap: 4 }}>
-                  <L style={{ fontSize: 15.5, lineHeight: 22, textAlign: 'justify' }}>{lang === 'en' && s.en ? s.en : s.da}</L>
-                  {showFa && s.fa ? <T style={{ color: c.muted, fontSize: 14, textAlign: 'justify' }}>{s.fa}</T> : null}
+                  <L style={{ fontSize: 15.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
+                  {showFa && s.fa ? <T style={{ color: c.muted, fontSize: 14 }}>{s.fa}</T> : null}
                 </View>
               </View>
             </Pressable>

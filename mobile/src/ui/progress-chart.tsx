@@ -1,15 +1,15 @@
-// Progress chart, like the site's «نمودار پیشرفت»: percent correct of each of the last 30 attempts, with the 80% pass
-// line. Tap the chart to pick the nearest attempt; its details and a review button show below. With `fill` it takes
+// Progress chart, «نمودار پیشرفت»: a bar for the percent correct of each of the last 30 attempts, green when the
+// attempt passed or reached 80%, else a neutral grey, with the 80% pass line; the bars grow in when it opens. Tap the chart to pick the nearest attempt; its details and a review button show below. With `fill` it takes
 // the height of the space it is given (the home screen fits the screen without scrolling).
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
+import Svg, { Line, Path, Text as SvgText } from 'react-native-svg';
 
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
-import { Button, T, tap } from './kit';
+import { Button, T, tap, useCountUp } from './kit';
 import { useColors } from './theme';
 
 const L = 38, R = 12, TOP = 14, B = 24;
@@ -23,6 +23,7 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
   const H = fill ? Math.max(fillH, 60) : 210;
   const [sel, setSel] = useState<number | null>(null);
   const box = useRef<View>(null);
+  const grow = useCountUp(1, 900);
   if (attempts.length < 2) {
     // Nothing to draw yet: say so, with a button to the exam tab.
     return (
@@ -33,11 +34,17 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
     );
   }
   const data = attempts.slice(-30), offset = attempts.length - data.length;
-  const x = (i: number) => L + i * (W - L - R) / (data.length - 1);
+  // One slot per attempt; the bar sits in its middle, at most 22 points wide.
+  const slot = (W - L - R) / data.length, bw = Math.max(3, Math.min(22, slot * 0.62));
+  const x = (i: number) => L + slot * (i + 0.5);
   const y = (v: number) => TOP + (1 - v / 100) * (H - TOP - B);
-  const pts = data.map((a, i) => [x(i), y(pctOf(a) * 100)] as const);
-  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
-  const area = `${line} L${pts[pts.length - 1][0].toFixed(1)} ${y(0)} L${pts[0][0].toFixed(1)} ${y(0)} Z`;
+  const pts = data.map((a, i) => [x(i), y(pctOf(a) * 100 * grow)] as const);
+  const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
+  // A bar with rounded top corners from the baseline up to its value.
+  const bar = (cx: number, top: number) => {
+    const l = cx - bw / 2, r = cx + bw / 2, b = y(0), rr = Math.min(4, bw / 2, Math.max(0, b - top));
+    return `M${l} ${b} L${l} ${top + rr} Q${l} ${top} ${l + rr} ${top} L${r - rr} ${top} Q${r} ${top} ${r} ${top + rr} L${r} ${b} Z`;
+  };
   const every = Math.ceil(data.length / 8);
   const ticks = H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
   const font = 'Vazirmatn-400';
@@ -55,24 +62,17 @@ export function ProgressChart({ attempts, onOpen, fill }: { attempts: Attempt[];
         accessibilityRole="image" accessibilityLabel="نمودار نمره‌ی آزمون‌ها">
         {W > 0 ? (
           <Svg width={W} height={H} pointerEvents="none">
-            <Defs>
-              <LinearGradient id="ga" x1="0" x2="0" y1="0" y2="1">
-                <Stop offset="0" stopColor={c.accent} stopOpacity={0.18} /><Stop offset="1" stopColor={c.accent} stopOpacity={0} />
-              </LinearGradient>
-            </Defs>
             {ticks.map(v => (
               <Line key={v} x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />
             ))}
             {ticks.map(v => (
               <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{`${faNum(v)}٪`}</SvgText>
             ))}
-            <Line x1={L} x2={W - R} y1={y(80)} y2={y(80)} stroke={c.ok} strokeWidth={1.5} strokeDasharray="5 5" />
-            <Path d={area} fill="url(#ga)" />
-            <Path d={line} fill="none" stroke={c.accent} strokeWidth={2} strokeLinejoin="round" />
-            {sel != null ? <Line x1={pts[sel][0]} x2={pts[sel][0]} y1={TOP} y2={y(0)} stroke={c.muted} strokeWidth={1} strokeDasharray="3 3" /> : null}
+            {/* The picked bar stays full strength, the others fade a little. */}
             {pts.map((p, i) => (
-              <Circle key={i} cx={p[0]} cy={p[1]} r={i === sel ? 6.5 : 4.5} fill={c.accent} stroke={c.surface} strokeWidth={2} />
+              <Path key={i} d={bar(p[0], p[1])} fill={good(data[i]) ? c.ok : c.faint} fillOpacity={(good(data[i]) ? 1 : 0.55) * (sel == null || sel === i ? 1 : 0.45)} />
             ))}
+            <Line x1={L} x2={W - R} y1={y(80)} y2={y(80)} stroke={c.ok} strokeWidth={1.5} strokeDasharray="5 5" />
             {data.map((_, i) => (i % every === 0 || i === data.length - 1
               ? <SvgText key={`x${i}`} x={x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
               : null))}

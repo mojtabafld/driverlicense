@@ -25,8 +25,31 @@ export const uiText = (lang: 'da' | 'en') => UI[lang];
 // The AI text (in the neutral grey look: on the soft `note` panel, headings in the text colour): «# » headings, «- » bullets, **bold**; «تیک زد» is worded «انتخاب کرد».
 const pickWords = (t: string) => t.replace(/تیک(?:\s|‌)*نزد/g, 'انتخاب نکرد').replace(/تیک(?:\s|‌)*زد/g, 'انتخاب کرد')
   .replace(/تیک(?:\s|‌)*نخورد/g, 'انتخاب نشد').replace(/تیک(?:\s|‌)*خورد/g, 'انتخاب شد');
-function Rich({ text, onQuestion }: { text: string; onQuestion?: (n: number) => void }) {
+// The AI's answer as the chat apps show it: written out a few letters at a time with a cursor at the end (only when it
+// has just come; text already seen shows whole). An open «**» is closed while it is being typed, so no stars show.
+function useTyped(text: string, on: boolean) {
+  const [n, setN] = useState(on ? 0 : text.length);
+  useEffect(() => {
+    if (!on) return;
+    let raf = 0, start = 0;
+    const ms = Math.min(7000, Math.max(1500, text.length * 14));
+    const step = (t: number) => {
+      if (!start) start = t;
+      const k = Math.min(1, (t - start) / ms);
+      setN(Math.round(text.length * k));
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [text, on]);
+  if (!on || n >= text.length) return text;
+  const part = text.slice(0, n);
+  return `${part}${(part.match(/\*\*/g) ?? []).length % 2 ? '**' : ''} ▍`;
+}
+
+function Rich({ text: full, onQuestion, typing = false }: { text: string; onQuestion?: (n: number) => void; typing?: boolean }) {
   const c = useColors();
+  const text = useTyped(full, typing);
   const inline = (s: string, key: string) => s.split(/(\*\*.+?\*\*)/g).flatMap((part, i) => {
     const bold = /^\*\*.+\*\*$/.test(part), body = bold ? part.slice(2, -2) : part;
     // «سؤال ۳» in the summary opens that question.
@@ -123,17 +146,19 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const key = `${q.id}:${a ? a.join('') : ''}:${lang}`;
   const [shown, setShown] = useState(false);
   const [text, setText] = useState<string | null>(() => lessonCache.get(key) ?? null);
+  const [typing, setTyping] = useState(false); // fetched just now: typed out
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [err, setErr] = useState('');
   const load = () => {
     setState('loading');
     api<{ text: string }>('POST', 'lesson', { qid: q.id, a, lang, at })
-      .then(d => { lessonCache.set(key, d.text); setText(d.text); setState('idle'); })
+      .then(d => { lessonCache.set(key, d.text); setTyping(true); setText(d.text); setState('idle'); })
       .catch((e: any) => { setErr(e.status === 429 ? e.message : 'نکات الان آماده نشد؛ دوباره امتحان کنید.'); setState('error'); });
   };
   const press = () => {
     if (state === 'loading') return;
     if (!shown && !text) load();
+    if (shown) setTyping(false); // typed once: shown whole when opened again
     setShown(!shown || (!text && state === 'error'));
   };
   const ref = useReveal(shown, !!text);
@@ -144,7 +169,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
         <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} /> : null}
+            : text ? <Rich text={text} typing={typing} /> : null}
         </View>
       ) : null}
     </View>
@@ -156,6 +181,7 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
   const c = useColors();
   const [shown, setShown] = useState(false);
   const [text, setText] = useState<string | null>(null);
+  const [typing, setTyping] = useState(false);
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [err, setErr] = useState('');
   const wrong = items.map((it, i) => ({ it, n: i + 1 })).filter(x => !x.it.ok && x.it.a).map(({ it, n }) => ({ id: it.id, a: it.a!.map(v => (v ? 1 : 0)), n }));
@@ -164,9 +190,10 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
     if (!shown && !text) {
       setState('loading');
       api<{ text: string }>('POST', 'summary', { items: wrong, lang, at })
-        .then(d => { setText(d.text); setState('idle'); })
+        .then(d => { setTyping(true); setText(d.text); setState('idle'); })
         .catch((e: any) => { setErr(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message); setState('error'); });
     }
+    if (shown) setTyping(false); // typed once: shown whole when opened again
     setShown(!shown || (!text && state === 'error'));
   };
   const ref = useReveal(shown, !!text);
@@ -177,7 +204,7 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
         <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} onQuestion={onQuestion} /> : null}
+            : text ? <Rich text={text} onQuestion={onQuestion} typing={typing} /> : null}
         </View>
       ) : null}
     </View>
@@ -257,11 +284,11 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </Pressable>
         </View>
         <View style={{ gap: 8 }}>
-          <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600', textAlign: 'justify' } : { fontSize: 16, lineHeight: 24, fontWeight: '600', textAlign: 'justify' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
+          <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
           {fa && q.sfa ? (
             // The Persian translation on a soft teal tint, no side line.
             <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accentSoft }}>
-              <T style={{ fontSize: 14.5, lineHeight: 25, textAlign: 'justify' }}>{q.sfa}</T>
+              <T style={{ fontSize: 14.5, lineHeight: 25 }}>{q.sfa}</T>
             </View>
           ) : null}
         </View>
@@ -299,8 +326,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                       {checked ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
                     </View>
                     <View style={{ flex: 1, gap: 4 }}>
-                      <L style={{ fontSize: 14.5, lineHeight: 22, textAlign: 'justify' }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>
-                      {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22, textAlign: 'justify' }}>{s.fa}</T> : null}
+                      <L style={{ fontSize: 14.5, lineHeight: 22 }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>
+                      {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{s.fa}</T> : null}
                     </View>
                   </View>
                   {view === 'right' ? (
