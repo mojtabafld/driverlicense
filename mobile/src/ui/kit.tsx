@@ -142,13 +142,14 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
   );
 }
 
-// Scrollable tab screen: top bar, then a page heading and the content; leaves room for the tab bar.
+// Scrollable tab screen: the page heading (with the theme switch beside it; no app name or logo, so the page has the
+// room) and the content; leaves room for the tab bar.
 // With `fill` the screen does not scroll: its content gets exactly the height between the title and the tab bar
 // (the floating bar on the web, the system bar on phones, which the bottom safe area already covers), and `gap`
 // can be set tighter for short screens.
 export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number }) {
   const c = useColors(), ins = useSafeAreaInsets();
-  const box = { paddingTop: 2, paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
+  const box = { paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const head = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
@@ -156,11 +157,11 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { t
         {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
       </View>
       {right}
+      <ThemeButton />
     </View>
   );
   return (
     <Backdrop>
-      <TopBar />
       <PageIn>
       {fill
         ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
