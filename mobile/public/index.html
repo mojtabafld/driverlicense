@@ -8,7 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- black-translucent: added to the Home Screen, the page runs under the iPhone's status bar (clock, battery), which
+         the app covers with a blurred glass strip of its own (src/app/_layout.tsx); iOS draws those icons white. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="TeoriPrøve" />
     <!-- Home-screen icon (iOS «Add to Home Screen») and the web app manifest (Android / installs). -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
