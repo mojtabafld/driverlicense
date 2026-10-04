@@ -75,7 +75,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
                   {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
                   {/* The picked bar stays full strength, the others fade a little. */}
                   {data.map((d, i) => (
-                    <Path key={i} d={bar(x(i), tops[i])} fill={good(d) ? c.ok : sel === i ? c.muted : c.faint}
+                    <Path key={i} d={bar(x(i), tops[i])} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
                       fillOpacity={sel === i ? 1 : (good(d) ? 1 : 0.55) * (sel == null ? 1 : 0.3)} />
                   ))}
                   {/* The picked bar: full strength (a grey one darker) with its percent above it. */}
@@ -84,7 +84,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
                       {`${faNum(Math.round(pctOf(data[sel]) * 100))}٪`}
                     </SvgText>
                   ) : null}
-                  <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.ok} strokeWidth={1.5} strokeDasharray="5 5" />
+                  <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeWidth={1.5} strokeDasharray="5 5" />
                   {data.map((_, i) => ((data.length - 1 - i) % every === 0
                     ? <SvgText key={`x${i}`} x={x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
                     : null))}
