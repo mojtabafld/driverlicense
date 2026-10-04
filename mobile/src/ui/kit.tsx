@@ -7,7 +7,7 @@ import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, Vi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-import { faFamily } from './fonts';
+import { daFamily, faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
 import { DA_FONT, UBER, radius, useColors, useTheme } from './theme';
@@ -179,9 +179,13 @@ export function T({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
   return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font]} />;
 }
 // Danish / English text (left to right).
+// In Inter, its weight (and italic) picked by family as for T; on the web Vazirmatn follows for the Persian digits.
 export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
   const c = useColors();
-  return <Text {...p} style={[{ color: c.text, fontSize: 16, lineHeight: 24, writingDirection: 'ltr', textAlign: 'left', fontFamily: DA_FONT }, style]} />;
+  const flat = StyleSheet.flatten(style) ?? {};
+  const fam = daFamily(flat.fontWeight, flat.fontStyle === 'italic');
+  const font = { fontFamily: Platform.OS === 'web' ? `${fam}, Vazirmatn-400, sans-serif` : fam, fontWeight: 'normal' as const, fontStyle: 'normal' as const };
+  return <Text {...p} style={[{ color: c.text, fontSize: 16, lineHeight: 24, writingDirection: 'ltr', textAlign: 'left' }, style, font]} />;
 }
 
 // The site's .card.
