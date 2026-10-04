@@ -194,8 +194,9 @@ function adminStats() {
   return { totals: t, days: keys.map(k => perDay[k]), users, visitDays, visitHours: visits.hours };
 }
 
-// Behind App Platform's load balancer the client address is in X-Forwarded-For.
-const clientIp = req => (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
+// Behind App Platform the client address is in DO-Connecting-IP, which its edge sets itself. X-Forwarded-For is not
+// used: its first entry is whatever the client sent, so trusting it let anyone dodge the sign-in rate limit.
+const clientIp = req => String(req.headers['do-connecting-ip'] || '').trim() || req.socket.remoteAddress;
 
 // Simple rate limit per IP: 10 failures / 10 minutes (login and invite code).
 const fails = new Map();
