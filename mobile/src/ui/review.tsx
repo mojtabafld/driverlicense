@@ -3,7 +3,7 @@
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, View } from 'react-native';
+import { Animated, Easing, Platform, Pressable, View, type TextStyle } from 'react-native';
 
 import { api } from '@/lib/api';
 import type { Item, Question } from '@/lib/bank';
@@ -25,14 +25,16 @@ export const uiText = (lang: 'da' | 'en') => UI[lang];
 // The AI text (in the neutral grey look: on the soft `note` panel, headings in the text colour): «# » headings, «- » bullets, **bold**; «تیک زد» is worded «انتخاب کرد».
 const pickWords = (t: string) => t.replace(/تیک(?:\s|‌)*نزد/g, 'انتخاب نکرد').replace(/تیک(?:\s|‌)*زد/g, 'انتخاب کرد')
   .replace(/تیک(?:\s|‌)*نخورد/g, 'انتخاب نشد').replace(/تیک(?:\s|‌)*خورد/g, 'انتخاب شد');
-// The AI's answer as the chat apps show it: written out a few letters at a time with a cursor at the end (only when it
-// has just come; text already seen shows whole). An open «**» is closed while it is being typed, so no stars show.
+// The AI's answer as the chat apps stream it: whole words at a time, quickly (under three seconds however long), the
+// newest few words fading in (only when it has just come; text already seen shows whole). TAIL marks where the
+// fading words start; an open «**» is closed while it is being written, so no stars show.
+const TAIL = '\u2063';
 function useTyped(text: string, on: boolean) {
   const [n, setN] = useState(on ? 0 : text.length);
   useEffect(() => {
     if (!on) return;
     let raf = 0, start = 0;
-    const ms = Math.min(7000, Math.max(1500, text.length * 14));
+    const ms = Math.min(2600, Math.max(700, text.length * 5));
     const step = (t: number) => {
       if (!start) start = t;
       const k = Math.min(1, (t - start) / ms);
@@ -43,30 +45,43 @@ function useTyped(text: string, on: boolean) {
     return () => cancelAnimationFrame(raf);
   }, [text, on]);
   if (!on || n >= text.length) return text;
-  const part = text.slice(0, n);
-  return `${part}${(part.match(/\*\*/g) ?? []).length % 2 ? '**' : ''} ▍`;
+  const gap = text.slice(n).search(/\s/), end = gap < 0 ? text.length : n + gap; // up to the end of a word
+  const part = text.slice(0, end);
+  const words = [...part.matchAll(/\S+/g)], t = words.length > 3 ? words[words.length - 3].index! : 0; // the last three words
+  return `${part.slice(0, t)}${TAIL}${part.slice(t)}${(part.match(/\*\*/g) ?? []).length % 2 ? '**' : ''}`;
 }
 
 function Rich({ text: full, onQuestion, typing = false, onGrow }: { text: string; onQuestion?: (n: number) => void; typing?: boolean; onGrow?: () => void }) {
   const c = useColors();
   const text = useTyped(full, typing);
-  useEffect(() => { if (typing) onGrow?.(); }, [text, typing, onGrow]); // each typed step: keep the line in view
-  const inline = (s: string, key: string) => s.split(/(\*\*.+?\*\*)/g).flatMap((part, i) => {
+  useEffect(() => { if (typing) onGrow?.(); }, [text, typing, onGrow]); // each written step: keep the line in view
+  // Everything after TAIL is drawn faint (the words just arriving).
+  let faded = false;
+  // `line`: the line's own weight (a heading's), repeated on the inner spans, which would otherwise reset it.
+  const piece = (seg: string, k: string, st?: TextStyle, line?: TextStyle) => {
+    if (!faded && !seg.includes(TAIL)) return st ? <T key={k} style={st}>{seg}</T> : seg;
+    const [a, b] = faded ? ['', seg] : seg.split(TAIL);
+    faded = true;
+    return <T key={k} style={st ?? line}>{a}<T style={[line, st, { opacity: 0.3 }]}>{b}</T></T>;
+  };
+  const inline = (s: string, key: string, line?: TextStyle) => s.split(/(\*\*.+?\*\*)/g).flatMap((part, i) => {
     const bold = /^\*\*.+\*\*$/.test(part), body = bold ? part.slice(2, -2) : part;
     // «سؤال ۳» in the summary opens that question.
     return body.split(/(سؤال\s*[0-9۰-۹]+)/g).map((seg, j) => {
       const m = seg.match(/^سؤال\s*([0-9۰-۹]+)$/);
       const k = `${key}-${i}-${j}`;
-      if (m && onQuestion) {
+      if (m && onQuestion && !faded) {
         const n = +m[1].replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
         return <T key={k} onPress={() => onQuestion(n)} style={{ color: c.text, fontWeight: '700' }}>{seg}</T>;
       }
-      return bold ? <T key={k} style={{ fontWeight: '700' }}>{seg}</T> : seg;
+      return piece(seg, k, bold ? { fontWeight: '700' } : undefined, line);
     });
   });
   const out: React.ReactNode[] = [];
-  pickWords(text).split('\n').map(l => l.trim()).filter(Boolean).forEach((line, i) => {
-    if (line.startsWith('#')) out.push(<T key={i} style={{ marginTop: 10, marginBottom: 2, fontSize: 14.5, fontWeight: '800', color: c.text }}>{inline(line.replace(/^#+\s*/, ''), `h${i}`)}</T>);
+  pickWords(text).split('\n').map(l => l.trim()).filter(l => l && l !== TAIL).forEach((raw, i) => {
+    if (raw.startsWith(TAIL)) faded = true; // a new line just begun
+    const line = raw.startsWith(TAIL) ? raw.slice(1).trim() : raw;
+    if (line.startsWith('#')) out.push(<T key={i} style={{ marginTop: 10, marginBottom: 2, fontSize: 14.5, fontWeight: '800', color: c.text }}>{inline(line.replace(/^#+\s*/, ''), `h${i}`, { fontWeight: '800' })}</T>);
     else if (/^[-•*]\s+/.test(line)) out.push(
       <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 1 }}>
         <T style={{ fontSize: 14, lineHeight: 25 }}>•</T>
