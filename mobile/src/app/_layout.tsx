@@ -13,6 +13,7 @@ import { Backdrop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
 import { INTRO_BG, Onboarding } from '@/ui/onboarding';
+import { useTapTopToScroll } from '@/ui/tap-top';
 import { useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
 
@@ -28,6 +29,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 }
 
 function Root() {
+  useTapTopToScroll();
   const { ready, user, bank, settings, refresh } = useApp();
   // No internet while the app has nothing loaded yet (at start, or before signing in): a page of its own; when the
   // connection is back the app loads again (the web page reloads, the phone app reads the account again). Losing the
