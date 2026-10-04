@@ -121,6 +121,7 @@ async function poll() {
         await store.saveBlob(job.blob, mime, buf);
         Object.assign(job, { state: 'done', done: true, credits: d.creditsConsumed, size: buf.length });
         item.active = job.id; item.v = job.id;          // the new picture is shown right away; the original can be restored
+        if (job.seed) setImmediate(() => checkSeeded(qid, job));
       } else if (d.state === 'fail') {
         Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
       } else { job.state = 'generating'; pending = true; }
@@ -232,7 +233,42 @@ async function draft(qid) {
 // place of the original; a question is tried again (up to 3 times) only when its picture failed. Changing SEED makes
 // new pictures for all of them.
 const SEED = 'own-v1';
-const SEED_STYLE = 'Style: realistic, modern, high-quality 3D render, sharp details, natural light. Right-hand traffic, as in Denmark. No logos, no watermarks, no brand names, no readable text except on traffic signs, no recognisable real people.';
+const SEED_STYLE = 'ACCURACY: this picture is used in a driving-theory test, so every sign, road marking, light, vehicle and person listed above must be clearly visible and exactly as described: their position, colour, shape, which lights are lit, solid or broken lines. Do not add any other signs, markings, vehicles or people. Right-hand traffic, as in Denmark.\nStyle: realistic, modern, high-quality 3D render, sharp details, natural light, 4:3. No logos, no watermarks, no brand names, no readable text except numbers on traffic signs, no recognisable real people.';
+// After a picture is made, Claude checks it against its description; one with a wrong or missing important detail
+// (a sign, a marking, which light is lit, where a vehicle or person is) is made again, up to 3 pictures in all. The
+// last one stays shown either way, with Claude's findings in job.check for the admin panel.
+const CHECK = `You check a picture made for a Danish driving-theory test against the scene description it was made from.
+Only details the test depends on matter: traffic signs (shape, colour, symbol, number), road markings (solid or broken, colour, arrows, zebra crossings), traffic lights and indicators (which lights are lit), the vehicles, cyclists, pedestrians and animals named (type, colour, position, what they do), the road layout (lanes, bends, hills, junction), weather, light and road surface when described, and the viewpoint (e.g. dashboard and mirrors visible). Anything listed under MUST NOT APPEAR must be absent.
+Ignore small artistic differences, the look of buildings and trees, and blurred text.
+Answer with JSON only: {"ok": true|false, "problems": ["short description of each important mismatch"]}.`;
+async function check(qid, job) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const b = await blob(job.blob);
+  if (!b || !/^image\/(png|jpeg|webp)$/.test(b.mime)) return null;
+  claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
+  const r = await claude.messages.create({
+    model: CLAUDE, max_tokens: 800, system: CHECK,
+    messages: [{ role: 'user', content: [
+      { type: 'image', source: { type: 'base64', media_type: b.mime, data: b.data.toString('base64') } },
+      { type: 'text', text: `Scene description:\n${job.prompt.split('\nACCURACY:')[0]}` },
+    ] }],
+  });
+  const text = r.content.filter(x => x.type === 'text').map(x => x.text).join('');
+  const m = /\{[\s\S]*\}/.exec(text);
+  return m ? JSON.parse(m[0]) : null;
+}
+async function checkSeeded(qid, job) {
+  try {
+    const res = await check(qid, job);
+    if (!res) return;
+    job.check = { ok: !!res.ok, problems: (res.problems || []).slice(0, 8).map(String), at: Date.now() }; await save();
+    const tries = images()[qid].jobs.filter(j => j.seed === job.seed).length;
+    if (!res.ok && tries < 3) {
+      console.log('own picture', qid, 'made again:', job.check.problems.join('; '));
+      await start(+qid, job.model, 'auto', job.prompt, job.seed);
+    }
+  } catch (e) { console.error('own picture check', qid, e.message); }
+}
 const ownPrompts = () => {
   const out = {};
   for (const f of fs.readdirSync(path.join(__dirname, 'data')).filter(f => /^original_.*\.json$/.test(f)).sort()) {
