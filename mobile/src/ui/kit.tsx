@@ -150,7 +150,8 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
 }
 
 // Scrollable tab screen: the page heading (with the theme switch beside it; no app name or logo, so the page has the
-// room) and the content; leaves room for the tab bar.
+// room) and the content; on the web it leaves room for the floating tab bar over the page's end (on phones the
+// system's tab bar sits below the page, so only a small margin is left there).
 // With `fill` the screen does not scroll: its content gets exactly the height between the title and the tab bar
 // (the floating bar on the web, the system bar on phones, which the bottom safe area already covers), and `gap`
 // can be set tighter for short screens.
@@ -172,7 +173,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { t
       <PageIn>
       {fill
         ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
-        : <ScrollView contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: ins.bottom + 100 }]}>{head}{children}</ScrollView>}
+        : <ScrollView contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 }]}>{head}{children}</ScrollView>}
       </PageIn>
     </Backdrop>
   );

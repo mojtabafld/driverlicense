@@ -53,7 +53,7 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
 }
 
 // The card with the latest `limit` attempts, newest first, and «نمایش همه» when there are more.
-export function ActivityList({ attempts, limit = 10 }: { attempts: Attempt[]; limit?: number }) {
+export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها' }: { attempts: Attempt[]; limit?: number; title?: string }) {
   const c = useColors();
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
@@ -62,7 +62,7 @@ export function ActivityList({ attempts, limit = 10 }: { attempts: Attempt[]; li
   return (
     <Card style={{ paddingVertical: 6 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 4 }}>
-        <T style={{ fontWeight: '700', fontSize: 16 }}>آخرین فعالیت‌ها</T>
+        <T style={{ fontWeight: '700', fontSize: 16 }}>{title}</T>
         {/* Delete the whole history, after a question. */}
         <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
           style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
