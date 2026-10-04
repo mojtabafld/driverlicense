@@ -51,15 +51,12 @@ export function SlideToConfirm({ label, doneLabel, icon = 'chevronLeft', onConfi
   const [room, setRoom] = useState(1);
   const layout = (e: LayoutChangeEvent) => { const r = Math.max(1, e.nativeEvent.layout.width - KNOB - PAD * 2); s.setRoom(r); setRoom(r); };
   const confirm = () => { if (!s.isDone()) s.finish(); };
-  // The label fades as the handle leaves; the fill grows behind it.
+  // The label fades as the handle leaves.
   const fade = s.x.interpolate({ inputRange: [0, room * 0.6], outputRange: [1, 0], extrapolate: 'clamp' });
-  const fill = s.x.interpolate({ inputRange: [0, room], outputRange: [KNOB + PAD * 2, room + KNOB + PAD * 2], extrapolate: 'clamp' });
   return (
     <View onLayout={layout} accessible accessibilityRole="button" accessibilityLabel={label}
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={confirm}
       style={{ height: H, borderRadius: 12, backgroundColor: c.btn, overflow: 'hidden', justifyContent: 'center', direction: 'ltr' } as any}>
-      {/* The trail behind the handle, from the right edge to the handle. */}
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: fill, borderRadius: 12, backgroundColor: c.btnFg, opacity: done ? 0 : 0.07 }} />
       <Animated.View pointerEvents="none" style={{ position: 'absolute', left: KNOB, right: KNOB, opacity: done ? 0 : fade, alignItems: 'center' }}>
         <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: c.btnFg, textAlign: 'center' }} numberOfLines={1}>{label}</T>
       </Animated.View>
