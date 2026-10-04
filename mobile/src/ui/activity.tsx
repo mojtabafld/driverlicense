@@ -75,8 +75,8 @@ export function ActivityList({ attempts, limit = 10 }: { attempts: Attempt[]; li
       {shown.map((a, i) => <Enter key={a.at}><ActivityRow a={a} bank={bank} c={c} last={i === shown.length - 1} /></Enter>)}
       {rows.length > limit ? (
         <Pressable onPress={() => { tap(); setAll(!all); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
-          <T style={{ color: c.link, fontWeight: '700', fontSize: 13.5 }}>{all ? 'نمایش کمتر' : `نمایش همه (${faNum(rows.length)})`}</T>
-          <View style={{ transform: [{ rotate: all ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={16} color={c.link} weight="semibold" /></View>
+          <T style={{ color: c.text, fontWeight: '700', fontSize: 13.5 }}>{all ? 'نمایش کمتر' : `نمایش همه (${faNum(rows.length)})`}</T>
+          <View style={{ transform: [{ rotate: all ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={16} color={c.text} weight="semibold" /></View>
         </Pressable>
       ) : null}
     </Card>
