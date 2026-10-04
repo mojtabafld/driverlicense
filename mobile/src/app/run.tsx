@@ -68,9 +68,9 @@ export default function Run() {
   const ui = uiText(lang === 'en' ? 'en' : 'da');
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
   // The clock's colour: the theme's while more than two thirds of the time is left, warning (amber) up to one third,
-  // danger (red) in the last third.
-  const total = qs.length * SECONDS_PER_Q;
-  const clock = left <= total / 3 ? c.bad : left <= (total * 2) / 3 ? c.warn : dark ? c.link : c.accent;
+  // danger (red) in the last third; each change on a whole minute (25 minutes: amber from 16:00, red from 8:00).
+  const total = qs.length * SECONDS_PER_Q, atMin = (x: number) => Math.floor(x / 60) * 60;
+  const clock = left <= atMin(total / 3) ? c.bad : left <= atMin((total * 2) / 3) ? c.warn : dark ? c.link : c.accent;
 
   return (
     <Backdrop anim={motion.style}>

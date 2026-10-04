@@ -22,7 +22,7 @@ const UI = {
 export const uiText = (lang: 'da' | 'en') => UI[lang];
 
 // Like the site, digits are Persian everywhere in the review, Danish text included (faNum).
-// The AI text (in the neutral grey look: a white card, headings in the text colour): «# » headings, «- » bullets, **bold**; «تیک زد» is worded «انتخاب کرد».
+// The AI text (in the neutral grey look: on the soft `note` panel, headings in the text colour): «# » headings, «- » bullets, **bold**; «تیک زد» is worded «انتخاب کرد».
 const pickWords = (t: string) => t.replace(/تیک(?:\s|‌)*نزد/g, 'انتخاب نکرد').replace(/تیک(?:\s|‌)*زد/g, 'انتخاب کرد')
   .replace(/تیک(?:\s|‌)*نخورد/g, 'انتخاب نشد').replace(/تیک(?:\s|‌)*خورد/g, 'انتخاب شد');
 function Rich({ text, onQuestion }: { text: string; onQuestion?: (n: number) => void }) {
@@ -126,7 +126,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
     <View style={{ marginTop: 14 }}>
       <AiButton title="تحلیل پاسخ شما" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
-        <View style={{ marginTop: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface }}>
+        <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
             : text ? <Rich text={text} /> : null}
@@ -158,7 +158,7 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
     <View style={{ marginTop: 22 }}>
       <AiButton title="جمع‌بندی آموزشی اشتباهات" sub="خلاصه‌ی آموزشی همه‌ی اشتباهات این آزمون، با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
       {shown ? (
-        <View style={{ marginTop: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface }}>
+        <View style={{ marginTop: 8, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
             : text ? <Rich text={text} onQuestion={onQuestion} /> : null}
