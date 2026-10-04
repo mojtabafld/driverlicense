@@ -67,6 +67,10 @@ export default function Run() {
   const goTo = (k: number) => { tap(); setDialog(null); setI(k); };
   const ui = uiText(lang === 'en' ? 'en' : 'da');
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+  // The clock's colour: the theme's while more than two thirds of the time is left, warning (amber) up to one third,
+  // danger (red) in the last third.
+  const total = qs.length * SECONDS_PER_Q;
+  const clock = left <= total / 3 ? c.bad : left <= (total * 2) / 3 ? c.warn : dark ? c.link : c.accent;
 
   return (
     <Backdrop anim={motion.style}>
@@ -78,8 +82,8 @@ export default function Run() {
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
             {settings.timer ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, direction: 'ltr' } as any}>
-                <Icon name="clock" size={17} color={left < 60 ? c.bad : dark ? c.link : c.accent} weight="semibold" />
-                <T style={{ fontSize: 20, lineHeight: 28, fontWeight: '500', color: left < 60 ? c.bad : dark ? c.link : c.accent, writingDirection: 'ltr' }}>{faNum(mm)}</T>
+                <Icon name="clock" size={17} color={clock} weight="semibold" />
+                <T style={{ fontSize: 20, lineHeight: 28, fontWeight: '500', color: clock, writingDirection: 'ltr' }}>{faNum(mm)}</T>
               </View>
             ) : null}
           </View>
