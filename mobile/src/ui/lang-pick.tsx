@@ -12,7 +12,7 @@ import { Icon } from './icon';
 import { L, T, tap } from './kit';
 import { INTRO_BG as BG } from './onboarding';
 
-const BUTTON = '#ffffff', BUTTON_TEXT = '#1d6e1d';
+const BUTTON = '#ffffff', BUTTON_TEXT = '#14421c';
 
 function FlagDK() {
   return (
@@ -49,7 +49,7 @@ export function LangPick() {
   const save = () => { tap(); setBusy(true); setSettings({ lang, langChosen: true }).catch(() => setBusy(false)); };
   return (
     <View style={{ flex: 1 }}>
-      <LinearGradient colors={BG} locations={[0, 0.62, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={BG} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <View style={{ flex: 1, justifyContent: 'center', gap: 28 }}>
           <View style={{ gap: 12 }}>

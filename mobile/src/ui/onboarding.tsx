@@ -19,11 +19,11 @@ const SLIDES = [
   { Art: ArtAi, title: 'هوش مصنوعی، همراه شما', text: 'برای هر اشتباه توضیحی ساده به فارسی بگیرید و در پایان هر آزمون جمع‌بندی نکته‌هایی را که باید مرور کنید.' },
   { Art: ArtProgress, title: 'پیشرفت‌تان را ببینید', text: 'نمودار پیشرفت، احتمال قبولی و تمرین هدفمند همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید.' },
 ];
-// Flat forest green at the top (the chart's green), the colour the server's intro pictures are made on, so they sit in
-// the page seamlessly.
-export const INTRO_BG = ['#228B22', '#228B22', '#17661a'] as const;
+// Flat dark forest green, the colour the server's intro pictures are made on (so they sit in the page seamlessly),
+// going only a shade darker at the very bottom.
+export const INTRO_BG = ['#14421c', '#14421c', '#0d3014'] as const;
 const BG = INTRO_BG;
-const BUTTON = '#ffffff', BUTTON_TEXT = '#1d6e1d';
+const BUTTON = '#ffffff', BUTTON_TEXT = '#14421c';
 
 // The slide's title on one line: measured once at full size in an invisible, very wide box, then set just small
 // enough to fit the width it has (never larger than `size`).
@@ -79,7 +79,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
   const artH = Math.min(height * 0.42, 340), shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
   return (
     <View style={{ flex: 1 }} {...swipe}>
-      <LinearGradient colors={[top, top, BG[2]]} locations={[0, 0.62, 1]} start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={[top, top, BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -28 }}
