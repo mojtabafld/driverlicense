@@ -49,7 +49,8 @@ function init(s, siteDir) {
   BANK = JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, ''));
   Q = new Map(BANK.questions.map(q => [q.id, q]));
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
-  fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message));
+  fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message))
+    .then(() => seedOwn()).catch(e => console.error('own pictures', e.message));
 }
 
 async function kie(method, url, body) {
@@ -77,7 +78,7 @@ async function describe(q) {
 
 // Starts ONE new picture for question `qid` with the chosen model ('flare' | 'sunburst'). Returns the job.
 // `prompt`: a scene description written or edited by the admin; without it Claude writes one.
-async function start(qid, model = 'sunburst', by = '', prompt = '') {
+async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '') {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
@@ -86,7 +87,7 @@ async function start(qid, model = 'sunburst', by = '', prompt = '') {
   // One picture at a time per question, so a double click or a second tab never makes two.
   if (item.jobs.some(j => !j.done)) throw Object.assign(new Error('برای این سؤال یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
   prompt = String(prompt || '').trim().slice(0, 20000);
-  const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}) };
+  const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}), ...(seed ? { seed } : {}) };
   item.jobs.push(job); await save();
   try {
     job.prompt = prompt || await describe(q);
@@ -114,9 +115,10 @@ async function poll() {
         const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
         if (!url) throw new Error('no result url');
         const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
-        const buf = Buffer.from(await r.arrayBuffer());
+        let buf = Buffer.from(await r.arrayBuffer()), mime = r.headers.get('content-type') || 'image/png';
+        if (job.seed) ({ buf, mime } = shrink(buf, mime));
         job.blob = `qimg-${qid}-${job.id}`;
-        await store.saveBlob(job.blob, r.headers.get('content-type') || 'image/png', buf);
+        await store.saveBlob(job.blob, mime, buf);
         Object.assign(job, { state: 'done', done: true, credits: d.creditsConsumed, size: buf.length });
         item.active = job.id; item.v = job.id;          // the new picture is shown right away; the original can be restored
       } else if (d.state === 'fail') {
@@ -221,6 +223,37 @@ async function draft(qid) {
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   return describe(q);
+}
+
+// ---------- our own questions' pictures (data/original_*.json) ----------
+// The questions written new for the site (build.py puts their text in place of prove.dk's) each carry `img`, a scene
+// description written with the new text. When the server starts with KIE_API_KEY set, each such question gets ONE new
+// picture from that text (Sunburst, the more detailed model, so signs and markings come out right), shown at once in
+// place of the original; a question is tried again (up to 3 times) only when its picture failed. Changing SEED makes
+// new pictures for all of them.
+const SEED = 'own-v1';
+const SEED_STYLE = 'Style: realistic, modern, high-quality 3D render, sharp details, natural light. Right-hand traffic, as in Denmark. No logos, no watermarks, no brand names, no readable text except on traffic signs, no recognisable real people.';
+const ownPrompts = () => {
+  const out = {};
+  for (const f of fs.readdirSync(path.join(__dirname, 'data')).filter(f => /^original_.*\.json$/.test(f)).sort()) {
+    for (const [k, v] of Object.entries(JSON.parse(fs.readFileSync(path.join(__dirname, 'data', f), 'utf8')))) if (!k.startsWith('_') && v.img) out[k] = v.img;
+  }
+  return out;
+};
+// A 2048-px picture at half size (about a quarter of the bytes); a file it cannot read is kept as it is.
+function shrink(buf, mime) {
+  try { const im = png.decode(buf); return im && im.w > 1200 ? { buf: png.encode(png.half(im)), mime: 'image/png' } : { buf, mime }; }
+  catch (e) { console.error('picture shrink', e.message); return { buf, mime }; }
+}
+async function seedOwn() {
+  if (!available()) return;
+  for (const [qid, text] of Object.entries(ownPrompts())) {
+    if (!Q.has(+qid)) continue;
+    const jobs = ((images()[qid] || {}).jobs || []).filter(j => j.seed === SEED);
+    if (jobs.some(j => j.blob || !j.done) || jobs.length >= 3) continue;   // made, being made, or given up
+    await start(+qid, 'sunburst', 'auto', `${text}\n${SEED_STYLE}`, SEED).catch(e => console.error('own picture', qid, e.message));
+    await new Promise(r => setTimeout(r, 1500));   // a little apart, not 25 requests at once
+  }
 }
 
 // ---------- pictures for the app's intro (four slides) ----------

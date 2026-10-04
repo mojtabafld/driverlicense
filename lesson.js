@@ -10,6 +10,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const Anthropic = require('@anthropic-ai/sdk');
+const imagegen = require('./imagegen');
 
 const MODEL = process.env.LESSON_MODEL || 'claude-opus-5-5';
 const PER_USER_PER_HOUR = 40; // new (uncached) lessons a user may trigger per hour
@@ -105,14 +106,19 @@ function allowed(username) {
   list.push(now); return true;
 }
 
-// The question's picture as an image block (the same file the page shows); null when it is missing.
+// The question's picture as an image block: the one the page shows, so a new picture made for the question
+// (imagegen.js) when there is one, else the file; null when it is missing.
 let SITE = null;
-function imageOf(q) {
+async function imageOf(q) {
   try {
+    const b = await imagegen.activeBlob(q.id).catch(() => null);
+    if (b && /^image\/(png|jpeg|webp|gif)$/.test(b.mime)) return { type: 'image', source: { type: 'base64', media_type: b.mime, data: b.data.toString('base64') } };
     const data = fs.readFileSync(path.join(SITE, q.img.split('?')[0])).toString('base64');
     return { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data } };
   } catch { return null; }
 }
+// A question written new (`rev` in the bank) gets its own cache keys, so no lesson made for its old text is shown.
+const qkey = q => `${q.id}${q.rev ? `r${q.rev}` : ''}`;
 
 function promptFor(q, ticks, lang) {
   const topic = BANK.topics[q.c];
@@ -148,12 +154,12 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
   const known = Array.isArray(ticks);
   const mask = known ? q.st.map((s, k) => ((!!ticks[k]) !== !!s.ok ? 1 : 0)).join('') : 'x';
   const allRight = known && !mask.includes('1');
-  const key = `lesson:v6:${q.id}:${mask}:${lang}`; // v6: an all-right answer gets its own analysis, mistakes list only the wrong ones
+  const key = `lesson:v6:${qkey(q)}:${mask}:${lang}`; // v6: an all-right answer gets its own analysis, mistakes list only the wrong ones
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
 
-  return { ...(await generate({ store, key, system: allRight ? SYSTEM_OK : SYSTEM, prompt: [imageOf(q), { type: 'text', text: promptFor(q, known ? ticks : null, lang) }].filter(Boolean), maxTokens: 4000 })), key };
+  return { ...(await generate({ store, key, system: allRight ? SYSTEM_OK : SYSTEM, prompt: [await imageOf(q), { type: 'text', text: promptFor(q, known ? ticks : null, lang) }].filter(Boolean), maxTokens: 4000 })), key };
 }
 
 // Calls Claude once per cache key (concurrent requests for the same key share the call) and caches the text.
@@ -191,12 +197,25 @@ async function getSummary({ store, siteDir, username, items, lang }) {
   const list = items.map((x, k) => ({ q: Q.get(+x.id), a: x.a, n: Number.isInteger(x.n) && x.n > 0 ? x.n : k + 1 })).filter(x => x.q);
   if (!list.length) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   const mask = (q, a) => q.st.map((s, k) => ((!!a[k]) !== !!s.ok ? 1 : 0)).join('');
-  const key = `summary:v3:${lang}:${list.map(x => `${x.n}.${x.q.id}.${mask(x.q, x.a)}`).sort().join(',')}`; // v3: sees the pictures
+  const key = `summary:v3:${lang}:${list.map(x => `${x.n}.${qkey(x.q)}.${mask(x.q, x.a)}`).sort().join(',')}`; // v3: sees the pictures
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
-  const prompt = list.flatMap(x => [{ type: 'text', text: `### سؤال ${x.n}` }, imageOf(x.q), { type: 'text', text: promptFor(x.q, x.a, lang) }].filter(Boolean));
+  const pics = await Promise.all(list.map(x => imageOf(x.q)));
+  const prompt = list.flatMap((x, i) => [{ type: 'text', text: `### سؤال ${x.n}` }, pics[i], { type: 'text', text: promptFor(x.q, x.a, lang) }].filter(Boolean));
   return { ...(await generate({ store, key, system: SUMMARY_SYSTEM, prompt, maxTokens: 8000 })), key };
 }
 
-module.exports = { getLesson, getSummary, lessonsAvailable: available };
+// Whether a lesson / summary linked to a past exam (attempt.ai) was made for the questions' current text: one made
+// before a question was written new is not shown, and a new one is made instead.
+function isCurrentLesson(siteDir, qid, ref) {
+  loadBank(siteDir);
+  const q = Q.get(+qid);
+  return !q || String(ref).split(':')[2] === qkey(q);
+}
+function isCurrentSummary(siteDir, items, ref) {
+  loadBank(siteDir);
+  return items.every(x => { const q = Q.get(+x.id); return !q || !q.rev || String(ref).includes(`.${qkey(q)}.`); });
+}
+
+module.exports = { getLesson, getSummary, lessonsAvailable: available, isCurrentLesson, isCurrentSummary };

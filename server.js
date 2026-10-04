@@ -12,7 +12,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
-const { getLesson, getSummary, lessonsAvailable } = require('./lesson');
+const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary } = require('./lesson');
 const imagegen = require('./imagegen');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -401,7 +401,7 @@ async function api(req, res, route) {
     const b = await readBody(req);
     const qid = +b.qid, att = attemptAt(b.at);
     const ref = att && att.ai && att.ai.q && att.ai.q[qid];
-    if (ref && store.meta[ref]) return send(res, 200, { text: store.meta[ref].text });
+    if (ref && store.meta[ref] && isCurrentLesson(SITE, qid, ref)) return send(res, 200, { text: store.meta[ref].text });
     try {
       const lesson = await getLesson({ store, siteDir: SITE, username: user.username, qid, ticks: Array.isArray(b.a) ? b.a.slice(0, 4) : null, lang: b.lang });
       if (att && att.items.some(it => it.id === qid)) await linkAi(att, qid, lesson.key);
@@ -418,7 +418,7 @@ async function api(req, res, route) {
     const items = Array.isArray(b.items) ? b.items.slice(0, 25).filter(x => x && Array.isArray(x.a)).map(x => ({ id: +x.id, a: x.a.slice(0, 4), n: +x.n || undefined })) : [];
     if (!items.length) return send(res, 400, { error: 'no mistakes' });
     const att = attemptAt(b.at), ref = att && att.ai && att.ai.s;
-    if (ref && store.meta[ref]) return send(res, 200, { text: store.meta[ref].text });
+    if (ref && store.meta[ref] && isCurrentSummary(SITE, items, ref)) return send(res, 200, { text: store.meta[ref].text });
     try {
       const summary = await getSummary({ store, siteDir: SITE, username: user.username, items, lang: b.lang });
       if (att) await linkAi(att, 's', summary.key);
