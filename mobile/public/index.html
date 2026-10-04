@@ -17,9 +17,11 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>TeoriPrøve</title>
     <style id="expo-reset">
+      /* Under the translucent status bar of a Home Screen app, iOS makes 100% short by the status bar's height,
+         which left an empty band at the bottom; the inset is added back (it is 0 in a browser tab). */
       html,
       body {
-        height: 100%;
+        height: calc(100% + env(safe-area-inset-top));
       }
       body {
         overflow: hidden;
