@@ -29,7 +29,8 @@ export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست 
   );
 }
 
-// The legend's entries: [label, fill, edge, bookmark] for the tile kinds in `items`, and the current question.
+// The legend's entries: [label, fill, edge, bookmark] for the tile kinds in `items`, and the current question (a
+// thick edge in the text colour, so it never looks like a right answer's green edge).
 function legend(items: QItem[], c: ReturnType<typeof useColors>): [string, string, string, boolean][] {
   const has = (t: QItem['tone']) => items.some(q => q.tone === t);
   return [
@@ -38,7 +39,7 @@ function legend(items: QItem[], c: ReturnType<typeof useColors>): [string, strin
     ...(has('ok') ? [['درست', c.okSoft, c.ok, false] as [string, string, string, boolean]] : []),
     ...(has('bad') ? [['نادرست', c.badSoft, c.bad, false] as [string, string, string, boolean]] : []),
     ...(items.some(q => q.marked) || has('answered') || has('empty') ? [['علامت‌خورده', c.surface, c.warn, true] as [string, string, string, boolean]] : []),
-    ['سؤال فعلی', c.surface, c.accent, false],
+    ['سؤال فعلی', c.surface, c.text, false],
   ];
 }
 
@@ -63,7 +64,7 @@ export function QuestionSheet({ open, items, current, onPick, onClose }: { open:
               return (
                 <Pressable key={k} onPress={() => { tap(); onPick(k); }} accessibilityRole="button" accessibilityLabel={`سؤال ${faNum(q.n)}`}
                   style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1, backgroundColor: bg,
-                    borderWidth: k === current ? 2.5 : 1.5, borderColor: k === current ? c.accent : q.marked ? c.warn : filled ? c.strong : empty ? c.nav : ok ? c.ok : bad ? c.bad : c.line })}>
+                    borderWidth: k === current ? 3 : 1.5, borderColor: k === current ? c.text : q.marked ? c.warn : filled ? c.strong : empty ? c.nav : ok ? c.ok : bad ? c.bad : c.line })}>
                   <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: fg, textAlign: 'center' }}>{faNum(q.n)}</T>
                   {q.marked ? (
                     <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>

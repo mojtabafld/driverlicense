@@ -54,7 +54,15 @@
           "hidden": true
         }
       ],
-      "./plugins/with-force-rtl"
+      "./plugins/with-force-rtl",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

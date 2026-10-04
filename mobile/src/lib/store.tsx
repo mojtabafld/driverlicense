@@ -12,7 +12,7 @@ type Ctx = {
   ready: boolean; user: User | null; attempts: Attempt[]; settings: Settings; bank: Bank | null; Q: Map<number, Question>;
   imgv: Record<string, string>; token: string | null;
   // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
-  saved: Saved[]; aiLessons: boolean;
+  saved: Saved[]; aiLessons: boolean; tts: boolean;
   // The intro's pictures that the server has made: slide number → version, and → the picture's background colour.
   intro: Record<string, string>; introBg: Record<string, string>;
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
@@ -36,6 +36,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [bank, setBank] = useState<Bank | null>(null);
   const [aiLessons, setAiLessons] = useState(false);
+  const [tts, setTts] = useState(false); // questions read aloud (the server has an ElevenLabs key)
   const [intro, setIntro] = useState<Record<string, string>>({});
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
 
@@ -46,7 +47,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const d = await api<Me>('GET', 'me');
     if (g !== gen.current) return;
     setMe(d);
-    api<{ aiLessons?: boolean }>('GET', 'config').then(x => setAiLessons(!!x.aiLessons)).catch(() => {});
+    api<{ aiLessons?: boolean; tts?: boolean }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); }).catch(() => {});
     if (!bank) setBank(await fetchBank<Bank>());
   }, [bank]);
 
@@ -71,7 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
-    saved: me?.saved ?? [], aiLessons, intro, introBg,
+    saved: me?.saved ?? [], aiLessons, tts, intro, introBg,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
@@ -101,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons, intro, introBg]);
+  }), [ready, token, me, bank, aiLessons, tts, intro, introBg]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

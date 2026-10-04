@@ -3,7 +3,8 @@
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review),
-// LESSON_MODEL (Claude model for those lessons, default claude-opus-5-5), KIE_API_KEY (new question pictures, admin panel).
+// LESSON_MODEL (Claude model for those lessons, default claude-opus-5-5), KIE_API_KEY (new question pictures, admin panel),
+// ELEVENLABS_API_KEY (questions read aloud).
 // See README.md for all variables.
 'use strict';
 process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
@@ -14,6 +15,7 @@ const crypto = require('node:crypto');
 const { openStore } = require('./store');
 const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary } = require('./lesson');
 const imagegen = require('./imagegen');
+const tts = require('./tts');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
@@ -70,12 +72,12 @@ async function newSession(req, res, username) {
 const isApp = req => req.headers['x-client'] === 'app';
 function sessionUser(req) {
   // Every credential the request carries, in this order: the app's own token (Bearer), the token of a picture in the
-  // app's web version (an <img> cannot send headers: ?t=<token>, only for /img/), then the site's cookie. The first one
+  // app's web version (an <img> or <audio> cannot send headers: ?t=<token>, only for /img/ and /api/tts), then the site's cookie. The first one
   // that is a live session wins, so a leftover cookie (e.g. one whose session was signed out) never blocks a valid token.
   const url = new URL(req.url, 'http://x');
   const tokens = [
     (/^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '') || [])[1],
-    /^\/img\//.test(url.pathname) ? (/^([a-f0-9]{64})$/.exec(url.searchParams.get('t') || '') || [])[1] : undefined,
+    /^\/(img\/|api\/tts$)/.test(url.pathname) ? (/^([a-f0-9]{64})$/.exec(url.searchParams.get('t') || '') || [])[1] : undefined,
     (/(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '') || [])[1],
   ].filter(Boolean);
   for (const token of tokens) {
@@ -316,7 +318,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), intro: imagegen.introVersions(), introBg: imagegen.introColours() });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -441,6 +443,15 @@ async function api(req, res, route) {
       if (req.method === 'POST' && route === 'imggendel') { await imagegen.remove(+b.qid, b.job); return send(res, 200, imagegen.list()); }
       if (req.method === 'POST' && route === 'imggendraft') return send(res, 200, { prompt: await imagegen.draft(+b.qid) });
       if (req.method === 'POST' && route === 'imggenset') { await imagegen.setActive(+b.qid, b.job || null); return send(res, 200, imagegen.list()); }
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+  }
+  // A question and its statements read aloud (ElevenLabs), as MP3: ?qid=<id>&lang=da|en.
+  if (req.method === 'GET' && route === 'tts') {
+    const u = new URL(req.url, 'http://x');
+    try {
+      const b = await tts.get({ store, siteDir: SITE, qid: u.searchParams.get('qid'), lang: u.searchParams.get('lang'), username: user.username });
+      res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=2592000', 'Accept-Ranges': 'none' });
+      return res.end(b.data);
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   if (req.method === 'GET' && route === 'adminstats') {

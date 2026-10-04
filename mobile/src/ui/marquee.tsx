@@ -10,8 +10,9 @@ import { useColors } from './theme';
 
 const SPEED = 32, PAUSE = 1600, FADE = 18; // px per second, ms at each end, width of the faded edges
 
-export function Marquee({ text, style, height }: { text: string; style?: StyleProp<TextStyle>; height: number }) {
-  const c = useColors();
+// `bg`: the colour behind it, for the faded edges (the page colour by default; a card's inside a card).
+export function Marquee({ text, style, height, bg }: { text: string; style?: StyleProp<TextStyle>; height: number; bg?: string }) {
+  const c = useColors(), edge = bg ?? c.bg;
   const [room, setRoom] = useState(0), [full, setFull] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
   // Too long: it travels so that both its ends come out from under the faded edges.
@@ -39,8 +40,8 @@ export function Marquee({ text, style, height }: { text: string; style?: StylePr
       </Animated.View>
       {over ? (
         <>
-          <LinearGradient pointerEvents="none" colors={[c.bg, `${c.bg}00`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: FADE }} />
-          <LinearGradient pointerEvents="none" colors={[`${c.bg}00`, c.bg]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: FADE }} />
+          <LinearGradient pointerEvents="none" colors={[edge, `${edge}00`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: FADE }} />
+          <LinearGradient pointerEvents="none" colors={[`${edge}00`, edge]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: FADE }} />
         </>
       ) : null}
     </View>

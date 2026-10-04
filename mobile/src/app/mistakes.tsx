@@ -131,7 +131,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                       <Pressable onPress={() => choose({ topic: g.c })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
                         <View style={{ gap: 6, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }} numberOfLines={1}>{topicFa(bank, g.c)}</T>
+                            {/* A long topic name glides to show all of it. */}
+                            <Marquee text={topicFa(bank, g.c)} height={24} bg={c.surface} style={{ fontSize: 14, lineHeight: 24, fontWeight: '700' }} />
                             <T style={{ fontSize: 12.5, fontWeight: '700', color: tone(p) }}>{faNum(Math.round(p * 100))}٪ پاسخ درست</T>
                             <Icon name="chevronLeft" size={14} color={c.faint} />
                           </View>
