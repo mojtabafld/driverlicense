@@ -3,7 +3,7 @@
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { useIsDark } from './theme';
+import { useColors, useIsDark } from './theme';
 
 const nativeGlass = Platform.OS === 'ios' && (() => { try { return isLiquidGlassAvailable(); } catch { return false; } })();
 
@@ -58,6 +58,27 @@ export function LiquidGlass({ style, children, r = 22, tint, interactive, bar }:
       web ?? { shadowColor: '#103c3c', shadowOpacity: dark ? 0.5 : 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 8 }, elevation: 2 },
       style,
     ]}>
+      {children}
+    </View>
+  );
+}
+
+// A page's top bar fixed over its content, as iOS draws its navigation bars: edge to edge, the page scrolling under it
+// blurred. iOS 26+: the system's own glass; web: a translucent bar with a backdrop blur and a hairline below; Android
+// (no blur): nearly solid. `onHeight` reports its height so the page can pad its content below it.
+export function GlassTop({ children, onHeight, style }: { children?: React.ReactNode; onHeight?: (h: number) => void; style?: StyleProp<ViewStyle> }) {
+  const dark = useIsDark(), c = useColors();
+  const box: ViewStyle = { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 };
+  const onLayout = onHeight ? (e: { nativeEvent: { layout: { height: number } } }) => onHeight(e.nativeEvent.layout.height) : undefined;
+  if (nativeGlass) {
+    return <GlassView onLayout={onLayout} style={[box, style]} glassEffectStyle="regular">{children}</GlassView>;
+  }
+  const web = Platform.OS === 'web' ? ({ backdropFilter: 'blur(22px) saturate(180%)', WebkitBackdropFilter: 'blur(22px) saturate(180%)' } as any) : null;
+  return (
+    <View onLayout={onLayout} style={[box, {
+      backgroundColor: `${c.bg}${web ? 'BD' : 'F5'}`, // the page colour, about 74% (web) / 96% see-through
+      borderBottomWidth: 0.5, borderBottomColor: dark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)',
+    }, web, style]}>
       {children}
     </View>
   );

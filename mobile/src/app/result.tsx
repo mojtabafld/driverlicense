@@ -16,6 +16,7 @@ import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Button, Card, L, T, physical, tap, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { GlassTop } from '@/ui/liquid';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { AiSummary, ReviewCard, hasSummary, uiText } from '@/ui/review';
 import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
@@ -33,7 +34,7 @@ const goTo = (path: '/' | '/exam' | '/learn') => {
 // The review's tabs, sized to the screen so they stay on one row with the back and details buttons: smaller text and
 // padding on narrow phones, and a shorter «ذخیره» there.
 function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: (f: Filter) => void; n: number; wrong: number; savedN: number }) {
-  const c = useColors();
+  const c = useColors(), dark = useIsDark();
   const w = useWindowDimensions().width;
   const fs = w < 360 ? 12 : w < 410 ? 13 : 14, px = w < 360 ? 7 : w < 410 ? 10 : 14;
   const opts: { v: Filter; label: string }[] = [
@@ -42,13 +43,13 @@ function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: 
     { v: 'all', label: `همه (${faNum(n)})` },
   ];
   return (
-    <View style={{ flexDirection: 'row', flexShrink: 1, padding: 3, gap: 3, borderRadius: 8, backgroundColor: c.surface2 }}>
+    <View style={{ flexDirection: 'row', flexShrink: 1, padding: 3, gap: 3, borderRadius: 10, backgroundColor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}>
       {opts.map(o => {
         const on = o.v === value;
         return (
           <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flexShrink: 1 }}>
-            <View style={{ paddingVertical: 7, paddingHorizontal: px, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }}>
-              <T numberOfLines={1} style={{ fontSize: fs, fontWeight: '600', color: on ? c.link : c.muted, textAlign: 'center' }}>{o.label}</T>
+            <View style={{ paddingVertical: 7, paddingHorizontal: px, borderRadius: 8, backgroundColor: on ? c.strong : 'transparent' }}>
+              <T numberOfLines={1} style={{ fontSize: fs, fontWeight: '600', color: on ? c.strongFg : c.muted, textAlign: 'center' }}>{o.label}</T>
             </View>
           </Pressable>
         );
@@ -92,6 +93,7 @@ export default function Result() {
   const [filter, setFilter] = useState<Filter>(() => (fresh || wrongN ? 'wrong' : 'all'));
   const [k, setK] = useState(0);
   const [listOpen, setListOpen] = useState(false); // the sheet of the questions, from the glass bar
+  const [headH, setHeadH] = useState(0); // the glass top bar's height, the review's top padding
   // The result line of a past review: shown for 3 s, then it shrinks and fades into the «جزئیات آزمون» button, which
   // fades in as it arrives (and brings the line back). `fade` goes 1 → 0; `to` is the way from the line to the button.
   const [line, setLine] = useState<'shown' | 'hidden'>('shown');
@@ -162,29 +164,7 @@ export default function Result() {
     );
     return (
       <Backdrop anim={motion.style}>
-        <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-          {/* .rev-top: back button, tabs, «جزئیات آزمون», always on one row (the details button is an icon on phones) */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
-              style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
-              <Icon name="arrowRight" size={20} color={c.text} />
-            </Pressable>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
-              <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
-              {faded ? (
-                <Animated.View ref={btnRef} style={{ opacity: btnIn, transform: [{ scale: btnIn.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }] }}>
-                  <Pressable onPress={() => { tap(); fade.setValue(1); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
-                    accessibilityRole="button" accessibilityLabel={line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}
-                    style={wide
-                      ? { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.nav }
-                      : { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: line === 'shown' && !flying ? c.strong : c.nav }}>
-                    <Icon name="chart" size={wide ? 16 : 18} color={!wide && line === 'shown' && !flying ? c.strongFg : c.navFg} />
-                    {wide ? <T style={{ fontSize: 13.5, fontWeight: '700', color: c.navFg }}>{line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T> : null}
-                  </Pressable>
-                </Animated.View>
-              ) : null}
-            </View>
-          </View>
+        <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .res-line */}
           {line === 'shown' ? (
             <Animated.View onLayout={e => { if (!flying) setPanelH(e.nativeEvent.layout.height); }}
@@ -215,6 +195,32 @@ export default function Result() {
                 : <Empty text={wrongN ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'} />
             ) : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
         </ScrollView>
+        {/* .rev-top, fixed on Liquid Glass over the page: back button, tabs, «جزئیات آزمون» on one row */}
+        <GlassTop onHeight={setHeadH}>
+          <View style={{ paddingTop: ins.top + 10, paddingBottom: 10, paddingHorizontal: 16, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
+              style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
+              <Icon name="arrowRight" size={20} color={c.text} />
+            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
+              <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
+              {faded ? (
+                <Animated.View ref={btnRef} style={{ opacity: btnIn, transform: [{ scale: btnIn.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }] }}>
+                  <Pressable onPress={() => { tap(); fade.setValue(1); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
+                    accessibilityRole="button" accessibilityLabel={line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}
+                    style={wide
+                      ? { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.nav }
+                      : { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: line === 'shown' && !flying ? c.strong : c.nav }}>
+                    <Icon name="chart" size={wide ? 16 : 18} color={!wide && line === 'shown' && !flying ? c.strongFg : c.navFg} />
+                    {wide ? <T style={{ fontSize: 13.5, fontWeight: '700', color: c.navFg }}>{line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T> : null}
+                  </Pressable>
+                </Animated.View>
+              ) : null}
+            </View>
+          </View>
+          </View>
+        </GlassTop>
         {total ? nav : null}
         {/* The questions on show (this tab's), green when right and red when wrong; a tap opens that one. */}
         <QuestionSheet open={listOpen} current={k} onClose={() => setListOpen(false)} onPick={j => { setListOpen(false); step(j); }}

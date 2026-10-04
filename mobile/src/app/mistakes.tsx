@@ -18,6 +18,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { GlassTop } from '@/ui/liquid';
 import { ListButton } from '@/ui/question-list';
 import { Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
 import { ReviewCard, uiText } from '@/ui/review';
@@ -59,6 +60,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const motion = usePageMotion('push');
   const [lessonOpen, setLessonOpen] = useState<Record<string, boolean>>({});
   const [k, setK] = useState(0); // the question shown
+  const [headH, setHeadH] = useState(0); // the glass title bar's height
   // The chosen categories (section numbers; none = all), and the category sheet with its ticks before applying them:
   // it opens with every category ticked when there is no filter, and «همه» ticks them all again.
   const [secs, setSecs] = useState<number[]>([]);
@@ -93,14 +95,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const step = (to: number) => { setK(to); scroll.current?.scrollTo({ y: 0, animated: true }); };
   return (
     <Backdrop anim={motion.style}>
-      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
-            style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
-            <Icon name="arrowRight" size={20} color={c.text} />
-          </Pressable>
-          <T style={{ flex: 1, fontSize: 24, lineHeight: 34, fontWeight: '700' }} numberOfLines={1}>{title}</T>
-        </View>
+      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {!view && open ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
         {!sorted.length ? <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>هنوز اشتباهی ثبت نشده است.</T></Card> : (
           <>
@@ -194,6 +189,18 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
           </>
         )}
       </ScrollView>
+      {/* The title row, fixed on Liquid Glass over the page. */}
+      <GlassTop onHeight={setHeadH}>
+        <View style={{ paddingTop: ins.top + 10, paddingBottom: 10, paddingHorizontal: 16, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
+              style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
+              <Icon name="arrowRight" size={20} color={c.text} />
+            </Pressable>
+            <T style={{ flex: 1, fontSize: 24, lineHeight: 34, fontWeight: '700' }} numberOfLines={1}>{title}</T>
+          </View>
+        </View>
+      </GlassTop>
       {/* As in the review: previous / the position / next, in the questions' language */}
       {cur ? (
         <GlassBar
