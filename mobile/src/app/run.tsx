@@ -10,12 +10,13 @@ import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
+import { SlideToConfirm } from '@/ui/slide-confirm';
 import { ZoomableImage } from '@/ui/zoom';
 import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { Icon } from '@/ui/icon';
-import { ActionButton, Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
@@ -173,7 +174,15 @@ export default function Run() {
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
           <View style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
             borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
-            <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
+            {/* The title, with a back button at the top right that returns to the exam. */}
+            <View style={{ minHeight: 40, justifyContent: 'center' }}>
+              <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
+              <Pressable onPress={() => { tap(); setDialog(null); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت به آزمون"
+                style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: c.nav, opacity: pressed ? 0.8 : 1 })}>
+                <Icon name="arrowRight" size={19} color={c.navFg} weight="semibold" />
+              </Pressable>
+            </View>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {([[answered, 'پاسخ داده‌شده'], [empty, 'بی‌پاسخ'], [flags.length, 'علامت‌خورده']] as const).map(([n, l]) => (
                 <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: c.surface2 }}>
@@ -208,10 +217,8 @@ export default function Run() {
                 </View>
               ))}
             </View>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <ActionButton label="بازگشت به آزمون" icon="arrowRight" tone="soft" onPress={() => setDialog(null)} style={{ flex: 1 }} />
-              <ActionButton label="تحویل و پایان" icon="check" iconWeight="bold" onPress={() => { setDialog(null); finish(); }} style={{ flex: 1 }} />
-            </View>
+            {/* Hand in by sliding the handle to the left end, so an exam is never handed in by a stray tap. */}
+            {dialog === 'handin' ? <SlideToConfirm label="برای تحویل و پایان، بکشید" doneLabel="تحویل شد" onConfirm={() => { setDialog(null); finish(); }} /> : null}
           </View>
         </View>
       </Modal>
