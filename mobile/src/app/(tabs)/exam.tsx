@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { FULL, SIZES, faNum, randomIds } from '@/lib/logic';
+import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds } from '@/lib/logic';
 import { topicFa } from '@/lib/names';
 import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
@@ -13,6 +13,14 @@ import { SizeSlider } from '@/ui/size-slider';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Screen, T, tap } from '@/ui/kit';
 import { useColors } from '@/ui/theme';
+
+// What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
+function sizeHint(n: number) {
+  const time = `${faNum(Math.round(n * SECONDS_PER_Q / 60))} دقیقه`, allowed = `${faNum(n - passMin(n))} اشتباه`;
+  return n === FULL
+    ? `مثل آزمون واقعی: ${faNum(n)} سؤال در ${time}؛ با حداکثر ${allowed} قبول می‌شوید. برای سنجیدن آمادگی، این را انتخاب کنید.`
+    : `تمرین کوتاه: ${faNum(n)} سؤال در ${time}، با حداکثر ${allowed} برای قبولی. برای آمادگی کامل، آزمون ${faNum(FULL)} سؤالی را هم امتحان کنید.`;
+}
 
 // Start a practice exam of these questions.
 function practice(ids: number[], title: string) { session.plan = { mode: 'mistakes', ids, title }; router.push('/run'); }
@@ -86,7 +94,13 @@ export default function Exam() {
           </View>
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
         </View>
+        {/* How to choose the number of questions, then what the chosen number means */}
+        <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را با لغزنده‌ی زیر انتخاب کنید.</T>
         <SizeSlider value={size} values={SIZES} onChange={setSize} grey />
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+          <Icon name={size === FULL ? 'checkCircle' : 'clock'} size={17} color={c.muted} />
+          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{sizeHint(size)}</T>
+        </View>
         <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />
       </Card>
       <MistakesCard />
