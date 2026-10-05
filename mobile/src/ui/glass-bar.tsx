@@ -1,4 +1,4 @@
-// The floating Liquid Glass bar of the exam and of the step-by-step review, left to right in the questions' language
+// The bottom bar of the exam, the step-by-step review and the guide pages, left to right in the questions' language
 // (Danish / English): a button at each end and something in the middle (the position).
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,18 +6,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
 import { L, T, tap } from './kit';
-import { LiquidGlass } from './liquid';
 import { useColors } from './theme';
 
 export function GlassBar({ start, middle, end }: { start: React.ReactNode; middle: React.ReactNode; end: React.ReactNode }) {
-  const ins = useSafeAreaInsets();
+  const ins = useSafeAreaInsets(), c = useColors();
+  // Docked at the bottom on a solid band of the card colour with a line above it, so it stands apart from the page in
+  // both themes (like a delivery app's action bar).
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: ins.bottom + 14, paddingHorizontal: 16, alignItems: 'center' }}>
-      <LiquidGlass bar r={30} style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, padding: 6, width: '100%', maxWidth: 520 } as any}>
+    <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, paddingTop: 10, paddingBottom: ins.bottom + 10, paddingHorizontal: 16, alignItems: 'center',
+      backgroundColor: c.surface, borderTopWidth: 1, borderTopColor: c.line }}>
+      <View style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, width: '100%', maxWidth: 520 } as any}>
         {start}
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>{middle}</View>
         {end}
-      </LiquidGlass>
+      </View>
     </View>
   );
 }
