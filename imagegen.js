@@ -428,14 +428,15 @@ const LEARN_PROMPTS = [
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
 // pictures; each has start (on server start), poll (in the poll round), versions (for /api/config) and blob.
-// `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`) or an object of key → { prompt, aspect }.
+// `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`) or an object of key → { prompt, aspect, ref }.
+// `ref`: a picture in `refDir` the model redraws (image to image), e.g. a sign's official drawing; without it, text only.
 // `limit`: at most this many being made at a time (the rest start as earlier ones finish); none = all at once.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity }) {
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '' }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
     ? prompts.map((p, i) => [String(i + 1), { prompt: `${p}\n${style}`, aspect }])
-    : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect }]);
+    : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect, ref: v.ref }]);
   const waiting = x => !x || (!x.blob && x.done && (x.tries || 0) < 3);   // never started, or failed with tries left
   let starting = false;
   async function startSet() {
@@ -446,13 +447,15 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       if (prev && prev.set !== set) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
       const it = meta().items;
       let running = Object.values(it).filter(j => !j.done && j.taskId).length;
-      for (const [n, { prompt, aspect: ar }] of list) {
+      for (const [n, { prompt, aspect: ar, ref }] of list) {
         if (running >= limit) break;
         const x = it[n];
         if (!waiting(x)) continue;   // done, running, or given up after 3 tries
         const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt };
         try {
-          const d = await kie('POST', '/jobs/createTask', { model: MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt, aspect_ratio: ar, resolution: '2K' } });
+          const input = { prompt, aspect_ratio: ar, resolution: '2K' };
+          if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
+          const d = await kie('POST', '/jobs/createTask', { model: ref ? EDIT_MODELS.sunburst : MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
           job.taskId = d.taskId; job.state = 'generating'; running++;
         } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message); }
         await save();
@@ -512,10 +515,12 @@ const AVATAR_PROMPTS = [
   'Background: plain soft sand (#efe5d8). A round red-ringed speed-limit road sign with a blank white middle on a short grey pole.',
 ];
 // ---------- pictures for the teaching pages «علائم رانندگی» and «آموزش حق تقدم» ----------
-// One educational picture per sign, marking, signal and right-of-way situation (data/guide-art.json, written by
-// data/guide-src/build.py with the prompts beside the texts), made a few at a time; served at /guide-art/<key>.png.
+// One educational picture per sign, marking, signal and right-of-way situation, and one per group for its card
+// (data/guide-art.json, written by data/guide-src/build.py with the prompts beside the texts); a sign with an official
+// drawing in data/guide-ref is redrawn from it. Made a few at a time; served at /guide-art/<key>.png.
 const GUIDE_SET = 'v1';
-const GUIDE = artSet({ metaKey: 'guideArt', set: GUIDE_SET, prompts: JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8')), prefix: 'guide', limit: 6 });
+const GUIDE = artSet({ metaKey: 'guideArt', set: GUIDE_SET, prompts: JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8')),
+  prefix: 'guide', limit: 8, refDir: path.join(__dirname, 'data', 'guide-ref') });
 const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
 
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
