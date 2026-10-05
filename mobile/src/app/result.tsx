@@ -1,10 +1,10 @@
 // Result and answer review, laid out like the site.
 // A past exam or lesson: the site's question-by-question review (back button, tabs, a result line that flies into
-// «جزئیات آزمون» after 3 seconds, one open card at a time with Forrige / Næste, and the AI summary of the mistakes at the end).
+// shown only from the «جزئیات آزمون» button, one open card at a time with Forrige / Næste, and the AI summary of the mistakes at the end).
 // One just handed in: the site's result card (ring, verdict, numbers, next steps) and the list of review cards.
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -14,7 +14,7 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, L, T, physical, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, Enter, L, T, physical, tap, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
@@ -94,41 +94,10 @@ export default function Result() {
   const [k, setK] = useState(0);
   const [listOpen, setListOpen] = useState(false); // the sheet of the questions, from the glass bar
   const [headH, setHeadH] = useState(0); // the glass top bar's height, the review's top padding
-  // The result line of a past review: shown for 3 s, then it shrinks and fades into the «جزئیات آزمون» button, which
-  // fades in as it arrives (and brings the line back). `fade` goes 1 → 0; `to` is the way from the line to the button.
-  const [line, setLine] = useState<'shown' | 'hidden'>('shown');
-  const [faded, setFaded] = useState(false), [flying, setFlying] = useState(false);
-  const [fade] = useState(() => new Animated.Value(1));
-  const [btnIn] = useState(() => new Animated.Value(0));
-  const [to, setTo] = useState({ x: 0, y: 0 });
-  // Then the room it leaves closes smoothly (its height to 0, the gap below it too) instead of the page jumping.
-  const [room] = useState(() => new Animated.Value(1));
-  const [panelH, setPanelH] = useState(0);
-  const panelRef = useRef<View>(null), btnRef = useRef<View>(null);
+  // The result line of a past review: hidden at first, shown and hidden again by the «جزئیات آزمون» button.
+  const [line, setLine] = useState<'shown' | 'hidden'>('hidden');
   const scroll = useRef<ScrollView>(null);
   const reveal = useRevealScroll(scroll, headH); // AI panels scroll this page into view
-  useEffect(() => {
-    if (fresh) return;
-    let raf = 0;
-    const t = setTimeout(() => {
-      setFaded(true); setFlying(true); // the button takes its place (still invisible), so it can be measured
-      raf = requestAnimationFrame(() => {
-        const go = (x: number, y: number) => {
-          setTo({ x, y });
-          Animated.parallel([
-            Animated.timing(fade, { toValue: 0, duration: 520, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }),
-            Animated.timing(btnIn, { toValue: 1, duration: 260, delay: 300, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-          ]).start(() => Animated.timing(room, { toValue: 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false })
-            .start(() => { setLine('hidden'); setFlying(false); room.setValue(1); }));
-        };
-        const p = panelRef.current, b = btnRef.current;
-        if (!p || !b) return go(0, -20);
-        p.measureInWindow((px, py, pw, ph) => b.measureInWindow((bx, by, bw, bh) =>
-          go(bx + bw / 2 - (px + pw / 2), by + bh / 2 - (py + ph / 2))));
-      });
-    }, 3000);
-    return () => { clearTimeout(t); cancelAnimationFrame(raf); };
-  }, [fresh, fade, btnIn, room]);
   useEffect(() => { if (!a) router.back(); }, [a]);
   if (!a) return null;
 
@@ -140,7 +109,7 @@ export default function Result() {
   const list = rows.filter(r => filter === 'all' || (filter === 'saved' ? r.it.m : !r.it.ok));
   const savedN = a.items.filter(it => it.m).length;
   const tone = full ? (pass ? 'ok' : 'bad') : 'neutral';
-  const toneFg = tone === 'ok' ? c.ok : tone === 'bad' ? c.bad : c.link, toneBg = tone === 'ok' ? c.okSoft : tone === 'bad' ? c.badSoft : c.accentSoft;
+  const toneFg = tone === 'ok' ? c.ok : tone === 'bad' ? c.bad : c.text, toneBg = tone === 'ok' ? c.okSoft : tone === 'bad' ? c.badSoft : c.surface2;
   const anyOld = a.items.some(it => !it.a);
   const showSummary = hasSummary(a.items, aiLessons);
   const toTop = () => scroll.current?.scrollTo({ y: 0, animated: true });
@@ -169,13 +138,7 @@ export default function Result() {
         <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .res-line */}
           {line === 'shown' ? (
-            <Animated.View onLayout={e => { if (!flying) setPanelH(e.nativeEvent.layout.height); }}
-              style={flying && panelH ? { height: room.interpolate({ inputRange: [0, 1], outputRange: [0, panelH] }), marginBottom: room.interpolate({ inputRange: [0, 1], outputRange: [-12, 0] }) } : null}>
-            <Animated.View ref={panelRef} style={{ opacity: fade, transform: [
-              { translateX: fade.interpolate({ inputRange: [0, 1], outputRange: [to.x, 0] }) },
-              { translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [to.y, 0] }) },
-              { scale: fade.interpolate({ inputRange: [0, 1], outputRange: [0.12, 1] }) },
-            ], flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, backgroundColor: toneBg }}>
+            <Enter style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, backgroundColor: toneBg }}>
               <View style={{ width: 66, height: 66, alignItems: 'center', justifyContent: 'center' }}>
                 <RingSvg size={66} stroke={5} pct={pct} color={toneFg} track={dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'} />
                 <T style={{ fontSize: 15, fontWeight: '800', color: toneFg, textAlign: 'center' }}>{faNum(pctN)}٪</T>
@@ -187,8 +150,7 @@ export default function Result() {
                 </View>
                 <T style={{ fontSize: 12.5, color: c.muted }}>{modeName(a, bank)}، {fmtDate(a.at)}</T>
               </View>
-            </Animated.View>
-            </Animated.View>
+            </Enter>
           ) : null}
           {anyOld ? <OldNote /> : null}
           {!total ? <Empty text="موردی نیست." />
@@ -211,18 +173,14 @@ export default function Result() {
             </View>
             <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
             <View style={{ flex: 1, flexBasis: 0, alignItems: 'flex-end' }}>
-              {faded ? (
-                <Animated.View ref={btnRef} style={{ opacity: btnIn, transform: [{ scale: btnIn.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }] }}>
-                  <Pressable onPress={() => { tap(); fade.setValue(1); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
-                    accessibilityRole="button" accessibilityLabel={line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}
-                    style={wide
-                      ? { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.nav }
-                      : { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: line === 'shown' && !flying ? c.strong : c.nav }}>
-                    <Icon name="chart" size={wide ? 16 : 18} color={!wide && line === 'shown' && !flying ? c.strongFg : c.navFg} />
-                    {wide ? <T style={{ fontSize: 13.5, fontWeight: '700', color: c.navFg }}>{line === 'shown' && !flying ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T> : null}
-                  </Pressable>
-                </Animated.View>
-              ) : null}
+              <Pressable onPress={() => { tap(); setLine(line === 'shown' ? 'hidden' : 'shown'); }} accessibilityState={{ expanded: line === 'shown' }}
+                accessibilityRole="button" accessibilityLabel={line === 'shown' ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}
+                style={wide
+                  ? { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.nav }
+                  : { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: line === 'shown' ? c.strong : c.nav }}>
+                <Icon name="chart" size={wide ? 16 : 18} color={!wide && line === 'shown' ? c.strongFg : c.navFg} />
+                {wide ? <T style={{ fontSize: 13.5, fontWeight: '700', color: c.navFg }}>{line === 'shown' ? 'پنهان‌کردن جزئیات' : 'جزئیات آزمون'}</T> : null}
+              </Pressable>
             </View>
           </View>
           </View>
