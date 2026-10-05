@@ -11,7 +11,7 @@ import { faNum } from '@/lib/logic';
 import { loadLangAsked, loadTourSeen, saveTourSeen } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
-import { T, tap } from './kit';
+import { T, physical, tap } from './kit';
 import { useColors } from './theme';
 
 export type TourStep = { title: string; text: string };
@@ -93,10 +93,11 @@ function TourOverlay({ steps, step, rect, waiting, onStep, onClose }: {
           <>
             <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: Math.max(0, a.y), backgroundColor: DIM }} />
             <View style={{ position: 'absolute', left: 0, right: 0, top: a.y + a.h, bottom: 0, backgroundColor: DIM }} />
-            <View style={{ position: 'absolute', left: 0, width: Math.max(0, a.x), top: a.y, height: a.h, backgroundColor: DIM }} />
-            <View style={{ position: 'absolute', left: a.x + a.w, right: 0, top: a.y, height: a.h, backgroundColor: DIM }} />
+            {/* Measured on screen, so placed by the physical left edge (phones in right to left swap left and right). */}
+            <View style={physical({ position: 'absolute' as const, left: 0, width: Math.max(0, a.x), top: a.y, height: a.h, backgroundColor: DIM })} />
+            <View style={physical({ position: 'absolute' as const, left: a.x + a.w, right: 0, top: a.y, height: a.h, backgroundColor: DIM })} />
             {/* The rounded edge of the lit part. */}
-            <View pointerEvents="none" style={{ position: 'absolute', left: a.x, top: a.y, width: a.w, height: a.h, borderRadius: R, borderWidth: 2, borderColor: '#ffffff' }} />
+            <View pointerEvents="none" style={physical({ position: 'absolute' as const, left: a.x, top: a.y, width: a.w, height: a.h, borderRadius: R, borderWidth: 2, borderColor: '#ffffff' })} />
           </>
         ) : <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: DIM }} />}
         {waiting ? null : (

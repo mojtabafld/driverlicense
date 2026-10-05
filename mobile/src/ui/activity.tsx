@@ -57,8 +57,8 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
 function Head({ title, c }: { title: string; c: Colors }) {
   return (
     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-        <Icon name="clock" size={19} color={c.link} weight="semibold" />
+      <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+        <Icon name="clock" size={19} color={c.text} weight="semibold" />
       </View>
       <T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>{title}</T>
     </View>
