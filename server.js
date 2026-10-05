@@ -152,6 +152,7 @@ function recordVisit(req) {
   saveVisits();
 }
 
+const REPORTS_KEPT = 500, REPORTS_PER_HOUR = 10, reportTimes = new Map(); // bug reports from the app
 const FULL = 25, PASS_MIN = 20;
 const scoreOf = a => a.items.filter(x => x.ok).length;
 function adminStats() {
@@ -456,7 +457,22 @@ async function api(req, res, route) {
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, adminStats());
+    return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse() });
+  }
+  // «گزارش خطا» from the app: { kind: 'bug' | 'idea', text, platform, version }, kept (newest REPORTS_KEPT) in
+  // store.meta.reports for the admin panel; at most REPORTS_PER_HOUR from one user.
+  if (req.method === 'POST' && route === 'report') {
+    const b = await readBody(req);
+    const text = String(b.text || '').trim().slice(0, 2000);
+    if (text.length < 5) return send(res, 400, { error: 'متن گزارش خیلی کوتاه است.' });
+    const now = Date.now(), recent = (reportTimes.get(user.username) || []).filter(t => now - t < 3600e3);
+    if (recent.length >= REPORTS_PER_HOUR) return send(res, 429, { error: 'گزارش‌های زیادی فرستاده‌اید؛ کمی بعد دوباره امتحان کنید.' });
+    recent.push(now); reportTimes.set(user.username, recent);
+    const clip = (v, n) => String(v || '').slice(0, n);
+    const list = (store.meta.reports || []).concat({ at: now, username: user.username, name: user.name, kind: b.kind === 'idea' ? 'idea' : 'bug',
+      text, platform: clip(b.platform, 20), version: clip(b.version, 20) }).slice(-REPORTS_KEPT);
+    await store.saveMeta('reports', list);
+    return send(res, 200, { ok: true });
   }
   if (req.method === 'GET' && route === 'me') {
     if (user.draft && user.draft.mode === 'lesson') { // from before lessons had their own drafts

@@ -1,9 +1,10 @@
-// Exams: a random exam like the real one, practice with your mistakes, and the latest exams and lessons.
+// Exams: a random exam like the real one, an exam of your mistakes, and the latest exams and lessons (the card stays,
+// with a note, before the first one).
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds } from '@/lib/logic';
+import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds, shuffle } from '@/lib/logic';
 import { topicFa } from '@/lib/names';
 import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
@@ -25,25 +26,33 @@ function sizeHint(n: number) {
 // Start a practice exam of these questions.
 function practice(ids: number[], title: string) { session.plan = { mode: 'mistakes', ids, title }; router.push('/run'); }
 
-// «تمرین اشتباهات», compact: how many are still wrong, and every topic with mistakes (weakest first) in a row that
-// scrolls sideways; a tap on a topic starts its practice. «همه» opens the mistakes page.
+// «آزمون بر اساس اشتباهات»: an exam of the questions still answered wrong (up to 25, the weakest topics first), or of
+// one topic's, from its chip in the row that scrolls sideways; «همه» opens the mistakes page. Before the first exam,
+// or with no mistakes, it says what it is for and how it fills up.
 function MistakesCard() {
   const c = useColors();
   const { bank, attempts, Q } = useApp();
   if (!bank) return null;
   const topics = weakTopics(attempts, Q);
   const open = topics.reduce((n, g) => n + g.open, 0), fixed = topics.reduce((n, g) => n + g.list.length - g.open, 0);
+  const startAll = () => practice(shuffle(topics.flatMap(g => g.list.filter(st => !st.lastOk).map(st => st.id))).slice(0, FULL), 'آزمون بر اساس اشتباهات');
+  // What it is, when there is nothing to practise yet.
+  const note = !attempts.length
+    ? 'هنوز آزمونی نداده‌اید. بعد از اولین آزمون، سؤال‌هایی که اشتباه جواب بدهید اینجا جمع می‌شوند تا با آن‌ها آزمون بدهید و نقطه‌ضعف‌هایتان را برطرف کنید.'
+    : !topics.length
+      ? 'تا اینجا هیچ اشتباهی نداشته‌اید؛ عالی! هر سؤالی که در آزمون‌ها اشتباه جواب بدهید اینجا اضافه می‌شود تا دوباره تمرینش کنید.'
+      : !open ? 'همه‌ی اشتباهات را اصلاح کرده‌اید؛ یعنی آخرین بار درست جوابشان داده‌اید. برای مرور دوباره «همه» را بزنید.' : null;
   return (
     <Card style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: open ? c.badSoft : c.okSoft }}>
-          <Icon name={open ? 'warning' : 'checkCircle'} size={19} color={open ? c.bad : c.ok} contrast={c.okSoft} weight="semibold" />
+        <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: open ? c.badSoft : topics.length ? c.okSoft : c.accentSoft }}>
+          <Icon name={open ? 'warning' : topics.length ? 'checkCircle' : 'refresh'} size={19} color={open ? c.bad : topics.length ? c.ok : c.link} contrast={c.okSoft} weight="semibold" />
         </View>
         <View style={{ flex: 1 }}>
-          <T style={{ fontWeight: '700', fontSize: 17 }}>تمرین اشتباهات</T>
+          <T style={{ fontWeight: '700', fontSize: 17 }}>آزمون بر اساس اشتباهات</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
             {open ? <T style={{ fontSize: 12.5, color: c.bad, fontWeight: '700' }}>{faNum(open)} سؤال اصلاح‌نشده</T>
-              : topics.length ? 'همه‌ی اشتباهات بازبینی شده‌اند' : 'هیچ اشتباهی نداشته‌اید'}
+              : topics.length ? `${faNum(fixed)} سؤال اصلاح‌شده` : 'سؤال‌هایی که اشتباه جواب داده‌اید'}
             {open && fixed ? `، ${faNum(fixed)} اصلاح‌شده` : ''}
           </T>
         </View>
@@ -53,23 +62,33 @@ function MistakesCard() {
           </Pressable>
         ) : null}
       </View>
-      {open ? (
-        <View style={{ gap: 6 }}>
-          <T style={{ color: c.muted, fontSize: 12 }}>مبحث را انتخاب کنید تا تمرینش شروع شود — ضعیف‌ترین اول</T>
-          {/* All topics with mistakes, weakest first, in one row that scrolls sideways. */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-            {topics.filter(g => g.open).map(g => (
-              <Pressable key={g.c} onPress={() => { tap(); practice(topicPracticeIds(g.list), topicFa(bank, g.c)); }}
-                accessibilityLabel={`تمرین ${topicFa(bank, g.c)}`}
-                style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface2 })}>
-                <T style={{ fontSize: 13, fontWeight: '600' }} numberOfLines={1}>{bank.topics[g.c]?.fa ?? topicFa(bank, g.c)}</T>
-                <View style={{ minWidth: 20, paddingHorizontal: 6, borderRadius: 99, backgroundColor: c.badSoft }}>
-                  <T style={{ fontSize: 11.5, lineHeight: 18, fontWeight: '700', color: c.bad, textAlign: 'center' }}>{faNum(g.open)}</T>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
+      {note ? (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+          <Icon name="info" size={17} color={c.muted} />
+          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{note}</T>
         </View>
+      ) : null}
+      {open ? (
+        <>
+          <T style={{ color: c.muted, fontSize: 13, lineHeight: 21 }}>با سؤال‌هایی که هنوز درست جواب نداده‌اید آزمون بدهید؛ یا فقط یک مبحث را انتخاب کنید.</T>
+          <View style={{ gap: 6 }}>
+            <T style={{ color: c.muted, fontSize: 12 }}>مباحث — ضعیف‌ترین اول</T>
+            {/* All topics with mistakes, weakest first, in one row that scrolls sideways. */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+              {topics.filter(g => g.open).map(g => (
+                <Pressable key={g.c} onPress={() => { tap(); practice(topicPracticeIds(g.list), topicFa(bank, g.c)); }}
+                  accessibilityLabel={`تمرین ${topicFa(bank, g.c)}`}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface2 })}>
+                  <T style={{ fontSize: 13, fontWeight: '600' }} numberOfLines={1}>{bank.topics[g.c]?.fa ?? topicFa(bank, g.c)}</T>
+                  <View style={{ minWidth: 20, paddingHorizontal: 6, borderRadius: 99, backgroundColor: c.badSoft }}>
+                    <T style={{ fontSize: 11.5, lineHeight: 18, fontWeight: '700', color: c.bad, textAlign: 'center' }}>{faNum(g.open)}</T>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+          <Button label={`شروع آزمون اشتباهات (${faNum(Math.min(open, FULL))} سؤال)`} onPress={startAll} icon="play" kind="grey" />
+        </>
       ) : null}
     </Card>
   );

@@ -8,7 +8,7 @@ import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
-import { Icon } from '@/ui/icon';
+import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 import { Toggle } from '@/ui/toggle';
@@ -23,6 +23,24 @@ function Row({ title, sub, right }: { title: string; sub?: string; right: React.
       </View>
       {right}
     </View>
+  );
+}
+
+// A row that opens a page: its icon, title and a line under it, and an arrow.
+function LinkRow({ icon, title, sub, onPress }: { icon: IconName; title: string; sub: string; onPress: () => void }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={title}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: c.line, opacity: pressed ? 0.7 : 1 })}>
+      <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+        <Icon name={icon} size={19} color={c.text} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T style={{ fontWeight: '700' }}>{title}</T>
+        <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{sub}</T>
+      </View>
+      <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
+    </Pressable>
   );
 }
 
@@ -70,8 +88,18 @@ export default function Settings() {
         <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />
         <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
-      <Card>
-        <Row title="نسخه‌ی نرم‌افزار" right={<T style={{ color: c.muted, writingDirection: 'ltr' }}>{faNum(Constants.expoConfig?.version ?? '1.0.0')}</T>} />
+      {/* «راهنما»: how to use the app, reporting a problem, and the version. */}
+      <Card style={{ gap: 4 }}>
+        <T style={{ fontWeight: '700', fontSize: 16, marginBottom: 4 }}>راهنما</T>
+        <LinkRow icon="help" title="راهنمای استفاده" sub="آزمون، آموزش، اشتباهات و امکانات اپ" onPress={() => router.push('/help')} />
+        <LinkRow icon="bug" title="گزارش خطا" sub="مشکلی دیدید؟ برای ما بنویسید" onPress={() => router.push('/report')} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}>
+          <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+            <Icon name="info" size={19} color={c.text} />
+          </View>
+          <T style={{ flex: 1, fontWeight: '700' }}>نسخه‌ی نرم‌افزار</T>
+          <T style={{ color: c.muted, writingDirection: 'ltr' }}>{faNum(Constants.expoConfig?.version ?? '1.0.0')}</T>
+        </View>
       </Card>
     </Screen>
   );

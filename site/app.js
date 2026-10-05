@@ -1683,6 +1683,13 @@
         <div class="card panel"><div class="panel-h"><h3>کاربران فعال در هر روز</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.days, 'active', 'کاربر فعال')}</div>
         <div class="card panel"><div class="panel-h"><h3>ثبت‌نام‌های جدید در هر روز</h3><small class="muted">۳۰ روز اخیر</small></div>${dayBars(d.days, 'newUsers', 'ثبت‌نام')}</div>
       </div>
+      <div class="section-title">گزارش‌های خطا و پیشنهادها <small class="muted">(${faNum((d.reports || []).length)} گزارش، جدیدترین اول)</small></div>
+      <div class="card table-wrap"><table class="utable">
+        <thead><tr><th>زمان</th><th>کاربر</th><th>نوع</th><th>متن</th><th>دستگاه</th></tr></thead>
+        <tbody>${(d.reports || []).map(r => `<tr><td>${fmtDateTime(r.at)}</td><td><b>${esc(r.name || '')}</b><small class="da">${esc(r.username)}</small></td>
+          <td>${r.kind === 'idea' ? 'پیشنهاد' : 'مشکل'}</td><td style="white-space:pre-wrap;min-width:240px" dir="auto">${esc(r.text)}</td>
+          <td><small class="da">${esc(r.platform)} ${esc(r.version)}</small></td></tr>`).join('') || '<tr><td colspan="5" class="muted">هنوز گزارشی نرسیده است.</td></tr>'}</tbody>
+      </table></div>
       <div class="section-title">کاربران <small class="muted">(${faNum(d.users.length)} نفر، به ترتیب آخرین فعالیت)</small></div>
       <div class="card table-wrap"><table class="utable">
         <thead><tr><th>کاربر</th><th>تعداد آزمون</th><th>امروز</th><th>۷ روز اخیر</th><th>قبولی / کامل</th><th>آخرین نمره</th><th>آخرین فعالیت</th><th>روزهای فعال</th><th>عضویت</th><th>زبان</th><th>لغات</th></tr></thead>
