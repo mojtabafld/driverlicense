@@ -12,6 +12,7 @@ import { Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
 import { ProgressChart } from '@/ui/progress-chart';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
+import { useTour, type TourStep } from '@/ui/tour';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
@@ -64,6 +65,11 @@ function useGreeting() {
   return g;
 }
 
+const TOUR: TourStep[] = [
+  { title: 'خلاصه‌ی پیشرفت شما', text: 'احتمال قبولی: تخمین شانس قبول شدن شما در آزمون واقعی، بر اساس آزمون‌های تصادفی اخیر. زیر آن میانگین ۵ آزمون آخر و تعداد قبولی‌ها را می‌بینید. سه کارت پایین تعداد آزمون‌ها، درس‌های انجام‌شده و اشتباهات شماست؛ روی هر کدام بزنید تا صفحه‌اش باز شود.' },
+  { title: 'نمودار پیشرفت', text: 'هر ستون نتیجه‌ی یکی از آزمون‌های شماست، از قدیمی به جدید. ستون سبز یعنی قبولی و خط‌چین، حد قبولی است. روی هر ستون بزنید تا جزئیات آن آزمون را ببینید و مرورش کنید.' },
+];
+
 export default function Home() {
   const c = useColors();
   // Screen height decides how compact the page is: below 800 points less padding and a smaller ring, below 680 the
@@ -72,6 +78,7 @@ export default function Home() {
   const compact = height < 800, tight = height < 680;
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
+  const tour = useTour('home', TOUR);
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
   const exams = attempts.filter(a => a.mode !== 'lesson');
@@ -86,7 +93,10 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
+    <>
     <Screen fill gap={compact ? 10 : 14} title={user?.name ? `${hello}، ${user.name}` : hello} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}>
+      {/* The four cards at the top: the chance of passing and the three counts (one tooltip for them). */}
+      <View {...tour.target(0)} style={{ gap: compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
@@ -116,7 +126,9 @@ export default function Home() {
         <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
         <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
       </View>
+      </View>
       {/* A tap anywhere in the chart's card, off the bars, clears the picked attempt. */}
+      <View {...tour.target(1)} style={{ flex: 1 }}>
       <Pressable onPress={() => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
@@ -130,6 +142,9 @@ export default function Home() {
         <ProgressChart fill attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
       </Card>
       </Pressable>
+      </View>
     </Screen>
+    {tour.overlay}
+    </>
   );
 }

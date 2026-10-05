@@ -11,13 +11,15 @@ import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
 import { useColors } from '@/ui/theme';
+import { useTour, type TourStep } from '@/ui/tour';
 
-function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
+function Part({ n, icon, title, text, note, href, target }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href; target: object }) {
   const c = useColors();
   const { learnArt } = useApp();
   const short = useWindowDimensions().height < 700; // less text on short screens
   const v = learnArt[n];
   return (
+    <View {...target} style={{ flex: 1 }}>
     <Card onPress={() => router.push(href)} style={{ flex: 1, padding: 0, overflow: 'hidden' }}>
       {/* The picture, as large as the card's top; the icon on a soft tile until the picture is made. */}
       <View style={{ flex: 1, minHeight: 90, backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
@@ -35,29 +37,41 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         <T style={{ color: c.text, fontSize: 11.5, lineHeight: 17, height: 17, fontWeight: '600' }} numberOfLines={1}>{note ?? ''}</T>
       </View>
     </Card>
+    </View>
   );
 }
+
+const TOUR: TourStep[] = [
+  { title: 'آموزش درس‌به‌درس', text: 'درس‌های رسمی آزمون تئوری به ترتیب، هر درس با سؤال‌های خودش. می‌توانید بر اساس دسته‌بندی رسمی هم تمرین کنید و تعداد سؤال‌ها را خودتان انتخاب کنید.' },
+  { title: 'قوانین', text: 'مهم‌ترین قوانین رانندگی در دانمارک به زبان ساده: سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک و بزرگراه. هر بخش یک تمرین با سؤال‌های همان مبحث دارد.' },
+  { title: 'علائم رانندگی', text: 'گروه‌های تابلوها با شکل و رنگشان، خط‌کشی‌ها و چراغ راهنمایی. با دانستن شکل و رنگ هر گروه، معنای تابلوهای ناآشنا را هم حدس می‌زنید.' },
+  { title: 'آموزش حق تقدم', text: 'چه کسی اول می‌رود؟ قاعده‌ی دست راست، حق تقدم مطلق، گردش به چپ و راست، میدان و عابران؛ از پرتکرارترین موضوع‌های آزمون.' },
+];
 
 export default function Learn() {
   const { bank, attempts } = useApp();
   const done = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, all = bank?.tests.length ?? 44;
+  const tour = useTour('learn', TOUR);
   return (
+    <>
     <Screen fill title="آموزش" subtitle="یک بخش را انتخاب کنید">
       <View style={{ flex: 1, gap: 12 }}>
         <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
-          <Part n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
+          <Part n={1} target={tour.target(0)} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
             text={`${faNum(all)} درس به ترتیب، هر کدام با سؤال‌های خودش؛ یا تمرین بر اساس دسته‌بندی رسمی.`}
             note={done ? `${faNum(done)} از ${faNum(all)} درس انجام شده` : undefined} />
-          <Part n={2} icon="rules" title="قوانین" href="/rules"
+          <Part n={2} target={tour.target(1)} icon="rules" title="قوانین" href="/rules"
             text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
         </View>
         <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
-          <Part n={3} icon="sign" title="علائم رانندگی" href="/signs"
+          <Part n={3} target={tour.target(2)} icon="sign" title="علائم رانندگی" href="/signs"
             text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
-          <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
+          <Part n={4} target={tour.target(3)} icon="priority" title="آموزش حق تقدم" href="/priority"
             text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
         </View>
       </View>
     </Screen>
+    {tour.overlay}
+    </>
   );
 }
