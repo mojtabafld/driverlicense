@@ -66,7 +66,7 @@ export default function GuideView() {
               <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }}>قواعد کلی این گروه</T>
               <View style={{ transform: [{ rotate: intro ? '90deg' : '-90deg' }] }}><Icon name="chevronLeft" size={14} color={c.faint} /></View>
             </View>
-            {intro ? <Rich text={cat.intro} style={{ fontSize: 14, lineHeight: 24, color: c.muted }} /> : null}
+            {intro ? <Rich text={cat.intro} style={{ fontSize: 14, lineHeight: 24, color: c.muted, textAlign: 'justify' }} /> : null}
           </Card>
         </Pressable>
         <Enter key={`pic-${i}`}>
@@ -97,7 +97,7 @@ function SignText({ item }: { item: SignItem }) {
       </View>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.fa}</T>
       <L style={{ fontSize: 13.5, lineHeight: 20, color: c.muted }}>{item.da}</L>
-      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
+      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28, textAlign: 'justify' }} />
     </View>
   );
 }
@@ -109,7 +109,7 @@ function ScenarioText({ item, legend }: { item: Scenario; legend: boolean }) {
   return (
     <View style={{ gap: 10 }}>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.title}</T>
-      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
+      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28, textAlign: 'justify' }} />
       <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, alignItems: 'flex-start' }}>
         <Icon name="checkCircle" size={20} color={c.ok} />
         <View style={{ flex: 1, gap: 2 }}>
