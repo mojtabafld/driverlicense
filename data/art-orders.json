@@ -1,4 +1,6 @@
 {
  "about": "Pictures are made only when ordered here (the image model's credit is limited). guide: picture keys (e.g. s-a42-2), group ids (e.g. A, UA, round, drill-right) or signs / priority / thumbs. A listed picture is made if it is missing or its prompt changed; once made it stays.",
- "guide": []
+ "guide": [
+  "order"
+ ]
 }
