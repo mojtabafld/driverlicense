@@ -22,7 +22,7 @@ const UI = {
 };
 export const uiText = (lang: 'da' | 'en') => UI[lang];
 
-// Like the site, digits are Persian everywhere in the review, Danish text included (faNum).
+// Digits are Persian in the Persian text and Latin in the question's own (Danish / English) text.
 // The AI text (in the neutral grey look: on the soft `note` panel, headings in the text colour): «# » headings, «- » bullets, **bold**; «تیک زد» is worded «انتخاب کرد».
 const pickWords = (t: string) => t.replace(/تیک(?:\s|‌)*نزد/g, 'انتخاب نکرد').replace(/تیک(?:\s|‌)*زد/g, 'انتخاب کرد')
   .replace(/تیک(?:\s|‌)*نخورد/g, 'انتخاب نشد').replace(/تیک(?:\s|‌)*خورد/g, 'انتخاب شد');
@@ -377,10 +377,10 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           <TranslateButton on={fa} onPress={() => setFa(!fa)} />
         </View>
         <View style={{ gap: 8 }}>
-          <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{faNum(lang === 'en' && q.sen ? q.sen : q.sda)}</L>
+          <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {fa && q.sfa ? (
-            // The Persian translation on a soft teal tint, no side line.
-            <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.accentSoft }}>
+            // The Persian translation on the theme's soft grey, no side line.
+            <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.surface2 }}>
               <T style={{ fontSize: 14.5, lineHeight: 25 }}>{q.sfa}</T>
             </View>
           ) : null}
@@ -390,12 +390,12 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       {on ? (
         <View style={flat ? { marginTop: 8 } : { marginHorizontal: 12, marginBottom: 12, padding: 12, backgroundColor: c.bg, borderWidth: 1, borderColor: c.line, borderRadius: 12 }}>
           {it.a ? (
-            <View style={{ flexDirection: 'row', gap: 3, padding: 3, marginTop: 2, marginBottom: 14, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 3, padding: 3, marginTop: 2, marginBottom: 14, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: radius.btn }}>
               {(['mine', 'right'] as const).map(v => {
                 const sel = view === v;
                 return (
                   <Pressable key={v} onPress={() => { tap(); setView(v); }} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: sel }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 7, borderRadius: 6, backgroundColor: sel ? c.strong : 'transparent' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 8, borderRadius: radius.btn - 3, backgroundColor: sel ? c.strong : 'transparent' }}>
                       {v === 'mine' ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: it.ok ? c.ok : c.bad, ...(sel ? { borderWidth: 1.5, borderColor: c.strongFg, width: 10, height: 10, borderRadius: 5 } : {}) }} /> : null}
                       <T style={{ fontSize: 14, fontWeight: '600', color: sel ? c.strongFg : c.muted, textAlign: 'center' }}>{v === 'mine' ? 'پاسخ شما' : 'پاسخ صحیح'}</T>
                     </View>
@@ -419,13 +419,13 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                       {checked ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
                     </View>
                     <View style={{ flex: 1, gap: 4 }}>
-                      <L style={{ fontSize: 14.5, lineHeight: 22 }}>{faNum(lang === 'en' && s.en ? s.en : s.da)}</L>
+                      <L style={{ fontSize: 14.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                       {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{s.fa}</T> : null}
                     </View>
                   </View>
                   {view === 'right' ? (
                     <View style={physical({ paddingLeft: 32 })}>
-                      <L style={{ marginTop: 10, fontSize: 15, lineHeight: 24 }}>{ui.expl} <L style={{ fontStyle: 'italic', fontSize: 15, lineHeight: 24 }}>{faNum(eda)}</L></L>
+                      <L style={{ marginTop: 10, fontSize: 15, lineHeight: 24 }}>{ui.expl} <L style={{ fontStyle: 'italic', fontSize: 15, lineHeight: 24 }}>{eda}</L></L>
                       {fa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>توضیح: {efa}</T> : null}
                     </View>
                   ) : null}
@@ -435,7 +435,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </View>
           {aiLessons ? <AiTips q={q} a={it.a} at={at} lang={lang} />
             : t ? (
-              <View style={{ marginTop: 14, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.accentSoft }}>
+              <View style={{ marginTop: 14, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.surface2 }}>
                 <T style={{ fontSize: 15, fontWeight: '700', marginBottom: 6 }}>📘 آموزش کوتاه: {bank ? topicFa(bank, q.c) : ''} <T style={{ fontSize: 12.5, fontWeight: '500', color: c.muted, fontFamily: DA_FONT }}>({t.da})</T></T>
                 {t.lesson.map((l, i) => (
                   <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 3 }}><T style={{ fontSize: 14 }}>•</T><T style={{ flex: 1, fontSize: 14 }}>{l}</T></View>
