@@ -45,8 +45,8 @@ function MistakesCard() {
   return (
     <Card style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: open ? c.badSoft : topics.length ? c.okSoft : c.accentSoft }}>
-          <Icon name={open ? 'warning' : topics.length ? 'checkCircle' : 'refresh'} size={19} color={open ? c.bad : topics.length ? c.ok : c.link} contrast={c.okSoft} weight="semibold" />
+        <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: open ? c.badSoft : topics.length ? c.okSoft : c.surface2 }}>
+          <Icon name={open ? 'warning' : topics.length ? 'checkCircle' : 'refresh'} size={19} color={open ? c.bad : topics.length ? c.ok : c.text} contrast={c.okSoft} weight="semibold" />
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 17 }}>آزمون بر اساس اشتباهات</T>
@@ -116,8 +116,8 @@ export default function Exam() {
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-            <Icon name="shuffle" size={19} color={c.link} weight="semibold" />
+          <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+            <Icon name="shuffle" size={19} color={c.text} weight="semibold" />
           </View>
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
         </View>

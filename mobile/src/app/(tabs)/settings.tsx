@@ -13,7 +13,6 @@ import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
-import { useTour, type TourStep } from '@/ui/tour';
 
 function Row({ title, sub, right }: { title: string; sub?: string; right: React.ReactNode }) {
   const c = useColors();
@@ -46,21 +45,15 @@ function LinkRow({ icon, title, sub, onPress }: { icon: IconName; title: string;
   );
 }
 
-const TOUR: TourStep[] = [
-  { title: 'تنظیمات', text: 'اینجا اپ را به دلخواه خود تنظیم می‌کنید: نام و رمز عبور (با زدن روی نام خود)، ظاهر روشن یا تیره، زبان سؤال‌ها، صدای خواندن سؤال‌ها، ترجمه‌ی فارسی زیر گزینه‌ها و زمان‌سنج. در بخش «راهنما» راهنمای کامل اپ را می‌خوانید یا مشکلی را برای ما گزارش می‌کنید.' },
-];
-
 export default function Settings() {
   const c = useColors();
   const { user, settings, setSettings, logout, tts } = useApp();
   const { mode, setMode } = useTheme();
-  const tour = useTour('settings', TOUR);
   // Sign-out asks first, in the app's own dialog.
   const [askOut, setAskOut] = useState(false);
   const confirmLogout = () => setAskOut(true);
   // Switches in the app's teal.
   return (
-    <>
     <Screen title="تنظیمات">
       <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
         cancel="ماندن" ok="خروج" okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
@@ -117,7 +110,5 @@ export default function Settings() {
         </View>
       </Card>
     </Screen>
-    {tour.overlay}
-    </>
   );
 }
