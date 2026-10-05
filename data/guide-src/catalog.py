@@ -467,7 +467,7 @@ cat('UE', 'تابلوهای زیرین اطلاع‌رسانی', 'زیر تاب�
 
 cat('US', 'علامت‌های تابلوهای زیرین', 'علامت وسایل نقلیه روی تابلوهای زیرین.',
     'این علامت‌ها روی تابلوهای زیرین می‌آیند و نوع وسیله‌ی نقلیه‌ای را که قاعده برایش هست (یا نیست) نشان می‌دهند.',
-    'A row of simple black vehicle pictograms on white plates: a car, a lorry, a bus and a bicycle.',
+    'Four small flat white RECTANGULAR plates standing in a row on short grey posts, each with a thin black border and ONE simple black vehicle pictogram: a car, a lorry, a bus and a bicycle. They are NOT round signs: no red rings, no red bars, no circles.',
     [n('US1', 'Bil til og med 3.500 kg', 'خودرو تا ۳۵۰۰ کیلوگرم', 'خودروی سواری و وانت تا وزن کل ۳۵۰۰ کیلوگرم.', SYM + 'a car seen from the side.'),
      n('US2', 'Lastbil', 'کامیون', 'کامیون (بیش از ۳۵۰۰ کیلوگرم) با یدکش.', SYM + 'a lorry seen from the side.'),
      n('US3', 'Bus', 'اتوبوس', 'خودروی بیش از ۳۵۰۰ کیلوگرم با بیش از ۸ صندلی مسافر.', SYM + 'a bus seen from the side.'),
