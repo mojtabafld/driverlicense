@@ -433,7 +433,9 @@ const LEARN_PROMPTS = [
 // `limit`: at most this many being made at a time (the rest start as earlier ones finish); none = all at once.
 // Keyed prompts carry a revision (a hash of the prompt and its reference): when it changes, that one picture is made
 // again, and the old one stays on show until the new one is ready.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '' }) {
+// A picture that failed because the account ran out of credit (or was rate limited) does not count as a try; it is tried
+// again 20 minutes later. `retry`: a mark kept with the set; changing it gives every picture not made yet new tries.
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '' }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
@@ -442,7 +444,12 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       rev: require('node:crypto').createHash('sha1').update(`${v.prompt}|${v.ref || ''}|${v.aspect || aspect}`).digest('hex').slice(0, 10) }]);
   // Never started, failed with tries left, or made from an earlier version of its prompt.
   const stale = (x, rev) => !!(rev && x && x.done && x.rev && x.rev !== rev);
-  const waiting = (x, rev) => !x || (!x.blob && x.done && (x.tries || 0) < 3) || stale(x, rev);
+  const NO_CREDIT = /credit|balance|insufficient|quota|402|429|too many/i, LATER = 20 * 60e3;
+  const broke = x => !!(x && x.done && !x.blob && NO_CREDIT.test(x.error || ''));
+  const due = x => broke(x) && Date.now() - x.at > LATER;
+  const waiting = (x, rev) => !x || (!x.blob && x.done && (broke(x) ? due(x) : (x.tries || 0) < 3)) || stale(x, rev);
+  let later = null;   // the timer that tries the credit failures again
+  const retryLater = () => { if (!later && Object.values(meta().items).some(broke)) later = setTimeout(() => { later = null; startSet().catch(() => {}); }, LATER + 5e3); };
   let starting = false;
   async function startSet() {
     if (!available() || starting) return;
@@ -451,23 +458,31 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       const prev = store.meta[metaKey];
       if (prev && prev.set !== set) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
       const it = meta().items;
+      if (retry && meta().retry !== retry) {   // a new retry mark: every picture not made yet gets its tries back
+        for (const j of Object.values(it)) if (j.done && !j.blob) Object.assign(j, { tries: 0, error: '' });
+        meta().retry = retry; await save();
+      }
       let running = Object.values(it).filter(j => !j.done && j.taskId).length;
       for (const [n, { prompt, aspect: ar, ref, rev }] of list) {
         if (running >= limit) break;
         const x = it[n];
         if (!waiting(x, rev)) continue;   // done, running, or given up after 3 tries
         const again = stale(x, rev);
-        const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: (again ? 0 : (x && x.tries) || 0) + 1, prompt, rev,
+        const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: (again ? 0 : (x && x.tries) || 0) + (broke(x) ? 0 : 1), prompt, rev,
           ...(again ? { blob: x.blob, v: x.v, size: x.size } : {}) };   // the old picture stays until the new one is made
         try {
           const input = { prompt, aspect_ratio: ar, resolution: '2K' };
           if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
           const d = await kie('POST', '/jobs/createTask', { model: ref ? EDIT_MODELS.sunburst : MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
           job.taskId = d.taskId; job.state = 'generating'; running++;
-        } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message); }
+        } catch (e) {
+          Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message);
+          if (NO_CREDIT.test(e.message)) { await save(); break; }   // out of credit: the rest wait too
+        }
         await save();
       }
       if (Object.values(it).some(j => !j.done && j.taskId)) schedule();
+      retryLater();
     } finally { starting = false; }
   }
   // One poll round; true while some are still being made.
@@ -493,7 +508,8 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       await save();
     }
     // With a limit, the next ones start as earlier ones finish.
-    if (limit !== Infinity && list.some(([n, { rev }]) => waiting(meta().items[n], rev))) { await startSet(); pending = true; }
+    const now2 = meta().items;
+    if (limit !== Infinity && list.some(([n, { rev }]) => waiting(now2[n], rev))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
     return pending;
   }
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
@@ -527,7 +543,7 @@ const AVATAR_PROMPTS = [
 // drawing in data/guide-ref is redrawn from it. Made a few at a time; served at /guide-art/<key>.png.
 const GUIDE_SET = 'v1';
 const GUIDE = artSet({ metaKey: 'guideArt', set: GUIDE_SET, prompts: JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8')),
-  prefix: 'guide', limit: 8, refDir: path.join(__dirname, 'data', 'guide-ref') });
+  prefix: 'guide', limit: 8, refDir: path.join(__dirname, 'data', 'guide-ref'), retry: 'r1' });
 const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
 
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
