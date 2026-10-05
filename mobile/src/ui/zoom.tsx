@@ -17,16 +17,20 @@ export function ZoomableImage({ source, style, ratio = 4 / 3, children, transiti
   source: ImageSource; style?: StyleProp<any>; ratio?: number; children?: React.ReactNode; transition?: number;
 }) {
   const [open, setOpen] = useState(false);
+  // When the viewer closes on a tap, that same tap's click can land on the picture underneath once the viewer is gone
+  // and open it again; taps in the first moment after closing are ignored.
+  const closedAt = useRef(0);
+  const close = () => { closedAt.current = Date.now(); setOpen(false); };
   return (
     <View>
-      <Pressable onPress={() => { tap(); setOpen(true); }} accessibilityRole="imagebutton" accessibilityLabel="بزرگ‌نمایی تصویر">
+      <Pressable onPress={() => { if (Date.now() - closedAt.current < 600) return; tap(); setOpen(true); }} accessibilityRole="imagebutton" accessibilityLabel="بزرگ‌نمایی تصویر">
         <Image source={source} style={style} contentFit="contain" transition={transition} />
         <View pointerEvents="none" style={{ position: 'absolute', bottom: 8, ...physical({ right: 8 }), width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)' }}>
           <Icon name="zoom" size={17} color="#fff" />
         </View>
       </Pressable>
       {children}
-      {open ? <ImageViewer source={source} ratio={ratio} onClose={() => setOpen(false)} /> : null}
+      {open ? <ImageViewer source={source} ratio={ratio} onClose={close} /> : null}
     </View>
   );
 }
