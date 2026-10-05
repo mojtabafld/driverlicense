@@ -5,17 +5,18 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from './icon';
-import { Backdrop, T, tap, usePageMotion } from './kit';
+import { Backdrop, T, tap, usePageMotion, useTopOnFocus } from './kit';
 import { Marquee } from './marquee';
 import { useColors } from './theme';
 
 export function SubPage({ title, subtitle, children, gap = 14 }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
+  const ref = useTopOnFocus();
   return (
     <Backdrop anim={motion.style}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
+        <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           <View style={{ gap: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>

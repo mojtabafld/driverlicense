@@ -20,7 +20,7 @@ import { Icon } from '@/ui/icon';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { ListButton } from '@/ui/question-list';
-import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion } from '@/ui/kit';
+import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
@@ -67,6 +67,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const [secs, setSecs] = useState<number[]>([]);
   const [sheet, setSheet] = useState<number[] | null>(null);
   const scroll = useRef<ScrollView>(null);
+  useTopOnFocus(scroll); // back at the top whenever the page comes into view
   const reveal = useRevealScroll(scroll, headH); // AI panels scroll this page into view
   if (!bank) return null;
   const lang = settings.lang === 'en' ? 'en' : 'da';

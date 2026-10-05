@@ -2,7 +2,7 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -149,6 +149,14 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
   );
 }
 
+// A scroll view that is back at the top whenever its page comes into view (a tab chosen again, a page returned to).
+// `given`: the page's own ref to the scroll view, when it has one (e.g. for the first-visit tooltips).
+export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
+  const own = useRef<ScrollView | null>(null);
+  useFocusEffect(useCallback(() => { (given ?? own).current?.scrollTo({ y: 0, animated: false }); }, [given]));
+  return given ?? own;
+}
+
 // Scrollable tab screen: the page heading (with the theme switch beside it; no app name or logo, so the page has the
 // room) and the content; on the web it leaves room for the floating tab bar over the page's end (on phones the
 // system's tab bar sits below the page, so only a small margin is left there).
@@ -157,8 +165,9 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
 // can be set tighter for short screens.
 // `scrollRef` / `onScrollY`: the scroll view and where it is scrolled, e.g. for the first-visit tooltips (tour.tsx).
 export function Screen({ title, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number;
-  scrollRef?: React.Ref<ScrollView>; onScrollY?: (y: number) => void }) {
+  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void }) {
   const c = useColors(), ins = useSafeAreaInsets();
+  const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const head = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
@@ -175,7 +184,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14, scrol
       <PageIn>
       {fill
         ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
-        : <ScrollView ref={scrollRef} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 }]}>{head}{children}</ScrollView>}
+        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 }]}>{head}{children}</ScrollView>}
       </PageIn>
     </Backdrop>
   );
