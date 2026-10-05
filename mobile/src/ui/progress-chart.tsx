@@ -2,9 +2,11 @@
 // by dragging the bars (it opens at the newest); green when the attempt passed or reached 80%, else a neutral grey, with
 // the 80% pass line; the bars grow in when it opens. Tap a bar to pick that attempt; its details and a review button
 // show below. With `fill` it takes the height of the space it is given (the home screen fits the screen without scrolling).
+// With more than ten attempts, the first time it is drawn after the app opens, it shows that older attempts are there:
+// the bars glide a little towards the older ones and back, under a small hint that fades in and out.
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import Svg, { Line, Path, Text as SvgText } from 'react-native-svg';
 
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
@@ -14,6 +16,41 @@ import { Button, T, tap, useCountUp } from './kit';
 import { useColors } from './theme';
 
 const L = 38, R = 12, TOP = 14, B = 24;
+// The scroll hint plays once per app start.
+let hinted = false;
+function takeHint() { if (hinted) return false; hinted = true; return true; }
+
+// The hint over the bars: an arrow towards the older attempts and a line of text, fading in, swaying, fading out.
+function ScrollHint({ run, onDone }: { run: boolean; onDone: () => void }) {
+  const c = useColors();
+  const [o] = useState(() => new Animated.Value(0)), [dx] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!run) return;
+    const ease = Easing.inOut(Easing.cubic);
+    const sway = Animated.sequence([
+      Animated.timing(dx, { toValue: -8, duration: 420, easing: ease, useNativeDriver: true }),
+      Animated.timing(dx, { toValue: 0, duration: 420, easing: ease, useNativeDriver: true }),
+    ]);
+    const anim = Animated.sequence([
+      Animated.timing(o, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      sway, sway,
+      Animated.delay(500),
+      Animated.timing(o, { toValue: 0, duration: 480, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
+    ]);
+    anim.start(({ finished }) => { if (finished) onDone(); });
+    return () => anim.stop();
+  }, [run, o, dx, onDone]);
+  if (!run) return null;
+  return (
+    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', opacity: o }}>
+      <Animated.View style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 99,
+        backgroundColor: c.strong, transform: [{ translateX: dx }], shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 3 } as any}>
+        <Icon name="arrowLeft" size={16} color={c.strongFg} weight="semibold" />
+        <T style={{ fontSize: 12.5, fontWeight: '600', color: c.strongFg }}>برای دیدن آزمون‌های قبلی، نمودار را بکشید</T>
+      </Animated.View>
+    </Animated.View>
+  );
+}
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی');
 
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
@@ -27,6 +64,21 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
   const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
   const grow = useCountUp(1, 900);
+  const [hint, setHint] = useState(false);
+  const hideHint = useCallback(() => setHint(false), []);
+  const n = Math.min(attempts.length, 200), many = attempts.length > 10;
+  // Once the bars have grown in: glide towards the older attempts and back, with the hint over them.
+  // Keyed by being ready only, so a later change of width does not cut the hint short.
+  const ready = many && W > 0;
+  useEffect(() => {
+    if (!ready || !takeHint()) return;
+    const vw = Math.max(0, W - L - R), sl = vw / Math.min(10, n), end = Math.max(0, sl * n - vw);
+    const t1 = setTimeout(() => setHint(true), 1000);
+    const t2 = setTimeout(() => scroller.current?.scrollTo({ x: Math.max(0, end - sl * 2.5), animated: true }), 1350);
+    const t3 = setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 2300);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
   if (attempts.length < 2) {
     // Nothing to draw yet: say so, with a button to the exam tab.
     return (
@@ -67,7 +119,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
               ))}
             </Svg>
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
-              onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })}>
+              onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })} onScrollBeginDrag={() => setHint(false)}>
               <View style={{ width: CW, height: H }}>
                 {/* A tap between the bars clears the pick. */}
                 <Pressable onPress={() => setSel(null)} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
@@ -96,6 +148,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
                 ))}
               </View>
             </ScrollView>
+            <ScrollHint run={hint} onDone={hideHint} />
           </>
         ) : null}
       </View>
