@@ -7,10 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Modal, PanResponder, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { api } from '@/lib/api';
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
-import { useApp } from '@/lib/store';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GuideImage, Rich } from '@/ui/guide-visual';
 import { Icon } from '@/ui/icon';
@@ -23,13 +21,12 @@ import { radius, useColors, useIsDark } from '@/ui/theme';
 // The cards of the page (the group's rules, the explanation): one look.
 const BOX = { paddingVertical: 14, paddingHorizontal: 16 };
 
-type SignInfo = { en: string; kw: { da: string; en: string; fa: string }[] };
 type Item = SignItem | Scenario;
 const isSign = (x: Item): x is SignItem => 'code' in x;
 const label = (x: Item) => (isSign(x) ? x.fa : x.title);
 
 export default function GuideView() {
-  const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
+  const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const p = useLocalSearchParams<{ kind?: string; cat?: string; i?: string }>();
   const kind: GuideKind = p.kind === 'priority' ? 'priority' : 'signs';
@@ -44,16 +41,6 @@ export default function GuideView() {
   // Each page starts at its top.
   useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [i]);
   const swipe = useSwipe(i, items.length, setI);
-  // The sign group's keywords and English names, written by the server's Claude the first time the group is opened.
-  const [info, setInfo] = useState<Record<string, SignInfo>>({});
-  const [infoLoading, setInfoLoading] = useState(kind === 'signs');
-  useEffect(() => {
-    if (kind !== 'signs') return;
-    let live = true;
-    api<{ items: Record<string, SignInfo> }>('GET', `signinfo?cat=${encodeURIComponent(cat.id)}`)
-      .then(r => { if (live) setInfo(r.items || {}); }).catch(() => {}).finally(() => { if (live) setInfoLoading(false); });
-    return () => { live = false; };
-  }, [kind, cat.id]);
 
   const it = items[i], last = i === items.length - 1;
   const back = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
@@ -91,13 +78,12 @@ export default function GuideView() {
           {/* The picture and its explanation in one card, the picture flush on top (like the «آموزش» cards); both come
               in again with each page. */}
           <Card style={{ padding: 0, overflow: 'hidden' }}>
-            {/* In the light theme a white frame around the picture (its own light grey background stands out on the card). */}
-            <Enter key={`pic-${i}`} style={dark ? null : { padding: 10, paddingBottom: 0 }}>
-              <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} flat={dark} radius={radius.md - 4} zoom />
+            <Enter key={`pic-${i}`}>
+              <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} flat zoom />
             </Enter>
             <View style={BOX}>
               <Enter key={`text-${i}`}>
-                {isSign(it) ? <SignText item={it} info={info[it.key]} loading={infoLoading} /> : <ScenarioText item={it} legend={!drill} />}
+                {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
               </Enter>
             </View>
           </Card>
@@ -151,42 +137,18 @@ function swipeResponder(dx: Animated.Value, now: SwipeNow) {
 }
 
 // A sign: its code, Persian and Danish names, and what it means and what to do.
-function SignText({ item, info, loading }: { item: SignItem; info?: SignInfo; loading: boolean }) {
+function SignText({ item }: { item: SignItem }) {
   const c = useColors();
-  const { settings } = useApp();
-  const en = settings.lang === 'en';
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row' }}>
         <View style={{ paddingHorizontal: 10, paddingVertical: 2, borderRadius: 8, backgroundColor: c.surface2 }}>
           <L style={{ fontSize: 14, fontWeight: '800', color: c.text }}>{item.code}</L>
         </View>
       </View>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.fa}</T>
+      <L style={{ fontSize: 13.5, lineHeight: 20, color: c.muted }}>{item.da}</L>
       <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
-      {/* The sign's name in the exam's language and its key terms (written by Claude, signinfo.js), in the soft grey box
-          of «چه کسی اول می‌رود؟», with its check icon. */}
-      <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
-        <Icon name="checkCircle" size={20} color={c.ok} />
-        <View style={{ flex: 1, gap: 8 }}>
-          <View style={{ gap: 2 }}>
-            <T style={{ fontSize: 12.5, color: c.muted, fontWeight: '600' }}>کلمات کلیدی</T>
-            <T style={{ fontSize: 15, lineHeight: 25, fontWeight: '700', textAlign: 'left', writingDirection: 'ltr' }}>{en ? info?.en ?? item.da : item.da}</T>
-          </View>
-          {info?.kw.length ? (
-            // The terms on one line in the box's font, separated by commas and set left to right like the other Latin
-            // text: the term in the exam's language and its Persian meaning after it.
-            <T style={{ fontSize: 15, lineHeight: 26, textAlign: 'left', writingDirection: 'ltr' }}>
-              {info.kw.map((w, k) => (
-                <T key={k} style={{ fontSize: 15, lineHeight: 26 }}>
-                  {k ? ', ' : ''}<T style={{ fontSize: 15, lineHeight: 26, fontWeight: '700' }}>{en ? w.en : w.da}</T>
-                  <T style={{ fontSize: 14, lineHeight: 26, color: c.muted }}> ({w.fa})</T>
-                </T>
-              ))}
-            </T>
-          ) : loading ? <T style={{ fontSize: 12.5, color: c.faint }}>کلمات کلیدی در حال آماده شدن…</T> : null}
-        </View>
-      </View>
     </View>
   );
 }
