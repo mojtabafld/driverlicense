@@ -170,16 +170,17 @@ function SignText({ item, info, loading }: { item: SignItem; info?: SignInfo; lo
         <Icon name="checkCircle" size={20} color={c.ok} />
         <View style={{ flex: 1, gap: 8 }}>
           <View style={{ gap: 2 }}>
-            <T style={{ fontSize: 12.5, color: c.muted, fontWeight: '600' }}>{en ? 'نام انگلیسی و کلمات کلیدی' : 'نام دانمارکی و کلمات کلیدی'}</T>
-            <L style={{ fontSize: 15, lineHeight: 23, fontWeight: '700' }}>{en ? info?.en ?? item.da : item.da}</L>
+            <T style={{ fontSize: 12.5, color: c.muted, fontWeight: '600' }}>کلمات کلیدی</T>
+            <T style={{ fontSize: 15, lineHeight: 25, fontWeight: '700' }}>{en ? info?.en ?? item.da : item.da}</T>
           </View>
           {info?.kw.length ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, direction: 'ltr' } as any}>
+            // The terms as plain text in the box's font: the term in the exam's language, its Persian meaning after it.
+            <View style={{ gap: 4 }}>
               {info.kw.map((w, k) => (
-                <View key={k} style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, alignItems: 'center' }}>
-                  <L style={{ fontSize: 13.5, lineHeight: 19, fontWeight: '700' }}>{en ? w.en : w.da}</L>
-                  <T style={{ fontSize: 11.5, lineHeight: 17, color: c.muted }}>{w.fa}</T>
-                </View>
+                <T key={k} style={{ fontSize: 15, lineHeight: 25 }}>
+                  <T style={{ fontSize: 15, lineHeight: 25, fontWeight: '700' }}>{en ? w.en : w.da}</T>{'  '}
+                  <T style={{ fontSize: 14, lineHeight: 25, color: c.muted }}>{w.fa}</T>
+                </T>
               ))}
             </View>
           ) : loading ? <T style={{ fontSize: 12.5, color: c.faint }}>کلمات کلیدی در حال آماده شدن…</T> : null}
