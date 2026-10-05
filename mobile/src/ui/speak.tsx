@@ -132,7 +132,8 @@ export function VoiceChoice() {
 }
 
 // Reads an AI text (the analysis of an answer, the summary of the mistakes) aloud in Persian: the server makes the
-// recording once (POST /api/ttsai), then it plays like a question's. A tap plays, a second tap stops.
+// recording once (POST /api/ttsai), then it plays like a question's: the same round icon button as the question's.
+// A tap plays, a second tap stops; if it could not be made, the icon turns red until the next tap.
 export function TextSpeakButton({ text }: { text: string }) {
   const c = useColors();
   const { tts } = useApp();
@@ -154,15 +155,12 @@ export function TextSpeakButton({ text }: { text: string }) {
   };
   return (
     <Pressable onPress={press} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
-      accessibilityLabel={on ? 'توقف خواندن متن' : 'خواندن این متن'}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 17, opacity: pressed ? 0.8 : 1,
-        backgroundColor: on ? c.strong : c.nav })}>
+      accessibilityLabel={on ? 'توقف خواندن متن' : failed ? 'خواندن متن نشد؛ دوباره امتحان کنید' : 'خواندن این متن'}
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
+        backgroundColor: failed ? c.badSoft : on ? c.strong : c.nav })}>
       <Animated.View style={{ opacity: pulse }}>
-        <Icon name={state === 'playing' ? 'stop' : 'speaker'} size={16} color={on ? c.strongFg : c.navFg} />
+        <Icon name={state === 'playing' ? 'stop' : 'speaker'} size={19} color={failed ? c.bad : on ? c.strongFg : c.navFg} />
       </Animated.View>
-      <T style={{ fontSize: 12.5, fontWeight: '600', color: on ? c.strongFg : c.navFg }}>
-        {failed ? 'دوباره امتحان کنید' : making ? 'در حال آماده‌سازی…' : state === 'playing' ? 'توقف' : state === 'loading' ? 'در حال پخش…' : 'گوش دادن'}
-      </T>
     </Pressable>
   );
 }

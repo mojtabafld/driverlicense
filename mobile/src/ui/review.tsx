@@ -220,7 +220,7 @@ function useFold() {
 // Lessons already fetched while the app is open (the server also keeps them, so a new visit costs no AI call).
 const lessonCache = new Map<string, string>();
 
-// At the top of an AI panel, at its end side (the left): «گوش دادن», reading the text aloud in Persian.
+// At the top of an AI panel, at its end side (the left): the speaker button, reading the text aloud in Persian.
 function AiListen({ text }: { text: string }) {
   return <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 4 }}><TextSpeakButton text={text} /></View>;
 }
