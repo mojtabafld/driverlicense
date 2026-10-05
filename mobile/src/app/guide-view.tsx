@@ -19,7 +19,7 @@ import { ListButton } from '@/ui/question-list';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
 // The cards of the page (the group's rules, the explanation): one look.
-const BOX = { paddingVertical: 12, paddingHorizontal: 16 };
+const BOX = { paddingVertical: 14, paddingHorizontal: 16 };
 
 type Item = SignItem | Scenario;
 const isSign = (x: Item): x is SignItem => 'code' in x;
@@ -74,15 +74,18 @@ export default function GuideView() {
             {intro ? <Rich text={cat.intro} style={{ fontSize: 14, lineHeight: 24, color: c.muted, textAlign: 'justify' }} /> : null}
           </Card>
         </Pressable>
-        <Animated.View {...swipe.handlers} style={{ gap: 12, transform: [{ translateX: swipe.dx }] }}>
-          <Enter key={`pic-${i}`}>
-            <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} radius={radius.md} />
-          </Enter>
-          {/* The explanation in the same card as the group's rules (BOX); the text comes in again with each page. */}
-          <Card style={BOX}>
-            <Enter key={`text-${i}`}>
-              {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
+        <Animated.View {...swipe.handlers} style={{ transform: [{ translateX: swipe.dx }] }}>
+          {/* The picture and its explanation in one card, the picture flush on top (like the «آموزش» cards); both come
+              in again with each page. */}
+          <Card style={{ padding: 0, overflow: 'hidden' }}>
+            <Enter key={`pic-${i}`}>
+              <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} flat />
             </Enter>
+            <View style={BOX}>
+              <Enter key={`text-${i}`}>
+                {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
+              </Enter>
+            </View>
           </Card>
         </Animated.View>
       </ScrollView>

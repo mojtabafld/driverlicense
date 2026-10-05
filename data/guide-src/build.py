@@ -137,4 +137,10 @@ for k, note in FIX.items():
 # The cards' thumbnails first, so the group pages look complete early; then the items in page order.
 art = {**{k: v for k, v in art.items() if k.startswith(('c-', 'pc-'))}, **{k: v for k, v in art.items() if not k.startswith(('c-', 'pc-'))}}
 json.dump(art, open(os.path.join(ROOT, 'data/guide-art.json'), 'w'), ensure_ascii=False, indent=1)
+# The groups' picture keys (the card's thumbnail first), so a group can be ordered by name in data/art-orders.json.
+groups = {c['id']: [c['thumb']] + [i['key'] for i in c['items']] for c in app['signs'] + app['priority']}
+groups['signs'] = [k for c in app['signs'] for k in groups[c['id']]]
+groups['priority'] = [k for c in app['priority'] for k in groups[c['id']]]
+groups['thumbs'] = [c['thumb'] for c in app['signs'] + app['priority']]
+json.dump(groups, open(os.path.join(ROOT, 'data/guide-groups.json'), 'w'), ensure_ascii=False, indent=0)
 print(len(art), 'pictures,', sum(1 for a in art.values() if a.get('ref')), 'from an official drawing')

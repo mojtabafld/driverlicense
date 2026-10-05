@@ -58,11 +58,19 @@ function init(s, siteDir) {
   Q = new Map(BANK.questions.map(q => [q.id, q]));
   if (Object.values(images()).reduce((n, x) => n + unstick(x), 0)) save().catch(() => {});
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
-  fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message))
-    .then(() => startLearn()).catch(e => console.error('learn pictures', e.message))
-    .then(() => AVATAR.start()).catch(e => console.error('avatar pictures', e.message))
-    .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
-    .then(() => seedOwn()).catch(e => console.error('own pictures', e.message));
+  // Nothing is made on its own any more (the image model's credit is limited): only the guide pictures ordered in
+  // data/art-orders.json. The intro, «آموزش» cards, profile pictures and the questions' own pictures keep what was made.
+  fixIntro().catch(e => console.error('intro pictures', e.message))
+    .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message));
+}
+
+// The pictures ordered by hand (data/art-orders.json): picture keys or group names (data/guide-groups.json).
+function ordered() {
+  try {
+    const o = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'art-orders.json'), 'utf8'));
+    const groups = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-groups.json'), 'utf8'));
+    return new Set((o.guide || []).flatMap(x => groups[x] || [x]));
+  } catch (e) { console.error('art orders', e.message); return new Set(); }
 }
 
 async function kie(method, url, body) {
@@ -435,7 +443,8 @@ const LEARN_PROMPTS = [
 // again, and the old one stays on show until the new one is ready.
 // A picture that failed because the account ran out of credit (or was rate limited) does not count as a try; it is tried
 // again 20 minutes later. `retry`: a mark kept with the set; changing it gives every picture not made yet new tries.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '' }) {
+// `allow`: which pictures may be made (key → true); none = all.
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
@@ -447,9 +456,10 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
   const NO_CREDIT = /credit|balance|insufficient|quota|402|429|too many/i, LATER = 20 * 60e3;
   const broke = x => !!(x && x.done && !x.blob && NO_CREDIT.test(x.error || ''));
   const due = x => broke(x) && Date.now() - x.at > LATER;
-  const waiting = (x, rev) => !x || (!x.blob && x.done && (broke(x) ? due(x) : (x.tries || 0) < 3)) || stale(x, rev);
+  const may = n => !allow || allow.has(n);
+  const waiting = (x, rev, n) => may(n) && (!x || (!x.blob && x.done && (broke(x) ? due(x) : (x.tries || 0) < 3)) || stale(x, rev));
   let later = null;   // the timer that tries the credit failures again
-  const retryLater = () => { if (!later && Object.values(meta().items).some(broke)) later = setTimeout(() => { later = null; startSet().catch(() => {}); }, LATER + 5e3); };
+  const retryLater = () => { if (!later && Object.entries(meta().items).some(([n, j]) => may(n) && broke(j))) later = setTimeout(() => { later = null; startSet().catch(() => {}); }, LATER + 5e3); };
   let starting = false;
   async function startSet() {
     if (!available() || starting) return;
@@ -466,7 +476,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       for (const [n, { prompt, aspect: ar, ref, rev }] of list) {
         if (running >= limit) break;
         const x = it[n];
-        if (!waiting(x, rev)) continue;   // done, running, or given up after 3 tries
+        if (!waiting(x, rev, n)) continue;   // done, running, or given up after 3 tries
         const again = stale(x, rev);
         const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: (again ? 0 : (x && x.tries) || 0) + (broke(x) ? 0 : 1), prompt, rev,
           ...(again ? { blob: x.blob, v: x.v, size: x.size } : {}) };   // the old picture stays until the new one is made
@@ -509,7 +519,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
     }
     // With a limit, the next ones start as earlier ones finish.
     const now2 = meta().items;
-    if (limit !== Infinity && list.some(([n, { rev }]) => waiting(now2[n], rev))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
+    if (limit !== Infinity && list.some(([n, { rev }]) => waiting(now2[n], rev, n))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
     return pending;
   }
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
@@ -543,7 +553,7 @@ const AVATAR_PROMPTS = [
 // drawing in data/guide-ref is redrawn from it. Made a few at a time; served at /guide-art/<key>.png.
 const GUIDE_SET = 'v1';
 const GUIDE = artSet({ metaKey: 'guideArt', set: GUIDE_SET, prompts: JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8')),
-  prefix: 'guide', limit: 8, refDir: path.join(__dirname, 'data', 'guide-ref'), retry: 'r1' });
+  prefix: 'guide', limit: 8, refDir: path.join(__dirname, 'data', 'guide-ref'), retry: 'r1', allow: ordered() });
 const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
 
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
