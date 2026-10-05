@@ -29,8 +29,8 @@ export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست 
   );
 }
 
-// The legend's entries: [label, fill, edge, bookmark] for the tile kinds in `items`, and the current question (drawn
-// with its ring).
+// The legend's entries: [label, fill, edge, bookmark] for the tile kinds in `items`. The current question's ring
+// speaks for itself and has no entry.
 function legend(items: QItem[], c: ReturnType<typeof useColors>): [string, string, string, boolean][] {
   const has = (t: QItem['tone']) => items.some(q => q.tone === t);
   return [
@@ -39,7 +39,6 @@ function legend(items: QItem[], c: ReturnType<typeof useColors>): [string, strin
     ...(has('ok') ? [['درست', c.okSoft, c.ok, false] as [string, string, string, boolean]] : []),
     ...(has('bad') ? [['نادرست', c.badSoft, c.bad, false] as [string, string, string, boolean]] : []),
     ...(items.some(q => q.marked) || has('answered') || has('empty') ? [['علامت‌خورده', c.surface, c.warn, true] as [string, string, string, boolean]] : []),
-    ['سؤال فعلی', c.nav, c.nav, false],
   ];
 }
 
@@ -84,7 +83,6 @@ export function QuestionSheet({ open, items, current, onPick, onClose }: { open:
               <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <View style={{ width: 14, height: 14, borderRadius: 4, backgroundColor: bg, borderWidth: 1.5, borderColor: bd, alignItems: 'center', justifyContent: 'center' }}>
                   {mark ? <Icon name="bookmark" size={8} filled color={bd} /> : null}
-                  {l === 'سؤال فعلی' ? <View style={{ position: 'absolute', top: -4, left: -4, right: -4, bottom: -4, borderRadius: 7, borderWidth: 1.5, borderColor: c.text }} /> : null}
                 </View>
                 <T style={{ fontSize: 12, color: c.muted }}>{l}</T>
               </View>
