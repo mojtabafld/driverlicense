@@ -9,6 +9,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const png = require('./png');
 
 const UA = 'TeoriProve/1.0 (https://kore.mintcloud.info; driving-theory study app)';
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8'));
@@ -93,16 +94,43 @@ async function refBlob(kind, key) {
   return store.getBlob(`${kind === 'official' ? 'ref-off' : 'ref-prove'}-${key}`);
 }
 
-// What the app gets: the made pictures, with the official drawing wherever the admin chose it.
+// A sign's made picture with its plain light grey background turned white (a levels step against the picture's edge
+// colour, so the sign's own colours only lighten a touch), as it looks on the dark theme's cards. Kept in memory.
+const whiteCache = new Map();
+async function whitened(key) {
+  const b = await imagegen.guideBlob(key);
+  if (!b || b.mime !== 'image/png') return b;
+  const id = `${key}:${b.data.length}`;
+  if (whiteCache.has(id)) return whiteCache.get(id);
+  let out = b;
+  try {
+    const im = png.decode(b.data);
+    if (im) {
+      const hex = png.edgeColour(im), bg = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)), ch = im.ch, px = im.px;
+      // Only a light, nearly grey background is whitened (a marking's road scene or a dark edge is left alone).
+      if (bg.every(x => x >= 215) && Math.max(...bg) - Math.min(...bg) <= 18) {
+        const k = bg.map(x => 255 / x);
+        for (let i = 0; i < px.length; i += ch) for (let j = 0; j < 3; j++) px[i + j] = Math.min(255, Math.round(px[i + j] * k[j]));
+        out = { mime: 'image/png', data: png.encode(im) };
+      }
+    }
+  } catch (e) { console.error('whiten', key, e.message); }
+  if (whiteCache.size > 600) whiteCache.clear();
+  whiteCache.set(id, out);
+  return out;
+}
+
+// What the app gets: the made pictures (signs on white), with the official drawing wherever the admin chose it.
 function versions() {
   const m = meta(), v = imagegen.guideVersions();
+  for (const k of Object.keys(v)) if (k.startsWith('s-')) v[k] += 'w';   // the whitened version is a new picture for caches
   for (const [k, c] of Object.entries(m.choice)) if (c === 'official' && (m.items[k] || {}).off) v[k] = `o${m.items[k].off.toString(36)}`;
   return v;
 }
 async function blob(key) {
   const m = meta();
   if (m.choice[key] === 'official' && (m.items[key] || {}).off) { const b = await store.getBlob(`ref-off-${key}`); if (b) return b; }
-  return imagegen.guideBlob(key);
+  return key.startsWith('s-') ? whitened(key) : imagegen.guideBlob(key);
 }
 
 module.exports = { init, startImport, list, choose, refBlob, versions, blob };
