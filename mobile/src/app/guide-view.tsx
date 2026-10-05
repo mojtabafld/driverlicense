@@ -165,23 +165,25 @@ function SignText({ item, info, loading }: { item: SignItem; info?: SignInfo; lo
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.fa}</T>
       <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
       {/* The sign's name in the exam's language and its key terms (written by Claude, signinfo.js), in the soft grey box
-          of «چه کسی اول می‌رود؟». */}
-      <View style={{ gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Icon name="sparkles" size={18} color={c.ok} />
-          <T style={{ fontSize: 12.5, color: c.muted, fontWeight: '600' }}>{en ? 'نام انگلیسی و کلمات کلیدی' : 'نام دانمارکی و کلمات کلیدی'}</T>
-        </View>
-        <L style={{ fontSize: 15, lineHeight: 22, fontWeight: '700' }}>{en ? info?.en ?? item.da : item.da}</L>
-        {info?.kw.length ? (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, direction: 'ltr' } as any}>
-            {info.kw.map((w, k) => (
-              <View key={k} style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, alignItems: 'center' }}>
-                <L style={{ fontSize: 13.5, lineHeight: 19, fontWeight: '700' }}>{en ? w.en : w.da}</L>
-                <T style={{ fontSize: 11.5, lineHeight: 17, color: c.muted }}>{w.fa}</T>
-              </View>
-            ))}
+          of «چه کسی اول می‌رود؟», with its check icon. */}
+      <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
+        <Icon name="checkCircle" size={20} color={c.ok} />
+        <View style={{ flex: 1, gap: 8 }}>
+          <View style={{ gap: 2 }}>
+            <T style={{ fontSize: 12.5, color: c.muted, fontWeight: '600' }}>{en ? 'نام انگلیسی و کلمات کلیدی' : 'نام دانمارکی و کلمات کلیدی'}</T>
+            <L style={{ fontSize: 15, lineHeight: 23, fontWeight: '700' }}>{en ? info?.en ?? item.da : item.da}</L>
           </View>
-        ) : loading ? <T style={{ fontSize: 12.5, color: c.faint }}>کلمات کلیدی در حال آماده شدن…</T> : null}
+          {info?.kw.length ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, direction: 'ltr' } as any}>
+              {info.kw.map((w, k) => (
+                <View key={k} style={{ paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, alignItems: 'center' }}>
+                  <L style={{ fontSize: 13.5, lineHeight: 19, fontWeight: '700' }}>{en ? w.en : w.da}</L>
+                  <T style={{ fontSize: 11.5, lineHeight: 17, color: c.muted }}>{w.fa}</T>
+                </View>
+              ))}
+            </View>
+          ) : loading ? <T style={{ fontSize: 12.5, color: c.faint }}>کلمات کلیدی در حال آماده شدن…</T> : null}
+        </View>
       </View>
     </View>
   );
