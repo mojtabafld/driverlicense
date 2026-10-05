@@ -124,9 +124,12 @@ export default function Run() {
       </SafeAreaView>
       </GlassTop>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+        {/* The question in one card: the picture flush on top (as on the guide pages), then the question and its
+            statements in soft grey boxes. */}
+        <View style={{ backgroundColor: c.surface, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden', paddingBottom: 16, gap: 12 }}>
         {/* The picture comes in again with each question. */}
         <Enter key={`pic-${i}`}>
-          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} transition={200} />
+          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3 }} transition={200} />
           {/* Mark the question to look at it again before handing in. */}
           <Pressable onPress={flag} hitSlop={6} accessibilityRole="button" accessibilityLabel="علامت برای بازبینی" accessibilityState={{ selected: flagged }}
             style={{ position: 'absolute', top: 8, ...physical({ left: 8 }), width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center',
@@ -135,12 +138,12 @@ export default function Run() {
           </Pressable>
         </Enter>
         {/* Translation on / off: a round icon under the picture, on its left (filled while the translation shows). */}
-        <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', gap: 10, marginTop: -4, marginBottom: -4 } as any}>
+        <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', gap: 10, paddingHorizontal: 16, marginBottom: -4 } as any}>
           <TranslateButton on={showFa} onPress={() => setShowFa(!showFa)} />
           {/* Read the question and its statements aloud, beside the translation switch. */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
         </View>
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: 4, paddingHorizontal: 16 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
         </View>
@@ -148,12 +151,12 @@ export default function Run() {
           const on = ticks[i][k];
           return (
             // Keyed by question too, so each new question's statements come in one after another.
-            <Enter key={`${i}-${k}`}>
+            <Enter key={`${i}-${k}`} style={{ marginHorizontal: 16 }}>
             <Pressable onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               {/* The statements are Danish / English, so the row runs left to right: the check box on the left. */}
               {/* Flat cards with a thin border; the chosen ones marked in `pick` (black / white in the Uber look). */}
-              <View style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 15, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: 16,
-                borderWidth: 1.5, borderColor: on ? c.pick : c.line, backgroundColor: on ? c.pickSoft : c.surface } as any}>
+              <View style={{ flexDirection: 'row', direction: 'ltr', gap: 12, paddingVertical: 14, paddingHorizontal: 14, alignItems: 'flex-start', borderRadius: radius.md,
+                borderWidth: 1.5, borderColor: on ? c.pick : 'transparent', backgroundColor: on ? c.pickSoft : c.surface2 } as any}>
                 <View style={{ width: 20, height: 20, marginTop: 2, borderRadius: 6, borderWidth: 1.5, borderColor: on ? c.pick : c.muted, backgroundColor: on ? c.pick : 'transparent', alignItems: 'center', justifyContent: 'center' }}>
                   {on ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
                 </View>
@@ -166,6 +169,7 @@ export default function Run() {
             </Enter>
           );
         })}
+        </View>
       </ScrollView>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar

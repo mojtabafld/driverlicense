@@ -308,7 +308,8 @@ export const hasSummary = (items: Item[], ai: boolean) => ai && items.some(it =>
 function Statement({ flat, mark, children }: { flat: boolean; mark: boolean; children: React.ReactNode }) {
   const c = useColors();
   if (flat) {
-    return <View style={{ paddingVertical: 15, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
+    // In the question's card: the soft grey box (as the guide pages' «چه کسی اول می‌رود؟»), red edge and tint when wrong.
+    return <View style={{ paddingVertical: 14, paddingHorizontal: 14, borderRadius: radius.md, borderWidth: 1.5, borderColor: mark ? c.bad : 'transparent', backgroundColor: mark ? c.badSoft : c.surface2 }}>{children}</View>;
   }
   return <View style={{ padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
 }
@@ -331,16 +332,17 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
   const t = bank?.topics[q.c];
   const ui = UI[lang];
   const on = open || alwaysOpen;
-  // Step-by-step review is laid out like the exam itself: no card around it, the full width for the picture, the
-  // question in the exam's size and the statements on glass rows. The list keeps its cards.
+  // Step-by-step review is laid out like the exam itself: one card with the picture flush on top (as on the guide
+  // pages), the question in the exam's size and the statements in soft grey boxes. The list keeps its cards.
   const flat = !!alwaysOpen;
+  const pad = flat ? { paddingHorizontal: 16 } : null;
   return (
-    <View style={flat ? { gap: 4 } : { backgroundColor: c.surface, borderRadius: 10, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
+    <View style={flat ? { backgroundColor: c.surface, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden', paddingBottom: 16 } : { backgroundColor: c.surface, borderRadius: 10, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
       shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
       {/* Head: picture, badges, question */}
       <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: flat ? 0 : 12, gap: flat ? 12 : 10 }}>
         <View>
-          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.md : 6, backgroundColor: c.surface2 }} />
+          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? 0 : 6, backgroundColor: c.surface2 }} />
           {index != null ? (
             <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
               <T style={{ color: '#fff', fontSize: 12, lineHeight: 20, fontWeight: '600' }}>سؤال {faNum(index + 1)}</T>
@@ -354,7 +356,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </Pressable>
         </View>
         {/* One line: a long category name is cut with «…» so the translation switch stays beside it. */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 6 }, pad]}>
           {badge ? (
             <View style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
               <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '700', color: badge.fg }}>{badge.text}</T>
@@ -371,7 +373,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
           <TranslateButton on={fa} onPress={() => setFa(!fa)} />
         </View>
-        <View style={{ gap: 8 }}>
+        <View style={[{ gap: 8 }, pad]}>
           <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {fa && q.sfa ? (
             // The Persian translation on the theme's soft grey, no side line.
@@ -383,7 +385,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       </Pressable>
       {/* Body: your answer / the right answer, explanations, tips */}
       {on ? (
-        <View style={flat ? { marginTop: 8 } : { marginHorizontal: 12, marginBottom: 12, padding: 12, backgroundColor: c.bg, borderWidth: 1, borderColor: c.line, borderRadius: 12 }}>
+        <View style={flat ? { marginTop: 8, paddingHorizontal: 16 } : { marginHorizontal: 12, marginBottom: 12, padding: 12, backgroundColor: c.bg, borderWidth: 1, borderColor: c.line, borderRadius: 12 }}>
           {it.a ? (
             <View style={{ flexDirection: 'row', gap: 3, padding: 3, marginTop: 2, marginBottom: 14, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: radius.btn }}>
               {(['mine', 'right'] as const).map(v => {
