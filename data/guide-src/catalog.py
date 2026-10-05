@@ -71,7 +71,7 @@ cat('B', 'تابلوهای حق تقدم', 'مثلث وارونه، ایست و 
     'این تابلوها درست در جایی نصب می‌شوند که قاعده‌ی حق تقدم از آنجا اعتبار دارد. حق تقدم «مطلق» (ubetinget vigepligt) یعنی باید به همه‌ی ترافیکِ جاده‌ای که واردش می‌شوید، از هر دو طرف، راه بدهید. یادتان باشد: اگر چراغ راهنمایی تقاطع کار کند، چراغ بر تابلوهای حق تقدم مقدم است.',
     'Three Danish priority signs on short grey poles: an inverted white triangle with a red border (give way), a red octagon (stop, blank without letters) and a white diamond with a yellow centre and black edge (main road).',
     ['B11', 'B13',
-     n('B13', 'Stop (ved jernbane)', 'ایست (طرح دایره‌ای)', 'همان معنای تابلوی ایست را دارد: **توقف کامل** و حق تقدم مطلق. این طرح، دایره‌ی قرمز با مثلث وارونه و کلمه‌ی STOP، بیشتر کنار گذرگاه راه‌آهن دیده می‌شود.',
+     n('B13', 'Stop (ved jernbane)', 'ایست (طرح دایره‌ای)', 'همان معنای تابلوی ایست را دارد: **توقف کامل** و راه دادن بی‌قید و شرط. این طرح، دایره‌ی قرمز با مثلث وارونه و کلمه‌ی STOP، بیشتر کنار گذرگاه راه‌آهن دیده می‌شود.',
        'a round sign with a broad red border and a white centre containing an inverted red-bordered white triangle with the black word "STOP" in its upper part.'),
      'B15', 'B16', 'B17', 'B18', 'B19'])
 

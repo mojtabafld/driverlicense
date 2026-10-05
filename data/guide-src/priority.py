@@ -47,8 +47,8 @@ cat('right', 'قاعده‌ی دست راست',
        X4 + '; three cars arrive at the same time: the blue car from the right, the red car from the bottom, and a grey car from the left, all going straight; the blue car crosses first with a solid green arrow; the red car waits with a dashed orange arrow; the grey car waits further back with a dashed grey arrow; small number badges are NOT drawn.'),
 ])
 
-cat('yield', 'حق تقدم مطلق، ایست و جاده‌ی اصلی',
-    'حق تقدم مطلق (ubetinget vigepligt) یعنی به **همه‌ی ترافیک از هر دو طرف** راه بدهید. با تابلوی B 11 (مثلث وارونه) و خط‌کشی دندان‌کوسه (S 11) نشان داده می‌شود؛ تابلوی ایست (B 13) یعنی علاوه بر آن کاملاً بایستید. روی جاده‌ی اصلی (B 16) حق تقدم با شماست.', [
+cat('yield', 'راه دادن مطلق، ایست و جاده‌ی اصلی',
+    'راه دادن مطلق (ubetinget vigepligt) یعنی به **همه‌ی ترافیک از هر دو طرف** راه بدهید. با تابلوی B 11 (مثلث وارونه) و خط‌کشی دندان‌کوسه (S 11) نشان داده می‌شود؛ تابلوی ایست (B 13) یعنی علاوه بر آن کاملاً بایستید. روی جاده‌ی اصلی (B 16) حق تقدم با شماست.', [
     sc('yield-b11', 'تابلوی «حق تقدم بدهید» و دندان‌کوسه',
        'خودروی قرمز از جاده‌ای با تابلوی مثلث وارونه و دندان‌کوسه وارد جاده‌ی اصلی می‌شود. باید به خودروها و دوچرخه‌هایی که از چپ و راست می‌آیند راه بدهد.',
        'همه‌ی ترافیک جاده‌ی اصلی، از هر دو طرف.', '§ 26، بند ۲ · B 11 · S 11',
@@ -68,13 +68,13 @@ cat('yield', 'حق تقدم مطلق، ایست و جاده‌ی اصلی',
 ])
 
 cat('exit', 'خروج از پارکینگ، ملک و مسیرهای فرعی',
-    'وقتی از پارکینگ، خانه، پمپ‌بنزین، مسیر دوچرخه یا عابر، راه خاکی یا خیابان پیاده خارج می‌شوید، یا از روی پیاده‌رو، مسیر دوچرخه یا جدولِ بالاتر از سطح جاده وارد آن می‌شوید، همیشه حق تقدم مطلق با دیگران است، **حتی بدون هیچ تابلویی**. به عابران پیاده‌رو هم باید راه بدهید.', [
+    'وقتی از پارکینگ، خانه، پمپ‌بنزین، مسیر دوچرخه یا عابر، راه خاکی یا خیابان پیاده خارج می‌شوید، یا از روی پیاده‌رو، مسیر دوچرخه یا جدولِ بالاتر از سطح جاده وارد آن می‌شوید، همیشه باید بی‌قید و شرط به دیگران راه بدهید، **حتی بدون هیچ تابلویی**. به عابران پیاده‌رو هم باید راه بدهید.', [
     sc('exit-property', 'خروج از پارکینگ یا خانه',
        'خودروی قرمز از پارکینگ بیرون می‌آید و از روی پیاده‌رو و مسیر دوچرخه می‌گذرد. اول به عابر پیاده‌رو، بعد به دوچرخه‌سوار و در آخر به خودروهای جاده راه می‌دهد.',
        'عابر، دوچرخه‌سوار و همه‌ی خودروهای جاده.', '§ 26، بند ۳ · § 27، بند ۲',
        'a parking lot at the bottom with an exit crossing a pavement and a cycle path to reach a road running left-right; a yellow-clad pedestrian walks along the pavement, a purple-clad cyclist rides on the cycle path, and the blue car drives along the road; the red car waits at the exit before the pavement (dashed orange arrow); the others pass first (solid green arrows).'),
     sc('exit-kerb', 'خروج از روی جدول بالاتر (overkørsel)',
-       'خیابان فرعی با یک جدولِ برآمده یا پیاده‌روی ممتد به جاده‌ی اصلی وصل شده است. این «ورودی ملک» حساب می‌شود و حق تقدم مطلق با ترافیک جاده است، حتی بدون تابلو.',
+       'خیابان فرعی با یک جدولِ برآمده یا پیاده‌روی ممتد به جاده‌ی اصلی وصل شده است. این «ورودی ملک» حساب می‌شود و باید بی‌قید و شرط به ترافیک جاده راه بدهید، حتی بدون تابلو.',
        'همه‌ی ترافیک جاده.', '§ 26، بند ۳',
        'a small side street from the bottom that meets a road through a continuous raised pavement (the pavement and kerb run unbroken across the mouth of the side street, slightly raised and paved differently); the red car waits on the side street before the raised pavement (dashed orange arrow); the blue car on the road passes first (solid green arrow).'),
     sc('exit-kerb-start', 'حرکت از کنار جدول',
@@ -98,9 +98,9 @@ cat('turn', 'گردش به چپ و راست',
        'عابران.', '§ 27، بندهای ۵ و ۶',
        'a crossroads with zebra crossings on every arm; the red car comes from the bottom turning right (dashed orange arrow stopping before the zebra crossing on the road to the right); two yellow-clad pedestrians are walking across that zebra crossing (solid green arrow along their path).'),
     sc('turn-two-left', 'دو خودروی روبه‌روی هم که هر دو به چپ می‌پیچند',
-       'دو خودرو از روبه‌روی هم وارد تقاطع می‌شوند و هر دو به چپ می‌پیچند. اگر بی‌خطر باشد، از سمت چپ از کنار هم رد می‌شوند (جلوی هم می‌پیچند).',
+       'دو خودرو از روبه‌روی هم وارد تقاطع می‌شوند و هر دو به چپ می‌پیچند. تا جایی که ممکن است از **سمت چپ** از کنار هم رد می‌شوند؛ یعنی هر کدام از کنار مرکز تقاطع رد می‌شود و دو خودرو **پشت سر هم** می‌پیچند، نه جلوی هم.',
        'هر دو، اگر بی‌خطر باشد هم‌زمان.', '§ 16، بند ۵',
-       'a crossroads seen from above; a blue car from the bottom and a second blue car from the top both turn left, their curved solid green arrows passing in front of each other (each turns in front of the other, passing left side to left side) without crossing paths.'),
+       'a crossroads seen from above; a blue car from the bottom and a second blue car from the top both turn left, each drives on past the centre of the junction before turning, so they pass each other driver side to driver side (left side to left side), each turning behind the other; two wide curved solid green arrows that pass each other near the centre.'),
 ])
 
 cat('signals', 'تقاطع‌های چراغ‌دار',

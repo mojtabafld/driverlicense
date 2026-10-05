@@ -431,13 +431,18 @@ const LEARN_PROMPTS = [
 // `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`) or an object of key → { prompt, aspect, ref }.
 // `ref`: a picture in `refDir` the model redraws (image to image), e.g. a sign's official drawing; without it, text only.
 // `limit`: at most this many being made at a time (the rest start as earlier ones finish); none = all at once.
+// Keyed prompts carry a revision (a hash of the prompt and its reference): when it changes, that one picture is made
+// again, and the old one stays on show until the new one is ready.
 function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '' }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
     ? prompts.map((p, i) => [String(i + 1), { prompt: `${p}\n${style}`, aspect }])
-    : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect, ref: v.ref }]);
-  const waiting = x => !x || (!x.blob && x.done && (x.tries || 0) < 3);   // never started, or failed with tries left
+    : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect, ref: v.ref,
+      rev: require('node:crypto').createHash('sha1').update(`${v.prompt}|${v.ref || ''}|${v.aspect || aspect}`).digest('hex').slice(0, 10) }]);
+  // Never started, failed with tries left, or made from an earlier version of its prompt.
+  const stale = (x, rev) => !!(rev && x && x.done && x.rev && x.rev !== rev);
+  const waiting = (x, rev) => !x || (!x.blob && x.done && (x.tries || 0) < 3) || stale(x, rev);
   let starting = false;
   async function startSet() {
     if (!available() || starting) return;
@@ -447,11 +452,13 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       if (prev && prev.set !== set) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
       const it = meta().items;
       let running = Object.values(it).filter(j => !j.done && j.taskId).length;
-      for (const [n, { prompt, aspect: ar, ref }] of list) {
+      for (const [n, { prompt, aspect: ar, ref, rev }] of list) {
         if (running >= limit) break;
         const x = it[n];
-        if (!waiting(x)) continue;   // done, running, or given up after 3 tries
-        const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt };
+        if (!waiting(x, rev)) continue;   // done, running, or given up after 3 tries
+        const again = stale(x, rev);
+        const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: (again ? 0 : (x && x.tries) || 0) + 1, prompt, rev,
+          ...(again ? { blob: x.blob, v: x.v, size: x.size } : {}) };   // the old picture stays until the new one is made
         try {
           const input = { prompt, aspect_ratio: ar, resolution: '2K' };
           if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
@@ -486,7 +493,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       await save();
     }
     // With a limit, the next ones start as earlier ones finish.
-    if (limit !== Infinity && list.some(([n]) => waiting(meta().items[n]))) { await startSet(); pending = true; }
+    if (limit !== Infinity && list.some(([n, { rev }]) => waiting(meta().items[n], rev))) { await startSet(); pending = true; }
     return pending;
   }
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
