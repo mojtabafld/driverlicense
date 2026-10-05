@@ -17,8 +17,8 @@ export const saveMode = async (m: ThemeMode) => {
 // used a version without it, so both get it once.
 const ONBOARDED = 'tp.onboarded';
 // The value marking the intro as seen; a new value shows the intro to everyone once more (2: after the teal redesign;
-// 3: with the first-visit tooltips, for everyone again).
-const SEEN = '3';
+// 3: with the first-visit tooltips; 4: with the look chosen on the language screen, for everyone again).
+const SEEN = '4';
 export const initialOnboarded = (): boolean | null => {
   try { return localStorage.getItem(ONBOARDED) === SEEN; } catch { return false; }
 };
@@ -31,7 +31,7 @@ export const saveLangAsked = async () => {};
 
 // The first-visit tooltips of each tab (src/ui/tour.tsx), seen or closed: per page and account in this browser.
 // TOUR_SET: a new value shows the tooltips to everyone once more.
-const TOUR_SET = 'v1';
+const TOUR_SET = 'v2';
 const tourKey = (page: string, user: string) => `tp.tour.${TOUR_SET}.${page}.${user}`;
 export const loadTourSeen = async (page: string, user: string) => { try { return localStorage.getItem(tourKey(page, user)) === '1'; } catch { return false; } };
 export const saveTourSeen = async (page: string, user: string) => { try { localStorage.setItem(tourKey(page, user), '1'); } catch {} };
