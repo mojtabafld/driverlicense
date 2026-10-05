@@ -14,6 +14,7 @@ import { Icon } from './icon';
 import { Enter, L, T, TranslateButton, physical, tap } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
+import { OptionBox } from './option-box';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const UI = {
@@ -303,14 +304,10 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
 }
 export const hasSummary = (items: Item[], ai: boolean) => ai && items.some(it => !it.ok && it.a);
 
-// One statement of a reviewed question: a flat card like the exam's in the flat layout, else the list's bordered box.
+// One statement of a reviewed question in the list's bordered box (the step-by-step review uses OptionBox).
 // A wrong tick or a missing one is shown in red.
-function Statement({ flat, mark, children }: { flat: boolean; mark: boolean; children: React.ReactNode }) {
+function Statement({ mark, children }: { mark: boolean; children: React.ReactNode }) {
   const c = useColors();
-  if (flat) {
-    // In the question's card: the soft grey box (as the guide pages' «چه کسی اول می‌رود؟»), red edge and tint when wrong.
-    return <View style={{ paddingVertical: 14, paddingHorizontal: 14, borderRadius: radius.md, borderWidth: 1.5, borderColor: mark ? c.bad : 'transparent', backgroundColor: mark ? c.badSoft : c.surface2 }}>{children}</View>;
-  }
   return <View style={{ padding: 14, borderRadius: 12, borderWidth: 1.5, borderColor: mark ? c.bad : c.line, backgroundColor: mark ? c.badSoft : c.surface }}>{children}</View>;
 }
 
@@ -332,16 +329,16 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
   const t = bank?.topics[q.c];
   const ui = UI[lang];
   const on = open || alwaysOpen;
-  // Step-by-step review is laid out like the exam itself: one card with the picture flush on top (as on the guide
-  // pages), the question in the exam's size and the statements in soft grey boxes. The list keeps its cards.
+  // Step-by-step review is laid out like the exam itself: the picture across the whole width, the page's own
+  // background, the question in the exam's size and the statements as outlined boxes with a round check. The list
+  // keeps its cards.
   const flat = !!alwaysOpen;
-  const pad = flat ? { paddingHorizontal: 16 } : null;
   return (
-    <View style={flat ? { backgroundColor: c.surface, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden', paddingBottom: 16 } : { backgroundColor: c.surface, borderRadius: 10, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
+    <View style={flat ? { gap: 4 } : { backgroundColor: c.surface, borderRadius: 10, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
       shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
       {/* Head: picture, badges, question */}
       <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: flat ? 0 : 12, gap: flat ? 12 : 10 }}>
-        <View>
+        <View style={flat ? { marginHorizontal: -16 } : null}>
           <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? 0 : 6, backgroundColor: c.surface2 }} />
           {index != null ? (
             <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
@@ -356,7 +353,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           </Pressable>
         </View>
         {/* One line: a long category name is cut with «…» so the translation switch stays beside it. */}
-        <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 6 }, pad]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {badge ? (
             <View style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
               <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '700', color: badge.fg }}>{badge.text}</T>
@@ -373,11 +370,11 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
           <TranslateButton on={fa} onPress={() => setFa(!fa)} />
         </View>
-        <View style={[{ gap: 8 }, pad]}>
+        <View style={{ gap: 8 }}>
           <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {fa && q.sfa ? (
-            // The Persian translation on the theme's soft grey, no side line.
-            <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: c.surface2 }}>
+            // The Persian translation on the theme's soft grey (on the card colour in the step-by-step review, whose page is grey), no side line.
+            <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: flat ? c.surface : c.surface2 }}>
               <T style={{ fontSize: 14.5, lineHeight: 25 }}>{q.sfa}</T>
             </View>
           ) : null}
@@ -385,7 +382,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       </Pressable>
       {/* Body: your answer / the right answer, explanations, tips */}
       {on ? (
-        <View style={flat ? { marginTop: 8, paddingHorizontal: 16 } : { marginHorizontal: 12, marginBottom: 12, padding: 12, backgroundColor: c.bg, borderWidth: 1, borderColor: c.line, borderRadius: 12 }}>
+        <View style={flat ? { marginTop: 8 } : { marginHorizontal: 12, marginBottom: 12, padding: 12, backgroundColor: c.bg, borderWidth: 1, borderColor: c.line, borderRadius: 12 }}>
           {it.a ? (
             <View style={{ flexDirection: 'row', gap: 3, padding: 3, marginTop: 2, marginBottom: 14, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: radius.btn }}>
               {(['mine', 'right'] as const).map(v => {
@@ -409,7 +406,19 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               const eda = (lang === 'en' ? s.een || s.eda : s.eda || '').trim() || (s.ok ? ui.yes : ui.no);
               const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
               return (
-                <Enter key={k}><Statement flat={flat} mark={!!mark}>
+                flat ? (
+                  <Enter key={k}><OptionBox on={checked} mark={!!mark}>
+                    <L style={{ fontSize: 15, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
+                    {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{s.fa}</T> : null}
+                    {view === 'right' ? (
+                      <View>
+                        <L style={{ marginTop: 6, fontSize: 14.5, lineHeight: 23 }}>{ui.expl} <L style={{ fontStyle: 'italic', fontSize: 14.5, lineHeight: 23 }}>{eda}</L></L>
+                        {fa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>توضیح: {efa}</T> : null}
+                      </View>
+                    ) : null}
+                  </OptionBox></Enter>
+                ) : (
+                <Enter key={k}><Statement mark={!!mark}>
                   <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', direction: 'ltr' } as any}>
                     <View style={{ width: 22, height: 22, marginTop: 1, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center',
                       borderColor: checked ? c.pick : c.muted, backgroundColor: checked ? c.pick : c.surface }}>
@@ -427,6 +436,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                     </View>
                   ) : null}
                 </Statement></Enter>
+                )
               );
             })}
           </View>
