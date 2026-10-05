@@ -11,6 +11,7 @@ import { Confirm } from '@/ui/confirm';
 import { Icon } from '@/ui/icon';
 import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
+import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
 
 function Row({ title, sub, right }: { title: string; sub?: string; right: React.ReactNode }) {
@@ -28,7 +29,7 @@ function Row({ title, sub, right }: { title: string; sub?: string; right: React.
 
 export default function Settings() {
   const c = useColors();
-  const { user, settings, setSettings, logout } = useApp();
+  const { user, settings, setSettings, logout, tts } = useApp();
   const { mode, setMode } = useTheme();
   // Sign-out asks first, in the app's own dialog.
   const [askOut, setAskOut] = useState(false);
@@ -67,6 +68,13 @@ export default function Settings() {
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
+        {/* The read-aloud voice, when the server can read aloud: each option plays a sample in this language. */}
+        {tts ? (
+          <View style={{ gap: 10, paddingBottom: 4 }}>
+            <Row title="صدای خواندن سؤال‌ها" sub="صدای خانم یا آقا؛ روی هر گزینه بزنید تا نمونه‌اش به زبان آزمون پخش شود." right={null} />
+            <VoiceChoice />
+          </View>
+        ) : null}
         <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />
         <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
