@@ -62,6 +62,14 @@
           "recordAudioAndroid": false,
           "enableBackgroundPlayback": false
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "برای گذاشتن عکس پروفایل، اپ به عکس‌های شما دسترسی لازم دارد.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
