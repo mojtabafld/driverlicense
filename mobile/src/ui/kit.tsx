@@ -212,18 +212,20 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
 // The translation switch under a question's picture, the same in the exam and in the review: a round button with the
 // translate icon, grey while off and filled while the Persian translation shows.
 // The translation switch: the questions' language (DK or EN) and «فا» laid out like the translate icon, in the button's colour.
-export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: () => void; lang: 'da' | 'en' }) {
+// The translation switch: the translate icon with «فا» (Vazirmatn bold) in place of its first glyph, and its «A».
+export function TranslateButton({ on, onPress }: { on: boolean; onPress: () => void; lang?: 'da' | 'en' }) {
   const c = useColors(), fg = on ? c.strongFg : c.navFg;
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
       accessibilityLabel={on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
         backgroundColor: on ? c.strong : c.nav })}>
-      {/* Like the translate icon it replaces: the questions' language at the top left (where its first glyph was) and
-          «فا» at the bottom right (where its «A» was); placed left to right on every platform. */}
-      <View style={{ width: 26, height: 24, direction: 'ltr' } as ViewStyle}>
-        <L style={{ position: 'absolute', top: -1, left: 0, fontSize: 9, lineHeight: 12, fontWeight: '700', color: fg }}>{lang === 'en' ? 'EN' : 'DK'}</L>
-        <T style={{ position: 'absolute', bottom: -2, right: 0, fontSize: 12, lineHeight: 16, fontWeight: '800', color: fg }}>فا</T>
+      {/* Placed left to right on every platform: «فا» at the top left, the icon's «A» at the bottom right. */}
+      <View style={{ width: 22, height: 22, direction: 'ltr' } as ViewStyle}>
+        <T style={{ position: 'absolute', top: -4, left: -1, fontSize: 12.5, lineHeight: 18, fontWeight: '700', color: fg }}>فا</T>
+        <Svg width={22} height={22} viewBox="0 0 24 24" style={{ position: 'absolute', top: 0, left: 0 }}>
+          <Path d="M12.5 20l4-9.5 4 9.5M14 16.8h5" stroke={fg} strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+        </Svg>
       </View>
     </Pressable>
   );
