@@ -11,6 +11,7 @@ import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { Card, L, T, tap } from './kit';
 import { useColors } from './theme';
+import { ZoomableImage } from './zoom';
 
 export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same in both themes
 
@@ -47,14 +48,19 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
 
 // An item's picture at its aspect ratio; until the server has made it, a soft tile with `label` (e.g. the code), or
 // only a small icon when `compact` (the list's thumbnails).
-// `flat`: at the top of a card, flush with its edges (no rounding or edge of its own).
-export function GuideImage({ k, aspect, label, radius = 12, compact, flat }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean }) {
+// `flat`: at the top of a card, flush with its edges (no rounding or edge of its own). `zoom`: a tap opens it full screen
+// to look at closely, like the exam's pictures (ZoomableImage).
+export function GuideImage({ k, aspect, label, radius = 12, compact, flat, zoom }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; zoom?: boolean }) {
   const c = useColors();
   const { guideArt } = useApp();
   const v = guideArt[k];
   return (
     <View style={{ width: '100%', aspectRatio: aspect, borderRadius: flat ? 0 : radius, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
-      {v ? <Image source={{ uri: `${API_URL}/guide-art/${k}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={200} />
+      {v && zoom ? (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+          <ZoomableImage source={{ uri: `${API_URL}/guide-art/${k}.png?v=${v}` }} style={{ width: '100%', aspectRatio: aspect }} ratio={aspect} transition={200} />
+        </View>
+      ) : v ? <Image source={{ uri: `${API_URL}/guide-art/${k}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={200} />
         : compact ? <Icon name="sign" size={16} color="#9aa0a6" /> : (
           <View style={{ alignItems: 'center', gap: 6 }}>
             <Icon name="sign" size={30} color="#9aa0a6" />

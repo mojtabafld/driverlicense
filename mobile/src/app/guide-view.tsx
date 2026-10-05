@@ -79,7 +79,7 @@ export default function GuideView() {
               in again with each page. */}
           <Card style={{ padding: 0, overflow: 'hidden' }}>
             <Enter key={`pic-${i}`}>
-              <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} flat />
+              <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} flat zoom />
             </Enter>
             <View style={BOX}>
               <Enter key={`text-${i}`}>
