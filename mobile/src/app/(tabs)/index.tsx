@@ -10,6 +10,7 @@ import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
 import { ProgressChart } from '@/ui/progress-chart';
+import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
 import { useTour, type TourStep } from '@/ui/tour';
@@ -48,11 +49,14 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
   );
 }
 
-// A greeting for the time of day on the user's device: morning 5–12, noon 12–15, afternoon 15–19, night 19–5.
+// A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
+// dusk and before dawn, so a bright summer evening at 20:00 is still «عصر» and a dark winter afternoon at 17:00 is
+// «شب»); otherwise morning before 12, noon 12–15 and afternoon after.
 // «به‌خیر» with a zero-width non-joiner: «به» is a preposition here, so it stays apart from «خیر» (the Academy's rule).
 function greeting(d = new Date()) {
+  if (isDark(d)) return 'شب به‌خیر';
   const h = d.getHours();
-  return h >= 5 && h < 12 ? 'صبح به‌خیر' : h >= 12 && h < 15 ? 'ظهر به‌خیر' : h >= 15 && h < 19 ? 'عصر به‌خیر' : 'شب به‌خیر';
+  return h < 12 ? 'صبح به‌خیر' : h < 15 ? 'ظهر به‌خیر' : 'عصر به‌خیر';
 }
 
 // The greeting, kept up to date while the app stays open.
