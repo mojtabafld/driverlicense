@@ -29,3 +29,10 @@ export const loadLangAsked = async (): Promise<boolean> => {
   try { return (await SecureStore.getItemAsync(LANG_ASKED)) === '1'; } catch { return false; }
 };
 export const saveLangAsked = () => SecureStore.setItemAsync(LANG_ASKED, '1').catch(() => {});
+
+// The first-visit tooltips of each tab (src/ui/tour.tsx), seen or closed: per page and account on this device.
+const tourKey = (page: string, user: string) => `tp_tour_${page}_${user.replace(/[^A-Za-z0-9._-]/g, '_')}`;
+export const loadTourSeen = async (page: string, user: string): Promise<boolean> => {
+  try { return (await SecureStore.getItemAsync(tourKey(page, user))) === '1'; } catch { return false; }
+};
+export const saveTourSeen = (page: string, user: string) => SecureStore.setItemAsync(tourKey(page, user), '1').catch(() => {});

@@ -155,7 +155,9 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
 // With `fill` the screen does not scroll: its content gets exactly the height between the title and the tab bar
 // (the floating bar on the web, the system bar on phones, which the bottom safe area already covers), and `gap`
 // can be set tighter for short screens.
-export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number }) {
+// `scrollRef` / `onScrollY`: the scroll view and where it is scrolled, e.g. for the first-visit tooltips (tour.tsx).
+export function Screen({ title, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number;
+  scrollRef?: React.Ref<ScrollView>; onScrollY?: (y: number) => void }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const box = { paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const head = (
@@ -173,7 +175,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14 }: { t
       <PageIn>
       {fill
         ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
-        : <ScrollView contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 }]}>{head}{children}</ScrollView>}
+        : <ScrollView ref={scrollRef} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 }]}>{head}{children}</ScrollView>}
       </PageIn>
     </Backdrop>
   );

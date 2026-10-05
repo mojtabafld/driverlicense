@@ -27,3 +27,8 @@ export const saveOnboarded = async () => { try { localStorage.setItem(ONBOARDED,
 // The web version asks for the questions' language once per account (settings.langChosen), not per browser.
 export const loadLangAsked = async () => true;
 export const saveLangAsked = async () => {};
+
+// The first-visit tooltips of each tab (src/ui/tour.tsx), seen or closed: per page and account in this browser.
+const tourKey = (page: string, user: string) => `tp.tour.${page}.${user}`;
+export const loadTourSeen = async (page: string, user: string) => { try { return localStorage.getItem(tourKey(page, user)) === '1'; } catch { return false; } };
+export const saveTourSeen = async (page: string, user: string) => { try { localStorage.setItem(tourKey(page, user), '1'); } catch {} };
