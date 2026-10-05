@@ -73,6 +73,8 @@ PRIORITY_BLURB = {
 FIX = {
     's-a41-2': 'IMPORTANT: the black line is a smooth, rounded curve bending to the LEFT, with no sharp corner.',
     's-a42-2': 'IMPORTANT: from the bottom the black line goes up and its FIRST bend goes to the LEFT, then it bends to the right: the exact mirror image of sign A 42,1. Do not draw the first bend to the right.',
+    'p-right-t': 'IMPORTANT: this is a T-junction with only THREE arms (left, right and bottom). Above the junction there is NO road at all: the top side is one continuous pavement with a lawn and houses behind it.',
+    'pc-right': 'IMPORTANT: no traffic signs and no road markings at all at this junction.',
     's-c26-2': 'IMPORTANT: a thin red diagonal bar runs from the top left to the bottom right across the walking person, as on every Danish prohibition sign of this kind.',
 }
 
