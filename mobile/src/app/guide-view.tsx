@@ -26,7 +26,7 @@ const isSign = (x: Item): x is SignItem => 'code' in x;
 const label = (x: Item) => (isSign(x) ? x.fa : x.title);
 
 export default function GuideView() {
-  const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
+  const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const p = useLocalSearchParams<{ kind?: string; cat?: string; i?: string }>();
   const kind: GuideKind = p.kind === 'priority' ? 'priority' : 'signs';
@@ -78,9 +78,8 @@ export default function GuideView() {
           {/* The picture and its explanation in one card, the picture flush on top (like the «آموزش» cards); both come
               in again with each page. */}
           <Card style={{ padding: 0, overflow: 'hidden' }}>
-            {/* In the light theme a white frame around the picture (its own light grey background stands out on the card). */}
-            <Enter key={`pic-${i}`} style={dark ? null : { padding: 10, paddingBottom: 0 }}>
-              <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} flat={dark} radius={radius.md - 4} zoom />
+            <Enter key={`pic-${i}`}>
+              <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} flat zoom />
             </Enter>
             <View style={BOX}>
               <Enter key={`text-${i}`}>
