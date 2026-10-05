@@ -53,6 +53,18 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
 }
 
 // The card with the latest `limit` attempts, newest first, and «نمایش همه» when there are more.
+// The card's title with its icon, in a tile like the exam tab's other cards.
+function Head({ title, c }: { title: string; c: Colors }) {
+  return (
+    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+        <Icon name="clock" size={19} color={c.link} weight="semibold" />
+      </View>
+      <T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>{title}</T>
+    </View>
+  );
+}
+
 export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها' }: { attempts: Attempt[]; limit?: number; title?: string }) {
   const c = useColors();
   const { bank, clearAttempts } = useApp();
@@ -61,10 +73,10 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
   // Nothing done yet: the card stays, with a line on what will show here.
   if (!rows.length) {
     return (
-      <Card style={{ gap: 10 }}>
-        <T style={{ fontWeight: '700', fontSize: 16 }}>{title}</T>
+      <Card style={{ gap: 12 }}>
+        <Head title={title} c={c} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
-          <Icon name="clock" size={18} color={c.muted} />
+          <Icon name="info" size={17} color={c.muted} />
           <T style={{ flex: 1, color: c.muted, fontSize: 13, lineHeight: 21 }}>هنوز آزمون یا درسی انجام نداده‌اید. بعد از اولین آزمون، نتیجه‌ها اینجا نمایش داده می‌شوند و می‌توانید دوباره مرورشان کنید.</T>
         </View>
       </Card>
@@ -72,8 +84,8 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
   }
   return (
     <Card style={{ paddingVertical: 6 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 4 }}>
-        <T style={{ fontWeight: '700', fontSize: 16 }}>{title}</T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, paddingBottom: 6 }}>
+        <Head title={title} c={c} />
         {/* Delete the whole history, after a question. */}
         <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
           style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>

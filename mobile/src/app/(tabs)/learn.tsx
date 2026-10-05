@@ -29,8 +29,10 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
           <T style={{ flex: 1, fontWeight: '700', fontSize: 15.5, lineHeight: 23 }} numberOfLines={1}>{title}</T>
           <Icon name="chevronLeft" size={15} color={c.faint} weight="semibold" />
         </View>
-        <T style={{ color: c.muted, fontSize: 12, lineHeight: 19 }} numberOfLines={short ? 2 : 3}>{text}</T>
-        {note ? <T style={{ color: c.text, fontSize: 11.5, lineHeight: 17, fontWeight: '600' }} numberOfLines={1}>{note}</T> : null}
+        {/* The text takes the same height on every card (its lines and a line for the note, empty when there is
+            none), so the four pictures are the same size. */}
+        <T style={{ color: c.muted, fontSize: 12, lineHeight: 19, height: (short ? 2 : 3) * 19 }} numberOfLines={short ? 2 : 3}>{text}</T>
+        <T style={{ color: c.text, fontSize: 11.5, lineHeight: 17, height: 17, fontWeight: '600' }} numberOfLines={1}>{note ?? ''}</T>
       </View>
     </Card>
   );
