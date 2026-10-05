@@ -2,11 +2,13 @@
 // in the exam's language (the server's ElevenLabs recording, made once and kept), in the voice chosen in the settings
 // (a woman's or a man's). A tap plays, a second tap stops; while the recording is fetched the icon breathes. Only one
 // recording plays at a time, and leaving the question stops it. Shown only when the server can read aloud (an
-// ElevenLabs key is set). VoiceChoice is the settings' choice of voice, each option playing a short sample.
+// ElevenLabs key is set). VoiceChoice is the settings' choice of voice, each option playing a short sample;
+// TextSpeakButton reads an AI analysis or summary aloud in Persian.
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
+import { api } from '@/lib/api';
 import { API_URL } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
@@ -126,5 +128,41 @@ export function VoiceChoice() {
         );
       })}
     </View>
+  );
+}
+
+// Reads an AI text (the analysis of an answer, the summary of the mistakes) aloud in Persian: the server makes the
+// recording once (POST /api/ttsai), then it plays like a question's. A tap plays, a second tap stops.
+export function TextSpeakButton({ text }: { text: string }) {
+  const c = useColors();
+  const { tts } = useApp();
+  const { state, play, stop, me } = usePlayer();
+  const [making, setMaking] = useState(false), [failed, setFailed] = useState(false);
+  const pulse = useBreath(making || state === 'loading');
+  const wanted = useRef(false); // still wanted when the recording is ready (not stopped meanwhile)
+  useEffect(() => () => { wanted.current = false; me.current?.stop(); }, [text, me]);
+  if (!tts) return null;
+  const on = making || state !== 'idle';
+  const press = () => {
+    tap(); setFailed(false);
+    if (on) { wanted.current = false; setMaking(false); stop(); return; }
+    wanted.current = true; setMaking(true);
+    api<{ id: string }>('POST', 'ttsai', { text })
+      .then(d => { if (wanted.current) play(`ai=${d.id}`); })
+      .catch(() => setFailed(true))
+      .finally(() => setMaking(false));
+  };
+  return (
+    <Pressable onPress={press} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
+      accessibilityLabel={on ? 'توقف خواندن متن' : 'خواندن این متن'}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 17, opacity: pressed ? 0.8 : 1,
+        backgroundColor: on ? c.strong : c.nav })}>
+      <Animated.View style={{ opacity: pulse }}>
+        <Icon name={state === 'playing' ? 'stop' : 'speaker'} size={16} color={on ? c.strongFg : c.navFg} />
+      </Animated.View>
+      <T style={{ fontSize: 12.5, fontWeight: '600', color: on ? c.strongFg : c.navFg }}>
+        {failed ? 'دوباره امتحان کنید' : making ? 'در حال آماده‌سازی…' : state === 'playing' ? 'توقف' : state === 'loading' ? 'در حال پخش…' : 'گوش دادن'}
+      </T>
+    </Pressable>
   );
 }

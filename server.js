@@ -273,11 +273,12 @@ function serveStatic(req, res) {
   const fromSite = p.startsWith('/app/');
   if (fromSite) p = p.slice(4);
   // The app at the root (everything that is not the earlier site's, the API's or a shared file).
-  if (!fromSite && !p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/')) return serveAppWeb(req, res, p);
+  if (!fromSite && !p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/')) return serveAppWeb(req, res, p);
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
-  const im = /^\/intro\/([1-9])\.png$/.exec(p);
-  if (im) {
-    return imagegen.introBlob(im[1]).then(b => {
+  // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
+  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p);
+  if (im || lm) {
+    return (im ? imagegen.introBlob(im[1]) : imagegen.learnBlob(lm[1])).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff' });
       res.end(req.method === 'HEAD' ? undefined : b.data);
@@ -319,7 +320,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours() });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -447,15 +448,23 @@ async function api(req, res, route) {
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // A question and its statements read aloud (ElevenLabs), as MP3: ?qid=<id>&lang=da|en&voice=woman|man; with
-  // ?sample=1 (no qid) the voice's short sample line, for choosing it in the settings.
+  // ?sample=1 (no qid) the voice's short sample line, for choosing it in the settings; with ?ai=<id> an AI text's
+  // recording made by POST /api/ttsai.
   if (req.method === 'GET' && route === 'tts') {
     const u = new URL(req.url, 'http://x');
     try {
-      const b = await tts.get({ store, siteDir: SITE, qid: u.searchParams.get('qid'), lang: u.searchParams.get('lang'), gender: u.searchParams.get('voice'),
-        sample: u.searchParams.get('sample') === '1', username: user.username });
+      const b = u.searchParams.has('ai') ? await tts.getAi({ store, id: u.searchParams.get('ai') })
+        : await tts.get({ store, siteDir: SITE, qid: u.searchParams.get('qid'), lang: u.searchParams.get('lang'), gender: u.searchParams.get('voice'),
+          sample: u.searchParams.get('sample') === '1', username: user.username });
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=2592000', 'Accept-Ranges': 'none' });
       return res.end(b.data);
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+  }
+  // An AI analysis or summary read aloud in Persian: { text } (the text exactly as the server wrote it) → { id }.
+  if (req.method === 'POST' && route === 'ttsai') {
+    const b = await readBody(req);
+    try { return send(res, 200, { id: await tts.prepareAi({ store, text: b.text, username: user.username }) }); }
+    catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
