@@ -179,7 +179,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                     </View>
                   </View>
                   {t?.lesson && lessonOpen[g.c] ? (
-                    <View style={{ paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.accentSoft }}>
+                    <View style={{ paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.surface2 }}>
                       <T style={{ fontSize: 15, fontWeight: '700', marginBottom: 6 }}>📘 {topicFa(bank, g.c)} <T style={{ fontSize: 12.5, fontWeight: '500', color: c.muted, fontFamily: DA_FONT }}>({t.da})</T></T>
                       {t.lesson.map((l, i) => <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 3 }}><T style={{ fontSize: 14 }}>•</T><T style={{ flex: 1, fontSize: 14 }}>{l}</T></View>)}
                     </View>
