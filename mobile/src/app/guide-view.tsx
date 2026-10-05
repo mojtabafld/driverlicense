@@ -174,15 +174,16 @@ function SignText({ item, info, loading }: { item: SignItem; info?: SignInfo; lo
             <T style={{ fontSize: 15, lineHeight: 25, fontWeight: '700' }}>{en ? info?.en ?? item.da : item.da}</T>
           </View>
           {info?.kw.length ? (
-            // The terms as plain text in the box's font: the term in the exam's language, its Persian meaning after it.
-            <View style={{ gap: 4 }}>
+            // The terms on one line in the box's font, separated by commas: the term in the exam's language and its
+            // Persian meaning after it.
+            <T style={{ fontSize: 15, lineHeight: 26 }}>
               {info.kw.map((w, k) => (
-                <T key={k} style={{ fontSize: 15, lineHeight: 25 }}>
-                  <T style={{ fontSize: 15, lineHeight: 25, fontWeight: '700' }}>{en ? w.en : w.da}</T>{'  '}
-                  <T style={{ fontSize: 14, lineHeight: 25, color: c.muted }}>{w.fa}</T>
+                <T key={k} style={{ fontSize: 15, lineHeight: 26 }}>
+                  {k ? '، ' : ''}<T style={{ fontSize: 15, lineHeight: 26, fontWeight: '700' }}>{en ? w.en : w.da}</T>
+                  <T style={{ fontSize: 14, lineHeight: 26, color: c.muted }}> ({w.fa})</T>
                 </T>
               ))}
-            </View>
+            </T>
           ) : loading ? <T style={{ fontSize: 12.5, color: c.faint }}>کلمات کلیدی در حال آماده شدن…</T> : null}
         </View>
       </View>
