@@ -162,7 +162,7 @@ export default function Run() {
           );
         })}
       </ScrollView>
-      {/* The bar docked at the bottom: previous on the left, the position between, next / hand in on the right. */}
+      {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
         middle={<ListButton n={i + 1} of={qs.length} onPress={() => setDialog('list')} />}
