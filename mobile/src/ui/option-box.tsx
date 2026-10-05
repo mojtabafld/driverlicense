@@ -4,13 +4,15 @@
 import { View } from 'react-native';
 
 import { Icon } from './icon';
-import { useColors } from './theme';
+import { useColors, useIsDark } from './theme';
 
 export function OptionBox({ on, mark, children }: { on: boolean; mark?: boolean; children: React.ReactNode }) {
-  const c = useColors();
+  const c = useColors(), dark = useIsDark();
+  // A clearly visible mid grey edge (darker than the page's lines) so each statement stands apart.
+  const edge = dark ? '#555555' : '#b8b8b8';
   return (
     <View style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'flex-start', gap: 12, paddingVertical: 16, paddingHorizontal: 16, borderRadius: 18,
-      borderWidth: 2, borderColor: mark ? c.bad : on ? c.pick : c.nav, backgroundColor: mark ? c.badSoft : 'transparent' } as any}>
+      borderWidth: 2, borderColor: mark ? c.bad : on ? c.pick : edge, backgroundColor: mark ? c.badSoft : 'transparent' } as any}>
       <View style={{ width: 20, height: 20, borderRadius: 6, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', marginTop: 1,
         borderColor: on ? c.pick : c.muted, backgroundColor: on ? c.pick : 'transparent' }}>
         {on ? <Icon name="check" size={13} color={c.surface} weight="bold" /> : null}
