@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, L, T, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, L, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { useColors } from '@/ui/theme';
 
 // A line under a form: what went wrong, or that it was saved.
@@ -23,6 +23,7 @@ export default function Account() {
   const c = useColors(), ins = useSafeAreaInsets();
   const { user, updateAccount } = useApp();
   const motion = usePageMotion('push');
+  const scroll = useTopOnFocus();
   const [name, setName] = useState(user?.name ?? '');
   const [nameMsg, setNameMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [cur, setCur] = useState(''), [pw, setPw] = useState(''), [pw2, setPw2] = useState('');
@@ -50,7 +51,7 @@ export default function Account() {
   return (
     <Backdrop anim={motion.style}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
+        <ScrollView ref={scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
