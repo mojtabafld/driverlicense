@@ -446,11 +446,13 @@ async function api(req, res, route) {
       if (req.method === 'POST' && route === 'imggenset') { await imagegen.setActive(+b.qid, b.job || null); return send(res, 200, imagegen.list()); }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
-  // A question and its statements read aloud (ElevenLabs), as MP3: ?qid=<id>&lang=da|en.
+  // A question and its statements read aloud (ElevenLabs), as MP3: ?qid=<id>&lang=da|en&voice=woman|man; with
+  // ?sample=1 (no qid) the voice's short sample line, for choosing it in the settings.
   if (req.method === 'GET' && route === 'tts') {
     const u = new URL(req.url, 'http://x');
     try {
-      const b = await tts.get({ store, siteDir: SITE, qid: u.searchParams.get('qid'), lang: u.searchParams.get('lang'), username: user.username });
+      const b = await tts.get({ store, siteDir: SITE, qid: u.searchParams.get('qid'), lang: u.searchParams.get('lang'), gender: u.searchParams.get('voice'),
+        sample: u.searchParams.get('sample') === '1', username: user.username });
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=2592000', 'Accept-Ranges': 'none' });
       return res.end(b.data);
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
@@ -598,7 +600,9 @@ async function api(req, res, route) {
     const lang = ['da', 'en'].includes(b.lang) ? b.lang : (user.settings || {}).lang;
     // langChosen: the app asked which language the questions should be in (once per user); it stays set.
     const langChosen = !!b.langChosen || !!(user.settings || {}).langChosen;
-    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}) };
+    // voice: the read-aloud voice, 'woman' or 'man' (kept when a client that does not know it saves, like the old site).
+    const voice = ['woman', 'man'].includes(b.voice) ? b.voice : (user.settings || {}).voice;
+    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}) };
     await store.saveUser(user);
     return send(res, 200, { settings: user.settings });
   }
