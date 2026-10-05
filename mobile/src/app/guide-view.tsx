@@ -17,6 +17,9 @@ import { Marquee } from '@/ui/marquee';
 import { ListButton } from '@/ui/question-list';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
+// The cards of the page (the group's rules, the explanation): one look.
+const BOX = { paddingVertical: 12, paddingHorizontal: 16 };
+
 type Item = SignItem | Scenario;
 const isSign = (x: Item): x is SignItem => 'code' in x;
 const label = (x: Item) => (isSign(x) ? x.fa : x.title);
@@ -60,7 +63,7 @@ export default function GuideView() {
         contentContainerStyle={{ padding: 16, paddingTop: headH + 14, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The group's general rules, the same on every page; folded until asked for. */}
         <Pressable onPress={() => { tap(); setIntro(!intro); }} accessibilityRole="button" accessibilityState={{ expanded: intro }}>
-          <Card style={{ paddingVertical: 12, gap: 8 }}>
+          <Card style={[BOX, { gap: 8 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Icon name="info" size={17} color={c.muted} />
               <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }}>قواعد کلی این گروه</T>
@@ -72,12 +75,12 @@ export default function GuideView() {
         <Enter key={`pic-${i}`}>
           <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} radius={radius.md} />
         </Enter>
-        <Enter key={`text-${i}`}>
-          {/* The explanation in a card of the theme's surface colour. */}
-          <Card style={{ gap: 0 }}>
+        {/* The explanation in the same card as the group's rules (BOX); the text comes in again with each page. */}
+        <Card style={BOX}>
+          <Enter key={`text-${i}`}>
             {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
-          </Card>
-        </Enter>
+          </Enter>
+        </Card>
       </ScrollView>
       <GlassBar
         start={<FootBtn label="قبلی" icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
