@@ -9,18 +9,13 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
-import { GuideImage, PracticeButton, Rich } from '@/ui/guide-visual';
+import { GuideImage, Rich } from '@/ui/guide-visual';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion } from '@/ui/kit';
 import { GlassTop } from '@/ui/liquid';
 import { Marquee } from '@/ui/marquee';
 import { ListButton } from '@/ui/question-list';
 import { radius, useColors, useIsDark } from '@/ui/theme';
-
-// The bank's topics that practise each group, for the practice button on its last page.
-const TOPICS: Record<string, string[]> = { order: ['6.1', '7.11'], right: ['7.11', '7.12'], yield: ['7.11', '7.12'], exit: ['7.1', '7.11'], turn: ['7.13', '7.14'],
-  signals: ['7.12', '7.14'], round: ['7.15'], people: ['7.6'], special: ['4.5', '7.6'], lanes: ['7.4', '7.16'], meet: ['7.7'],
-  'drill-right': ['7.11', '7.12'], 'drill-yield': ['7.11', '7.12'], 'drill-special': ['4.5', '7.11'] };
 
 type Item = SignItem | Scenario;
 const isSign = (x: Item): x is SignItem => 'code' in x;
@@ -71,7 +66,7 @@ export default function GuideView() {
               <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }}>قواعد کلی این گروه</T>
               <View style={{ transform: [{ rotate: intro ? '90deg' : '-90deg' }] }}><Icon name="chevronLeft" size={14} color={c.faint} /></View>
             </View>
-            {intro ? <Rich text={cat.intro} style={{ fontSize: 14, lineHeight: 24, color: c.muted }} /> : null}
+            {intro ? <Rich text={cat.intro} style={{ fontSize: 14, lineHeight: 24, color: c.muted, textAlign: 'justify' }} /> : null}
           </Card>
         </Pressable>
         <Enter key={`pic-${i}`}>
@@ -80,7 +75,6 @@ export default function GuideView() {
         <Enter key={`text-${i}`}>
           {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
         </Enter>
-        {last ? <PracticeButton topics={kind === 'signs' ? ['6.1'] : TOPICS[cat.id] ?? ['7.11']} title={cat.title} /> : null}
       </ScrollView>
       <GlassBar
         start={<FootBtn label="قبلی" icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
@@ -103,7 +97,7 @@ function SignText({ item }: { item: SignItem }) {
       </View>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.fa}</T>
       <L style={{ fontSize: 13.5, lineHeight: 20, color: c.muted }}>{item.da}</L>
-      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
+      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28, textAlign: 'justify' }} />
     </View>
   );
 }
@@ -115,7 +109,7 @@ function ScenarioText({ item, legend }: { item: Scenario; legend: boolean }) {
   return (
     <View style={{ gap: 10 }}>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.title}</T>
-      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
+      <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28, textAlign: 'justify' }} />
       <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, alignItems: 'flex-start' }}>
         <Icon name="checkCircle" size={20} color={c.ok} />
         <View style={{ flex: 1, gap: 2 }}>

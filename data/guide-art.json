@@ -105,7 +105,7 @@
  },
  "c-us": {
   "aspect": "4:3",
-  "prompt": "Background: one plain soft pale colour (#f5dbe2). A row of simple black vehicle pictograms on white plates: a car, a lorry, a bus and a bicycle.\nStyle: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter. The objects are centred with generous empty space around them, on one plain soft pale background colour with no gradient and no floor line. Danish traffic signs follow their official design (shape and colours). No readable text, no letters, no numbers unless described, no logos, no watermarks, no faces."
+  "prompt": "Background: one plain soft pale colour (#f5dbe2). Four small flat white RECTANGULAR plates standing in a row on short grey posts, each with a thin black border and ONE simple black vehicle pictogram: a car, a lorry, a bus and a bicycle. They are NOT round signs: no red rings, no red bars, no circles.\nStyle: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter. The objects are centred with generous empty space around them, on one plain soft pale background colour with no gradient and no floor line. Danish traffic signs follow their official design (shape and colours). No readable text, no letters, no numbers unless described, no logos, no watermarks, no faces."
  },
  "c-v": {
   "aspect": "4:3",

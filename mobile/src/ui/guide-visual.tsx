@@ -1,16 +1,15 @@
 // Shared parts of the teaching pages «علائم رانندگی» and «آموزش حق تقدم»: the groups' cards, an item's educational
-// picture (made by the server; a soft tile with its code until then), text with **bold** parts, and the practice button.
+// picture (made by the server; a soft tile with its code until then), text with **bold** parts.
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, View, type StyleProp, type TextStyle } from 'react-native';
 
 import { API_URL } from '@/lib/config';
 import type { GuideKind } from '@/lib/guide-data';
-import { FULL, faNum, shuffle } from '@/lib/logic';
-import { session } from '@/lib/session';
+import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
-import { Button, Card, L, T, tap } from './kit';
+import { Card, L, T, tap } from './kit';
 import { useColors } from './theme';
 
 export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same in both themes
@@ -75,14 +74,4 @@ export function Rich({ text, style }: { text: string; style?: StyleProp<TextStyl
       {text.split(/(\*\*.+?\*\*)/g).map((p, i) => (/^\*\*.+\*\*$/.test(p) ? <T key={i} style={[style, { fontWeight: '800' }]}>{p.slice(2, -2)}</T> : p))}
     </T>
   );
-}
-
-// A practice exam of the bank's questions in these topics.
-function practise(ids: number[], title: string) { session.plan = { mode: 'sections', ids, title }; router.push('/run'); }
-export function PracticeButton({ topics, title }: { topics: string[]; title: string }) {
-  const { bank } = useApp();
-  if (!bank) return null;
-  const ids = bank.questions.filter(q => topics.includes(q.c)).map(q => q.id);
-  if (!ids.length) return null;
-  return <Button kind="grey" icon="play" label={`تمرین این بخش (${faNum(Math.min(ids.length, FULL))} سؤال)`} onPress={() => practise(shuffle(ids).slice(0, FULL), title)} />;
 }
