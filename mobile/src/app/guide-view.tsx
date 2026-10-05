@@ -73,7 +73,10 @@ export default function GuideView() {
           <GuideImage k={it.key} aspect={4 / 3} label={isSign(it) ? it.code : undefined} radius={radius.md} />
         </Enter>
         <Enter key={`text-${i}`}>
-          {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
+          {/* The explanation in a card of the theme's surface colour. */}
+          <Card style={{ gap: 0 }}>
+            {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
+          </Card>
         </Enter>
       </ScrollView>
       <GlassBar
@@ -110,7 +113,7 @@ function ScenarioText({ item, legend }: { item: Scenario; legend: boolean }) {
     <View style={{ gap: 10 }}>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.title}</T>
       <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28, textAlign: 'justify' }} />
-      <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, alignItems: 'flex-start' }}>
+      <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
         <Icon name="checkCircle" size={20} color={c.ok} />
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontSize: 12.5, color: c.muted, fontWeight: '600' }}>چه کسی اول می‌رود؟</T>
