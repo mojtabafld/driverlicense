@@ -69,6 +69,13 @@ PRIORITY_BLURB = {
     'drill-special': 'امدادی، تراموا و ستون نظامی.',
 }
 
+# Notes added to a picture's prompt after looking at what the model drew (key → note), for details it got wrong.
+FIX = {
+    's-a41-2': 'IMPORTANT: the black line is a smooth, rounded curve bending to the LEFT, with no sharp corner.',
+    's-a42-2': 'IMPORTANT: from the bottom the black line goes up and its FIRST bend goes to the LEFT, then it bends to the right: the exact mirror image of sign A 42,1. Do not draw the first bend to the right.',
+    's-c26-2': 'IMPORTANT: a thin red diagonal bar runs from the top left to the bottom right across the walking person, as on every Danish prohibition sign of this kind.',
+}
+
 def norm(code):
     return re.sub(r'\s', '', code).replace(',', '.')
 
@@ -125,6 +132,8 @@ for c in O:
 app['sources'] = ('Bekendtgørelse om vejafmærkning (BEK nr. 1632 af 20/12/2017 med senere ændringer) og færdselsloven '
                   '(LBK nr. 168 af 14/02/2023), retsinformation.dk')
 json.dump(app, open(os.path.join(ROOT, 'mobile/src/lib/guide-data.json'), 'w'), ensure_ascii=False, indent=1)
+for k, note in FIX.items():
+    art[k]['prompt'] += '\n' + note
 # The cards' thumbnails first, so the group pages look complete early; then the items in page order.
 art = {**{k: v for k, v in art.items() if k.startswith(('c-', 'pc-'))}, **{k: v for k, v in art.items() if not k.startswith(('c-', 'pc-'))}}
 json.dump(art, open(os.path.join(ROOT, 'data/guide-art.json'), 'w'), ensure_ascii=False, indent=1)
