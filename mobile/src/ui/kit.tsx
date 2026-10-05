@@ -211,14 +211,20 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
 
 // The translation switch under a question's picture, the same in the exam and in the review: a round button with the
 // translate icon, grey while off and filled while the Persian translation shows.
-export function TranslateButton({ on, onPress }: { on: boolean; onPress: () => void }) {
-  const c = useColors();
+// The translation switch: «فا» beside the questions' language (DK or EN) in place of an icon, in the button's colour.
+export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: () => void; lang: 'da' | 'en' }) {
+  const c = useColors(), fg = on ? c.strongFg : c.navFg;
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
       accessibilityLabel={on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
         backgroundColor: on ? c.strong : c.nav })}>
-      <Icon name="translate" size={19} color={on ? c.strongFg : c.navFg} />
+      {/* Laid out left to right on every platform: the language on the left, «فا» on the right. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2.5, direction: 'ltr' } as ViewStyle}>
+        <L style={{ fontSize: 9.5, lineHeight: 13, fontWeight: '700', color: fg }}>{lang === 'en' ? 'EN' : 'DK'}</L>
+        <View style={{ width: 1, height: 10, backgroundColor: fg, opacity: 0.5 }} />
+        <T style={{ fontSize: 12, lineHeight: 16, fontWeight: '800', color: fg }}>فا</T>
+      </View>
     </Pressable>
   );
 }

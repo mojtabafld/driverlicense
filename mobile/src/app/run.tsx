@@ -136,7 +136,7 @@ export default function Run() {
         </Enter>
         {/* Translation on / off: a round icon under the picture, on its left (filled while the translation shows). */}
         <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', gap: 10, marginTop: -4, marginBottom: -4 } as any}>
-          <TranslateButton on={showFa} onPress={() => setShowFa(!showFa)} />
+          <TranslateButton on={showFa} onPress={() => setShowFa(!showFa)} lang={lang} />
           {/* Read the question and its statements aloud, beside the translation switch. */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
         </View>
