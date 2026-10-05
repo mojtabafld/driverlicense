@@ -19,6 +19,8 @@ type Ctx = {
   learnArt: Record<string, string>;
   // The profile pictures to choose from that the server has made: number → version.
   avatarArt: Record<string, string>;
+  // The teaching pages' pictures (signs, right of way) that the server has made: key → version.
+  guideArt: Record<string, string>;
   // Set the profile picture: one of the made ones, an own photo (base64 JPEG, cropped and small) or none.
   setAvatar: (b: { preset: number } | { image: string } | { remove: true }) => Promise<void>;
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
@@ -47,6 +49,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
   const [learnArt, setLearnArt] = useState<Record<string, string>>({});
   const [avatarArt, setAvatarArt] = useState<Record<string, string>>({});
+  const [guideArt, setGuideArt] = useState<Record<string, string>>({});
 
   // Bumped on sign-out: an account read that was still on its way then is dropped, so it cannot sign the user back in.
   const gen = useRef(0);
@@ -60,7 +63,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [bank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; avatarArt?: Record<string, string> }>('GET', 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setAvatarArt(x.avatarArt || {}); }).catch(() => {}); }, []);
+  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; avatarArt?: Record<string, string>; guideArt?: Record<string, string> }>('GET', 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setAvatarArt(x.avatarArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
@@ -80,7 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
-    saved: me?.saved ?? [], aiLessons, tts, intro, introBg, learnArt, avatarArt,
+    saved: me?.saved ?? [], aiLessons, tts, intro, introBg, learnArt, avatarArt, guideArt,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
@@ -111,7 +114,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons, tts, intro, introBg, learnArt, avatarArt]);
+  }), [ready, token, me, bank, aiLessons, tts, intro, introBg, learnArt, avatarArt, guideArt]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

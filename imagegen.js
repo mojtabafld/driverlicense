@@ -61,6 +61,7 @@ function init(s, siteDir) {
   fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message))
     .then(() => startLearn()).catch(e => console.error('learn pictures', e.message))
     .then(() => AVATAR.start()).catch(e => console.error('avatar pictures', e.message))
+    .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
     .then(() => seedOwn()).catch(e => console.error('own pictures', e.message));
 }
 
@@ -147,6 +148,7 @@ async function poll() {
   if (await pollIntro().catch(() => true)) pending = true;
   if (await pollLearn().catch(() => true)) pending = true;
   if (await AVATAR.poll().catch(() => true)) pending = true;
+  if (await GUIDE.poll().catch(() => true)) pending = true;
   if (pending) schedule();
 }
 
@@ -426,25 +428,47 @@ const LEARN_PROMPTS = [
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
 // pictures; each has start (on server start), poll (in the poll round), versions (for /api/config) and blob.
-function artSet({ metaKey, set, prompts, style, aspect, prefix }) {
+// `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`) or an object of key → { prompt, aspect, ref }.
+// `ref`: a picture in `refDir` the model redraws (image to image), e.g. a sign's official drawing; without it, text only.
+// `limit`: at most this many being made at a time (the rest start as earlier ones finish); none = all at once.
+// Keyed prompts carry a revision (a hash of the prompt and its reference): when it changes, that one picture is made
+// again, and the old one stays on show until the new one is ready.
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '' }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
+  const list = Array.isArray(prompts)
+    ? prompts.map((p, i) => [String(i + 1), { prompt: `${p}\n${style}`, aspect }])
+    : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect, ref: v.ref,
+      rev: require('node:crypto').createHash('sha1').update(`${v.prompt}|${v.ref || ''}|${v.aspect || aspect}`).digest('hex').slice(0, 10) }]);
+  // Never started, failed with tries left, or made from an earlier version of its prompt.
+  const stale = (x, rev) => !!(rev && x && x.done && x.rev && x.rev !== rev);
+  const waiting = (x, rev) => !x || (!x.blob && x.done && (x.tries || 0) < 3) || stale(x, rev);
+  let starting = false;
   async function startSet() {
-    if (!available()) return;
-    const prev = store.meta[metaKey];
-    if (prev && prev.set !== set) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
-    const it = meta().items;
-    for (let n = 1; n <= prompts.length; n++) {
-      const x = it[n];
-      if (x && (x.blob || !x.done || (x.tries || 0) >= 3)) continue;   // done, running, or given up after 3 tries
-      const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt: `${prompts[n - 1]}\n${style}` };
-      try {
-        const d = await kie('POST', '/jobs/createTask', { model: MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: aspect, resolution: '2K' } });
-        job.taskId = d.taskId; job.state = 'generating';
-      } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message); }
-      await save();
-    }
-    if (Object.values(it).some(j => !j.done && j.taskId)) schedule();
+    if (!available() || starting) return;
+    starting = true;
+    try {
+      const prev = store.meta[metaKey];
+      if (prev && prev.set !== set) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
+      const it = meta().items;
+      let running = Object.values(it).filter(j => !j.done && j.taskId).length;
+      for (const [n, { prompt, aspect: ar, ref, rev }] of list) {
+        if (running >= limit) break;
+        const x = it[n];
+        if (!waiting(x, rev)) continue;   // done, running, or given up after 3 tries
+        const again = stale(x, rev);
+        const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: (again ? 0 : (x && x.tries) || 0) + 1, prompt, rev,
+          ...(again ? { blob: x.blob, v: x.v, size: x.size } : {}) };   // the old picture stays until the new one is made
+        try {
+          const input = { prompt, aspect_ratio: ar, resolution: '2K' };
+          if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
+          const d = await kie('POST', '/jobs/createTask', { model: ref ? EDIT_MODELS.sunburst : MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
+          job.taskId = d.taskId; job.state = 'generating'; running++;
+        } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message); }
+        await save();
+      }
+      if (Object.values(it).some(j => !j.done && j.taskId)) schedule();
+    } finally { starting = false; }
   }
   // One poll round; true while some are still being made.
   async function pollSet() {
@@ -468,12 +492,14 @@ function artSet({ metaKey, set, prompts, style, aspect, prefix }) {
       } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
       await save();
     }
+    // With a limit, the next ones start as earlier ones finish.
+    if (limit !== Infinity && list.some(([n, { rev }]) => waiting(meta().items[n], rev))) { await startSet(); pending = true; }
     return pending;
   }
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
   const versions = () => Object.fromEntries(Object.entries(now()).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
   const blobOf = async n => { const j = now()[n]; return j && j.blob ? blob(j.blob) : null; };
-  return { start: startSet, poll: pollSet, versions, blob: blobOf, count: prompts.length };
+  return { start: startSet, poll: pollSet, versions, blob: blobOf, count: list.length };
 }
 const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '4:3', prefix: 'learn' });
 const startLearn = LEARN.start, pollLearn = LEARN.poll, learnVersions = LEARN.versions, learnBlob = LEARN.blob;
@@ -495,7 +521,16 @@ const AVATAR_PROMPTS = [
   'Background: plain soft periwinkle (#dde2f7). A small rounded mint-green car seen from the side.',
   'Background: plain soft sand (#efe5d8). A round red-ringed speed-limit road sign with a blank white middle on a short grey pole.',
 ];
+// ---------- pictures for the teaching pages «علائم رانندگی» and «آموزش حق تقدم» ----------
+// One educational picture per sign, marking, signal and right-of-way situation, and one per group for its card
+// (data/guide-art.json, written by data/guide-src/build.py with the prompts beside the texts); a sign with an official
+// drawing in data/guide-ref is redrawn from it. Made a few at a time; served at /guide-art/<key>.png.
+const GUIDE_SET = 'v1';
+const GUIDE = artSet({ metaKey: 'guideArt', set: GUIDE_SET, prompts: JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8')),
+  prefix: 'guide', limit: 8, refDir: path.join(__dirname, 'data', 'guide-ref') });
+const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
+
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
 const avatarVersions = AVATAR.versions, avatarBlob = AVATAR.blob, avatarCount = AVATAR.count;
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount };
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob };
