@@ -145,4 +145,27 @@ groups['signs'] = [k for c in app['signs'] for k in groups[c['id']]]
 groups['priority'] = [k for c in app['priority'] for k in groups[c['id']]]
 groups['thumbs'] = [c['thumb'] for c in app['signs'] + app['priority']]
 json.dump(groups, open(os.path.join(ROOT, 'data/guide-groups.json'), 'w'), ensure_ascii=False, indent=0)
+# Where each item's picture is on prove.dk (for the admin's side-by-side comparison; the files stay there until the admin
+# imports them into the database). `official`: the official drawing (Wikimedia Commons «Denmark road
+# sign …», public domain) exists for it, which the admin may choose for the app instead of the made picture.
+src = json.load(open(os.path.join(HERE, 'prove-src.json')))
+codes = {}
+for x in src['signs']:
+    codes.setdefault(norm(x['code']), []).append(x['img'])
+pmap = {}
+for c in app['signs']:
+    seen2 = {}
+    for i in c['items']:
+        urls = codes.get(norm(i['code']), [])
+        n = seen2[i['code']] = seen2.get(i['code'], 0) + 1
+        if len(urls) >= n:
+            u = urls[n - 1]; name = u.rsplit('/', 1)[1]
+            # The official drawing comes from Wikimedia Commons whenever it is there (data/guide-ref has it).
+            ok = n == 1 and os.path.exists(os.path.join(REFS, norm(i['code']) + '.png'))
+            pmap[i['key']] = {'url': u, 'official': ok, **({'commons': f"Denmark_road_sign_{norm(i['code'])}.svg"} if ok else {})}
+for x in src['priority']:
+    k = f"p-drill-{x['id']}"
+    if k in art: pmap[k] = {'url': x['picture'], 'official': False}
+json.dump(pmap, open(os.path.join(ROOT, 'data/prove-map.json'), 'w'), ensure_ascii=False, indent=0)
+print(len(pmap), 'pictures on prove.dk,', sum(1 for v in pmap.values() if v['official']), 'official drawings')
 print(len(art), 'pictures,', sum(1 for a in art.values() if a.get('ref')), 'from an official drawing')

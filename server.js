@@ -15,6 +15,7 @@ const crypto = require('node:crypto');
 const { openStore } = require('./store');
 const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary } = require('./lesson');
 const imagegen = require('./imagegen');
+const guideref = require('./guideref');
 const tts = require('./tts');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -281,13 +282,24 @@ function serveStatic(req, res) {
   const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p),
     gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p);
   if (im || lm || am || gm2) {
-    return (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : imagegen.guideBlob(gm2[1])).then(b => {
+    return (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : guideref.blob(gm2[1])).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff' });
       res.end(req.method === 'HEAD' ? undefined : b.data);
     }).catch(() => { res.writeHead(500); res.end(); });
   }
   if (isProtected(p) && !sessionUser(req)) { res.writeHead(401, { 'Cache-Control': 'no-store' }); return res.end('Sign in first'); }
+  // The admin's picture comparison (guideref.js): the made picture, prove.dk's copy and the official drawing, admin only.
+  const rm = /^\/img\/guideref\/(ai|prove|official)\/([a-z0-9-]{3,40})$/.exec(p);
+  if (rm) {
+    const sess = sessionUser(req);
+    if (!sess || !isAdmin(sess.user)) { res.writeHead(403); return res.end(); }
+    return guideref.refBlob(rm[1], rm[2]).then(b => {
+      if (!b) { res.writeHead(404); return res.end(); }
+      res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' });
+      res.end(req.method === 'HEAD' ? undefined : b.data);
+    }).catch(() => { res.writeHead(500); res.end(); });
+  }
   // A question picture replaced by a generated one (the original file stays; ?orig=1 still shows it), and the generated
   // versions themselves at /img/gen/<qid>/<job> for the admin panel.
   const qm = /^\/img\/q(\d+)\.jpg$/.exec(p), gm = /^\/img\/gen\/(\d+)\/([a-z0-9]+)$/.exec(p);
@@ -323,7 +335,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), avatarArt: imagegen.avatarVersions(), guideArt: imagegen.guideVersions() });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), avatarArt: imagegen.avatarVersions(), guideArt: guideref.versions() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -499,6 +511,16 @@ async function api(req, res, route) {
     try { return send(res, 200, { id: await tts.prepareAi({ store, text: b.text, username: user.username }) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
+  // Comparing the teaching pictures with prove.dk's (admin): the list, copying the reference pictures in, and choosing
+  // the official drawing (or the made picture) for a sign.
+  if (['guideref', 'guiderefimport', 'guiderefchoose'].includes(route)) {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    try {
+      if (req.method === 'GET' && route === 'guideref') return send(res, 200, guideref.list());
+      if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
+      if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+  }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse() });
@@ -672,6 +694,7 @@ async function main() {
     await store.saveMeta('removeNegin2223', 1);
   }
   imagegen.init(store, SITE);
+  guideref.init(store, imagegen);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });
