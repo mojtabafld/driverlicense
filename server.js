@@ -274,13 +274,14 @@ function serveStatic(req, res) {
   const fromSite = p.startsWith('/app/');
   if (fromSite) p = p.slice(4);
   // The app at the root (everything that is not the earlier site's, the API's or a shared file).
-  if (!fromSite && !p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/avatar-art/')) return serveAppWeb(req, res, p);
+  if (!fromSite && !p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
   // And the profile pictures to choose from.
-  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p);
-  if (im || lm || am) {
-    return (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : imagegen.avatarBlob(am[1])).then(b => {
+  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p),
+    gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p);
+  if (im || lm || am || gm2) {
+    return (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : imagegen.guideBlob(gm2[1])).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff' });
       res.end(req.method === 'HEAD' ? undefined : b.data);
@@ -322,7 +323,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), avatarArt: imagegen.avatarVersions() });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), avatarArt: imagegen.avatarVersions(), guideArt: imagegen.guideVersions() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
