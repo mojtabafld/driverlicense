@@ -7,9 +7,10 @@ import { Pressable, View } from 'react-native';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp } from '@/lib/store';
+import { Avatar, AvatarSheet } from '@/ui/avatar';
 import { Confirm } from '@/ui/confirm';
 import { Icon, type IconName } from '@/ui/icon';
-import { Card, Screen, Segmented, T, tap } from '@/ui/kit';
+import { Card, Screen, Segmented, T, physical, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
@@ -51,19 +52,25 @@ export default function Settings() {
   const { mode, setMode } = useTheme();
   // Sign-out asks first, in the app's own dialog.
   const [askOut, setAskOut] = useState(false);
+  const [avatarOpen, setAvatarOpen] = useState(false);
   const confirmLogout = () => setAskOut(true);
   // Switches in the app's teal.
   return (
     <Screen title="تنظیمات">
+      <AvatarSheet open={avatarOpen} onClose={() => setAvatarOpen(false)} />
       <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
         cancel="ماندن" ok="خروج" okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
       <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         {/* The name opens the account page (name and password); sign-out stays at the end. */}
         <Pressable onPress={() => { tap(); router.push('/account'); }} accessibilityRole="button" accessibilityLabel="حساب کاربری"
           style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? 0.7 : 1 })}>
-          <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: c.accent, alignItems: 'center', justifyContent: 'center' }}>
-            <T style={{ color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center' }}>{(user?.name || '?').slice(0, 1).toUpperCase()}</T>
-          </View>
+          {/* The profile picture (or the first letter, in the theme's colours): a tap opens the pictures to choose from. */}
+          <Pressable onPress={() => { tap(); setAvatarOpen(true); }} hitSlop={4} accessibilityRole="button" accessibilityLabel="عکس پروفایل">
+            <Avatar size={52} />
+            <View style={{ position: 'absolute', bottom: -2, ...physical({ right: -2 }), width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
+              <Icon name="edit" size={11} color={c.text} />
+            </View>
+          </Pressable>
           <View style={{ flex: 1 }}>
             <T style={{ fontWeight: '700', fontSize: 17 }}>{user?.name}</T>
             {/* The day the account was made */}
