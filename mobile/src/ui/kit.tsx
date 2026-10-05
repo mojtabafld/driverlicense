@@ -211,7 +211,7 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
 
 // The translation switch under a question's picture, the same in the exam and in the review: a round button with the
 // translate icon, grey while off and filled while the Persian translation shows.
-// The translation switch: «فا» beside the questions' language (DK or EN) in place of an icon, in the button's colour.
+// The translation switch: the questions' language (DK or EN) and «فا» laid out like the translate icon, in the button's colour.
 export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: () => void; lang: 'da' | 'en' }) {
   const c = useColors(), fg = on ? c.strongFg : c.navFg;
   return (
@@ -219,11 +219,11 @@ export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: (
       accessibilityLabel={on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
         backgroundColor: on ? c.strong : c.nav })}>
-      {/* Laid out left to right on every platform: the language on the left, «فا» on the right. */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2.5, direction: 'ltr' } as ViewStyle}>
-        <L style={{ fontSize: 9.5, lineHeight: 13, fontWeight: '700', color: fg }}>{lang === 'en' ? 'EN' : 'DK'}</L>
-        <View style={{ width: 1, height: 10, backgroundColor: fg, opacity: 0.5 }} />
-        <T style={{ fontSize: 12, lineHeight: 16, fontWeight: '800', color: fg }}>فا</T>
+      {/* Like the translate icon it replaces: the questions' language at the top left (where its first glyph was) and
+          «فا» at the bottom right (where its «A» was); placed left to right on every platform. */}
+      <View style={{ width: 26, height: 24, direction: 'ltr' } as ViewStyle}>
+        <L style={{ position: 'absolute', top: -1, left: 0, fontSize: 9, lineHeight: 12, fontWeight: '700', color: fg }}>{lang === 'en' ? 'EN' : 'DK'}</L>
+        <T style={{ position: 'absolute', bottom: -2, right: 0, fontSize: 12, lineHeight: 16, fontWeight: '800', color: fg }}>فا</T>
       </View>
     </Pressable>
   );
