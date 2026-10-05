@@ -1,7 +1,7 @@
 // Home: progress at a glance (chance of passing, counts, progress chart), fitted to the screen without scrolling:
 // the chart takes the height left, and on shorter screens the cards get more compact.
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
@@ -47,6 +47,23 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
   );
 }
 
+// A greeting for the time of day on the user's device: morning 5–12, noon 12–15, afternoon 15–19, night 19–5.
+// «به‌خیر» with a zero-width non-joiner: «به» is a preposition here, so it stays apart from «خیر» (the Academy's rule).
+function greeting(d = new Date()) {
+  const h = d.getHours();
+  return h >= 5 && h < 12 ? 'صبح به‌خیر' : h >= 12 && h < 15 ? 'ظهر به‌خیر' : h >= 15 && h < 19 ? 'عصر به‌خیر' : 'شب به‌خیر';
+}
+
+// The greeting, kept up to date while the app stays open.
+function useGreeting() {
+  const [g, setG] = useState(() => greeting());
+  useEffect(() => {
+    const t = setInterval(() => setG(greeting()), 60e3);
+    return () => clearInterval(t);
+  }, []);
+  return g;
+}
+
 export default function Home() {
   const c = useColors();
   // Screen height decides how compact the page is: below 800 points less padding and a smaller ring, below 680 the
@@ -54,6 +71,7 @@ export default function Home() {
   const { height } = useWindowDimensions();
   const compact = height < 800, tight = height < 680;
   const { user, attempts, bank } = useApp();
+  const hello = useGreeting();
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
   const exams = attempts.filter(a => a.mode !== 'lesson');
@@ -68,7 +86,7 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <Screen fill gap={compact ? 10 : 14} title={`سلام ${user?.name ?? ''}`} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}>
+    <Screen fill gap={compact ? 10 : 14} title={user?.name ? `${hello}، ${user.name}` : hello} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}>
       <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
