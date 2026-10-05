@@ -171,15 +171,15 @@ function SignText({ item, info, loading }: { item: SignItem; info?: SignInfo; lo
         <View style={{ flex: 1, gap: 8 }}>
           <View style={{ gap: 2 }}>
             <T style={{ fontSize: 12.5, color: c.muted, fontWeight: '600' }}>کلمات کلیدی</T>
-            <T style={{ fontSize: 15, lineHeight: 25, fontWeight: '700' }}>{en ? info?.en ?? item.da : item.da}</T>
+            <T style={{ fontSize: 15, lineHeight: 25, fontWeight: '700', textAlign: 'left', writingDirection: 'ltr' }}>{en ? info?.en ?? item.da : item.da}</T>
           </View>
           {info?.kw.length ? (
-            // The terms on one line in the box's font, separated by commas: the term in the exam's language and its
-            // Persian meaning after it.
-            <T style={{ fontSize: 15, lineHeight: 26 }}>
+            // The terms on one line in the box's font, separated by commas and set left to right like the other Latin
+            // text: the term in the exam's language and its Persian meaning after it.
+            <T style={{ fontSize: 15, lineHeight: 26, textAlign: 'left', writingDirection: 'ltr' }}>
               {info.kw.map((w, k) => (
                 <T key={k} style={{ fontSize: 15, lineHeight: 26 }}>
-                  {k ? '، ' : ''}<T style={{ fontSize: 15, lineHeight: 26, fontWeight: '700' }}>{en ? w.en : w.da}</T>
+                  {k ? ', ' : ''}<T style={{ fontSize: 15, lineHeight: 26, fontWeight: '700' }}>{en ? w.en : w.da}</T>
                   <T style={{ fontSize: 14, lineHeight: 26, color: c.muted }}> ({w.fa})</T>
                 </T>
               ))}
