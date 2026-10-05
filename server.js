@@ -16,7 +16,6 @@ const { openStore } = require('./store');
 const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary } = require('./lesson');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
-const signinfo = require('./signinfo');
 const tts = require('./tts');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -512,11 +511,6 @@ async function api(req, res, route) {
     try { return send(res, 200, { id: await tts.prepareAi({ store, text: b.text, username: user.username }) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
-  // A sign group's keywords and English names (signinfo.js), written by Claude the first time the group is opened.
-  if (req.method === 'GET' && route === 'signinfo') {
-    try { return send(res, 200, { items: await signinfo.forGroup(String(new URL(req.url, 'http://x').searchParams.get('cat') || '')) }); }
-    catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
-  }
   // Comparing the teaching pictures with prove.dk's (admin): the list, copying the reference pictures in, and choosing
   // the official drawing (or the made picture) for a sign.
   if (['guideref', 'guiderefimport', 'guiderefchoose'].includes(route)) {
@@ -701,7 +695,6 @@ async function main() {
   }
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
-  signinfo.init(store);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });
