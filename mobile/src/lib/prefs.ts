@@ -15,8 +15,8 @@ export const saveMode = (m: ThemeMode) => SecureStore.setItemAsync(KEY, m).catch
 // ran a version without it, so both get it once.
 const ONBOARDED = 'tp_onboarded';
 // The value marking the intro as seen; a new value shows the intro to everyone once more (2: after the teal redesign;
-// 3: with the first-visit tooltips, for everyone again).
-const SEEN = '3';
+// 3: with the first-visit tooltips; 4: with the look chosen on the language screen, for everyone again).
+const SEEN = '4';
 export const initialOnboarded = (): boolean | null => null;
 export const loadOnboarded = async (): Promise<boolean> => {
   try { return (await SecureStore.getItemAsync(ONBOARDED)) === SEEN; } catch { return false; }
@@ -25,15 +25,16 @@ export const saveOnboarded = () => SecureStore.setItemAsync(ONBOARDED, SEEN).cat
 
 // Whether this phone has asked for the questions' language: asked once on every new device after signing in (the
 // account's own choice preselected), even when the account chose one elsewhere.
-const LANG_ASKED = 'tp_lang_asked';
+// ASKED: a new value asks everyone once more (2: with the look on the same screen).
+const LANG_ASKED = 'tp_lang_asked', ASKED = '2';
 export const loadLangAsked = async (): Promise<boolean> => {
-  try { return (await SecureStore.getItemAsync(LANG_ASKED)) === '1'; } catch { return false; }
+  try { return (await SecureStore.getItemAsync(LANG_ASKED)) === ASKED; } catch { return false; }
 };
-export const saveLangAsked = () => SecureStore.setItemAsync(LANG_ASKED, '1').catch(() => {});
+export const saveLangAsked = () => SecureStore.setItemAsync(LANG_ASKED, ASKED).catch(() => {});
 
 // The first-visit tooltips of each tab (src/ui/tour.tsx), seen or closed: per page and account on this device.
 // TOUR_SET: a new value shows the tooltips to everyone once more.
-const TOUR_SET = 'v1';
+const TOUR_SET = 'v2';
 const tourKey = (page: string, user: string) => `tp_tour_${TOUR_SET}_${page}_${user.replace(/[^A-Za-z0-9._-]/g, '_')}`;
 export const loadTourSeen = async (page: string, user: string): Promise<boolean> => {
   try { return (await SecureStore.getItemAsync(tourKey(page, user))) === '1'; } catch { return false; }

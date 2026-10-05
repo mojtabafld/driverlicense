@@ -621,9 +621,10 @@ async function api(req, res, route) {
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
   // One-time: everyone is asked again which language the questions are in (with the app's renewed intro).
-  if (store.meta.langAskReset !== 1) {
+  // (2: once more, with the app's look chosen on the same screen.)
+  if (store.meta.langAskReset !== 2) {
     for (const u of Object.values(store.users)) if (u.settings && u.settings.langChosen) { delete u.settings.langChosen; await store.saveUser(u); }
-    await store.saveMeta('langAskReset', 1);
+    await store.saveMeta('langAskReset', 2);
   }
   // One-time, asked by the owner: remove user negin's 22nd and 23rd attempts (as numbered on the progress chart,
   // oldest first). A copy is kept in meta (`removed:negin:22-23`) so they can be restored.
