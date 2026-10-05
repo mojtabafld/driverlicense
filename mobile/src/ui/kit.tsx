@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -164,10 +164,24 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 // (the floating bar on the web, the system bar on phones, which the bottom safe area already covers), and `gap`
 // can be set tighter for short screens.
 // `scrollRef` / `onScrollY`: the scroll view and where it is scrolled, e.g. for the first-visit tooltips (tour.tsx).
+// On phones the page measures where it ends: when it reaches the bottom of the window, the system's tab bar lies over
+// its end (the tab content is not inset on some devices, and never on iOS), so it keeps that bar's height free.
+const TAB_BAR = Platform.OS === 'android' ? 80 : Platform.OS === 'ios' ? 50 : 0;
+function useTabBarRoom() {
+  const { height } = useWindowDimensions();
+  const [under, setUnder] = useState(false);
+  const onLayout = (e: { currentTarget: unknown }) => {
+    if (!TAB_BAR) return;
+    (e.currentTarget as View).measureInWindow((_x, y, _w, h) => setUnder(y + h >= height - 40));
+  };
+  return [onLayout, under ? TAB_BAR : 0] as const;
+}
+
 export function Screen({ title, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
+  const [barLayout, barRoom] = useTabBarRoom();
   const box = { paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const head = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
@@ -182,9 +196,11 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14, scrol
   return (
     <Backdrop>
       <PageIn>
+      <View onLayout={barLayout} style={{ flex: 1 }}>
       {fill
-        ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 }]}>{head}{children}</View>
-        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 }]}>{head}{children}</ScrollView>}
+        ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 + barRoom }]}>{head}{children}</View>
+        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 + barRoom }]}>{head}{children}</ScrollView>}
+      </View>
       </PageIn>
     </Backdrop>
   );
