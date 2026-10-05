@@ -407,7 +407,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               const efa = (s.efa || '').trim() || (s.ok ? 'بله.' : 'خیر.');
               return (
                 flat ? (
-                  <Enter key={k}><OptionBox on={checked} mark={!!mark}>
+                  <Enter key={k}><OptionBox on={checked} mark={!!mark} review>
                     <L style={{ fontSize: 15, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                     {fa && s.fa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{s.fa}</T> : null}
                     {view === 'right' ? (
