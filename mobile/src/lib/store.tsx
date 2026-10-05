@@ -17,6 +17,10 @@ type Ctx = {
   intro: Record<string, string>; introBg: Record<string, string>;
   // The «آموزش» cards' pictures that the server has made: card number → version.
   learnArt: Record<string, string>;
+  // The profile pictures to choose from that the server has made: number → version.
+  avatarArt: Record<string, string>;
+  // Set the profile picture: one of the made ones, an own photo (base64 JPEG, cropped and small) or none.
+  setAvatar: (b: { preset: number } | { image: string } | { remove: true }) => Promise<void>;
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
@@ -42,6 +46,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [intro, setIntro] = useState<Record<string, string>>({});
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
   const [learnArt, setLearnArt] = useState<Record<string, string>>({});
+  const [avatarArt, setAvatarArt] = useState<Record<string, string>>({});
 
   // Bumped on sign-out: an account read that was still on its way then is dropped, so it cannot sign the user back in.
   const gen = useRef(0);
@@ -55,7 +60,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [bank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string> }>('GET', 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); }).catch(() => {}); }, []);
+  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; avatarArt?: Record<string, string> }>('GET', 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setAvatarArt(x.avatarArt || {}); }).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
@@ -75,7 +80,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
-    saved: me?.saved ?? [], aiLessons, tts, intro, introBg, learnArt,
+    saved: me?.saved ?? [], aiLessons, tts, intro, introBg, learnArt, avatarArt,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
@@ -96,6 +101,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (old) api('POST', 'logout', undefined, old).catch(() => {});
     },
     clearAttempts: async () => { await api('DELETE', 'attempts'); setMe(m => (m ? { ...m, attempts: [] } : m)); },
+    setAvatar: async b => { const d = await api<{ user: User }>('POST', 'avatar', b); setMe(m => (m ? { ...m, user: d.user } : m)); },
     updateAccount: async b => { const d = await api<{ user: User }>('PUT', 'account', b); setMe(m => (m ? { ...m, user: d.user } : m)); },
     refresh: load,
     saveAttempt: async a => { const d = await api<{ attempt: Attempt }>('POST', 'attempts', a); setMe(m => (m ? { ...m, attempts: [...m.attempts, d.attempt] } : m)); },
@@ -105,7 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons, tts, intro, introBg, learnArt]);
+  }), [ready, token, me, bank, aiLessons, tts, intro, introBg, learnArt, avatarArt]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

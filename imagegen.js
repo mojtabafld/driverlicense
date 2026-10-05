@@ -60,6 +60,7 @@ function init(s, siteDir) {
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
   fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message))
     .then(() => startLearn()).catch(e => console.error('learn pictures', e.message))
+    .then(() => AVATAR.start()).catch(e => console.error('avatar pictures', e.message))
     .then(() => seedOwn()).catch(e => console.error('own pictures', e.message));
 }
 
@@ -145,6 +146,7 @@ async function poll() {
   }
   if (await pollIntro().catch(() => true)) pending = true;
   if (await pollLearn().catch(() => true)) pending = true;
+  if (await AVATAR.poll().catch(() => true)) pending = true;
   if (pending) schedule();
 }
 
@@ -421,52 +423,79 @@ const LEARN_PROMPTS = [
   // 4: right of way
   'Background: one plain soft sky blue (#d8e8f6) colour, no gradient, no floor line. A small rounded crossroads seen from above at an isometric angle, grey roads with white markings and white shark-teeth triangles at one side; two small rounded cars (coral and periwinkle blue) wait at the junction while a third (mint green) drives through; a white inverted give-way triangle sign with a red border and a yellow diamond priority-road sign stand at the corners.',
 ];
-const learnArt = () => (store.meta.learnArt = store.meta.learnArt && store.meta.learnArt.set === LEARN_SET ? store.meta.learnArt : { set: LEARN_SET, items: {} });
-const saveLearn = () => store.saveMeta('learnArt', learnArt());
-async function startLearn() {
-  if (!available()) return;
-  const prev = store.meta.learnArt;
-  if (prev && prev.set !== LEARN_SET) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
-  const it = learnArt().items;
-  for (let n = 1; n <= LEARN_PROMPTS.length; n++) {
-    const x = it[n];
-    if (x && (x.blob || !x.done || (x.tries || 0) >= 3)) continue;   // done, running, or given up after 3 tries
-    const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt: `${LEARN_PROMPTS[n - 1]}\n${LEARN_STYLE}` };
-    try {
-      const d = await kie('POST', '/jobs/createTask', { model: MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
-      job.taskId = d.taskId; job.state = 'generating';
-    } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error('learn picture', n, e.message); }
-    await saveLearn();
+// A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
+// blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
+// pictures; each has start (on server start), poll (in the poll round), versions (for /api/config) and blob.
+function artSet({ metaKey, set, prompts, style, aspect, prefix }) {
+  const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
+  const save = () => store.saveMeta(metaKey, meta());
+  async function startSet() {
+    if (!available()) return;
+    const prev = store.meta[metaKey];
+    if (prev && prev.set !== set) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
+    const it = meta().items;
+    for (let n = 1; n <= prompts.length; n++) {
+      const x = it[n];
+      if (x && (x.blob || !x.done || (x.tries || 0) >= 3)) continue;   // done, running, or given up after 3 tries
+      const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt: `${prompts[n - 1]}\n${style}` };
+      try {
+        const d = await kie('POST', '/jobs/createTask', { model: MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: aspect, resolution: '2K' } });
+        job.taskId = d.taskId; job.state = 'generating';
+      } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message); }
+      await save();
+    }
+    if (Object.values(it).some(j => !j.done && j.taskId)) schedule();
   }
-  if (Object.values(it).some(j => !j.done && j.taskId)) schedule();
-}
-// One poll round for the cards' pictures; true while some are still being made.
-async function pollLearn() {
-  if (!store.meta.learnArt) return false;
-  let pending = false;
-  for (const [n, job] of Object.entries(learnArt().items)) {
-    if (job.done || !job.taskId) continue;
-    try {
-      const d = await kie('GET', `/jobs/recordInfo?taskId=${encodeURIComponent(job.taskId)}`);
-      if (d.state === 'success') {
-        const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
-        if (!url) throw new Error('no result url');
-        const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
-        const s = shrink(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
-        job.blob = `learn-${LEARN_SET}-${n}`;
-        await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob);
-        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: s.buf.length });
-      } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
-      else pending = true;
-      if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
-    } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
-    await saveLearn();
+  // One poll round; true while some are still being made.
+  async function pollSet() {
+    if (!store.meta[metaKey]) return false;
+    let pending = false;
+    for (const [n, job] of Object.entries(meta().items)) {
+      if (job.done || !job.taskId) continue;
+      try {
+        const d = await kie('GET', `/jobs/recordInfo?taskId=${encodeURIComponent(job.taskId)}`);
+        if (d.state === 'success') {
+          const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
+          if (!url) throw new Error('no result url');
+          const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
+          const sm = shrink(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
+          job.blob = `${prefix}-${set}-${n}`;
+          await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
+          Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: sm.buf.length });
+        } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
+        else pending = true;
+        if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
+      } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
+      await save();
+    }
+    return pending;
   }
-  return pending;
+  const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
+  const versions = () => Object.fromEntries(Object.entries(now()).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
+  const blobOf = async n => { const j = now()[n]; return j && j.blob ? blob(j.blob) : null; };
+  return { start: startSet, poll: pollSet, versions, blob: blobOf, count: prompts.length };
 }
-const learnNow = () => (store.meta.learnArt && store.meta.learnArt.set === LEARN_SET ? store.meta.learnArt.items || {} : {});
-// For /api/config: card number → picture version, for the pictures that are ready.
-const learnVersions = () => Object.fromEntries(Object.entries(learnNow()).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
-const learnBlob = async n => { const j = learnNow()[n]; return j && j.blob ? blob(j.blob) : null; };
+const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '4:3', prefix: 'learn' });
+const startLearn = LEARN.start, pollLearn = LEARN.poll, learnVersions = LEARN.versions, learnBlob = LEARN.blob;
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob };
+// ---------- profile pictures to choose from in the settings ----------
+// Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
+// centred with room around it so it sits well in a circle. Served at /avatar-art/<n>.png.
+const AVATAR_SET = 'v1';
+const AVATAR_STYLE = 'Style: a modern, minimal 3D icon like a premium app\'s profile picture: ONE simple object, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, a subtle soft shadow. The object is centred and fills about 60% of the square, with even empty space around it so it fits inside a circle. The background is one plain flat colour with no gradient, no floor and no frame. No text, no letters, no numbers, no logos, no brand names, no watermarks, no faces.';
+const AVATAR_PROMPTS = [
+  'Background: plain soft pale mint (#d9efe3). A small rounded coral-red car seen from the front at a slight angle.',
+  'Background: plain soft lavender (#e3e1f5). A rounded dark grey steering wheel seen from the front.',
+  'Background: plain soft warm peach (#f6e1d3). A rounded traffic light on a short pole with the green light glowing softly.',
+  'Background: plain soft sky blue (#d8e8f6). A white triangular give-way road sign with a red border, point down, on a short grey pole.',
+  'Background: plain soft butter yellow (#f6efcf). A simple pink driving licence card with a faceless round photo silhouette and a few blank lines.',
+  'Background: plain soft pale teal (#d3eeee). An orange and white striped traffic cone.',
+  'Background: plain soft rose (#f5dbe2). A rounded car key with a small black remote fob.',
+  'Background: plain soft sage green (#dfe9d6). A rounded speedometer gauge with a white face and a red needle.',
+  'Background: plain soft periwinkle (#dde2f7). A small rounded mint-green car seen from the side.',
+  'Background: plain soft sand (#efe5d8). A round red-ringed speed-limit road sign with a blank white middle on a short grey pole.',
+];
+const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
+const avatarVersions = AVATAR.versions, avatarBlob = AVATAR.blob, avatarCount = AVATAR.count;
+
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount };
