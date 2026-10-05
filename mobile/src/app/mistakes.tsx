@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Attempt, Question } from '@/lib/bank';
 import { faNum, mistakeStats, shuffle, type MistakeStat } from '@/lib/logic';
-import { topicFa } from '@/lib/names';
+import { topicFa, topicName } from '@/lib/names';
 import { topicPracticeIds } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
@@ -79,14 +79,14 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const tone = (p: number) => (p >= 0.8 ? c.ok : p >= 0.6 ? c.warn : c.bad);
 
   const practiceAll = () => practice(shuffle(sorted.flatMap(g => g.list.filter(st => !st.lastOk).map(st => st.id))).slice(0, 25), 'تمرین اشتباهات');
-  const practiceTopic = (code: string) => practice(topicPracticeIds(sorted.find(g => g.c === code)?.list ?? []), topicFa(bank, code));
+  const practiceTopic = (code: string) => practice(topicPracticeIds(sorted.find(g => g.c === code)?.list ?? []), topicName(bank, code));
   // A panel or a topic opens its own page.
   const choose = (v: View_) => {
     tap();
     router.push({ pathname: '/mistakes-view', params: typeof v === 'object' ? { topic: v.topic } : { v } });
   };
   const shown = !view || view === 'topics' ? [] : typeof view === 'object' ? sorted.filter(g => g.c === view.topic) : sorted.filter(g => g.list.some(keep));
-  const title = !view ? 'اشتباهات' : view === 'topics' ? 'مباحث' : view === 'open' ? 'سؤال‌های اصلاح‌نشده' : view === 'fixed' ? 'سؤال‌های اصلاح‌شده' : topicFa(bank, view.topic);
+  const title = !view ? 'اشتباهات' : view === 'topics' ? 'مباحث' : view === 'open' ? 'سؤال‌های اصلاح‌نشده' : view === 'fixed' ? 'سؤال‌های اصلاح‌شده' : topicName(bank, view.topic);
   const sectionOf = (code: string) => +String(code).split('.')[0];
   const all = shown.flatMap(g => g.list.filter(keep).map(st => ({ g, st })));
   const items = secs.length ? all.filter(x => secs.includes(sectionOf(x.g.c))) : all;
@@ -133,7 +133,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                         <View style={{ gap: 6, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             {/* A long topic name glides to show all of it. */}
-                            <Marquee text={topicFa(bank, g.c)} height={24} bg={c.surface} style={{ fontSize: 14, lineHeight: 24, fontWeight: '700' }} />
+                            <Marquee text={topicName(bank, g.c)} height={24} bg={c.surface} style={{ fontSize: 14, lineHeight: 24, fontWeight: '700' }} />
                             <T style={{ fontSize: 12.5, fontWeight: '700', color: tone(p) }}>{faNum(Math.round(p * 100))}٪ پاسخ درست</T>
                             <Icon name="chevronLeft" size={14} color={c.faint} />
                           </View>

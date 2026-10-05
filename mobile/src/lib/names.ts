@@ -19,6 +19,8 @@ export function sectionFa(bank: Bank, c: string): string | null {
 }
 
 export const topicFa = (bank: Bank, c: string) => (bank.topics[c] ? `${faNum(c)} ${bank.topics[c].fa}` : 'سایر');
+// The topic's name alone, without its number (e.g. a practice exam's title).
+export const topicName = (bank: Bank, c: string) => bank.topics[c]?.fa ?? 'سایر';
 
 // Times are shown in Copenhagen time, as on the site.
 const TZ = 'Europe/Copenhagen';
