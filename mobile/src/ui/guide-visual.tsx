@@ -24,9 +24,9 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
         <Pressable key={g.id} onPress={() => { tap(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); }}
           accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`}
           style={({ pressed }) => ({ width: '48.4%', opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
-          <Card style={{ padding: 8, gap: 8, flex: 1 }}>
-            <GuideImage k={g.thumb} aspect={4 / 3} />
-            <View style={{ paddingHorizontal: 2, gap: 3, flex: 1 }}>
+          <Card style={{ padding: 0, overflow: 'hidden', flex: 1 }}>
+            <GuideImage k={g.thumb} aspect={4 / 3} flat />
+            <View style={{ padding: 10, gap: 3, flex: 1 }}>
               <T style={{ fontSize: 14.5, lineHeight: 22, fontWeight: '700' }} numberOfLines={2}>{g.title}</T>
               <T style={{ fontSize: 12, lineHeight: 19, color: c.muted }} numberOfLines={2}>{g.blurb}</T>
               <View style={{ flex: 1 }} />
@@ -47,12 +47,13 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
 
 // An item's picture at its aspect ratio; until the server has made it, a soft tile with `label` (e.g. the code), or
 // only a small icon when `compact` (the list's thumbnails).
-export function GuideImage({ k, aspect, label, radius = 12, compact }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean }) {
+// `flat`: at the top of a card, flush with its edges (no rounding or edge of its own).
+export function GuideImage({ k, aspect, label, radius = 12, compact, flat }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean }) {
   const c = useColors();
   const { guideArt } = useApp();
   const v = guideArt[k];
   return (
-    <View style={{ width: '100%', aspectRatio: aspect, borderRadius: radius, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: '100%', aspectRatio: aspect, borderRadius: flat ? 0 : radius, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
       {v ? <Image source={{ uri: `${API_URL}/guide-art/${k}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={200} />
         : compact ? <Icon name="sign" size={16} color="#9aa0a6" /> : (
           <View style={{ alignItems: 'center', gap: 6 }}>
@@ -62,7 +63,7 @@ export function GuideImage({ k, aspect, label, radius = 12, compact }: { k: stri
           </View>
         )}
       {/* a hairline edge in the dark theme, so the light picture does not glare */}
-      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: radius, borderWidth: 1, borderColor: c.line }} />
+      {flat ? null : <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: radius, borderWidth: 1, borderColor: c.line }} />}
     </View>
   );
 }
