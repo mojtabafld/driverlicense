@@ -59,6 +59,7 @@ function init(s, siteDir) {
   if (Object.values(images()).reduce((n, x) => n + unstick(x), 0)) save().catch(() => {});
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
   fixIntro().catch(e => console.error('intro pictures', e.message)).then(() => startIntro()).catch(e => console.error('intro pictures', e.message))
+    .then(() => startLearn()).catch(e => console.error('learn pictures', e.message))
     .then(() => seedOwn()).catch(e => console.error('own pictures', e.message));
 }
 
@@ -143,6 +144,7 @@ async function poll() {
     await save();
   }
   if (await pollIntro().catch(() => true)) pending = true;
+  if (await pollLearn().catch(() => true)) pending = true;
   if (pending) schedule();
 }
 
@@ -402,4 +404,69 @@ const introVersions = () => Object.fromEntries(Object.entries(introNow()).filter
 const introColours = () => Object.fromEntries(Object.entries(introNow()).filter(([, j]) => j.blob && j.bg).map(([n, j]) => [n, j.bg]));
 const introBlob = async n => { const j = introNow()[n]; return j && j.blob ? blob(j.blob) : null; };
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob };
+// ---------- pictures for the four cards of the app's «آموزش» tab ----------
+// Made once like the intro's (when the server starts with KIE_API_KEY set): one minimal, modern 3D picture per card
+// (lessons, rules, road signs, right of way), 4:3 on its own soft background, as large as the card's top. Kept in
+// store.meta.learnArt and served at /learn-art/<n>.png; the app shows its icon tile until a picture is there.
+// Changing LEARN_SET makes new ones.
+const LEARN_SET = 'v1';
+const LEARN_STYLE = 'Style: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter, no fine texture. The objects are centred with generous empty space around them. Danish traffic signs follow their official design (shape and colours). No text, no letters, no numbers, no logos, no brand names, no watermarks, no people\'s faces.';
+const LEARN_PROMPTS = [
+  // 1: lessons one by one
+  'Background: one plain soft pale mint (#d9efe3) colour, no gradient, no floor line. A small stack of three rounded theory books in white, mint green and periwinkle blue, the top one open with a tiny winding grey road with white dashes on its page; a small rounded coral car stands on the road; a pencil and a small green round badge with a white check mark lie beside the books.',
+  // 2: rules
+  'Background: one plain soft warm peach (#f6e1d3) colour, no gradient, no floor line. A balanced pair of rounded white justice scales in the centre; on one pan a tiny rounded coral car, on the other a small round speed-limit sign (white with a red ring, blank in the middle); a small rounded seat-belt buckle and a tiny traffic cone stand beside the scales.',
+  // 3: road signs
+  'Background: one plain soft lavender (#e3e1f5) colour, no gradient, no floor line. A small group of rounded road signs on short grey poles at slightly different heights: a white triangular warning sign with a red border, a round white sign with a red ring, a round blue sign with a white arrow, and a red octagonal stop sign (blank, no text); a short piece of grey road with a white broken line lies in front of them.',
+  // 4: right of way
+  'Background: one plain soft sky blue (#d8e8f6) colour, no gradient, no floor line. A small rounded crossroads seen from above at an isometric angle, grey roads with white markings and white shark-teeth triangles at one side; two small rounded cars (coral and periwinkle blue) wait at the junction while a third (mint green) drives through; a white inverted give-way triangle sign with a red border and a yellow diamond priority-road sign stand at the corners.',
+];
+const learnArt = () => (store.meta.learnArt = store.meta.learnArt && store.meta.learnArt.set === LEARN_SET ? store.meta.learnArt : { set: LEARN_SET, items: {} });
+const saveLearn = () => store.saveMeta('learnArt', learnArt());
+async function startLearn() {
+  if (!available()) return;
+  const prev = store.meta.learnArt;
+  if (prev && prev.set !== LEARN_SET) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
+  const it = learnArt().items;
+  for (let n = 1; n <= LEARN_PROMPTS.length; n++) {
+    const x = it[n];
+    if (x && (x.blob || !x.done || (x.tries || 0) >= 3)) continue;   // done, running, or given up after 3 tries
+    const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt: `${LEARN_PROMPTS[n - 1]}\n${LEARN_STYLE}` };
+    try {
+      const d = await kie('POST', '/jobs/createTask', { model: MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
+      job.taskId = d.taskId; job.state = 'generating';
+    } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error('learn picture', n, e.message); }
+    await saveLearn();
+  }
+  if (Object.values(it).some(j => !j.done && j.taskId)) schedule();
+}
+// One poll round for the cards' pictures; true while some are still being made.
+async function pollLearn() {
+  if (!store.meta.learnArt) return false;
+  let pending = false;
+  for (const [n, job] of Object.entries(learnArt().items)) {
+    if (job.done || !job.taskId) continue;
+    try {
+      const d = await kie('GET', `/jobs/recordInfo?taskId=${encodeURIComponent(job.taskId)}`);
+      if (d.state === 'success') {
+        const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
+        if (!url) throw new Error('no result url');
+        const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
+        const s = shrink(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
+        job.blob = `learn-${LEARN_SET}-${n}`;
+        await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob);
+        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: s.buf.length });
+      } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
+      else pending = true;
+      if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
+    } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
+    await saveLearn();
+  }
+  return pending;
+}
+const learnNow = () => (store.meta.learnArt && store.meta.learnArt.set === LEARN_SET ? store.meta.learnArt.items || {} : {});
+// For /api/config: card number → picture version, for the pictures that are ready.
+const learnVersions = () => Object.fromEntries(Object.entries(learnNow()).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
+const learnBlob = async n => { const j = learnNow()[n]; return j && j.blob ? blob(j.blob) : null; };
+
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob };

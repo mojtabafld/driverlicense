@@ -143,6 +143,27 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'filter':
       body = <Path d="M4.5 7h15M7.5 12h9M10.5 17h3" {...line} />;
       break;
+    case 'rules': // scales: the law
+      body = <G><Path d="M12 4v16M8 20h8M5 7.5h14M12 5.5l-.01 0" {...line} /><Path d="M7 7.5 4.2 13.5a2.9 2.9 0 0 0 5.6 0zM17 7.5l-2.8 6a2.9 2.9 0 0 0 5.6 0z" {...line} /></G>;
+      break;
+    case 'sign': // a round sign on its post
+      body = <G><Circle cx={12} cy={9} r={6} {...line} /><Path d="M9 9h6M12 15v6M9.5 21h5" {...line} /></G>;
+      break;
+    case 'priority': // the give-way triangle, point down
+      body = <G><Path d="M4.6 5.2h14.8a1.1 1.1 0 0 1 .95 1.65l-7.4 12.8a1.1 1.1 0 0 1-1.9 0L3.65 6.85A1.1 1.1 0 0 1 4.6 5.2z" {...line} /><Path d="M8.8 8.6h6.4L12 14.2z" {...line} /></G>;
+      break;
+    case 'help':
+      body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.7M12 16.9v.01" {...line} /></G>;
+      break;
+    case 'info':
+      body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M12 11v5.5M12 7.6v.01" {...line} /></G>;
+      break;
+    case 'bug':
+      body = <G><Path d="M8 10.5a4 4 0 0 1 8 0v3.5a4 4 0 0 1-8 0z" {...line} /><Path d="M9.5 6.8 8 5M14.5 6.8 16 5M12 10.5V18M4.5 12.5H8M16 12.5h3.5M5 17.5l3.2-1.4M19 17.5l-3.2-1.4M5 7.8l3.2 1.6M19 7.8l-3.2 1.6" {...line} /></G>;
+      break;
+    case 'send':
+      body = <Path d="M20 4 3.8 10.6l6.6 2.9 2.9 6.6zM20 4l-9.6 9.5" {...line} />;
+      break;
     case 'clock':
       body = <G><Circle cx={12} cy={12} r={8.6} {...line} /><Path d="M12 7.5V12l3 2" {...line} /></G>;
       break;

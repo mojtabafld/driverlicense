@@ -88,6 +88,12 @@ function Root() {
           <Stack.Screen name="mistakes" />
           <Stack.Screen name="mistakes-view" />
           <Stack.Screen name="account" />
+          <Stack.Screen name="learn-lessons" />
+          <Stack.Screen name="rules" />
+          <Stack.Screen name="signs" />
+          <Stack.Screen name="priority" />
+          <Stack.Screen name="help" />
+          <Stack.Screen name="report" />
         </Stack.Protected>
         <Stack.Protected guard={!user}>
           <Stack.Screen name="login" />

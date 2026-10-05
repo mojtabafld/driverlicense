@@ -12,7 +12,7 @@ import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon } from './icon';
 import { Enter, L, T, TranslateButton, physical, tap } from './kit';
-import { SpeakButton } from './speak';
+import { SpeakButton, TextSpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
@@ -220,6 +220,11 @@ function useFold() {
 // Lessons already fetched while the app is open (the server also keeps them, so a new visit costs no AI call).
 const lessonCache = new Map<string, string>();
 
+// At the top of an AI panel, at its end side (the left): the speaker button, reading the text aloud in Persian.
+function AiListen({ text }: { text: string }) {
+  return <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 4 }}><TextSpeakButton text={text} /></View>;
+}
+
 function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; lang: 'da' | 'en' }) {
   const c = useColors();
   const key = `${q.id}:${a ? a.join('') : ''}:${lang}`;
@@ -253,7 +258,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
         <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} typing={typing} onGrow={follow} /> : null}
+            : text ? <><AiListen text={text} /><Rich text={text} typing={typing} onGrow={follow} /></> : null}
         </View>
         </View></Animated.View>
       ) : null}
@@ -294,7 +299,7 @@ export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?:
         <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} onQuestion={onQuestion} typing={typing} onGrow={follow} /> : null}
+            : text ? <><AiListen text={text} /><Rich text={text} onQuestion={onQuestion} typing={typing} onGrow={follow} /></> : null}
         </View>
         </View></Animated.View>
       ) : null}

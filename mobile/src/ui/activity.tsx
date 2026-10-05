@@ -58,7 +58,18 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
   const rows = attempts.slice().reverse(), shown = all ? rows : rows.slice(0, limit);
-  if (!rows.length) return null;
+  // Nothing done yet: the card stays, with a line on what will show here.
+  if (!rows.length) {
+    return (
+      <Card style={{ gap: 10 }}>
+        <T style={{ fontWeight: '700', fontSize: 16 }}>{title}</T>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+          <Icon name="clock" size={18} color={c.muted} />
+          <T style={{ flex: 1, color: c.muted, fontSize: 13, lineHeight: 21 }}>هنوز آزمون یا درسی انجام نداده‌اید. بعد از اولین آزمون، نتیجه‌ها اینجا نمایش داده می‌شوند و می‌توانید دوباره مرورشان کنید.</T>
+        </View>
+      </Card>
+    );
+  }
   return (
     <Card style={{ paddingVertical: 6 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 4 }}>
