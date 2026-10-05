@@ -9,18 +9,13 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
-import { GuideImage, PracticeButton, Rich } from '@/ui/guide-visual';
+import { GuideImage, Rich } from '@/ui/guide-visual';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion } from '@/ui/kit';
 import { GlassTop } from '@/ui/liquid';
 import { Marquee } from '@/ui/marquee';
 import { ListButton } from '@/ui/question-list';
 import { radius, useColors, useIsDark } from '@/ui/theme';
-
-// The bank's topics that practise each group, for the practice button on its last page.
-const TOPICS: Record<string, string[]> = { order: ['6.1', '7.11'], right: ['7.11', '7.12'], yield: ['7.11', '7.12'], exit: ['7.1', '7.11'], turn: ['7.13', '7.14'],
-  signals: ['7.12', '7.14'], round: ['7.15'], people: ['7.6'], special: ['4.5', '7.6'], lanes: ['7.4', '7.16'], meet: ['7.7'],
-  'drill-right': ['7.11', '7.12'], 'drill-yield': ['7.11', '7.12'], 'drill-special': ['4.5', '7.11'] };
 
 type Item = SignItem | Scenario;
 const isSign = (x: Item): x is SignItem => 'code' in x;
@@ -80,7 +75,6 @@ export default function GuideView() {
         <Enter key={`text-${i}`}>
           {isSign(it) ? <SignText item={it} /> : <ScenarioText item={it} legend={!drill} />}
         </Enter>
-        {last ? <PracticeButton topics={kind === 'signs' ? ['6.1'] : TOPICS[cat.id] ?? ['7.11']} title={cat.title} /> : null}
       </ScrollView>
       <GlassBar
         start={<FootBtn label="قبلی" icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}

@@ -3,7 +3,7 @@
 // the 80% pass line; the bars grow in when it opens. Tap a bar to pick that attempt; its details and a review button
 // show below. With `fill` it takes the height of the space it is given (the home screen fits the screen without scrolling).
 // With more than ten attempts, the first time it is drawn after the app opens, it shows that older attempts are there:
-// the bars glide a little towards the older ones and back, under a small hint that fades in and out.
+// the bars glide a little towards the older ones and back, under a small arrow that fades in and out.
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
@@ -20,7 +20,7 @@ const L = 38, R = 12, TOP = 14, B = 24;
 let hinted = false;
 function takeHint() { if (hinted) return false; hinted = true; return true; }
 
-// The hint over the bars: an arrow towards the older attempts and a line of text, fading in, swaying, fading out.
+// The hint over the bars: a round arrow towards the older attempts, fading in, swaying, fading out.
 function ScrollHint({ run, onDone }: { run: boolean; onDone: () => void }) {
   const c = useColors();
   const [o] = useState(() => new Animated.Value(0)), [dx] = useState(() => new Animated.Value(0));
@@ -43,10 +43,9 @@ function ScrollHint({ run, onDone }: { run: boolean; onDone: () => void }) {
   if (!run) return null;
   return (
     <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', opacity: o }}>
-      <Animated.View style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 99,
+      <Animated.View style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 22,
         backgroundColor: c.strong, transform: [{ translateX: dx }], shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 3 } as any}>
-        <Icon name="arrowLeft" size={16} color={c.strongFg} weight="semibold" />
-        <T style={{ fontSize: 12.5, fontWeight: '600', color: c.strongFg }}>برای دیدن آزمون‌های قبلی، نمودار را بکشید</T>
+        <Icon name="arrowLeft" size={18} color={c.strongFg} weight="semibold" />
       </Animated.View>
     </Animated.View>
   );
