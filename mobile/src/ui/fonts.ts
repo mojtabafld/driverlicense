@@ -18,25 +18,18 @@ export const FA_FONTS = {
 };
 
 // The font of the Danish / English text (questions, statements, explanations), bundled the same way as Vazirmatn:
-// 'uber' (in use): Uber Move, Medium for running text and Bold for the question and anything 600 or heavier;
-// 'inter' (the look before, kept): Inter in four weights and the regular italic.
-export const LATIN: 'uber' | 'inter' = 'uber';
-
-const INTER = {
+// Inter (SIL Open Font License) in four weights and the regular italic.
+export const DA_FONTS = {
   'Inter-400': Inter_400Regular, 'Inter-500': Inter_500Medium, 'Inter-600': Inter_600SemiBold, 'Inter-700': Inter_700Bold,
   'Inter-400i': Inter_400Regular_Italic,
 };
-const UBER_MOVE = {
-  'UberMove-500': require('../../assets/fonts/UberMove-Medium.otf'), 'UberMove-700': require('../../assets/fonts/UberMove-Bold.otf'),
-};
-export const DA_FONTS = LATIN === 'uber' ? UBER_MOVE : INTER;
 // The regular family, for text that sets no weight.
-export const DA_REGULAR = LATIN === 'uber' ? 'UberMove-500' : 'Inter-400';
+export const DA_REGULAR = 'Inter-400';
 
-// The family for a fontWeight and italic, and whether the italic must be slanted by the browser (Uber Move has none).
+// The family for a fontWeight and italic, and whether the italic must be slanted by the browser (never: Inter has
+// its own italic).
 export function daFamily(weight: TextStyle['fontWeight'], italic?: boolean): { family: string; slant: boolean } {
   const w = weight === 'bold' ? 700 : weight === 'normal' || weight == null ? 400 : Number(weight) || 400;
-  if (LATIN === 'uber') return { family: w >= 600 ? 'UberMove-700' : 'UberMove-500', slant: !!italic };
   if (italic) return { family: 'Inter-400i', slant: false };
   return { family: `Inter-${Math.min(700, Math.max(400, Math.round(w / 100) * 100))}`, slant: false };
 }
