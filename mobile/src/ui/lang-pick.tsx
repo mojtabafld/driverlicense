@@ -1,7 +1,8 @@
 // Asked once per user, after the intro and the first sign-in (and once for users from before it existed): which
 // language the questions are in, Danish (as in the real test) or English. Saved in the user's settings with
-// `langChosen`, so it is not asked again on any device; it can be changed later in the settings. Under it the look:
-// as the device (the default, so a first visit follows the system), light or dark; it applies at once.
+// `langChosen`, so it is not asked again on any device; it can be changed later in the settings. Under it «ظاهر»:
+// light or dark, the device's current one shown chosen (left as it is, the app keeps following the device); a tap
+// applies the other at once.
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -13,7 +14,7 @@ import { Icon } from './icon';
 import { L, T, tap } from './kit';
 import { INTRO_BG as BG } from './onboarding';
 import { useTheme } from './theme';
-import type { ThemeMode } from '@/lib/prefs';
+import type { ThemeName } from '@/lib/prefs';
 
 const BUTTON = '#ffffff', BUTTON_TEXT = '#14421c';
 
@@ -39,8 +40,8 @@ function FlagGB() {
   );
 }
 
-const LOOKS: { v: ThemeMode; label: string; icon: 'settings' | 'sun' | 'moon' }[] = [
-  { v: 'system', label: 'مثل دستگاه', icon: 'settings' }, { v: 'light', label: 'روشن', icon: 'sun' }, { v: 'dark', label: 'تیره', icon: 'moon' },
+const LOOKS: { v: ThemeName; label: string; icon: 'sun' | 'moon' }[] = [
+  { v: 'light', label: 'روشن', icon: 'sun' }, { v: 'dark', label: 'تیره', icon: 'moon' },
 ];
 
 const OPTIONS = [
@@ -53,7 +54,7 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
   const { settings, setSettings } = useApp();
   const [lang, setLang] = useState<'da' | 'en'>(settings.lang === 'en' ? 'en' : 'da');
   const [busy, setBusy] = useState(false);
-  const { mode, setMode } = useTheme();
+  const { theme, setMode } = useTheme(); // theme: the one in use (the device's while the mode follows it)
   const save = () => { tap(); setBusy(true); setSettings({ lang, langChosen: true }).then(() => onDone?.(), () => setBusy(false)); };
   return (
     <View style={{ flex: 1 }}>
@@ -90,14 +91,14 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
               );
             })}
           </View>
-          {/* The look of the app: as the device (default), light or dark. */}
+          {/* The look: light or dark, the one in use chosen. */}
           <View style={{ gap: 10 }}>
-            <T style={{ color: '#fff', fontSize: 17, lineHeight: 26, fontWeight: '700' }}>ظاهر اپ</T>
+            <T style={{ color: '#fff', fontSize: 17, lineHeight: 26, fontWeight: '700' }}>ظاهر</T>
             <View style={{ flexDirection: 'row', gap: 8, padding: 4, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)' }} accessibilityRole="radiogroup">
               {LOOKS.map(({ v, label, icon }) => {
-                const on = mode === v;
+                const on = theme === v;
                 return (
-                  <Pressable key={v} onPress={() => { tap(); setMode(v); }} accessibilityRole="radio" accessibilityState={{ checked: on }}
+                  <Pressable key={v} onPress={() => { tap(); if (!on) setMode(v); }} accessibilityRole="radio" accessibilityState={{ checked: on }}
                     style={({ pressed }) => ({ flex: 1, height: 46, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
                       opacity: pressed ? 0.85 : 1, backgroundColor: on ? '#fff' : 'transparent' })}>
                     <Icon name={icon} size={17} color={on ? BUTTON_TEXT : '#fff'} />
@@ -106,7 +107,6 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
                 );
               })}
             </View>
-            <T style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12.5, lineHeight: 20 }}>«مثل دستگاه» با تنظیم روشن / تیره‌ی گوشی شما عوض می‌شود.</T>
           </View>
         </ScrollView>
         <Pressable disabled={busy} onPress={save} accessibilityRole="button"
