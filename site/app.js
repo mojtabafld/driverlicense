@@ -1655,6 +1655,7 @@
     $app.innerHTML = `<section class="view admin">
       <button class="back-link" id="back">→ بازگشت به داشبورد</button>
       <div class="words-head"><h1><span class="h-ico">${ICON.chart}</span>پنل مدیریت</h1><button class="tr-toggle" id="reloadAdmin">به‌روزرسانی</button></div>
+      <div style="margin:0 0 14px"><button class="btn btn-primary" id="openGuideRef">مقایسه‌ی تصاویر علائم و حق تقدم با prove.dk</button></div>
       <div class="stats">
         ${stat('بازدید امروز', faNum(t.visitsToday), `${faNum(t.visitorsToday)} بازدیدکننده`)}
         ${stat('بازدید ۷ روز اخیر', faNum(t.visits7), `${faNum(t.visits30)} بازدید در ۳۰ روز`)}
@@ -1703,8 +1704,56 @@
     </section>`;
     document.getElementById('back').onclick = home;
     document.getElementById('reloadAdmin').onclick = adminView;
+    document.getElementById('openGuideRef').onclick = guideRefView;
     document.getElementById('hourDay').onchange = e => { document.getElementById('hourChart').innerHTML = hourBars(d.visitHours, e.target.value); };
     window.scrollTo({ top: 0 });
+  }
+
+  // Comparing the app's teaching pictures (signs, right of way) with prove.dk's, side by side (admin only, guideref.js).
+  // prove.dk's pictures are copied into the database once («دریافت تصاویر مرجع») and only shown here; for a sign whose
+  // official drawing (public domain, Wikimedia Commons) is there, the admin chooses which one the app shows.
+  async function guideRefView() {
+    stopSpeak(); leaveExam(); setExamMode(false); closeModal();
+    const st = guideRefView.st = guideRefView.st || { g: 0 };
+    let d; try { d = await api('GET', 'guideref'); } catch (e) { toast(e.message); return adminView(); }
+    const g = d.groups[Math.min(st.g, d.groups.length - 1)], run = d.run;
+    const pic = (kind, key, v, on) => `<img loading="lazy" src="img/guideref/${kind}/${key}?v=${esc(String(v || ''))}" alt="" style="width:100%;aspect-ratio:4/3;object-fit:contain;background:#f2f3f5;border-radius:10px;${on ? 'outline:3px solid var(--ok, #2fae4f);outline-offset:2px' : ''}">`;
+    const none = t => `<div style="width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--surface2, #eee);border-radius:10px" class="muted">${t}</div>`;
+    const opts = d.groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${x.kind === 'signs' ? 'علائم' : 'حق تقدم'} · ${esc(x.title)} (${faNum(x.items.length)})</option>`).join('');
+    const running = run && !run.done;
+    $app.innerHTML = `<section class="view admin">
+      <button class="back-link" id="back">→ بازگشت به پنل مدیریت</button>
+      <div class="words-head"><h1>مقایسه‌ی تصاویر با prove.dk</h1></div>
+      <p class="muted" style="margin:0 0 10px">تصاویر prove.dk یک بار در پایگاه داده‌ی خودمان ذخیره می‌شوند و فقط در همین صفحه برای مقایسه دیده می‌شوند. برای تابلوهایی که طرح رسمی‌شان (مالکیت عمومی، از Wikimedia Commons) موجود است، می‌توانید طرح رسمی را به‌جای تصویر ساخته‌شده در برنامه نشان دهید.</p>
+      <div class="card panel" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-primary" id="grImport" ${running ? 'disabled' : ''}>دریافت تصاویر مرجع</button>
+        <span class="muted">${running ? `در حال دریافت… ${faNum(run.n)} از ${faNum(run.total)}` : run ? `آخرین دریافت: ${fmtDateTime(run.at)} · ${faNum(run.n)} مورد${run.errors.length ? ` · ${faNum(run.errors.length)} خطا` : ''}${run.stopped ? ' (نیمه‌کاره ماند؛ دوباره بزنید)' : ''}` : 'هنوز دریافت نشده است.'}</span>
+        <label style="margin-inline-start:auto">گروه <select id="grGroup">${opts}</select></label>
+      </div>
+      ${run && run.errors.length ? `<details class="card panel"><summary class="muted">خطاهای دریافت</summary><pre dir="ltr" style="white-space:pre-wrap;font-size:12px">${esc(run.errors.slice(0, 50).join('\n'))}</pre></details>` : ''}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:12px">
+      ${g.items.map(x => `<div class="card panel" style="display:flex;flex-direction:column;gap:8px">
+        <div><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
+        <div style="display:grid;grid-template-columns:repeat(${x.canOfficial ? 3 : 2},1fr);gap:8px;align-items:start">
+          <div>${x.ai ? pic('ai', x.key, x.ai, x.choice === 'ai') : none('ساخته نشده')}<small class="muted">تصویر ساخته‌شده (AI)</small></div>
+          <div>${x.prove ? pic('prove', x.key, '') : none(x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}<small class="muted">prove.dk (فقط مقایسه)</small></div>
+          ${x.canOfficial ? `<div>${x.official ? pic('official', x.key, '', x.choice === 'official') : none('دریافت نشده')}<small class="muted">طرح رسمی (Commons)</small></div>` : ''}
+        </div>
+        ${x.canOfficial ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="tr-toggle ${x.choice === 'ai' ? 'on' : ''}" data-gr="${x.key}" data-c="ai" ${x.choice === 'ai' ? 'disabled' : ''}>${x.choice === 'ai' ? '✓ ' : ''}تصویر ساخته‌شده در برنامه</button>
+          <button class="tr-toggle ${x.choice === 'official' ? 'on' : ''}" data-gr="${x.key}" data-c="official" ${x.choice === 'official' || !x.official ? 'disabled' : ''}>${x.choice === 'official' ? '✓ ' : ''}طرح رسمی در برنامه</button></div>` : ''}
+      </div>`).join('')}
+      </div>
+    </section>`;
+    document.getElementById('back').onclick = adminView;
+    document.getElementById('grGroup').onchange = e => { st.g = +e.target.value; guideRefView(); };
+    document.getElementById('grImport').onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } guideRefView(); };
+    $app.querySelectorAll('[data-gr]').forEach(b => b.onclick = async () => {
+      try { await api('POST', 'guiderefchoose', { key: b.dataset.gr, choice: b.dataset.c }); toast('ذخیره شد'); } catch (e) { toast(e.message); }
+      guideRefView();
+    });
+    clearTimeout(guideRefView.t);
+    if (running) guideRefView.t = setTimeout(() => { if (document.getElementById('grImport')) guideRefView(); }, 4000);
   }
 
   // Own page for the new question pictures (admin only), opened from «تنظیمات و امکانات».
