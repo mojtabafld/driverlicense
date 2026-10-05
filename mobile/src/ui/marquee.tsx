@@ -17,6 +17,7 @@ export function Marquee({ text, style, height, bg }: { text: string; style?: Sty
   const [x] = useState(() => new Animated.Value(0));
   // Too long: it travels so that both its ends come out from under the faded edges.
   const over = full > room + 0.5 ? Math.ceil(full - room + FADE * 2) : 0;
+  const wide = full ? Math.ceil(full) + 4 : undefined;
   useEffect(() => {
     x.setValue(0);
     if (!over) return;
@@ -35,8 +36,10 @@ export function Marquee({ text, style, height, bg }: { text: string; style?: Sty
       <View pointerEvents="none" style={{ position: 'absolute', top: 0, right: 0, width: 4000, flexDirection: 'row', justifyContent: 'flex-end', opacity: 0 }}>
         <T style={[style, { flexShrink: 0 }]} onLayout={e => setFull(e.nativeEvent.layout.width)}>{text}</T>
       </View>
-      <Animated.View style={{ position: 'absolute', top: 0, right: over ? FADE : 0, flexDirection: 'row', transform: [{ translateX: x }] }}>
-        <T style={[style, { flexShrink: 0 }]} numberOfLines={1}>{text}</T>
+      {/* Given its full measured width (and a little slack for rounding): left to itself on Android and iOS, a box
+          placed by its right edge only is held to its parent's width, which cut the text off with «…». */}
+      <Animated.View style={{ position: 'absolute', top: 0, right: over ? FADE : 0, width: wide, flexDirection: 'row', justifyContent: 'flex-end', transform: [{ translateX: x }] }}>
+        <T style={[style, { flexShrink: 0, width: wide }]} numberOfLines={1}>{text}</T>
       </Animated.View>
       {over ? (
         <>
