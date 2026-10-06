@@ -89,7 +89,8 @@ async function kie(method, url, body) {
   return d.data;
 }
 
-async function describe(q) {
+// `extra`: one more instruction for this description (e.g. the console's attention to signs and markings).
+async function describe(q, extra = '') {
   claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
   const lines = q.st.map((s, k) => `${k + 1}. ${s.da} → ${s.ok ? 'CORRECT' : 'WRONG'}. Explanation: ${s.eda || '-'}`).join('\n');
   const img = fs.readFileSync(path.join(SITE, q.img));
@@ -97,7 +98,7 @@ async function describe(q) {
     model: CLAUDE, max_tokens: 1500, system: DESCRIBE,
     messages: [{ role: 'user', content: [
       { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img.toString('base64') } },
-      { type: 'text', text: `Question: ${q.sda}\n${q.sen ? `(English: ${q.sen})\n` : ''}Statements:\n${lines}` },
+      { type: 'text', text: `Question: ${q.sda}\n${q.sen ? `(English: ${q.sen})\n` : ''}Statements:\n${lines}${extra ? `\n\n${extra}` : ''}` },
     ] }],
   });
   const text = r.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
@@ -274,17 +275,22 @@ async function remove(qid, jobId) {
   await save();
 }
 
-// A scene description only (Claude), for the admin to edit before making a picture (the console), in the app's
-// picture style.
-async function draft(qid) {
+// A scene description only (Claude), for the admin to edit before making a picture (the console), with the details
+// paragraph and the style of the console's part (`part`: lessons = realistic, rules = the illustration style).
+async function draft(qid, part = 'lessons') {
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
-  return withHouseStyle(ownPrompt(q.id) || await describe(q));
+  return withHouseStyle(ownPrompt(q.id) || await describe(q, `Give special attention to the traffic signs, road markings and lights: name each one with its exact official Danish design, colour, line type, direction and position, since the picture is for a driving-theory app.`), part);
 }
-// The app's picture style (data/art-style.json: that of its road-sign pictures, a clean flat vector illustration).
-// A prompt written for the console ends with it: any other «Style:» line is taken out first.
-const houseStyle = () => JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'art-style.json'), 'utf8')).style;
-const withHouseStyle = text => `${String(text).replace(/(^|\s)Style\s*:[^\n]*/gi, '$1').trim()}\n${houseStyle()}`;
+// How the console's prompts end (data/art-style.json): the details paragraph, then the style line of the part (lessons:
+// realistic; signs, right of way and rules: the illustration style of the road-sign pictures). Any other «Style:» line
+// and an earlier details paragraph are taken out first.
+const artStyle = () => JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'art-style.json'), 'utf8'));
+const houseStyle = (part = 'signs') => { const a = artStyle(); return a.styles[a.use[part] || 'illustration']; };
+const withHouseStyle = (text, part = 'signs') => {
+  const a = artStyle(), body = String(text).replace(/(^|\s)DETAILS \(this picture[^\n]*/g, '$1').replace(/(^|\s)Style\s*:[^\n]*/gi, '$1').trim();
+  return `${body}\n${a.details}\n${houseStyle(part)}`;
+};
 
 // ---------- our own questions' pictures (data/original_*.json) ----------
 // The questions written new for the site (build.py puts their text in place of prove.dk's) each carry `img`, a scene

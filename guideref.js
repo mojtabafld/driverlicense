@@ -91,6 +91,7 @@ const known = key => DATA.signs.concat(DATA.priority).some(g => g.thumb === key 
 const DRAFT = `You write prompts for an image model that draws the teaching pictures of a Danish driving-theory app (category B): road signs, road markings, signals and right-of-way situations.
 You get one topic (its Danish code and name if it has one, its Persian title and explanation) and the prompt the current picture was made from.
 Write ONE improved prompt in English (at most 250 words) for a new picture of the same topic: keep the current prompt's format and every rule it sets (e.g. redrawing the reference sign exactly, the colour code of the cars, the bird's-eye view), and make sure everything the explanation teaches is clearly visible and correct for Denmark (right-hand traffic, official Danish sign designs). No readable text except what is on the signs; no logos or watermarks.
+Give special attention to the details the app teaches: describe every traffic sign with its exact official Danish design (shape, border, colours, symbol, numbers, any plate under it), every road marking exactly (colour, solid or broken, single or double, arrows and their direction, stop lines, give-way triangles, zebra crossings, cycle lanes), which lamp of a traffic light is lit, and where each vehicle and person is.
 The picture MUST be in the app's picture style, the style of its road-sign pictures: a clean flat vector illustration, never photorealistic or a 3D render. Do not write a style line of your own: the app adds its style line after your prompt.
 Answer with the prompt only.`;
 function itemOf(key) {
@@ -101,8 +102,9 @@ function itemOf(key) {
 async function draft(key) {
   const it = itemOf(key), p = imagegen.guidePrompt(key);
   if (!it) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
+  const part = key.startsWith('p-') ? 'priority' : 'signs';
   return imagegen.withHouseStyle(await imagegen.writeText(DRAFT, [it.code && `Code: ${it.code}`, it.da && `Danish name: ${it.da}`, `Title (Persian): ${it.title}`, it.text && `Explanation (Persian): ${it.text}`,
-    p ? `Current prompt:\n${p.prompt}` : '', `The app's style line (added after your prompt):\n${imagegen.houseStyle()}`].filter(Boolean).join('\n')));
+    p ? `Current prompt:\n${p.prompt}` : '', `The app's style line (added after your prompt):\n${imagegen.houseStyle(part)}`].filter(Boolean).join('\n')), part);
 }
 // «تایید ساخت تصویر»: a new picture from the (edited) prompt; a sign is redrawn from its official drawing as before.
 function generate(key, prompt) {
