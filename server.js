@@ -3,7 +3,8 @@
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review),
-// LESSON_MODEL (Claude model for those lessons, default claude-opus-5-5), KIE_API_KEY (new question pictures, admin panel),
+// LESSON_MODEL (Claude model for those lessons, default claude-opus-5-5), PROMPT_MODEL and IMAGE_MODEL (the console's
+// prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
 // ELEVENLABS_API_KEY (questions read aloud).
 // See README.md for all variables.
 'use strict';
@@ -547,7 +548,7 @@ async function api(req, res, route) {
   if (['guideref', 'guiderefimport', 'guiderefchoose', 'guidedraft', 'guidegen'].includes(route)) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     try {
-      if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), promptModel: imagegen.promptModel() });
+      if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), models: imagegen.models() });
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guidedraft') { const b = await readBody(req); return send(res, 200, { prompt: await guideref.draft(String(b.key || '')) }); }
@@ -557,7 +558,7 @@ async function api(req, res, route) {
   // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
   if (req.method === 'GET' && route === 'consolepics') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), promptModel: imagegen.promptModel() });
+    return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models() });
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
