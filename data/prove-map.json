@@ -1853,5 +1853,45 @@
 "p-drill-93": {
 "url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija93.jpg",
 "official": false
+},
+"p-right-basic": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija72.jpg",
+"official": false
+},
+"p-right-t": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija67.jpg",
+"official": false
+},
+"p-right-left-turn": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija77.jpg",
+"official": false
+},
+"p-right-three-cars": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija71.jpg",
+"official": false
+},
+"p-yield-b11": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija81.jpg",
+"official": false
+},
+"p-yield-main": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija80.jpg",
+"official": false
+},
+"p-turn-left": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija92.jpg",
+"official": false
+},
+"p-turn-pedestrian": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija88.jpg",
+"official": false
+},
+"p-special-emergency": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/righthandgivewayduty.jpg",
+"official": false
+},
+"p-special-tram": {
+"url": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija63.jpg",
+"official": false
 }
 }

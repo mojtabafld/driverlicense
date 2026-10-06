@@ -166,6 +166,14 @@ for c in app['signs']:
 for x in src['priority']:
     k = f"p-drill-{x['id']}"
     if k in art: pmap[k] = {'url': x['picture'], 'official': False}
+# Our own right-of-way rule pages have no picture of their own on prove.dk; where one of prove.dk's practice
+# situations teaches the same thing, its picture stands beside the rule (prove.dk practice id).
+RULE_PROVE = {'p-right-basic': 72, 'p-right-t': 67, 'p-right-left-turn': 77, 'p-right-three-cars': 71,
+              'p-yield-b11': 81, 'p-yield-main': 80, 'p-turn-left': 92, 'p-turn-pedestrian': 88,
+              'p-special-emergency': 53, 'p-special-tram': 63}
+pics = {x['id']: x['picture'] for x in src['priority']}
+for k, n in RULE_PROVE.items():
+    if k in art and n in pics: pmap[k] = {'url': pics[n], 'official': False}
 json.dump(pmap, open(os.path.join(ROOT, 'data/prove-map.json'), 'w'), ensure_ascii=False, indent=0)
 print(len(pmap), 'pictures on prove.dk,', sum(1 for v in pmap.values() if v['official']), 'official drawings')
 print(len(art), 'pictures,', sum(1 for a in art.values() if a.get('ref')), 'from an official drawing')
