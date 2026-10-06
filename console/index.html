@@ -183,7 +183,8 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       ${hasAi ? `<div class="row">
           <button class="chip" data-showp="${esc(id)}">${x.show ? 'بستن پرامپت' : 'نمایش پرامپت تصویر AI'}</button>
           <button class="chip" data-fix="${esc(id)}" ${x.fix ? 'disabled' : ''}>اصلاح تصویر</button></div>
-        ${x.show ? `<div class="ptext"><small class="muted">پرامپتی که تصویر AI فعلی از آن ساخته شده:</small><pre>${x.loading ? 'در حال دریافت…' : esc(x.prompt || 'پرامپتی برای این تصویر ذخیره نشده است.')}</pre></div>` : ''}
+        ${x.show ? `<div class="ptext"><small class="muted">پرامپتی که تصویر AI فعلی از آن ساخته شده:</small><pre>${x.loading ? 'در حال دریافت…' : esc(x.prompt || 'پرامپتی برای این تصویر ذخیره نشده است.')}</pre>
+          ${!x.loading && x.prompt ? `<div class="row" style="margin-top:6px"><button class="chip" data-editp="${esc(id)}">ویرایش این پرامپت</button></div>` : ''}</div>` : ''}
         ${x.fix ? (x.fixing ? `<span class="state">در حال اصلاح پرامپت…</span>` : `<div class="fixbox">
           <small class="muted">ایراد تصویر را به فارسی بنویسید؛ به انگلیسی ترجمه و در پرامپت همین تصویر اعمال می‌شود.</small>
           <textarea class="fa" data-fixnote="${esc(id)}" placeholder="مثلاً: خط وسط جاده باید بریده باشد نه ممتد، و تابلوی ایست سمت راست باشد.">${esc(x.note || '')}</textarea>
@@ -191,6 +192,10 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       ${!d ? `<div class="row"><button class="btn soft" data-draft="${esc(id)}">ساخت پرامپت با هوش مصنوعی</button></div>`
         : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
         : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
+          ${x.dfixing ? `<span class="state">در حال اصلاح پرامپت…</span>` : `<div class="fixbox">
+            <small class="muted">اگر پرامپت ایرادی دارد، به فارسی بنویسید چه چیزی باید عوض شود؛ به انگلیسی ترجمه و در همین پرامپت اعمال می‌شود. (می‌توانید متن بالا را مستقیم هم ویرایش کنید.)</small>
+            <textarea class="fa" data-dnote="${esc(id)}" placeholder="مثلاً: دوچرخه‌سوار باید از سمت راست بیاید، و چراغ راهنمایی قرمز باشد.">${esc(x.dnote || '')}</textarea>
+            <div class="row"><button class="btn soft" data-dfix="${esc(id)}">اصلاح پرامپت به فارسی</button></div></div>`}
           <div class="row"><button class="btn" data-go="${esc(id)}">تایید ساخت تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button>
           <span class="muted" style="font-size:12.5px">تصویر تازه جای تصویر AI قبلی را می‌گیرد (قبلی پاک می‌شود)؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</span></div>`}
     </div>`;
@@ -438,6 +443,18 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       x.loading = false; render();
     });
     $app.querySelectorAll('[data-fix]').forEach(b => b.onclick = () => { xOf(b.dataset.fix).fix = true; render(); });
+    // The shown prompt into the editable box (to change it by hand or with a Persian note, then make the picture).
+    $app.querySelectorAll('[data-editp]').forEach(b => b.onclick = () => { const id = b.dataset.editp; drafts[id] = { text: xOf(id).prompt }; xOf(id).show = false; render(); });
+    // A Persian note on the prompt in the box (a fresh draft or an edited one): worked into that same text.
+    $app.querySelectorAll('[data-dnote]').forEach(t => t.oninput = () => { xOf(t.dataset.dnote).dnote = t.value; });
+    $app.querySelectorAll('[data-dfix]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.dfix, x = xOf(id), text = (drafts[id] || {}).text || '';
+      if (!(x.dnote || '').trim()) return toast('ایراد پرامپت را بنویسید.');
+      x.dfixing = true; render();
+      try { drafts[id] = { text: (await api('POST', 'consolefix', { id, note: x.dnote, part: st.tab, prompt: text })).prompt }; x.dnote = ''; toast('پرامپت اصلاح شد'); }
+      catch (e) { toast(e.message); }
+      x.dfixing = false; render();
+    });
     $app.querySelectorAll('[data-fixno]').forEach(b => b.onclick = () => { Object.assign(xOf(b.dataset.fixno), { fix: false, note: '' }); render(); });
     $app.querySelectorAll('[data-fixnote]').forEach(t => t.oninput = () => { xOf(t.dataset.fixnote).note = t.value; });
     $app.querySelectorAll('[data-fixgo]').forEach(b => b.onclick = async () => {

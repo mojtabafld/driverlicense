@@ -561,7 +561,7 @@ async function api(req, res, route) {
     return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
   }
   // The prompt an item's current AI picture was made from (?id=q:<qid>|g:<key>), and the console's «اصلاح تصویر»:
-  // { id, note (Persian), part } → { prompt } with the correction worked in.
+  // { id, note (Persian), part, prompt? } → { prompt } with the correction worked in.
   if (req.method === 'GET' && route === 'consoleprompt') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
@@ -573,7 +573,9 @@ async function api(req, res, route) {
     const b = await readBody(req), id = String(b.id || '');
     if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
     const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
-    const prompt = id[0] === 'q' ? imagegen.questionPrompt(id.slice(2)) : imagegen.guidePromptNow(id.slice(2));
+    // `prompt`: a prompt being edited in the console (e.g. a fresh draft); else the current picture's.
+    const given = typeof b.prompt === 'string' ? b.prompt.trim().slice(0, 20000) : '';
+    const prompt = given || (id[0] === 'q' ? imagegen.questionPrompt(id.slice(2)) : imagegen.guidePromptNow(id.slice(2)));
     try { return send(res, 200, { prompt: await imagegen.fixPrompt(prompt, b.note, part) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
