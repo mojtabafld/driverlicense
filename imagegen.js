@@ -727,7 +727,7 @@ function questionPrompt(qid) {
 // The console's «اصلاح تصویر»: the admin says in Persian what is wrong in a picture; Claude puts that right in the
 // picture's prompt (in English), changing nothing else. `part` decides the style line (as for a new prompt).
 const FIX = `You edit a prompt for an image model that draws pictures for a Danish driving-theory app.
-You get the prompt a picture was made from and a correction, written in Persian by the person who checked the picture (what is wrong in the picture or what has to change).
+You get a prompt (the one a picture was made from, or a draft not used yet) and a correction, written in Persian by the person who checked it (what is wrong in the picture or the prompt, or what has to change).
 Translate the correction into exact English and work it into the prompt: change, add or remove exactly what the correction asks, in the right place of the prompt, and make the affected traffic details (signs, markings, lights, positions, colours, directions) explicit and unambiguous. Keep everything else in the prompt as it is, including its parts and their order. If the correction says something must not appear, say so clearly in the prompt.
 Answer with the complete revised prompt only, in English.`;
 async function fixPrompt(prompt, note, part) {
