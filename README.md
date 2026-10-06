@@ -91,8 +91,8 @@ shows it instead of the original (see `SEED` in `imagegen.js`). Claude then chec
 (signs, markings, lit lights, vehicles' positions); one with a wrong detail is made again, up to 3 pictures per question,
 and the findings show in the admin panel's job list. More lessons can be added as `data/original_<name>.json`.
 prove.dk's original text of these questions is kept in `data/raw.json` and `data/backup/lesson1-prove-original.json`,
-and the original pictures stay in `site/img` (shown again with one click in the admin panel, or with `?orig=1`).
+and the original pictures stay in `site/img` (shown with `?orig=1`, as the app's copy at `/app/` does).
 
 ## Mobile app
 
-`mobile/` holds the iOS / Android / web app (Expo, same look as the site; Liquid Glass tab bar and answer options) on the same server and accounts; see `mobile/README.md`. Its web build (`app-web/`, made with `cd mobile && npm run build:web`) is the site at the root (`/`); the earlier site (`site/`) is served at `/app/`.
+`mobile/` holds the iOS / Android / web app (Expo, same look as the site; Liquid Glass tab bar and answer options) on the same server and accounts; see `mobile/README.md`. Its web build (`app-web/`, made with `cd mobile && npm run build:web`) is the site at the root (`/`). The same app is built a second time with the base path `/app` (`app-web-app/`, by the same script) and served at `/app/`: that copy shows prove.dk's own pictures (the questions' originals, and prove.dk's for the signs and right of way). `/console` (`console/index.html`) is the admin's sign-in page for comparing the teaching pictures with prove.dk's, and nothing else. `site/` now only holds the question bank (`data.js`) and its pictures.

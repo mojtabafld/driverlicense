@@ -39,14 +39,13 @@ const isAdmin = u => ADMINS.has(u.username);
 
 const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
-// Version of the front end: a hash of its files (incl. the question bank). index.html links app.js/style.css with ?v=VERSION so a
-// browser (or CDN) never keeps an old copy after a deploy, and /api/config reports it to check what is live.
+// Version of what is live: a hash of the question bank and the app's web version (its index.html names its bundles);
+// /api/config reports it to check what is live.
 const VERSION = crypto.createHash('sha256')
-  .update(['index.html', 'app.js', 'style.css', 'data.js'].map(f => fs.readFileSync(path.join(SITE, f))).join('\0'))
+  .update([path.join(SITE, 'data.js'), path.join(__dirname, 'app-web', 'index.html')].map(f => fs.readFileSync(f)).join('\0'))
   .digest('hex').slice(0, 8);
-const INDEX_HTML = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8')
-  .replace('href="style.css"', `href="style.css?v=${VERSION}"`)
-  .replace('src="app.js"', `src="app.js?v=${VERSION}"`);
+// The admin's console at /console (console/index.html): only the comparison of the teaching pictures with prove.dk's.
+const CONSOLE_HTML = fs.readFileSync(path.join(__dirname, 'console', 'index.html'));
 
 let store; // set in main()
 
@@ -239,22 +238,35 @@ const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 
 // The app's web version (mobile/, built into app-web/ with `npm run build:web`) is the site at the root: a
 // single-page app, so a path that is no file of it (and nothing else of the server's) gets its index.html; its hashed
-// bundles are cached for a year. The earlier site (site/) lives on at /app/.
-const APP_WEB = path.join(__dirname, 'app-web');
-const APP_INDEX = path.join(APP_WEB, 'index.html');
+// bundles are cached for a year. The same app is built a second time with the base path /app (app-web-app/) and
+// served at /app/: that copy shows prove.dk's own pictures (PROVE_PICS in mobile/src/lib/config.ts).
 const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
-function serveAppWeb(req, res, p) {
-  let file = path.normalize(path.join(APP_WEB, p));
-  if (file !== APP_WEB && !file.startsWith(APP_WEB + path.sep)) { res.writeHead(403); return res.end(); }
+const WEBS = {
+  root: { dir: path.join(__dirname, 'app-web') },
+  // Its page links the manifest and the icon of /app (its own start page), and its manifest is that of the root's
+  // with /app/ as start and scope.
+  app: { dir: path.join(__dirname, 'app-web-app'), base: '/app',
+    page: b => Buffer.from(b.toString('utf8').replace('href="/manifest.webmanifest"', 'href="/app/manifest.webmanifest"')),
+    manifest: () => { const m = JSON.parse(fs.readFileSync(path.join(__dirname, 'app-web', 'manifest.webmanifest'), 'utf8')); return Buffer.from(JSON.stringify({ ...m, start_url: '/app/', scope: '/app/' })); } },
+};
+function serveAppWeb(req, res, p, web = WEBS.root) {
+  const dir = web.dir, index = path.join(dir, 'index.html');
+  if (web.manifest && p === '/manifest.webmanifest') {
+    res.writeHead(200, { 'Content-Type': APP_MIME['.webmanifest'], 'Cache-Control': 'public, max-age=86400' });
+    return res.end(req.method === 'HEAD' ? undefined : web.manifest());
+  }
+  let file = path.normalize(path.join(dir, p));
+  if (file !== dir && !file.startsWith(dir + path.sep)) { res.writeHead(403); return res.end(); }
   fs.stat(file, (err, st) => {
-    const index = err || !st.isFile();
-    if (index) file = APP_INDEX;
-    if (index && req.method === 'GET') recordVisit(req);
+    const isIndex = err || !st.isFile() || file === index;
+    if (isIndex) file = index;
+    if (isIndex && req.method === 'GET') recordVisit(req);
     fs.readFile(file, (e, buf) => {
       if (e) { res.writeHead(404); return res.end('Not found'); }
+      if (isIndex && web.page) buf = web.page(buf);
       res.writeHead(200, {
         'Content-Type': APP_MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
-        'Cache-Control': file === APP_INDEX ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
+        'Cache-Control': isIndex ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
         'X-Content-Type-Options': 'nosniff',
       });
       res.end(req.method === 'HEAD' ? undefined : buf);
@@ -265,17 +277,16 @@ function serveAppWeb(req, res, p) {
 function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
-  // The earlier site at /app/: its page, and its own files and the shared ones (data.js, img/) under /app/ too.
-  if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
-  if (p === '/app/' || p === '/app/index.html') {
-    if (req.method === 'GET') recordVisit(req);
-    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
-    return res.end(req.method === 'HEAD' ? undefined : INDEX_HTML);
+  // The admin's console (its page; it signs in and reads /api/guideref itself).
+  if (p === '/console' || p === '/console/') {
+    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY' });
+    return res.end(req.method === 'HEAD' ? undefined : CONSOLE_HTML);
   }
-  const fromSite = p.startsWith('/app/');
-  if (fromSite) p = p.slice(4);
-  // The app at the root (everything that is not the earlier site's, the API's or a shared file).
-  if (!fromSite && !p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
+  // The app's copy with prove.dk's pictures at /app/.
+  if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
+  if (p.startsWith('/app/')) return serveAppWeb(req, res, p.slice(4), WEBS.app);
+  // The app at the root (everything that is not the API's or a shared file).
+  if (!p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
   // And the profile pictures to choose from.
@@ -297,6 +308,17 @@ function serveStatic(req, res) {
     return guideref.refBlob(rm[1], rm[2]).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' });
+      res.end(req.method === 'HEAD' ? undefined : b.data);
+    }).catch(() => { res.writeHead(500); res.end(); });
+  }
+  // prove.dk's picture of a sign or a right-of-way item, for the app's copy at /app (signed-in users, like the questions').
+  const pm = /^\/img\/guideprove\/([a-z0-9-]{3,40})\.png$/.exec(p);
+  if (pm) {
+    return guideref.refBlob('prove', pm[1]).then(b => {
+      if (!b) { res.writeHead(404); return res.end(); }
+      // (prove.dk's signs are SVG: shown as pictures only, nothing in them runs.)
+      res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=604800', 'X-Content-Type-Options': 'nosniff',
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:" });
       res.end(req.method === 'HEAD' ? undefined : b.data);
     }).catch(() => { res.writeHead(500); res.end(); });
   }
@@ -335,7 +357,9 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), avatarArt: imagegen.avatarVersions(), guideArt: guideref.versions() });
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), avatarArt: imagegen.avatarVersions(),
+      // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
+      guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });

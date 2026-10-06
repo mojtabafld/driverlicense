@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
-import { API_URL } from './config';
+import { API_URL, PROVE_PICS } from './config';
 import { loadToken, saveToken } from './token';
 
 export type Saved = { id: number; a?: number[]; at: number };
@@ -19,7 +19,8 @@ type Ctx = {
   learnArt: Record<string, string>;
   // The profile pictures to choose from that the server has made: number → version.
   avatarArt: Record<string, string>;
-  // The teaching pages' pictures (signs, right of way) that the server has made: key → version.
+  // The teaching pages' pictures (signs, right of way) that the server has made: key → version. At /app (PROVE_PICS) a
+  // version starting with «p» is prove.dk's picture of it (/img/guideprove/<key>.png).
   guideArt: Record<string, string>;
   // Set the profile picture: one of the made ones, an own photo (base64 JPEG, cropped and small) or none.
   setAvatar: (b: { preset: number } | { image: string } | { remove: true }) => Promise<void>;
@@ -63,7 +64,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [bank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; avatarArt?: Record<string, string>; guideArt?: Record<string, string> }>('GET', 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setAvatarArt(x.avatarArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
+  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; avatarArt?: Record<string, string>; guideArt?: Record<string, string> }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setAvatarArt(x.avatarArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
@@ -128,7 +129,8 @@ export function useApp() {
 export function useQuestionImage() {
   const { token, imgv } = useApp();
   return (q: Question) => {
-    const base = `${API_URL}/${q.img}`, v = imgv[q.id] ? `v=${encodeURIComponent(imgv[q.id])}` : '';
+    // At /app the question's original picture (from prove.dk), not a remade one.
+    const base = `${API_URL}/${q.img}`, v = PROVE_PICS ? 'orig=1' : imgv[q.id] ? `v=${encodeURIComponent(imgv[q.id])}` : '';
     return { uri: base, v, token };
   };
 }
