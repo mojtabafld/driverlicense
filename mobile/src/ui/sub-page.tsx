@@ -3,10 +3,11 @@
 // line under the title and the content scrolling below. It slides in and out like the other inner pages, and a drag
 // from right to left goes back.
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Confirm } from './confirm';
 import { Icon } from './icon';
 import { Backdrop, T, tap, usePageMotion, useTopOnFocus } from './kit';
 import { GlassTop } from './liquid';
@@ -14,13 +15,23 @@ import { Marquee } from './marquee';
 import { backLean, swipeWebStyle, useSwipeBack } from './swipe';
 import { useColors } from './theme';
 
-export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760 }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number; maxWidth?: number }) {
+// `guard`: while set (e.g. unsaved changes), leaving — the back button, the drag back or the phone's back button — asks
+// first with this title and text.
+export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number; maxWidth?: number;
+  guard?: { title: string; text: string } | null }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const ref = useTopOnFocus();
   const [headH, setHeadH] = useState(0);
-  const back = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
+  const [asking, setAsking] = useState(false);
+  const leave = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
+  const back = () => (guard ? setAsking(true) : leave());
   const swipe = useSwipeBack(back);
+  useEffect(() => {
+    if (!guard) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { setAsking(true); return true; });
+    return () => sub.remove();
+  }, [guard]);
   return (
     <Backdrop anim={motion.style}>
       <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, backLean(swipe.dx)]}>
@@ -46,6 +57,10 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760 }:
           </SafeAreaView>
         </GlassTop>
       </Animated.View>
+      {guard ? (
+        <Confirm open={asking} icon="exit" title={guard.title} text={guard.text} cancel="ماندن" ok="خروج" cancelIcon="xmark" okIcon="exit" danger
+          onCancel={() => setAsking(false)} onOk={() => { setAsking(false); leave(); }} />
+      ) : null}
     </Backdrop>
   );
 }
