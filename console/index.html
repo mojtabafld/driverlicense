@@ -5,11 +5,11 @@
      drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has the API write a prompt (editable) and «ایجاد تصویر» makes the picture;
-     once there is a picture, a chat with the AI under it changes the prompt from Persian messages (what changed and where,
-     and the whole new prompt) and «ساخت تصویر با این پرامپت» makes the new one. One AI picture is kept per item. An item
+     the item's prompt is kept («پرامپت ذخیره‌شده», with the item's code); Claude Code edits it on the admin's request
+     (/api/claudeprompt), and then it shows as edited by Claude Code with «ساخت تصویر با این پرامپت» to make the new one. One AI picture is kept per item. An item
      can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked items of a part, and the
      «⚑ علامت‌دارها» part all of them in full. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
-     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consolechat and /api/imggen*. -->
+     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consoleprompt and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -84,18 +84,12 @@ small{display:block;font-size:12px;margin-top:2px}
 .sts li.ok .mark{color:var(--ok)}
 .sts li.no .mark{color:var(--bad)}
 .gtext{font-size:13.5px;line-height:1.8}
+.saved{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
+.saved.cc{border-color:var(--accent)}
+.sv-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:14px}
+.sv-h .code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--surface2);border-radius:6px;padding:1px 7px;user-select:all}
+.ccl{color:var(--accent);font-weight:700;font-size:13px}
 .ptext pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12.5px;line-height:1.6;background:var(--surface2);border-radius:10px;padding:10px;margin:4px 0 0;max-height:320px;overflow:auto}
-.chat{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
-.chat-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
-.msgs{display:flex;flex-direction:column;gap:8px;max-height:460px;overflow:auto;padding:2px}
-.msg{border-radius:12px;padding:8px 12px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;max-width:92%}
-.msg.me{align-self:flex-start;background:var(--accent);color:#fff}
-.msg.ai{align-self:flex-end;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
-.msg.ai details summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
-.msg.ai pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12px;line-height:1.55;background:var(--surface2);border-radius:8px;padding:8px;margin:4px 0 0;max-height:260px;overflow:auto}
-.msg.ai .btn{align-self:flex-start;padding:7px 14px;font-size:14px}
-.chat-in{display:flex;gap:8px;align-items:flex-end}
-.chat-in textarea{flex:1;font:inherit;font-size:14px;min-height:44px;max-height:160px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl}
 .fixbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px}
 .fixbox textarea{font:inherit;font-size:14px;width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl;text-align:right}
 .act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -182,37 +176,33 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   const actRow = id => `<div class="act">${id in pending
     ? `<button class="btn" data-apply="${esc(id)}">اعمال در سایت اصلی</button><button class="btn soft" data-undo1="${esc(id)}">لغو</button><span class="muted" style="font-size:12.5px">انتخاب تازه هنوز اعمال نشده است.</span>`
     : `<button class="btn" disabled>اعمال در سایت اصلی</button>`}</div>`;
-  // Making a picture: «ساخت پرامپت با هوش مصنوعی» → the API's prompt (editable) → «ایجاد تصویر». Once there is a
-  // picture, a chat with the AI under it: the admin says in Persian what to change, the AI answers with what it changed
-  // and where and the whole new prompt, and «ساخت تصویر با این پرامپت» makes the new picture (consolechat.js).
-  // Per item: { data: { prompt, msgs }, loading, sending, input, showPrompt }.
-  const chats = {};
-  const chatOf = id => (chats[id] = chats[id] || {});
-  const loadChat = async id => {
-    const ch = chatOf(id);
-    if (ch.data || ch.loading) return;
-    ch.loading = true;
-    try { ch.data = await api('GET', `consolechat?id=${encodeURIComponent(id)}`); } catch (e) { ch.data = { prompt: '', msgs: [] }; }
-    ch.loading = false; render();
+  // Making a picture: «ساخت پرامپت با هوش مصنوعی» → the API's prompt (editable) → «ایجاد تصویر». Every item keeps its
+  // prompt (the API's, or the last picture's) on the server; the admin asks Claude Code (in its chat, giving the item's
+  // code) to change it, and it then shows here as edited by Claude Code, with «ساخت تصویر با این پرامپت» to make the
+  // new picture from it (consoleprompts.js). Per item: { data: { prompt, by, at, note }, loading, open }.
+  const saved = {};
+  const savedOf = id => (saved[id] = saved[id] || {});
+  const loadSaved = async id => {
+    const sv = savedOf(id);
+    if (sv.loading) return;
+    sv.loading = true; render();
+    try { sv.data = await api('GET', `consoleprompt?id=${encodeURIComponent(id)}`); } catch (e) { toast(e.message); }
+    sv.loading = false; render();
   };
-  const chatBox = id => {
-    const ch = chatOf(id);
-    if (!ch.data) { setTimeout(() => loadChat(id)); return `<div class="chat"><div class="chat-h">گفت‌وگو با هوش مصنوعی برای اصلاح تصویر</div><span class="muted" style="font-size:13px">در حال بارگذاری…</span></div>`; }
-    const msgs = ch.data.msgs, lastA = msgs.map(m => m.r).lastIndexOf('a');
-    return `<div class="chat">
-      <div class="chat-h"><span>گفت‌وگو با هوش مصنوعی برای اصلاح تصویر</span><span style="flex:1"></span>
-        <button class="chip" data-cprompt="${esc(id)}">${ch.showPrompt ? 'بستن پرامپت فعلی' : 'پرامپت فعلی'}</button>
-        ${msgs.length ? `<button class="chip" data-creset="${esc(id)}">شروع دوباره</button>` : ''}</div>
-      ${ch.showPrompt ? `<div class="ptext"><pre>${esc(ch.data.prompt || 'پرامپتی ذخیره نشده است.')}</pre></div>` : ''}
-      <div class="msgs">${msgs.length ? msgs.map((m, k) => m.r === 'u'
-        ? `<div class="msg me">${esc(m.t)}</div>`
-        : `<div class="msg ai"><div class="mt">${esc(m.t)}</div>
-            ${m.p ? `<details ${k === lastA ? 'open' : ''}><summary>پرامپت ${k === lastA ? 'نهایی' : 'این مرحله'}</summary><pre>${esc(m.p)}</pre></details>` : ''}
-            ${k === lastA && m.p ? `<button class="btn" data-cmake="${esc(id)}">ساخت تصویر با این پرامپت</button>` : ''}</div>`).join('')
-        : `<div class="muted" style="font-size:13px">بنویسید چه چیزی در تصویر باید عوض شود؛ هوش مصنوعی پرامپت تصویر را اصلاح می‌کند، می‌گوید کجا را تغییر داد و پرامپت نهایی را می‌فرستد.</div>`}
-        ${ch.sending ? `<div class="msg ai"><span class="state">در حال نوشتن پاسخ…</span></div>` : ''}</div>
-      <div class="chat-in"><textarea class="fa" data-cin="${esc(id)}" placeholder="مثلاً: خط وسط جاده باید بریده باشد نه ممتد" ${ch.sending ? 'disabled' : ''}>${esc(ch.input || '')}</textarea>
-        <button class="btn" data-csend="${esc(id)}" ${ch.sending ? 'disabled' : ''}>ارسال</button></div>
+  const promptBox = (id, hasAi) => {
+    const m = (st.data.prompts || {})[id], sv = savedOf(id), byClaude = m && m.by === 'claude';
+    if (!m && !hasAi) return '';
+    // A newer edit than the one loaded: load again when opened.
+    if (sv.data && m && sv.data.at !== m.at) sv.data = null;
+    return `<div class="saved ${byClaude ? 'cc' : ''}">
+      <div class="sv-h"><b>پرامپت ذخیره‌شده</b><span class="code" dir="ltr" title="این کد را برای ویرایش پرامپت به Claude Code بدهید">${esc(id)}</span>
+        ${byClaude ? `<span class="ccl">✎ این پرامپت توسط Claude Code ویرایش شده${m.at ? ` · ${esc(when(m.at))}` : ''}</span>` : ''}
+        ${byClaude && m.used && m.used >= m.at ? '<span class="muted" style="font-size:12px">ساخت تصویر با همین پرامپت درخواست شده</span>' : ''}
+        <span style="flex:1"></span>
+        <button class="chip" data-sopen="${esc(id)}">${sv.open ? 'بستن' : 'نمایش پرامپت'}</button></div>
+      ${byClaude && m.note ? `<div class="muted" style="font-size:13px">تغییر: ${esc(m.note)}</div>` : ''}
+      ${sv.open ? (sv.data ? `<div class="ptext"><pre>${esc(sv.data.prompt || 'پرامپتی ذخیره نشده است.')}</pre></div>` : '<span class="muted" style="font-size:13px">در حال بارگذاری…</span>') : ''}
+      ${byClaude ? `<div class="row"><button class="btn" data-smake="${esc(id)}">ساخت تصویر با این پرامپت</button></div>` : ''}
     </div>`;
   };
   const genBox = (id, making, failed, hasAi) => {
@@ -224,7 +214,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
         : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
         : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
           <div class="row"><button class="btn" data-go="${esc(id)}">ایجاد تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button></div>`}
-      ${hasAi && !making ? chatBox(id) : ''}
+      ${!making ? promptBox(id, hasAi) : ''}
       ${hasAi || d ? `<small class="muted">تصویر تازه جای تصویر AI قبلی را می‌گیرد؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</small>` : ''}
     </div>`;
   };
@@ -462,31 +452,18 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       render();
     });
     $app.querySelectorAll('[data-dr]').forEach(t => t.oninput = () => { drafts[t.dataset.dr] = { text: t.value }; });
-    // The chat: a message to the AI, its answer and new prompt, and the picture from the final prompt.
-    $app.querySelectorAll('[data-cin]').forEach(t => {
-      t.oninput = () => { chatOf(t.dataset.cin).input = t.value; };
-      t.onkeydown = e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $app.querySelector(`[data-csend="${t.dataset.cin}"]`).click(); } };
+    // The saved prompt: shown on request; a picture made from it (Claude Code's edited one).
+    $app.querySelectorAll('[data-sopen]').forEach(b => b.onclick = () => {
+      const id = b.dataset.sopen, sv = savedOf(id);
+      sv.open = !sv.open;
+      if (sv.open && !sv.data) loadSaved(id); else render();
     });
-    $app.querySelectorAll('[data-csend]').forEach(b => b.onclick = async () => {
-      const id = b.dataset.csend, ch = chatOf(id), message = (ch.input || '').trim();
-      if (!message) return toast('پیامی ننوشته‌اید.');
-      ch.sending = true; ch.data.msgs = [...ch.data.msgs, { r: 'u', t: message }]; ch.input = ''; render();
-      try { ch.data = await api('POST', 'consolechat', { id, message, part: st.tab }); }
-      catch (e) { toast(e.message); ch.input = message; ch.data.msgs = ch.data.msgs.slice(0, -1); }
-      ch.sending = false; render();
-      const box = $app.querySelector(`[data-cin="${id}"]`); if (box) box.closest('.chat').querySelector('.msgs').scrollTop = 1e9;
-    });
-    $app.querySelectorAll('[data-cprompt]').forEach(b => b.onclick = () => { const ch = chatOf(b.dataset.cprompt); ch.showPrompt = !ch.showPrompt; render(); });
-    $app.querySelectorAll('[data-creset]').forEach(b => b.onclick = async () => {
-      if (!confirm('گفت‌وگوی این مورد پاک شود؟')) return;
-      try { chatOf(b.dataset.creset).data = await api('POST', 'consolechat', { id: b.dataset.creset, reset: true }); } catch (e) { toast(e.message); }
-      render();
-    });
-    $app.querySelectorAll('[data-cmake]').forEach(b => b.onclick = async () => {
-      const id = b.dataset.cmake, ref = id.slice(2), prompt = (chatOf(id).data || {}).prompt || '';
-      if (!prompt) return toast('پرامپتی نیست.');
+    $app.querySelectorAll('[data-smake]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.smake, ref = id.slice(2);
       b.disabled = true;
       try {
+        const { prompt } = await api('GET', `consoleprompt?id=${encodeURIComponent(id)}`);
+        if (!prompt) throw new Error('پرامپتی ذخیره نشده است.');
         if (id[0] === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
         else await api('POST', 'guidegen', { key: ref, prompt });
         toast('تصویر جدید در حال ساخت است');
@@ -501,7 +478,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       try {
         if (kind === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
         else await api('POST', 'guidegen', { key: ref, prompt });
-        delete drafts[id]; delete chats[id]; toast('ساخت تصویر شروع شد');
+        delete drafts[id]; delete saved[id]; toast('ساخت تصویر شروع شد');
       } catch (e) { toast(e.message); }
       view();
     });

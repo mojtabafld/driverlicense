@@ -18,7 +18,7 @@ const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSumma
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
-const consolechat = require('./consolechat');
+const consoleprompts = require('./consoleprompts');
 const tts = require('./tts');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -402,6 +402,23 @@ async function api(req, res, route) {
   // kie.ai calls this when a picture is ready; the body is not trusted, it only makes the server check its jobs now.
   if (req.method === 'POST' && route === 'kiecallback') { imagegen.poll().catch(() => {}); return send(res, 200, { ok: true }); }
 
+  // Claude Code reads and edits a console item's saved prompt for the admin (consoleprompts.js), with the
+  // X-Claude-Code-Key header matching the CLAUDE_CODE_KEY secret (nothing here without it):
+  // GET ?id=q:<qid>|g:<key> → the prompt and what the item is about; POST { id, prompt, note } saves the new prompt,
+  // which the console shows as edited by Claude Code. GET without an id lists the items with a saved prompt.
+  if (route === 'claudeprompt' && (req.method === 'GET' || req.method === 'POST')) {
+    const key = process.env.CLAUDE_CODE_KEY || '';
+    if (tooMany(ip)) return send(res, 429, { error: 'too many' });
+    if (key.length < 24 || !safeEqual(String(req.headers['x-claude-code-key'] || ''), key)) { addFail(ip); return send(res, 403, { error: 'forbidden' }); }
+    const b = req.method === 'POST' ? await readBody(req) : {}, id = String(req.method === 'GET' ? new URL(req.url, 'http://x').searchParams.get('id') || '' : b.id || '');
+    if (req.method === 'GET' && !id) return send(res, 200, { prompts: consoleprompts.marks() });
+    if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
+    try {
+      if (req.method === 'GET') return send(res, 200, { ...consoleprompts.get(id), about: consoleprompts.about(id) });
+      return send(res, 200, await consoleprompts.edit(id, b.prompt, b.note));
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+  }
+
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
   const user = s.user;
@@ -517,13 +534,17 @@ async function api(req, res, route) {
       // `pick` (the console): the new picture is only shown once the admin chooses it.
       if (req.method === 'POST' && route === 'imggenstart') {
         const job = await imagegen.start(+b.qid, b.model, user.username, b.prompt, '', !!b.pick);
-        if (b.pick) await consolechat.made(`q:${+b.qid}`, job.prompt);   // the console's chat goes on from this prompt
+        if (b.pick) await consoleprompts.made(`q:${+b.qid}`, job.prompt);   // the item's saved prompt (consoleprompts.js)
         return send(res, 200, { job });
       }
       if (req.method === 'POST' && route === 'imggenedit') return send(res, 200, { job: await imagegen.edit(+b.qid, b.job, b.text, b.model, user.username) });
       if (req.method === 'POST' && route === 'imggendel') { await imagegen.remove(+b.qid, b.job); return send(res, 200, imagegen.list()); }
       // `part`: the console's part the question is in (lessons: realistic; rules: the illustration style).
-      if (req.method === 'POST' && route === 'imggendraft') return send(res, 200, { prompt: await imagegen.draft(+b.qid, b.part === 'rules' ? 'rules' : 'lessons') });
+      if (req.method === 'POST' && route === 'imggendraft') {
+        const prompt = await imagegen.draft(+b.qid, b.part === 'rules' ? 'rules' : 'lessons');
+        await consoleprompts.saved(`q:${+b.qid}`, prompt);
+        return send(res, 200, { prompt });
+      }
       if (req.method === 'POST' && route === 'imggenset') { await imagegen.setActive(+b.qid, b.job || null); return send(res, 200, imagegen.list()); }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
@@ -553,13 +574,17 @@ async function api(req, res, route) {
   if (['guideref', 'guiderefimport', 'guiderefchoose', 'guidedraft', 'guidegen'].includes(route)) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     try {
-      if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
+      if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), models: imagegen.models(), marks: store.meta.consoleMarks || {}, prompts: consoleprompts.marks() });
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
-      if (req.method === 'POST' && route === 'guidedraft') { const b = await readBody(req); return send(res, 200, { prompt: await guideref.draft(String(b.key || '')) }); }
+      if (req.method === 'POST' && route === 'guidedraft') {
+        const b = await readBody(req), prompt = await guideref.draft(String(b.key || ''));
+        await consoleprompts.saved(`g:${String(b.key || '')}`, prompt);
+        return send(res, 200, { prompt });
+      }
       if (req.method === 'POST' && route === 'guidegen') {
         const b = await readBody(req), job = await guideref.generate(String(b.key || ''), b.prompt);
-        await consolechat.made(`g:${String(b.key || '')}`, job.prompt);
+        await consoleprompts.made(`g:${String(b.key || '')}`, job.prompt);
         return send(res, 200, { job });
       }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
@@ -567,27 +592,14 @@ async function api(req, res, route) {
   // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
   if (req.method === 'GET' && route === 'consolepics') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
+    return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {}, prompts: consoleprompts.marks() });
   }
-  // The prompt an item's current AI picture was made from (?id=q:<qid>|g:<key>).
+  // An item's saved prompt (consoleprompts.js): ?id=q:<qid>|g:<key> → { id, prompt, by: 'api' | 'claude', at, note, prev }.
   if (req.method === 'GET' && route === 'consoleprompt') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
-    if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
-    return send(res, 200, { prompt: id[0] === 'q' ? imagegen.questionPrompt(id.slice(2)) : imagegen.guidePromptNow(id.slice(2)) });
-  }
-  // The console's chat about a picture (consolechat.js): GET ?id= → { prompt, msgs }; POST { id, message, part } → the
-  // AI's answer and new prompt; POST { id, reset: true } starts the conversation again.
-  if (route === 'consolechat' && (req.method === 'GET' || req.method === 'POST')) {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    const b = req.method === 'POST' ? await readBody(req) : {}, id = String(req.method === 'GET' ? new URL(req.url, 'http://x').searchParams.get('id') || '' : b.id || '');
-    if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
-    const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
-    try {
-      if (req.method === 'GET') return send(res, 200, consolechat.get(id));
-      if (b.reset) return send(res, 200, await consolechat.reset(id));
-      return send(res, 200, await consolechat.send(id, b.message, part));
-    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+    if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
+    return send(res, 200, consoleprompts.get(id));
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
   if (req.method === 'GET' && route === 'consolemarked') {
@@ -597,7 +609,7 @@ async function api(req, res, route) {
       const d = id[0] === 'q' ? consolepics.detail(id.slice(2), store.meta.images || {}) : guideref.item(id.slice(2));
       if (d) items.push({ ...d, id, mark: m });
     }
-    return send(res, 200, { items, marks, models: imagegen.models() });
+    return send(res, 200, { items, marks, models: imagegen.models(), prompts: consoleprompts.marks() });
   }
   // The console's marks: an item ('q:<qid>' or 'g:<key>') flagged to be made again later, with an optional note.
   if (req.method === 'POST' && route === 'consolemark') {
@@ -784,7 +796,7 @@ async function main() {
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
-  consolechat.init(store, imagegen, guideref, consolepics);
+  consoleprompts.init(store, imagegen, guideref, consolepics);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });
