@@ -209,6 +209,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     $app.innerHTML = `
       <div class="head"><h1>مقایسه‌ی تصاویر با prove.dk</h1><span class="sp"></span><button class="btn soft" id="out">خروج</button></div>
       <div class="tabs">${TABS.map(([k, t]) => `<button class="tab ${k === st.tab ? 'on' : ''}" data-tab="${k}">${t}</button>`).join('')}</div>
+      ${st.data.promptModel ? `<p class="muted" style="margin:-4px 0 10px;font-size:12.5px">پرامپت‌ها را <b dir="ltr">${esc(st.data.promptModel.model)}</b> می‌نویسد${st.data.promptModel.from ? ` (از متغیر <span dir="ltr">${esc(st.data.promptModel.from)}</span> در تنظیمات سرور)` : ' (پیش‌فرض؛ در تنظیمات سرور مدلی تعیین نشده است)'}.</p>` : ''}
       ${isGuide() ? guideBody() : questionBody()}
       <div class="apply ${n ? 'show' : ''}"><span>${faNum(n)} تغییر انتخاب شده (همه با هم)</span><span class="sp"></span>
         <button class="btn soft" id="undo">لغو</button><button class="btn" id="apply">اعمال همه در سایت اصلی</button></div>`;

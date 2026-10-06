@@ -547,7 +547,7 @@ async function api(req, res, route) {
   if (['guideref', 'guiderefimport', 'guiderefchoose', 'guidedraft', 'guidegen'].includes(route)) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     try {
-      if (req.method === 'GET' && route === 'guideref') return send(res, 200, guideref.list());
+      if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), promptModel: imagegen.promptModel() });
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guidedraft') { const b = await readBody(req); return send(res, 200, { prompt: await guideref.draft(String(b.key || '')) }); }
@@ -557,7 +557,7 @@ async function api(req, res, route) {
   // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
   if (req.method === 'GET' && route === 'consolepics') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}));
+    return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), promptModel: imagegen.promptModel() });
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
