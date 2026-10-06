@@ -154,6 +154,8 @@ async function poll() {
         Object.assign(job, { state: 'done', done: true, credits: d.creditsConsumed, size: buf.length });
         // The new picture is shown right away (the original can be restored), unless the admin is to choose it first.
         if (!job.pick) { item.active = job.id; item.v = job.id; }
+        // Made from the console: it replaces the question's earlier made picture (deleted), and is shown wherever that one was.
+        else await replaceWith(item, job);
         if (job.seed) setImmediate(() => checkSeeded(qid, job));
       } else if (d.state === 'fail') {
         Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
@@ -189,6 +191,13 @@ async function prune(item) {
   for (const j of item.jobs.filter(j => j.done && j.id !== keep)) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
   item.jobs = item.jobs.filter(j => !j.done || j.id === keep);
   await save();
+}
+// A new made picture in place of the question's earlier ones: they are deleted; if one of them was shown, the new one is.
+async function replaceWith(item, job) {
+  const shown = item.active && item.active !== job.id;
+  for (const j of item.jobs.filter(j => j.done && j !== job)) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
+  item.jobs = item.jobs.filter(j => !j.done || j === job);
+  if (shown) { item.active = job.id; item.v = `${job.id}.${Date.now().toString(36)}`; }
 }
 // Once: every question keeps only its newest made picture (shown if a made one was shown).
 async function pruneAll() {
@@ -625,12 +634,14 @@ const guidePrompt = key => GUIDE_PROMPTS[key] || null;
 // file the model redraws (image to image), e.g. a sign's official drawing.
 const oneOffs = () => (store.meta.oneOff = store.meta.oneOff || {});
 const saveOneOff = () => store.saveMeta('oneOff', oneOffs());
-async function startOneOff(id, { prompt, aspect = '4:3', ref = '' }) {
+// `target`: where the picture goes once made: 'guide:<key>' puts it in place of that teaching picture (the earlier one is
+// gone) and the job is cleared.
+async function startOneOff(id, { prompt, aspect = '4:3', ref = '', target = '' }) {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const old = oneOffs()[id];
   if (old && !old.done) throw Object.assign(new Error('یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
   if (old && old.blob) { await store.deleteBlob(old.blob).catch(() => {}); cache.delete(old.blob); }
-  const job = oneOffs()[id] = { at: Date.now(), prompt, state: 'queued', done: false };
+  const job = oneOffs()[id] = { at: Date.now(), prompt, state: 'queued', done: false, ...(target ? { target } : {}) };
   try {
     const input = { prompt, aspect_ratio: aspect, resolution: '2K' };
     if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(ref) }, `oneoff-${id}`)];
@@ -655,6 +666,11 @@ async function pollOneOff() {
         job.blob = `oneoff-${id}`;
         await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
         Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36) });
+        if (job.target && job.target.startsWith('guide:')) {
+          await GUIDE.put(job.target.slice(6), { mime: sm.mime, data: sm.buf });
+          await store.deleteBlob(job.blob).catch(() => {}); cache.delete(job.blob);
+          delete oneOffs()[id];
+        }
       } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
       else pending = true;
       if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
