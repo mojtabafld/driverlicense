@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 let BANK = { tests: [], questions: [] }, Q = new Map(), RULES = [];
+const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 
 function init(siteDir) {
   try {
@@ -33,9 +34,10 @@ function list(kind, images = {}) {
     return { id, text: q.sfa || q.sda || '', da: q.sda || '', made: x.jobs.filter(j => j.blob).map(j => ({ id: j.id, at: j.at })), active: x.active || null,
       making: last && !last.done ? last.state : null, failed: last && last.done && !last.blob ? last.error || 'failed' : null };
   };
+  // Exactly the questions the app has there: a lesson's (named as in the app, «درس N»), or a rules part's practice.
   const groups = kind === 'rules'
-    ? RULES.map(r => ({ title: r.title, items: BANK.questions.filter(q => r.topics.includes(q.c) && q.img).map(q => item(q.id)) }))
-    : BANK.tests.map(t => ({ title: t.title, items: t.qs.filter(id => Q.has(id) && Q.get(id).img).map(item) }));
+    ? RULES.map(r => ({ title: r.title, items: BANK.questions.filter(q => r.topics.includes(q.c)).map(q => item(q.id)) }))
+    : BANK.tests.map((t, i) => ({ title: `درس ${faNum((t.title.match(/\d+/) || [String(i + 1)])[0])}`, items: t.qs.filter(id => Q.has(id)).map(item) }));
   return { groups };
 }
 
