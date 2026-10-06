@@ -21,7 +21,11 @@ function init(s, ig) {
   try { MAP = read('data/prove-map.json'); DATA = read('mobile/src/lib/guide-data.json'); } catch (e) { console.error('guide refs', e.message); }
   const r = meta().run;
   if (r && !r.done) { r.done = true; r.stopped = true; save().catch(() => {}); }   // an import cut short by a restart
+  // prove.dk's pictures and the official drawings are copied in on their own: a minute after the start, whatever is
+  // not there yet (nothing is fetched again).
+  if (missing()) setTimeout(() => { if (missing()) startImport(); }, 60e3).unref();
 }
+const missing = () => Object.entries(MAP).some(([k, x]) => { const it = meta().items[k] || {}; return !it.prove || (x.official && !it.off); });
 const meta = () => (store.meta.guideRef = store.meta.guideRef || { items: {}, choice: {} });
 const save = () => store.saveMeta('guideRef', meta());
 
