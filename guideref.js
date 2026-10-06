@@ -107,12 +107,13 @@ async function draft(key) {
     p ? `Current prompt:\n${p.prompt}` : '', `The app's style line (added after your prompt):\n${imagegen.houseStyle(part)}`].filter(Boolean).join('\n')), part);
 }
 // «تایید ساخت تصویر»: a new picture from the (edited) prompt; a sign is redrawn from its official drawing as before.
+// Once made it replaces the item's made picture (one per item), shown on the main site if the made picture is chosen.
 function generate(key, prompt) {
   if (!itemOf(key)) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
   prompt = String(prompt || '').trim().slice(0, 20000);
   if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
   const p = imagegen.guidePrompt(key) || {};
-  return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '' });
+  return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '', target: `guide:${key}` });
 }
 
 // What the app (the main site) shows for an item: 'ai' (the made picture), 'official' (a sign's official drawing),
@@ -157,7 +158,7 @@ const whiteCache = new Map();
 async function whitened(key) {
   const b = await imagegen.guideBlob(key);
   if (!b || b.mime !== 'image/png') return b;
-  const id = `${key}:${b.data.length}`;
+  const id = `${key}:${imagegen.guideVersions()[key] || ''}:${b.data.length}`;
   if (whiteCache.has(id)) return whiteCache.get(id);
   let out = b;
   try {

@@ -5,8 +5,7 @@
      drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
-     (editable); «تایید ساخت تصویر» makes it, and it appears beside the others to be chosen. One made picture is kept
-     per item. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     (editable); «تایید ساخت تصویر» makes it, and it replaces the item's AI picture (one per item). Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
      /api/guidegen, /api/consolepics and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
@@ -155,7 +154,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
         : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
         : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
           <div class="row"><button class="btn" data-go="${esc(id)}">تایید ساخت تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button>
-          <span class="muted" style="font-size:12.5px">تصویر تازه کنار بقیه می‌آید؛ سایت اصلی فقط پس از انتخاب و «اعمال» آن را نشان می‌دهد.</span></div>`}
+          <span class="muted" style="font-size:12.5px">تصویر تازه جای تصویر AI قبلی را می‌گیرد (قبلی پاک می‌شود)؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</span></div>`}
     </div>`;
   };
   const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp">${groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)})</option>`).join('')}</select></label>`;
@@ -255,7 +254,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     const d = st.data, g = d.groups[Math.min(st.g, d.groups.length - 1)];
     if (g.items.some(x => x.making)) busyPoll = true;
     return `
-      <p class="muted" style="margin:0 0 12px">${st.tab === 'rules' ? 'سؤال‌های هر بخش «قوانین»، همان سؤال‌هایی که تمرین آن بخش در برنامه از آن‌ها ساخته می‌شود.' : 'سؤال‌های هر درس، همان‌طور که در برنامه هستند.'} برای هر سؤال، تصویری را که سایت اصلی باید نشان دهد (prove.dk یا AI) انتخاب کنید و «اعمال در سایت اصلی» را بزنید. سایت پشتیبان (/app) همیشه تصویر prove.dk را نشان می‌دهد. برای هر سؤال فقط یک تصویر AI نگه داشته می‌شود.</p>
+      <p class="muted" style="margin:0 0 12px">${st.tab === 'rules' ? 'سؤال‌های هر بخش «قوانین»، همان سؤال‌هایی که تمرین آن بخش در برنامه از آن‌ها ساخته می‌شود.' : 'سؤال‌های هر درس، همان‌طور که در برنامه هستند.'} برای هر سؤال، تصویری را که سایت اصلی باید نشان دهد (prove.dk یا AI) انتخاب کنید و «اعمال در سایت اصلی» را بزنید. سایت پشتیبان (/app) همیشه تصویر prove.dk را نشان می‌دهد. برای هر سؤال فقط یک تصویر AI هست: تصویر تازه جای قبلی را می‌گیرد.</p>
       <div class="card bar">${select(d.groups, x => x.title)}</div>
       <div class="grid">${g.items.map((x, k) => {
         const id = `q:${x.id}`, now = x.active || '', made = x.made.slice().sort((a, b) => a.at - b.at);
