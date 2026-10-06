@@ -568,15 +568,15 @@
   "ref": "C59.png",
   "prompt": "Redraw the road sign in the reference image as a clean flat vector illustration for a Danish driving-theory app, NOT photorealistic. Keep the sign EXACTLY as in the reference: the same shape, border, colours, symbol, numbers and letters, with nothing added, removed, mirrored or changed. Draw it large and centred, seen straight from the front, standing on a short plain grey post (a sub-sign plate or a pictogram is drawn alone, without a post), on a plain very light grey background (#f2f3f5), with only a very soft shadow. No scenery, no other objects, no watermark, no logo, no extra text.\nThe sign: Danish road sign C59 «Ophør af forbud». Its official design: a round white sign with a thin grey border, crossed by black diagonal stripes from upper right to lower left, with nothing else inside."
  },
- "s-c62": {
-  "aspect": "4:3",
-  "ref": "C62.png",
-  "prompt": "Redraw the road sign in the reference image as a clean flat vector illustration for a Danish driving-theory app, NOT photorealistic. Keep the sign EXACTLY as in the reference: the same shape, border, colours, symbol, numbers and letters, with nothing added, removed, mirrored or changed. Draw it large and centred, seen straight from the front, standing on a short plain grey post (a sub-sign plate or a pictogram is drawn alone, without a post), on a plain very light grey background (#f2f3f5), with only a very soft shadow. No scenery, no other objects, no watermark, no logo, no extra text.\nThe sign: Danish road sign C62 «Parkering forbudt». Its official design: a round sign with a blue centre and a broad red border, crossed by one red diagonal bar from upper left to lower right."
- },
  "s-c61": {
   "aspect": "4:3",
   "ref": "C61.png",
   "prompt": "Redraw the road sign in the reference image as a clean flat vector illustration for a Danish driving-theory app, NOT photorealistic. Keep the sign EXACTLY as in the reference: the same shape, border, colours, symbol, numbers and letters, with nothing added, removed, mirrored or changed. Draw it large and centred, seen straight from the front, standing on a short plain grey post (a sub-sign plate or a pictogram is drawn alone, without a post), on a plain very light grey background (#f2f3f5), with only a very soft shadow. No scenery, no other objects, no watermark, no logo, no extra text.\nThe sign: Danish road sign C61 «Standsning forbudt». Its official design: a round sign with a blue centre and a broad red border, crossed by a red X (two red diagonal bars)."
+ },
+ "s-c62": {
+  "aspect": "4:3",
+  "ref": "C62.png",
+  "prompt": "Redraw the road sign in the reference image as a clean flat vector illustration for a Danish driving-theory app, NOT photorealistic. Keep the sign EXACTLY as in the reference: the same shape, border, colours, symbol, numbers and letters, with nothing added, removed, mirrored or changed. Draw it large and centred, seen straight from the front, standing on a short plain grey post (a sub-sign plate or a pictogram is drawn alone, without a post), on a plain very light grey background (#f2f3f5), with only a very soft shadow. No scenery, no other objects, no watermark, no logo, no extra text.\nThe sign: Danish road sign C62 «Parkering forbudt». Its official design: a round sign with a blue centre and a broad red border, crossed by one red diagonal bar from upper left to lower right."
  },
  "s-c92": {
   "aspect": "4:3",

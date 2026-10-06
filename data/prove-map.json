@@ -399,15 +399,15 @@
 "official": true,
 "commons": "Denmark_road_sign_C59.svg"
 },
-"s-c62": {
-"url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C62.svg",
-"official": true,
-"commons": "Denmark_road_sign_C62.svg"
-},
 "s-c61": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C61.svg",
 "official": true,
 "commons": "Denmark_road_sign_C61.svg"
+},
+"s-c62": {
+"url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C62.svg",
+"official": true,
+"commons": "Denmark_road_sign_C62.svg"
 },
 "s-c92": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C92.svg",
