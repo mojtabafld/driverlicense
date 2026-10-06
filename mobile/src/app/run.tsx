@@ -23,7 +23,7 @@ import { useWebBackGuard } from '@/ui/web-back';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
-import { useColors, useIsDark } from '@/ui/theme';
+import { radius, useColors, useIsDark } from '@/ui/theme';
 
 // The timer's clock icon; with `pulse` it fades out and in again (the last two minutes).
 function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
@@ -137,11 +137,11 @@ export default function Run() {
       {/* A sideways swipe turns to the next or previous question; it never leaves the exam (only the exit button does). */}
       <Pager i={i} n={qs.length} go={setI}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        {/* The picture across the whole width, the page's own background around the question and its statements,
-            which are outlined boxes with a round check. */}
+        {/* The picture in its own box with rounded corners like the buttons', the page's own background around the
+            question and its statements, which are outlined boxes with a round check. */}
         {/* The picture comes in again with each question. */}
-        <Enter key={`pic-${i}`} style={{ marginHorizontal: -16, marginTop: -16 }}>
-          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3 }} transition={200} />
+        <Enter key={`pic-${i}`} style={{ borderRadius: radius.btn, overflow: 'hidden' }}>
+          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.btn, backgroundColor: c.surface2 }} transition={200} />
           {/* Mark the question to look at it again before handing in. */}
           <Pressable onPress={flag} hitSlop={6} accessibilityRole="button" accessibilityLabel="علامت برای بازبینی" accessibilityState={{ selected: flagged }}
             style={{ position: 'absolute', top: 8, ...physical({ left: 8 }), width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center',

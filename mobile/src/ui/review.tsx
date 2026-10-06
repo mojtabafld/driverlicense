@@ -338,8 +338,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
       {/* Head: picture, badges, question */}
       <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: flat ? 0 : 12, gap: flat ? 12 : 10 }}>
-        <View style={flat ? { marginHorizontal: -16 } : null}>
-          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? 0 : 6, backgroundColor: c.surface2 }} />
+        <View style={flat ? { borderRadius: radius.btn, overflow: 'hidden' } : null}>
+          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.btn : 6, backgroundColor: c.surface2 }} />
           {index != null ? (
             <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
               <T style={{ color: '#fff', fontSize: 12, lineHeight: 20, fontWeight: '600' }}>سؤال {faNum(index + 1)}</T>
