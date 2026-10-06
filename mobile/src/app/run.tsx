@@ -134,8 +134,8 @@ export default function Run() {
         </View>
       </SafeAreaView>
       </GlassTop>
-      {/* A sideways swipe turns to the next or previous question; past the first one it asks whether to leave. */}
-      <Pager i={i} n={qs.length} go={setI} edge={dir => { if (dir < 0) quit(); }}>
+      {/* A sideways swipe turns to the next or previous question; it never leaves the exam (only the exit button does). */}
+      <Pager i={i} n={qs.length} go={setI}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The picture across the whole width, the page's own background around the question and its statements,
             which are outlined boxes with a round check. */}

@@ -14,14 +14,13 @@ import { tap } from './kit';
 const WEB = Platform.OS === 'web' ? ({ touchAction: 'pan-y' } as any) : null;
 const sideways = (_: unknown, g: { dx: number; dy: number }) => Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.8;
 
-type PagerNow = { i: number; n: number; width: number; go: (k: number) => void; edge?: (dir: 1 | -1) => void };
-// `edge`: a swipe past the first page (dir -1) or the last (dir 1), e.g. to ask before leaving the exam.
-export function usePager(i: number, n: number, go: (k: number) => void, edge?: (dir: 1 | -1) => void) {
+type PagerNow = { i: number; n: number; width: number; go: (k: number) => void };
+export function usePager(i: number, n: number, go: (k: number) => void) {
   const { width } = useWindowDimensions();
   const [dx] = useState(() => new Animated.Value(0));
   // The page's current values for the gesture's handlers, kept up to date after each render.
-  const [now] = useState<PagerNow>(() => ({ i, n, width, go, edge }));
-  useEffect(() => { Object.assign(now, { i, n, width, go, edge }); }, [now, i, n, width, go, edge]);
+  const [now] = useState<PagerNow>(() => ({ i, n, width, go }));
+  useEffect(() => { Object.assign(now, { i, n, width, go }); }, [now, i, n, width, go]);
   const [pan] = useState(() => pagerResponder(dx, now));
   return { dx, handlers: pan.panHandlers };
 }
@@ -38,12 +37,6 @@ function pagerResponder(dx: Animated.Value, now: PagerNow) {
       const w = now.width;
       const dir = g.dx < -w / 3 || g.vx < -0.5 ? 1 : g.dx > w / 3 || g.vx > 0.5 ? -1 : 0;
       const to = now.i + dir;
-      // Past the ends: `edge` runs at once (e.g. the exam's question) while the page glides back.
-      if (dir && (to < 0 || to >= now.n) && now.edge) {
-        Animated.timing(dx, { toValue: 0, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-        now.edge(dir as 1 | -1);
-        return;
-      }
       if (!dir || to < 0 || to >= now.n) return settle();
       tap();
       Animated.timing(dx, { toValue: -dir * w, duration: 160, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => {
@@ -85,8 +78,8 @@ function backResponder(dx: Animated.Value, now: BackNow) {
 }
 
 // The same as components, for pages whose values are known only after their own early returns.
-export function Pager({ i, n, go, edge, style, children }: { i: number; n: number; go: (k: number) => void; edge?: (dir: 1 | -1) => void; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
-  const p = usePager(i, n, go, edge);
+export function Pager({ i, n, go, style, children }: { i: number; n: number; go: (k: number) => void; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
+  const p = usePager(i, n, go);
   return <Animated.View {...p.handlers} style={[{ flex: 1 }, WEB, style, { transform: [{ translateX: p.dx }] }]}>{children}</Animated.View>;
 }
 export function SwipeBack({ back, style, children }: { back: () => void; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
