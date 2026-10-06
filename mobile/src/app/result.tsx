@@ -17,6 +17,7 @@ import { Icon } from '@/ui/icon';
 import { Backdrop, Button, Card, Enter, L, T, physical, tap, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
+import { Pager } from '@/ui/swipe';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { AiSummary, ReviewCard, RevealScrollProvider, hasSummary, uiText, useRevealScroll } from '@/ui/review';
 import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
@@ -135,6 +136,8 @@ export default function Result() {
     return (
       <Backdrop anim={motion.style}>
         <RevealScrollProvider value={reveal.value}>
+        {/* A sideways swipe turns to the next or previous question (the summary comes after the last). */}
+        <Pager i={k} n={total + 1} go={to => { setK(to); toTop(); }}>
         <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .res-line */}
           {line === 'shown' ? (
@@ -159,6 +162,7 @@ export default function Result() {
                 : <Empty text={wrongN ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'} />
             ) : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
         </ScrollView>
+        </Pager>
         </RevealScrollProvider>
         {/* .rev-top, fixed on Liquid Glass over the page: back button, tabs, «جزئیات آزمون» on one row */}
         <GlassTop onHeight={setHeadH}>
