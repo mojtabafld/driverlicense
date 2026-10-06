@@ -1,7 +1,7 @@
 // Taking an exam or a lesson: one picture at a time, statements to tick (on Liquid Glass), a slim strip on top and a
 // floating Liquid Glass bar at the bottom with previous / the timer / next.
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, BackHandler, Easing, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,6 +19,7 @@ import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { OptionBox } from '@/ui/option-box';
 import { Pager } from '@/ui/swipe';
+import { useWebBackGuard } from '@/ui/web-back';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
@@ -59,6 +60,9 @@ export default function Run() {
   const done = useRef(false);
   const lang = settings.lang === 'en' ? 'en' : 'da';
 
+  // On the web the browser's way back (Safari's edge swipe, the back button) asks too.
+  const release = useWebBackGuard(useCallback(() => setDialog('quit'), []));
+
   const finish = async () => {
     if (done.current || !plan) return; done.current = true;
     // Marked questions are saved as such (m), so the result shows them.
@@ -67,7 +71,7 @@ export default function Run() {
     const attempt = { secs, mode: plan.mode, ...(plan.lesson ? { lesson: plan.lesson } : {}), items };
     session.result = { at: Date.now(), ...attempt }; session.fresh = true;
     saveAttempt(attempt).catch(() => {});
-    router.replace('/result');
+    release(() => router.replace('/result'));
   };
   useEffect(() => {
     if (!settings.timer) return;
@@ -179,7 +183,7 @@ export default function Run() {
       <QuestionSheet open={dialog === 'list'} current={i} onClose={() => setDialog(null)} onPick={goTo}
         items={qs.map((_, k) => ({ n: k + 1, tone: ticks[k].some(Boolean) ? 'answered' : 'empty', marked: flags.includes(k) }))} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
-        cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => router.back()); }} />
+        cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
       <Modal visible={dialog === 'handin'} transparent animationType="fade" onRequestClose={() => setDialog(null)}>
         <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
           <View style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
