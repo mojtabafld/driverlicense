@@ -4,7 +4,8 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, View, type StyleProp, type TextStyle } from 'react-native';
 
-import { API_URL } from '@/lib/config';
+import { API_URL, PROVE_PICS } from '@/lib/config';
+import { imgSource } from '@/lib/img-source';
 import type { GuideKind } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
@@ -52,15 +53,20 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
 // to look at closely, like the exam's pictures (ZoomableImage).
 export function GuideImage({ k, aspect, label, radius = 12, compact, flat, zoom }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; zoom?: boolean }) {
   const c = useColors();
-  const { guideArt } = useApp();
+  const { guideArt, token } = useApp();
   const v = guideArt[k];
+  // prove.dk's picture (at /app; only for signed-in users, like the questions' pictures) or the made one.
+  const prove = PROVE_PICS && !!v?.startsWith('p');
+  const src = prove ? imgSource({ uri: `${API_URL}/img/guideprove/${k}.png`, v: `v=${v}`, token }) : { uri: `${API_URL}/guide-art/${k}.png?v=${v}` };
+  // prove.dk's sign drawings reach their edges: a little room around them, as the made pictures have.
+  const inset = prove && k.startsWith('s-') ? { transform: [{ scale: 0.82 }] } : null;
   return (
     <View style={{ width: '100%', aspectRatio: aspect, borderRadius: flat ? 0 : radius, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
       {v && zoom ? (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
-          <ZoomableImage source={{ uri: `${API_URL}/guide-art/${k}.png?v=${v}` }} style={{ width: '100%', aspectRatio: aspect }} ratio={aspect} transition={200} />
+          <ZoomableImage source={src} style={[{ width: '100%', aspectRatio: aspect }, inset]} ratio={aspect} transition={200} />
         </View>
-      ) : v ? <Image source={{ uri: `${API_URL}/guide-art/${k}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={200} />
+      ) : v ? <Image source={src} style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, inset]} contentFit={prove ? 'contain' : 'cover'} transition={200} />
         : compact ? <Icon name="sign" size={16} color="#9aa0a6" /> : (
           <View style={{ alignItems: 'center', gap: 6 }}>
             <Icon name="sign" size={30} color="#9aa0a6" />

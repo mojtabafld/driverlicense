@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!-- The admin's console at kore.mintcloud.info/console: sign in (an admin account, ADMIN_USERS) and compare the
+     teaching pictures (signs, right of way) with prove.dk's, side by side; for a sign whose official drawing is there,
+     choose which one the app shows. Only this; it talks to /api/login, /api/me, /api/logout and /api/guideref*. -->
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TeoriPrøve Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f7;--surface:#fff;--surface2:#eef1f3;--line:#dde2e6;--text:#1c2226;--muted:#6b757d;--accent:#2e8285;--ok:#2fae4f;--bad:#d64545}
+@media (prefers-color-scheme:dark){:root{--bg:#121516;--surface:#1c2022;--surface2:#262b2e;--line:#333a3e;--text:#e8ecee;--muted:#9aa4aa;--accent:#4fb3b6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Vazirmatn',system-ui,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 16px;background:var(--accent);color:#fff;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.soft{background:var(--surface2);color:var(--text)}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;background:var(--surface);color:var(--text);cursor:pointer}
+.chip.on{border-color:var(--ok);color:var(--ok);font-weight:700}
+.chip:disabled{cursor:default}
+.chip:not(.on):disabled{opacity:.5}
+input,select{font:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--surface);color:var(--text)}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.head .sp{flex:1}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:12px}
+.item{display:flex;flex-direction:column;gap:8px}
+.pics{display:grid;gap:8px;align-items:start}
+.pic{width:100%;aspect-ratio:4/3;object-fit:contain;background:#f2f3f5;border-radius:10px;display:block}
+.pic.on{outline:3px solid var(--ok);outline-offset:2px}
+.none{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:10px;font-size:13px}
+small{display:block;font-size:12px;margin-top:2px}
+.login{max-width:360px;margin:12vh auto 0;display:flex;flex-direction:column;gap:10px}
+.err{color:var(--bad);min-height:1.5em;font-size:14px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="toast"></div>
+<script>
+(() => {
+  const $app = document.getElementById('app');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  const when = t => new Date(t).toLocaleString('fa-IR', { dateStyle: 'medium', timeStyle: 'short' });
+  let toastT;
+  const toast = m => { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); };
+  async function api(method, route, body) {
+    const r = await fetch('/api/' + route, { method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(d.error || 'خطا'), { status: r.status });
+    return d;
+  }
+
+  // Signing in: an admin account (the same accounts as the app).
+  function login(msg = '') {
+    $app.innerHTML = `<form class="card login" id="f">
+      <h1>کنسول TeoriPrøve</h1>
+      <p class="muted" style="margin:0">مقایسه‌ی تصاویر با prove.dk؛ فقط برای مدیران.</p>
+      <input name="u" placeholder="نام کاربری" autocomplete="username" dir="ltr" required>
+      <input name="p" type="password" placeholder="رمز عبور" autocomplete="current-password" dir="ltr" required>
+      <div class="err" id="err">${esc(msg)}</div>
+      <button class="btn">ورود</button>
+    </form>`;
+    const f = document.getElementById('f');
+    f.u.focus();
+    f.onsubmit = async e => {
+      e.preventDefault();
+      try { const d = await api('POST', 'login', { username: f.u.value, password: f.p.value }); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد.'); } view(); }
+      catch (er) { document.getElementById('err').textContent = er.message; }
+    };
+  }
+
+  // The comparison: one group at a time, each item's made picture, prove.dk's and (for a sign) the official drawing.
+  const st = { g: 0 };
+  let pollT;
+  async function view() {
+    clearTimeout(pollT);
+    let d;
+    try { d = await api('GET', 'guideref'); }
+    catch (e) { return login(e.status === 401 || e.status === 403 ? '' : e.message); }
+    const g = d.groups[Math.min(st.g, d.groups.length - 1)], run = d.run, running = run && !run.done;
+    const pic = (kind, key, v, on) => `<img loading="lazy" class="pic ${on ? 'on' : ''}" src="/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}" alt="">`;
+    const none = t => `<div class="none muted">${t}</div>`;
+    const opts = d.groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${x.kind === 'signs' ? 'علائم' : 'حق تقدم'} · ${esc(x.title)} (${faNum(x.items.length)})</option>`).join('');
+    $app.innerHTML = `
+      <div class="head"><h1>مقایسه‌ی تصاویر با prove.dk</h1><span class="sp"></span><button class="btn soft" id="out">خروج</button></div>
+      <p class="muted" style="margin:0 0 12px">تصاویر prove.dk یک بار در پایگاه داده‌ی خودمان ذخیره می‌شوند؛ نسخه‌ی kore.mintcloud.info/app همین تصاویر را نشان می‌دهد. برای تابلوهایی که طرح رسمی‌شان (مالکیت عمومی، از Wikimedia Commons) موجود است، می‌توانید طرح رسمی را به‌جای تصویر ساخته‌شده در برنامه نشان دهید.</p>
+      <div class="card bar">
+        <button class="btn" id="imp" ${running ? 'disabled' : ''}>دریافت تصاویر مرجع</button>
+        <span class="muted">${running ? `در حال دریافت… ${faNum(run.n)} از ${faNum(run.total)}` : run ? `آخرین دریافت: ${when(run.at)} · ${faNum(run.n)} مورد${run.errors.length ? ` · ${faNum(run.errors.length)} خطا` : ''}${run.stopped ? ' (نیمه‌کاره ماند؛ دوباره بزنید)' : ''}` : 'هنوز دریافت نشده است.'}</span>
+        <label style="margin-inline-start:auto">گروه <select id="grp">${opts}</select></label>
+      </div>
+      ${run && run.errors.length ? `<details class="card" style="margin-bottom:12px"><summary class="muted">خطاهای دریافت</summary><pre>${esc(run.errors.slice(0, 50).join('\n'))}</pre></details>` : ''}
+      <div class="grid">${g.items.map(x => `<div class="card item">
+        <div><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
+        <div class="pics" style="grid-template-columns:repeat(${x.canOfficial ? 3 : 2},1fr)">
+          <div>${x.ai ? pic('ai', x.key, x.ai, x.choice === 'ai') : none('ساخته نشده')}<small class="muted">تصویر ساخته‌شده (AI)</small></div>
+          <div>${x.prove ? pic('prove', x.key, '') : none(x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}<small class="muted">prove.dk</small></div>
+          ${x.canOfficial ? `<div>${x.official ? pic('official', x.key, '', x.choice === 'official') : none('دریافت نشده')}<small class="muted">طرح رسمی (Commons)</small></div>` : ''}
+        </div>
+        ${x.canOfficial ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="chip ${x.choice === 'ai' ? 'on' : ''}" data-k="${esc(x.key)}" data-c="ai" ${x.choice === 'ai' ? 'disabled' : ''}>${x.choice === 'ai' ? '✓ ' : ''}تصویر ساخته‌شده در برنامه</button>
+          <button class="chip ${x.choice === 'official' ? 'on' : ''}" data-k="${esc(x.key)}" data-c="official" ${x.choice === 'official' || !x.official ? 'disabled' : ''}>${x.choice === 'official' ? '✓ ' : ''}طرح رسمی در برنامه</button></div>` : ''}
+      </div>`).join('')}</div>`;
+    document.getElementById('out').onclick = async () => { await api('POST', 'logout').catch(() => {}); login(); };
+    document.getElementById('grp').onchange = e => { st.g = +e.target.value; view(); window.scrollTo({ top: 0 }); };
+    document.getElementById('imp').onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } view(); };
+    $app.querySelectorAll('[data-k]').forEach(b => b.onclick = async () => {
+      try { await api('POST', 'guiderefchoose', { key: b.dataset.k, choice: b.dataset.c }); toast('ذخیره شد'); } catch (e) { toast(e.message); }
+      view();
+    });
+    if (running) pollT = setTimeout(view, 4000);
+  }
+
+  view();
+})();
+</script>
+</body>
+</html>

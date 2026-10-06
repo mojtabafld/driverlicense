@@ -2,8 +2,9 @@
 // data/prove-map.json (from data/guide-src/build.py) says where each item's picture is on prove.dk and whether the
 // sign's official drawing is on Wikimedia Commons. «دریافت تصاویر مرجع» copies them into the database once (blobs
 // ref-prove-<key>, ref-off-<key>), so the comparison does not depend on the prove.dk account. prove.dk's pictures are
-// only for the admin's comparison and are never served to the app; for a sign the admin may choose the official drawing
-// (public domain) instead of the made picture, which /guide-art/<key>.png then serves.
+// for the admin's comparison (/console) and for the app's copy at /app, which shows them instead of the made pictures
+// (/img/guideprove/<key>.png, signed-in users only); for a sign the admin may choose the official drawing (public
+// domain) instead of the made picture, which /guide-art/<key>.png then serves.
 // store.meta.guideRef = { items: { [key]: { prove?: at, off?: at } }, choice: { [key]: 'official' }, run: {…} }.
 'use strict';
 const fs = require('node:fs');
@@ -127,10 +128,16 @@ function versions() {
   for (const [k, c] of Object.entries(m.choice)) if (c === 'official' && (m.items[k] || {}).off) v[k] = `o${m.items[k].off.toString(36)}`;
   return v;
 }
+// For the app's copy at /app: prove.dk's picture wherever it is copied in («p» + when), else what the app gets.
+function proveVersions() {
+  const m = meta(), v = versions();
+  for (const [k, it] of Object.entries(m.items)) if (it.prove && MAP[k]) v[k] = `p${it.prove.toString(36)}`;
+  return v;
+}
 async function blob(key) {
   const m = meta();
   if (m.choice[key] === 'official' && (m.items[key] || {}).off) { const b = await store.getBlob(`ref-off-${key}`); if (b) return b; }
   return key.startsWith('s-') ? whitened(key) : imagegen.guideBlob(key);
 }
 
-module.exports = { init, startImport, list, choose, refBlob, versions, blob };
+module.exports = { init, startImport, list, choose, refBlob, versions, proveVersions, blob };
