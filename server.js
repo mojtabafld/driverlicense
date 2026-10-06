@@ -561,7 +561,7 @@ async function api(req, res, route) {
     return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
   }
   // The prompt an item's current AI picture was made from (?id=q:<qid>|g:<key>), and the console's «اصلاح تصویر»:
-  // { id, note (Persian), part, prompt? } → { prompt } with the correction worked in.
+  // { id, note (Persian), part } → { prompt }: a new prompt for the item that follows the corrections.
   if (req.method === 'GET' && route === 'consoleprompt') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
@@ -570,17 +570,12 @@ async function api(req, res, route) {
   }
   if (req.method === 'POST' && route === 'consolefix') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    const b = await readBody(req), id = String(b.id || '');
+    const b = await readBody(req), id = String(b.id || ''), note = String(b.note || '').trim();
     if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
+    if (!note) return send(res, 400, { error: 'بنویسید چه چیزی باید اصلاح شود.' });
     const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
-    // `prompt`: a prompt being edited in the console (e.g. a fresh draft); else the current picture's.
-    const given = typeof b.prompt === 'string' ? b.prompt.trim().slice(0, 20000) : '';
-    try {
-      // The prompt to correct: the one being edited, else the current AI picture's, else (none yet) a new one from the API.
-      let prompt = given || (id[0] === 'q' ? imagegen.questionPrompt(id.slice(2)) : imagegen.guidePromptNow(id.slice(2)));
-      if (!prompt) prompt = id[0] === 'q' ? await imagegen.draft(id.slice(2), part) : await guideref.draft(id.slice(2));
-      return send(res, 200, { prompt: await imagegen.fixPrompt(prompt, b.note, part) });
-    }
+    // A new prompt written by the API right now, from the item itself and the corrections (no earlier prompt).
+    try { return send(res, 200, { prompt: id[0] === 'q' ? await imagegen.draft(id.slice(2), part, note) : await guideref.draft(id.slice(2), note) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».

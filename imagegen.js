@@ -287,7 +287,8 @@ async function remove(qid, jobId) {
 
 // A scene description only (Claude), for the admin to edit before making a picture (the console), with the details
 // paragraph and the style of the console's part (`part`: lessons = realistic, rules = the illustration style).
-async function draft(qid, part = 'lessons') {
+// `note`: corrections from the console (Persian), followed in this new prompt.
+async function draft(qid, part = 'lessons', note = '') {
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   const lines = q.st.map((s, k) => `${k + 1}. ${s.da} → ${s.ok ? 'CORRECT' : 'WRONG'}. Explanation: ${s.eda || '-'}`).join('\n');
@@ -295,9 +296,12 @@ async function draft(qid, part = 'lessons') {
   let img = null;
   try { img = { mime: 'image/jpeg', data: fs.readFileSync(path.join(SITE, q.img)) }; } catch { /* no picture file */ }
   const text = await writeText(CONSOLE_DESCRIBE, `Question: ${q.sda}\n${q.sen ? `(English: ${q.sen})\n` : ''}Statements:\n${lines}`
-    + (own ? `\n\nOur own scene description of this question (keep everything in it, make it more complete and exact):\n${own.text}` : ''), img, 3000);
+    + (own ? `\n\nOur own scene description of this question (keep everything in it, make it more complete and exact):\n${own.text}` : '')
+    + (note ? `\n\n${NOTE_INTRO}\n${String(note).slice(0, 3000)}` : ''), img, 3000);
   return withHouseStyle(text, part);
 }
+// How the console's corrections reach a new prompt.
+const NOTE_INTRO = 'CORRECTIONS from the person who checked the last picture (written in Persian; translate them and follow them exactly in the new prompt — they override anything else):';
 // The console's question prompts: long and exact, in labelled parts, about everything that matters for driving.
 const CONSOLE_DESCRIBE = `You write a detailed prompt for an image model that draws a NEW picture for one question of a Danish driving-theory app (category B).
 You get the question (Danish), its statements with the correct answers and the official explanations, the current picture as a reference for the situation only, and sometimes our own scene description.
@@ -724,19 +728,6 @@ function questionPrompt(qid) {
   const j = made.find(x => x.id === item.active) || made[0];
   return (j && j.prompt) || '';
 }
-// The console's «اصلاح تصویر»: the admin says in Persian what is wrong in a picture; Claude puts that right in the
-// picture's prompt (in English), changing nothing else. `part` decides the style line (as for a new prompt).
-const FIX = `You edit a prompt for an image model that draws pictures for a Danish driving-theory app.
-You get a prompt (the one a picture was made from, or a draft not used yet) and a correction, written in Persian by the person who checked it (what is wrong in the picture or the prompt, or what has to change).
-Translate the correction into exact English and work it into the prompt: change, add or remove exactly what the correction asks, in the right place of the prompt, and make the affected traffic details (signs, markings, lights, positions, colours, directions) explicit and unambiguous. Keep everything else in the prompt as it is, including its parts and their order. If the correction says something must not appear, say so clearly in the prompt.
-Answer with the complete revised prompt only, in English.`;
-async function fixPrompt(prompt, note, part) {
-  if (!String(prompt || '').trim()) throw Object.assign(new Error('پرامپتی برای این تصویر ذخیره نشده است.'), { status: 409 });
-  if (!String(note || '').trim()) throw Object.assign(new Error('ایراد تصویر را بنویسید.'), { status: 400 });
-  const out = await writeText(FIX, `Prompt:\n${prompt}\n\nCorrection (Persian):\n${String(note).slice(0, 3000)}`, null, 3000);
-  return withHouseStyle(out, part);
-}
-
 // A short text from Claude (e.g. a picture's prompt written for the console), with an optional picture to look at.
 async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
@@ -749,5 +740,5 @@ async function writeText(system, text, image, maxTokens = 1500) {
 }
 
 module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
-  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
-  questionPrompt, guidePromptNow: GUIDE.promptOf, fixPrompt };
+  guidePrompt, guidePut: GUIDE.put, NOTE_INTRO, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
+  questionPrompt, guidePromptNow: GUIDE.promptOf };
