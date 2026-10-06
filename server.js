@@ -516,7 +516,8 @@ async function api(req, res, route) {
       if (req.method === 'POST' && route === 'imggenstart') return send(res, 200, { job: await imagegen.start(+b.qid, b.model, user.username, b.prompt, '', !!b.pick) });
       if (req.method === 'POST' && route === 'imggenedit') return send(res, 200, { job: await imagegen.edit(+b.qid, b.job, b.text, b.model, user.username) });
       if (req.method === 'POST' && route === 'imggendel') { await imagegen.remove(+b.qid, b.job); return send(res, 200, imagegen.list()); }
-      if (req.method === 'POST' && route === 'imggendraft') return send(res, 200, { prompt: await imagegen.draft(+b.qid) });
+      // `part`: the console's part the question is in (lessons: realistic; rules: the illustration style).
+      if (req.method === 'POST' && route === 'imggendraft') return send(res, 200, { prompt: await imagegen.draft(+b.qid, b.part === 'rules' ? 'rules' : 'lessons') });
       if (req.method === 'POST' && route === 'imggenset') { await imagegen.setActive(+b.qid, b.job || null); return send(res, 200, imagegen.list()); }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }

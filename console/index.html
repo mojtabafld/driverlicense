@@ -6,7 +6,7 @@
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
      (editable); «تایید ساخت تصویر» makes it, and it appears beside the others to be chosen. One made picture is kept
-     per item. Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     per item. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
      /api/guidegen, /api/consolepics and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
@@ -65,6 +65,14 @@ small{display:block;font-size:12px;margin-top:2px}
 .live{margin-inline-start:auto;font-size:11px;font-weight:700;color:var(--ok);border:1px solid var(--ok);border-radius:99px;padding:0 8px}
 .act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .act .btn{padding:7px 14px;font-size:14px}
+.pw{position:relative}
+.zoom{position:absolute;bottom:6px;left:6px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:16px;line-height:30px;cursor:zoom-in;padding:0}
+.zoom:hover{background:rgba(0,0,0,.75)}
+.lb{position:fixed;inset:0;background:rgba(10,12,14,.92);z-index:20;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+.lb img{max-width:94vw;max-height:86vh;object-fit:contain;background:#f2f3f5;border-radius:8px;transition:transform .15s ease-out;user-select:none;-webkit-user-drag:none}
+.lbx{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:18px;cursor:pointer}
+.lbc{position:absolute;top:20px;left:50%;transform:translateX(-50%);color:#fff;font-weight:700}
+.lbh{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:12.5px;white-space:nowrap}
 .apply{position:fixed;left:0;right:0;bottom:0;display:none;align-items:center;gap:10px;padding:12px max(16px,calc((100vw - 1200px)/2 + 16px));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.08);z-index:5}
 .apply.show{display:flex}
 .apply .sp{flex:1}
@@ -130,7 +138,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   const tile = (id, val, now, src, label, empty) => {
     const sel = id in pending ? pending[id].val : now, on = sel === val, live = now === val;
     return `<div class="tile ${src ? 'can' : ''} ${on ? 'sel' : ''}" ${src ? `data-pick="${esc(id)}" data-val="${esc(val)}" data-now="${esc(now)}" role="button" tabindex="0"` : ''}>
-      ${src ? `<img loading="lazy" class="pic" src="${esc(src)}" alt="">` : `<div class="none muted">${empty}</div>`}
+      ${src ? `<div class="pw"><img loading="lazy" class="pic" src="${esc(src)}" alt=""><button class="zoom" data-zoom="${esc(src)}" data-cap="${esc(label)}" title="بزرگ‌نمایی" aria-label="بزرگ‌نمایی">⤢</button></div>` : `<div class="none muted">${empty}</div>`}
       <div class="tl"><span class="radio">${on ? '●' : '○'}</span><small>${label}</small>${live ? '<span class="live">سایت اصلی</span>' : ''}</div>
     </div>`;
   };
@@ -151,6 +159,41 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     </div>`;
   };
   const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp">${groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)})</option>`).join('')}</select></label>`;
+
+  // A picture full screen: a click (or the wheel, or two fingers) zooms in at that point and out again, dragging moves
+  // it; Esc, ✕ or a click beside it closes.
+  function zoom(src, cap) {
+    const box = document.createElement('div');
+    box.className = 'lb';
+    box.innerHTML = `<img src="${esc(src)}" alt="" draggable="false"><button class="lbx" aria-label="بستن">✕</button>${cap ? `<div class="lbc">${esc(cap)}</div>` : ''}<div class="lbh">کلیک یا چرخ موس: بزرگ‌نمایی · کشیدن: جابه‌جایی · Esc: بستن</div>`;
+    document.body.appendChild(box);
+    const img = box.querySelector('img');
+    let k = 1, x = 0, y = 0, drag = null, moved = false;
+    const put = () => { img.style.transform = `translate(${x}px, ${y}px) scale(${k})`; img.style.cursor = k > 1 ? 'grab' : 'zoom-in'; };
+    // Zoom to `nk` keeping the point (cx, cy) of the screen where it is.
+    const to = (nk, cx, cy) => {
+      nk = Math.min(6, Math.max(1, nk));
+      const r = img.getBoundingClientRect(), ox = cx - (r.left + r.width / 2), oy = cy - (r.top + r.height / 2);
+      x -= ox * (nk / k - 1); y -= oy * (nk / k - 1); k = nk;
+      if (k === 1) { x = 0; y = 0; }
+      put();
+    };
+    const close = () => { box.remove(); document.removeEventListener('keydown', key); };
+    const key = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', key);
+    box.onclick = e => { if (e.target === box || e.target.classList.contains('lbx')) close(); };
+    img.onclick = e => { if (moved) return; to(k > 1 ? 1 : 2.5, e.clientX, e.clientY); };
+    img.onwheel = e => { e.preventDefault(); to(k * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY); };
+    img.onpointerdown = e => { if (k === 1) return; drag = { sx: e.clientX - x, sy: e.clientY - y }; moved = false; img.setPointerCapture(e.pointerId); };
+    img.onpointermove = e => { if (!drag) return; x = e.clientX - drag.sx; y = e.clientY - drag.sy; moved = true; put(); };
+    img.onpointerup = () => { drag = null; setTimeout(() => { moved = false; }, 0); };
+    // Two fingers on a touch screen.
+    let pinch = null;
+    img.ontouchstart = e => { if (e.touches.length === 2) { const [a, b] = e.touches; pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), k }; } };
+    img.ontouchmove = e => { if (pinch && e.touches.length === 2) { e.preventDefault(); const [a, b] = e.touches; to(pinch.k * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / pinch.d, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2); } };
+    img.ontouchend = () => { pinch = null; };
+    put();
+  }
 
   async function view() {
     clearTimeout(pollT);
@@ -237,6 +280,8 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     const imp = document.getElementById('imp');
     if (imp) imp.onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } view(); };
     // Choosing a picture only marks it; «اعمال» applies.
+    $app.querySelectorAll('[data-zoom]').forEach(z => z.onclick = e => { e.stopPropagation(); zoom(z.dataset.zoom, z.dataset.cap); });
+    $app.querySelectorAll('.pw img').forEach(i => i.ondblclick = e => { e.stopPropagation(); zoom(i.getAttribute('src'), ''); });
     $app.querySelectorAll('[data-pick]').forEach(t => t.onclick = () => {
       const id = t.dataset.pick, val = t.dataset.val;
       if (val === t.dataset.now) delete pending[id]; else pending[id] = { val };
@@ -264,7 +309,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     $app.querySelectorAll('[data-draft]').forEach(b => b.onclick = async () => {
       const id = b.dataset.draft, kind = id[0], ref = id.slice(2);
       drafts[id] = { busy: true }; render();
-      try { drafts[id] = { text: (kind === 'q' ? await api('POST', 'imggendraft', { qid: +ref }) : await api('POST', 'guidedraft', { key: ref })).prompt }; }
+      try { drafts[id] = { text: (kind === 'q' ? await api('POST', 'imggendraft', { qid: +ref, part: st.tab }) : await api('POST', 'guidedraft', { key: ref })).prompt }; }
       catch (e) { delete drafts[id]; toast(e.message); }
       render();
     });
