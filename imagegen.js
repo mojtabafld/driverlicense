@@ -61,7 +61,8 @@ function init(s, siteDir) {
   // Nothing is made on its own any more (the image model's credit is limited): only the guide pictures ordered in
   // data/art-orders.json. The intro, «آموزش» cards, profile pictures and the questions' own pictures keep what was made.
   fixIntro().catch(e => console.error('intro pictures', e.message))
-    .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message));
+    .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
+    .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message));
 }
 
 // The pictures ordered by hand (data/art-orders.json): picture keys or group names (data/guide-groups.json).
@@ -71,6 +72,12 @@ function ordered() {
     const groups = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-groups.json'), 'utf8'));
     return new Set((o.guide || []).flatMap(x => groups[x] || [x]));
   } catch (e) { console.error('art orders', e.message); return new Set(); }
+}
+// The «آموزش» cards ordered to be made again: card number → a mark (e.g. the date); each new mark makes that card's
+// picture once more (the old one stays on show until the new one is ready).
+function learnOrders() {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'art-orders.json'), 'utf8')).learn || {}; }
+  catch { return {}; }
 }
 
 async function kie(method, url, body) {
@@ -444,15 +451,18 @@ const LEARN_PROMPTS = [
 // A picture that failed because the account ran out of credit (or was rate limited) does not count as a try; it is tried
 // again 20 minutes later. `retry`: a mark kept with the set; changing it gives every picture not made yet new tries.
 // `allow`: which pictures may be made (key → true); none = all.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null }) {
+// `redo` (a numbered list only): number → a mark; a picture made without that mark is made again (as a changed prompt).
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {} }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
-    ? prompts.map((p, i) => [String(i + 1), { prompt: `${p}\n${style}`, aspect }])
+    ? prompts.map((p, i) => [String(i + 1), { prompt: `${p}\n${style}`, aspect, rev: redo[String(i + 1)] }])
     : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect, ref: v.ref,
       rev: require('node:crypto').createHash('sha1').update(`${v.prompt}|${v.ref || ''}|${v.aspect || aspect}`).digest('hex').slice(0, 10) }]);
   // Never started, failed with tries left, or made from an earlier version of its prompt.
-  const stale = (x, rev) => !!(rev && x && x.done && x.rev && x.rev !== rev);
+  // (A keyed picture made before revisions existed is kept; a numbered one is ordered again by its `redo` mark, and
+  // tried again on the next start when that failed.)
+  const stale = (x, rev) => !!(rev && x && x.done && (Array.isArray(prompts) ? x.rev !== rev || (x.state === 'fail' && x.blob) : x.rev && x.rev !== rev));
   const NO_CREDIT = /credit|balance|insufficient|quota|402|429|too many/i, LATER = 20 * 60e3;
   const broke = x => !!(x && x.done && !x.blob && NO_CREDIT.test(x.error || ''));
   const due = x => broke(x) && Date.now() - x.at > LATER;
@@ -527,7 +537,10 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
   const blobOf = async n => { const j = now()[n]; return j && j.blob ? blob(j.blob) : null; };
   return { start: startSet, poll: pollSet, versions, blob: blobOf, count: list.length };
 }
-const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '4:3', prefix: 'learn' });
+// Only the cards ordered again in data/art-orders.json («learn») are made.
+const LEARN_REDO = learnOrders();
+const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '4:3', prefix: 'learn',
+  redo: LEARN_REDO, allow: new Set(Object.keys(LEARN_REDO)) });
 const startLearn = LEARN.start, pollLearn = LEARN.poll, learnVersions = LEARN.versions, learnBlob = LEARN.blob;
 
 // ---------- profile pictures to choose from in the settings ----------
