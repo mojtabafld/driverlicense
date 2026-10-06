@@ -18,6 +18,7 @@ import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { OptionBox } from '@/ui/option-box';
+import { Pager } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
@@ -124,6 +125,8 @@ export default function Run() {
         </View>
       </SafeAreaView>
       </GlassTop>
+      {/* A sideways swipe turns to the next or previous question. */}
+      <Pager i={i} n={qs.length} go={setI}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The picture across the whole width, the page's own background around the question and its statements,
             which are outlined boxes with a round check. */}
@@ -162,6 +165,7 @@ export default function Run() {
           );
         })}
       </ScrollView>
+      </Pager>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}

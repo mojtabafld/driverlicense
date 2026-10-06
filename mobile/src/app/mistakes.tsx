@@ -19,6 +19,7 @@ import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
+import { SideSwipe } from '@/ui/swipe';
 import { ListButton } from '@/ui/question-list';
 import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
@@ -99,6 +100,9 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   return (
     <Backdrop anim={motion.style}>
       <RevealScrollProvider value={reveal.value}>
+      {/* Question by question a sideways swipe turns the questions; the overview pages go back with a drag from right to
+          left. */}
+      <SideSwipe pager={cur ? { i: at, n: items.length, go: step } : undefined} back={() => motion.leave(() => router.back())}>
       <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {!view && open ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
         {!sorted.length ? <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>هنوز اشتباهی ثبت نشده است.</T></Card> : (
@@ -194,6 +198,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
           </>
         )}
       </ScrollView>
+      </SideSwipe>
       </RevealScrollProvider>
       {/* The title row, fixed on Liquid Glass over the page. */}
       <GlassTop onHeight={setHeadH}>

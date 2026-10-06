@@ -4,7 +4,7 @@
 // (to the left: the next one, as on the bar), the content following the finger. ?kind=signs|priority&cat=<group id>[&i=<index>]
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Modal, PanResponder, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
@@ -16,6 +16,7 @@ import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion } from '@/
 import { GlassTop } from '@/ui/liquid';
 import { Marquee } from '@/ui/marquee';
 import { ListButton } from '@/ui/question-list';
+import { swipeWebStyle, usePager } from '@/ui/swipe';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
 // The cards of the page (the group's rules, the explanation): one look.
@@ -40,7 +41,7 @@ export default function GuideView() {
   const scroll = useRef<ScrollView>(null);
   // Each page starts at its top.
   useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [i]);
-  const swipe = useSwipe(i, items.length, setI);
+  const swipe = usePager(i, items.length, setI);
 
   const it = items[i], last = i === items.length - 1;
   const back = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
@@ -74,7 +75,7 @@ export default function GuideView() {
             {intro ? <Rich text={cat.intro} style={{ fontSize: 14, lineHeight: 24, color: c.muted }} /> : null}
           </Card>
         </Pressable>
-        <Animated.View {...swipe.handlers} style={{ transform: [{ translateX: swipe.dx }] }}>
+        <Animated.View {...swipe.handlers} style={[swipeWebStyle, { transform: [{ translateX: swipe.dx }] }]}>
           {/* The picture and its explanation in one card, the picture flush on top (like the «آموزش» cards); both come
               in again with each page. */}
           <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -96,44 +97,6 @@ export default function GuideView() {
       <ItemSheet open={list} items={items} current={i} onClose={() => setList(false)} onPick={k => { setList(false); setI(k); }} />
     </Backdrop>
   );
-}
-
-// Turning the page by a sideways swipe: the content follows the finger (with resistance at the first and last page);
-// past a third of the width or a quick flick it slides out, the page changes, and the new one slides in.
-type SwipeNow = { i: number; n: number; width: number; setI: (k: number) => void };
-function useSwipe(i: number, n: number, setI: (k: number) => void) {
-  const { width } = useWindowDimensions();
-  const [dx] = useState(() => new Animated.Value(0));
-  // The page's current values for the gesture's handlers, kept up to date after each render.
-  const [now] = useState<SwipeNow>(() => ({ i, n, width, setI }));
-  useEffect(() => { Object.assign(now, { i, n, width, setI }); }, [now, i, n, width, setI]);
-  const [pan] = useState(() => swipeResponder(dx, now));
-  return { dx, handlers: pan.panHandlers };
-}
-function swipeResponder(dx: Animated.Value, now: SwipeNow) {
-  const sideways = (_: unknown, g: { dx: number; dy: number }) => Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.8;
-  const settle = () => Animated.spring(dx, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
-  return PanResponder.create({
-    onMoveShouldSetPanResponder: sideways,
-    onMoveShouldSetPanResponderCapture: sideways,
-    onPanResponderMove: (_, g) => {
-      const edge = (g.dx > 0 && now.i === 0) || (g.dx < 0 && now.i === now.n - 1);
-      dx.setValue(edge ? g.dx / 3 : g.dx);
-    },
-    onPanResponderRelease: (_, g) => {
-      const w = now.width;
-      const dir = g.dx < -w / 3 || g.vx < -0.5 ? 1 : g.dx > w / 3 || g.vx > 0.5 ? -1 : 0;
-      const to = now.i + dir;
-      if (!dir || to < 0 || to >= now.n) return settle();
-      tap();
-      Animated.timing(dx, { toValue: -dir * w, duration: 160, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => {
-        now.setI(to);
-        dx.setValue(dir * w * 0.35);
-        Animated.timing(dx, { toValue: 0, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-      });
-    },
-    onPanResponderTerminate: settle,
-  });
 }
 
 // A sign: its code, Persian and Danish names, and what it means and what to do.

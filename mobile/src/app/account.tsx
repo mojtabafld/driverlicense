@@ -1,14 +1,13 @@
-// The account, opened from the user card in the settings: the username (fixed), the shown name, and a new password
+// The account, opened from the user card in the settings (an inner page: fixed head, a drag back): the username (fixed), the shown name, and a new password
 // (only with the current one).
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, L, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
+import { Button, Card, L, T } from '@/ui/kit';
+import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
 // A line under a form: what went wrong, or that it was saved.
@@ -20,10 +19,8 @@ function Note({ msg }: { msg: { ok: boolean; text: string } | null }) {
 const errText = (e: unknown) => (e instanceof Error && e.message ? e.message : 'ذخیره نشد؛ دوباره امتحان کنید.');
 
 export default function Account() {
-  const c = useColors(), ins = useSafeAreaInsets();
+  const c = useColors();
   const { user, updateAccount } = useApp();
-  const motion = usePageMotion('push');
-  const scroll = useTopOnFocus();
   const [name, setName] = useState(user?.name ?? '');
   const [nameMsg, setNameMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [cur, setCur] = useState(''), [pw, setPw] = useState(''), [pw2, setPw2] = useState('');
@@ -49,18 +46,7 @@ export default function Account() {
   };
 
   return (
-    <Backdrop anim={motion.style}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView ref={scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap: 14, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
-              style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
-              <Icon name="arrowRight" size={20} color={c.text} />
-            </Pressable>
-            <T style={{ flex: 1, fontSize: 24, lineHeight: 34, fontWeight: '700' }}>حساب کاربری</T>
-          </View>
-
+    <SubPage title="حساب کاربری" maxWidth={560}>
           <Card style={{ gap: 6 }}>
             <T style={{ fontWeight: '700' }}>نام کاربری</T>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 50, borderRadius: 14, backgroundColor: c.surface2 }}>
@@ -85,8 +71,6 @@ export default function Account() {
             <Note msg={pwMsg} />
             <Button label={busy === 'pw' ? 'در حال ذخیره…' : 'تغییر رمز عبور'} onPress={savePw} disabled={!!busy} icon="lock" />
           </Card>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Backdrop>
+    </SubPage>
   );
 }

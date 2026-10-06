@@ -25,7 +25,7 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   document.documentElement.dir = 'rtl'; document.documentElement.lang = 'fa';
   const l = document.createElement('link'); l.rel = 'stylesheet';
   l.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap'; document.head.appendChild(l);
-  const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%}body,div,span,input,textarea{font-family:Vazirmatn-400,system-ui,sans-serif}*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0}'; document.head.appendChild(s);
+  const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%;overscroll-behavior:none}body,div,span,input,textarea{font-family:Vazirmatn-400,system-ui,sans-serif}*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0}'; document.head.appendChild(s);
 }
 
 function Root() {
