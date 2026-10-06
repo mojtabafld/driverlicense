@@ -175,26 +175,26 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   // typing): { show, prompt, loading, fix, note, fixing }.
   const extra = {};
   const xOf = id => (extra[id] = extra[id] || {});
-  // Making a picture: «ساخت پرامپت با هوش مصنوعی» (the API writes it, editable) → «تایید ساخت تصویر». Once there is an AI
-  // picture: its prompt can be shown, and one Persian box takes what is wrong; «اعمال اصلاحات و ساخت تصویر جدید» has the
-  // API work it into that picture's prompt and makes the new picture from the corrected prompt.
+  // Making a picture: «ساخت پرامپت با هوش مصنوعی» (the API writes it, editable) → «تایید ساخت تصویر». And always, for
+  // every item: one Persian box for what has to change; «اعمال اصلاحات و ساخت تصویر جدید» has the API work it into the
+  // latest prompt (the one in the box, else the AI picture's, else a new one) and makes the new picture from it.
   const genBox = (id, making, failed, hasAi) => {
     const d = drafts[id], x = xOf(id);
     if (making || x.fixing) return `<div class="gen"><span class="state">${x.fixing ? 'در حال اعمال اصلاحات در پرامپت…' : 'در حال ساخت تصویر…'}</span></div>`;
     return `<div class="gen">
       ${failed ? `<span class="fail">ساخت تصویر قبلی ناموفق بود: ${esc(failed)}</span>` : ''}
-      ${hasAi ? `<div class="fixbox">
-          <div class="row"><b style="font-size:14px">اصلاح تصویر</b><span class="sp" style="flex:1"></span>
-            <button class="chip" data-showp="${esc(id)}">${x.show ? 'بستن پرامپت' : 'نمایش پرامپت'}</button></div>
-          ${x.show ? `<div class="ptext"><pre>${x.loading ? 'در حال دریافت…' : esc(x.prompt || 'پرامپتی برای این تصویر ذخیره نشده است.')}</pre></div>` : ''}
-          <textarea class="fa" data-fixnote="${esc(id)}" placeholder="ایراد تصویر را به فارسی بنویسید؛ مثلاً: خط وسط جاده باید بریده باشد نه ممتد، و تابلوی ایست سمت راست باشد.">${esc(x.note || '')}</textarea>
-          <div class="row"><button class="btn" data-fixgo="${esc(id)}">اعمال اصلاحات و ساخت تصویر جدید</button></div>
-        </div>` : ''}
       ${!d ? `<div class="row"><button class="btn soft" data-draft="${esc(id)}">ساخت پرامپت با هوش مصنوعی</button></div>`
         : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
         : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
           <div class="row"><button class="btn" data-go="${esc(id)}">تایید ساخت تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button></div>`}
-      ${hasAi || d ? `<span class="muted" style="font-size:12.5px">تصویر تازه جای تصویر AI قبلی را می‌گیرد؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</span>` : ''}
+      <div class="fixbox">
+        <div class="row"><b style="font-size:14px">اصلاح تصویر</b><span class="sp" style="flex:1"></span>
+          ${hasAi ? `<button class="chip" data-showp="${esc(id)}">${x.show ? 'بستن پرامپت' : 'نمایش پرامپت'}</button>` : ''}</div>
+        ${x.show ? `<div class="ptext"><pre>${x.loading ? 'در حال دریافت…' : esc(x.prompt || 'پرامپتی برای این تصویر ذخیره نشده است.')}</pre></div>` : ''}
+        <textarea class="fa" data-fixnote="${esc(id)}" placeholder="بنویسید چه چیزی در تصویر باید اصلاح شود؛ مثلاً: خط وسط جاده باید بریده باشد نه ممتد، و تابلوی ایست سمت راست باشد.">${esc(x.note || '')}</textarea>
+        <div class="row"><button class="btn" data-fixgo="${esc(id)}">اعمال اصلاحات و ساخت تصویر جدید</button></div>
+        <small class="muted">اصلاحات در آخرین پرامپت این مورد اعمال می‌شود و تصویر جدید با آن ساخته می‌شود و جای تصویر AI قبلی را می‌گیرد؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</small>
+      </div>
     </div>`;
   };
   // Marks: items flagged to be made again later (kept on the server, with an optional note).
@@ -446,10 +446,11 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       if (!(x.note || '').trim()) return toast('ایراد تصویر را بنویسید.');
       x.fixing = true; render();
       try {
-        const prompt = (await api('POST', 'consolefix', { id, note: x.note, part: st.tab })).prompt;
+        // The prompt in the box if there is one (a draft), else the server takes the AI picture's or writes a new one.
+        const prompt = (await api('POST', 'consolefix', { id, note: x.note, part: st.tab, prompt: (drafts[id] && drafts[id].text) || '' })).prompt;
         if (id[0] === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
         else await api('POST', 'guidegen', { key: ref, prompt });
-        Object.assign(x, { note: '', show: false, prompt: '' });
+        Object.assign(x, { note: '', show: false, prompt: '' }); delete drafts[id];
         toast('اصلاحات اعمال شد؛ تصویر جدید در حال ساخت است');
       } catch (e) { toast(e.message); }
       x.fixing = false; view();

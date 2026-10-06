@@ -575,8 +575,12 @@ async function api(req, res, route) {
     const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
     // `prompt`: a prompt being edited in the console (e.g. a fresh draft); else the current picture's.
     const given = typeof b.prompt === 'string' ? b.prompt.trim().slice(0, 20000) : '';
-    const prompt = given || (id[0] === 'q' ? imagegen.questionPrompt(id.slice(2)) : imagegen.guidePromptNow(id.slice(2)));
-    try { return send(res, 200, { prompt: await imagegen.fixPrompt(prompt, b.note, part) }); }
+    try {
+      // The prompt to correct: the one being edited, else the current AI picture's, else (none yet) a new one from the API.
+      let prompt = given || (id[0] === 'q' ? imagegen.questionPrompt(id.slice(2)) : imagegen.guidePromptNow(id.slice(2)));
+      if (!prompt) prompt = id[0] === 'q' ? await imagegen.draft(id.slice(2), part) : await guideref.draft(id.slice(2));
+      return send(res, 200, { prompt: await imagegen.fixPrompt(prompt, b.note, part) });
+    }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
