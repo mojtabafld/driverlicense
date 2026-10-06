@@ -209,7 +209,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     $app.innerHTML = `
       <div class="head"><h1>مقایسه‌ی تصاویر با prove.dk</h1><span class="sp"></span><button class="btn soft" id="out">خروج</button></div>
       <div class="tabs">${TABS.map(([k, t]) => `<button class="tab ${k === st.tab ? 'on' : ''}" data-tab="${k}">${t}</button>`).join('')}</div>
-      ${st.data.models ? `<p class="muted" style="margin:-4px 0 10px;font-size:12.5px">مدل پرامپت‌نویسی: <b dir="ltr">${esc(st.data.models.prompt)}</b> · مدل ساخت تصویر: <b dir="ltr">${esc(st.data.models.image)}</b> (قابل تعریف در تنظیمات سرور: PROMPT_MODEL و IMAGE_MODEL)</p>` : ''}
+      ${st.data.models ? `<p class="muted" style="margin:-4px 0 10px;font-size:12.5px">مدل پرامپت‌نویسی: <b dir="ltr">${esc(st.data.models.prompt)}</b> · مدل ساخت تصویر: <b dir="ltr">${esc(st.data.models.image)}</b> (قابل تعریف در تنظیمات سرور: IMAGE_PROMPT_MODEL و IMAGE_MODEL)</p>` : ''}
       ${isGuide() ? guideBody() : questionBody()}
       <div class="apply ${n ? 'show' : ''}"><span>${faNum(n)} تغییر انتخاب شده (همه با هم)</span><span class="sp"></span>
         <button class="btn soft" id="undo">لغو</button><button class="btn" id="apply">اعمال همه در سایت اصلی</button></div>`;

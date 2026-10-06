@@ -42,7 +42,7 @@ Accounts are stored in `data/db.json` when `DATABASE_URL` is not set.
    - `ANTHROPIC_API_KEY`: turns on the AI lesson after an exam.
    - `INVITE_CODE` (optional): only people who know it can create an account.
 3. Add `ADMIN_USERS` there too, with your username, to get the admin panel.
-4. `LESSON_MODEL` is already set by the spec to `claude-opus-5-5`. To use another Claude model for the
+4. `LESSON_AI_MODEL` is already set by the spec to `claude-opus-5-5`. To use another Claude model for the
    lessons, edit its value in the same screen; the app redeploys with it.
 5. Every push to `main` redeploys automatically. Accounts live in PostgreSQL, so they survive redeploys.
 
@@ -57,8 +57,8 @@ it replaces the whole variable list and would delete the secrets that were added
 | `DATABASE_URL` | Spec (from the attached database) | PostgreSQL connection string. Without it, accounts are stored in `data/db.json`. |
 | `DATABASE_CA_CERT` | Spec (from the attached database) | CA certificate of the database. |
 | `ANTHROPIC_API_KEY` | Dashboard, encrypted | Turns on the AI lessons in Persian: «آموزش این سؤال» in an exam's answer review explains each question and the user's own mistakes; after a lesson, «جمع‌بندی آموزشی اشتباهات شما» covers all its mistakes in one summary. Key points are in bold. Claude also sees each question's picture and describes only what it clearly shows. Lessons are cached per question (or set of questions) + mistake pattern. Without the key, the topic's fixed lesson is shown. |
-| `LESSON_MODEL` | Spec, editable in the dashboard | Claude model for the AI lessons. Default `claude-opus-5-5` (Claude Opus 5.5), also used when the variable is missing. |
-| `PROMPT_MODEL` | Dashboard, optional | Claude model that writes the picture prompts in `/console`. Default `claude-opus-5-5`. |
+| `LESSON_AI_MODEL` | Spec, editable in the dashboard | Claude model for the AI lessons and analyses after an exam. Default `claude-opus-5-5` (Claude Opus 5.5), also used when the variable is missing. |
+| `IMAGE_PROMPT_MODEL` | Dashboard, optional | Claude model that writes the picture prompts in `/console`. Default `claude-opus-5-5`. |
 | `IMAGE_MODEL` | Dashboard, optional | kie.ai picture model for every new picture (its `-text-to-image` and `-image-to-image` variants are used). Default `gpt-image-2-5-sunburst`. |
 | `KIE_API_KEY` | Dashboard, encrypted (optional) | New question pictures for admins («ساخت تصاویر جدید سؤال‌ها» in «تنظیمات و امکانات» on the dashboard): Claude writes a factual description of the situation from the question and its picture, GPT Image 2.5 (Sunburst by default, or Flare; on kie.ai) draws one new picture with the chosen model from that text only. A made picture can be edited in place with a short instruction (image-to-image on our own picture, changing only what the instruction says) or deleted; when no made picture is left, the original is shown again. The new picture is kept in the database and shown instead of the original; the original file is never changed and can be shown again with one click. `PUBLIC_URL` (default https://kore.mintcloud.info) is where kie.ai reports finished pictures. |
 | `ELEVENLABS_API_KEY` | Dashboard, encrypted (optional) | Questions read aloud: the speaker button beside «ترجمه» in the exam and the review plays the question and its statements in the exam's language (Danish or English), made by ElevenLabs once per question and language and kept in the database. Without the key the button is hidden. |
