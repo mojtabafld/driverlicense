@@ -16,6 +16,7 @@ const { openStore } = require('./store');
 const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary } = require('./lesson');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
+const consolepics = require('./consolepics');
 const tts = require('./tts');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -545,6 +546,11 @@ async function api(req, res, route) {
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
+  // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
+  if (req.method === 'GET' && route === 'consolepics') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    return send(res, 200, consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}));
+  }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse() });
@@ -719,6 +725,7 @@ async function main() {
   }
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
+  consolepics.init(SITE);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });

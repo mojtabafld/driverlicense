@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <!-- The admin's console at kore.mintcloud.info/console: sign in (an admin account, ADMIN_USERS) and compare the
-     teaching pictures (signs, right of way) with prove.dk's, side by side; for a sign whose official drawing is there,
-     choose which one the app shows. Only this; it talks to /api/login, /api/me, /api/logout and /api/guideref*. -->
+     pictures with prove.dk's, in four parts: the lessons' and exams' question pictures (prove.dk's original beside the
+     made ones; choose which the app shows), the signs and right of way (the made picture, prove.dk's and the official
+     drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
+     each part of «قوانین»). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/consolepics and
+     /api/imggenset. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -38,6 +41,11 @@ input,select{font:inherit;border:1px solid var(--line);border-radius:10px;paddin
 .pic.on{outline:3px solid var(--ok);outline-offset:2px}
 .none{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:10px;font-size:13px}
 small{display:block;font-size:12px;margin-top:2px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{font:inherit;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:7px 16px;background:var(--surface);color:var(--text);cursor:pointer}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.qtext{font-size:14px}
+.qda{font-size:12.5px;direction:ltr;text-align:left}
 .login{max-width:360px;margin:12vh auto 0;display:flex;flex-direction:column;gap:10px}
 .err{color:var(--bad);min-height:1.5em;font-size:14px}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none}
@@ -82,46 +90,87 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     };
   }
 
-  // The comparison: one group at a time, each item's made picture, prove.dk's and (for a sign) the official drawing.
-  const st = { g: 0 };
+  // Four parts; the open one and its group are kept in the address (#signs/3), so a reload stays there.
+  const TABS = [['lessons', 'درس‌ها و آزمون‌ها'], ['signs', 'علائم'], ['priority', 'حق تقدم'], ['rules', 'قوانین']];
+  const st = { tab: 'lessons', g: 0 };
+  { const [t, g] = location.hash.slice(1).split('/'); if (TABS.some(x => x[0] === t)) { st.tab = t; st.g = +g || 0; } }
   let pollT;
+  const pic = (src, on) => `<img loading="lazy" class="pic ${on ? 'on' : ''}" src="${esc(src)}" alt="">`;
+  const none = t => `<div class="none muted">${t}</div>`;
+  const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp">${groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)})</option>`).join('')}</select></label>`;
+
   async function view() {
     clearTimeout(pollT);
-    let d;
-    try { d = await api('GET', 'guideref'); }
+    history.replaceState(null, '', `#${st.tab}/${st.g}`);
+    let body;
+    try { body = st.tab === 'signs' || st.tab === 'priority' ? await guideView() : await questionView(); }
     catch (e) { return login(e.status === 401 || e.status === 403 ? '' : e.message); }
-    const g = d.groups[Math.min(st.g, d.groups.length - 1)], run = d.run, running = run && !run.done;
-    const pic = (kind, key, v, on) => `<img loading="lazy" class="pic ${on ? 'on' : ''}" src="/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}" alt="">`;
-    const none = t => `<div class="none muted">${t}</div>`;
-    const opts = d.groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${x.kind === 'signs' ? 'علائم' : 'حق تقدم'} · ${esc(x.title)} (${faNum(x.items.length)})</option>`).join('');
     $app.innerHTML = `
       <div class="head"><h1>مقایسه‌ی تصاویر با prove.dk</h1><span class="sp"></span><button class="btn soft" id="out">خروج</button></div>
-      <p class="muted" style="margin:0 0 12px">تصاویر prove.dk یک بار در پایگاه داده‌ی خودمان ذخیره می‌شوند؛ نسخه‌ی kore.mintcloud.info/app همین تصاویر را نشان می‌دهد. برای تابلوهایی که طرح رسمی‌شان (مالکیت عمومی، از Wikimedia Commons) موجود است، می‌توانید طرح رسمی را به‌جای تصویر ساخته‌شده در برنامه نشان دهید.</p>
+      <div class="tabs">${TABS.map(([k, t]) => `<button class="tab ${k === st.tab ? 'on' : ''}" data-tab="${k}">${t}</button>`).join('')}</div>
+      ${body}`;
+    document.getElementById('out').onclick = async () => { await api('POST', 'logout').catch(() => {}); login(); };
+    $app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.tab; st.g = 0; view(); });
+    const grp = document.getElementById('grp');
+    if (grp) grp.onchange = e => { st.g = +e.target.value; view(); window.scrollTo({ top: 0 }); };
+    const imp = document.getElementById('imp');
+    if (imp) imp.onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } view(); };
+    $app.querySelectorAll('[data-k]').forEach(b => b.onclick = async () => {
+      try { await api('POST', 'guiderefchoose', { key: b.dataset.k, choice: b.dataset.c }); toast('ذخیره شد'); } catch (e) { toast(e.message); }
+      view();
+    });
+    $app.querySelectorAll('[data-q]').forEach(b => b.onclick = async () => {
+      try { await api('POST', 'imggenset', { qid: +b.dataset.q, job: b.dataset.j || null }); toast('ذخیره شد'); } catch (e) { toast(e.message); }
+      view();
+    });
+  }
+
+  // Signs or right of way: each item's made picture, prove.dk's and (for a sign) the official drawing.
+  async function guideView() {
+    const d = await api('GET', 'guideref'), run = d.run, running = run && !run.done;
+    const groups = d.groups.filter(x => x.kind === st.tab), g = groups[Math.min(st.g, groups.length - 1)];
+    if (running) pollT = setTimeout(view, 4000);
+    const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
+    return `
+      <p class="muted" style="margin:0 0 12px">تصاویر prove.dk و طرح‌های رسمی (مالکیت عمومی، از Wikimedia Commons) در پایگاه داده‌ی خودمان ذخیره می‌شوند؛ سرور هر چه را هنوز ندارد خودش دریافت می‌کند. نسخه‌ی kore.mintcloud.info/app تصاویر prove.dk را نشان می‌دهد. برای تابلوهایی که طرح رسمی دارند، می‌توانید طرح رسمی را به‌جای تصویر ساخته‌شده در برنامه نشان دهید.</p>
       <div class="card bar">
         <button class="btn" id="imp" ${running ? 'disabled' : ''}>دریافت تصاویر مرجع</button>
         <span class="muted">${running ? `در حال دریافت… ${faNum(run.n)} از ${faNum(run.total)}` : run ? `آخرین دریافت: ${when(run.at)} · ${faNum(run.n)} مورد${run.errors.length ? ` · ${faNum(run.errors.length)} خطا` : ''}${run.stopped ? ' (نیمه‌کاره ماند؛ دوباره بزنید)' : ''}` : 'هنوز دریافت نشده است.'}</span>
-        <label style="margin-inline-start:auto">گروه <select id="grp">${opts}</select></label>
+        ${select(groups, x => x.title)}
       </div>
       ${run && run.errors.length ? `<details class="card" style="margin-bottom:12px"><summary class="muted">خطاهای دریافت</summary><pre>${esc(run.errors.slice(0, 50).join('\n'))}</pre></details>` : ''}
       <div class="grid">${g.items.map(x => `<div class="card item">
         <div><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
         <div class="pics" style="grid-template-columns:repeat(${x.canOfficial ? 3 : 2},1fr)">
-          <div>${x.ai ? pic('ai', x.key, x.ai, x.choice === 'ai') : none('ساخته نشده')}<small class="muted">تصویر ساخته‌شده (AI)</small></div>
-          <div>${x.prove ? pic('prove', x.key, '') : none(x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}<small class="muted">prove.dk</small></div>
-          ${x.canOfficial ? `<div>${x.official ? pic('official', x.key, '', x.choice === 'official') : none('دریافت نشده')}<small class="muted">طرح رسمی (Commons)</small></div>` : ''}
+          <div>${x.ai ? pic(ref('ai', x.key, x.ai), x.choice === 'ai') : none('ساخته نشده')}<small class="muted">تصویر ساخته‌شده (AI)</small></div>
+          <div>${x.prove ? pic(ref('prove', x.key, '')) : none(x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}<small class="muted">prove.dk</small></div>
+          ${x.canOfficial ? `<div>${x.official ? pic(ref('official', x.key, ''), x.choice === 'official') : none('دریافت نشده')}<small class="muted">طرح رسمی (Commons)</small></div>` : ''}
         </div>
         ${x.canOfficial ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="chip ${x.choice === 'ai' ? 'on' : ''}" data-k="${esc(x.key)}" data-c="ai" ${x.choice === 'ai' ? 'disabled' : ''}>${x.choice === 'ai' ? '✓ ' : ''}تصویر ساخته‌شده در برنامه</button>
           <button class="chip ${x.choice === 'official' ? 'on' : ''}" data-k="${esc(x.key)}" data-c="official" ${x.choice === 'official' || !x.official ? 'disabled' : ''}>${x.choice === 'official' ? '✓ ' : ''}طرح رسمی در برنامه</button></div>` : ''}
       </div>`).join('')}</div>`;
-    document.getElementById('out').onclick = async () => { await api('POST', 'logout').catch(() => {}); login(); };
-    document.getElementById('grp').onchange = e => { st.g = +e.target.value; view(); window.scrollTo({ top: 0 }); };
-    document.getElementById('imp').onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } view(); };
-    $app.querySelectorAll('[data-k]').forEach(b => b.onclick = async () => {
-      try { await api('POST', 'guiderefchoose', { key: b.dataset.k, choice: b.dataset.c }); toast('ذخیره شد'); } catch (e) { toast(e.message); }
-      view();
-    });
-    if (running) pollT = setTimeout(view, 4000);
+  }
+
+  // Lessons or rules: each question's original picture (prove.dk) beside the ones made for it; the app shows the chosen one.
+  async function questionView() {
+    const d = await api('GET', `consolepics?kind=${st.tab}`);
+    const g = d.groups[Math.min(st.g, d.groups.length - 1)];
+    return `
+      <p class="muted" style="margin:0 0 12px">${st.tab === 'rules' ? 'تصاویر سؤال‌های هر بخش «قوانین» (همان سؤال‌هایی که تمرین آن بخش از آن‌ها ساخته می‌شود).' : 'تصاویر سؤال‌های هر درس (آزمون).'} تصویر اصلی همان تصویر prove.dk است؛ اگر برای سؤالی تصویر تازه ساخته شده باشد، کنار آن می‌آید و می‌توانید انتخاب کنید برنامه کدام را نشان دهد. نسخه‌ی /app همیشه تصویر اصلی را نشان می‌دهد.</p>
+      <div class="card bar">${select(d.groups, x => x.title)}</div>
+      <div class="grid">${g.items.map(x => {
+        const cols = 1 + x.made.length;
+        return `<div class="card item">
+        <div class="qtext"><b>${faNum(x.id)}.</b> ${esc(x.text)}</div>
+        ${x.da && x.da !== x.text ? `<div class="qda muted">${esc(x.da)}</div>` : ''}
+        <div class="pics" style="grid-template-columns:repeat(${Math.min(cols, 3)},1fr)">
+          <div>${pic(`/img/q${x.id}.jpg?orig=1`, !x.active && x.made.length > 0)}<small class="muted">prove.dk (اصلی)</small>
+            ${x.made.length ? `<button class="chip ${!x.active ? 'on' : ''}" style="margin-top:6px" data-q="${x.id}" data-j="" ${!x.active ? 'disabled' : ''}>${!x.active ? '✓ ' : ''}در برنامه</button>` : ''}</div>
+          ${x.made.map((j, k) => `<div>${pic(`/img/gen/${x.id}/${encodeURIComponent(j.id)}`, x.active === j.id)}<small class="muted">ساخته‌شده (AI)${x.made.length > 1 ? ` ${faNum(k + 1)}` : ''}</small>
+            <button class="chip ${x.active === j.id ? 'on' : ''}" style="margin-top:6px" data-q="${x.id}" data-j="${esc(j.id)}" ${x.active === j.id ? 'disabled' : ''}>${x.active === j.id ? '✓ ' : ''}در برنامه</button></div>`).join('')}
+        </div>
+      </div>`; }).join('')}</div>`;
   }
 
   view();
