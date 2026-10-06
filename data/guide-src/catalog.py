@@ -116,7 +116,7 @@ cat('C', 'تابلوهای ممنوعیت', 'دایره با حاشیه‌ی ق�
      'C52', 'C53',
      n('C54', 'Ophør af overhaling med lastbil forbudt', 'پایان سبقت ممنوع برای کامیون', 'از اینجا کامیون‌ها دوباره می‌توانند سبقت بگیرند.',
        'a round white sign with a thin grey edge showing a grey lorry and a grey car side by side, crossed by several thin black diagonal lines.'),
-     'C55', 'C56', 'C59', 'C61', 'C62', 'C92'])
+     'C55', 'C56', 'C59', 'C62', 'C61', 'C92'])
 
 # ---------------------------------------------------------------- D
 _dir = 'فقط در جهتی که فلش نشان می‌دهد می‌توانید بروید.'
