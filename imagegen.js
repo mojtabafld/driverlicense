@@ -14,16 +14,15 @@ const Anthropic = require('@anthropic-ai/sdk');
 const png = require('./png');
 
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
-// Sunburst (more detail) is the default; Flare is faster and cheaper.
-const MODELS = { sunburst: 'gpt-image-2-5-sunburst-text-to-image', flare: 'gpt-image-2-5-flare-text-to-image' };
-// Editing one of OUR generated pictures (never the original): image-to-image with a short instruction.
-const EDIT_MODELS = { flare: 'gpt-image-2-5-flare-image-to-image', sunburst: 'gpt-image-2-5-sunburst-image-to-image' };
+// The two models, set in the server's environment (DigitalOcean: Settings → web → Environment Variables):
+// IMAGE_MODEL: the kie.ai picture model (default GPT Image 2.5 Sunburst; its text-to-image and image-to-image variants);
+// PROMPT_MODEL: the Claude model that writes the console's prompts (default Claude Opus 5.5).
+const IMAGE_MODEL = (process.env.IMAGE_MODEL || '').trim().replace(/-(text|image)-to-image$/, '') || 'gpt-image-2-5-sunburst';
+const TEXT_TO_IMAGE = `${IMAGE_MODEL}-text-to-image`, IMAGE_TO_IMAGE = `${IMAGE_MODEL}-image-to-image`;
+const PROMPT_MODEL = (process.env.PROMPT_MODEL || '').trim() || 'claude-opus-5-5';
+const models = () => ({ prompt: PROMPT_MODEL, image: IMAGE_MODEL });
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
 const CLAUDE = process.env.LESSON_MODEL || 'claude-opus-5-5';
-// The Claude model that writes the console's prompts: the one set in the server's environment (DigitalOcean: Settings →
-// web → Environment Variables), under the first of these names that is set; else the lessons' model.
-const PROMPT_MODEL_VARS = ['PROMPT_MODEL', 'CLAUDE_MODEL', 'ANTHROPIC_MODEL', 'LESSON_MODEL'];
-const promptModel = () => { const k = PROMPT_MODEL_VARS.find(n => (process.env[n] || '').trim()); return { model: k ? process.env[k].trim() : CLAUDE, from: k || '' }; };
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://kore.mintcloud.info').replace(/\/$/, '');
 
 const DESCRIBE = `You write prompts for a text-to-image model that draws NEW pictures for a Danish driving-theory practice site (category B).
@@ -117,7 +116,6 @@ async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '', p
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
-  if (!MODELS[model]) throw Object.assign(new Error('مدل نامعتبر'), { status: 400 });
   const item = images()[q.id] = images()[q.id] || { active: null, v: '', jobs: [] };
   unstick(item);
   // One picture at a time per question, so a double click or a second tab never makes two.
@@ -128,7 +126,7 @@ async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '', p
   try {
     job.prompt = prompt || ownPrompt(q.id) || await describe(q);
     job.state = 'queued'; await save();
-    const d = await kie('POST', '/jobs/createTask', { model: MODELS[model], callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
+    const d = await kie('POST', '/jobs/createTask', { model: TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
     job.taskId = d.taskId; job.state = 'generating'; await save();
     schedule();
   } catch (e) {
@@ -234,7 +232,7 @@ const jobBlob = async (qid, jobId) => {
 };
 // Picture versions the page adds to the image URL (?v=…), for every question whose picture was ever switched.
 const versions = () => Object.fromEntries(Object.entries(store.meta.images || {}).filter(([, x]) => x.v).map(([k, x]) => [k, x.v]));
-const list = () => ({ available: available(), models: Object.keys(MODELS),
+const list = () => ({ available: available(), models: [IMAGE_MODEL],
   items: Object.fromEntries(Object.entries(store.meta.images || {}).filter(([, x]) => x.jobs.length)) });
 
 const firstQuestion = () => BANK.tests[0].qs[0];
@@ -254,7 +252,6 @@ async function edit(qid, fromJob, instruction, model = 'sunburst', by = '') {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const item = images()[+qid], src = item && item.jobs.find(j => j.id === fromJob && j.blob);
   if (!src) throw Object.assign(new Error('تصویر پیدا نشد.'), { status: 404 });
-  if (!EDIT_MODELS[model]) throw Object.assign(new Error('مدل نامعتبر'), { status: 400 });
   instruction = String(instruction || '').trim().slice(0, 2000);
   if (!instruction) throw Object.assign(new Error('دستور ویرایش خالی است.'), { status: 400 });
   if (item.jobs.some(j => !j.done)) throw Object.assign(new Error('برای این سؤال یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
@@ -263,7 +260,7 @@ async function edit(qid, fromJob, instruction, model = 'sunburst', by = '') {
   item.jobs.push(job); await save();
   try {
     const url = await upload(await blob(src.blob), `q${qid}-${src.id}.png`);
-    const d = await kie('POST', '/jobs/createTask', { model: EDIT_MODELS[model], callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt, input_urls: [url], aspect_ratio: '4:3', resolution: '2K' } });
+    const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt, input_urls: [url], aspect_ratio: '4:3', resolution: '2K' } });
     job.taskId = d.taskId; job.state = 'generating'; await save();
     schedule();
   } catch (e) {
@@ -456,7 +453,7 @@ async function startIntro() {
     const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt: `${INTRO_PROMPTS[n - 1]}
 ${INTRO_STYLE}` };
     try {
-      const d = await kie('POST', '/jobs/createTask', { model: MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '1:1', resolution: '2K' } });
+      const d = await kie('POST', '/jobs/createTask', { model: TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '1:1', resolution: '2K' } });
       job.taskId = d.taskId; job.state = 'generating';
     } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error('intro picture', n, e.message); }
     await saveIntro();
@@ -564,7 +561,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         try {
           const input = { prompt, aspect_ratio: ar, resolution: '2K' };
           if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
-          const d = await kie('POST', '/jobs/createTask', { model: ref ? EDIT_MODELS.sunburst : MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
+          const d = await kie('POST', '/jobs/createTask', { model: ref ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
           job.taskId = d.taskId; job.state = 'generating'; running++;
         } catch (e) {
           Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message);
@@ -672,7 +669,7 @@ async function startOneOff(id, { prompt, aspect = '4:3', ref = '', target = '' }
   try {
     const input = { prompt, aspect_ratio: aspect, resolution: '2K' };
     if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(ref) }, `oneoff-${id}`)];
-    const d = await kie('POST', '/jobs/createTask', { model: ref ? EDIT_MODELS.sunburst : MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
+    const d = await kie('POST', '/jobs/createTask', { model: ref ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
     Object.assign(job, { taskId: d.taskId, state: 'generating' });
     schedule();
   } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); }
@@ -720,11 +717,11 @@ async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
   const content = [...(image ? [{ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.data.toString('base64') } }] : []), { type: 'text', text }];
-  const r = await claude.messages.create({ model: promptModel().model, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
+  const r = await claude.messages.create({ model: PROMPT_MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
   const out = r.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
   if (!out) throw new Error('empty answer');
   return out;
 }
 
 module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
-  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, promptModel };
+  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models };
