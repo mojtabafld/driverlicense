@@ -289,8 +289,31 @@ async function remove(qid, jobId) {
 async function draft(qid, part = 'lessons') {
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
-  return withHouseStyle(ownPrompt(q.id) || await describe(q, `Give special attention to the traffic signs, road markings and lights: name each one with its exact official Danish design, colour, line type, direction and position, since the picture is for a driving-theory app.`), part);
+  const lines = q.st.map((s, k) => `${k + 1}. ${s.da} → ${s.ok ? 'CORRECT' : 'WRONG'}. Explanation: ${s.eda || '-'}`).join('\n');
+  const own = ownPrompts()[q.id];
+  let img = null;
+  try { img = { mime: 'image/jpeg', data: fs.readFileSync(path.join(SITE, q.img)) }; } catch { /* no picture file */ }
+  const text = await writeText(CONSOLE_DESCRIBE, `Question: ${q.sda}\n${q.sen ? `(English: ${q.sen})\n` : ''}Statements:\n${lines}`
+    + (own ? `\n\nOur own scene description of this question (keep everything in it, make it more complete and exact):\n${own.text}` : ''), img, 3000);
+  return withHouseStyle(text, part);
 }
+// The console's question prompts: long and exact, in labelled parts, about everything that matters for driving.
+const CONSOLE_DESCRIBE = `You write a detailed prompt for an image model that draws a NEW picture for one question of a Danish driving-theory app (category B).
+You get the question (Danish), its statements with the correct answers and the official explanations, the current picture as a reference for the situation only, and sometimes our own scene description.
+
+Write ONE prompt in English of 300 to 550 words, in these labelled parts and in this order (leave a part out only if it truly does not apply):
+WHAT THE PICTURE TEACHES: one or two sentences: the rule the question tests and exactly which details the correct answers depend on.
+VIEWPOINT: where the camera is (e.g. from the driver's seat at eye height looking ahead, with or without the dashboard and mirrors; or from above), and how far it sees.
+ROAD LAYOUT: the kind of road (town street, residential road, country road, motorway, slip road, junction, roundabout, level crossing…), the number of lanes in each direction and which lane our car is in, curves and which way they turn, hills, the junction's shape and how far ahead it is, kerbs, cycle tracks, pavements, verges, islands.
+ROAD MARKINGS: lane by lane from left to right: white or yellow, solid, broken, double or a solid line beside a broken one, warning lines, arrows and the way each points, stop lines, give-way triangles («shark teeth»), zebra crossings, cycle and bus lanes with their symbols, hatched areas, and where each marking starts and ends.
+TRAFFIC SIGNS: every sign, one by one: its Danish code when you know it (e.g. A41, B11, C55, E55), its meaning, its exact official Danish design (shape, border colour, background colour, symbol, numbers or letters, any plate under it with its symbol or distance), which side of the road it stands on, how high and how far ahead.
+TRAFFIC LIGHTS AND SIGNALS: each signal head and exactly which lamp or arrow is lit or flashing; railway signals, police officers' arm signals, lane-control signals over motorways, when present.
+VEHICLES AND ROAD USERS: each car, lorry, bus, bicycle, moped, pedestrian or animal: generic type and colour, exact position (lane, side, distance), direction of travel, what it is doing, which indicators, brake lights or hazard lights are lit.
+CONDITIONS: time of day, weather, road surface (dry, wet, snow, ice), visibility and light, only when they matter for the answer.
+MUST NOT APPEAR: anything that would change the answer or confuse it (other signs, markings, vehicles or lights).
+
+Everything the correct answers depend on must be clearly visible, large enough and unambiguous. Use the official Danish designs from the Danish road-sign catalogue and right-hand traffic. Keep buildings, trees and other scenery to a short neutral mention: the picture is about driving, not the surroundings. Do not describe the reference picture's artistic style or framing, do not mention the reference, and do not write a style line: the app adds its own style line after your prompt.
+Answer with the prompt only.`;
 // How the console's prompts end (data/art-style.json): the details paragraph, then the style line of the part (lessons:
 // realistic; signs, right of way and rules: the illustration style of the road-sign pictures). Any other «Style:» line
 // and an earlier details paragraph are taken out first.
@@ -689,11 +712,11 @@ async function dropOneOff(id) {
 }
 
 // A short text from Claude (e.g. a picture's prompt written for the console), with an optional picture to look at.
-async function writeText(system, text, image) {
+async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
   const content = [...(image ? [{ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.data.toString('base64') } }] : []), { type: 'text', text }];
-  const r = await claude.messages.create({ model: CLAUDE, max_tokens: 1500, system, messages: [{ role: 'user', content }] });
+  const r = await claude.messages.create({ model: CLAUDE, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
   const out = r.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
   if (!out) throw new Error('empty answer');
   return out;
