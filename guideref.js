@@ -73,7 +73,7 @@ function startImport() {
 function list() {
   const m = meta(), ai = imagegen.guideVersions();
   const row = (key, label, sub) => ({ key, label, sub, ai: ai[key] || null, prove: !!(m.items[key] || {}).prove, official: !!(m.items[key] || {}).off,
-    canOfficial: !!(MAP[key] || {}).official, choice: m.choice[key] || 'ai', onProve: !!MAP[key] });
+    canOfficial: !!(MAP[key] || {}).official, choice: m.choice[key] || 'ai', onProve: !!MAP[key], cand: candOf(key) });
   const groups = [
     ...DATA.signs.map(g => ({ kind: 'signs', id: g.id, title: g.title, items: g.items.map(i => row(i.key, i.fa, i.code)) })),
     ...DATA.priority.map(g => ({ kind: 'priority', id: g.id, title: g.title, items: g.items.map(i => row(i.key, i.title, '')) })),
@@ -81,9 +81,53 @@ function list() {
   return { groups, run: m.run || null };
 }
 
-function choose(key, choice) {
+// A new picture made on request in the console (imagegen's one-off job `guide-<key>`): its state, and its version once
+// made. It waits beside the others until the admin chooses it (choice 'cand') or another picture.
+const candOf = key => { const j = imagegen.oneOff(`guide-${key}`); return j ? { state: j.state, done: j.done, v: j.v || null, error: j.error || '' } : null; };
+const known = key => DATA.signs.concat(DATA.priority).some(g => g.thumb === key || g.items.some(i => i.key === key));
+
+// The console's «ساخت پرامپت با هوش مصنوعی»: Claude writes a new prompt for an item's picture from its title and text
+// and the prompt the current picture was made from.
+const DRAFT = `You write prompts for an image model that draws the teaching pictures of a Danish driving-theory app (category B): road signs, road markings, signals and right-of-way situations.
+You get one topic (its Danish code and name if it has one, its Persian title and explanation) and the prompt the current picture was made from.
+Write ONE improved prompt in English (at most 250 words) for a new picture of the same topic: keep the current prompt's visual style, format and every rule it sets (e.g. redrawing the reference sign exactly, the colour code of the cars, the bird's-eye view), and make sure everything the explanation teaches is clearly visible and correct for Denmark (right-hand traffic, official Danish sign designs). No readable text except what is on the signs; no logos or watermarks.
+Answer with the prompt only.`;
+function itemOf(key) {
+  for (const g of DATA.signs) { if (g.thumb === key) return { title: g.title, text: g.blurb || '' }; const i = g.items.find(x => x.key === key); if (i) return { code: i.code, da: i.da, title: i.fa, text: i.text || '' }; }
+  for (const g of DATA.priority) { if (g.thumb === key) return { title: g.title, text: g.blurb || '' }; const i = g.items.find(x => x.key === key); if (i) return { title: i.title, text: [i.text, i.first && `Who goes first: ${i.first}`].filter(Boolean).join('\n') }; }
+  return null;
+}
+async function draft(key) {
+  const it = itemOf(key), p = imagegen.guidePrompt(key);
+  if (!it) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
+  return imagegen.writeText(DRAFT, [it.code && `Code: ${it.code}`, it.da && `Danish name: ${it.da}`, `Title (Persian): ${it.title}`, it.text && `Explanation (Persian): ${it.text}`,
+    p ? `Current prompt:\n${p.prompt}` : ''].filter(Boolean).join('\n'));
+}
+// «تایید ساخت تصویر»: a new picture from the (edited) prompt; a sign is redrawn from its official drawing as before.
+function generate(key, prompt) {
+  if (!itemOf(key)) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
+  prompt = String(prompt || '').trim().slice(0, 20000);
+  if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
+  const p = imagegen.guidePrompt(key) || {};
+  return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '' });
+}
+
+// What the app (the main site) shows for an item: 'ai' (the made picture), 'official' (a sign's official drawing) or
+// 'cand' (the new picture made in the console: it becomes the made picture). Choosing keeps one made picture: the
+// one not chosen of the old and the new is deleted.
+async function choose(key, choice) {
   const m = meta();
-  if (!MAP[key]) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
+  if (choice === 'cand') {
+    const b = await imagegen.oneOffBlob(`guide-${key}`);
+    if (!b) throw Object.assign(new Error('تصویر تازه‌ای برای این مورد نیست.'), { status: 409 });
+    await imagegen.guidePut(key, b);
+    await imagegen.dropOneOff(`guide-${key}`);
+    delete m.choice[key];
+    return save();
+  }
+  const c = imagegen.oneOff(`guide-${key}`);
+  if (c && c.done) await imagegen.dropOneOff(`guide-${key}`);
+  if (!MAP[key]) { if (known(key) && choice !== 'official') return save(); throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 }); }
   if (choice === 'official') {
     if (!MAP[key].official) throw Object.assign(new Error('برای این مورد طرح رسمی وجود ندارد.'), { status: 400 });
     if (!(m.items[key] || {}).off) throw Object.assign(new Error('طرح رسمی این تابلو هنوز دریافت نشده است.'), { status: 409 });
@@ -95,6 +139,7 @@ function choose(key, choice) {
 // For the admin panel: kind = prove | official | ai.
 async function refBlob(kind, key) {
   if (kind === 'ai') return imagegen.guideBlob(key);
+  if (kind === 'cand') return imagegen.oneOffBlob(`guide-${key}`);
   if (!MAP[key]) return null;
   return store.getBlob(`${kind === 'official' ? 'ref-off' : 'ref-prove'}-${key}`);
 }
@@ -144,4 +189,4 @@ async function blob(key) {
   return key.startsWith('s-') ? whitened(key) : imagegen.guideBlob(key);
 }
 
-module.exports = { init, startImport, list, choose, refBlob, versions, proveVersions, blob };
+module.exports = { init, startImport, list, choose, draft, generate, refBlob, versions, proveVersions, blob };

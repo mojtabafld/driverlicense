@@ -28,8 +28,10 @@ function init(siteDir) {
 // kind: 'lessons' | 'rules'; images: store.meta.images (imagegen.js: qid → { jobs, active }).
 function list(kind, images = {}) {
   const item = id => {
-    const q = Q.get(id), x = images[id] || { jobs: [] };
-    return { id, text: q.sfa || q.sda || '', da: q.sda || '', made: x.jobs.filter(j => j.blob).map(j => ({ id: j.id, at: j.at })), active: x.active || null };
+    const q = Q.get(id), x = images[id] || { jobs: [] }, last = x.jobs[x.jobs.length - 1];
+    // `making`: a picture on its way; `failed`: why the last one did not come.
+    return { id, text: q.sfa || q.sda || '', da: q.sda || '', made: x.jobs.filter(j => j.blob).map(j => ({ id: j.id, at: j.at })), active: x.active || null,
+      making: last && !last.done ? last.state : null, failed: last && last.done && !last.blob ? last.error || 'failed' : null };
   };
   const groups = kind === 'rules'
     ? RULES.map(r => ({ title: r.title, items: BANK.questions.filter(q => r.topics.includes(q.c) && q.img).map(q => item(q.id)) }))
