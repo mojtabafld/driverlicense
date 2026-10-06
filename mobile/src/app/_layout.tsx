@@ -80,7 +80,8 @@ function Root() {
       {!onboarded ? (
         <Onboarding onTop={setIntroTop} onDone={() => { saveOnboarded(); setOnboarded(true); }} />
       ) : (
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' },
+        animation: 'fade', animationDuration: 180 /* inner pages: a short, light fade (minimal, as in Uber); the exam and the result keep theirs */ }}>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="run" options={{ presentation: 'fullScreenModal', gestureEnabled: false, animation: 'slide_from_bottom' }} />

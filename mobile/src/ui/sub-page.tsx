@@ -11,7 +11,7 @@ import { Icon } from './icon';
 import { Backdrop, T, tap, usePageMotion, useTopOnFocus } from './kit';
 import { GlassTop } from './liquid';
 import { Marquee } from './marquee';
-import { swipeWebStyle, useSwipeBack } from './swipe';
+import { backLean, swipeWebStyle, useSwipeBack } from './swipe';
 import { useColors } from './theme';
 
 export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760 }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number; maxWidth?: number }) {
@@ -23,7 +23,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760 }:
   const swipe = useSwipeBack(back);
   return (
     <Backdrop anim={motion.style}>
-      <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, { transform: [{ translateX: swipe.dx }] }]}>
+      <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, backLean(swipe.dx)]}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap, maxWidth, width: '100%', alignSelf: 'center' }}>
