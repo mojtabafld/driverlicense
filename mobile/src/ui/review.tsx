@@ -10,7 +10,7 @@ import { imgSource } from '@/lib/img-source';
 import { faNum } from '@/lib/logic';
 import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
-import { Icon } from './icon';
+import { Icon, type IconName } from './icon';
 import { Enter, L, T, TranslateButton, physical, tap } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
@@ -53,6 +53,14 @@ function useTyped(text: string, on: boolean) {
   return `${part.slice(0, t)}${TAIL}${part.slice(t)}${(part.match(/\*\*/g) ?? []).length % 2 ? '**' : ''}`;
 }
 
+// The icon of an AI lesson's heading (lesson.js writes these parts), or none.
+function headIcon(head: string, c: ReturnType<typeof useColors>): { name: IconName; color: string } | null {
+  if (/درباره/.test(head)) return { name: 'help', color: c.accent };
+  if (/اشتباه/.test(head)) return { name: 'xCircle', color: c.bad };
+  if (/نکته/.test(head)) return { name: 'bulbCircle', color: c.warn };
+  return null;
+}
+
 function Rich({ text: full, onQuestion, typing = false, onGrow }: { text: string; onQuestion?: (n: number) => void; typing?: boolean; onGrow?: () => void }) {
   const c = useColors();
   const text = useTyped(full, typing);
@@ -83,7 +91,13 @@ function Rich({ text: full, onQuestion, typing = false, onGrow }: { text: string
   pickWords(text).split('\n').map(l => l.trim()).filter(l => l && l !== TAIL).forEach((raw, i) => {
     if (raw.startsWith(TAIL)) faded = true; // a new line just begun
     const line = raw.startsWith(TAIL) ? raw.slice(1).trim() : raw;
-    if (line.startsWith('#')) out.push(<T key={i} style={{ marginTop: 10, marginBottom: 2, fontSize: 14.5, fontWeight: '800', color: c.text }}>{inline(line.replace(/^#+\s*/, ''), `h${i}`, { fontWeight: '800' })}</T>);
+    if (line.startsWith('#')) {
+      // The lesson's parts get their icon, in the style of the round check: what it is about, the mistake, the tip.
+      const head = line.replace(/^#+\s*/, ''), mark = headIcon(head, c);
+      const title = <T style={{ flex: mark ? 1 : undefined, fontSize: 14.5, fontWeight: '800', color: c.text }}>{inline(head, `h${i}`, { fontWeight: '800' })}</T>;
+      out.push(mark ? <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 4 }}><Icon name={mark.name} size={20} color={mark.color} />{title}</View>
+        : <View key={i} style={{ marginTop: 10, marginBottom: 2 }}>{title}</View>);
+    }
     else if (/^[-•*]\s+/.test(line)) out.push(
       <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 1 }}>
         <T style={{ fontSize: 14, lineHeight: 25 }}>•</T>

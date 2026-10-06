@@ -155,6 +155,9 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'help':
       body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.7M12 16.9v.01" {...line} /></G>;
       break;
+    case 'bulbCircle': // a light bulb in a circle (a tip), in the style of checkCircle
+      body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M12 7a3.4 3.4 0 0 0-2 6.2c.4.3.6.7.6 1.1v.4h2.8v-.4c0-.4.2-.8.6-1.1A3.4 3.4 0 0 0 12 7zM10.8 16.9h2.4" {...line} /></G>;
+      break;
     case 'info':
       body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M12 11v5.5M12 7.6v.01" {...line} /></G>;
       break;
