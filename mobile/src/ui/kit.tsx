@@ -1,7 +1,7 @@
 // Small building blocks shared by all screens, styled like the web site.
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,13 +38,32 @@ export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().c
 // On phones the native stack already moves pushed pages and the exam, so there only the fade of a tab plays.
 export type Motion = 'tab' | 'push' | 'sheet';
 let goingBack = false; // set by leave(): the next page shown is the one returned to
+// Runs `cb` each time the page comes into view, with `returned` true when it was only covered meanwhile (a page opened
+// over it and closed again, by any way back: the back button, a swipe, the browser's or the phone's back) — then the
+// page is just there again as it was, nothing replays. For a tab page a switch to another tab is not covering.
+function useFocusReturn(cb: (returned: boolean) => void) {
+  const nav = useNavigation();
+  const covered = useRef(false);
+  useFocusEffect(useCallback(() => {
+    const returned = covered.current;
+    covered.current = false;
+    cb(returned);
+    const st = nav.getState(), mine = st?.routes[st.index]?.key;
+    return () => {
+      // Blurred while still here: covered, unless (in the tabs) another tab is now chosen.
+      const now = nav.getState();
+      covered.current = !!now && (now.type !== 'tab' || now.routes[now.index]?.key === mine);
+    };
+  }, [cb, nav]));
+}
+
 export function usePageMotion(motion: Motion) {
   const [v] = useState(() => new Animated.Value(0));
   const [from, setFrom] = useState<1 | -1>(1);
   const own = motion === 'tab' || Platform.OS === 'web';
-  useFocusEffect(useCallback(() => {
+  useFocusReturn(useCallback(returned => {
     const back = goingBack; goingBack = false;
-    if (!own) { v.setValue(1); return; }
+    if (!own || returned) { v.stopAnimation(); v.setValue(1); return; }
     setFrom(back ? -1 : 1);
     v.setValue(0);
     Animated.timing(v, { toValue: 1, duration: motion === 'sheet' ? 320 : motion === 'push' ? 200 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
@@ -153,7 +172,8 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
 // `given`: the page's own ref to the scroll view, when it has one (e.g. for the first-visit tooltips).
 export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
   const own = useRef<ScrollView | null>(null);
-  useFocusEffect(useCallback(() => { (given ?? own).current?.scrollTo({ y: 0, animated: false }); }, [given]));
+  // From the top when the page is opened (or its tab chosen), where it was when a page over it is closed.
+  useFocusReturn(useCallback(returned => { if (!returned) (given ?? own).current?.scrollTo({ y: 0, animated: false }); }, [given]));
   return given ?? own;
 }
 
