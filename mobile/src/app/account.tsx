@@ -26,6 +26,8 @@ export default function Account() {
   const [cur, setCur] = useState(''), [pw, setPw] = useState(''), [pw2, setPw2] = useState('');
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState<'name' | 'pw' | null>(null);
+  // Unsaved changes: a new name not saved yet, or anything typed in the password fields.
+  const dirty = name.trim() !== (user?.name ?? '') || !!(cur || pw || pw2);
 
   const saveName = async () => {
     const n = name.trim();
@@ -46,7 +48,7 @@ export default function Account() {
   };
 
   return (
-    <SubPage title="حساب کاربری" maxWidth={560}>
+    <SubPage title="حساب کاربری" maxWidth={560} guard={dirty ? { title: 'خروج بدون ذخیره؟', text: 'تغییراتی که ذخیره نکرده‌اید از بین می‌روند.' } : null}>
           <Card style={{ gap: 6 }}>
             <T style={{ fontWeight: '700' }}>نام کاربری</T>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 50, borderRadius: 14, backgroundColor: c.surface2 }}>

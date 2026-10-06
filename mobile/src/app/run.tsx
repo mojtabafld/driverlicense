@@ -2,7 +2,7 @@
 // floating Liquid Glass bar at the bottom with previous / the timer / next.
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Easing, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Animated, BackHandler, Easing, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
@@ -75,6 +75,11 @@ export default function Run() {
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // The phone's back button asks too, instead of leaving the exam at once.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { setDialog(d => (d ? null : 'quit')); return true; });
+    return () => sub.remove();
+  }, []);
   if (!plan || !qs.length) { router.back(); return null; }
 
   const q = qs[i], last = i === qs.length - 1;
@@ -125,8 +130,8 @@ export default function Run() {
         </View>
       </SafeAreaView>
       </GlassTop>
-      {/* A sideways swipe turns to the next or previous question. */}
-      <Pager i={i} n={qs.length} go={setI}>
+      {/* A sideways swipe turns to the next or previous question; past the first one it asks whether to leave. */}
+      <Pager i={i} n={qs.length} go={setI} edge={dir => { if (dir < 0) quit(); }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The picture across the whole width, the page's own background around the question and its statements,
             which are outlined boxes with a round check. */}
