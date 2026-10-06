@@ -113,7 +113,8 @@ function generate(key, prompt) {
   return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '' });
 }
 
-// What the app (the main site) shows for an item: 'ai' (the made picture), 'official' (a sign's official drawing) or
+// What the app (the main site) shows for an item: 'ai' (the made picture), 'official' (a sign's official drawing),
+// 'prove' (prove.dk's picture) or
 // 'cand' (the new picture made in the console: it becomes the made picture). Choosing keeps one made picture: the
 // one not chosen of the old and the new is deleted.
 async function choose(key, choice) {
@@ -129,7 +130,10 @@ async function choose(key, choice) {
   const c = imagegen.oneOff(`guide-${key}`);
   if (c && c.done) await imagegen.dropOneOff(`guide-${key}`);
   if (!MAP[key]) { if (known(key) && choice !== 'official') return save(); throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 }); }
-  if (choice === 'official') {
+  if (choice === 'prove') {
+    if (!(m.items[key] || {}).prove) throw Object.assign(new Error('تصویر prove.dk این مورد هنوز دریافت نشده است.'), { status: 409 });
+    m.choice[key] = 'prove';
+  } else if (choice === 'official') {
     if (!MAP[key].official) throw Object.assign(new Error('برای این مورد طرح رسمی وجود ندارد.'), { status: 400 });
     if (!(m.items[key] || {}).off) throw Object.assign(new Error('طرح رسمی این تابلو هنوز دریافت نشده است.'), { status: 409 });
     m.choice[key] = 'official';
@@ -175,7 +179,11 @@ async function whitened(key) {
 function versions() {
   const m = meta(), v = imagegen.guideVersions();
   for (const k of Object.keys(v)) if (k.startsWith('s-')) v[k] += 'w';   // the whitened version is a new picture for caches
-  for (const [k, c] of Object.entries(m.choice)) if (c === 'official' && (m.items[k] || {}).off) v[k] = `o${m.items[k].off.toString(36)}`;
+  for (const [k, c] of Object.entries(m.choice)) {
+    const it = m.items[k] || {};
+    if (c === 'official' && it.off) v[k] = `o${it.off.toString(36)}`;
+    else if (c === 'prove' && it.prove) v[k] = `p${it.prove.toString(36)}`;
+  }
   return v;
 }
 // For the app's copy at /app: prove.dk's picture wherever it is copied in («p» + when), else what the app gets.
@@ -187,6 +195,7 @@ function proveVersions() {
 async function blob(key) {
   const m = meta();
   if (m.choice[key] === 'official' && (m.items[key] || {}).off) { const b = await store.getBlob(`ref-off-${key}`); if (b) return b; }
+  if (m.choice[key] === 'prove' && (m.items[key] || {}).prove) { const b = await store.getBlob(`ref-prove-${key}`); if (b) return b; }
   return key.startsWith('s-') ? whitened(key) : imagegen.guideBlob(key);
 }
 

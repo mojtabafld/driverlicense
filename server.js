@@ -296,7 +296,9 @@ function serveStatic(req, res) {
   if (im || lm || am || gm2) {
     return (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : guideref.blob(gm2[1])).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
-      res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff' });
+      // (A sign chosen from prove.dk can be SVG: shown as a picture only, nothing in it runs.)
+      res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff',
+        'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; img-src data:" });
       res.end(req.method === 'HEAD' ? undefined : b.data);
     }).catch(() => { res.writeHead(500); res.end(); });
   }
