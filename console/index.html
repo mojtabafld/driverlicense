@@ -5,8 +5,9 @@
      drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
-     (editable); «تایید ساخت تصویر» makes it, and it replaces the item's AI picture (one per item). Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
-     /api/guidegen, /api/consolepics and /api/imggen*. -->
+     (editable); «تایید ساخت تصویر» makes it, and it replaces the item's AI picture (one per item). An item can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked
+     items of a part. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     /api/guidegen, /api/consolepics, /api/consolemark and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -62,6 +63,11 @@ small{display:block;font-size:12px;margin-top:2px}
 .tl small{margin:0}
 .radio{color:var(--accent);font-size:14px;line-height:1}
 .live{margin-inline-start:auto;font-size:11px;font-weight:700;color:var(--ok);border:1px solid var(--ok);border-radius:99px;padding:0 8px}
+.item.marked{border-color:#e8912d;box-shadow:inset 0 0 0 1px #e8912d}
+.mk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:rgba(232,145,45,.12);color:#b8670f;border-radius:10px;padding:6px 10px;font-size:13px}
+.mk .sp{flex:1}
+.chip.flag{color:#b8670f;border-color:rgba(232,145,45,.5)}
+.only{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}
 .act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .act .btn{padding:7px 14px;font-size:14px}
 .pw{position:relative}
@@ -121,7 +127,8 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
 
   // Four parts; the open one and its group are kept in the address (#signs/3), so a reload stays there.
   const TABS = [['lessons', 'درس‌ها و آزمون‌ها'], ['signs', 'علائم'], ['priority', 'حق تقدم'], ['rules', 'قوانین']];
-  const st = { tab: 'lessons', g: 0, data: null };
+  // `only`: show only the items marked to be made again (from all groups of the part).
+  const st = { tab: 'lessons', g: 0, data: null, only: false };
   { const [t, g] = location.hash.slice(1).split('/'); if (TABS.some(x => x[0] === t)) { st.tab = t; st.g = +g || 0; } }
   const isGuide = () => st.tab === 'signs' || st.tab === 'priority';
   let pollT;
@@ -157,7 +164,26 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
           <span class="muted" style="font-size:12.5px">تصویر تازه جای تصویر AI قبلی را می‌گیرد (قبلی پاک می‌شود)؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</span></div>`}
     </div>`;
   };
-  const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp">${groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)})</option>`).join('')}</select></label>`;
+  // Marks: items flagged to be made again later (kept on the server, with an optional note).
+  const marks = () => st.data.marks || {};
+  const markRow = id => {
+    const m = marks()[id];
+    return m ? `<div class="mk"><span>⚑ برای ساخت دوباره علامت خورده${m.note ? `: <b>${esc(m.note)}</b>` : ''}</span><span class="sp"></span>
+        <button class="chip" data-mark="${esc(id)}" data-on="1">ویرایش یادداشت</button><button class="chip" data-mark="${esc(id)}" data-on="0">برداشتن علامت</button></div>`
+      : `<div><button class="chip flag" data-mark="${esc(id)}" data-on="1">⚑ علامت برای ساخت دوباره</button></div>`;
+  };
+  const idOf = x => (x.key ? `g:${x.key}` : `q:${x.id}`);
+  const nMarked = items => items.filter(x => marks()[idOf(x)]).length;
+  const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp" ${st.only ? 'disabled' : ''}>${groups.map((x, i) => { const m = nMarked(x.items); return `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)}${m ? ` · ⚑${faNum(m)}` : ''})</option>`; }).join('')}</select></label>`;
+  // The cards to show: the open group's items, or (only marked) the marked items of every group, once each.
+  const shown = (groups, g) => {
+    if (!st.only) return g.items.map((x, k) => ({ x, n: k + 1, from: '' }));
+    const seen = new Set(), out = [];
+    for (const gr of groups) gr.items.forEach((x, k) => { const id = idOf(x); if (marks()[id] && !seen.has(id)) { seen.add(id); out.push({ x, n: k + 1, from: gr.title }); } });
+    return out;
+  };
+  const onlyBox = groups => { const all = new Set(groups.flatMap(gr => gr.items.map(idOf)).filter(id => marks()[id])).size;
+    return `<label class="only"><input type="checkbox" id="only" ${st.only ? 'checked' : ''}> فقط علامت‌دارها (${faNum(all)})</label>`; };
 
   // A picture full screen: a click (or the wheel, or two fingers) zooms in at that point and out again, dragging moves
   // it; Esc, ✕ or a click beside it closes.
@@ -231,14 +257,17 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       <div class="card bar">
         <button class="btn" id="imp" ${running ? 'disabled' : ''}>دریافت تصاویر مرجع</button>
         <span class="muted">${running ? `در حال دریافت… ${faNum(run.n)} از ${faNum(run.total)}` : run ? `آخرین دریافت: ${when(run.at)} · ${faNum(run.n)} مورد${run.errors.length ? ` · ${faNum(run.errors.length)} خطا` : ''}${run.stopped ? ' (نیمه‌کاره ماند؛ دوباره بزنید)' : ''}` : 'هنوز دریافت نشده است.'}</span>
-        ${select(groups, x => x.title)}
+        ${onlyBox(groups)}${select(groups, x => x.title)}
       </div>
       ${run && run.errors.length ? `<details class="card" style="margin-bottom:12px"><summary class="muted">خطاهای دریافت</summary><pre>${esc(run.errors.slice(0, 50).join('\n'))}</pre></details>` : ''}
-      <div class="grid">${g.items.map(x => {
+      ${st.only && !shown(groups, g).length ? '<p class="muted">موردی علامت نخورده است.</p>' : ''}
+      <div class="grid">${shown(groups, g).map(({ x, from }) => {
         const id = `g:${x.key}`, c = x.cand, newPic = c && c.done && c.v, now = x.choice;
         const cols = 2 + (x.canOfficial ? 1 : 0) + (newPic ? 1 : 0);
-        return `<div class="card item">
+        return `<div class="card item ${marks()[id] ? 'marked' : ''}">
+        ${from ? `<small class="muted">${esc(from)}</small>` : ''}
         <div><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
+        ${markRow(id)}
         <div class="pics" style="grid-template-columns:repeat(${cols},1fr)">
           ${tile(id, 'ai', now, x.ai ? ref('ai', x.key, x.ai) : '', 'تصویر AI', 'ساخته نشده')}
           ${newPic ? tile(id, 'cand', now, ref('cand', x.key, c.v), 'تصویر تازه‌ی AI', '') : ''}
@@ -253,15 +282,17 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   // Lessons or rules: every question of the group, as in the app: prove.dk's picture and the AI one (when made).
   function questionBody() {
     const d = st.data, g = d.groups[Math.min(st.g, d.groups.length - 1)];
-    if (g.items.some(x => x.making)) busyPoll = true;
+    if (shown(d.groups, g).some(({ x }) => x.making)) busyPoll = true;
     return `
       <p class="muted" style="margin:0 0 12px">${st.tab === 'rules' ? 'سؤال‌های هر بخش «قوانین»، همان سؤال‌هایی که تمرین آن بخش در برنامه از آن‌ها ساخته می‌شود.' : 'سؤال‌های هر درس، همان‌طور که در برنامه هستند.'} برای هر سؤال، تصویری را که سایت اصلی باید نشان دهد (prove.dk یا AI) انتخاب کنید و «اعمال در سایت اصلی» را بزنید. سایت پشتیبان (/app) همیشه تصویر prove.dk را نشان می‌دهد. برای هر سؤال فقط یک تصویر AI هست: تصویر تازه جای قبلی را می‌گیرد.</p>
-      <div class="card bar">${select(d.groups, x => x.title)}</div>
-      <div class="grid">${g.items.map((x, k) => {
+      <div class="card bar">${onlyBox(d.groups)}${select(d.groups, x => x.title)}</div>
+      ${st.only && !shown(d.groups, g).length ? '<p class="muted">موردی علامت نخورده است.</p>' : ''}
+      <div class="grid">${shown(d.groups, g).map(({ x, n, from }) => {
         const id = `q:${x.id}`, now = x.active || '', made = x.made.slice().sort((a, b) => a.at - b.at);
-        return `<div class="card item">
-        <div class="qtext"><b>${faNum(k + 1)}.</b> ${esc(x.text)}</div>
+        return `<div class="card item ${marks()[id] ? 'marked' : ''}">
+        <div class="qtext"><b>${from ? `${esc(from)} · ` : ''}${faNum(n)}.</b> ${esc(x.text)}</div>
         ${x.da && x.da !== x.text ? `<div class="qda muted">${esc(x.da)}</div>` : ''}
+        ${markRow(id)}
         <div class="pics" style="grid-template-columns:repeat(${1 + Math.max(1, made.length)},1fr)">
           ${tile(id, '', now, `/img/q${x.id}.jpg?orig=1`, 'prove.dk', '')}
           ${made.length ? made.map((j, i) => tile(id, j.id, now, `/img/gen/${x.id}/${encodeURIComponent(j.id)}`, made.length > 1 && i === made.length - 1 ? 'تصویر تازه‌ی AI' : 'تصویر AI', '')).join('')
@@ -277,6 +308,14 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     $app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.tab; st.g = 0; view(); });
     const grp = document.getElementById('grp');
     if (grp) grp.onchange = e => { st.g = +e.target.value; view(); window.scrollTo({ top: 0 }); };
+    const only = document.getElementById('only');
+    if (only) only.onchange = () => { st.only = only.checked; render(); window.scrollTo({ top: 0 }); };
+    $app.querySelectorAll('[data-mark]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.mark, on = b.dataset.on === '1';
+      let note = '';
+      if (on) { const cur = (marks()[id] || {}).note || ''; const t = prompt('یادداشت (اختیاری): چه چیزی باید در ساخت دوباره درست شود؟', cur); if (t === null) return; note = t; }
+      try { st.data.marks = (await api('POST', 'consolemark', { id, on, note })).marks; render(); toast(on ? 'علامت خورد' : 'علامت برداشته شد'); } catch (e) { toast(e.message); }
+    });
     const imp = document.getElementById('imp');
     if (imp) imp.onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } view(); };
     // Choosing a picture only marks it; «اعمال» applies.
