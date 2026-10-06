@@ -108,14 +108,12 @@ function itemOf(key) {
   for (const g of DATA.priority) { if (g.thumb === key) return { title: g.title, text: g.blurb || '' }; const i = g.items.find(x => x.key === key); if (i) return { title: i.title, text: [i.text, i.first && `Who goes first: ${i.first}`].filter(Boolean).join('\n') }; }
   return null;
 }
-// `note`: corrections from the console (Persian), followed in this new prompt.
-async function draft(key, note = '') {
+async function draft(key) {
   const it = itemOf(key), p = imagegen.guidePrompt(key);
   if (!it) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
   const part = key.startsWith('p-') ? 'priority' : 'signs';
   return imagegen.withHouseStyle(await imagegen.writeText(DRAFT, [it.code && `Code: ${it.code}`, it.da && `Danish name: ${it.da}`, `Title (Persian): ${it.title}`, it.text && `Explanation (Persian): ${it.text}`,
-    p ? `Current prompt:\n${p.prompt}` : '', `The app's style line (added after your prompt):\n${imagegen.houseStyle(part)}`,
-    note ? `${imagegen.NOTE_INTRO}\n${String(note).slice(0, 3000)}` : ''].filter(Boolean).join('\n'), null, 3000), part);
+    p ? `Current prompt:\n${p.prompt}` : '', `The app's style line (added after your prompt):\n${imagegen.houseStyle(part)}`].filter(Boolean).join('\n'), null, 3000), part);
 }
 // «تایید ساخت تصویر»: a new picture from the (edited) prompt; a sign is redrawn from its official drawing as before.
 // Once made it replaces the item's made picture (one per item), shown on the main site if the made picture is chosen.

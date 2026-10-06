@@ -18,6 +18,7 @@ const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSumma
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
+const consolechat = require('./consolechat');
 const tts = require('./tts');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -514,7 +515,11 @@ async function api(req, res, route) {
       if (req.method === 'GET' && route === 'imggen') return send(res, 200, imagegen.list());
       const b = await readBody(req);
       // `pick` (the console): the new picture is only shown once the admin chooses it.
-      if (req.method === 'POST' && route === 'imggenstart') return send(res, 200, { job: await imagegen.start(+b.qid, b.model, user.username, b.prompt, '', !!b.pick) });
+      if (req.method === 'POST' && route === 'imggenstart') {
+        const job = await imagegen.start(+b.qid, b.model, user.username, b.prompt, '', !!b.pick);
+        if (b.pick) await consolechat.made(`q:${+b.qid}`, job.prompt);   // the console's chat goes on from this prompt
+        return send(res, 200, { job });
+      }
       if (req.method === 'POST' && route === 'imggenedit') return send(res, 200, { job: await imagegen.edit(+b.qid, b.job, b.text, b.model, user.username) });
       if (req.method === 'POST' && route === 'imggendel') { await imagegen.remove(+b.qid, b.job); return send(res, 200, imagegen.list()); }
       // `part`: the console's part the question is in (lessons: realistic; rules: the illustration style).
@@ -552,7 +557,11 @@ async function api(req, res, route) {
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guidedraft') { const b = await readBody(req); return send(res, 200, { prompt: await guideref.draft(String(b.key || '')) }); }
-      if (req.method === 'POST' && route === 'guidegen') { const b = await readBody(req); return send(res, 200, { job: await guideref.generate(String(b.key || ''), b.prompt) }); }
+      if (req.method === 'POST' && route === 'guidegen') {
+        const b = await readBody(req), job = await guideref.generate(String(b.key || ''), b.prompt);
+        await consolechat.made(`g:${String(b.key || '')}`, job.prompt);
+        return send(res, 200, { job });
+      }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
@@ -560,23 +569,25 @@ async function api(req, res, route) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
   }
-  // The prompt an item's current AI picture was made from (?id=q:<qid>|g:<key>), and the console's «اصلاح تصویر»:
-  // { id, note (Persian), part } → { prompt }: a new prompt for the item that follows the corrections.
+  // The prompt an item's current AI picture was made from (?id=q:<qid>|g:<key>).
   if (req.method === 'GET' && route === 'consoleprompt') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
     if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
     return send(res, 200, { prompt: id[0] === 'q' ? imagegen.questionPrompt(id.slice(2)) : imagegen.guidePromptNow(id.slice(2)) });
   }
-  if (req.method === 'POST' && route === 'consolefix') {
+  // The console's chat about a picture (consolechat.js): GET ?id= → { prompt, msgs }; POST { id, message, part } → the
+  // AI's answer and new prompt; POST { id, reset: true } starts the conversation again.
+  if (route === 'consolechat' && (req.method === 'GET' || req.method === 'POST')) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    const b = await readBody(req), id = String(b.id || ''), note = String(b.note || '').trim();
+    const b = req.method === 'POST' ? await readBody(req) : {}, id = String(req.method === 'GET' ? new URL(req.url, 'http://x').searchParams.get('id') || '' : b.id || '');
     if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
-    if (!note) return send(res, 400, { error: 'بنویسید چه چیزی باید اصلاح شود.' });
     const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
-    // A new prompt written by the API right now, from the item itself and the corrections (no earlier prompt).
-    try { return send(res, 200, { prompt: id[0] === 'q' ? await imagegen.draft(id.slice(2), part, note) : await guideref.draft(id.slice(2), note) }); }
-    catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+    try {
+      if (req.method === 'GET') return send(res, 200, consolechat.get(id));
+      if (b.reset) return send(res, 200, await consolechat.reset(id));
+      return send(res, 200, await consolechat.send(id, b.message, part));
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
   if (req.method === 'GET' && route === 'consolemarked') {
@@ -773,6 +784,7 @@ async function main() {
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
+  consolechat.init(store, imagegen, guideref, consolepics);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });

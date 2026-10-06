@@ -4,12 +4,12 @@
      made ones; choose which the app shows), the signs and right of way (the made picture, prove.dk's and the official
      drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
-     «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
-     (editable); «تایید ساخت تصویر» makes it, and it replaces the item's AI picture (one per item). An item can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked
-     items of a part, and the «⚑ علامت‌دارها» part all of them in full (the question and its answers, or the item's
-     text, its pictures and the note). Under an AI picture, its prompt can be shown, and «اصلاح تصویر» takes what is wrong in Persian and
-     works it (in English) into that prompt, which then goes to the prompt box to make the picture again. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
-     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consoleprompt, /api/consolefix and /api/imggen*. -->
+     «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has the API write a prompt (editable) and «ایجاد تصویر» makes the picture;
+     once there is a picture, a chat with the AI under it changes the prompt from Persian messages (what changed and where,
+     and the whole new prompt) and «ساخت تصویر با این پرامپت» makes the new one. One AI picture is kept per item. An item
+     can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked items of a part, and the
+     «⚑ علامت‌دارها» part all of them in full. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consolechat and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -85,6 +85,17 @@ small{display:block;font-size:12px;margin-top:2px}
 .sts li.no .mark{color:var(--bad)}
 .gtext{font-size:13.5px;line-height:1.8}
 .ptext pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12.5px;line-height:1.6;background:var(--surface2);border-radius:10px;padding:10px;margin:4px 0 0;max-height:320px;overflow:auto}
+.chat{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
+.chat-h{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.msgs{display:flex;flex-direction:column;gap:8px;max-height:460px;overflow:auto;padding:2px}
+.msg{border-radius:12px;padding:8px 12px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;max-width:92%}
+.msg.me{align-self:flex-start;background:var(--accent);color:#fff}
+.msg.ai{align-self:flex-end;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.msg.ai details summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+.msg.ai pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12px;line-height:1.55;background:var(--surface2);border-radius:8px;padding:8px;margin:4px 0 0;max-height:260px;overflow:auto}
+.msg.ai .btn{align-self:flex-start;padding:7px 14px;font-size:14px}
+.chat-in{display:flex;gap:8px;align-items:flex-end}
+.chat-in textarea{flex:1;font:inherit;font-size:14px;min-height:44px;max-height:160px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl}
 .fixbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px}
 .fixbox textarea{font:inherit;font-size:14px;width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl;text-align:right}
 .act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -171,30 +182,50 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   const actRow = id => `<div class="act">${id in pending
     ? `<button class="btn" data-apply="${esc(id)}">اعمال در سایت اصلی</button><button class="btn soft" data-undo1="${esc(id)}">لغو</button><span class="muted" style="font-size:12.5px">انتخاب تازه هنوز اعمال نشده است.</span>`
     : `<button class="btn" disabled>اعمال در سایت اصلی</button>`}</div>`;
-  // Per item: the current AI picture's prompt (shown on request) and «اصلاح تصویر» (the problem in Persian, kept while
-  // typing): { show, prompt, loading, fix, note, fixing }.
-  const extra = {};
-  const xOf = id => (extra[id] = extra[id] || {});
-  // Making a picture: «ساخت پرامپت با هوش مصنوعی» (the API writes it, editable) → «تایید ساخت تصویر». And always, for
-  // every item: one Persian box for what has to change; «اعمال اصلاحات و ساخت تصویر جدید» has the API write a new prompt
-  // right then, for the item with those corrections, and makes the new picture from it.
+  // Making a picture: «ساخت پرامپت با هوش مصنوعی» → the API's prompt (editable) → «ایجاد تصویر». Once there is a
+  // picture, a chat with the AI under it: the admin says in Persian what to change, the AI answers with what it changed
+  // and where and the whole new prompt, and «ساخت تصویر با این پرامپت» makes the new picture (consolechat.js).
+  // Per item: { data: { prompt, msgs }, loading, sending, input, showPrompt }.
+  const chats = {};
+  const chatOf = id => (chats[id] = chats[id] || {});
+  const loadChat = async id => {
+    const ch = chatOf(id);
+    if (ch.data || ch.loading) return;
+    ch.loading = true;
+    try { ch.data = await api('GET', `consolechat?id=${encodeURIComponent(id)}`); } catch (e) { ch.data = { prompt: '', msgs: [] }; }
+    ch.loading = false; render();
+  };
+  const chatBox = id => {
+    const ch = chatOf(id);
+    if (!ch.data) { setTimeout(() => loadChat(id)); return `<div class="chat"><div class="chat-h">گفت‌وگو با هوش مصنوعی برای اصلاح تصویر</div><span class="muted" style="font-size:13px">در حال بارگذاری…</span></div>`; }
+    const msgs = ch.data.msgs, lastA = msgs.map(m => m.r).lastIndexOf('a');
+    return `<div class="chat">
+      <div class="chat-h"><span>گفت‌وگو با هوش مصنوعی برای اصلاح تصویر</span><span style="flex:1"></span>
+        <button class="chip" data-cprompt="${esc(id)}">${ch.showPrompt ? 'بستن پرامپت فعلی' : 'پرامپت فعلی'}</button>
+        ${msgs.length ? `<button class="chip" data-creset="${esc(id)}">شروع دوباره</button>` : ''}</div>
+      ${ch.showPrompt ? `<div class="ptext"><pre>${esc(ch.data.prompt || 'پرامپتی ذخیره نشده است.')}</pre></div>` : ''}
+      <div class="msgs">${msgs.length ? msgs.map((m, k) => m.r === 'u'
+        ? `<div class="msg me">${esc(m.t)}</div>`
+        : `<div class="msg ai"><div class="mt">${esc(m.t)}</div>
+            ${m.p ? `<details ${k === lastA ? 'open' : ''}><summary>پرامپت ${k === lastA ? 'نهایی' : 'این مرحله'}</summary><pre>${esc(m.p)}</pre></details>` : ''}
+            ${k === lastA && m.p ? `<button class="btn" data-cmake="${esc(id)}">ساخت تصویر با این پرامپت</button>` : ''}</div>`).join('')
+        : `<div class="muted" style="font-size:13px">بنویسید چه چیزی در تصویر باید عوض شود؛ هوش مصنوعی پرامپت تصویر را اصلاح می‌کند، می‌گوید کجا را تغییر داد و پرامپت نهایی را می‌فرستد.</div>`}
+        ${ch.sending ? `<div class="msg ai"><span class="state">در حال نوشتن پاسخ…</span></div>` : ''}</div>
+      <div class="chat-in"><textarea class="fa" data-cin="${esc(id)}" placeholder="مثلاً: خط وسط جاده باید بریده باشد نه ممتد" ${ch.sending ? 'disabled' : ''}>${esc(ch.input || '')}</textarea>
+        <button class="btn" data-csend="${esc(id)}" ${ch.sending ? 'disabled' : ''}>ارسال</button></div>
+    </div>`;
+  };
   const genBox = (id, making, failed, hasAi) => {
-    const d = drafts[id], x = xOf(id);
-    if (making || x.fixing) return `<div class="gen"><span class="state">${x.fixing ? 'در حال نوشتن پرامپت تازه با اصلاحات…' : 'در حال ساخت تصویر…'}</span></div>`;
+    const d = drafts[id];
     return `<div class="gen">
       ${failed ? `<span class="fail">ساخت تصویر قبلی ناموفق بود: ${esc(failed)}</span>` : ''}
-      ${!d ? `<div class="row"><button class="btn soft" data-draft="${esc(id)}">ساخت پرامپت با هوش مصنوعی</button></div>`
+      ${making ? `<span class="state">در حال ساخت تصویر…</span>`
+        : !d ? `<div class="row"><button class="btn soft" data-draft="${esc(id)}">ساخت پرامپت با هوش مصنوعی</button></div>`
         : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
         : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
-          <div class="row"><button class="btn" data-go="${esc(id)}">تایید ساخت تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button></div>`}
-      <div class="fixbox">
-        <div class="row"><b style="font-size:14px">اصلاح تصویر</b><span class="sp" style="flex:1"></span>
-          ${hasAi ? `<button class="chip" data-showp="${esc(id)}">${x.show ? 'بستن پرامپت' : 'نمایش پرامپت'}</button>` : ''}</div>
-        ${x.show ? `<div class="ptext"><pre>${x.loading ? 'در حال دریافت…' : esc(x.prompt || 'پرامپتی برای این تصویر ذخیره نشده است.')}</pre></div>` : ''}
-        <textarea class="fa" data-fixnote="${esc(id)}" placeholder="بنویسید چه چیزی در تصویر باید اصلاح شود؛ مثلاً: خط وسط جاده باید بریده باشد نه ممتد، و تابلوی ایست سمت راست باشد.">${esc(x.note || '')}</textarea>
-        <div class="row"><button class="btn" data-fixgo="${esc(id)}">اعمال اصلاحات و ساخت تصویر جدید</button></div>
-        <small class="muted">هوش مصنوعی همان لحظه برای این مورد پرامپت تازه‌ای با اصلاحات شما می‌نویسد و تصویر جدید با آن ساخته می‌شود و جای تصویر AI قبلی را می‌گیرد؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</small>
-      </div>
+          <div class="row"><button class="btn" data-go="${esc(id)}">ایجاد تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button></div>`}
+      ${hasAi && !making ? chatBox(id) : ''}
+      ${hasAi || d ? `<small class="muted">تصویر تازه جای تصویر AI قبلی را می‌گیرد؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</small>` : ''}
     </div>`;
   };
   // Marks: items flagged to be made again later (kept on the server, with an optional note).
@@ -431,29 +462,36 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       render();
     });
     $app.querySelectorAll('[data-dr]').forEach(t => t.oninput = () => { drafts[t.dataset.dr] = { text: t.value }; });
-    // The current picture's prompt, and «اصلاح تصویر»: the Persian note → the prompt with it worked in → the box above.
-    $app.querySelectorAll('[data-showp]').forEach(b => b.onclick = async () => {
-      const id = b.dataset.showp, x = xOf(id);
-      if (x.show) { x.show = false; return render(); }
-      Object.assign(x, { show: true, loading: true }); render();
-      try { x.prompt = (await api('GET', `consoleprompt?id=${encodeURIComponent(id)}`)).prompt; } catch (e) { toast(e.message); x.show = false; }
-      x.loading = false; render();
+    // The chat: a message to the AI, its answer and new prompt, and the picture from the final prompt.
+    $app.querySelectorAll('[data-cin]').forEach(t => {
+      t.oninput = () => { chatOf(t.dataset.cin).input = t.value; };
+      t.onkeydown = e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $app.querySelector(`[data-csend="${t.dataset.cin}"]`).click(); } };
     });
-    $app.querySelectorAll('[data-fixnote]').forEach(t => t.oninput = () => { xOf(t.dataset.fixnote).note = t.value; });
-    // The correction worked into the picture's prompt by the API, then the new picture made from it at once.
-    $app.querySelectorAll('[data-fixgo]').forEach(b => b.onclick = async () => {
-      const id = b.dataset.fixgo, x = xOf(id), ref = id.slice(2);
-      if (!(x.note || '').trim()) return toast('ایراد تصویر را بنویسید.');
-      x.fixing = true; render();
+    $app.querySelectorAll('[data-csend]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.csend, ch = chatOf(id), message = (ch.input || '').trim();
+      if (!message) return toast('پیامی ننوشته‌اید.');
+      ch.sending = true; ch.data.msgs = [...ch.data.msgs, { r: 'u', t: message }]; ch.input = ''; render();
+      try { ch.data = await api('POST', 'consolechat', { id, message, part: st.tab }); }
+      catch (e) { toast(e.message); ch.input = message; ch.data.msgs = ch.data.msgs.slice(0, -1); }
+      ch.sending = false; render();
+      const box = $app.querySelector(`[data-cin="${id}"]`); if (box) box.closest('.chat').querySelector('.msgs').scrollTop = 1e9;
+    });
+    $app.querySelectorAll('[data-cprompt]').forEach(b => b.onclick = () => { const ch = chatOf(b.dataset.cprompt); ch.showPrompt = !ch.showPrompt; render(); });
+    $app.querySelectorAll('[data-creset]').forEach(b => b.onclick = async () => {
+      if (!confirm('گفت‌وگوی این مورد پاک شود؟')) return;
+      try { chatOf(b.dataset.creset).data = await api('POST', 'consolechat', { id: b.dataset.creset, reset: true }); } catch (e) { toast(e.message); }
+      render();
+    });
+    $app.querySelectorAll('[data-cmake]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.cmake, ref = id.slice(2), prompt = (chatOf(id).data || {}).prompt || '';
+      if (!prompt) return toast('پرامپتی نیست.');
+      b.disabled = true;
       try {
-        // A new prompt from the API right now, for this item with the corrections; then the picture from it.
-        const prompt = (await api('POST', 'consolefix', { id, note: x.note, part: st.tab })).prompt;
         if (id[0] === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
         else await api('POST', 'guidegen', { key: ref, prompt });
-        Object.assign(x, { note: '', show: false, prompt: '' }); delete drafts[id];
-        toast('اصلاحات اعمال شد؛ تصویر جدید در حال ساخت است');
+        toast('تصویر جدید در حال ساخت است');
       } catch (e) { toast(e.message); }
-      x.fixing = false; view();
+      view();
     });
     $app.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => { delete drafts[b.dataset.cancel]; render(); });
     $app.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
@@ -463,7 +501,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       try {
         if (kind === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
         else await api('POST', 'guidegen', { key: ref, prompt });
-        delete drafts[id]; toast('ساخت تصویر شروع شد');
+        delete drafts[id]; delete chats[id]; toast('ساخت تصویر شروع شد');
       } catch (e) { toast(e.message); }
       view();
     });
