@@ -90,7 +90,8 @@ const known = key => DATA.signs.concat(DATA.priority).some(g => g.thumb === key 
 // and the prompt the current picture was made from.
 const DRAFT = `You write prompts for an image model that draws the teaching pictures of a Danish driving-theory app (category B): road signs, road markings, signals and right-of-way situations.
 You get one topic (its Danish code and name if it has one, its Persian title and explanation) and the prompt the current picture was made from.
-Write ONE improved prompt in English (at most 250 words) for a new picture of the same topic: keep the current prompt's visual style, format and every rule it sets (e.g. redrawing the reference sign exactly, the colour code of the cars, the bird's-eye view), and make sure everything the explanation teaches is clearly visible and correct for Denmark (right-hand traffic, official Danish sign designs). No readable text except what is on the signs; no logos or watermarks.
+Write ONE improved prompt in English (at most 250 words) for a new picture of the same topic: keep the current prompt's format and every rule it sets (e.g. redrawing the reference sign exactly, the colour code of the cars, the bird's-eye view), and make sure everything the explanation teaches is clearly visible and correct for Denmark (right-hand traffic, official Danish sign designs). No readable text except what is on the signs; no logos or watermarks.
+The picture MUST be in the app's picture style, the style of its road-sign pictures: a clean flat vector illustration, never photorealistic or a 3D render. Do not write a style line of your own: the app adds its style line after your prompt.
 Answer with the prompt only.`;
 function itemOf(key) {
   for (const g of DATA.signs) { if (g.thumb === key) return { title: g.title, text: g.blurb || '' }; const i = g.items.find(x => x.key === key); if (i) return { code: i.code, da: i.da, title: i.fa, text: i.text || '' }; }
@@ -100,8 +101,8 @@ function itemOf(key) {
 async function draft(key) {
   const it = itemOf(key), p = imagegen.guidePrompt(key);
   if (!it) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
-  return imagegen.writeText(DRAFT, [it.code && `Code: ${it.code}`, it.da && `Danish name: ${it.da}`, `Title (Persian): ${it.title}`, it.text && `Explanation (Persian): ${it.text}`,
-    p ? `Current prompt:\n${p.prompt}` : ''].filter(Boolean).join('\n'));
+  return imagegen.withHouseStyle(await imagegen.writeText(DRAFT, [it.code && `Code: ${it.code}`, it.da && `Danish name: ${it.da}`, `Title (Persian): ${it.title}`, it.text && `Explanation (Persian): ${it.text}`,
+    p ? `Current prompt:\n${p.prompt}` : '', `The app's style line (added after your prompt):\n${imagegen.houseStyle()}`].filter(Boolean).join('\n')));
 }
 // «تایید ساخت تصویر»: a new picture from the (edited) prompt; a sign is redrawn from its official drawing as before.
 function generate(key, prompt) {

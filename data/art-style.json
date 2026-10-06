@@ -1,0 +1,4 @@
+{
+ "about": "The app's picture style: the style of its road-sign pictures (a clean flat vector illustration). Every prompt the console writes for a new picture (questions, signs, right of way, rules) ends with this style line, in place of any other style line. Change it here.",
+ "style": "Style: a clean flat vector illustration for a Danish driving-theory app, the same style as the app's road-sign pictures, NOT photorealistic and NOT a 3D render: simple clean shapes, flat even colours, crisp edges, only very soft shadows, uncluttered, with plenty of space around the important part; where there is no scenery, a plain very light grey background (#f2f3f5). Road signs, road markings and traffic lights always in their official Danish design (shape, colours, symbols); right-hand traffic, as in Denmark. No watermark, no logo, no brand names, no readable text except what is on the traffic signs, no recognisable real people."
+}
