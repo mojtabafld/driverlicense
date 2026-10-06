@@ -274,12 +274,17 @@ async function remove(qid, jobId) {
   await save();
 }
 
-// A scene description only (Claude), for the admin to edit before making a picture.
+// A scene description only (Claude), for the admin to edit before making a picture (the console), in the app's
+// picture style.
 async function draft(qid) {
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
-  return ownPrompt(q.id) || describe(q);
+  return withHouseStyle(ownPrompt(q.id) || await describe(q));
 }
+// The app's picture style (data/art-style.json: that of its road-sign pictures, a clean flat vector illustration).
+// A prompt written for the console ends with it: any other «Style:» line is taken out first.
+const houseStyle = () => JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'art-style.json'), 'utf8')).style;
+const withHouseStyle = text => `${String(text).replace(/(^|\s)Style\s*:[^\n]*/gi, '$1').trim()}\n${houseStyle()}`;
 
 // ---------- our own questions' pictures (data/original_*.json) ----------
 // The questions written new for the site (build.py puts their text in place of prove.dk's) each carry `img`, a scene
@@ -673,4 +678,4 @@ async function writeText(system, text, image) {
 }
 
 module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
-  guidePrompt, guidePut: GUIDE.put, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText };
+  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText };
