@@ -3,8 +3,10 @@
      pictures with prove.dk's, in four parts: the lessons' and exams' question pictures (prove.dk's original beside the
      made ones; choose which the app shows), the signs and right of way (the made picture, prove.dk's and the official
      drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
-     each part of «قوانین»). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/consolepics and
-     /api/imggenset. -->
+     each part of «قوانین»). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
+     (editable); «تایید ساخت تصویر» makes it, and it is shown on the main site only once chosen («در برنامه»). One made
+     picture is kept per item. Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     /api/guidegen, /api/consolepics and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -45,6 +47,12 @@ small{display:block;font-size:12px;margin-top:2px}
 .tab{font:inherit;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:7px 16px;background:var(--surface);color:var(--text);cursor:pointer}
 .tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .qtext{font-size:14px}
+.gen{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.gen textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;min-height:150px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--text);resize:vertical}
+.gen .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.gen .btn{padding:7px 14px;font-size:14px}
+.state{font-size:13px;color:var(--accent);font-weight:700}
+.fail{font-size:12.5px;color:var(--bad)}
 .qda{font-size:12.5px;direction:ltr;text-align:left}
 .login{max-width:360px;margin:12vh auto 0;display:flex;flex-direction:column;gap:10px}
 .err{color:var(--bad);min-height:1.5em;font-size:14px}
@@ -95,6 +103,21 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   const st = { tab: 'lessons', g: 0 };
   { const [t, g] = location.hash.slice(1).split('/'); if (TABS.some(x => x[0] === t)) { st.tab = t; st.g = +g || 0; } }
   let pollT;
+  // Prompts being written or edited, by item ('q:<qid>' or 'g:<key>'): { text } or { busy: true }; kept across redraws.
+  const drafts = {};
+  const genBox = (id, making, failed) => {
+    const d = drafts[id];
+    if (making) return `<div class="gen"><span class="state">در حال ساخت تصویر…</span></div>`;
+    return `<div class="gen">
+      ${failed ? `<span class="fail">ساخت تصویر قبلی ناموفق بود: ${esc(failed)}</span>` : ''}
+      ${!d ? `<div class="row"><button class="btn soft" data-draft="${esc(id)}">ساخت پرامپت با هوش مصنوعی</button></div>`
+        : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
+        : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
+          <div class="row"><button class="btn" data-go="${esc(id)}">تایید ساخت تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button>
+          <span class="muted" style="font-size:12.5px">تصویر تازه کنار بقیه می‌آید و فقط پس از انتخاب در سایت اصلی نشان داده می‌شود.</span></div>`}
+    </div>`;
+  };
+  let busyPoll = false;   // something is being made: the page looks again in a few seconds
   const pic = (src, on) => `<img loading="lazy" class="pic ${on ? 'on' : ''}" src="${esc(src)}" alt="">`;
   const none = t => `<div class="none muted">${t}</div>`;
   const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp">${groups.map((x, i) => `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)})</option>`).join('')}</select></label>`;
@@ -102,6 +125,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   async function view() {
     clearTimeout(pollT);
     history.replaceState(null, '', `#${st.tab}/${st.g}`);
+    busyPoll = false;
     let body;
     try { body = st.tab === 'signs' || st.tab === 'priority' ? await guideView() : await questionView(); }
     catch (e) { return login(e.status === 401 || e.status === 403 ? '' : e.message); }
@@ -123,41 +147,70 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       try { await api('POST', 'imggenset', { qid: +b.dataset.q, job: b.dataset.j || null }); toast('ذخیره شد'); } catch (e) { toast(e.message); }
       view();
     });
+    // A prompt from Claude, edited in its box, then the picture made from it.
+    $app.querySelectorAll('[data-draft]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.draft, [kind, ref] = [id.slice(0, 1), id.slice(2)];
+      drafts[id] = { busy: true }; view();
+      try { drafts[id] = { text: (kind === 'q' ? await api('POST', 'imggendraft', { qid: +ref }) : await api('POST', 'guidedraft', { key: ref })).prompt }; }
+      catch (e) { delete drafts[id]; toast(e.message); }
+      view();
+    });
+    $app.querySelectorAll('[data-dr]').forEach(t => t.oninput = () => { drafts[t.dataset.dr] = { text: t.value }; });
+    $app.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => { delete drafts[b.dataset.cancel]; view(); });
+    $app.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.go, [kind, ref] = [id.slice(0, 1), id.slice(2)], prompt = (drafts[id] || {}).text || '';
+      if (!prompt.trim()) return toast('پرامپت خالی است.');
+      b.disabled = true;
+      try {
+        if (kind === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
+        else await api('POST', 'guidegen', { key: ref, prompt });
+        delete drafts[id]; toast('ساخت تصویر شروع شد');
+      } catch (e) { toast(e.message); }
+      view();
+    });
+    if (busyPoll) pollT = setTimeout(function again() {
+      // Not while a prompt is being typed (a redraw would take the cursor away).
+      if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') pollT = setTimeout(again, 4000); else view();
+    }, 5000);
   }
 
   // Signs or right of way: each item's made picture, prove.dk's and (for a sign) the official drawing.
   async function guideView() {
     const d = await api('GET', 'guideref'), run = d.run, running = run && !run.done;
     const groups = d.groups.filter(x => x.kind === st.tab), g = groups[Math.min(st.g, groups.length - 1)];
-    if (running) pollT = setTimeout(view, 4000);
+    if (running || g.items.some(x => x.cand && !x.cand.done)) busyPoll = true;
     const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
     return `
-      <p class="muted" style="margin:0 0 12px">تصاویر prove.dk و طرح‌های رسمی (مالکیت عمومی، از Wikimedia Commons) در پایگاه داده‌ی خودمان ذخیره می‌شوند؛ سرور هر چه را هنوز ندارد خودش دریافت می‌کند. نسخه‌ی kore.mintcloud.info/app تصاویر prove.dk را نشان می‌دهد. برای تابلوهایی که طرح رسمی دارند، می‌توانید طرح رسمی را به‌جای تصویر ساخته‌شده در برنامه نشان دهید.</p>
+      <p class="muted" style="margin:0 0 12px">تصاویر prove.dk و طرح‌های رسمی (مالکیت عمومی، از Wikimedia Commons) در پایگاه داده‌ی خودمان ذخیره می‌شوند؛ سرور هر چه را هنوز ندارد خودش دریافت می‌کند. سایت پشتیبان (/app) تصاویر prove.dk را نشان می‌دهد؛ سایت اصلی تصویر AI یا (برای تابلوها) طرح رسمی را، هر کدام که «در برنامه» باشد.</p>
       <div class="card bar">
         <button class="btn" id="imp" ${running ? 'disabled' : ''}>دریافت تصاویر مرجع</button>
         <span class="muted">${running ? `در حال دریافت… ${faNum(run.n)} از ${faNum(run.total)}` : run ? `آخرین دریافت: ${when(run.at)} · ${faNum(run.n)} مورد${run.errors.length ? ` · ${faNum(run.errors.length)} خطا` : ''}${run.stopped ? ' (نیمه‌کاره ماند؛ دوباره بزنید)' : ''}` : 'هنوز دریافت نشده است.'}</span>
         ${select(groups, x => x.title)}
       </div>
       ${run && run.errors.length ? `<details class="card" style="margin-bottom:12px"><summary class="muted">خطاهای دریافت</summary><pre>${esc(run.errors.slice(0, 50).join('\n'))}</pre></details>` : ''}
-      <div class="grid">${g.items.map(x => `<div class="card item">
+      <div class="grid">${g.items.map(x => {
+        const c = x.cand, newPic = c && c.done && c.v, chooser = x.canOfficial || newPic;
+        const chip = (choice, on, label, off) => chooser ? `<button class="chip ${on ? 'on' : ''}" style="margin-top:6px" data-k="${esc(x.key)}" data-c="${choice}" ${on || off ? 'disabled' : ''}>${on ? '✓ ' : ''}${label}</button>` : '';
+        const cols = 2 + (x.canOfficial ? 1 : 0) + (newPic ? 1 : 0);
+        return `<div class="card item">
         <div><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
-        <div class="pics" style="grid-template-columns:repeat(${x.canOfficial ? 3 : 2},1fr)">
-          <div>${x.ai ? pic(ref('ai', x.key, x.ai), x.choice === 'ai') : none('ساخته نشده')}<small class="muted">تصویر ساخته‌شده (AI)</small></div>
-          <div>${x.prove ? pic(ref('prove', x.key, '')) : none(x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}<small class="muted">prove.dk</small></div>
-          ${x.canOfficial ? `<div>${x.official ? pic(ref('official', x.key, ''), x.choice === 'official') : none('دریافت نشده')}<small class="muted">طرح رسمی (Commons)</small></div>` : ''}
+        <div class="pics" style="grid-template-columns:repeat(${cols},1fr)">
+          <div>${x.ai ? pic(ref('ai', x.key, x.ai), x.choice === 'ai') : none('ساخته نشده')}<small class="muted">تصویر ساخته‌شده (AI)</small>${x.ai ? chip('ai', x.choice === 'ai', 'در برنامه') : ''}</div>
+          ${newPic ? `<div>${pic(ref('cand', x.key, c.v))}<small class="muted">تصویر تازه (AI)</small>${chip('cand', false, 'در برنامه')}</div>` : ''}
+          <div>${x.prove ? pic(ref('prove', x.key, '')) : none(x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}<small class="muted">prove.dk (سایت پشتیبان)</small></div>
+          ${x.canOfficial ? `<div>${x.official ? pic(ref('official', x.key, ''), x.choice === 'official') : none('دریافت نشده')}<small class="muted">طرح رسمی (Commons)</small>${chip('official', x.choice === 'official', 'در برنامه', !x.official)}</div>` : ''}
         </div>
-        ${x.canOfficial ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="chip ${x.choice === 'ai' ? 'on' : ''}" data-k="${esc(x.key)}" data-c="ai" ${x.choice === 'ai' ? 'disabled' : ''}>${x.choice === 'ai' ? '✓ ' : ''}تصویر ساخته‌شده در برنامه</button>
-          <button class="chip ${x.choice === 'official' ? 'on' : ''}" data-k="${esc(x.key)}" data-c="official" ${x.choice === 'official' || !x.official ? 'disabled' : ''}>${x.choice === 'official' ? '✓ ' : ''}طرح رسمی در برنامه</button></div>` : ''}
-      </div>`).join('')}</div>`;
+        ${genBox(`g:${x.key}`, c && !c.done ? c.state : null, c && c.done && !c.v ? c.error || 'failed' : null)}
+      </div>`; }).join('')}</div>`;
   }
 
   // Lessons or rules: each question's original picture (prove.dk) beside the ones made for it; the app shows the chosen one.
   async function questionView() {
     const d = await api('GET', `consolepics?kind=${st.tab}`);
     const g = d.groups[Math.min(st.g, d.groups.length - 1)];
+    if (g.items.some(x => x.making)) busyPoll = true;
     return `
-      <p class="muted" style="margin:0 0 12px">${st.tab === 'rules' ? 'تصاویر سؤال‌های هر بخش «قوانین» (همان سؤال‌هایی که تمرین آن بخش از آن‌ها ساخته می‌شود).' : 'تصاویر سؤال‌های هر درس (آزمون).'} تصویر اصلی همان تصویر prove.dk است؛ اگر برای سؤالی تصویر تازه ساخته شده باشد، کنار آن می‌آید و می‌توانید انتخاب کنید برنامه کدام را نشان دهد. نسخه‌ی /app همیشه تصویر اصلی را نشان می‌دهد.</p>
+      <p class="muted" style="margin:0 0 12px">${st.tab === 'rules' ? 'تصاویر سؤال‌های هر بخش «قوانین» (همان سؤال‌هایی که تمرین آن بخش از آن‌ها ساخته می‌شود).' : 'تصاویر سؤال‌های هر درس (آزمون).'} تصویر اصلی همان تصویر prove.dk است؛ اگر برای سؤالی تصویر با هوش مصنوعی ساخته شده باشد، کنار آن می‌آید و با «در برنامه» انتخاب می‌کنید سایت اصلی کدام را نشان دهد. سایت پشتیبان (/app) همیشه تصویر prove.dk را نشان می‌دهد. برای هر سؤال فقط یک تصویر AI نگه داشته می‌شود.</p>
       <div class="card bar">${select(d.groups, x => x.title)}</div>
       <div class="grid">${g.items.map(x => {
         const cols = 1 + x.made.length;
@@ -167,9 +220,10 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
         <div class="pics" style="grid-template-columns:repeat(${Math.min(cols, 3)},1fr)">
           <div>${pic(`/img/q${x.id}.jpg?orig=1`, !x.active && x.made.length > 0)}<small class="muted">prove.dk (اصلی)</small>
             ${x.made.length ? `<button class="chip ${!x.active ? 'on' : ''}" style="margin-top:6px" data-q="${x.id}" data-j="" ${!x.active ? 'disabled' : ''}>${!x.active ? '✓ ' : ''}در برنامه</button>` : ''}</div>
-          ${x.made.map((j, k) => `<div>${pic(`/img/gen/${x.id}/${encodeURIComponent(j.id)}`, x.active === j.id)}<small class="muted">ساخته‌شده (AI)${x.made.length > 1 ? ` ${faNum(k + 1)}` : ''}</small>
+          ${x.made.map((j, k) => `<div>${pic(`/img/gen/${x.id}/${encodeURIComponent(j.id)}`, x.active === j.id)}<small class="muted">ساخته‌شده (AI)${x.made.length > 1 ? (k === x.made.length - 1 ? ' · تازه' : '') : ''}</small>
             <button class="chip ${x.active === j.id ? 'on' : ''}" style="margin-top:6px" data-q="${x.id}" data-j="${esc(j.id)}" ${x.active === j.id ? 'disabled' : ''}>${x.active === j.id ? '✓ ' : ''}در برنامه</button></div>`).join('')}
         </div>
+        ${genBox(`q:${x.id}`, x.making, x.failed)}
       </div>`; }).join('')}</div>`;
   }
 

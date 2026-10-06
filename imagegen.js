@@ -58,6 +58,8 @@ function init(s, siteDir) {
   Q = new Map(BANK.questions.map(q => [q.id, q]));
   if (Object.values(images()).reduce((n, x) => n + unstick(x), 0)) save().catch(() => {});
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
+  pruneAll().catch(e => console.error('prune pictures', e.message));
+  if (Object.values(store.meta.oneOff || {}).some(j => !j.done)) schedule();
   // Nothing is made on its own any more (the image model's credit is limited): only the guide pictures ordered in
   // data/art-orders.json. The intro, «آموزش» cards, profile pictures and the questions' own pictures keep what was made.
   fixIntro().catch(e => console.error('intro pictures', e.message))
@@ -105,7 +107,8 @@ async function describe(q) {
 
 // Starts ONE new picture for question `qid` with the chosen model ('flare' | 'sunburst'). Returns the job.
 // `prompt`: a scene description written or edited by the admin; without it Claude writes one.
-async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '') {
+// `pick`: made from the console: the new picture waits beside the others until the admin chooses it (setActive).
+async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '', pick = false) {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
@@ -115,7 +118,7 @@ async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '') {
   // One picture at a time per question, so a double click or a second tab never makes two.
   if (item.jobs.some(j => !j.done)) throw Object.assign(new Error('برای این سؤال یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
   prompt = String(prompt || '').trim().slice(0, 20000);
-  const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}), ...(seed ? { seed } : {}) };
+  const job = { id: Date.now().toString(36), model, at: Date.now(), by, state: prompt ? 'queued' : 'describing', done: false, ...(prompt ? { edited: true } : {}), ...(seed ? { seed } : {}), ...(pick ? { pick: true } : {}) };
   item.jobs.push(job); await save();
   try {
     job.prompt = prompt || ownPrompt(q.id) || await describe(q);
@@ -148,7 +151,8 @@ async function poll() {
         job.blob = `qimg-${qid}-${job.id}`;
         await store.saveBlob(job.blob, mime, buf);
         Object.assign(job, { state: 'done', done: true, credits: d.creditsConsumed, size: buf.length });
-        item.active = job.id; item.v = job.id;          // the new picture is shown right away; the original can be restored
+        // The new picture is shown right away (the original can be restored), unless the admin is to choose it first.
+        if (!job.pick) { item.active = job.id; item.v = job.id; }
         if (job.seed) setImmediate(() => checkSeeded(qid, job));
       } else if (d.state === 'fail') {
         Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
@@ -164,6 +168,7 @@ async function poll() {
   if (await pollLearn().catch(() => true)) pending = true;
   if (await AVATAR.poll().catch(() => true)) pending = true;
   if (await GUIDE.poll().catch(() => true)) pending = true;
+  if (await pollOneOff().catch(() => true)) pending = true;
   if (pending) schedule();
 }
 
@@ -173,7 +178,26 @@ async function setActive(qid, jobId) {
   if (!item) throw Object.assign(new Error('not found'), { status: 404 });
   if (jobId && !item.jobs.some(j => j.id === jobId && j.blob)) throw Object.assign(new Error('not found'), { status: 404 });
   item.active = jobId || null; item.v = (jobId || 'o') + '.' + Date.now().toString(36);
+  await prune(item);
+}
+// One made picture per question is enough: the shown one, or (the original shown) the newest; the other finished
+// jobs and their pictures are deleted. A picture still being made is left alone.
+async function prune(item) {
+  const made = item.jobs.filter(j => j.blob).sort((a, b) => b.at - a.at);
+  const keep = item.active && made.some(j => j.id === item.active) ? item.active : made[0] && made[0].id;
+  for (const j of item.jobs.filter(j => j.done && j.id !== keep)) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
+  item.jobs = item.jobs.filter(j => !j.done || j.id === keep);
   await save();
+}
+// Once: every question keeps only its newest made picture (shown if a made one was shown).
+async function pruneAll() {
+  if (store.meta.imagesPruned) return;
+  for (const item of Object.values(images())) {
+    const newest = item.jobs.filter(j => j.blob).sort((a, b) => b.at - a.at)[0];
+    if (item.active && newest && item.active !== newest.id) { item.active = newest.id; item.v = `${newest.id}.${Date.now().toString(36)}`; }
+    await prune(item);
+  }
+  store.meta.imagesPruned = Date.now(); await store.saveMeta('imagesPruned', store.meta.imagesPruned);
 }
 
 // Recently served pictures stay in memory (a few MB each), so the database is not read on every request.
@@ -535,7 +559,16 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
   const versions = () => Object.fromEntries(Object.entries(now()).filter(([, j]) => j.blob).map(([n, j]) => [n, j.v]));
   const blobOf = async n => { const j = now()[n]; return j && j.blob ? blob(j.blob) : null; };
-  return { start: startSet, poll: pollSet, versions, blob: blobOf, count: list.length };
+  // Puts picture `b` ({ mime, data }) in place of picture `n` (e.g. one made on request and chosen in the console); its
+  // prompt's revision is kept, so it is not made again.
+  async function put(n, b) {
+    const it = meta().items, x = it[n] || {}, key = `${prefix}-${set}-${n}`, rev = (list.find(([k]) => k === n) || [])[1];
+    await store.saveBlob(key, b.mime, b.data); cache.delete(key);
+    it[n] = { ...x, at: Date.now(), done: true, state: 'done', blob: key, v: Date.now().toString(36), size: b.data.length, rev: (rev && rev.rev) || x.rev, error: '' };
+    delete it[n].taskId;
+    await save();
+  }
+  return { start: startSet, poll: pollSet, versions, blob: blobOf, put, count: list.length };
 }
 // Only the cards ordered again in data/art-orders.json («learn») are made.
 const LEARN_REDO = learnOrders();
@@ -572,4 +605,72 @@ const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
 const avatarVersions = AVATAR.versions, avatarBlob = AVATAR.blob, avatarCount = AVATAR.count;
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob };
+// A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
+const GUIDE_PROMPTS = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8'));
+const guidePrompt = key => GUIDE_PROMPTS[key] || null;
+
+// ---------- single pictures made on request (the console's «ساخت تصویر» for a sign or a right-of-way item) ----------
+// store.meta.oneOff = { [id]: { at, prompt, state, done, taskId, blob, error } }; blob `oneoff-<id>`. `ref`: a picture
+// file the model redraws (image to image), e.g. a sign's official drawing.
+const oneOffs = () => (store.meta.oneOff = store.meta.oneOff || {});
+const saveOneOff = () => store.saveMeta('oneOff', oneOffs());
+async function startOneOff(id, { prompt, aspect = '4:3', ref = '' }) {
+  if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
+  const old = oneOffs()[id];
+  if (old && !old.done) throw Object.assign(new Error('یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
+  if (old && old.blob) { await store.deleteBlob(old.blob).catch(() => {}); cache.delete(old.blob); }
+  const job = oneOffs()[id] = { at: Date.now(), prompt, state: 'queued', done: false };
+  try {
+    const input = { prompt, aspect_ratio: aspect, resolution: '2K' };
+    if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(ref) }, `oneoff-${id}`)];
+    const d = await kie('POST', '/jobs/createTask', { model: ref ? EDIT_MODELS.sunburst : MODELS.sunburst, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
+    Object.assign(job, { taskId: d.taskId, state: 'generating' });
+    schedule();
+  } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); }
+  await saveOneOff();
+  return job;
+}
+async function pollOneOff() {
+  let pending = false;
+  for (const [id, job] of Object.entries(oneOffs())) {
+    if (job.done || !job.taskId) continue;
+    try {
+      const d = await kie('GET', `/jobs/recordInfo?taskId=${encodeURIComponent(job.taskId)}`);
+      if (d.state === 'success') {
+        const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
+        if (!url) throw new Error('no result url');
+        const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
+        const sm = shrink(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
+        job.blob = `oneoff-${id}`;
+        await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
+        Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36) });
+      } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
+      else pending = true;
+      if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
+    } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
+    await saveOneOff();
+  }
+  return pending;
+}
+const oneOff = id => oneOffs()[id] || null;
+const oneOffBlob = async id => { const j = oneOffs()[id]; return j && j.blob ? blob(j.blob) : null; };
+async function dropOneOff(id) {
+  const j = oneOffs()[id];
+  if (!j) return;
+  if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
+  delete oneOffs()[id]; await saveOneOff();
+}
+
+// A short text from Claude (e.g. a picture's prompt written for the console), with an optional picture to look at.
+async function writeText(system, text, image) {
+  if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
+  claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
+  const content = [...(image ? [{ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.data.toString('base64') } }] : []), { type: 'text', text }];
+  const r = await claude.messages.create({ model: CLAUDE, max_tokens: 1500, system, messages: [{ role: 'user', content }] });
+  const out = r.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+  if (!out) throw new Error('empty answer');
+  return out;
+}
+
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
+  guidePrompt, guidePut: GUIDE.put, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText };

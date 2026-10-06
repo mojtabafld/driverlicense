@@ -302,7 +302,7 @@ function serveStatic(req, res) {
   }
   if (isProtected(p) && !sessionUser(req)) { res.writeHead(401, { 'Cache-Control': 'no-store' }); return res.end('Sign in first'); }
   // The admin's picture comparison (guideref.js): the made picture, prove.dk's copy and the official drawing, admin only.
-  const rm = /^\/img\/guideref\/(ai|prove|official)\/([a-z0-9-]{3,40})$/.exec(p);
+  const rm = /^\/img\/guideref\/(ai|prove|official|cand)\/([a-z0-9-]{3,40})$/.exec(p);
   if (rm) {
     const sess = sessionUser(req);
     if (!sess || !isAdmin(sess.user)) { res.writeHead(403); return res.end(); }
@@ -510,7 +510,8 @@ async function api(req, res, route) {
     try {
       if (req.method === 'GET' && route === 'imggen') return send(res, 200, imagegen.list());
       const b = await readBody(req);
-      if (req.method === 'POST' && route === 'imggenstart') return send(res, 200, { job: await imagegen.start(+b.qid, b.model, user.username, b.prompt) });
+      // `pick` (the console): the new picture is only shown once the admin chooses it.
+      if (req.method === 'POST' && route === 'imggenstart') return send(res, 200, { job: await imagegen.start(+b.qid, b.model, user.username, b.prompt, '', !!b.pick) });
       if (req.method === 'POST' && route === 'imggenedit') return send(res, 200, { job: await imagegen.edit(+b.qid, b.job, b.text, b.model, user.username) });
       if (req.method === 'POST' && route === 'imggendel') { await imagegen.remove(+b.qid, b.job); return send(res, 200, imagegen.list()); }
       if (req.method === 'POST' && route === 'imggendraft') return send(res, 200, { prompt: await imagegen.draft(+b.qid) });
@@ -538,12 +539,16 @@ async function api(req, res, route) {
   }
   // Comparing the teaching pictures with prove.dk's (admin): the list, copying the reference pictures in, and choosing
   // the official drawing (or the made picture) for a sign.
-  if (['guideref', 'guiderefimport', 'guiderefchoose'].includes(route)) {
+  // guidedraft { key } → { prompt } (Claude), guidegen { key, prompt }: a new picture for an item, to choose with
+  // guiderefchoose { key, choice: 'cand' }.
+  if (['guideref', 'guiderefimport', 'guiderefchoose', 'guidedraft', 'guidegen'].includes(route)) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     try {
       if (req.method === 'GET' && route === 'guideref') return send(res, 200, guideref.list());
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
+      if (req.method === 'POST' && route === 'guidedraft') { const b = await readBody(req); return send(res, 200, { prompt: await guideref.draft(String(b.key || '')) }); }
+      if (req.method === 'POST' && route === 'guidegen') { const b = await readBody(req); return send(res, 200, { job: await guideref.generate(String(b.key || ''), b.prompt) }); }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
