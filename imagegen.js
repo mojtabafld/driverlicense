@@ -20,6 +20,10 @@ const MODELS = { sunburst: 'gpt-image-2-5-sunburst-text-to-image', flare: 'gpt-i
 const EDIT_MODELS = { flare: 'gpt-image-2-5-flare-image-to-image', sunburst: 'gpt-image-2-5-sunburst-image-to-image' };
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
 const CLAUDE = process.env.LESSON_MODEL || 'claude-opus-5-5';
+// The Claude model that writes the console's prompts: the one set in the server's environment (DigitalOcean: Settings →
+// web → Environment Variables), under the first of these names that is set; else the lessons' model.
+const PROMPT_MODEL_VARS = ['PROMPT_MODEL', 'CLAUDE_MODEL', 'ANTHROPIC_MODEL', 'LESSON_MODEL'];
+const promptModel = () => { const k = PROMPT_MODEL_VARS.find(n => (process.env[n] || '').trim()); return { model: k ? process.env[k].trim() : CLAUDE, from: k || '' }; };
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://kore.mintcloud.info').replace(/\/$/, '');
 
 const DESCRIBE = `You write prompts for a text-to-image model that draws NEW pictures for a Danish driving-theory practice site (category B).
@@ -716,11 +720,11 @@ async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
   const content = [...(image ? [{ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.data.toString('base64') } }] : []), { type: 'text', text }];
-  const r = await claude.messages.create({ model: CLAUDE, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
+  const r = await claude.messages.create({ model: promptModel().model, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
   const out = r.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
   if (!out) throw new Error('empty answer');
   return out;
 }
 
 module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
-  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText };
+  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, promptModel };
