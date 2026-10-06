@@ -38,11 +38,10 @@ function pagerResponder(dx: Animated.Value, now: PagerNow) {
       const w = now.width;
       const dir = g.dx < -w / 3 || g.vx < -0.5 ? 1 : g.dx > w / 3 || g.vx > 0.5 ? -1 : 0;
       const to = now.i + dir;
-      // Past the ends: the page glides back first and only then `edge` runs (its question opening over a page in motion
-      // looked like the page jumping).
+      // Past the ends: `edge` runs at once (e.g. the exam's question) while the page glides back.
       if (dir && (to < 0 || to >= now.n) && now.edge) {
-        const edge = now.edge;
-        Animated.timing(dx, { toValue: 0, duration: 170, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(() => edge(dir as 1 | -1));
+        Animated.timing(dx, { toValue: 0, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+        now.edge(dir as 1 | -1);
         return;
       }
       if (!dir || to < 0 || to >= now.n) return settle();
