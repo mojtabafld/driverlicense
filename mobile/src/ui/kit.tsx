@@ -47,18 +47,18 @@ export function usePageMotion(motion: Motion) {
     if (!own) { v.setValue(1); return; }
     setFrom(back ? -1 : 1);
     v.setValue(0);
-    Animated.timing(v, { toValue: 1, duration: motion === 'sheet' ? 320 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    Animated.timing(v, { toValue: 1, duration: motion === 'sheet' ? 320 : motion === 'push' ? 200 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
   }, [v, own, motion]));
   // Play the way out, then go (`then`, e.g. router.back()); on phones the native stack moves the page itself.
   const leave = useCallback((then: () => void) => {
     goingBack = true;
     if (Platform.OS !== 'web' || motion === 'tab') { then(); return; }
     setFrom(1);
-    Animated.timing(v, { toValue: 0, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(() => then());
+    Animated.timing(v, { toValue: 0, duration: motion === 'push' ? 140 : 200, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => then());
   }, [v, motion]);
   // Right to left: a new page comes in from the left (and goes back out there), as Persian reads.
   const shift = motion === 'sheet' ? { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [70, 0] }) }
-    : motion === 'push' ? { translateX: v.interpolate({ inputRange: [0, 1], outputRange: [-36 * from, 0] }) }
+    : motion === 'push' ? { translateX: v.interpolate({ inputRange: [0, 1], outputRange: [-14 * from, 0] }) }   // a light, short glide
     : { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) };
   const style = { flex: 1, opacity: motion === 'sheet' ? v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) : v, transform: [shift] };
   return { style, leave };

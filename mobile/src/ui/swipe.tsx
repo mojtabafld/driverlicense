@@ -51,6 +51,8 @@ function pagerResponder(dx: Animated.Value, now: PagerNow) {
 
 type BackNow = { width: number; back: () => void };
 export const swipeWebStyle = WEB;
+// The back swipe's look: the lean and a slight fade with it.
+export const backLean = (dx: Animated.Value) => ({ opacity: dx.interpolate({ inputRange: [-72, 0], outputRange: [0.75, 1] }), transform: [{ translateX: dx }] });
 export function useSwipeBack(back: () => void) {
   const { width } = useWindowDimensions();
   const [dx] = useState(() => new Animated.Value(0));
@@ -60,20 +62,16 @@ export function useSwipeBack(back: () => void) {
   return { dx, handlers: pan.panHandlers };
 }
 function backResponder(dx: Animated.Value, now: BackNow) {
-  const settle = () => Animated.spring(dx, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+  // Light and minimal: the page only leans a little with the finger (a quarter of the drag, at most 72 px) and fades a
+  // touch; past a third of the width or on a flick it goes back at once (the page's own short way out plays).
+  const settle = () => Animated.timing(dx, { toValue: 0, duration: 160, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
   const leftwards = (e: unknown, g: { dx: number; dy: number }) => g.dx < 0 && sideways(e, g);
   return PanResponder.create({
     onMoveShouldSetPanResponder: leftwards,
     onMoveShouldSetPanResponderCapture: leftwards,
-    onPanResponderMove: (_, g) => dx.setValue(Math.min(0, g.dx)),
+    onPanResponderMove: (_, g) => dx.setValue(Math.max(-72, Math.min(0, g.dx * 0.25))),
     onPanResponderRelease: (_, g) => {
-      if (g.dx < -now.width / 3 || g.vx < -0.5) {
-        tap();
-        Animated.timing(dx, { toValue: -now.width, duration: 180, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => {
-          now.back();
-          dx.setValue(0);
-        });
-      } else settle();
+      if (g.dx < -now.width / 3 || g.vx < -0.5) { tap(); now.back(); setTimeout(() => dx.setValue(0), 300); } else settle();
     },
     onPanResponderTerminate: settle,
   });
@@ -86,12 +84,12 @@ export function Pager({ i, n, go, style, children }: { i: number; n: number; go:
 }
 export function SwipeBack({ back, style, children }: { back: () => void; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
   const p = useSwipeBack(back);
-  return <Animated.View {...p.handlers} style={[{ flex: 1 }, WEB, style, { transform: [{ translateX: p.dx }] }]}>{children}</Animated.View>;
+  return <Animated.View {...p.handlers} style={[{ flex: 1 }, WEB, style, backLean(p.dx)]}>{children}</Animated.View>;
 }
 // One or the other on the same page: with `pager` the questions turn, without it a drag from right to left goes back.
 export function SideSwipe({ pager, back, children }: { pager?: { i: number; n: number; go: (k: number) => void }; back: () => void; children: React.ReactNode }) {
   const p = usePager(pager?.i ?? 0, pager?.n ?? 0, pager?.go ?? noop), b = useSwipeBack(back);
   const on = pager ? p : b;
-  return <Animated.View {...on.handlers} style={[{ flex: 1 }, WEB, { transform: [{ translateX: on.dx }] }]}>{children}</Animated.View>;
+  return <Animated.View {...on.handlers} style={[{ flex: 1 }, WEB, pager ? { transform: [{ translateX: p.dx }] } : backLean(b.dx)]}>{children}</Animated.View>;
 }
 const noop = () => {};
