@@ -548,7 +548,7 @@ async function api(req, res, route) {
   if (['guideref', 'guiderefimport', 'guiderefchoose', 'guidedraft', 'guidegen'].includes(route)) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     try {
-      if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), models: imagegen.models() });
+      if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guidedraft') { const b = await readBody(req); return send(res, 200, { prompt: await guideref.draft(String(b.key || '')) }); }
@@ -558,7 +558,17 @@ async function api(req, res, route) {
   // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
   if (req.method === 'GET' && route === 'consolepics') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models() });
+    return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
+  }
+  // The console's marks: an item ('q:<qid>' or 'g:<key>') flagged to be made again later, with an optional note.
+  if (req.method === 'POST' && route === 'consolemark') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const b = await readBody(req), id = String(b.id || '');
+    if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
+    const marks = store.meta.consoleMarks = store.meta.consoleMarks || {};
+    if (b.on) marks[id] = { at: Date.now(), by: user.username, note: clip(b.note, 300) }; else delete marks[id];
+    await store.saveMeta('consoleMarks', marks);
+    return send(res, 200, { marks });
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
