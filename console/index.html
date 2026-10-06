@@ -6,8 +6,9 @@
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
      (editable); «تایید ساخت تصویر» makes it, and it replaces the item's AI picture (one per item). An item can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked
-     items of a part. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
-     /api/guidegen, /api/consolepics, /api/consolemark and /api/imggen*. -->
+     items of a part, and the «⚑ علامت‌دارها» part all of them in full (the question and its answers, or the item's
+     text, its pictures and the note). Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     /api/guidegen, /api/consolepics, /api/consolemark(ed) and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -68,6 +69,20 @@ small{display:block;font-size:12px;margin-top:2px}
 .mk .sp{flex:1}
 .chip.flag{color:#b8670f;border-color:rgba(232,145,45,.5)}
 .only{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}
+.tab.tabm:not(.on){color:#b8670f;border-color:rgba(232,145,45,.5)}
+.mlist{display:flex;flex-direction:column;gap:14px}
+.mhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
+.mhead .sp{flex:1}
+.kind{font-weight:700;font-size:12px;border-radius:99px;padding:1px 10px;background:var(--surface2)}
+.mbody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;align-items:start}
+@media (max-width:820px){.mbody{grid-template-columns:1fr}}
+.minfo,.mpics{display:flex;flex-direction:column;gap:8px}
+.sts{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.sts li{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:8px;background:var(--surface2)}
+.sts li .mark{font-weight:800;width:16px;flex:none}
+.sts li.ok .mark{color:var(--ok)}
+.sts li.no .mark{color:var(--bad)}
+.gtext{font-size:13.5px;line-height:1.8}
 .act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .act .btn{padding:7px 14px;font-size:14px}
 .pw{position:relative}
@@ -126,7 +141,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   }
 
   // Four parts; the open one and its group are kept in the address (#signs/3), so a reload stays there.
-  const TABS = [['lessons', 'درس‌ها و آزمون‌ها'], ['signs', 'علائم'], ['priority', 'حق تقدم'], ['rules', 'قوانین']];
+  const TABS = [['lessons', 'درس‌ها و آزمون‌ها'], ['signs', 'علائم'], ['priority', 'حق تقدم'], ['rules', 'قوانین'], ['marked', '⚑ علامت‌دارها']];
   // `only`: show only the items marked to be made again (from all groups of the part).
   const st = { tab: 'lessons', g: 0, data: null, only: false };
   { const [t, g] = location.hash.slice(1).split('/'); if (TABS.some(x => x[0] === t)) { st.tab = t; st.g = +g || 0; } }
@@ -223,7 +238,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   async function view() {
     clearTimeout(pollT);
     history.replaceState(null, '', `#${st.tab}/${st.g}`);
-    try { st.data = isGuide() ? await api('GET', 'guideref') : await api('GET', `consolepics?kind=${st.tab}`); }
+    try { st.data = st.tab === 'marked' ? await api('GET', 'consolemarked') : isGuide() ? await api('GET', 'guideref') : await api('GET', `consolepics?kind=${st.tab}`); }
     catch (e) { return login(e.status === 401 || e.status === 403 ? '' : e.message); }
     render();
   }
@@ -234,9 +249,9 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     const n = Object.keys(pending).length;
     $app.innerHTML = `
       <div class="head"><h1>مقایسه‌ی تصاویر با prove.dk</h1><span class="sp"></span><button class="btn soft" id="out">خروج</button></div>
-      <div class="tabs">${TABS.map(([k, t]) => `<button class="tab ${k === st.tab ? 'on' : ''}" data-tab="${k}">${t}</button>`).join('')}</div>
+      <div class="tabs">${TABS.map(([k, t]) => `<button class="tab ${k === st.tab ? 'on' : ''} ${k === 'marked' ? 'tabm' : ''}" data-tab="${k}">${t}${k === 'marked' ? ` (${faNum(Object.keys(marks()).length)})` : ''}</button>`).join('')}</div>
       ${st.data.models ? `<p class="muted" style="margin:-4px 0 10px;font-size:12.5px">مدل پرامپت‌نویسی: <b dir="ltr">${esc(st.data.models.prompt)}</b> · مدل ساخت تصویر: <b dir="ltr">${esc(st.data.models.image)}</b> (قابل تعریف در تنظیمات سرور: IMAGE_PROMPT_MODEL و IMAGE_MODEL)</p>` : ''}
-      ${isGuide() ? guideBody() : questionBody()}
+      ${st.tab === 'marked' ? markedBody() : isGuide() ? guideBody() : questionBody()}
       <div class="apply ${n ? 'show' : ''}"><span>${faNum(n)} تغییر انتخاب شده (همه با هم)</span><span class="sp"></span>
         <button class="btn soft" id="undo">لغو</button><button class="btn" id="apply">اعمال همه در سایت اصلی</button></div>`;
     wire();
@@ -303,6 +318,51 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       </div>`; }).join('')}</div>`;
   }
 
+  // Every marked item of all four parts, newest mark first, in full: where it is, the question with its answers (or the
+  // sign's or situation's text), its pictures, the note, and the same choosing and making as in the parts.
+  function markedBody() {
+    const items = st.data.items || [];
+    if (items.some(x => x.making || (x.cand && !x.cand.done))) busyPoll = true;
+    const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
+    const plain = t => esc(String(t || '').replace(/\*\*/g, ''));
+    return `
+      <p class="muted" style="margin:0 0 12px">همه‌ی مواردی که برای ساخت دوباره علامت خورده‌اند، از هر چهار بخش، تازه‌ترین علامت اول.</p>
+      ${items.length ? '' : '<p class="muted">موردی علامت نخورده است.</p>'}
+      <div class="mlist">${items.map(x => {
+        const id = x.id, m = x.mark, isQ = id[0] === 'q';
+        const kind = isQ ? 'سؤال' : x.kind === 'signs' ? 'علائم' : 'حق تقدم';
+        const where = isQ ? [...x.lessons, ...x.rules.map(r => `قوانین: ${r}`)].join(' · ') : x.group;
+        let pics, info;
+        if (isQ) {
+          const now = x.active || '', made = x.made.slice().sort((a, b) => a.at - b.at);
+          pics = `<div class="pics" style="grid-template-columns:repeat(${1 + Math.max(1, made.length)},1fr)">
+            ${tile(id, '', now, `/img/q${x.qid}.jpg?orig=1`, 'prove.dk', '')}
+            ${made.length ? made.map((j, i) => tile(id, j.id, now, `/img/gen/${x.qid}/${encodeURIComponent(j.id)}`, made.length > 1 && i === made.length - 1 ? 'تصویر تازه‌ی AI' : 'تصویر AI', '')).join('') : tile(id, '-', now, '', 'تصویر AI', 'هنوز ساخته نشده')}</div>`;
+          info = `<div class="qtext"><b>${esc(x.text)}</b></div>
+            ${x.da && x.da !== x.text ? `<div class="qda muted">${esc(x.da)}</div>` : ''}
+            <ul class="sts">${x.statements.map(t => `<li class="${t.ok ? 'ok' : 'no'}"><span class="mark">${t.ok ? '✓' : '✗'}</span><span>${esc(t.fa)}<br><span class="qda muted">${esc(t.da)}</span></span></li>`).join('')}</ul>
+            ${x.topic ? `<small class="muted">موضوع: ${esc(x.topic)}</small>` : ''}`;
+        } else {
+          const c = x.cand, newPic = c && c.done && c.v, now = x.choice, cols = 2 + (x.canOfficial ? 1 : 0) + (newPic ? 1 : 0);
+          pics = `<div class="pics" style="grid-template-columns:repeat(${cols},1fr)">
+            ${tile(id, 'ai', now, x.ai ? ref('ai', x.key, x.ai) : '', 'تصویر AI', 'ساخته نشده')}
+            ${newPic ? tile(id, 'cand', now, ref('cand', x.key, c.v), 'تصویر تازه‌ی AI', '') : ''}
+            ${tile(id, 'prove', now, x.prove ? ref('prove', x.key, '') : '', 'prove.dk', x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}
+            ${x.canOfficial ? tile(id, 'official', now, x.official ? ref('official', x.key, '') : '', 'طرح رسمی', 'دریافت نشده') : ''}</div>`;
+          info = `<div class="qtext"><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
+            ${x.da ? `<div class="qda muted">${esc(x.da)}</div>` : ''}
+            ${x.text ? `<div class="gtext">${plain(x.text)}</div>` : ''}`;
+        }
+        const making = isQ ? x.making : x.cand && !x.cand.done ? x.cand.state : null;
+        const failed = isQ ? x.failed : x.cand && x.cand.done && !x.cand.v ? x.cand.error || 'failed' : null;
+        return `<div class="card item marked mrow">
+          <div class="mhead"><span class="kind">${kind}</span><span class="muted">${esc(where)}</span><span class="sp"></span><small class="muted">علامت: ${when(m.at)}${m.by ? ` · ${esc(m.by)}` : ''}</small></div>
+          ${markRow(id)}
+          <div class="mbody"><div class="minfo">${info}</div><div class="mpics">${pics}${actRow(id)}</div></div>
+          ${genBox(id, making, failed)}
+        </div>`; }).join('')}</div>`;
+  }
+
   function wire() {
     document.getElementById('out').onclick = async () => { await api('POST', 'logout').catch(() => {}); login(); };
     $app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.tab; st.g = 0; view(); });
@@ -314,7 +374,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       const id = b.dataset.mark, on = b.dataset.on === '1';
       let note = '';
       if (on) { const cur = (marks()[id] || {}).note || ''; const t = prompt('یادداشت (اختیاری): چه چیزی باید در ساخت دوباره درست شود؟', cur); if (t === null) return; note = t; }
-      try { st.data.marks = (await api('POST', 'consolemark', { id, on, note })).marks; render(); toast(on ? 'علامت خورد' : 'علامت برداشته شد'); } catch (e) { toast(e.message); }
+      try { st.data.marks = (await api('POST', 'consolemark', { id, on, note })).marks; toast(on ? 'علامت خورد' : 'علامت برداشته شد'); if (st.tab === 'marked') view(); else render(); } catch (e) { toast(e.message); }
     });
     const imp = document.getElementById('imp');
     if (imp) imp.onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } view(); };

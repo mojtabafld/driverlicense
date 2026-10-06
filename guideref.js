@@ -211,4 +211,13 @@ async function blob(key) {
   return key.startsWith('s-') ? whitened(key) : imagegen.guideBlob(key);
 }
 
-module.exports = { init, startImport, list, choose, draft, generate, refBlob, versions, proveVersions, blob };
+// One sign or right-of-way item in full for the console's marked list: its row as in list(), its group and its text.
+function item(key) {
+  for (const g of list().groups) {
+    const r = g.items.find(x => x.key === key);
+    if (r) { const t = itemOf(key) || {}; return { ...r, kind: g.kind, group: g.title, text: t.text || '', da: t.da || '' }; }
+  }
+  return null;
+}
+
+module.exports = { init, startImport, list, item, choose, draft, generate, refBlob, versions, proveVersions, blob };

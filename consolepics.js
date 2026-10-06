@@ -41,4 +41,18 @@ function list(kind, images = {}) {
   return { groups };
 }
 
-module.exports = { init, list };
+// One question in full for the console's marked list: its text, its statements with the right answers, where it is in
+// the app (lessons, parts of «قوانین») and its pictures as in list().
+function detail(id, images = {}) {
+  const q = Q.get(+id);
+  if (!q) return null;
+  const x = images[q.id] || { jobs: [] }, last = x.jobs[x.jobs.length - 1];
+  const lessons = BANK.tests.map((t, i) => ({ t, i })).filter(({ t }) => t.qs.includes(q.id)).map(({ t, i }) => `درس ${faNum((t.title.match(/\d+/) || [String(i + 1)])[0])} · ${faNum(t.qs.indexOf(q.id) + 1)}`);
+  return { qid: q.id, text: q.sfa || q.sda || '', da: q.sda || '', topic: (BANK.topics[q.c] || {}).fa || '',
+    statements: q.st.map(s => ({ fa: s.fa || '', da: s.da || '', ok: !!s.ok })),
+    lessons, rules: RULES.filter(r => r.topics.includes(q.c)).map(r => r.title),
+    made: x.jobs.filter(j => j.blob).map(j => ({ id: j.id, at: j.at })), active: x.active || null,
+    making: last && !last.done ? last.state : null, failed: last && last.done && !last.blob ? last.error || 'failed' : null };
+}
+
+module.exports = { init, list, detail };

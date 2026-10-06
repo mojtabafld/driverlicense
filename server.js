@@ -560,6 +560,16 @@ async function api(req, res, route) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {} });
   }
+  // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
+  if (req.method === 'GET' && route === 'consolemarked') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const marks = store.meta.consoleMarks || {}, items = [];
+    for (const [id, m] of Object.entries(marks).sort((a, b) => b[1].at - a[1].at)) {
+      const d = id[0] === 'q' ? consolepics.detail(id.slice(2), store.meta.images || {}) : guideref.item(id.slice(2));
+      if (d) items.push({ ...d, id, mark: m });
+    }
+    return send(res, 200, { items, marks, models: imagegen.models() });
+  }
   // The console's marks: an item ('q:<qid>' or 'g:<key>') flagged to be made again later, with an optional note.
   if (req.method === 'POST' && route === 'consolemark') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
