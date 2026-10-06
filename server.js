@@ -3,7 +3,7 @@
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review),
-// LESSON_MODEL (Claude model for those lessons, default claude-opus-5-5), PROMPT_MODEL and IMAGE_MODEL (the console's
+// LESSON_AI_MODEL (Claude model for those lessons, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
 // ELEVENLABS_API_KEY (questions read aloud).
 // See README.md for all variables.

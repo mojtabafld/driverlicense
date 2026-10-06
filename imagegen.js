@@ -16,13 +16,13 @@ const png = require('./png');
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
 // The two models, set in the server's environment (DigitalOcean: Settings → web → Environment Variables):
 // IMAGE_MODEL: the kie.ai picture model (default GPT Image 2.5 Sunburst; its text-to-image and image-to-image variants);
-// PROMPT_MODEL: the Claude model that writes the console's prompts (default Claude Opus 5.5).
+// IMAGE_PROMPT_MODEL: the Claude model that writes the console's picture prompts (default Claude Opus 5.5).
 const IMAGE_MODEL = (process.env.IMAGE_MODEL || '').trim().replace(/-(text|image)-to-image$/, '') || 'gpt-image-2-5-sunburst';
 const TEXT_TO_IMAGE = `${IMAGE_MODEL}-text-to-image`, IMAGE_TO_IMAGE = `${IMAGE_MODEL}-image-to-image`;
-const PROMPT_MODEL = (process.env.PROMPT_MODEL || '').trim() || 'claude-opus-5-5';
+const PROMPT_MODEL = (process.env.IMAGE_PROMPT_MODEL || '').trim() || 'claude-opus-5-5';
 const models = () => ({ prompt: PROMPT_MODEL, image: IMAGE_MODEL });
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
-const CLAUDE = process.env.LESSON_MODEL || 'claude-opus-5-5';
+const CLAUDE = process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://kore.mintcloud.info').replace(/\/$/, '');
 
 const DESCRIBE = `You write prompts for a text-to-image model that draws NEW pictures for a Danish driving-theory practice site (category B).

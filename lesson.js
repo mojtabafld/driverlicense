@@ -12,7 +12,7 @@ const path = require('node:path');
 const Anthropic = require('@anthropic-ai/sdk');
 const imagegen = require('./imagegen');
 
-const MODEL = process.env.LESSON_MODEL || 'claude-opus-5-5';
+const MODEL = process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
 const PER_USER_PER_HOUR = 40; // new (uncached) lessons a user may trigger per hour
 
 // How the picture is used: describe only what it clearly shows and what matters for the question.
