@@ -605,14 +605,18 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
   const blobOf = async n => { const j = now()[n]; return j && j.blob ? blob(j.blob) : null; };
   // Puts picture `b` ({ mime, data }) in place of picture `n` (e.g. one made on request and chosen in the console); its
   // prompt's revision is kept, so it is not made again.
-  async function put(n, b) {
+  // `prompt`: the prompt it was made from (kept with it, so the console can show it).
+  async function put(n, b, prompt) {
     const it = meta().items, x = it[n] || {}, key = `${prefix}-${set}-${n}`, rev = (list.find(([k]) => k === n) || [])[1];
     await store.saveBlob(key, b.mime, b.data); cache.delete(key);
-    it[n] = { ...x, at: Date.now(), done: true, state: 'done', blob: key, v: Date.now().toString(36), size: b.data.length, rev: (rev && rev.rev) || x.rev, error: '' };
+    it[n] = { ...x, at: Date.now(), done: true, state: 'done', blob: key, v: Date.now().toString(36), size: b.data.length, rev: (rev && rev.rev) || x.rev, error: '',
+      ...(prompt ? { prompt } : {}) };
     delete it[n].taskId;
     await save();
   }
-  return { start: startSet, poll: pollSet, versions, blob: blobOf, put, count: list.length };
+  // The prompt picture `n` was made from (or, not made yet, the one it would be made from).
+  const promptOf = n => { const j = now()[n], l = list.find(([k]) => k === n); return (j && j.prompt) || (l && l[1].prompt) || ''; };
+  return { start: startSet, poll: pollSet, versions, blob: blobOf, put, promptOf, count: list.length };
 }
 // Only the cards ordered again in data/art-orders.json («learn») are made.
 const LEARN_REDO = learnOrders();
@@ -691,7 +695,7 @@ async function pollOneOff() {
         await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
         Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36) });
         if (job.target && job.target.startsWith('guide:')) {
-          await GUIDE.put(job.target.slice(6), { mime: sm.mime, data: sm.buf });
+          await GUIDE.put(job.target.slice(6), { mime: sm.mime, data: sm.buf }, job.prompt);
           await store.deleteBlob(job.blob).catch(() => {}); cache.delete(job.blob);
           delete oneOffs()[id];
         }
@@ -712,6 +716,27 @@ async function dropOneOff(id) {
   delete oneOffs()[id]; await saveOneOff();
 }
 
+// The prompt a question's made picture came from: the one shown, else the newest made one ('' when none was made).
+function questionPrompt(qid) {
+  const item = images()[+qid];
+  if (!item) return '';
+  const made = item.jobs.filter(j => j.blob).sort((a, b) => b.at - a.at);
+  const j = made.find(x => x.id === item.active) || made[0];
+  return (j && j.prompt) || '';
+}
+// The console's «اصلاح تصویر»: the admin says in Persian what is wrong in a picture; Claude puts that right in the
+// picture's prompt (in English), changing nothing else. `part` decides the style line (as for a new prompt).
+const FIX = `You edit a prompt for an image model that draws pictures for a Danish driving-theory app.
+You get the prompt a picture was made from and a correction, written in Persian by the person who checked the picture (what is wrong in the picture or what has to change).
+Translate the correction into exact English and work it into the prompt: change, add or remove exactly what the correction asks, in the right place of the prompt, and make the affected traffic details (signs, markings, lights, positions, colours, directions) explicit and unambiguous. Keep everything else in the prompt as it is, including its parts and their order. If the correction says something must not appear, say so clearly in the prompt.
+Answer with the complete revised prompt only, in English.`;
+async function fixPrompt(prompt, note, part) {
+  if (!String(prompt || '').trim()) throw Object.assign(new Error('پرامپتی برای این تصویر ذخیره نشده است.'), { status: 409 });
+  if (!String(note || '').trim()) throw Object.assign(new Error('ایراد تصویر را بنویسید.'), { status: 400 });
+  const out = await writeText(FIX, `Prompt:\n${prompt}\n\nCorrection (Persian):\n${String(note).slice(0, 3000)}`, null, 3000);
+  return withHouseStyle(out, part);
+}
+
 // A short text from Claude (e.g. a picture's prompt written for the console), with an optional picture to look at.
 async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
@@ -724,4 +749,5 @@ async function writeText(system, text, image, maxTokens = 1500) {
 }
 
 module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
-  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models };
+  guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
+  questionPrompt, guidePromptNow: GUIDE.promptOf, fixPrompt };

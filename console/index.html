@@ -7,8 +7,9 @@
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
      (editable); «تایید ساخت تصویر» makes it, and it replaces the item's AI picture (one per item). An item can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked
      items of a part, and the «⚑ علامت‌دارها» part all of them in full (the question and its answers, or the item's
-     text, its pictures and the note). Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
-     /api/guidegen, /api/consolepics, /api/consolemark(ed) and /api/imggen*. -->
+     text, its pictures and the note). Under an AI picture, its prompt can be shown, and «اصلاح تصویر» takes what is wrong in Persian and
+     works it (in English) into that prompt, which then goes to the prompt box to make the picture again. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consoleprompt, /api/consolefix and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -83,6 +84,9 @@ small{display:block;font-size:12px;margin-top:2px}
 .sts li.ok .mark{color:var(--ok)}
 .sts li.no .mark{color:var(--bad)}
 .gtext{font-size:13.5px;line-height:1.8}
+.ptext pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12.5px;line-height:1.6;background:var(--surface2);border-radius:10px;padding:10px;margin:4px 0 0;max-height:320px;overflow:auto}
+.fixbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px}
+.fixbox textarea{font:inherit;font-size:14px;width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl;text-align:right}
 .act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .act .btn{padding:7px 14px;font-size:14px}
 .pw{position:relative}
@@ -167,11 +171,23 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
   const actRow = id => `<div class="act">${id in pending
     ? `<button class="btn" data-apply="${esc(id)}">اعمال در سایت اصلی</button><button class="btn soft" data-undo1="${esc(id)}">لغو</button><span class="muted" style="font-size:12.5px">انتخاب تازه هنوز اعمال نشده است.</span>`
     : `<button class="btn" disabled>اعمال در سایت اصلی</button>`}</div>`;
-  const genBox = (id, making, failed) => {
-    const d = drafts[id];
+  // Per item: the current AI picture's prompt (shown on request) and «اصلاح تصویر» (the problem in Persian, kept while
+  // typing): { show, prompt, loading, fix, note, fixing }.
+  const extra = {};
+  const xOf = id => (extra[id] = extra[id] || {});
+  const genBox = (id, making, failed, hasAi) => {
+    const d = drafts[id], x = xOf(id);
     if (making) return `<div class="gen"><span class="state">در حال ساخت تصویر…</span></div>`;
     return `<div class="gen">
       ${failed ? `<span class="fail">ساخت تصویر قبلی ناموفق بود: ${esc(failed)}</span>` : ''}
+      ${hasAi ? `<div class="row">
+          <button class="chip" data-showp="${esc(id)}">${x.show ? 'بستن پرامپت' : 'نمایش پرامپت تصویر AI'}</button>
+          <button class="chip" data-fix="${esc(id)}" ${x.fix ? 'disabled' : ''}>اصلاح تصویر</button></div>
+        ${x.show ? `<div class="ptext"><small class="muted">پرامپتی که تصویر AI فعلی از آن ساخته شده:</small><pre>${x.loading ? 'در حال دریافت…' : esc(x.prompt || 'پرامپتی برای این تصویر ذخیره نشده است.')}</pre></div>` : ''}
+        ${x.fix ? (x.fixing ? `<span class="state">در حال اصلاح پرامپت…</span>` : `<div class="fixbox">
+          <small class="muted">ایراد تصویر را به فارسی بنویسید؛ به انگلیسی ترجمه و در پرامپت همین تصویر اعمال می‌شود.</small>
+          <textarea class="fa" data-fixnote="${esc(id)}" placeholder="مثلاً: خط وسط جاده باید بریده باشد نه ممتد، و تابلوی ایست سمت راست باشد.">${esc(x.note || '')}</textarea>
+          <div class="row"><button class="btn" data-fixgo="${esc(id)}">ساخت پرامپت اصلاح‌شده</button><button class="btn soft" data-fixno="${esc(id)}">انصراف</button></div></div>`) : ''}` : ''}
       ${!d ? `<div class="row"><button class="btn soft" data-draft="${esc(id)}">ساخت پرامپت با هوش مصنوعی</button></div>`
         : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
         : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
@@ -290,7 +306,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
           ${x.canOfficial ? tile(id, 'official', now, x.official ? ref('official', x.key, '') : '', 'طرح رسمی', 'دریافت نشده') : ''}
         </div>
         ${actRow(id)}
-        ${genBox(id, c && !c.done ? c.state : null, c && c.done && !c.v ? c.error || 'failed' : null)}
+        ${genBox(id, c && !c.done ? c.state : null, c && c.done && !c.v ? c.error || 'failed' : null, !!x.ai)}
       </div>`; }).join('')}</div>`;
   }
 
@@ -314,7 +330,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
             : tile(id, '-', now, '', 'تصویر AI', 'هنوز ساخته نشده')}
         </div>
         ${actRow(id)}
-        ${genBox(id, x.making, x.failed)}
+        ${genBox(id, x.making, x.failed, made.length > 0)}
       </div>`; }).join('')}</div>`;
   }
 
@@ -359,7 +375,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
           <div class="mhead"><span class="kind">${kind}</span><span class="muted">${esc(where)}</span><span class="sp"></span><small class="muted">علامت: ${when(m.at)}${m.by ? ` · ${esc(m.by)}` : ''}</small></div>
           ${markRow(id)}
           <div class="mbody"><div class="minfo">${info}</div><div class="mpics">${pics}${actRow(id)}</div></div>
-          ${genBox(id, making, failed)}
+          ${genBox(id, making, failed, isQ ? x.made.length > 0 : !!x.ai)}
         </div>`; }).join('')}</div>`;
   }
 
@@ -413,6 +429,28 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       render();
     });
     $app.querySelectorAll('[data-dr]').forEach(t => t.oninput = () => { drafts[t.dataset.dr] = { text: t.value }; });
+    // The current picture's prompt, and «اصلاح تصویر»: the Persian note → the prompt with it worked in → the box above.
+    $app.querySelectorAll('[data-showp]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.showp, x = xOf(id);
+      if (x.show) { x.show = false; return render(); }
+      Object.assign(x, { show: true, loading: true }); render();
+      try { x.prompt = (await api('GET', `consoleprompt?id=${encodeURIComponent(id)}`)).prompt; } catch (e) { toast(e.message); x.show = false; }
+      x.loading = false; render();
+    });
+    $app.querySelectorAll('[data-fix]').forEach(b => b.onclick = () => { xOf(b.dataset.fix).fix = true; render(); });
+    $app.querySelectorAll('[data-fixno]').forEach(b => b.onclick = () => { Object.assign(xOf(b.dataset.fixno), { fix: false, note: '' }); render(); });
+    $app.querySelectorAll('[data-fixnote]').forEach(t => t.oninput = () => { xOf(t.dataset.fixnote).note = t.value; });
+    $app.querySelectorAll('[data-fixgo]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.fixgo, x = xOf(id);
+      if (!(x.note || '').trim()) return toast('ایراد تصویر را بنویسید.');
+      x.fixing = true; render();
+      try {
+        drafts[id] = { text: (await api('POST', 'consolefix', { id, note: x.note, part: st.tab })).prompt };
+        Object.assign(x, { fix: false, note: '' });
+        toast('پرامپت اصلاح شد؛ بررسی کنید و «تایید ساخت تصویر» را بزنید');
+      } catch (e) { toast(e.message); }
+      x.fixing = false; render();
+    });
     $app.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => { delete drafts[b.dataset.cancel]; render(); });
     $app.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
       const id = b.dataset.go, kind = id[0], ref = id.slice(2), prompt = (drafts[id] || {}).text || '';
