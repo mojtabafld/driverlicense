@@ -55,7 +55,7 @@ function useTyped(text: string, on: boolean) {
 
 // The icon of an AI lesson's heading (lesson.js writes these parts), or none.
 function headIcon(head: string, c: ReturnType<typeof useColors>): { name: IconName; color: string } | null {
-  if (/درباره/.test(head)) return { name: 'help', color: c.accent };
+  if (/درباره/.test(head)) return { name: 'help', color: c.info };
   if (/درست بود/.test(head)) return { name: 'checkCircle', color: c.ok };
   if (/^اشتباه شما/.test(head)) return { name: 'xCircle', color: c.bad };
   if (/نکته برای دفعه/.test(head)) return { name: 'bulbCircle', color: c.warn };
