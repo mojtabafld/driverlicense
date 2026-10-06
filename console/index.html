@@ -3,8 +3,8 @@
      pictures with prove.dk's, in four parts: the lessons' and exams' question pictures (prove.dk's original beside the
      made ones; choose which the app shows), the signs and right of way (the made picture, prove.dk's and the official
      drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
-     each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; «اعمال در سایت
-     اصلی» applies the choices. Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
+     each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
+     «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has Claude write a prompt for a new picture
      (editable); «تایید ساخت تصویر» makes it, and it appears beside the others to be chosen. One made picture is kept
      per item. Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
      /api/guidegen, /api/consolepics and /api/imggen*. -->
@@ -63,6 +63,8 @@ small{display:block;font-size:12px;margin-top:2px}
 .tl small{margin:0}
 .radio{color:var(--accent);font-size:14px;line-height:1}
 .live{margin-inline-start:auto;font-size:11px;font-weight:700;color:var(--ok);border:1px solid var(--ok);border-radius:99px;padding:0 8px}
+.act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.act .btn{padding:7px 14px;font-size:14px}
 .apply{position:fixed;left:0;right:0;bottom:0;display:none;align-items:center;gap:10px;padding:12px max(16px,calc((100vw - 1200px)/2 + 16px));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.08);z-index:5}
 .apply.show{display:flex}
 .apply .sp{flex:1}
@@ -132,6 +134,10 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       <div class="tl"><span class="radio">${on ? '●' : '○'}</span><small>${label}</small>${live ? '<span class="live">سایت اصلی</span>' : ''}</div>
     </div>`;
   };
+  // The item's own «اعمال»: applies only its marked choice (and «لغو» drops it).
+  const actRow = id => `<div class="act">${id in pending
+    ? `<button class="btn" data-apply="${esc(id)}">اعمال در سایت اصلی</button><button class="btn soft" data-undo1="${esc(id)}">لغو</button><span class="muted" style="font-size:12.5px">انتخاب تازه هنوز اعمال نشده است.</span>`
+    : `<button class="btn" disabled>اعمال در سایت اصلی</button>`}</div>`;
   const genBox = (id, making, failed) => {
     const d = drafts[id];
     if (making) return `<div class="gen"><span class="state">در حال ساخت تصویر…</span></div>`;
@@ -162,8 +168,8 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       <div class="head"><h1>مقایسه‌ی تصاویر با prove.dk</h1><span class="sp"></span><button class="btn soft" id="out">خروج</button></div>
       <div class="tabs">${TABS.map(([k, t]) => `<button class="tab ${k === st.tab ? 'on' : ''}" data-tab="${k}">${t}</button>`).join('')}</div>
       ${isGuide() ? guideBody() : questionBody()}
-      <div class="apply ${n ? 'show' : ''}"><span>${faNum(n)} تغییر انتخاب شده</span><span class="sp"></span>
-        <button class="btn soft" id="undo">لغو</button><button class="btn" id="apply">اعمال در سایت اصلی</button></div>`;
+      <div class="apply ${n ? 'show' : ''}"><span>${faNum(n)} تغییر انتخاب شده (همه با هم)</span><span class="sp"></span>
+        <button class="btn soft" id="undo">لغو</button><button class="btn" id="apply">اعمال همه در سایت اصلی</button></div>`;
     wire();
     if (busyPoll) pollT = setTimeout(function again() {
       // Not while a prompt is being typed (a redraw would take the cursor away).
@@ -196,6 +202,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
           ${tile(id, 'prove', now, x.prove ? ref('prove', x.key, '') : '', 'prove.dk', x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}
           ${x.canOfficial ? tile(id, 'official', now, x.official ? ref('official', x.key, '') : '', 'طرح رسمی', 'دریافت نشده') : ''}
         </div>
+        ${actRow(id)}
         ${genBox(id, c && !c.done ? c.state : null, c && c.done && !c.v ? c.error || 'failed' : null)}
       </div>`; }).join('')}</div>`;
   }
@@ -217,6 +224,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
           ${made.length ? made.map((j, i) => tile(id, j.id, now, `/img/gen/${x.id}/${encodeURIComponent(j.id)}`, made.length > 1 && i === made.length - 1 ? 'تصویر تازه‌ی AI' : 'تصویر AI', '')).join('')
             : tile(id, '-', now, '', 'تصویر AI', 'هنوز ساخته نشده')}
         </div>
+        ${actRow(id)}
         ${genBox(id, x.making, x.failed)}
       </div>`; }).join('')}</div>`;
   }
@@ -235,20 +243,23 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       render();
     });
     document.getElementById('undo').onclick = () => { for (const k of Object.keys(pending)) delete pending[k]; render(); };
-    document.getElementById('apply').onclick = async e => {
-      e.target.disabled = true;
+    // Applies the marked choices of `ids` on the main site.
+    const applyIds = async ids => {
       let ok = 0, bad = 0;
-      for (const [id, { val }] of Object.entries(pending)) {
-        const ref = id.slice(2);
+      for (const id of ids) {
+        const ref = id.slice(2), { val } = pending[id];
         try {
           if (id[0] === 'q') await api('POST', 'imggenset', { qid: +ref, job: val || null });
           else await api('POST', 'guiderefchoose', { key: ref, choice: val });
           delete pending[id]; ok++;
         } catch (er) { bad++; toast(er.message); }
       }
-      if (ok) toast(`${faNum(ok)} تغییر در سایت اصلی اعمال شد${bad ? ` · ${faNum(bad)} خطا` : ''}`);
+      if (ok) toast(`${ok > 1 ? `${faNum(ok)} تغییر` : 'تغییر'} در سایت اصلی اعمال شد${bad ? ` · ${faNum(bad)} خطا` : ''}`);
       view();
     };
+    document.getElementById('apply').onclick = e => { e.target.disabled = true; applyIds(Object.keys(pending)); };
+    $app.querySelectorAll('[data-apply]').forEach(b => b.onclick = () => { b.disabled = true; applyIds([b.dataset.apply]); });
+    $app.querySelectorAll('[data-undo1]').forEach(b => b.onclick = () => { delete pending[b.dataset.undo1]; render(); });
     // A prompt from Claude, edited in its box, then the picture made from it.
     $app.querySelectorAll('[data-draft]').forEach(b => b.onclick = async () => {
       const id = b.dataset.draft, kind = id[0], ref = id.slice(2);
