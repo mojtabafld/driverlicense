@@ -110,8 +110,8 @@ function SignText({ item }: { item: SignItem }) {
         </View>
       </View>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.fa}</T>
-      {/* The sign's Danish name in a box like «چه کسی اول می‌رود؟», after the green check. */}
-      <View style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
+      {/* The sign's Danish name in a box like «چه کسی اول می‌رود؟», laid out left to right: the green check on the left. */}
+      <View style={{ direction: 'ltr', flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
         <Icon name="checkCircle" size={20} color={c.ok} />
         <L style={{ flex: 1, fontSize: 14, lineHeight: 21, color: c.text, fontWeight: '600', textAlign: 'left' }}>{item.da}</L>
       </View>
