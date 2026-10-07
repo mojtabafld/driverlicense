@@ -681,6 +681,21 @@ const LEARN_REDO = learnOrders();
 const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '4:3', prefix: 'learn',
   redo: LEARN_REDO, allow: new Set(Object.keys(LEARN_REDO)) });
 const startLearn = LEARN.start, pollLearn = LEARN.poll, learnVersions = LEARN.versions, learnBlob = LEARN.blob;
+// The «آموزش» cards' pictures' background colour (from their edges), so a card can show the whole picture and fill the
+// rest of its picture area with the same colour. Worked out in the background once per picture version.
+const learnBg = {};
+function learnColours() {
+  const out = {};
+  for (const [n, v] of Object.entries(learnVersions())) {
+    const k = `${n}:${v}`;
+    if (learnBg[k] === undefined) {
+      learnBg[k] = null;
+      learnBlob(n).then(b => { const im = b && png.decode(b.data); learnBg[k] = im ? png.edgeColour(im) : ''; }).catch(() => { learnBg[k] = ''; });
+    }
+    if (learnBg[k]) out[n] = learnBg[k];
+  }
+  return out;
+}
 
 // ---------- profile pictures to choose from in the settings ----------
 // Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
@@ -807,6 +822,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
