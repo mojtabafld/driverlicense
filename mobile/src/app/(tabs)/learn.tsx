@@ -1,7 +1,7 @@
 // «آموزش»: four parts as tall cards filling the screen, two by two, each with its picture (made by the server's image
 // model; the part's icon on a soft tile until it is there), its title and a line on what is in it; a card opens its
 // part's page: the lessons one by one (and practice by category), the rules, the road signs, and right of way.
-// Beside the theme switch, «جستجو با هوش مصنوعی» (ui/search-ai.tsx).
+// Beside the theme switch, «جستجو با هوش مصنوعی» (ui/search-ai.tsx); above the parts, «آموزش گام‌به‌گام» (app/course.tsx).
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
@@ -44,6 +44,26 @@ function Part({ n, icon, title, text, note, href, target }: { n: number; icon: I
   );
 }
 
+// «آموزش گام‌به‌گام» (the app's own course, app/course.tsx): a slim card above the four parts, marked new.
+function CourseCard() {
+  const c = useColors();
+  return (
+    <Card onPress={() => router.push('/course')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14 }}>
+      <View style={{ width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+        <Icon name="play" size={20} color={c.link} weight="semibold" />
+      </View>
+      <View style={{ flex: 1, gap: 2 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <T style={{ fontWeight: '700', fontSize: 15.5 }}>آموزش گام‌به‌گام</T>
+          <View style={{ backgroundColor: c.ok, borderRadius: 99, paddingHorizontal: 7, paddingVertical: 1 }}><T style={{ color: '#fff', fontSize: 10.5, fontWeight: '700' }}>جدید</T></View>
+        </View>
+        <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={1}>دوره‌ی کامل، فصل به فصل، بر اساس قانون و برنامه‌ی رسمی</T>
+      </View>
+      <Icon name="chevronLeft" size={15} color={c.faint} weight="semibold" />
+    </Card>
+  );
+}
+
 const TOUR: TourStep[] = [
   { title: 'آموزش درس‌به‌درس', text: 'درس‌های رسمی آزمون تئوری به ترتیب، هر درس با سؤال‌های خودش. می‌توانید بر اساس دسته‌بندی رسمی هم تمرین کنید و تعداد سؤال‌ها را خودتان انتخاب کنید.' },
   { title: 'قوانین', text: 'مهم‌ترین قوانین رانندگی در دانمارک به زبان ساده: سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک و بزرگراه. هر بخش یک تمرین با سؤال‌های همان مبحث دارد.' },
@@ -59,6 +79,7 @@ export default function Learn() {
     <>
     <Screen fill title="آموزش" right={<SearchAiButton />}>
       <View style={{ flex: 1, gap: 12 }}>
+        <CourseCard />
         <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
           <Part n={1} target={tour.target(0)} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
             text={`${faNum(all)} درس به ترتیب، هر کدام با سؤال‌های خودش؛ یا تمرین بر اساس دسته‌بندی رسمی.`}

@@ -16,7 +16,7 @@ type Ctx = {
   // The intro's pictures that the server has made: slide number → version, and → the picture's background colour.
   intro: Record<string, string>; introBg: Record<string, string>;
   // The «آموزش» cards' pictures that the server has made: card number → version.
-  learnArt: Record<string, string>; learnBg: Record<string, string>;
+  learnArt: Record<string, string>; learnBg: Record<string, string>; courseArt: Record<string, string>;
   // The profile pictures to choose from that the server has made: number → version.
   avatarArt: Record<string, string>;
   // The teaching pages' pictures (signs, right of way) that the server has made: key → version. At /app (PROVE_PICS) a
@@ -50,6 +50,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
   const [learnArt, setLearnArt] = useState<Record<string, string>>({});
   const [learnBg, setLearnBg] = useState<Record<string, string>>({});
+  const [courseArt, setCourseArt] = useState<Record<string, string>>({});
   const [avatarArt, setAvatarArt] = useState<Record<string, string>>({});
   const [guideArt, setGuideArt] = useState<Record<string, string>>({});
 
@@ -65,7 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [bank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; avatarArt?: Record<string, string>; guideArt?: Record<string, string> }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setAvatarArt(x.avatarArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
+  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; avatarArt?: Record<string, string>; guideArt?: Record<string, string> }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setAvatarArt(x.avatarArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
@@ -85,7 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
-    saved: me?.saved ?? [], aiLessons, tts, intro, introBg, learnArt, learnBg, avatarArt, guideArt,
+    saved: me?.saved ?? [], aiLessons, tts, intro, introBg, learnArt, learnBg, courseArt, avatarArt, guideArt,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
@@ -116,7 +117,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons, tts, intro, introBg, learnArt, learnBg, avatarArt, guideArt]);
+  }), [ready, token, me, bank, aiLessons, tts, intro, introBg, learnArt, learnBg, courseArt, avatarArt, guideArt]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
