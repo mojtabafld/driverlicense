@@ -14,7 +14,7 @@ import { GuideImage } from '@/ui/guide-visual';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Enter, T, tap } from '@/ui/kit';
 import { RoadSign, type SignKind } from '@/ui/road-signs';
-import { SearchField } from '@/ui/search-ai';
+import { SearchField, SearchHistoryList, useSearchHistory } from '@/ui/search-ai';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
@@ -100,7 +100,12 @@ export default function Search() {
     return () => { live = false; };
   }, [asked]);
   const busy = asked.trim().length >= 2 && state.for !== asked, shown = busy ? { results: null, error: '' } : state;
-  const go = () => { if (q.trim().length >= 2) { setAsked(q.trim()); setKind(null); } };
+  const history = useSearchHistory();
+  // The earlier searches show under the field while it is focused (hidden a moment after it loses focus, so a tap on
+  // one still lands).
+  const [focus, setFocus] = useState(false);
+  const run = (text: string) => { const t = text.trim(); if (t.length >= 2) { setQ(t); setAsked(t); setKind(null); setFocus(false); history.add(t); } };
+  const go = () => run(q);
   // The filter: one kind of result only (null: all); the menu opens under the filter button.
   const [kind, setKind] = useState<Result['kind'] | null>(null), [menu, setMenu] = useState<number | null>(null);
   const filterBtn = useRef<View>(null);
@@ -110,7 +115,7 @@ export default function Search() {
   return (
     <SubPage title="جستجو با هوش مصنوعی" subtitle="نزدیک‌ترین علائم، حق تقدم‌ها، قوانین و سؤال‌ها" gap={10}>
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-        <SearchField value={q} onChange={setQ} onSubmit={go} />
+        <SearchField value={q} onChange={setQ} onSubmit={go} onFocus={() => setFocus(true)} onBlur={() => setTimeout(() => setFocus(false), 200)} />
         <Pressable onPress={() => { tap(); go(); }} accessibilityRole="button" accessibilityLabel="جستجو"
           style={({ pressed }) => ({ width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.btn })}>
           <Icon name="searchAi" size={19} color={c.btnFg} />
@@ -122,6 +127,7 @@ export default function Search() {
           <Icon name="filter" size={19} color={kind ? c.link : c.text} />
         </Pressable>
       </View>
+      {focus ? <SearchHistoryList boxed text={q === asked ? "" : q} items={history.items.filter(x => x !== asked)} onPick={run} onRemove={history.remove} /> : null}
       <FilterMenu open={menu !== null} top={menu ?? 0} value={kind} counts={counts} onPick={k => { setKind(k); setMenu(null); }} onClose={() => setMenu(null)} />
       {kind && shown.results?.length ? (
         <Pressable onPress={() => { tap(); setKind(null); }} style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.accentSoft,
