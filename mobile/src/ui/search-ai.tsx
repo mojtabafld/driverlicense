@@ -94,7 +94,7 @@ export function SearchAiButton() {
   const go = () => search(q);
   return (
     <>
-      <Pressable onPress={() => { tap(); v.setValue(0); setOpen(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="جستجو با هوش مصنوعی"
+      <Pressable onPress={() => { tap(); v.setValue(0); setQ(''); setOpen(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="جستجو با هوش مصنوعی"
         style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
         <Icon name="searchAi" size={20} color={dark ? c.text : c.muted} />
       </Pressable>
