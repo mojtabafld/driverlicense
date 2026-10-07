@@ -194,7 +194,6 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                 </View>
               );
             })() : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{view === 'open' ? 'هیچ سؤالی در حالت «اصلاح‌نشده» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
-            {!view || view === 'topics' ? null : <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>«شما انتخاب کردید / انتخاب نکردید» مربوط به آخرین باری است که این سؤال را جواب داده‌اید.</T>}
           </>
         )}
       </ScrollView>
