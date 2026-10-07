@@ -3,7 +3,7 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, View, useWindowDimensions } from 'react-native';
 
 import { api } from '@/lib/api';
 import { faNum } from '@/lib/logic';
@@ -53,7 +53,8 @@ function Pic({ r }: { r: Result }) {
 
 // The filter: «همه» or one of the four kinds, each with how many results it has; a kind with none is greyed.
 const KINDS: Result['kind'][] = ['signs', 'priority', 'rules', 'question'];
-function FilterMenu({ open, top, value, counts, onPick, onClose }: { open: boolean; top: number; value: Result['kind'] | null; counts: Record<string, number>;
+// `at`: where the filter button is on the screen; the menu opens right under it, its edge in line with the button's.
+function FilterMenu({ open, at, value, counts, onPick, onClose }: { open: boolean; at: { x: number; y: number; w: number; h: number }; value: Result['kind'] | null; counts: Record<string, number>;
   onPick: (k: Result['kind'] | null) => void; onClose: () => void }) {
   const c = useColors();
   const row = (k: Result['kind'] | null, label: string, icon: IconName, n: number) => {
@@ -70,11 +71,14 @@ function FilterMenu({ open, top, value, counts, onPick, onClose }: { open: boole
     );
   };
   const all = KINDS.reduce((a, k) => a + (counts[k] || 0), 0);
+  const { width } = useWindowDimensions(), W = Math.min(290, width - 32);
+  // Under the button, starting at its outer edge and kept on the screen.
+  const left = Math.max(16, Math.min(at.x, width - 16 - W));
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.12)' }}>
-        <View style={{ position: 'absolute', top, left: 16, right: 16, alignItems: 'flex-start' }}>
-          <Pressable onPress={() => {}} style={{ width: 290, maxWidth: '100%', backgroundColor: c.surface, borderRadius: 16, padding: 6, borderWidth: 1, borderColor: c.line,
+        <View style={{ position: 'absolute', top: at.y + at.h + 6, left, width: W, direction: 'ltr' }}>
+          <Pressable onPress={() => {}} style={{ width: W, direction: 'rtl', backgroundColor: c.surface, borderRadius: 16, padding: 6, borderWidth: 1, borderColor: c.line,
             shadowColor: '#000', shadowOpacity: 0.16, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 10 }}>
             {row(null, 'همه‌ی نتایج', 'list', all)}
             {KINDS.map(k => row(k, KIND[k].group, KIND[k].icon, counts[k] || 0))}
@@ -107,7 +111,7 @@ export default function Search() {
   const run = (text: string) => { const t = text.trim(); if (t.length >= 2) { setQ(t); setAsked(t); setKind(null); setFocus(false); history.add(t); } };
   const go = () => run(q);
   // The filter: one kind of result only (null: all); the menu opens under the filter button.
-  const [kind, setKind] = useState<Result['kind'] | null>(null), [menu, setMenu] = useState<number | null>(null);
+  const [kind, setKind] = useState<Result['kind'] | null>(null), [menu, setMenu] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const filterBtn = useRef<View>(null);
   const counts: Record<string, number> = {};
   for (const r of shown.results ?? []) counts[r.kind] = (counts[r.kind] || 0) + 1;
@@ -120,7 +124,7 @@ export default function Search() {
           style={({ pressed }) => ({ width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.btn })}>
           <Icon name="searchAi" size={19} color={c.btnFg} />
         </Pressable>
-        <Pressable ref={filterBtn} onPress={() => { tap(); filterBtn.current?.measureInWindow((_x, y, _w, h) => setMenu(y + h + 6)); }}
+        <Pressable ref={filterBtn} onPress={() => { tap(); filterBtn.current?.measureInWindow((x, y, w, h) => setMenu({ x, y, w, h })); }}
           disabled={!shown.results?.length} accessibilityRole="button" accessibilityLabel="فیلتر نتایج"
           style={({ pressed }) => ({ width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5,
             borderColor: kind ? c.link : c.line, backgroundColor: kind ? c.accentSoft : pressed ? c.surface2 : 'transparent', opacity: shown.results?.length ? 1 : 0.45 })}>
@@ -128,7 +132,7 @@ export default function Search() {
         </Pressable>
       </View>
       {focus ? <SearchHistoryList boxed text={q === asked ? "" : q} items={history.items.filter(x => x !== asked)} onPick={run} onRemove={history.remove} /> : null}
-      <FilterMenu open={menu !== null} top={menu ?? 0} value={kind} counts={counts} onPick={k => { setKind(k); setMenu(null); }} onClose={() => setMenu(null)} />
+      <FilterMenu open={menu !== null} at={menu ?? { x: 0, y: 0, w: 0, h: 0 }} value={kind} counts={counts} onPick={k => { setKind(k); setMenu(null); }} onClose={() => setMenu(null)} />
       {kind && shown.results?.length ? (
         <Pressable onPress={() => { tap(); setKind(null); }} style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.accentSoft,
           borderRadius: 999, paddingVertical: 5, paddingHorizontal: 12 }} accessibilityRole="button" accessibilityLabel="برداشتن فیلتر">
