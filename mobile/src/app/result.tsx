@@ -1,6 +1,6 @@
 // Result and answer review, laid out like the site.
 // A past exam or lesson: the site's question-by-question review (back button, tabs, a result line that flies into
-// shown only from the «جزئیات آزمون» button, one open card at a time with Forrige / Næste, and the AI summary of the mistakes at the end).
+// shown only from the «جزئیات آزمون» button, one open card at a time with Forrige / Næste, and ✓ on the last one to finish).
 // One just handed in: the site's result card (ring, verdict, numbers, next steps) and the list of review cards.
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -19,7 +19,7 @@ import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { Pager } from '@/ui/swipe';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
-import { AiSummary, ReviewCard, RevealScrollProvider, hasSummary, uiText, useRevealScroll } from '@/ui/review';
+import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
 
 type Filter = 'wrong' | 'saved' | 'all';
@@ -85,7 +85,7 @@ const Empty = ({ text }: { text: string }) => {
 
 export default function Result() {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
-  const { Q, settings, bank, aiLessons } = useApp();
+  const { Q, settings, bank } = useApp();
   const motion = usePageMotion('push');
   const wide = useWindowDimensions().width >= 480; // «جزئیات آزمون» with its label; an icon on phones
   const [a] = useState<Attempt | null>(() => session.result);
@@ -112,32 +112,28 @@ export default function Result() {
   const tone = full ? (pass ? 'ok' : 'bad') : 'neutral';
   const toneFg = tone === 'ok' ? c.ok : tone === 'bad' ? c.bad : c.text, toneBg = tone === 'ok' ? c.okSoft : tone === 'bad' ? c.badSoft : c.surface2;
   const anyOld = a.items.some(it => !it.a);
-  const showSummary = hasSummary(a.items, aiLessons);
   const toTop = () => scroll.current?.scrollTo({ y: 0, animated: true });
   const changeFilter = (f: Filter) => { setFilter(f); setK(0); };
-  // «سؤال n» in the AI summary shows that question.
-  const jumpTo = (num: number) => { setFilter('all'); setK(Math.max(0, rows.findIndex(r => r.i === num - 1))); toTop(); };
   const step = (to: number) => { tap(); setK(to); toTop(); };
 
   // ---- A past exam or lesson: question by question ----
   if (!fresh) {
-    const total = list.length, end = k >= total, r = list[k];
-    // The floating glass bar, as in the exam: previous / the position / next; on the last question the summary (AI
-    // sparkles, or a list), and at the summary the exam page (the lessons page after a lesson). All round icon buttons.
+    const total = list.length, r = list[Math.min(k, Math.max(0, total - 1))];
+    // The floating glass bar, as in the exam: previous / the position / next, and on the last question ✓ to finish
+    // the review (back to where it was opened from). All round icon buttons.
+    const finish = () => { tap(); motion.leave(() => (router.canGoBack() ? router.back() : goTo(isLesson ? '/learn' : '/exam'))); };
     const nav = (
       <GlassBar
         start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!k} onPress={() => step(k - 1)} />}
-        middle={end ? null : <ListButton n={k + 1} of={total} onPress={() => setListOpen(true)} />}
-        end={end ? (isLesson ? <FootBtn label={ui.lessons} icon="learn" round onPress={() => goTo('/learn')} />
-            : <FootBtn label={ui.exams} icon="exam" round onPress={() => goTo('/exam')} />)
-          : k === total - 1 ? <FootBtn label={ui.summary} icon={showSummary ? 'sparkles' : 'clipboard'} round onPress={() => step(k + 1)} />
+        middle={<ListButton n={k + 1} of={total} onPress={() => setListOpen(true)} />}
+        end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" round onPress={finish} />
           : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => step(k + 1)} />} />
     );
     return (
       <Backdrop anim={motion.style}>
         <RevealScrollProvider value={reveal.value}>
-        {/* A sideways swipe turns to the next or previous question (the summary comes after the last). */}
-        <Pager i={k} n={total + 1} go={to => { setK(to); toTop(); }}>
+        {/* A sideways swipe turns to the next or previous question. */}
+        <Pager i={k} n={total} go={to => { setK(to); toTop(); }}>
         <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .res-line */}
           {line === 'shown' ? (
@@ -157,10 +153,7 @@ export default function Result() {
           ) : null}
           {anyOld ? <OldNote /> : null}
           {!total ? <Empty text="موردی نیست." />
-            : end ? (
-              showSummary ? <AiSummary items={a.items} at={a.at} lang={lang} onQuestion={jumpTo} />
-                : <Empty text={wrongN ? 'جمع‌بندی هوش مصنوعی در دسترس نیست.' : 'در این درس هیچ اشتباهی نداشتید! 👏'} />
-            ) : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
+            : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
         </ScrollView>
         </Pager>
         </RevealScrollProvider>
