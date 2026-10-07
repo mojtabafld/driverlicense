@@ -71,15 +71,19 @@ You get: the picture with one or more NUMBERED RED RECTANGLES around the parts t
 2. Change ONLY what the prompt says about the things in those parts, exactly as the person asks for each: translate each request into precise English and make the affected details explicit and unambiguous (position, side, lane, distance, size, colour, direction, number, official design). Everything must agree with Danish traffic rules and the official Danish designs of signs, markings and signals. If it helps, add a line to MUST NOT APPEAR that rules out a mistake. When two corrections touch the same thing, apply both consistently.
 3. Keep every other sentence of the prompt word for word, with its parts and their order.
 4. The new picture has no rectangles or numbers: never mention the rectangles, numbers, close-ups or "marked areas" in the prompt; name each place in terms of the scene.
+Also write an instruction for an image-editing model that will change ONLY those parts of the existing picture: for each numbered part, one line «n. …» in English saying what is there now and exactly how it must look after the change (shape, colour, position, size, number, official design), so that it fits seamlessly with what is around it. Nothing about the rest of the picture.
 Answer in exactly this form:
 <reply>
 In Persian, short: for each part, a line «بخش n: …» on what is in it and what you changed (quoting the changed English words).
 </reply>
 <prompt>
 The complete new prompt in English.
-</prompt>`;
+</prompt>
+<edit>
+The numbered lines for the image-editing model.
+</edit>`;
 const pct = v => Math.round(v * 100), faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
-async function region(id, { regions, marked, part }) {
+async function region(id, { regions, marked, part, mode = 'prompt', from = '', by = '' }) {
   regions = (regions || []).map(r => ({ ...r, message: String(r.message || '').trim().slice(0, 2000) })).filter(r => r.message).slice(0, 8);
   if (!regions.length) throw Object.assign(new Error('برای بخش‌های انتخاب‌شده بنویسید چه چیزی باید اصلاح شود.'), { status: 400 });
   const before = get(id).prompt;
@@ -91,11 +95,21 @@ async function region(id, { regions, marked, part }) {
   const out = await imagegen.writeText(REGION, text, [marked, ...regions.map(r => r.crop)], 8000);
   const reply = ((/<reply>([\s\S]*?)<\/reply>/.exec(out) || [])[1] || '').trim();
   const prompt = ((/<prompt>([\s\S]*?)<\/prompt>/.exec(out) || [])[1] || '').trim();
+  const edit = ((/<edit>([\s\S]*?)<\/edit>/.exec(out) || [])[1] || '').trim();
   if (!prompt) throw Object.assign(new Error('هوش مصنوعی پرامپت تازه‌ای نفرستاد؛ دوباره امتحان کنید.'), { status: 502 });
   all()[id] = { prompt: imagegen.withHouseStyle(prompt, part).slice(0, 20000), by: 'region', at: Date.now(),
     note: regions.map((r, i) => `${regions.length > 1 ? `بخش ${faNum(i + 1)}: ` : ''}${r.message}`).join('\n'), reply: reply.slice(0, 4000),
     box: regions.map(r => r.box || null), prev: before };
   await save();
+  // «اعمال اصلاحات روی همین تصویر»: the saved picture is corrected in those parts only (imagegen.editRegions, or a
+  // guide one-off with a base picture); the rest of it stays as it is.
+  if (mode === 'image') {
+    const boxes = regions.map(r => r.box).filter(Boolean), instruction = edit || regions.map((r, i) => `${i + 1}. ${r.message}`).join('\n');
+    if (id[0] === 'q') await imagegen.editRegions(+id.slice(2), from, { instruction, marked, regions: boxes, prompt: all()[id].prompt, by });
+    else await guideref.editRegions(id.slice(2), { instruction, marked, regions: boxes, prompt: all()[id].prompt });
+    all()[id].used = Date.now(); all()[id].edit = instruction.slice(0, 4000);
+    await save();
+  }
   return get(id);
 }
 

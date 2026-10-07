@@ -151,6 +151,14 @@ async function poll() {
         const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
         let buf = Buffer.from(await r.arrayBuffer()), mime = r.headers.get('content-type') || 'image/png';
         if (job.seed) ({ buf, mime } = shrink(buf, mime));
+        // Only the marked parts are taken from the result; the rest is the original picture's, untouched.
+        if (job.regions) {
+          const src = item.jobs.find(j => j.id === job.from && j.blob), sb = src && await blob(src.blob);
+          const c = sb && composited(sb, { mime, data: buf }, job.regions);
+          // Never the whole new picture in place of a correction: without the original to put the parts on, it fails.
+          if (!c) throw Object.assign(new Error('ترکیب بخش‌های اصلاح‌شده با تصویر اصلی ممکن نشد.'), { final: true });
+          buf = c.data; mime = c.mime; job.composited = true;
+        }
         job.blob = `qimg-${qid}-${job.id}`;
         await store.saveBlob(job.blob, mime, buf);
         Object.assign(job, { state: 'done', done: true, credits: d.creditsConsumed, size: buf.length });
@@ -164,8 +172,9 @@ async function poll() {
       } else { job.state = 'generating'; pending = true; }
       if (Date.now() - job.at > 30 * 60e3 && !job.done) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
     } catch (e) {
-      job.error = e.message; pending = true;
-      if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true });
+      job.error = e.message;
+      if (e.final) Object.assign(job, { state: 'fail', done: true });
+      else { pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
     }
     await save();
   }
@@ -266,6 +275,40 @@ async function edit(qid, fromJob, instruction, model = 'sunburst', by = '') {
   } catch (e) {
     job.state = 'fail'; job.error = e.message; job.done = true; await save();
     console.error('imagegen edit', qid, e.message);
+  }
+  return job;
+}
+
+// The console's «اعمال اصلاحات روی همین تصویر»: the image model redraws picture `src` with only the marked parts
+// changed (`instruction`, one line per numbered part; `marked`: the picture with the parts outlined and numbered, as
+// a guide), then only those parts (`regions`: [{ x, y, w, h }] as fractions) are taken from its result and put on the
+// original: everything outside them stays exactly as it was.
+const regionPrompt = instruction => `Edit the FIRST image. The SECOND image is the same picture with numbered red rectangles that mark the ONLY places to change. Make exactly these changes, each inside its numbered rectangle, and nothing else:
+${instruction}
+Everything outside the rectangles must stay exactly as it is in the first image: the same composition, camera angle, framing, scale, lighting, colours and every road, marking, sign, light, vehicle and object. Do not draw any rectangles, numbers or outlines. No logos, no watermarks, no new text.`;
+function composited(src, out, regions) {
+  try {
+    const a = png.decode(src.data), b = png.decode(out.data);
+    if (!a || !b) return null;
+    return { mime: 'image/png', data: png.encode(png.composite(a, b, regions)) };
+  } catch (e) { console.error('picture composite', e.message); return null; }
+}
+async function editRegions(qid, fromJob, { instruction, marked, regions, prompt, by = '' }) {
+  if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
+  const item = images()[+qid], src = item && item.jobs.find(j => j.id === fromJob && j.blob);
+  if (!src) throw Object.assign(new Error('تصویر پیدا نشد.'), { status: 404 });
+  if (item.jobs.some(j => !j.done)) throw Object.assign(new Error('برای این سؤال یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
+  const job = { id: Date.now().toString(36), model: 'sunburst', at: Date.now(), by, state: 'queued', done: false, kind: 'regions', from: fromJob,
+    instruction, regions, pick: true, prompt: prompt || src.prompt };
+  item.jobs.push(job); await save();
+  try {
+    const urls = [await upload(await blob(src.blob), `q${qid}-${src.id}.png`), await upload(marked, `q${qid}-${job.id}-marked.jpg`)];
+    const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: regionPrompt(instruction), input_urls: urls, aspect_ratio: '4:3', resolution: '2K' } });
+    job.taskId = d.taskId; job.state = 'generating'; await save();
+    schedule();
+  } catch (e) {
+    job.state = 'fail'; job.error = e.message; job.done = true; await save();
+    console.error('imagegen regions', qid, e.message);
   }
   return job;
 }
@@ -664,16 +707,21 @@ const oneOffs = () => (store.meta.oneOff = store.meta.oneOff || {});
 const saveOneOff = () => store.saveMeta('oneOff', oneOffs());
 // `target`: where the picture goes once made: 'guide:<key>' puts it in place of that teaching picture (the earlier one is
 // gone) and the job is cleared.
-async function startOneOff(id, { prompt, aspect = '4:3', ref = '', target = '' }) {
+// `images` ([{ mime, data }]) are sent instead of `ref`; with `regions` and `base` (the picture being corrected), only
+// those parts of the result are put on `base` (kept as blob `oneoff-<id>-base` meanwhile), as in editRegions.
+// `record`: the prompt kept with the picture when it differs from what the model is sent (an edit instruction).
+async function startOneOff(id, { prompt, aspect = '4:3', ref = '', target = '', images: inputs = null, regions = null, base = null, record = '' }) {
   if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
   const old = oneOffs()[id];
   if (old && !old.done) throw Object.assign(new Error('یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
   if (old && old.blob) { await store.deleteBlob(old.blob).catch(() => {}); cache.delete(old.blob); }
-  const job = oneOffs()[id] = { at: Date.now(), prompt, state: 'queued', done: false, ...(target ? { target } : {}) };
+  const job = oneOffs()[id] = { at: Date.now(), prompt: record || prompt, state: 'queued', done: false, ...(target ? { target } : {}) };
   try {
     const input = { prompt, aspect_ratio: aspect, resolution: '2K' };
-    if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(ref) }, `oneoff-${id}`)];
-    const d = await kie('POST', '/jobs/createTask', { model: ref ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
+    if (inputs) input.input_urls = await Promise.all(inputs.map((b, i) => upload(b, `oneoff-${id}-${i}`)));
+    else if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(ref) }, `oneoff-${id}`)];
+    if (regions && base) { await store.saveBlob(`oneoff-${id}-base`, base.mime, base.data); Object.assign(job, { regions, base: `oneoff-${id}-base` }); }
+    const d = await kie('POST', '/jobs/createTask', { model: input.input_urls ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
     Object.assign(job, { taskId: d.taskId, state: 'generating' });
     schedule();
   } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); }
@@ -690,7 +738,13 @@ async function pollOneOff() {
         const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
         if (!url) throw new Error('no result url');
         const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
-        const sm = shrink(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
+        let sm = shrink(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
+        if (job.regions && job.base) {
+          const bb = await store.getBlob(job.base), c = bb && composited(bb, { mime: sm.mime, data: sm.buf }, job.regions);
+          await store.deleteBlob(job.base).catch(() => {}); delete job.base;
+          if (!c) throw Object.assign(new Error('ترکیب بخش‌های اصلاح‌شده با تصویر اصلی ممکن نشد.'), { final: true });
+          sm = { buf: c.data, mime: c.mime }; job.composited = true;
+        }
         job.blob = `oneoff-${id}`;
         await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
         Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36) });
@@ -702,7 +756,8 @@ async function pollOneOff() {
       } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
       else pending = true;
       if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
-    } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
+      if (job.done && job.base) { await store.deleteBlob(job.base).catch(() => {}); delete job.base; }
+    } catch (e) { job.error = e.message; if (e.final) Object.assign(job, { state: 'fail', done: true }); else { pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); } }
     await saveOneOff();
   }
   return pending;
@@ -739,4 +794,4 @@ async function writeText(system, text, image, maxTokens = 1500) {
 
 module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
-  questionPrompt, guidePromptNow: GUIDE.promptOf };
+  questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };

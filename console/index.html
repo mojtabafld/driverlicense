@@ -226,8 +226,9 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     </div>`;
   };
   // «اصلاح بخش‌هایی از تصویر»: the picture full screen; the admin drags rectangles over the parts to correct (each one
-  // numbered, with its own comment), then «ذخیره و اصلاح پرامپت» has the API change the saved prompt for those parts
-  // only (/api/consoleregion). The page draws the picture with the parts outlined and numbered, and each part close up.
+  // numbered, with its own comment), then «اعمال اصلاحات روی همین تصویر» corrects the saved picture in those parts
+  // only (the rest stays exactly as it is) and the saved prompt with it, or «فقط اصلاح پرامپت» the prompt only
+  // (/api/consoleregion). The page draws the picture with the parts outlined and numbered, and each part close up.
   function regionEdit(id, src) {
     const box = document.createElement('div');
     box.className = 'lb rg';
@@ -237,15 +238,16 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       <div class="rg-pic"><img src="${esc(src)}" alt="" draggable="false"></div>
       <div class="rg-list"></div>
       <div class="rg-out" hidden></div>
-      <div class="row"><button class="btn" data-rgo disabled>ذخیره و اصلاح پرامپت</button><button class="btn soft" data-rno>انصراف</button></div>
+      <div class="row"><button class="btn" data-rimg disabled>اعمال اصلاحات روی همین تصویر</button><button class="btn soft" data-rgo disabled>فقط اصلاح پرامپت</button><button class="btn soft" data-rno>انصراف</button></div>
+      <small class="muted">«اعمال اصلاحات روی همین تصویر»: فقط داخل کادرها عوض می‌شود و بقیه‌ی تصویر دقیقاً همان می‌ماند؛ پرامپت هم به‌روز می‌شود. «فقط اصلاح پرامپت»: تصویر عوض نمی‌شود.</small>
     </div>`;
     document.body.appendChild(box);
     const img = box.querySelector('img'), wrap = box.querySelector('.rg-pic'), list = box.querySelector('.rg-list'),
-      go = box.querySelector('[data-rgo]'), out = box.querySelector('.rg-out'), no = box.querySelector('[data-rno]');
+      go = box.querySelector('[data-rgo]'), gi = box.querySelector('[data-rimg]'), out = box.querySelector('.rg-out'), no = box.querySelector('[data-rno]');
     // The parts: { x, y, w, h } (fractions of the picture) and the comment.
     const regions = [];
     let drawing = null, start = null, busy = false, done = false;
-    const ready = () => { go.disabled = busy || done || !regions.length || regions.some(r => !r.text.trim()); };
+    const ready = () => { go.disabled = gi.disabled = busy || done || !regions.length || regions.some(r => !r.text.trim()); };
     const close = () => { if (busy) return; box.remove(); document.removeEventListener('keydown', key); window.removeEventListener('resize', show); };
     const key = e => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', key);
@@ -311,19 +313,22 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       };
       return { marked: c.toDataURL('image/jpeg', 0.85), regions: regions.map(r => ({ box: { x: r.x, y: r.y, w: r.w, h: r.h }, message: r.text.trim(), crop: crop(r) })) };
     };
-    go.onclick = async () => {
-      busy = true; listParts(); go.textContent = 'در حال اصلاح پرامپت…';
+    const send = async (mode, b, label) => {
+      busy = true; listParts(); b.textContent = mode === 'image' ? 'در حال اصلاح پرامپت و شروع اصلاح تصویر…' : 'در حال اصلاح پرامپت…';
       try {
-        const e = await api('POST', 'consoleregion', { id, part: st.tab, ...draw() });
-        st.data.prompts = { ...(st.data.prompts || {}), [id]: { by: e.by, at: e.at, note: e.note, reply: e.reply, used: null } };
+        const e = await api('POST', 'consoleregion', { id, part: st.tab, mode, ...draw() });
+        st.data.prompts = { ...(st.data.prompts || {}), [id]: { by: e.by, at: e.at, note: e.note, reply: e.reply, used: e.used || null } };
         delete saved[id];
         busy = false; done = true; listParts();
         out.hidden = false;
-        out.innerHTML = `<b>پرامپت نهایی ذخیره شد.</b>${e.reply ? `<div class="reply">${esc(e.reply)}</div>` : ''}<div class="muted" style="font-size:13px">برای ساختن تصویر تازه، زیر همین مورد «ساخت تصویر با این پرامپت» را بزنید.</div>`;
-        go.hidden = true; no.textContent = 'بستن';
-        render();
-      } catch (er) { busy = false; toast(er.message); go.textContent = 'ذخیره و اصلاح پرامپت'; listParts(); }
+        out.innerHTML = `<b>${mode === 'image' ? 'پرامپت ذخیره شد و اصلاح تصویر شروع شد.' : 'پرامپت نهایی ذخیره شد.'}</b>${e.reply ? `<div class="reply">${esc(e.reply)}</div>` : ''}
+          <div class="muted" style="font-size:13px">${mode === 'image' ? 'تصویر اصلاح‌شده تا یکی دو دقیقه‌ی دیگر جای همین تصویر را می‌گیرد؛ فقط داخل کادرها عوض می‌شود.' : 'برای ساختن تصویر تازه، زیر همین مورد «ساخت تصویر با این پرامپت» را بزنید.'}</div>`;
+        go.hidden = gi.hidden = true; no.textContent = 'بستن';
+        if (mode === 'image') view(); else render();
+      } catch (er) { busy = false; toast(er.message); b.textContent = label; listParts(); }
     };
+    gi.onclick = () => send('image', gi, 'اعمال اصلاحات روی همین تصویر');
+    go.onclick = () => send('prompt', go, 'فقط اصلاح پرامپت');
   }
   const genBox = (id, making, failed, hasAi, pic) => {
     const d = drafts[id];

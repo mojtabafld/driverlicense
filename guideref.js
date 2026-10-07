@@ -125,6 +125,16 @@ function generate(key, prompt) {
   return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '', target: `guide:${key}` });
 }
 
+// The console's «اعمال اصلاحات روی همین تصویر» for a sign or right-of-way picture: its current made picture is corrected
+// in the marked parts only (imagegen.startOneOff with a base picture) and goes in its place once made.
+async function editRegions(key, { instruction, marked, regions, prompt }) {
+  if (!itemOf(key)) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
+  const base = await imagegen.guideBlob(key);
+  if (!base) throw Object.assign(new Error('این مورد هنوز تصویر AI ندارد.'), { status: 404 });
+  const p = imagegen.guidePrompt(key) || {}, b = { mime: base.mime, data: base.data };
+  return imagegen.startOneOff(`guide-${key}`, { prompt: imagegen.regionPrompt(instruction), aspect: p.aspect || '4:3', target: `guide:${key}`, images: [b, marked], regions, base: b, record: prompt });
+}
+
 // What the app (the main site) shows for an item: 'ai' (the made picture), 'official' (a sign's official drawing),
 // 'prove' (prove.dk's picture) or
 // 'cand' (the new picture made in the console: it becomes the made picture). Choosing keeps one made picture: the
@@ -220,4 +230,4 @@ function item(key) {
   return null;
 }
 
-module.exports = { init, startImport, list, item, choose, draft, generate, refBlob, versions, proveVersions, blob };
+module.exports = { init, startImport, editRegions, list, item, choose, draft, generate, refBlob, versions, proveVersions, blob };

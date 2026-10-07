@@ -601,8 +601,9 @@ async function api(req, res, route) {
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
     return send(res, 200, consoleprompts.get(id));
   }
-  // «اصلاح بخش‌هایی از تصویر» (consoleprompts.region): { id, part, marked, regions: [{ box, message, crop }] } — the
-  // pictures as JPEG data URLs drawn by the console; the API changes the saved prompt for the marked parts only.
+  // «اصلاح بخش‌هایی از تصویر» (consoleprompts.region): { id, part, mode, marked, regions: [{ box, message, crop }] } —
+  // the pictures as JPEG data URLs drawn by the console; the API changes the saved prompt for the marked parts only,
+  // and with mode 'image' the saved picture is corrected in those parts, the rest of it left exactly as it is.
   if (req.method === 'POST' && route === 'consoleregion') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req, 8e6), id = String(b.id || '');
@@ -613,7 +614,11 @@ async function api(req, res, route) {
     if (!marked) return send(res, 400, { error: 'تصویر نرسید.' });
     const regions = (Array.isArray(b.regions) ? b.regions : []).slice(0, 8).map(r => ({ box: boxOf(r && r.box), message: r && r.message, crop: pic(r && r.crop) }));
     const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
-    try { return send(res, 200, await consoleprompts.region(id, { regions, marked, part })); }
+    // mode 'image': the saved picture itself is corrected in those parts (for a question, its newest made picture).
+    const mode = b.mode === 'image' ? 'image' : 'prompt';
+    const jobs = id[0] === 'q' ? (((store.meta.images || {})[id.slice(2)] || {}).jobs || []).filter(j => j.blob).sort((x, y) => y.at - x.at) : [];
+    if (mode === 'image' && id[0] === 'q' && !jobs.length) return send(res, 400, { error: 'این سؤال هنوز تصویر AI ندارد.' });
+    try { return send(res, 200, await consoleprompts.region(id, { regions, marked, part, mode, from: jobs[0] && jobs[0].id, by: user.username })); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
