@@ -371,7 +371,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), avatarArt: imagegen.avatarVersions(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), avatarArt: imagegen.avatarVersions(),
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
       guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions() });
   }
@@ -850,6 +850,7 @@ async function main() {
   guideref.init(store, imagegen);
   consolepics.init(SITE);
   try { learnsearch.init(SITE); } catch (e) { console.error('search init', e.message); }
+  setTimeout(() => imagegen.learnColours(), 3000);   // the «آموزش» pictures' colours ready for the first visits
   consoleprompts.init(store, imagegen, guideref, consolepics);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.

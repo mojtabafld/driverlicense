@@ -17,15 +17,16 @@ import { useTour, type TourStep } from '@/ui/tour';
 
 function Part({ n, icon, title, text, note, href, target }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href; target: object }) {
   const c = useColors();
-  const { learnArt } = useApp();
+  const { learnArt, learnBg } = useApp();
   const short = useWindowDimensions().height < 700; // less text on short screens
   const v = learnArt[n];
   return (
     <View {...target} style={{ flex: 1 }}>
     <Card onPress={() => router.push(href)} style={{ flex: 1, padding: 0, overflow: 'hidden' }}>
-      {/* The picture, as large as the card's top; the icon on a soft tile until the picture is made. */}
-      <View style={{ flex: 1, minHeight: 90, backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-        {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={250} />
+      {/* The picture, whole (never cropped, whatever the card's shape on this screen), in the card's top, the rest of
+          it in the picture's own background colour; the icon on a soft tile until the picture is made. */}
+      <View style={{ flex: 1, minHeight: 90, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+        {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="contain" transition={250} />
           : <Icon name={icon} size={40} color={c.link} weight="semibold" />}
       </View>
       <View style={{ padding: 12, gap: 4 }}>
