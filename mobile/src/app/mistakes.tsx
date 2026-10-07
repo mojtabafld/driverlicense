@@ -165,7 +165,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
               const { g, st } = cur, t = bank.topics[g.c];
               return (
                 <View style={{ gap: 10 }}>
-                  <View style={{ gap: 6, marginTop: 10, marginHorizontal: 2 }}>
+                  <View style={{ gap: 6, marginHorizontal: 2 }}>
                     <T style={{ fontSize: 16, fontWeight: '700' }}>{topicFa(bank, g.c)}</T>
                     <T style={{ fontSize: 12.5, color: c.muted }}>{faNum(Math.round(accOf(g.c) * 100))}٪ پاسخ درست، {faNum(g.open)} مورد، {faNum(g.fixed)} اصلاح‌شده</T>
                     <View style={{ flexDirection: 'row', gap: 8 }}>
