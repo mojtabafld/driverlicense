@@ -19,6 +19,7 @@ const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
 const consoleprompts = require('./consoleprompts');
+const learnsearch = require('./learnsearch');
 const tts = require('./tts');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -561,6 +562,16 @@ async function api(req, res, route) {
       return res.end(b.data);
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
+  // «جستجو با هوش مصنوعی» on the «آموزش» page (learnsearch.js): { q } → { results } — the closest signs, right-of-way
+  // items, rules and questions, each with why it matches.
+  if (req.method === 'POST' && route === 'learnsearch') {
+    const b = await readBody(req);
+    try { return send(res, 200, await learnsearch.search(b.q, user.username)); }
+    catch (e) {
+      if (e instanceof Anthropic.APIError) { console.error('search API error', e.status, e.message); return send(res, 502, { error: 'جستجوی هوش مصنوعی الان در دسترس نیست.' }); }
+      if (e.status) return send(res, e.status, { error: e.message }); throw e;
+    }
+  }
   // An AI analysis or summary read aloud in Persian: { text } (the text exactly as the server wrote it) → { id }.
   if (req.method === 'POST' && route === 'ttsai') {
     const b = await readBody(req);
@@ -816,6 +827,7 @@ async function main() {
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
+  try { learnsearch.init(SITE); } catch (e) { console.error('search init', e.message); }
   consoleprompts.init(store, imagegen, guideref, consolepics);
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
