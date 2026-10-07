@@ -1,6 +1,7 @@
 // «آموزش»: four parts as tall cards filling the screen, two by two, each with its picture (made by the server's image
 // model; the part's icon on a soft tile until it is there), its title and a line on what is in it; a card opens its
 // part's page: the lessons one by one (and practice by category), the rules, the road signs, and right of way.
+// Beside the theme switch, «جستجو با هوش مصنوعی» (ui/search-ai.tsx).
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
@@ -10,6 +11,7 @@ import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
+import { SearchAiButton } from '@/ui/search-ai';
 import { useColors } from '@/ui/theme';
 import { useTour, type TourStep } from '@/ui/tour';
 
@@ -54,7 +56,7 @@ export default function Learn() {
   const tour = useTour('learn', TOUR);
   return (
     <>
-    <Screen fill title="آموزش" subtitle="یک بخش را انتخاب کنید">
+    <Screen fill title="آموزش" subtitle="یک بخش را انتخاب کنید" right={<SearchAiButton />}>
       <View style={{ flex: 1, gap: 12 }}>
         <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
           <Part n={1} target={tour.target(0)} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"

@@ -19,11 +19,12 @@ function startPractice(ids: number[], title: string) { session.plan = { mode: 's
 
 const LAW = 'خلاصه‌ای برای آمادگی آزمون تئوری؛ متن کامل قوانین در قانون راهنمایی و رانندگی دانمارک (Færdselsloven) است.';
 
-// `footer`: the line at the end (by default, that this is a summary of the law; null for none).
-export function GuidePage({ title, subtitle, parts, footer = LAW }: { title: string; subtitle: string; parts: GuidePart[]; footer?: string | null }) {
+// `footer`: the line at the end (by default, that this is a summary of the law; null for none); `initialOpen`: the part
+// open at first.
+export function GuidePage({ title, subtitle, parts, footer = LAW, initialOpen = 0 }: { title: string; subtitle: string; parts: GuidePart[]; footer?: string | null; initialOpen?: number }) {
   const c = useColors();
   const { bank } = useApp();
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(initialOpen);
   if (!bank) return null;
   const idsOf = (p: GuidePart) => bank.questions.filter(q => p.topics?.includes(q.c)).map(q => q.id);
   const practise = (p: GuidePart) => startPractice(shuffle(idsOf(p)).slice(0, FULL), p.title);
