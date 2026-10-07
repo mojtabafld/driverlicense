@@ -34,12 +34,13 @@ export function useSearchHistory() {
 
 // Letters folded so Persian / Arabic spellings and half-spaces compare alike.
 const fold = (s: string) => s.toLowerCase().replace(/[يى]/g, 'ی').replace(/ك/g, 'ک').replace(/\u200c/g, ' ').replace(/\s+/g, ' ').trim();
-// Earlier searches under the field: with nothing typed the latest ones, else the ones containing what is typed.
+// Earlier searches under the field: with nothing typed the latest three, else the ones containing what is typed.
 // `boxed`: in a card of its own (on the results page, between the field and the results).
 export function SearchHistoryList({ text, items, onPick, onRemove, max = 6, boxed }: { text: string; items: string[]; onPick: (q: string) => void; onRemove: (q: string) => void; max?: number; boxed?: boolean }) {
   const c = useColors();
   const t = fold(text);
-  const list = items.filter(x => (t ? fold(x).includes(t) && fold(x) !== t : true)).slice(0, max);
+  // Nothing typed: only the last three; from the first letter typed, the earlier searches containing it.
+  const list = items.filter(x => (t ? fold(x).includes(t) && fold(x) !== t : true)).slice(0, t ? max : 3);
   if (!list.length) return null;
   return (
     <View style={[{ gap: 2 }, boxed ? { backgroundColor: c.surface, borderRadius: 14, borderWidth: 1, borderColor: c.line, padding: 8 } : null]}>
