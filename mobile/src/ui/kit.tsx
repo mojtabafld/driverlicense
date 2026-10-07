@@ -187,6 +187,8 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 // On phones the page measures where it ends: when it reaches the bottom of the window, the system's tab bar lies over
 // its end (the tab content is not inset on some devices, and never on iOS), so it keeps that bar's height free.
 const TAB_BAR = Platform.OS === 'android' ? 80 : Platform.OS === 'ios' ? 50 : 0;
+// On the web, room for the floating tab bar (64 high, above the bottom edge) and a clear gap above it.
+const WEB_BAR_ROOM = 64 + 30;
 function useTabBarRoom() {
   const { height } = useWindowDimensions();
   const [under, setUnder] = useState(false);
@@ -218,7 +220,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14, scrol
       <PageIn>
       <View onLayout={barLayout} style={{ flex: 1 }}>
       {fill
-        ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? 80 + Math.max(16, ins.bottom) : ins.bottom + 10 + barRoom }]}>{head}{children}</View>
+        ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? WEB_BAR_ROOM + Math.max(16, ins.bottom) : ins.bottom + 10 + barRoom }]}>{head}{children}</View>
         : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 + barRoom }]}>{head}{children}</ScrollView>}
       </View>
       </PageIn>
