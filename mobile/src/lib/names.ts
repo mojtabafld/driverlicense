@@ -18,7 +18,7 @@ export function sectionFa(bank: Bank, c: string): string | null {
   return bank.sections.find(s => s.n === n)?.fa ?? null;
 }
 
-export const topicFa = (bank: Bank, c: string) => (bank.topics[c] ? `${faNum(c)} ${bank.topics[c].fa}` : 'سایر');
+export const topicFa = (bank: Bank, c: string) => bank.topics[c]?.fa ?? 'سایر';
 // The topic's name alone, without its number (e.g. a practice exam's title).
 export const topicName = (bank: Bank, c: string) => bank.topics[c]?.fa ?? 'سایر';
 

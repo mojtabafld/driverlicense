@@ -334,8 +334,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           ) : null}
           {/* The question's category (official section) */}
           {bank && sectionFa(bank, q.c) ? (
-            <View style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
-              <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.muted }} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
+            <View style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
+              <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
             </View>
           ) : null}
           <View style={{ flex: 1, minWidth: 4 }} />
