@@ -226,10 +226,10 @@ function send(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(obj));
 }
-function readBody(req) {
+function readBody(req, limit = 256e3) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
-    req.on('data', c => { size += c.length; if (size > 256e3) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
+    req.on('data', c => { size += c.length; if (size > limit) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
     req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); } catch { reject(new Error('bad json')); } });
     req.on('error', reject);
   });
@@ -600,6 +600,20 @@ async function api(req, res, route) {
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
     return send(res, 200, consoleprompts.get(id));
+  }
+  // «اصلاح بخشی از تصویر» (consoleprompts.region): { id, part, box, message, marked, crop } — the two pictures as JPEG
+  // data URLs drawn by the console; the API changes the saved prompt for the marked part only → the item's saved prompt.
+  if (req.method === 'POST' && route === 'consoleregion') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const b = await readBody(req, 4e6), id = String(b.id || '');
+    if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
+    const pic = u => { const m = /^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/.exec(String(u || '')); return m ? { mime: m[1], data: Buffer.from(m[2], 'base64') } : null; };
+    const marked = pic(b.marked), crop = pic(b.crop);
+    if (!marked) return send(res, 400, { error: 'تصویر نرسید.' });
+    const n = v => Math.min(1, Math.max(0, +v || 0)), box = b.box ? { x: n(b.box.x), y: n(b.box.y), w: n(b.box.w), h: n(b.box.h) } : null;
+    const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
+    try { return send(res, 200, await consoleprompts.region(id, { message: b.message, box, marked, crop, part })); }
+    catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
   if (req.method === 'GET' && route === 'consolemarked') {

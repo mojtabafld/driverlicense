@@ -6,10 +6,11 @@
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has the API write a prompt (editable) and «ایجاد تصویر» makes the picture;
      the item's prompt is kept («پرامپت ذخیره‌شده», with the item's code); Claude Code edits it on the admin's request
-     (/api/claudeprompt), and then it shows as edited by Claude Code with «ساخت تصویر با این پرامپت» to make the new one. One AI picture is kept per item. An item
+     (/api/claudeprompt), and then it shows as edited by Claude Code with «ساخت تصویر با این پرامپت» to make the new one. «اصلاح بخشی از
+     تصویر»: mark a part of the picture and say what is wrong there; the API changes the prompt for that part (/api/consoleregion). One AI picture is kept per item. An item
      can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked items of a part, and the
      «⚑ علامت‌دارها» part all of them in full. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
-     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consoleprompt and /api/imggen*. -->
+     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consoleprompt, /api/consoleregion and /api/imggen*. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -88,6 +89,17 @@ small{display:block;font-size:12px;margin-top:2px}
 .saved.cc{border-color:var(--accent)}
 .sv-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:14px}
 .sv-h .code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--surface2);border-radius:6px;padding:1px 7px;user-select:all}
+.reply{white-space:pre-wrap;font-size:13px;line-height:1.75;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.lb.rg{align-items:flex-start;overflow:auto;touch-action:auto;padding:16px}
+.rg-in{background:var(--surface);color:var(--text);border-radius:14px;padding:12px;width:min(1000px,100%);display:flex;flex-direction:column;gap:10px;margin:auto}
+.rg-h{display:flex;align-items:center;gap:8px}
+.rg-h .code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--surface2);border-radius:6px;padding:1px 7px}
+.rg-h .lbx{position:static;background:var(--surface2);color:var(--text)}
+.rg-t{font-size:13px}
+.rg-pic{position:relative;display:flex;justify-content:center;cursor:crosshair;touch-action:none;user-select:none}
+.rg-pic img{max-width:100%;max-height:62vh;border-radius:8px;-webkit-user-drag:none;pointer-events:none}
+.rg-box{position:absolute;border:3px solid #ff1a1a;background:rgba(255,26,26,.12);border-radius:3px;pointer-events:none}
+.rg-in textarea{font:inherit;font-size:14px;min-height:64px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl}
 .ccl{color:var(--accent);font-weight:700;font-size:13px}
 .ptext pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12.5px;line-height:1.6;background:var(--surface2);border-radius:10px;padding:10px;margin:4px 0 0;max-height:320px;overflow:auto}
 .fixbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px}
@@ -189,23 +201,88 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
     try { sv.data = await api('GET', `consoleprompt?id=${encodeURIComponent(id)}`); } catch (e) { toast(e.message); }
     sv.loading = false; render();
   };
-  const promptBox = (id, hasAi) => {
-    const m = (st.data.prompts || {})[id], sv = savedOf(id), byClaude = m && m.by === 'claude';
+  const promptBox = (id, hasAi, pic) => {
+    const m = (st.data.prompts || {})[id], sv = savedOf(id), byClaude = m && m.by === 'claude', byRegion = m && m.by === 'region';
     if (!m && !hasAi) return '';
     // A newer edit than the one loaded: load again when opened.
     if (sv.data && m && sv.data.at !== m.at) sv.data = null;
-    return `<div class="saved ${byClaude ? 'cc' : ''}">
+    return `<div class="saved ${byClaude || byRegion ? 'cc' : ''}">
       <div class="sv-h"><b>پرامپت ذخیره‌شده</b><span class="code" dir="ltr" title="این کد را برای ویرایش پرامپت به Claude Code بدهید">${esc(id)}</span>
         ${byClaude ? `<span class="ccl">✎ این پرامپت توسط Claude Code ویرایش شده${m.at ? ` · ${esc(when(m.at))}` : ''}</span>` : ''}
-        ${byClaude && m.used && m.used >= m.at ? '<span class="muted" style="font-size:12px">ساخت تصویر با همین پرامپت درخواست شده</span>' : ''}
+        ${byRegion ? `<span class="ccl">✎ با API برای بخش انتخاب‌شده‌ی تصویر ویرایش شده${m.at ? ` · ${esc(when(m.at))}` : ''}</span>` : ''}
+        ${(byClaude || byRegion) && m.used && m.used >= m.at ? '<span class="muted" style="font-size:12px">ساخت تصویر با همین پرامپت درخواست شده</span>' : ''}
         <span style="flex:1"></span>
+        ${pic ? `<button class="chip" data-region="${esc(id)}" data-pic="${esc(pic)}">اصلاح بخشی از تصویر</button>` : ''}
         <button class="chip" data-sopen="${esc(id)}">${sv.open ? 'بستن' : 'نمایش پرامپت'}</button></div>
-      ${byClaude && m.note ? `<div class="muted" style="font-size:13px">تغییر: ${esc(m.note)}</div>` : ''}
+      ${(byClaude || byRegion) && m.note ? `<div class="muted" style="font-size:13px">${byRegion ? 'درخواست شما' : 'تغییر'}: ${esc(m.note)}</div>` : ''}
+      ${byRegion && m.reply ? `<div class="reply">${esc(m.reply)}</div>` : ''}
       ${sv.open ? (sv.data ? `<div class="ptext"><pre>${esc(sv.data.prompt || 'پرامپتی ذخیره نشده است.')}</pre></div>` : '<span class="muted" style="font-size:13px">در حال بارگذاری…</span>') : ''}
-      ${byClaude ? `<div class="row"><button class="btn" data-smake="${esc(id)}">ساخت تصویر با این پرامپت</button></div>` : ''}
+      ${byClaude || byRegion ? `<div class="row"><button class="btn" data-smake="${esc(id)}">ساخت تصویر با این پرامپت</button></div>` : ''}
     </div>`;
   };
-  const genBox = (id, making, failed, hasAi) => {
+  // «اصلاح بخشی از تصویر»: the picture full screen; the admin drags a rectangle over the part to correct, writes what is
+  // wrong there, and the API changes the saved prompt for that part only (/api/consoleregion). The page draws the
+  // picture with the part outlined in red, and the part close up, and sends both.
+  function regionEdit(id, src) {
+    const box = document.createElement('div');
+    box.className = 'lb rg';
+    box.innerHTML = `<div class="rg-in">
+      <div class="rg-h"><b>اصلاح بخشی از تصویر</b><span class="code" dir="ltr">${esc(id)}</span><span style="flex:1"></span><button class="lbx" aria-label="بستن">✕</button></div>
+      <div class="muted rg-t">روی تصویر بکشید تا بخشی که باید اصلاح شود انتخاب شود، بعد بنویسید چه چیزی در آن اشتباه است.</div>
+      <div class="rg-pic"><img src="${esc(src)}" alt="" draggable="false"><div class="rg-box" hidden></div></div>
+      <textarea class="fa" placeholder="مثلاً: هاشور این قسمت باید صاف و یکنواخت باشد" maxlength="2000"></textarea>
+      <div class="rg-out" hidden></div>
+      <div class="row"><button class="btn" data-rgo disabled>ویرایش پرامپت برای این بخش</button><button class="btn soft" data-rno>انصراف</button></div>
+    </div>`;
+    document.body.appendChild(box);
+    const img = box.querySelector('img'), wrap = box.querySelector('.rg-pic'), rect = box.querySelector('.rg-box'), ta = box.querySelector('textarea'),
+      go = box.querySelector('[data-rgo]'), out = box.querySelector('.rg-out');
+    let sel = null, start = null, busy = false;
+    const ready = () => { go.disabled = busy || !sel || sel.w < 0.02 || sel.h < 0.02 || !ta.value.trim(); };
+    const close = () => { if (busy) return; box.remove(); document.removeEventListener('keydown', key); };
+    const key = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', key);
+    box.querySelector('.lbx').onclick = close;
+    box.querySelector('[data-rno]').onclick = close;
+    ta.oninput = ready;
+    const at = e => { const r = img.getBoundingClientRect(); return { x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) }; };
+    const show = () => {
+      if (!sel) { rect.hidden = true; return; }
+      const r = img.getBoundingClientRect(), w = wrap.getBoundingClientRect();
+      Object.assign(rect.style, { left: `${r.left - w.left + sel.x * r.width}px`, top: `${r.top - w.top + sel.y * r.height}px`, width: `${sel.w * r.width}px`, height: `${sel.h * r.height}px` });
+      rect.hidden = false;
+    };
+    wrap.onpointerdown = e => { if (busy) return; e.preventDefault(); start = at(e); sel = { ...start, w: 0, h: 0 }; wrap.setPointerCapture(e.pointerId); show(); };
+    wrap.onpointermove = e => { if (!start) return; const p = at(e); sel = { x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) }; show(); };
+    wrap.onpointerup = () => { start = null; ready(); };
+    window.addEventListener('resize', show);
+    // The picture with the part outlined, and the part itself, as JPEG data URLs.
+    const draw = () => {
+      const W = img.naturalWidth, H = img.naturalHeight, k = Math.min(1, 1400 / Math.max(W, H));
+      const c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
+      g.strokeStyle = '#ff1a1a'; g.lineWidth = Math.max(4, c.width / 220);
+      g.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height);
+      const sw = sel.w * W, sh = sel.h * H, kc = Math.min(1, 900 / Math.max(sw, sh), 4);
+      const d = document.createElement('canvas'); d.width = Math.max(1, Math.round(sw * kc)); d.height = Math.max(1, Math.round(sh * kc));
+      d.getContext('2d').drawImage(img, sel.x * W, sel.y * H, sw, sh, 0, 0, d.width, d.height);
+      return { marked: c.toDataURL('image/jpeg', 0.85), crop: d.toDataURL('image/jpeg', 0.9) };
+    };
+    go.onclick = async () => {
+      busy = true; ready(); go.textContent = 'در حال ویرایش پرامپت…'; ta.disabled = true;
+      try {
+        const e = await api('POST', 'consoleregion', { id, part: st.tab, box: sel, message: ta.value.trim(), ...draw() });
+        st.data.prompts = { ...(st.data.prompts || {}), [id]: { by: e.by, at: e.at, note: e.note, reply: e.reply, used: null } };
+        delete saved[id];
+        busy = false;
+        out.hidden = false;
+        out.innerHTML = `<b>پرامپت ذخیره شد.</b>${e.reply ? `<div class="reply">${esc(e.reply)}</div>` : ''}<div class="muted" style="font-size:13px">برای ساختن تصویر تازه، زیر همین مورد «ساخت تصویر با این پرامپت» را بزنید.</div>`;
+        go.hidden = true; box.querySelector('[data-rno]').textContent = 'بستن';
+        render();
+      } catch (er) { busy = false; toast(er.message); go.textContent = 'ویرایش پرامپت برای این بخش'; ta.disabled = false; ready(); }
+    };
+  }
+  const genBox = (id, making, failed, hasAi, pic) => {
     const d = drafts[id];
     return `<div class="gen">
       ${failed ? `<span class="fail">ساخت تصویر قبلی ناموفق بود: ${esc(failed)}</span>` : ''}
@@ -214,7 +291,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
         : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
         : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
           <div class="row"><button class="btn" data-go="${esc(id)}">ایجاد تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button></div>`}
-      ${!making ? promptBox(id, hasAi) : ''}
+      ${!making ? promptBox(id, hasAi, pic) : ''}
       ${hasAi || d ? `<small class="muted">تصویر تازه جای تصویر AI قبلی را می‌گیرد؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</small>` : ''}
     </div>`;
   };
@@ -227,6 +304,12 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       : `<div><button class="chip flag" data-mark="${esc(id)}" data-on="1">⚑ علامت برای ساخت دوباره</button></div>`;
   };
   const idOf = x => (x.key ? `g:${x.key}` : `q:${x.id}`);
+  // The item's newest AI picture (the one its saved prompt belongs to), for «اصلاح بخشی از تصویر».
+  const picOf = (x, isQ) => {
+    if (isQ) { const m = x.made.slice().sort((a, b) => a.at - b.at).pop(); return m ? `/img/gen/${x.qid}/${encodeURIComponent(m.id)}` : ''; }
+    const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
+    const c = x.cand; return c && c.done && c.v ? ref('cand', x.key, c.v) : x.ai ? ref('ai', x.key, x.ai) : '';
+  };
   const nMarked = items => items.filter(x => marks()[idOf(x)]).length;
   const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp" ${st.only ? 'disabled' : ''}>${groups.map((x, i) => { const m = nMarked(x.items); return `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)}${m ? ` · ⚑${faNum(m)}` : ''})</option>`; }).join('')}</select></label>`;
   // The cards to show: the open group's items, or (only marked) the marked items of every group, once each.
@@ -329,7 +412,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
           ${x.canOfficial ? tile(id, 'official', now, x.official ? ref('official', x.key, '') : '', 'طرح رسمی', 'دریافت نشده') : ''}
         </div>
         ${actRow(id)}
-        ${genBox(id, c && !c.done ? c.state : null, c && c.done && !c.v ? c.error || 'failed' : null, !!x.ai)}
+        ${genBox(id, c && !c.done ? c.state : null, c && c.done && !c.v ? c.error || 'failed' : null, !!x.ai, newPic ? ref('cand', x.key, c.v) : x.ai ? ref('ai', x.key, x.ai) : '')}
       </div>`; }).join('')}</div>`;
   }
 
@@ -353,7 +436,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
             : tile(id, '-', now, '', 'تصویر AI', 'هنوز ساخته نشده')}
         </div>
         ${actRow(id)}
-        ${genBox(id, x.making, x.failed, made.length > 0)}
+        ${genBox(id, x.making, x.failed, made.length > 0, made.length ? `/img/gen/${x.id}/${encodeURIComponent(made[made.length - 1].id)}` : '')}
       </div>`; }).join('')}</div>`;
   }
 
@@ -398,7 +481,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
           <div class="mhead"><span class="kind">${kind}</span><span class="muted">${esc(where)}</span><span class="sp"></span><small class="muted">علامت: ${when(m.at)}${m.by ? ` · ${esc(m.by)}` : ''}</small></div>
           ${markRow(id)}
           <div class="mbody"><div class="minfo">${info}</div><div class="mpics">${pics}${actRow(id)}</div></div>
-          ${genBox(id, making, failed, isQ ? x.made.length > 0 : !!x.ai)}
+          ${genBox(id, making, failed, isQ ? x.made.length > 0 : !!x.ai, picOf(x, isQ))}
         </div>`; }).join('')}</div>`;
   }
 
@@ -458,6 +541,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       sv.open = !sv.open;
       if (sv.open && !sv.data) loadSaved(id); else render();
     });
+    $app.querySelectorAll('[data-region]').forEach(b => b.onclick = () => regionEdit(b.dataset.region, b.dataset.pic));
     $app.querySelectorAll('[data-smake]').forEach(b => b.onclick = async () => {
       const id = b.dataset.smake, ref = id.slice(2);
       b.disabled = true;
