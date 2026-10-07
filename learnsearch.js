@@ -93,7 +93,8 @@ async function search(query, username) {
   client = client || new Anthropic({ timeout: 60e3, maxRetries: 2 });
   const qs = candidates(query);
   const r = await client.messages.create({
-    model: MODEL, max_tokens: 1500,
+    model: MODEL, max_tokens: 4000,
+    output_config: { effort: 'medium' },   // weighed against the Danish rules, not answered off the cuff
     system: [{ type: 'text', text: SYSTEM }, { type: 'text', text: `Signs, right of way and rules:\n${GUIDE_TEXT}`, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: `${qs.length ? `Exam questions that may match:\n${qs.join('\n')}\n\n` : ''}Search: ${query}` }],
   });

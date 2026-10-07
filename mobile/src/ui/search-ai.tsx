@@ -11,17 +11,18 @@ import { Icon } from './icon';
 import { Button, T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 
-// The search field: large, with the magnifier inside it at the start.
+// The search field: large, with the magnifier inside it at the start. Its text is at least 16px: a smaller one makes
+// iPhone Safari zoom the page in when it is focused, and the page stays zoomed after going back.
 export function SearchField({ value, onChange, onSubmit, autoFocus, big }: { value: string; onChange: (v: string) => void; onSubmit: () => void; autoFocus?: boolean; big?: boolean }) {
   const c = useColors(), dark = useIsDark();
-  const h = big ? 58 : 50;
+  const h = big ? 58 : 46;
   return (
     <View style={{ flex: 1, height: h, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5, borderColor: c.line,
       backgroundColor: dark ? 'rgba(255,255,255,0.06)' : c.surface2 }}>
       <Icon name="searchAi" size={big ? 22 : 20} color={c.muted} />
       <TextInput value={value} onChangeText={v => onChange(v.slice(0, 200))} autoFocus={autoFocus} returnKeyType="search" onSubmitEditing={onSubmit}
         placeholder="چه چیزی را می‌خواهید پیدا کنید؟" placeholderTextColor={c.faint}
-        style={[{ flex: 1, height: h - 4, color: c.text, fontSize: big ? 17 : 15.5, fontFamily: 'Vazirmatn-400', textAlign: 'right', writingDirection: 'rtl' },
+        style={[{ flex: 1, height: h - 4, color: c.text, fontSize: big ? 17 : 16, fontFamily: 'Vazirmatn-400', textAlign: 'right', writingDirection: 'rtl' },
           Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null]} />
       {value ? <Pressable onPress={() => onChange('')} hitSlop={8} accessibilityLabel="پاک کردن"><Icon name="xmark" size={16} color={c.faint} /></Pressable> : null}
     </View>

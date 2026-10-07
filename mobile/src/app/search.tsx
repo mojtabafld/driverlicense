@@ -72,8 +72,8 @@ export default function Search() {
       <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
         <SearchField value={q} onChange={setQ} onSubmit={go} />
         <Pressable onPress={() => { tap(); go(); }} accessibilityRole="button" accessibilityLabel="جستجو"
-          style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.btn })}>
-          <Icon name="searchAi" size={21} color={c.btnFg} />
+          style={({ pressed }) => ({ width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.btn })}>
+          <Icon name="searchAi" size={19} color={c.btnFg} />
         </Pressable>
       </View>
       {busy ? (
