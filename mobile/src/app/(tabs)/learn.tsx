@@ -56,7 +56,7 @@ export default function Learn() {
   const tour = useTour('learn', TOUR);
   return (
     <>
-    <Screen fill title="آموزش" subtitle="یک بخش را انتخاب کنید" right={<SearchAiButton />}>
+    <Screen fill title="آموزش" right={<SearchAiButton />}>
       <View style={{ flex: 1, gap: 12 }}>
         <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
           <Part n={1} target={tour.target(0)} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
