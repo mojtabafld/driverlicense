@@ -18,8 +18,8 @@ import { OptionBox } from './option-box';
 import { DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const UI = {
-  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever', restart: 'Forfra', summary: 'Opsummering', exams: 'Prøver', lessons: 'Lektioner' },
-  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in', restart: 'Start over', summary: 'Summary', exams: 'Exams', lessons: 'Lessons' },
+  da: { expl: 'Forklaring:', yes: 'Ja.', no: 'Nej.', prev: 'Forrige', next: 'Næste', handin: 'Aflever', restart: 'Forfra', done: 'Færdig', exams: 'Prøver', lessons: 'Lektioner' },
+  en: { expl: 'Explanation:', yes: 'Yes.', no: 'No.', prev: 'Previous', next: 'Next', handin: 'Hand in', restart: 'Start over', done: 'Done', exams: 'Exams', lessons: 'Lessons' },
 };
 export const uiText = (lang: 'da' | 'en') => UI[lang];
 
@@ -133,7 +133,7 @@ function AiLoading({ text }: { text: string }) {
   );
 }
 
-// The site's «تحلیل پاسخ شما» / «جمع‌بندی آموزشی اشتباهات» button: outlined in teal, filled while its text is shown.
+// The site's «تحلیل پاسخ شما» button: outlined in teal, filled while its text is shown.
 function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; shown: boolean; onPress: () => void }) {
   const c = useColors(), dark = useIsDark();
   // In the neutral `strong` grey: outlined while closed (the AI mark on a solid tile), filled while its text shows.
@@ -276,48 +276,6 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
     </View>
   );
 }
-
-// «جمع‌بندی آموزشی اشتباهات»: the AI summary of all the mistakes of an exam or lesson.
-export function AiSummary({ items, at, lang, onQuestion }: { items: Item[]; at?: number; lang: 'da' | 'en'; onQuestion?: (n: number) => void }) {
-  const c = useColors();
-  const [shown, setShown] = useState(false);
-  const [text, setText] = useState<string | null>(null);
-  const [typing, setTyping] = useState(false);
-  const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
-  const [err, setErr] = useState('');
-  const wrong = items.map((it, i) => ({ it, n: i + 1 })).filter(x => !x.it.ok && x.it.a).map(({ it, n }) => ({ id: it.id, a: it.a!.map(v => (v ? 1 : 0)), n }));
-  const fold = useFold();
-  const press = () => {
-    if (state === 'loading') return;
-    if (!shown && !text) {
-      setState('loading');
-      api<{ text: string }>('POST', 'summary', { items: wrong, lang, at })
-        .then(d => { setTyping(true); setText(d.text); setState('idle'); })
-        .catch((e: any) => { setErr(e.status === 503 ? 'آموزش هوش مصنوعی فعال نیست.' : e.message); setState('error'); });
-    }
-    if (fold.closing) return;
-    const next = !shown || (!text && state === 'error');
-    if (shown) setTyping(false); // typed once: shown whole when opened again
-    if (shown && !next) fold.close(() => setShown(false));
-    else setShown(next);
-  };
-  const { ref, panel, follow } = useReveal(shown);
-  return (
-    <View ref={ref} style={{ marginTop: 22 }}>
-      <AiButton title="جمع‌بندی آموزشی اشتباهات" sub="خلاصه‌ی آموزشی همه‌ی اشتباهات این آزمون، با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
-      {shown ? (
-        <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
-        <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
-          {state === 'loading' ? <AiLoading text="در حال بررسی اشتباهات شما و آماده‌سازی جمع‌بندی آموزشی" />
-            : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} onQuestion={onQuestion} typing={typing} onGrow={follow} /> : null}
-        </View>
-        </View></Animated.View>
-      ) : null}
-    </View>
-  );
-}
-export const hasSummary = (items: Item[], ai: boolean) => ai && items.some(it => !it.ok && it.a);
 
 // One statement of a reviewed question in the list's bordered box (the step-by-step review uses OptionBox).
 // A wrong tick or a missing one is shown in red.
