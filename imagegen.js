@@ -61,7 +61,7 @@ function init(s, siteDir) {
   Q = new Map(BANK.questions.map(q => [q.id, q]));
   if (Object.values(images()).reduce((n, x) => n + unstick(x), 0)) save().catch(() => {});
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
-  pruneAll().catch(e => console.error('prune pictures', e.message));
+  pruneAll().then(lessonsToProve).catch(e => console.error('prune pictures', e.message));
   if (Object.values(store.meta.oneOff || {}).some(j => !j.done)) schedule();
   // Nothing is made on its own any more (the image model's credit is limited): only the guide pictures ordered in
   // data/art-orders.json. The intro, «آموزش» cards, profile pictures and the questions' own pictures keep what was made.
@@ -219,6 +219,21 @@ async function pruneAll() {
     await prune(item);
   }
   store.meta.imagesPruned = Date.now(); await store.saveMeta('imagesPruned', store.meta.imagesPruned);
+}
+
+// Once (the admin asked for it): every question of the 44 lessons shows its original picture from prove.dk on the main
+// site again; the made pictures are kept, to be chosen again in the console.
+async function lessonsToProve() {
+  if (store.meta.lessonsToProve) return;
+  const ids = new Set(BANK.tests.flatMap(t => t.qs));
+  let n = 0;
+  for (const [qid, item] of Object.entries(images())) {
+    if (!ids.has(+qid) || !item.active) continue;
+    item.active = null; item.v = `o.${Date.now().toString(36)}`; n++;
+  }
+  await save();
+  store.meta.lessonsToProve = Date.now(); await store.saveMeta('lessonsToProve', store.meta.lessonsToProve);
+  console.log(`lesson pictures: ${n} back to prove.dk's`);
 }
 
 // Recently served pictures stay in memory (a few MB each), so the database is not read on every request.
