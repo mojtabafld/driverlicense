@@ -21,6 +21,13 @@ const IMAGE_RULES = `- موقعیت را فقط با چیزهایی توصیف �
 - اگر ترجمه‌ی فارسی با تصویر جور نیست (مثلاً «گاری» برای چیزی که در تصویر ون یا خودرو است)، نام درستِ آنچه در تصویر می‌بینید را بنویسید.
 - ساده و روان بنویسید، مثل معلمی که حضوری توضیح می‌دهد؛ جمله‌های کوتاه و قابل‌فهم.`;
 
+// Everything the AI writes for the user must follow Denmark's traffic rules exactly (the user asked for this above all).
+const LAW_RULES = `- همه‌ی توضیح‌ها باید دقیقاً بر اساس قوانین فعلی رانندگی دانمارک باشد: Færdselsloven، مقررات تابلوها و خط‌کشی‌ها (bekendtgørelse om vejafmærkning) و برنامه‌ی آموزشی رسمی گواهینامه‌ی B (Undervisningsplan). قوانین یا عادت‌های کشورهای دیگر (مثلاً ایران) یا «عقل سلیم» کلی را جای قانون دانمارک ننویسید.
+- پاسخ درست هر گزینه و «توضیح رسمی» داده‌شده معتبرترین منبع است؛ دلیل‌ها را با آن هماهنگ بنویسید و هرگز با آن تناقض نگویید.
+- قبل از نوشتن هر جمله بسنجید که طبق قانون دانمارک درست است؛ اگر درباره‌ی عددی (سرعت، فاصله، زمان، الکل…)، کد تابلو یا جزئیاتی مطمئن نیستید، آن را ننویسید و فقط آنچه قطعی است بگویید. هیچ قانون، عدد یا کد تابلویی از خودتان نسازید.
+- کد و نام تابلوها را به شکل رسمی دانمارکی بیاورید (مثلاً B 11، C 61) و اصطلاح‌های رسمی را درست به کار ببرید (ubetinget vigepligt، højreregel، vigepligt…).
+- قاعده‌ها را دقیق و با شرطشان بگویید (مثلاً «در تقاطع بدون علامت، به وسیله‌ای که از راست می‌آید حق تقدم بدهید»)، نه کلی و مبهم.`;
+
 const SYSTEM = `شما معلم آزمون تئوری رانندگی دانمارک (گواهینامه‌ی B) برای فارسی‌زبانان هستید.
 برای یک سؤال تصویری آزمون، یک آموزش کوتاه و دقیق به فارسی بنویسید که فقط به همین سؤال و اشتباهات همین کاربر مربوط باشد.
 تصویر سؤال هم به شما داده می‌شود؛ همان تصویری که کاربر می‌بیند.
@@ -37,7 +44,7 @@ const SYSTEM = `شما معلم آزمون تئوری رانندگی دانما�
 
 قواعد:
 - پاسخ درستِ هر گزینه همانی است که در داده آمده؛ آن را تغییر ندهید و با آن تناقض نگویید.
-- فقط بر اساس قوانین رانندگی دانمارک و توضیحات داده‌شده بنویسید؛ چیزی از خودتان نسازید.
+${LAW_RULES}
 ${IMAGE_RULES}
 - حداکثر حدود ۱۲۰ کلمه، ساده و روان، بدون مقدمه و بدون جمع‌بندی اضافه.
 - اصطلاح‌های دانمارکی مهم (مثل ubetinget vigepligt) را در صورت لزوم داخل پرانتز بیاورید.
@@ -58,7 +65,7 @@ const SYSTEM_OK = `شما معلم آزمون تئوری رانندگی دانم
 قواعد:
 - بخش «اشتباه شما» یا «نکته برای دفعه‌ی بعد» ننویسید؛ کاربر اشتباهی نداشته است.
 - پاسخ درستِ هر گزینه همانی است که در داده آمده؛ آن را تغییر ندهید و با آن تناقض نگویید.
-- فقط بر اساس قوانین رانندگی دانمارک و توضیحات داده‌شده بنویسید؛ چیزی از خودتان نسازید.
+${LAW_RULES}
 ${IMAGE_RULES}
 - حداکثر حدود ۱۰۰ کلمه، بدون مقدمه و بدون جمع‌بندی اضافه.
 - اصطلاح‌های دانمارکی مهم را در صورت لزوم داخل پرانتز بیاورید.
@@ -79,7 +86,7 @@ const SUMMARY_SYSTEM = `شما معلم آزمون تئوری رانندگی د�
 
 قواعد:
 - پاسخ درستِ هر گزینه همانی است که در داده آمده؛ آن را تغییر ندهید و با آن تناقض نگویید.
-- فقط بر اساس قوانین رانندگی دانمارک و توضیحات داده‌شده بنویسید؛ چیزی از خودتان نسازید.
+${LAW_RULES}
 - برای پاسخ کاربر همیشه «انتخاب کردید / انتخاب نکردید» بنویسید.
 ${IMAGE_RULES}
 - نکته‌های مهم (قاعده‌ی اصلی، عدد یا شرط کلیدی) را با **دو ستاره** پررنگ کنید؛ در هر خط حداکثر یکی دو عبارت کوتاه.
@@ -154,7 +161,7 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
   const known = Array.isArray(ticks);
   const mask = known ? q.st.map((s, k) => ((!!ticks[k]) !== !!s.ok ? 1 : 0)).join('') : 'x';
   const allRight = known && !mask.includes('1');
-  const key = `lesson:v6:${qkey(q)}:${mask}:${lang}`; // v6: an all-right answer gets its own analysis, mistakes list only the wrong ones
+  const key = `lesson:v7:${qkey(q)}:${mask}:${lang}`; // v7: written strictly by Denmark's traffic rules (LAW_RULES)
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
@@ -170,7 +177,7 @@ async function generate({ store, key, system, prompt, maxTokens }) {
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: maxTokens,
-      output_config: { effort: 'low' },
+      output_config: { effort: 'medium' },   // checked against the Danish rules, not written off the cuff
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
       system,
@@ -197,7 +204,7 @@ async function getSummary({ store, siteDir, username, items, lang }) {
   const list = items.map((x, k) => ({ q: Q.get(+x.id), a: x.a, n: Number.isInteger(x.n) && x.n > 0 ? x.n : k + 1 })).filter(x => x.q);
   if (!list.length) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   const mask = (q, a) => q.st.map((s, k) => ((!!a[k]) !== !!s.ok ? 1 : 0)).join('');
-  const key = `summary:v3:${lang}:${list.map(x => `${x.n}.${qkey(x.q)}.${mask(x.q, x.a)}`).sort().join(',')}`; // v3: sees the pictures
+  const key = `summary:v4:${lang}:${list.map(x => `${x.n}.${qkey(x.q)}.${mask(x.q, x.a)}`).sort().join(',')}`; // v4: strictly by Denmark's traffic rules
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
