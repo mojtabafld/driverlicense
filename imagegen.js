@@ -728,7 +728,9 @@ function questionPrompt(qid) {
 async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
-  const content = [...(image ? [{ type: 'image', source: { type: 'base64', media_type: image.mime, data: image.data.toString('base64') } }] : []), { type: 'text', text }];
+  // `image`: one { mime, data } or a list of them (e.g. a marked picture and a close-up).
+  const images = (Array.isArray(image) ? image : image ? [image] : []).filter(Boolean);
+  const content = [...images.map(i => ({ type: 'image', source: { type: 'base64', media_type: i.mime, data: i.data.toString('base64') } })), { type: 'text', text }];
   const r = await claude.messages.create({ model: PROMPT_MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
   const out = r.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
   if (!out) throw new Error('empty answer');

@@ -2,8 +2,10 @@
 // the last picture was made from, or one Claude Code edited on the admin's request (through /api/claudeprompt,
 // with the CLAUDE_CODE_KEY secret). The console shows it, says when Claude Code edited it, and «ساخت تصویر با این
 // پرامپت» makes a picture from it. Kept in store.meta.consolePrompts:
-// { [id]: { prompt, by: 'api' | 'claude', at, note?, prev?, used? } } — `prev` the prompt before Claude Code's edit,
-// `used` when a picture was last made from this very prompt.
+// { [id]: { prompt, by: 'api' | 'claude' | 'region', at, note?, reply?, box?, prev?, used? } } — 'region': the API
+// corrected it for a part of the picture the admin marked in the console (`note` what they asked, `reply` what the API
+// says it changed, `box` the marked part); `prev` the prompt before an edit, `used` when a picture was last made from
+// this very prompt.
 'use strict';
 let store = null, imagegen = null, guideref = null, consolepics = null;
 
@@ -21,7 +23,7 @@ function get(id) {
 // The small part of every entry, for the console's lists (the text itself is fetched when opened).
 function marks() {
   const out = {};
-  for (const [id, e] of Object.entries(all())) out[id] = { by: e.by, at: e.at, note: e.note || '', used: e.used || null };
+  for (const [id, e] of Object.entries(all())) out[id] = { by: e.by, at: e.at, note: e.note || '', reply: e.reply || '', used: e.used || null };
   return out;
 }
 
@@ -59,4 +61,35 @@ async function edit(id, prompt, note) {
   return get(id);
 }
 
-module.exports = { init, get, marks, about, saved, made, edit, ID_RE };
+// The console's «اصلاح بخشی از تصویر»: the admin marks a part of the picture and says (in Persian) what is wrong there;
+// the API changes only what the prompt says about that part. `marked`: the picture with the part outlined in red,
+// `crop`: the part close up (both { mime, data }, drawn by the console), `box`: { x, y, w, h } as fractions.
+const REGION = `You correct the prompt an image model used to draw a picture for a Danish driving-theory app (category B).
+You get: the picture with a RED RECTANGLE around the part the person is talking about, a close-up of that part, the current prompt, and the person's correction in Persian.
+1. Work out exactly what is inside the marked part: which signs, markings, signals, vehicles, people or objects, and where they are in the scene.
+2. Change ONLY what the prompt says about the things in that part, exactly as the person asks: translate the request into precise English and make the affected details explicit and unambiguous (position, side, lane, distance, size, colour, direction, number, official design). Everything must agree with Danish traffic rules and the official Danish designs of signs, markings and signals. If it helps, add a line to MUST NOT APPEAR that rules out the mistake.
+3. Keep every other sentence of the prompt word for word, with its parts and their order.
+4. The new picture has no rectangle: never mention the rectangle, the close-up or "the marked area" in the prompt; name the place in terms of the scene.
+Answer in exactly this form:
+<reply>
+In Persian, short: one line on what is in the marked part, then a few lines starting with «- » on what you changed (quoting the changed English words).
+</reply>
+<prompt>
+The complete new prompt in English.
+</prompt>`;
+async function region(id, { message, box, marked, crop, part }) {
+  message = String(message || '').trim().slice(0, 2000);
+  if (!message) throw Object.assign(new Error('بنویسید در این بخش چه چیزی باید اصلاح شود.'), { status: 400 });
+  const before = get(id).prompt;
+  if (!before) throw Object.assign(new Error('برای این مورد پرامپتی ذخیره نشده؛ اول «ساخت پرامپت با هوش مصنوعی» را بزنید.'), { status: 400 });
+  const where = box ? `The marked part: from ${Math.round(box.x * 100)}% to ${Math.round((box.x + box.w) * 100)}% of the width (from the left) and from ${Math.round(box.y * 100)}% to ${Math.round((box.y + box.h) * 100)}% of the height (from the top).` : '';
+  const out = await imagegen.writeText(REGION, [`What the picture is for:\n${JSON.stringify(about(id))}`, where, `Current prompt:\n${before}`, `The person's correction for the marked part (Persian):\n${message}`].filter(Boolean).join('\n\n'), [marked, crop], 6000);
+  const reply = ((/<reply>([\s\S]*?)<\/reply>/.exec(out) || [])[1] || '').trim();
+  const prompt = ((/<prompt>([\s\S]*?)<\/prompt>/.exec(out) || [])[1] || '').trim();
+  if (!prompt) throw Object.assign(new Error('هوش مصنوعی پرامپت تازه‌ای نفرستاد؛ دوباره امتحان کنید.'), { status: 502 });
+  all()[id] = { prompt: imagegen.withHouseStyle(prompt, part).slice(0, 20000), by: 'region', at: Date.now(), note: message, reply: reply.slice(0, 3000), box: box || null, prev: before };
+  await save();
+  return get(id);
+}
+
+module.exports = { init, get, marks, about, saved, made, edit, region, ID_RE };
