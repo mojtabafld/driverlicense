@@ -8,9 +8,10 @@
 // picture, the question in Danish with its translation, «Ja / Nej» for each statement, every wrong answer one mistake)
 // → its result against the real test's limit → summary with the sources. Progress is kept with the account
 // (/api/courseprogress). Pictures are made for the course (data/course-art.json → /course-art); one not ordered yet
-// shows a placeholder. Chapters without lessons yet are shown as «به‌زودی». Pictures and points centre on what the
-// exam reads the answer from: the signs, the road markings and the road's layout; pictures are clear illustrations,
-// not realistic scenes, with the signs and markings large and in their official Danish design.
+// shows a placeholder. Chapters without lessons yet are shown as «به‌زودی». Pictures and points centre on everything
+// that matters for driving and for the exam: signs, road markings, the road's layout, the road users, their positions,
+// indicators and lights. Pictures are clear illustrations, not realistic scenes, from exact prompts: what must be
+// clearly visible, where, in its official Danish design, and what must not appear.
 
 // The real test, as the app's exam simulates it.
 export const EXAM = { questions: 25, maxMistakes: 5 };
