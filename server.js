@@ -222,6 +222,14 @@ function safeEqual(a, b) {
   return x.length === y.length && crypto.timingSafeEqual(x, y);
 }
 
+// A search the user made, kept with the account (newest first, each once, at most 30) for the search box.
+async function rememberSearch(user, q) {
+  q = String(q || '').trim().slice(0, 200);
+  if (q.length < 2) return;
+  user.searches = [q, ...(user.searches || []).filter(x => x !== q)].slice(0, 30);
+  await store.saveUser(user).catch(() => {});
+}
+
 // ---------- http helpers ----------
 function send(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -566,11 +574,25 @@ async function api(req, res, route) {
   // items, rules and questions, each with why it matches.
   if (req.method === 'POST' && route === 'learnsearch') {
     const b = await readBody(req);
-    try { return send(res, 200, await learnsearch.search(b.q, user.username)); }
+    try {
+      const out = await learnsearch.search(b.q, user.username);
+      await rememberSearch(user, b.q);
+      return send(res, 200, out);
+    }
     catch (e) {
       if (e instanceof Anthropic.APIError) { console.error('search API error', e.status, e.message); return send(res, 502, { error: 'جستجوی هوش مصنوعی الان در دسترس نیست.' }); }
       if (e.status) return send(res, e.status, { error: e.message }); throw e;
     }
+  }
+  // The user's earlier searches (newest first), for the search box's suggestions: GET → { items };
+  // POST { remove: text } drops one, POST { clear: true } all.
+  if (route === 'searchhistory' && (req.method === 'GET' || req.method === 'POST')) {
+    if (req.method === 'POST') {
+      const b = await readBody(req);
+      user.searches = b.clear ? [] : (user.searches || []).filter(x => x !== String(b.remove || '').trim());
+      await store.saveUser(user);
+    }
+    return send(res, 200, { items: user.searches || [] });
   }
   // An AI analysis or summary read aloud in Persian: { text } (the text exactly as the server wrote it) → { id }.
   if (req.method === 'POST' && route === 'ttsai') {
