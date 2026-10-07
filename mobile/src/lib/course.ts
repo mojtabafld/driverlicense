@@ -334,8 +334,8 @@ const OVERTAKING: CourseLesson = {
     {
       kind: 'exam',
       art: 'exam-c51-cyclist',
-      da: 'Du har lige passeret tavlen «Overhaling forbudt». Foran dig kører en cyklist. Hvordan forholder du dig?',
-      fa: 'همین الان از تابلوی «سبقت ممنوع» رد شده‌اید. جلوی شما یک دوچرخه‌سوار می‌رود. چه می‌کنید؟',
+      da: 'Du kører forbi tavlen «Overhaling forbudt». Foran dig kører en cyklist. Hvordan forholder du dig?',
+      fa: 'به تابلوی «سبقت ممنوع» رسیده‌اید و از کنارش رد می‌شوید. جلوی شما یک دوچرخه‌سوار می‌رود. چه می‌کنید؟',
       statements: [
         { da: 'Jeg må gerne overhale cyklisten, når det kan ske uden fare.', fa: 'اگر بی‌خطر باشد، می‌توانم از دوچرخه‌سوار سبقت بگیرم.', ok: true, why: 'تابلوی C 51 سبقت از دوچرخه را ممنوع نمی‌کند.' },
         { da: 'Forbuddet gælder også overhaling af cyklisten.', fa: 'ممنوعیت شامل سبقت از دوچرخه‌سوار هم می‌شود.', ok: false, why: 'ممنوعیت فقط برای وسیله‌های موتوری بیش از دو چرخ است.' },
