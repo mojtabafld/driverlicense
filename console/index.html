@@ -6,8 +6,8 @@
      each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
      «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has the API write a prompt (editable) and «ایجاد تصویر» makes the picture;
      the item's prompt is kept («پرامپت ذخیره‌شده», with the item's code); Claude Code edits it on the admin's request
-     (/api/claudeprompt), and then it shows as edited by Claude Code with «ساخت تصویر با این پرامپت» to make the new one. «اصلاح بخشی از
-     تصویر»: mark a part of the picture and say what is wrong there; the API changes the prompt for that part (/api/consoleregion). One AI picture is kept per item. An item
+     (/api/claudeprompt), and then it shows as edited by Claude Code with «ساخت تصویر با این پرامپت» to make the new one. «اصلاح بخش‌هایی از
+     تصویر»: mark parts of the picture, comment on each, and the API changes the prompt for those parts (/api/consoleregion). One AI picture is kept per item. An item
      can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked items of a part, and the
      «⚑ علامت‌دارها» part all of them in full. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
      /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consoleprompt, /api/consoleregion and /api/imggen*. -->
@@ -91,7 +91,7 @@ small{display:block;font-size:12px;margin-top:2px}
 .sv-h .code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--surface2);border-radius:6px;padding:1px 7px;user-select:all}
 .reply{white-space:pre-wrap;font-size:13px;line-height:1.75;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
 .lb.rg{align-items:flex-start;overflow:auto;touch-action:auto;padding:16px}
-.rg-in{background:var(--surface);color:var(--text);border-radius:14px;padding:12px;width:min(1000px,100%);display:flex;flex-direction:column;gap:10px;margin:auto}
+.rg-in{background:var(--surface);color:var(--text);border-radius:14px;padding:12px;width:min(1000px,100%);display:flex;flex-direction:column;gap:10px;margin:0 auto}
 .rg-h{display:flex;align-items:center;gap:8px}
 .rg-h .code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--surface2);border-radius:6px;padding:1px 7px}
 .rg-h .lbx{position:static;background:var(--surface2);color:var(--text)}
@@ -99,7 +99,12 @@ small{display:block;font-size:12px;margin-top:2px}
 .rg-pic{position:relative;display:flex;justify-content:center;cursor:crosshair;touch-action:none;user-select:none}
 .rg-pic img{max-width:100%;max-height:62vh;border-radius:8px;-webkit-user-drag:none;pointer-events:none}
 .rg-box{position:absolute;border:3px solid #ff1a1a;background:rgba(255,26,26,.12);border-radius:3px;pointer-events:none}
-.rg-in textarea{font:inherit;font-size:14px;min-height:64px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl}
+.rg-box span{position:absolute;top:-3px;left:-3px;min-width:22px;height:22px;padding:0 4px;background:#ff1a1a;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;border-radius:3px 0 6px 0}
+.rg-list{display:flex;flex-direction:column;gap:8px}
+.rg-row{display:flex;gap:8px;align-items:flex-start}
+.rg-n{flex:none;width:26px;height:26px;border-radius:6px;background:#ff1a1a;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:6px}
+.rg-row textarea{flex:1}
+.rg-in textarea{font:inherit;font-size:14px;min-height:52px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl}
 .ccl{color:var(--accent);font-weight:700;font-size:13px}
 .ptext pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12.5px;line-height:1.6;background:var(--surface2);border-radius:10px;padding:10px;margin:4px 0 0;max-height:320px;overflow:auto}
 .fixbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px}
@@ -212,74 +217,112 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
         ${byRegion ? `<span class="ccl">✎ با API برای بخش انتخاب‌شده‌ی تصویر ویرایش شده${m.at ? ` · ${esc(when(m.at))}` : ''}</span>` : ''}
         ${(byClaude || byRegion) && m.used && m.used >= m.at ? '<span class="muted" style="font-size:12px">ساخت تصویر با همین پرامپت درخواست شده</span>' : ''}
         <span style="flex:1"></span>
-        ${pic ? `<button class="chip" data-region="${esc(id)}" data-pic="${esc(pic)}">اصلاح بخشی از تصویر</button>` : ''}
+        ${pic ? `<button class="chip" data-region="${esc(id)}" data-pic="${esc(pic)}">اصلاح بخش‌هایی از تصویر</button>` : ''}
         <button class="chip" data-sopen="${esc(id)}">${sv.open ? 'بستن' : 'نمایش پرامپت'}</button></div>
-      ${(byClaude || byRegion) && m.note ? `<div class="muted" style="font-size:13px">${byRegion ? 'درخواست شما' : 'تغییر'}: ${esc(m.note)}</div>` : ''}
+      ${(byClaude || byRegion) && m.note ? `<div class="muted" style="font-size:13px;white-space:pre-wrap">${byRegion ? 'درخواست شما' : 'تغییر'}: ${esc(m.note)}</div>` : ''}
       ${byRegion && m.reply ? `<div class="reply">${esc(m.reply)}</div>` : ''}
       ${sv.open ? (sv.data ? `<div class="ptext"><pre>${esc(sv.data.prompt || 'پرامپتی ذخیره نشده است.')}</pre></div>` : '<span class="muted" style="font-size:13px">در حال بارگذاری…</span>') : ''}
       ${byClaude || byRegion ? `<div class="row"><button class="btn" data-smake="${esc(id)}">ساخت تصویر با این پرامپت</button></div>` : ''}
     </div>`;
   };
-  // «اصلاح بخشی از تصویر»: the picture full screen; the admin drags a rectangle over the part to correct, writes what is
-  // wrong there, and the API changes the saved prompt for that part only (/api/consoleregion). The page draws the
-  // picture with the part outlined in red, and the part close up, and sends both.
+  // «اصلاح بخش‌هایی از تصویر»: the picture full screen; the admin drags rectangles over the parts to correct (each one
+  // numbered, with its own comment), then «ذخیره و اصلاح پرامپت» has the API change the saved prompt for those parts
+  // only (/api/consoleregion). The page draws the picture with the parts outlined and numbered, and each part close up.
   function regionEdit(id, src) {
     const box = document.createElement('div');
     box.className = 'lb rg';
     box.innerHTML = `<div class="rg-in">
-      <div class="rg-h"><b>اصلاح بخشی از تصویر</b><span class="code" dir="ltr">${esc(id)}</span><span style="flex:1"></span><button class="lbx" aria-label="بستن">✕</button></div>
-      <div class="muted rg-t">روی تصویر بکشید تا بخشی که باید اصلاح شود انتخاب شود، بعد بنویسید چه چیزی در آن اشتباه است.</div>
-      <div class="rg-pic"><img src="${esc(src)}" alt="" draggable="false"><div class="rg-box" hidden></div></div>
-      <textarea class="fa" placeholder="مثلاً: هاشور این قسمت باید صاف و یکنواخت باشد" maxlength="2000"></textarea>
+      <div class="rg-h"><b>اصلاح بخش‌هایی از تصویر</b><span class="code" dir="ltr">${esc(id)}</span><span style="flex:1"></span><button class="lbx" aria-label="بستن">✕</button></div>
+      <div class="muted rg-t">روی تصویر بکشید تا یک بخش انتخاب شود؛ برای هر بخش بنویسید چه چیزی در آن اشتباه است. می‌توانید چند بخش انتخاب کنید.</div>
+      <div class="rg-pic"><img src="${esc(src)}" alt="" draggable="false"></div>
+      <div class="rg-list"></div>
       <div class="rg-out" hidden></div>
-      <div class="row"><button class="btn" data-rgo disabled>ویرایش پرامپت برای این بخش</button><button class="btn soft" data-rno>انصراف</button></div>
+      <div class="row"><button class="btn" data-rgo disabled>ذخیره و اصلاح پرامپت</button><button class="btn soft" data-rno>انصراف</button></div>
     </div>`;
     document.body.appendChild(box);
-    const img = box.querySelector('img'), wrap = box.querySelector('.rg-pic'), rect = box.querySelector('.rg-box'), ta = box.querySelector('textarea'),
-      go = box.querySelector('[data-rgo]'), out = box.querySelector('.rg-out');
-    let sel = null, start = null, busy = false;
-    const ready = () => { go.disabled = busy || !sel || sel.w < 0.02 || sel.h < 0.02 || !ta.value.trim(); };
-    const close = () => { if (busy) return; box.remove(); document.removeEventListener('keydown', key); };
+    const img = box.querySelector('img'), wrap = box.querySelector('.rg-pic'), list = box.querySelector('.rg-list'),
+      go = box.querySelector('[data-rgo]'), out = box.querySelector('.rg-out'), no = box.querySelector('[data-rno]');
+    // The parts: { x, y, w, h } (fractions of the picture) and the comment.
+    const regions = [];
+    let drawing = null, start = null, busy = false, done = false;
+    const ready = () => { go.disabled = busy || done || !regions.length || regions.some(r => !r.text.trim()); };
+    const close = () => { if (busy) return; box.remove(); document.removeEventListener('keydown', key); window.removeEventListener('resize', show); };
     const key = e => { if (e.key === 'Escape') close(); };
     document.addEventListener('keydown', key);
     box.querySelector('.lbx').onclick = close;
-    box.querySelector('[data-rno]').onclick = close;
-    ta.oninput = ready;
+    no.onclick = close;
     const at = e => { const r = img.getBoundingClientRect(); return { x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) }; };
-    const show = () => {
-      if (!sel) { rect.hidden = true; return; }
+    // The rectangles over the picture, numbered as in the list.
+    function show() {
+      wrap.querySelectorAll('.rg-box').forEach(el => el.remove());
       const r = img.getBoundingClientRect(), w = wrap.getBoundingClientRect();
-      Object.assign(rect.style, { left: `${r.left - w.left + sel.x * r.width}px`, top: `${r.top - w.top + sel.y * r.height}px`, width: `${sel.w * r.width}px`, height: `${sel.h * r.height}px` });
-      rect.hidden = false;
+      [...regions, ...(drawing ? [drawing] : [])].forEach((g, i) => {
+        const el = document.createElement('div');
+        el.className = 'rg-box';
+        Object.assign(el.style, { left: `${r.left - w.left + g.x * r.width}px`, top: `${r.top - w.top + g.y * r.height}px`, width: `${g.w * r.width}px`, height: `${g.h * r.height}px` });
+        if (g !== drawing) el.innerHTML = `<span>${faNum(i + 1)}</span>`;
+        wrap.appendChild(el);
+      });
+    }
+    // One comment box per part, in order; ✕ removes the part.
+    function listParts() {
+      list.innerHTML = regions.map((g, i) => `<div class="rg-row"><span class="rg-n">${faNum(i + 1)}</span>
+        <textarea class="fa" data-i="${i}" placeholder="چه چیزی در بخش ${faNum(i + 1)} باید اصلاح شود؟" maxlength="2000" ${busy || done ? 'disabled' : ''}>${esc(g.text)}</textarea>
+        ${busy || done ? '' : `<button class="chip" data-del="${i}" title="حذف این بخش">✕</button>`}</div>`).join('')
+        || '<div class="muted" style="font-size:13px">هنوز بخشی انتخاب نشده است.</div>';
+      list.querySelectorAll('textarea').forEach(t => t.oninput = () => { regions[+t.dataset.i].text = t.value; ready(); });
+      list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { regions.splice(+b.dataset.del, 1); listParts(); show(); ready(); });
+      ready();
+    }
+    wrap.onpointerdown = e => { if (busy || done) return; e.preventDefault(); start = at(e); drawing = { ...start, w: 0, h: 0 }; wrap.setPointerCapture(e.pointerId); show(); };
+    wrap.onpointermove = e => { if (!start) return; const p = at(e); drawing = { x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) }; show(); };
+    wrap.onpointerup = () => {
+      if (!start) return;
+      start = null;
+      const g = drawing; drawing = null;
+      if (g && g.w >= 0.02 && g.h >= 0.02 && regions.length < 8) {
+        regions.push({ ...g, text: '' });
+        listParts();
+        const t = list.querySelector(`textarea[data-i="${regions.length - 1}"]`); if (t) t.focus();
+      } else if (regions.length >= 8) toast('حداکثر ۸ بخش');
+      show();
     };
-    wrap.onpointerdown = e => { if (busy) return; e.preventDefault(); start = at(e); sel = { ...start, w: 0, h: 0 }; wrap.setPointerCapture(e.pointerId); show(); };
-    wrap.onpointermove = e => { if (!start) return; const p = at(e); sel = { x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) }; show(); };
-    wrap.onpointerup = () => { start = null; ready(); };
     window.addEventListener('resize', show);
-    // The picture with the part outlined, and the part itself, as JPEG data URLs.
+    img.onload = show;
+    listParts();
+    // The picture with the parts outlined and numbered, and each part close up, as JPEG data URLs.
     const draw = () => {
       const W = img.naturalWidth, H = img.naturalHeight, k = Math.min(1, 1400 / Math.max(W, H));
       const c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
       const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
-      g.strokeStyle = '#ff1a1a'; g.lineWidth = Math.max(4, c.width / 220);
-      g.strokeRect(sel.x * c.width, sel.y * c.height, sel.w * c.width, sel.h * c.height);
-      const sw = sel.w * W, sh = sel.h * H, kc = Math.min(1, 900 / Math.max(sw, sh), 4);
-      const d = document.createElement('canvas'); d.width = Math.max(1, Math.round(sw * kc)); d.height = Math.max(1, Math.round(sh * kc));
-      d.getContext('2d').drawImage(img, sel.x * W, sel.y * H, sw, sh, 0, 0, d.width, d.height);
-      return { marked: c.toDataURL('image/jpeg', 0.85), crop: d.toDataURL('image/jpeg', 0.9) };
+      const lw = Math.max(4, c.width / 220), fs = Math.max(22, c.width / 32);
+      regions.forEach((r, i) => {
+        g.strokeStyle = '#ff1a1a'; g.lineWidth = lw;
+        g.strokeRect(r.x * c.width, r.y * c.height, r.w * c.width, r.h * c.height);
+        g.fillStyle = '#ff1a1a'; g.fillRect(r.x * c.width, r.y * c.height, fs * 1.3, fs * 1.3);
+        g.fillStyle = '#fff'; g.font = `bold ${fs}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText(String(i + 1), r.x * c.width + fs * 0.65, r.y * c.height + fs * 0.68);
+      });
+      const crop = r => {
+        const sw = r.w * W, sh = r.h * H, kc = Math.min(1, 700 / Math.max(sw, sh), 4);
+        const d = document.createElement('canvas'); d.width = Math.max(1, Math.round(sw * kc)); d.height = Math.max(1, Math.round(sh * kc));
+        d.getContext('2d').drawImage(img, r.x * W, r.y * H, sw, sh, 0, 0, d.width, d.height);
+        return d.toDataURL('image/jpeg', 0.88);
+      };
+      return { marked: c.toDataURL('image/jpeg', 0.85), regions: regions.map(r => ({ box: { x: r.x, y: r.y, w: r.w, h: r.h }, message: r.text.trim(), crop: crop(r) })) };
     };
     go.onclick = async () => {
-      busy = true; ready(); go.textContent = 'در حال ویرایش پرامپت…'; ta.disabled = true;
+      busy = true; listParts(); go.textContent = 'در حال اصلاح پرامپت…';
       try {
-        const e = await api('POST', 'consoleregion', { id, part: st.tab, box: sel, message: ta.value.trim(), ...draw() });
+        const e = await api('POST', 'consoleregion', { id, part: st.tab, ...draw() });
         st.data.prompts = { ...(st.data.prompts || {}), [id]: { by: e.by, at: e.at, note: e.note, reply: e.reply, used: null } };
         delete saved[id];
-        busy = false;
+        busy = false; done = true; listParts();
         out.hidden = false;
-        out.innerHTML = `<b>پرامپت ذخیره شد.</b>${e.reply ? `<div class="reply">${esc(e.reply)}</div>` : ''}<div class="muted" style="font-size:13px">برای ساختن تصویر تازه، زیر همین مورد «ساخت تصویر با این پرامپت» را بزنید.</div>`;
-        go.hidden = true; box.querySelector('[data-rno]').textContent = 'بستن';
+        out.innerHTML = `<b>پرامپت نهایی ذخیره شد.</b>${e.reply ? `<div class="reply">${esc(e.reply)}</div>` : ''}<div class="muted" style="font-size:13px">برای ساختن تصویر تازه، زیر همین مورد «ساخت تصویر با این پرامپت» را بزنید.</div>`;
+        go.hidden = true; no.textContent = 'بستن';
         render();
-      } catch (er) { busy = false; toast(er.message); go.textContent = 'ویرایش پرامپت برای این بخش'; ta.disabled = false; ready(); }
+      } catch (er) { busy = false; toast(er.message); go.textContent = 'ذخیره و اصلاح پرامپت'; listParts(); }
     };
   }
   const genBox = (id, making, failed, hasAi, pic) => {
@@ -304,7 +347,7 @@ pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
       : `<div><button class="chip flag" data-mark="${esc(id)}" data-on="1">⚑ علامت برای ساخت دوباره</button></div>`;
   };
   const idOf = x => (x.key ? `g:${x.key}` : `q:${x.id}`);
-  // The item's newest AI picture (the one its saved prompt belongs to), for «اصلاح بخشی از تصویر».
+  // The item's newest AI picture (the one its saved prompt belongs to), for «اصلاح بخش‌هایی از تصویر».
   const picOf = (x, isQ) => {
     if (isQ) { const m = x.made.slice().sort((a, b) => a.at - b.at).pop(); return m ? `/img/gen/${x.qid}/${encodeURIComponent(m.id)}` : ''; }
     const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
