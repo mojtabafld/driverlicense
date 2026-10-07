@@ -95,6 +95,8 @@ function Root() {
           <Stack.Screen name="priority" />
           <Stack.Screen name="guide-view" />
           <Stack.Screen name="search" />
+          <Stack.Screen name="course" />
+          <Stack.Screen name="course-lesson" />
           <Stack.Screen name="help" />
           <Stack.Screen name="report" />
         </Stack.Protected>

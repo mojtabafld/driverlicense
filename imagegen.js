@@ -67,7 +67,8 @@ function init(s, siteDir) {
   // data/art-orders.json. The intro, «آموزش» cards, profile pictures and the questions' own pictures keep what was made.
   fixIntro().catch(e => console.error('intro pictures', e.message))
     .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
-    .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message));
+    .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message))
+    .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message));
 }
 
 // The pictures ordered by hand (data/art-orders.json): picture keys or group names (data/guide-groups.json).
@@ -180,6 +181,7 @@ async function poll() {
   }
   if (await pollIntro().catch(() => true)) pending = true;
   if (await pollLearn().catch(() => true)) pending = true;
+  if (await COURSE.poll().catch(() => true)) pending = true;
   if (await AVATAR.poll().catch(() => true)) pending = true;
   if (await GUIDE.poll().catch(() => true)) pending = true;
   if (await pollOneOff().catch(() => true)) pending = true;
@@ -697,6 +699,11 @@ function learnColours() {
   return out;
 }
 
+// ---------- the step-by-step course's pictures («آموزش گام‌به‌گام», data/course-art.json) ----------
+// Ordered by the admin with their prompts; each is made once (and again when its prompt changes).
+const COURSE = artSet({ metaKey: 'courseArt', set: 'v1', prompts: JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'course-art.json'), 'utf8')), aspect: '4:3', prefix: 'course' });
+const courseVersions = COURSE.versions, courseBlob = COURSE.blob;
+
 // ---------- profile pictures to choose from in the settings ----------
 // Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
 // centred with room around it so it sits well in a circle. Served at /avatar-art/<n>.png.
@@ -822,6 +829,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
