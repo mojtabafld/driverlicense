@@ -700,8 +700,11 @@ function learnColours() {
 }
 
 // ---------- the step-by-step course's pictures («آموزش گام‌به‌گام», data/course-art.json) ----------
-// Ordered by the admin with their prompts; each is made once (and again when its prompt changes).
-const COURSE = artSet({ metaKey: 'courseArt', set: 'v1', prompts: JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'course-art.json'), 'utf8')), aspect: '4:3', prefix: 'course' });
+// The admin's orders with their prompts; each is made once (and again when its prompt changes).
+// A picture with "order": false is written down but not made until the admin orders it (the image model's credit).
+const COURSE_ART = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'course-art.json'), 'utf8'));
+const COURSE = artSet({ metaKey: 'courseArt', set: 'v1', prompts: COURSE_ART, aspect: '4:3', prefix: 'course',
+  allow: new Set(Object.keys(COURSE_ART).filter(k => COURSE_ART[k].order !== false)) });
 const courseVersions = COURSE.versions, courseBlob = COURSE.blob;
 
 // ---------- profile pictures to choose from in the settings ----------

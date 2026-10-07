@@ -1,9 +1,10 @@
-// «آموزش گام‌به‌گام»: the course's chapters in the official curriculum's order, each with its lessons (a finished one
-// ticked; those still being written «به‌زودی»), the overall progress, how the lessons work and the sources.
+// «آموزش گام‌به‌گام»: preparing for the theory test. The real test's format, the overall progress and how the lessons
+// work, then the chapters in the official curriculum's order (each ending with its test, the course with full
+// simulated exams), each with its lessons (a finished one ticked; those still being written «به‌زودی»), and the sources.
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { COURSE, SOURCES, lessonCount, readyCount } from '@/lib/course';
+import { COURSE, EXAM, SOURCES, lessonCount, readyCount } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { Icon, type IconName } from '@/ui/icon';
@@ -12,10 +13,10 @@ import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
 const HOW: { icon: IconName; text: string }[] = [
-  { icon: 'info', text: 'هدف درس' },
-  { icon: 'learn', text: 'یک نکته در هر قدم، با تصویر' },
-  { icon: 'checkCircle', text: 'خودتان را بسنجید' },
-  { icon: 'bulbCircle', text: 'جمع‌بندی و منبع قانونی' },
+  { icon: 'exam', text: 'در آزمون چه می‌پرسند' },
+  { icon: 'learn', text: 'قاعده با تصویر و منبع' },
+  { icon: 'warning', text: 'فخ‌های آزمون' },
+  { icon: 'checkCircle', text: 'سؤال‌ها به شکل آزمون واقعی' },
 ];
 
 export default function Course() {
@@ -24,7 +25,19 @@ export default function Course() {
   const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
   const total = lessonCount();
   return (
-    <SubPage title="آموزش گام‌به‌گام" subtitle="دوره‌ی کامل آموزش تئوری گواهینامه‌ی B، فصل به فصل و قدم به قدم، بر اساس قانون و برنامه‌ی رسمی آموزش دانمارک.">
+    <SubPage title="آموزش گام‌به‌گام" subtitle="آمادگی کامل برای آزمون تئوری گواهینامه‌ی B: فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی، بر اساس قانون و برنامه‌ی رسمی آموزش دانمارک.">
+      <Enter>
+        <Card style={{ gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name="exam" size={18} color={c.link} />
+            <T style={{ flex: 1, fontWeight: '700', fontSize: 15.5 }}>هدف: قبولی در آزمون تئوری</T>
+          </View>
+          <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 23 }}>
+            در آزمون واقعی {faNum(EXAM.questions)} موقعیت تصویری می‌بینید و برای هر گزینه «Ja» یا «Nej» می‌زنید؛ هر پاسخ غلط یک اشتباه است و با حداکثر {faNum(EXAM.maxMistakes)} اشتباه قبول می‌شوید.
+            هر درس با چند سؤال دقیقاً به همین شکل تمام می‌شود و دوره با آزمون‌های کامل شبیه‌سازی‌شده.
+          </T>
+        </Card>
+      </Enter>
       <Enter>
         <Card style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

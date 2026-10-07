@@ -57,7 +57,7 @@ function CourseCard() {
           <T style={{ fontWeight: '700', fontSize: 15.5 }}>آموزش گام‌به‌گام</T>
           <View style={{ backgroundColor: c.ok, borderRadius: 99, paddingHorizontal: 7, paddingVertical: 1 }}><T style={{ color: '#fff', fontSize: 10.5, fontWeight: '700' }}>جدید</T></View>
         </View>
-        <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={1}>دوره‌ی کامل، فصل به فصل، بر اساس قانون و برنامه‌ی رسمی</T>
+        <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={1}>آمادگی آزمون تئوری، فصل به فصل، با سؤال‌های شبیه آزمون</T>
       </View>
       <Icon name="chevronLeft" size={15} color={c.faint} weight="semibold" />
     </Card>
