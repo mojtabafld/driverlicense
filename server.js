@@ -601,18 +601,19 @@ async function api(req, res, route) {
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
     return send(res, 200, consoleprompts.get(id));
   }
-  // «اصلاح بخشی از تصویر» (consoleprompts.region): { id, part, box, message, marked, crop } — the two pictures as JPEG
-  // data URLs drawn by the console; the API changes the saved prompt for the marked part only → the item's saved prompt.
+  // «اصلاح بخش‌هایی از تصویر» (consoleprompts.region): { id, part, marked, regions: [{ box, message, crop }] } — the
+  // pictures as JPEG data URLs drawn by the console; the API changes the saved prompt for the marked parts only.
   if (req.method === 'POST' && route === 'consoleregion') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    const b = await readBody(req, 4e6), id = String(b.id || '');
+    const b = await readBody(req, 8e6), id = String(b.id || '');
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
     const pic = u => { const m = /^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/.exec(String(u || '')); return m ? { mime: m[1], data: Buffer.from(m[2], 'base64') } : null; };
-    const marked = pic(b.marked), crop = pic(b.crop);
+    const n = v => Math.min(1, Math.max(0, +v || 0)), boxOf = x => (x ? { x: n(x.x), y: n(x.y), w: n(x.w), h: n(x.h) } : null);
+    const marked = pic(b.marked);
     if (!marked) return send(res, 400, { error: 'تصویر نرسید.' });
-    const n = v => Math.min(1, Math.max(0, +v || 0)), box = b.box ? { x: n(b.box.x), y: n(b.box.y), w: n(b.box.w), h: n(b.box.h) } : null;
+    const regions = (Array.isArray(b.regions) ? b.regions : []).slice(0, 8).map(r => ({ box: boxOf(r && r.box), message: r && r.message, crop: pic(r && r.crop) }));
     const part = id[0] === 'g' ? (id.startsWith('g:p-') ? 'priority' : 'signs') : b.part === 'rules' ? 'rules' : 'lessons';
-    try { return send(res, 200, await consoleprompts.region(id, { message: b.message, box, marked, crop, part })); }
+    try { return send(res, 200, await consoleprompts.region(id, { regions, marked, part })); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
