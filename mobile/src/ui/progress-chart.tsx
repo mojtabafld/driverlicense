@@ -3,7 +3,8 @@
 // by dragging (it opens at the newest); a point is green when the
 // attempt passed or reached 80%, else grey, with the 80% pass line; the line rises in when it opens. Tap a point to pick
 // that attempt; its details and a review button show below. With `fill` it takes the height of the space it is given,
-// at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
+// at least FILL_MIN (the home screen fits above the tab bar); `short` (a short screen): at least FILL_MIN_SHORT, with a
+// lower line under it for the hint or the picked attempt.
 // With more than ten attempts, the first time it is drawn after the app opens, it shows that older attempts are there:
 // the bars glide a little towards the older ones and back, under a small arrow that fades in and out.
 import { router } from 'expo-router';
@@ -17,7 +18,7 @@ import { Icon } from './icon';
 import { Button, T, tap, useCountUp } from './kit';
 import { useColors } from './theme';
 
-const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 120;
+const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 120, FILL_MIN_SHORT = 100;
 // The scroll hint plays once per app start.
 let hinted = false;
 function takeHint() { if (hinted) return false; hinted = true; return true; }
@@ -55,12 +56,12 @@ function ScrollHint({ run, onDone }: { run: boolean; onDone: () => void }) {
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی');
 
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
-export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void }) {
+export function ProgressChart({ attempts, onOpen, fill, short, sel: selOut, onSel }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; short?: boolean; sel?: number | null; onSel?: (i: number | null) => void }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
-  const H = fill ? Math.max(fillH, FILL_MIN) : 210;
+  const MIN = short ? FILL_MIN_SHORT : FILL_MIN, H = fill ? Math.max(fillH, MIN) : 210;
   const [selIn, setSelIn] = useState<number | null>(null);
   const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
@@ -107,9 +108,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
   const font = 'Vazirmatn-400';
   const a = sel != null ? data[sel] : null;
   return (
-    <View style={fill ? { flex: 1, gap: 8 } : { gap: 10 }}>
+    <View style={fill ? { flex: 1, gap: short ? 4 : 8 } : { gap: 10 }}>
       <View onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setFillH(e.nativeEvent.layout.height); }}
-        style={[fill ? { flex: 1, minHeight: FILL_MIN } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
+        style={[fill ? { flex: 1, minHeight: MIN } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
         accessibilityRole="image" accessibilityLabel="نمودار نمره‌ی آزمون‌ها">
         {W > 0 ? (
           <>
@@ -163,10 +164,10 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
       </View>
       {fill ? (
         // Fitted to the screen: one fixed line, so the chart keeps its height when an attempt is picked.
-        <View style={{ height: 40, justifyContent: 'center' }}>
+        <View style={{ height: short ? 30 : 40, justifyContent: 'center' }}>
           {a ? (
             <Pressable onPress={() => onOpen(a)} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: short ? 30 : 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
                 <T style={{ flex: 1, fontSize: 13 }} numberOfLines={1}>
                   <T style={{ fontSize: 13, fontWeight: '700' }}>آزمون {faNum(sel! + 1 + offset)}</T>
                   {' · '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`} · {fmtDate(a.at)}
