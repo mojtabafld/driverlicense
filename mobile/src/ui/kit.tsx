@@ -195,20 +195,25 @@ const BAR_ROOM = 64 + 30;
 // A page's picture header: a picture made for the page (imagegen.js HERO_PROMPTS) covering the whole header from the top
 // edge (under the status bar) to its square bottom, the title and a line on its calm right side, and the page's
 // buttons on a glass capsule above. Until the picture is made, the app's dark green with the page's icon.
+// Its lower edge melts into the page in the theme's own background colour, so picture and page read as one.
 export type HeroLook = { pic: number; icon: IconName };
 const HERO_BG = '#14421c';
+const HERO_FADE = 120;   // how far up from the header's bottom the picture fades into the page
 function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string; subtitle?: string; right?: React.ReactNode }) {
-  const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width } = useWindowDimensions();
+  const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width } = useWindowDimensions();
+  const page = c.bgGradient[0];
   const v = heroArt[String(look.pic)];
   const glass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any) : null;
   const shade = { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
-    <View style={{ height: ins.top + Math.min(Math.round(width * 0.62), 320), backgroundColor: HERO_BG, overflow: 'hidden' }}>
-      {v ? <Image source={{ uri: `${API_URL}/hero-art/${look.pic}.png?v=${v}` }} contentFit="cover" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
+    <View style={{ height: ins.top + Math.min(Math.round(width * 0.62), 320) + HERO_FADE - 50, backgroundColor: HERO_BG, overflow: 'hidden' }}>
+      {v ? <Image source={{ uri: `${API_URL}/hero-art/${look.pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
-      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 22, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'space-between' }}>
+      <LinearGradient pointerEvents="none" colors={[`${page}00`, `${page}66`, `${page}d9`, page]} locations={[0, 0.4, 0.75, 1]}
+        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
+      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: HERO_FADE - 44, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }} />
           <HeroInk.Provider value="#ffffff">
@@ -232,7 +237,8 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14, scrol
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
-  const box = { paddingTop: hero ? 16 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
+  // (Under a picture header, the content starts over the header's faded lower edge.)
+  const box = { marginTop: hero ? -40 : 0, paddingTop: hero ? 0 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const top = hero ? <Hero look={hero} title={title} subtitle={subtitle} right={right} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
