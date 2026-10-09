@@ -476,11 +476,11 @@ function sharp(buf, mime, max = 2560) {
       const j = require('jpeg-js').decode(buf, { useTArray: true, maxMemoryUsageInMB: 1024, maxResolutionInMP: 100 });
       im = { w: j.width, h: j.height, ch: 4, px: Buffer.from(j.data.buffer, j.data.byteOffset, j.data.length) };
     }
-    if (!im) return { buf, mime };
+    if (!im) return { buf, mime, src: `unreadable ${mime} ${buf.length}B` };
     const k = Math.min(1, max / Math.max(im.w, im.h)), out = k < 1 ? boxResize(im, Math.round(im.w * k), Math.round(im.h * k)) : im;
     const rgba = Buffer.alloc(out.w * out.h * 4);
     for (let i = 0, j = 0; i < out.w * out.h; i++, j += out.ch) { rgba[i * 4] = out.px[j]; rgba[i * 4 + 1] = out.px[j + (out.ch > 2 ? 1 : 0)]; rgba[i * 4 + 2] = out.px[j + (out.ch > 2 ? 2 : 0)]; rgba[i * 4 + 3] = 255; }
-    return { buf: require('jpeg-js').encode({ data: rgba, width: out.w, height: out.h }, 88).data, mime: 'image/jpeg', bg: png.edgeColour(out) };
+    return { buf: require('jpeg-js').encode({ data: rgba, width: out.w, height: out.h }, 88).data, mime: 'image/jpeg', bg: png.edgeColour(out), src: `${im.w}x${im.h}`, out: `${out.w}x${out.h}` };
   } catch (e) { console.error('picture sharpen', e.message); return { buf, mime }; }
 }
 // Downscaling by averaging every source pixel under each new one (no aliasing, unlike a plain bilinear resize).
@@ -738,9 +738,9 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         await save();
       }
       if (enhance) for (const [n] of list) {   // made pictures sharpened (the same drawing, finer)
-        const x = it[n];
-        if (!x || !x.done || !x.blob || x.enh === enhance || (x.enhTries || 0) >= 3 || running >= limit) continue;
-        const job = it[n] = { ...x, at: Date.now(), done: false, state: 'enhancing', stage: 'enhance', enh: enhance, enhTries: (x.enhTries || 0) + 1, rv: x.rv || x.v, error: '' };
+        const x = it[n], mark = typeof enhance === 'string' ? enhance : enhance[n];
+        if (!mark || !x || !x.done || !x.blob || x.enh === mark || (x.enhTries || 0) >= 3 || running >= limit) continue;
+        const job = it[n] = { ...x, at: Date.now(), done: false, state: 'enhancing', stage: 'enhance', enh: mark, enhTries: (x.enhTries || 0) + 1, rv: x.rv || x.v, error: '' };
         try { job.taskId = await enhanceTask(await blob(x.blob), `${prefix}-${set}-${n}-enh`); running++; }
         catch (e) { enhanceFailed(job, e.message); console.error(metaKey, n, 'enhance', e.message); }
         await save();
@@ -787,6 +787,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           job.blob = `${prefix}-${set}-${n}`;
           await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
           const v = Date.now().toString(36);
+          if (job.stage === 'enhance') job.enhInfo = { from: sm.src, kept: sm.out, mime: rawMime, bytes: raw.length };   // what the upscaler sent back
           Object.assign(job, { state: 'done', done: true, v, rv: job.stage === 'enhance' ? job.rv : v, size: sm.buf.length, stage: null });
         } else if (d.state === 'fail' && job.stage === 'enhance') enhanceFailed(job, d.failMsg || 'failed');
         else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' }, job.blob && job.upTries ? { up: null } : {});
@@ -799,7 +800,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
     // With a limit, the next ones start as earlier ones finish.
     const now2 = meta().items;
     // (and a picture redrawn from another starts once that one is made)
-    if (((limit !== Infinity || Object.keys(derive).length) && list.some(([n, { rev }]) => waiting(now2[n], rev, n))) || (enhance && Object.values(now2).some(j => j.done && j.blob && j.enh !== enhance && (j.enhTries || 0) < 3))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
+    if (((limit !== Infinity || Object.keys(derive).length) && list.some(([n, { rev }]) => waiting(now2[n], rev, n))) || (enhance && Object.entries(now2).some(([n, j]) => { const m = typeof enhance === 'string' ? enhance : enhance[n]; return m && j.done && j.blob && j.enh !== m && (j.enhTries || 0) < 3; }))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
     return pending;
   }
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
@@ -913,8 +914,12 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
   redo: { 2: 'narrow' }, derive: { 1: '4', 3: '6', 5: '2', 7: '8' }, fixed: { 8: 'sign-in-light.png' }, refDir: path.join(__dirname, 'data', 'hero-ref'),
   // Kept large (2560 px, JPEG); the drawings made before that are redrawn sharper from themselves at 4K, and the ones
   // drawn from them (1, 3, 5, 7) follow from the sharp ones.
-  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, enhance: 'tz1' });
+  // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
+  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, enhance: { 4: 'tz2' } });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
+// The header pictures' state for /api/config's heroDiag: no prompts or keys, only how each was last made / sharpened.
+const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
+  [n, { state: j.state, enh: j.enh || null, enhTries: j.enhTries || 0, info: j.enhInfo || null, error: j.error ? String(j.error).slice(0, 160) : null }]));
 // A trial of another image model (TRY_MODEL) on the same pictures, to compare with the ones on show; served at
 // /hero-try/<n>.png and not used by the app. 1: the home picture (light), 2: the test picture (dark).
 const TRY_MODEL = 'nano-banana-pro';
@@ -1023,6 +1028,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
