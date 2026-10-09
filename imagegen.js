@@ -738,7 +738,7 @@ const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
 const avatarVersions = AVATAR.versions, avatarBlob = AVATAR.blob, avatarCount = AVATAR.count;
 
-// ---------- the pictures at the top of the app's «آموزش» and «آزمون» pages ----------
+// ---------- the pictures at the top of the app's home, «آموزش» and «آزمون» pages ----------
 // One wide scene each that fills the page's header from edge to edge (no frame, no gradient over it); the page's title
 // lies on its right side, so the objects stand on the left and the right is left calm. Served at /hero-art/<n>.png.
 const HERO_SET = 'v1';
@@ -748,6 +748,8 @@ const HERO_PROMPTS = [
   'Learning to drive: an open periwinkle-blue book lying at an isometric angle, a winding grey road with white dashes rising out of its pages, a small rounded coral car driving on that road, a red-and-white triangular warning sign and a round blue sign on short poles beside the road, and a white graduation cap resting on a corner of the book.',
   // 2: «آزمون» (the test)
   'A driving theory test: a white clipboard standing at an isometric angle with three rows of answer boxes, two ticked in green and one crossed in coral, a round white stopwatch with a coral button leaning against it, a yellow pencil lying in front and a small golden star badge floating above the clipboard.',
+  // 3: the home page (a greeting and the progress)
+  'On the way to the driving licence: a short winding grey road with white dashes rising from the front towards the back, a small rounded coral car driving up it, a white driving licence card with a faceless photo silhouette standing upright at the end of the road beside a small green flag, and a round white speedometer gauge with a green needle floating beside the road. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 30% and 70% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
 ];
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, prompts: HERO_PROMPTS, style: HERO_STYLE, aspect: '4:3', prefix: 'hero-art' });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;

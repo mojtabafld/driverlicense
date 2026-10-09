@@ -45,6 +45,8 @@ function Part({ n, icon, title, text, note, href, target }: { n: number; icon: I
 }
 
 // «آموزش گام‌به‌گام» (the app's own course, app/course.tsx): a slim card above the four parts, marked new.
+// Hidden for now (SHOW_COURSE); the course itself stays at /course.
+const SHOW_COURSE = false;
 function CourseCard() {
   const c = useColors();
   return (
@@ -80,7 +82,7 @@ export default function Learn() {
     <Screen fill title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" right={<SearchAiButton />}
       hero={{ pic: 1, icon: 'learn' }}>
       <View style={{ flex: 1, gap: 12 }}>
-        <CourseCard />
+        {SHOW_COURSE ? <CourseCard /> : null}
         <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
           <Part n={1} target={tour.target(0)} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
             text={`${faNum(all)} درس به ترتیب، هر کدام با سؤال‌های خودش؛ یا تمرین بر اساس دسته‌بندی رسمی.`}

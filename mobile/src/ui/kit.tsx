@@ -195,8 +195,10 @@ const BAR_ROOM = 64 + 30;
 // A page's picture header: a picture made for the page (imagegen.js HERO_PROMPTS) covering the whole header from the top
 // edge (under the status bar) to its square bottom, the title and a line on its calm right side, and the page's
 // buttons on a glass capsule above. Until the picture is made, the app's dark green with the page's icon.
-// Its lower edge melts into the page in the theme's own background colour, so picture and page read as one.
-export type HeroLook = { pic: number; icon: IconName };
+// Its lower edge melts into the page in the theme's own background colour, so picture and page read as one; the page's
+// content starts below it.
+// `short`: a lower header, for a page with much to fit on one screen (home).
+export type HeroLook = { pic: number; icon: IconName; short?: boolean };
 const HERO_BG = '#14421c';
 const HERO_FADE = 120;   // how far up from the header's bottom the picture fades into the page
 function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string; subtitle?: string; right?: React.ReactNode }) {
@@ -206,7 +208,7 @@ function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string;
   const glass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any) : null;
   const shade = { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
-    <View style={{ height: ins.top + Math.min(Math.round(width * 0.62), 320) + HERO_FADE - 50, backgroundColor: HERO_BG, overflow: 'hidden' }}>
+    <View style={{ height: ins.top + (look.short ? Math.min(Math.round(width * 0.34), 190) : Math.min(Math.round(width * 0.62), 320)) + HERO_FADE - 50, backgroundColor: HERO_BG, overflow: 'hidden' }}>
       {v ? <Image source={{ uri: `${API_URL}/hero-art/${look.pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
@@ -225,7 +227,7 @@ function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string;
           </HeroInk.Provider>
         </View>
         <View style={{ gap: 2, maxWidth: '58%' }}>
-          <T style={{ fontSize: 32, lineHeight: 42, fontWeight: '700', color: '#ffffff', ...shade }}>{title}</T>
+          <T style={{ fontSize: look.short ? 24 : 32, lineHeight: look.short ? 34 : 42, fontWeight: '700', color: '#ffffff', ...shade }}>{title}</T>
           {subtitle ? <T style={{ color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, ...shade }}>{subtitle}</T> : null}
         </View>
       </View>
@@ -237,8 +239,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14, scrol
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
-  // (Under a picture header, the content starts over the header's faded lower edge.)
-  const box = { marginTop: hero ? -40 : 0, paddingTop: hero ? 0 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
+  const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const top = hero ? <Hero look={hero} title={title} subtitle={subtitle} right={right} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
