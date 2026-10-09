@@ -1,5 +1,6 @@
-// Progress chart, «نمودار پیشرفت»: a point for the percent correct of each attempt on a smooth line with a soft green
-// gradient under it, ten across the width and older ones by dragging (it opens at the newest); a point is green when the
+// Progress chart, «نمودار پیشرفت»: a point for the percent correct of each attempt on a smooth grey line (light grey in
+// the light theme, dark grey in the dark one) with a soft green gradient under it, ten across the width and older ones
+// by dragging (it opens at the newest); a point is green when the
 // attempt passed or reached 80%, else grey, with the 80% pass line; the line rises in when it opens. Tap a point to pick
 // that attempt; its details and a review button show below. With `fill` it takes the height of the space it is given,
 // at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
@@ -132,7 +133,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
                     </LinearGradient>
                   </Defs>
                   <Path d={area} fill="url(#pcArea)" />
-                  <Path d={line} fill="none" stroke={c.forest} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
+                  <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
                   {/* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */}
                   {data.map((d, i) => (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
