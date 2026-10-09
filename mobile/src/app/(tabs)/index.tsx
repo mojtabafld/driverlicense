@@ -99,7 +99,7 @@ export default function Home() {
   return (
     <>
     <Screen fill gap={compact ? 10 : 14} title={user?.name ? `${hello}، ${user.name}` : hello} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
-      hero={{ pic: 3, icon: 'house', short: true }}>
+      hero={{ pic: 3, icon: 'house' }}>
       {/* The four cards at the top: the chance of passing and the three counts (one tooltip for them). */}
       <View {...tour.target(0)} style={{ gap: compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>

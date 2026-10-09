@@ -197,49 +197,53 @@ const BAR_ROOM = 64 + 30;
 // buttons on a glass capsule above. Until the picture is made, the app's dark green with the page's icon.
 // Its lower edge melts into the page in the theme's own background colour, so picture and page read as one; the page's
 // content starts below it.
-// `short`: a lower header, for a page with much to fit on one screen (home).
-export type HeroLook = { pic: number; icon: IconName; short?: boolean };
+export type HeroLook = { pic: number; icon: IconName };
 // The colour at the top of the header pictures: also the phone's status bar over the header (the Home Screen web app
 // colours it with theme-color), so the header runs up to the screen's edge.
 const HERO_BG = '#1b4827';
-const HERO_FADE = 170, HERO_FADE_SHORT = 110;   // how far up from the header's bottom the picture fades into the page
+const HERO_FADE = 110;   // how far up from the header's bottom the picture fades into the page
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string; subtitle?: string; right?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width } = useWindowDimensions();
-  const page = c.bgGradient[0], fade = look.short ? HERO_FADE_SHORT : HERO_FADE;
+  const page = c.bgGradient[0];
+  // The page's buttons (theme, search…) wait behind a «⋮» button; shown when it is tapped, folded again on leaving.
+  const [menu, setMenu] = useState(false);
   // While the page is in view on the web, the status bar above it in the header's green; back to the page's colour after.
   useFocusEffect(useCallback(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
     const m = document.querySelector('meta[name="theme-color"]'); if (!m) return;
     const was = m.getAttribute('content'); m.setAttribute('content', HERO_BG); document.body.style.backgroundColor = HERO_BG;
-    return () => { if (m.getAttribute('content') === HERO_BG && was) { m.setAttribute('content', was); document.body.style.backgroundColor = was; } };
+    return () => { setMenu(false); if (m.getAttribute('content') === HERO_BG && was) { m.setAttribute('content', was); document.body.style.backgroundColor = was; } };
   }, []));
   const v = heroArt[String(look.pic)];
   const glass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any) : null;
   const shade = { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
-    <View style={{ height: ins.top + (look.short ? Math.min(Math.round(width * 0.34), 190) : Math.min(Math.round(width * 0.62), 320)) + (look.short ? 70 : 80), backgroundColor: HERO_BG, overflow: 'hidden' }}>
+    <View style={{ height: ins.top + Math.min(Math.round(width * 0.34), 190) + 70, backgroundColor: HERO_BG, overflow: 'hidden' }}>
       {v ? <Image source={{ uri: `${API_URL}/hero-art/${look.pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
       <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
-        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: fade }} />
-      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: look.short ? 60 : 84, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'space-between' }}>
+        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
+      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 76, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }} />
           <HeroInk.Provider value="#ffffff">
             <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 4, height: 46, borderRadius: 23,
               backgroundColor: 'rgba(0,0,0,0.22)', borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.3)' }, glass]}>
-              {right}
-              <ThemeButton />
+              {menu ? <>{right}<ThemeButton /></> : null}
+              <Pressable onPress={() => { tap(); setMenu(o => !o); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={menu ? 'بستن' : 'گزینه‌ها'} accessibilityState={{ expanded: menu }}
+                style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', gap: 3, backgroundColor: pressed || menu ? 'rgba(255,255,255,0.18)' : 'transparent' })}>
+                {[0, 1, 2].map(i => <View key={i} style={{ width: 4.5, height: 4.5, borderRadius: 2.25, backgroundColor: '#ffffff' }} />)}
+              </Pressable>
             </View>
           </HeroInk.Provider>
         </View>
         <View style={{ gap: 2, maxWidth: '58%' }}>
-          <T style={{ fontSize: look.short ? 24 : 32, lineHeight: look.short ? 34 : 42, fontWeight: '700', color: '#ffffff', ...shade }}>{title}</T>
+          <T style={{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: '#ffffff', ...shade }}>{title}</T>
           {subtitle ? <T style={{ color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, ...shade }}>{subtitle}</T> : null}
         </View>
       </View>
