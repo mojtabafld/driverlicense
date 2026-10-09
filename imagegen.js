@@ -528,8 +528,32 @@ function cleanBackground(im, bg) {
   }
   return { ...im, px: res };
 }
+// Gentle unsharp mask on the objects (not the plain background): a 2-pass box blur (≈ Gaussian, r ≈ 1.5 px) and the
+// difference added back where it is above a small threshold, so edges get crisper but flat clay and noise do not.
+function sharpenObjects(im, bg, amount = 0.55, thr = 3) {
+  const { w, h, ch, px } = im, bgc = [parseInt(bg.slice(1, 3), 16), parseInt(bg.slice(3, 5), 16), parseInt(bg.slice(5, 7), 16)];
+  const blur = new Float32Array(w * h * 3), tmp = new Float32Array(w * h * 3);
+  const pass = (src, dst, get) => {
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) {   // horizontal 3-tap
+      const a = get(y, Math.max(0, x - 1), c), b = get(y, x, c), d = get(y, Math.min(w - 1, x + 1), c); tmp[(y * w + x) * 3 + c] = (a + b + d) / 3; }
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) {   // vertical 3-tap
+      const a = tmp[(Math.max(0, y - 1) * w + x) * 3 + c], b = tmp[(y * w + x) * 3 + c], d = tmp[(Math.min(h - 1, y + 1) * w + x) * 3 + c]; dst[(y * w + x) * 3 + c] = (a + b + d) / 3; }
+  };
+  pass(null, blur, (y, x, c) => px[(y * w + x) * ch + c]);
+  pass(null, blur, (y, x, c) => blur[(y * w + x) * 3 + c]);
+  const res = Buffer.from(px);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * ch, d = Math.hypot(px[i] - bgc[0], px[i + 1] - bgc[1], px[i + 2] - bgc[2]);
+    const t = d <= 16 ? 0 : d >= 30 ? 1 : (d - 16) / 14;   // objects only
+    if (!t) continue;
+    for (let c = 0; c < 3; c++) { const diff = px[i + c] - blur[(y * w + x) * 3 + c]; if (Math.abs(diff) < thr) continue;
+      res[i + c] = Math.max(0, Math.min(255, Math.round(px[i + c] + amount * t * diff))); }
+  }
+  return { ...im, px: res };
+}
 const MAX_DECODE = 40e6;   // pixels: a larger picture is not decoded here (its RGBA copy alone would be 160 MB+)
-// `clean`: the plain background smoothed (cleanBackground), for the full-scene header and intro pictures.
+// `clean`: for the full-scene header and intro pictures: the plain background smoothed (cleanBackground) and the objects'
+// edges made crisper (sharpenObjects); 'edges' for the second only (a picture already smoothed). Stored at quality 95.
 function sharp(buf, mime, max = 2560, clean = false) {
   try {
     const dim = imageSize(buf);
@@ -541,10 +565,10 @@ function sharp(buf, mime, max = 2560, clean = false) {
     }
     if (!im) return { buf, mime, src: `unreadable ${mime} ${buf.length}B` };
     const k = Math.min(1, max / Math.max(im.w, im.h)); let out = k < 1 ? boxResize(im, Math.round(im.w * k), Math.round(im.h * k)) : im;
-    if (clean) out = cleanBackground(out, png.edgeColour(out));
+    if (clean) { const bgc = png.edgeColour(out); if (clean !== 'edges') out = cleanBackground(out, bgc); out = sharpenObjects(out, bgc); }
     const rgba = Buffer.alloc(out.w * out.h * 4);
     for (let i = 0, j = 0; i < out.w * out.h; i++, j += out.ch) { rgba[i * 4] = out.px[j]; rgba[i * 4 + 1] = out.px[j + (out.ch > 2 ? 1 : 0)]; rgba[i * 4 + 2] = out.px[j + (out.ch > 2 ? 2 : 0)]; rgba[i * 4 + 3] = 255; }
-    return { buf: require('jpeg-js').encode({ data: rgba, width: out.w, height: out.h }, clean ? 92 : 88).data, mime: 'image/jpeg', bg: png.edgeColour(out), src: `${im.w}x${im.h}`, out: `${out.w}x${out.h}` };
+    return { buf: require('jpeg-js').encode({ data: rgba, width: out.w, height: out.h }, clean ? 95 : 88).data, mime: 'image/jpeg', bg: png.edgeColour(out), src: `${im.w}x${im.h}`, out: `${out.w}x${out.h}` };
   } catch (e) { console.error('picture sharpen', e.message); return { buf, mime }; }
 }
 // Downscaling by averaging every source pixel under each new one (no aliasing, unlike a plain bilinear resize).
@@ -564,7 +588,7 @@ function boxResize(im, w, h) {
 // and crisp edges are added, so it holds up when zoomed. The result is kept at up to ENHANCED_MAX px (sharp()).
 // (Topaz on kie.ai answered «internal error» for most pictures and the size unchanged for the rest; Recraft's crisp
 // upscale is tried instead.) A mark starting «tz» uses Topaz, any other Recraft.
-const ENHANCED_MAX = 3840;
+const ENHANCED_MAX = 3840, FULL_MAX = 3600;   // FULL_MAX: a new full-scene picture kept at the model's own size (≈3300 px)
 async function enhanceTask(b, name, mark = '') {
   const url = await upload({ mime: b.mime, data: b.data }, `${name}.${b.mime === 'image/jpeg' ? 'jpg' : 'png'}`);
   const body = /^tz/.test(mark) ? { model: 'topaz/image-upscale', input: { image_url: url, upscale_factor: '2' } } : { model: 'recraft/crisp-upscale', input: { image: url } };
@@ -598,7 +622,7 @@ const INTRO_SET = 'v8'; // v8: each slide its own scene (v7 full scenes all on t
 // the page below it, so its background is not cut out.
 const INTRO_REF = 'sign-in-dark.png';   // in data/hero-ref
 const INTRO_CUT = false;
-const INTRO_CLEAN = 'cl1';   // the mark of the pictures whose background was smoothed (startIntro)
+const INTRO_CLEAN = 'cl2';   // the mark of the pictures whose background was smoothed (startIntro)
 const INTRO_UP = 'k4';   // the mark of the pictures redrawn sharper at 4K (startIntro)
 const INTRO_ENH = '';     // the mark of the pictures sharpened by enhanceTask (startIntro)
 const INTRO_STYLE = 'Take ONLY the look from the reference picture: its soft 3D clay style, rounded shapes, smooth matte pastel materials, soft light and soft shadows, colours (white, coral, periwinkle blue, soft greens, warm yellow) and its dark forest green background with soft, slightly lighter dark green rolling hills low in the distance. Do NOT copy its road, car, trees, flag or card: draw only the scene described here, as its own composition. The picture is one full scene that fills the frame from edge to edge, no sky, no frame, no vignette. The main objects stand in the middle of the picture, between about 15% and 70% of its height and within its middle 70% of the width (its sides may be cut off on a narrow screen). The top tenth is calm, plain dark green, and the bottom quarter is one flat, even dark forest green (#14421c) with nothing in it, because the picture fades into the page there. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
@@ -621,7 +645,7 @@ const INTRO_PROMPTS = [
 function shrinkIntro(buf, mime) {
   try {
     const im = png.decode(buf); if (!im) return { buf, mime };
-    if (!INTRO_CUT) return sharp(buf, mime, 2560, true);   // a full scene: kept large and sharp, its background smoothed
+    if (!INTRO_CUT) return sharp(buf, mime, FULL_MAX, true);   // a full scene: kept large and sharp, its background smoothed
     const small = im.w > 1200 ? png.half(im) : im, bg = png.edgeColour(small);
     return { buf: png.encode(png.cutout(small, bg)), mime: 'image/png', bg, cut: true };
   } catch (e) { console.error('intro picture shrink', e.message); return { buf, mime }; }
@@ -663,7 +687,7 @@ async function startIntro() {
     const x = it[n];
     if (!x || !x.done || !x.blob || x.clean === INTRO_CLEAN) continue;
     const b = await blob(x.blob); if (!b) continue;
-    const r = sharp(b.data, b.mime, 2560, true);
+    const r = sharp(b.data, b.mime, FULL_MAX, x.clean === 'cl1' ? 'edges' : true);
     if (r.buf) { await store.saveBlob(x.blob, r.mime, r.buf); cache.delete(x.blob); Object.assign(x, { v: Date.now().toString(36), size: r.buf.length }); }
     x.clean = INTRO_CLEAN; await saveIntro(); await new Promise(res => setImmediate(res));
   }
@@ -822,7 +846,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         const x = it[n];
         if (!x || !x.done || !x.blob || x.clean === clean) continue;
         const b = await blob(x.blob); if (!b) continue;
-        const r = sharp(b.data, b.mime, 2560, true); if (!r.buf) { x.clean = clean; continue; }
+        const r = sharp(b.data, b.mime, FULL_MAX, x.clean === 'cl1' ? 'edges' : true); if (!r.buf) { x.clean = clean; continue; }
         await store.saveBlob(x.blob, r.mime, r.buf); cache.delete(x.blob);
         Object.assign(x, { clean, rv: x.rv || x.v, v: Date.now().toString(36), size: r.buf.length });
         await save(); await new Promise(res => setImmediate(res));
@@ -875,7 +899,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           if (!url) throw new Error('no result url');
           const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
           const raw = Buffer.from(await r.arrayBuffer()), rawMime = r.headers.get('content-type') || 'image/png';
-          const sm = job.stage === 'enhance' ? sharp(raw, rawMime, ENHANCED_MAX, !!clean) : full ? sharp(raw, rawMime, 2560, !!clean) : shrink(raw, rawMime);
+          const sm = job.stage === 'enhance' ? sharp(raw, rawMime, ENHANCED_MAX, !!clean) : full ? sharp(raw, rawMime, FULL_MAX, !!clean) : shrink(raw, rawMime);
           if (clean && sm.buf) job.clean = clean;
           if (!sm.buf) throw Object.assign(new Error(sm.src || 'unreadable picture'), { final: true });
           job.blob = `${prefix}-${set}-${n}`;
@@ -1009,7 +1033,7 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
   // Kept large (2560 px, JPEG); the drawings made before that are redrawn sharper from themselves at 4K, and the ones
   // drawn from them (1, 3, 5, 7) follow from the sharp ones.
   // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
-  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, clean: 'cl1', enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
+  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, clean: 'cl2', enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 // The header pictures' state for /api/config's heroDiag: no prompts or keys, only how each was last made / sharpened.
 const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
