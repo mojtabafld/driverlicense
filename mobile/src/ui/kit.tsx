@@ -220,7 +220,8 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
-// `tall`: about half the screen high (the sign-in page, its form under it).
+// `tall`: about half the screen high (the sign-in page, its form under it), with the theme switch at its top on a soft
+// round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
 export function Hero({ look, title, subtitle, tall }: { look: HeroLook; title: string; subtitle?: string; tall?: boolean }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && !!heroArt[String(lightPic)];
@@ -231,16 +232,27 @@ export function Hero({ look, title, subtitle, tall }: { look: HeroLook; title: s
     return () => { webTop.hero = null; paintWebTop(); };
   }, [bg]));
   const v = heroArt[String(pic)];
+  const H = ins.top + (tall ? Math.min(Math.round(height * 0.42), 440) : Math.min(Math.round(width * 0.34), 190) + 70);
+  const topPad = ins.top + (Platform.OS === 'web' ? 14 : 8);
   const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
-    <View style={{ height: ins.top + (tall ? Math.min(Math.round(height * 0.42), 440) : Math.min(Math.round(width * 0.34), 190) + 70), backgroundColor: bg, overflow: 'hidden' }}>
+    <View style={{ height: H, backgroundColor: bg, overflow: 'hidden' }}>
       {v ? <Image source={{ uri: `${API_URL}/hero-art/${pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
       <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
-      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'flex-end' }}>
+      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
+        {tall ? (
+          <>
+            <View style={{ alignSelf: 'flex-end', borderRadius: 19, backgroundColor: light ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)' }}>
+              <ThemeButton />
+            </View>
+            {/* Down to where a title and a two-line line, set on the header's foot (100 above its end), would begin. */}
+            <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38) }} />
+          </>
+        ) : null}
         <View style={{ gap: 2, maxWidth: '58%' }}>
           <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
