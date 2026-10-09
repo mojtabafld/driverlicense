@@ -1,37 +1,71 @@
-// The four parts of the app as native tabs: on iOS Apple's own tab bar as the system draws it (Liquid Glass, system
-// colours, light and dark; the chosen tab in the app's teal); on Android Material tabs in the site's colours. The icons
-// are the app's own drawings on every platform.
-// The screens pad for the status bar and the tab bar themselves (Screen), so iOS must not add its own inset to their
-// first scroll view as well: that pushed the content down twice under a blurred band.
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { Platform } from 'react-native';
+// The tab bar on every platform (web, iOS, Android), drawn the same way: a floating capsule of grey glass above the
+// bottom edge, each tab an icon over its label in white; the chosen tab sits on a darker grey capsule, its icon (filled)
+// and label in the app's green. The glass blurs what lies under it where the platform can (iOS's own glass, the web's
+// backdrop blur); on Android it is a nearly solid grey. The pages keep room for it under their end (Screen).
+import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
+import { forwardRef } from 'react';
+import { Platform, Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { UBER, useColors, useIsDark } from '../theme';
+import { T, tap } from '../kit';
+import { Icon, type IconName } from '../icon';
+import { LiquidGlass } from '../liquid';
+import { useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
 
-// The same four drawings as the web's tab bar and the rest of the app (src/ui/icon.tsx: house, check in a circle, book,
-// gear), as pictures the system tints in the tab colours, so the tab icons look alike on iOS, Android and the web.
-// Made from those drawings into assets/images/tabs (26 pt, @2x and @3x).
-const TAB_IMG: Record<string, number> = {
-  index: require('../../../assets/images/tabs/house.png'),
-  exam: require('../../../assets/images/tabs/exam.png'),
-  learn: require('../../../assets/images/tabs/learn.png'),
-  settings: require('../../../assets/images/tabs/settings.png'),
-};
+const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
+// The bar's height (also the room the pages keep for it, with the gap under it: kit.tsx).
+export const TAB_BAR_H = 64;
+
+const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, onPress, ...props }, ref) => {
+  const c = useColors(), dark = useIsDark();
+  const color = isFocused ? (dark ? c.link : '#5fd16e') : '#ffffff';
+  return (
+    <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1 }}
+      accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={label}>
+      <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 2, height: TAB_BAR_H - 8, borderRadius: (TAB_BAR_H - 8) / 2 },
+        Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null,
+        isFocused && { backgroundColor: dark ? 'rgba(0,0,0,0.38)' : 'rgba(40,40,44,0.42)' }]}>
+        <Icon name={TAB_ICON[name]} size={24} color={color} filled={isFocused} contrast={dark ? '#2a2a2c' : '#55555a'} />
+        <T style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color }}>{label}</T>
+      </View>
+    </Pressable>
+  );
+});
+TabButton.displayName = 'TabButton';
+
+// Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
+const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
+  const ins = useSafeAreaInsets(), dark = useIsDark();
+  const grey = dark ? 'rgba(58,58,62,0.78)' : 'rgba(120,120,128,0.72)';
+  const web = Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)' } as any) : null;
+  return (
+    <View ref={ref} {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
+      {Platform.OS === 'ios' ? (
+        <LiquidGlass r={TAB_BAR_H / 2} tint={grey} style={{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4 }}>{children}</LiquidGlass>
+      ) : (
+        <View style={[{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4, borderRadius: TAB_BAR_H / 2,
+          backgroundColor: Platform.OS === 'android' ? (dark ? 'rgba(52,52,56,0.96)' : 'rgba(112,112,120,0.95)') : grey,
+          borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.18)' }, web]}>{children}</View>
+      )}
+    </View>
+  );
+});
+GlassTabBar.displayName = 'GlassTabBar';
 
 export default function AppTabs() {
-  const c = useColors(), dark = useIsDark();
-  const android = Platform.OS === 'android'
-    ? { tintColor: UBER ? c.text : c.link, backgroundColor: c.surface, iconColor: c.muted, labelStyle: { color: c.muted }, indicatorColor: UBER ? c.surface2 : c.accentSoft }
-    : { tintColor: UBER ? c.text : dark ? c.link : c.accent }; // iOS: the system's bar, the chosen tab in the app's teal (text colour in the Uber look)
   return (
-    <NativeTabs {...android}>
-      {TABS.map(t => (
-        <NativeTabs.Trigger key={t.name} name={t.name} disableAutomaticContentInsets={Platform.OS === 'ios'}>
-          <NativeTabs.Trigger.Label>{t.label}</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon src={TAB_IMG[t.name]} renderingMode="template" />
-        </NativeTabs.Trigger>
-      ))}
-    </NativeTabs>
+    <Tabs>
+      <TabSlot style={{ flex: 1 }} />
+      <TabList asChild>
+        <GlassTabBar>
+          {TABS.map(t => (
+            <TabTrigger key={t.name} name={t.name} href={t.href as any} asChild>
+              <TabButton name={t.name} label={t.label} />
+            </TabTrigger>
+          ))}
+        </GlassTabBar>
+      </TabList>
+    </Tabs>
   );
 }

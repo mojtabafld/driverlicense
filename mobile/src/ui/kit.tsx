@@ -2,14 +2,17 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { daFamily, faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
+import { API_URL } from '@/lib/config';
+import { useApp } from '@/lib/store';
 import { DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 
 // A style given in physical left/right terms. Phones running right-to-left swap left and right in styles,
@@ -138,12 +141,15 @@ export function Logo({ size = 28 }: { size?: number }) {
 }
 
 // Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
+// The colour of the buttons in a page's picture header (Hero), white on its gradient; null elsewhere.
+export const HeroInk = createContext<string | null>(null);
+
 export function ThemeButton() {
-  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark';
+  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark', ink = useContext(HeroInk);
   return (
     <Pressable onPress={() => { tap(); setMode(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
-      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-      {dark ? <Icon name="sun" size={20} color={c.text} /> : <Icon name="moon" size={19} color={c.muted} />}
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? (ink ? 'rgba(255,255,255,0.18)' : c.surface2) : 'transparent' })}>
+      {dark ? <Icon name="sun" size={20} color={ink ?? c.text} /> : <Icon name="moon" size={19} color={ink ?? c.muted} />}
     </Pressable>
   );
 }
@@ -178,34 +184,60 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 }
 
 // Scrollable tab screen: the page heading (with the theme switch beside it; no app name or logo, so the page has the
-// room) and the content; on the web it leaves room for the floating tab bar over the page's end (on phones the
-// system's tab bar sits below the page, so only a small margin is left there).
-// With `fill` the screen does not scroll: its content gets exactly the height between the title and the tab bar
-// (the floating bar on the web, the system bar on phones, which the bottom safe area already covers), and `gap`
-// can be set tighter for short screens.
+// room) and the content; it leaves room for the floating tab bar over the page's end.
+// With `fill` the screen does not scroll: its content gets exactly the height between the title and the tab bar, and
+// `gap` can be set tighter for short screens.
 // `scrollRef` / `onScrollY`: the scroll view and where it is scrolled, e.g. for the first-visit tooltips (tour.tsx).
-// On phones the page measures where it ends: when it reaches the bottom of the window, the system's tab bar lies over
-// its end (the tab content is not inset on some devices, and never on iOS), so it keeps that bar's height free.
-const TAB_BAR = Platform.OS === 'android' ? 80 : Platform.OS === 'ios' ? 50 : 0;
-// On the web, room for the floating tab bar (64 high, above the bottom edge) and a clear gap above it.
-const WEB_BAR_ROOM = 64 + 30;
-function useTabBarRoom() {
-  const { height } = useWindowDimensions();
-  const [under, setUnder] = useState(false);
-  const onLayout = (e: { currentTarget: unknown }) => {
-    if (!TAB_BAR) return;
-    (e.currentTarget as View).measureInWindow((_x, y, _w, h) => setUnder(y + h >= height - 40));
-  };
-  return [onLayout, under ? TAB_BAR : 0] as const;
+// Room for the floating tab bar (src/ui/tabs/app-tabs.tsx: 64 high, above the bottom edge) and a clear gap above it,
+// on every platform.
+const BAR_ROOM = 64 + 30;
+
+// A page's picture header: a gradient in the page's own colours from the top edge (under the status bar), a round
+// framed picture with the title and a line beside it, and the page's buttons on a glass capsule above them.
+// `pic`: the server's intro picture shown in the frame (imagegen.js INTRO_PROMPTS), `alt` while it is not made yet,
+// and `icon` while neither is there.
+export type HeroLook = { colors: readonly [string, string, ...string[]]; pic: number; alt?: number; icon: IconName };
+function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string; subtitle?: string; right?: React.ReactNode }) {
+  const ins = useSafeAreaInsets(), { intro } = useApp();
+  const n = intro[look.pic] ? look.pic : look.alt && intro[look.alt] ? look.alt : 0;
+  const glass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any) : null;
+  return (
+    <LinearGradient colors={look.colors} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }}
+      style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 22, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, overflow: 'hidden' }}>
+      <View style={{ paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', gap: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flex: 1 }} />
+          <HeroInk.Provider value="#ffffff">
+            <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 4, height: 46, borderRadius: 23,
+              backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.3)' }, glass]}>
+              {right}
+              <ThemeButton />
+            </View>
+          </HeroInk.Provider>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <View style={{ width: 104, height: 104, borderRadius: 52, borderWidth: 3, borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(255,255,255,0.14)',
+            alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {n ? <Image source={{ uri: `${API_URL}/intro/${n}.png?v=${intro[n]}` }} contentFit="contain" transition={250} style={{ width: 96, height: 96 }} accessibilityIgnoresInvertColors />
+              : <Icon name={look.icon} size={44} color="#ffffff" />}
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T style={{ fontSize: 30, lineHeight: 40, fontWeight: '700', color: '#ffffff' }}>{title}</T>
+            {subtitle ? <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
+          </View>
+        </View>
+      </View>
+    </LinearGradient>
+  );
 }
 
-export function Screen({ title, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number;
-  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void }) {
+export function Screen({ title, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number;
+  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
-  const [barLayout, barRoom] = useTabBarRoom();
-  const box = { paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const head = (
+  const box = { paddingTop: hero ? 16 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
+  const top = hero ? <Hero look={hero} title={title} subtitle={subtitle} right={right} /> : null;
+  const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
         <T style={{ fontSize: 26, lineHeight: 34, fontWeight: '700', color: c.text }}>{title}</T>
@@ -218,10 +250,12 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14, scrol
   return (
     <Backdrop>
       <PageIn>
-      <View onLayout={barLayout} style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
       {fill
-        ? <View style={[box, { flex: 1, paddingBottom: Platform.OS === 'web' ? WEB_BAR_ROOM + Math.max(16, ins.bottom) : ins.bottom + 10 + barRoom }]}>{head}{children}</View>
-        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={[box, { paddingBottom: Platform.OS === 'web' ? ins.bottom + 100 : 24 + barRoom }]}>{head}{children}</ScrollView>}
+        ? <>{top}<View style={[box, { flex: 1, paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) }]}>{head}{children}</View></>
+        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
+            {top}<View style={box}>{head}{children}</View>
+          </ScrollView>}
       </View>
       </PageIn>
     </Backdrop>
