@@ -222,7 +222,8 @@ const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // `tall`: about half the screen high (the sign-in page, its form under it), with the theme switch at its top on a soft
 // round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
-export function Hero({ look, title, subtitle, tall }: { look: HeroLook; title: string; subtitle?: string; tall?: boolean }) {
+// `lower`: that place this much further down (signing up).
+export function Hero({ look, title, subtitle, tall, lower = 0 }: { look: HeroLook; title: string; subtitle?: string; tall?: boolean; lower?: number }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && !!heroArt[String(lightPic)];
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
@@ -250,7 +251,7 @@ export function Hero({ look, title, subtitle, tall }: { look: HeroLook; title: s
               <ThemeButton />
             </View>
             {/* Down to where a title and a two-line line, set on the header's foot (100 above its end), would begin. */}
-            <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38) }} />
+            <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />
           </>
         ) : null}
         <View style={{ gap: 2, maxWidth: '58%' }}>
