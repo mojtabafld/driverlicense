@@ -1,5 +1,5 @@
-// The intro shown once on a device: four slides about what the app does, each a picture with a large title and a
-// short line, on the app's forest-green gradient. «رد شدن» skips it, «بعدی» goes on and the last slide's «شروع کنید» closes
+// The intro shown once on a device: four slides about what the app does, each a tall picture across the top (fading
+// into the page, ui/tall-picture.tsx) with a large title and a short line under it, on the app's forest green. «رد شدن» skips it, «بعدی» goes on and the last slide's «شروع کنید» closes
 // it; a sideways swipe also turns the slides (right to left, as the page reads).
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,7 @@ import { API_URL } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { T, tap } from './kit';
+import { TallPicture } from './tall-picture';
 import { ArtAi, ArtBank, ArtExam, ArtProgress } from './onboarding-art';
 
 const SLIDES = [
@@ -70,8 +71,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
     },
   };
   const { Art, title, text } = SLIDES[i];
-  // The server's picture for this slide: see-through around its objects (the server cuts its background out), so it
-  // lies on the page's one colour and nothing changes colour from slide to slide.
+  // The server's picture for this slide: a full scene on the page's dark green, its bottom plain so it melts into it.
   const pic = intro[i + 1], top = BG[0];
   useEffect(() => { onTop?.(top); }, [top, onTop]);
   // Every slide's picture is fetched up front, so a new slide never shows the previous picture on its own colour while
@@ -80,28 +80,25 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
     const urls = SLIDES.map((_, k) => intro[k + 1] ? `${API_URL}/intro/${k + 1}.png?v=${intro[k + 1]}` : null).filter((u): u is string => !!u);
     if (urls.length) Image.prefetch(urls).catch(() => {});
   }, [intro]);
-  // The picture takes all the room above the text (the full width, under the side padding).
-  const [box, setBox] = useState({ w: 0, h: 0 });
-  const side = Math.max(0, Math.min(box.w, box.h));
-  const artH = Math.min(height * 0.42, 340), shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
+  // The picture: a tall header across the top, fading into the page (the app's own drawing there until the server's
+  // picture is made), the title and line under it.
+  const headH = ins.top + Math.min(Math.round(height * 0.56), 540), artH = Math.min(height * 0.42, 340);
+  const shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
   return (
     <View style={{ flex: 1 }} {...swipe}>
       <LinearGradient colors={[BG[0], BG[0], BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-      <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
-        <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -28 }}
-            onLayout={e => { const { width: w, height: h } = e.nativeEvent.layout; setBox({ w, h }); }}>
-            {/* The server's 3D picture for this slide when it has one, else the app's own drawing. */}
-            {pic ? (
-              <Image key={i} source={{ uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` }} style={{ width: Math.min(side, 520), height: Math.min(side, 520) }}
-                contentFit="contain" transition={0} cachePolicy="memory-disk" />
-            ) : <View style={{ width: Math.min(width - 40, 380), height: artH }}><Art /></View>}
+      <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
+        <TallPicture key={i} height={headH} bg={BG[0]} source={pic ? { uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` } : null}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: ins.top }}>
+            <View style={{ width: Math.min(width - 40, 380), height: artH }}><Art /></View>
           </View>
-          <View style={{ gap: 12, paddingBottom: 28, minHeight: 190 }}>
-            <FitTitle text={title} size={30} />
-            <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>{text}</T>
-          </View>
-        </Animated.View>
+        </TallPicture>
+        <View style={{ gap: 12, marginTop: -28, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
+          <FitTitle text={title} size={30} />
+          <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>{text}</T>
+        </View>
+      </Animated.View>
+      <View style={{ paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         {/* Skip at the start, the dots in the middle (at the start on the last slide, beside the wider «شروع کنید»), next / start at the end */}
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 54 }}>
           <View style={{ flex: 1, alignItems: 'flex-start' }}>
