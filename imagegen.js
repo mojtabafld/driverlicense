@@ -456,6 +456,32 @@ function shrink(buf, mime) {
   try { const im = png.decode(buf); return im && im.w > 1200 ? { buf: png.encode(png.half(im)), mime: 'image/png' } : { buf, mime }; }
   catch (e) { console.error('picture shrink', e.message); return { buf, mime }; }
 }
+// A large picture kept sharp: at most `max` px on its longer side (averaged down, never halved past it) and stored as a
+// good JPEG (a quarter of a PNG's bytes, no visible loss in a soft 3D picture). A file it cannot read is kept as it is.
+function sharp(buf, mime, max = 2560) {
+  try {
+    const im = png.decode(buf); if (!im) return { buf, mime };
+    const k = Math.min(1, max / Math.max(im.w, im.h)), out = k < 1 ? boxResize(im, Math.round(im.w * k), Math.round(im.h * k)) : im;
+    const rgba = Buffer.alloc(out.w * out.h * 4);
+    for (let i = 0, j = 0; i < out.w * out.h; i++, j += out.ch) { rgba[i * 4] = out.px[j]; rgba[i * 4 + 1] = out.px[j + (out.ch > 2 ? 1 : 0)]; rgba[i * 4 + 2] = out.px[j + (out.ch > 2 ? 2 : 0)]; rgba[i * 4 + 3] = 255; }
+    return { buf: require('jpeg-js').encode({ data: rgba, width: out.w, height: out.h }, 88).data, mime: 'image/jpeg', bg: png.edgeColour(out) };
+  } catch (e) { console.error('picture sharpen', e.message); return { buf, mime }; }
+}
+// Downscaling by averaging every source pixel under each new one (no aliasing, unlike a plain bilinear resize).
+function boxResize(im, w, h) {
+  const { ch } = im, out = Buffer.alloc(w * h * ch), sx = im.w / w, sy = im.h / h, acc = new Float64Array(ch);
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.floor(y * sy), y1 = Math.max(y0 + 1, Math.floor((y + 1) * sy));
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.floor(x * sx), x1 = Math.max(x0 + 1, Math.floor((x + 1) * sx)); acc.fill(0);
+      for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x1; xx++) { const i = (yy * im.w + xx) * ch; for (let c = 0; c < ch; c++) acc[c] += im.px[i + c]; }
+      const n = (y1 - y0) * (x1 - x0), o = (y * w + x) * ch; for (let c = 0; c < ch; c++) out[o + c] = Math.round(acc[c] / n);
+    }
+  }
+  return { w, h, ch, px: out };
+}
+// Asking the image model to redraw a picture as it is, only sharper and at full size (for pictures kept small earlier).
+const UPSCALE_PROMPT = 'Redraw this exact picture at high resolution, crisp and detailed. Keep everything exactly as it is: the same objects, shapes, sizes, positions, angles, colours, materials, lighting, background and composition; nothing added, removed, moved or restyled. Only make it sharper, with clean edges and fine smooth detail. No text, no letters, no numbers, no logos, no watermarks.';
 async function seedOwn() {
   if (!available()) return;
   for (const [qid, { text, rev }] of Object.entries(ownPrompts())) {
@@ -479,6 +505,7 @@ const INTRO_SET = 'v8'; // v8: each slide its own scene (v7 full scenes all on t
 // the page below it, so its background is not cut out.
 const INTRO_REF = 'sign-in-dark.png';   // in data/hero-ref
 const INTRO_CUT = false;
+const INTRO_UP = 'k4';   // the mark of the pictures redrawn sharper at 4K (startIntro)
 const INTRO_STYLE = 'Take ONLY the look from the reference picture: its soft 3D clay style, rounded shapes, smooth matte pastel materials, soft light and soft shadows, colours (white, coral, periwinkle blue, soft greens, warm yellow) and its dark forest green background with soft, slightly lighter dark green rolling hills low in the distance. Do NOT copy its road, car, trees, flag or card: draw only the scene described here, as its own composition. The picture is one full scene that fills the frame from edge to edge, no sky, no frame, no vignette. The main objects stand in the middle of the picture, between about 15% and 70% of its height and within its middle 70% of the width (its sides may be cut off on a narrow screen). The top tenth is calm, plain dark green, and the bottom quarter is one flat, even dark forest green (#14421c) with nothing in it, because the picture fades into the page there. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
 const INTRO_PROMPTS = [
   // 1: «آزمون تئوری دانمارک، در جیب شما» — every theory question with its picture, in Danish or English with a Persian
@@ -499,8 +526,8 @@ const INTRO_PROMPTS = [
 function shrinkIntro(buf, mime) {
   try {
     const im = png.decode(buf); if (!im) return { buf, mime };
+    if (!INTRO_CUT) return sharp(buf, mime);   // a full scene: kept large and sharp
     const small = im.w > 1200 ? png.half(im) : im, bg = png.edgeColour(small);
-    if (!INTRO_CUT) return { buf: png.encode(small), mime: 'image/png', bg };   // a full scene: only made smaller
     return { buf: png.encode(png.cutout(small, bg)), mime: 'image/png', bg, cut: true };
   } catch (e) { console.error('intro picture shrink', e.message); return { buf, mime }; }
 }
@@ -524,6 +551,19 @@ async function startIntro() {
   if (prev && prev.set !== INTRO_SET) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
   const it = intro().items;
   let refUrl = null;   // the style picture, uploaded once for all the slides
+  // Pictures made before they were kept large: redrawn sharper from themselves at 4K (the same drawing).
+  for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
+    const x = it[n];
+    if (!x || !x.done || !x.blob || x.up === INTRO_UP || (x.upTries || 0) >= 3) continue;
+    const job = it[n] = { ...x, at: Date.now(), done: false, state: 'queued', up: INTRO_UP, upTries: (x.upTries || 0) + 1, error: '' };
+    try {
+      const own = await blob(x.blob);
+      const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`,
+        input: { prompt: UPSCALE_PROMPT, input_urls: [await upload({ mime: own.mime, data: own.data }, `intro-${INTRO_SET}-${n}-up.${own.mime === 'image/jpeg' ? 'jpg' : 'png'}`)], aspect_ratio: '1:1', resolution: '4K' } });
+      job.taskId = d.taskId; job.state = 'generating';
+    } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message, up: x.up }); console.error('intro picture', n, 'upscale', e.message); }
+    await saveIntro();
+  }
   for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
     const x = it[n];
     if (x && (x.blob || !x.done || (x.tries || 0) >= 3)) continue;   // done, running, or given up after 3 tries
@@ -531,7 +571,7 @@ async function startIntro() {
 ${INTRO_STYLE}` };
     try {
       refUrl = refUrl || await upload({ mime: 'image/png', data: fs.readFileSync(path.join(__dirname, 'data', 'hero-ref', INTRO_REF)) }, `intro-${INTRO_SET}-ref.png`);
-      const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, input_urls: [refUrl], aspect_ratio: '1:1', resolution: '2K' } });
+      const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, input_urls: [refUrl], aspect_ratio: '1:1', resolution: '4K' } });
       job.taskId = d.taskId; job.state = 'generating';
     } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error('intro picture', n, e.message); }
     await saveIntro();
@@ -554,7 +594,7 @@ async function pollIntro() {
         job.blob = `intro-${INTRO_SET}-${n}`;
         await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob);
         Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: s.buf.length, ...(s.bg ? { bg: s.bg } : {}), ...(s.cut ? { cut: true } : {}) });
-      } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
+      } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' }, job.blob && job.upTries ? { up: null } : {});
       else pending = true;
       if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
     } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
@@ -604,7 +644,10 @@ const LEARN_PROMPTS = [
 // change), e.g. a light version of a dark picture with the same drawing; it waits until that one is made and up to date,
 // and is made again whenever that one changes.
 // `fixed`: number → a picture file in `refDir` used as it is (one chosen by hand), put in again whenever the file changes.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {}, fixed = {} }) {
+// `full`: keep the pictures large and sharp (sharp(): up to 2560 px, JPEG) instead of halving them.
+// `upscale`: number → a mark; a picture made without that mark is redrawn from itself at `resolution` (UPSCALE_PROMPT), so
+// it stays the same drawing, only sharper (the one on show stays until the new one is made).
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {}, fixed = {}, full = false, upscale = {} }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
@@ -614,7 +657,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
   // Never started, failed with tries left, or made from an earlier version of its prompt.
   // (A keyed picture made before revisions existed is kept; a numbered one is ordered again by its `redo` mark, and
   // tried again on the next start when that failed.)
-  const stale = (x, rev) => !!(rev && x && x.done && (Array.isArray(prompts) ? x.rev !== rev || (x.state === 'fail' && x.blob) : x.rev && x.rev !== rev));
+  const stale = (x, rev) => !!(rev && x && x.done && (Array.isArray(prompts) ? x.rev !== rev || (x.state === 'fail' && x.blob && !x.up) : x.rev && x.rev !== rev));
   const NO_CREDIT = /credit|balance|insufficient|quota|402|429|too many/i, LATER = 20 * 60e3;
   const broke = x => !!(x && x.done && !x.blob && NO_CREDIT.test(x.error || ''));
   const due = x => broke(x) && Date.now() - x.at > LATER;
@@ -642,6 +685,18 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         if ((it[n] || {}).rev !== mark) { await put(n, { mime: 'image/png', data }, `file ${file}`); meta().items[n].rev = mark; await save(); }
       }
       let running = Object.values(it).filter(j => !j.done && j.taskId).length;
+      for (const [n, mark] of Object.entries(upscale)) {   // made pictures redrawn sharper from themselves
+        const x = it[n], l = list.find(([k]) => k === n);
+        if (!l || !x || !x.done || !x.blob || x.up === mark || (x.upTries || 0) >= 3 || running >= limit) continue;
+        const job = it[n] = { ...x, at: Date.now(), done: false, state: 'queued', up: mark, upTries: (x.upTries || 0) + 1, error: '' };
+        try {
+          const own = await blob(x.blob);
+          const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`,
+            input: { prompt: UPSCALE_PROMPT, aspect_ratio: l[1].aspect, resolution, input_urls: [await upload({ mime: own.mime, data: own.data }, `${prefix}-${set}-${n}-up.${own.mime === 'image/jpeg' ? 'jpg' : 'png'}`)] } });
+          job.taskId = d.taskId; job.state = 'generating'; running++;
+        } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message, up: x.up }); console.error(metaKey, n, 'upscale', e.message); }
+        await save();
+      }
       for (const [n, { prompt, aspect: ar, ref, rev: rev0 }] of list) {
         if (running >= limit) break;
         if (fixed[n]) continue;
@@ -679,13 +734,14 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           const url = (JSON.parse(d.resultJson || '{}').resultUrls || [])[0];
           if (!url) throw new Error('no result url');
           const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
-          const sm = shrink(Buffer.from(await r.arrayBuffer()), r.headers.get('content-type') || 'image/png');
+          const raw = Buffer.from(await r.arrayBuffer()), rawMime = r.headers.get('content-type') || 'image/png';
+          const sm = full ? sharp(raw, rawMime) : shrink(raw, rawMime);
           job.blob = `${prefix}-${set}-${n}`;
           await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
           Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36), size: sm.buf.length });
-        } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' });
+        } else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' }, job.blob && job.upTries ? { up: null } : {});
         else pending = true;
-        if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
+        if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' }, job.blob && job.upTries ? { up: null } : {});
       } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
       await save();
     }
@@ -803,7 +859,10 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
     { prompt: HERO_RECOLOUR_DARK, aspect: '1:1' }, { prompt: 'data/hero-ref/sign-in-light.png', aspect: '1:1' }],
   // Each page's two pictures are one drawing: the learning and home dark ones redrawn from their light ones (1 from 4,
   // 3 from 6, and the sign-in's 7 from its chosen 8), the test's light one from its dark one (5 from 2).
-  redo: { 2: 'narrow' }, derive: { 1: '4', 3: '6', 5: '2', 7: '8' }, fixed: { 8: 'sign-in-light.png' }, refDir: path.join(__dirname, 'data', 'hero-ref') });
+  redo: { 2: 'narrow' }, derive: { 1: '4', 3: '6', 5: '2', 7: '8' }, fixed: { 8: 'sign-in-light.png' }, refDir: path.join(__dirname, 'data', 'hero-ref'),
+  // Kept large (2560 px, JPEG); the drawings made before that are redrawn sharper from themselves at 4K, and the ones
+  // drawn from them (1, 3, 5, 7) follow from the sharp ones.
+  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' } });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
