@@ -98,7 +98,7 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     <>
-    <Screen fill gap={compact ? 10 : 14} title={hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
+    <Screen fill gap={compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
       hero={{ pic: 3, icon: 'house' }}>
       {/* The four cards at the top: the chance of passing and the three counts (one tooltip for them). */}
       <View {...tour.target(0)} style={{ gap: compact ? 10 : 14 }}>
