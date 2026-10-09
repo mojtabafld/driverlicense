@@ -224,10 +224,8 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 // `tall`: about half the screen high (the sign-in page, its form under it), with the theme switch at its top on a soft
 // round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
 // `lower`: that place this much further down (signing up). `name`: a line under the title (the user's name on the home
-// page's greeting). `fit`: over a page that fits the screen (Screen's `fill`); on a short screen (below 830 points) the
-// header is lower (a fifth of the screen) with its title nearer its foot and a shorter fade, so the page's
-// content still ends above the tab bar.
-export function Hero({ look, title, name, subtitle, tall, lower = 0, fit }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; fit?: boolean }) {
+// page's greeting).
+export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && !!heroArt[String(lightPic)];
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
@@ -238,9 +236,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, fit }: { lo
   }, [bg]));
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
-  const low = !tall && !!fit && height < 830;
-  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0)
-    : Math.min(Math.min(Math.round(width * 0.34), 190) + 70, low ? Math.round(height * 0.2) : Infinity));
+  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : Math.min(Math.round(width * 0.34), 190) + 70);
   const topPad = ins.top + (Platform.OS === 'web' ? 14 : 8);
   // The sign-in picture (square, laid in from its left edge, its height or width filling the header, the other cut evenly)
   // has its objects across most of its width, down to about 68% of its height, with calm ground under them. On a narrow
@@ -257,8 +253,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, fit }: { lo
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
       <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
-        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: low ? 80 : HERO_FADE }} />
-      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: low ? 34 : name ? 88 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
+        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
+      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: name ? 88 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
         {tall ? (
           <>
             <View style={{ alignSelf: 'flex-end', borderRadius: 19, backgroundColor: light ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)' }}>
@@ -289,7 +285,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} fit={fill} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
