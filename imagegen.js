@@ -753,7 +753,14 @@ const HERO_PROMPTS = [
   // 3: the home page (a greeting and the progress)
   'On the way to the driving licence: a short winding grey road with white dashes rising from the front towards the back, a small rounded coral car driving up it, a white driving licence card with a faceless photo silhouette standing upright at the end of the road beside a small green flag, and a round white speedometer gauge with a green needle floating beside the road. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 30% and 70% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
 ];
-const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, prompts: HERO_PROMPTS, style: HERO_STYLE, aspect: '4:3', prefix: 'hero-art', resolution: '4K' });
+// 4–6: the same three for the light theme, on a soft light green that sits with the light page (its title in dark green).
+const HERO_STYLE_LIGHT = HERO_STYLE
+  .replace('The whole picture is one rich dark forest green (#14421c) background scene', 'The whole picture is one soft, light, airy pastel green (#d9ecd5) background scene')
+  .replace('soft darker green shapes of rolling hills', 'gentle slightly deeper pale green (#c4e1be) shapes of rolling hills')
+  .replace('one flat even dark green', 'one flat even light pastel green (#d9ecd5)')
+  .replace('(a white title will be written there)', '(a dark green title will be written there)');
+const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
+  prompts: [...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE}`), ...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE_LIGHT}`)] });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
