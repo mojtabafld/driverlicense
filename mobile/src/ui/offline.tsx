@@ -10,7 +10,7 @@ import { Icon } from './icon';
 import { T, tap } from './kit';
 import { TallPicture } from './tall-picture';
 
-const PICTURE = require('../../assets/images/offline.png');
+const PICTURE = require('../../assets/images/offline.jpg');
 // The intro's dark forest green (the picture's own background, which it fades into).
 export const OFFLINE_TOP = '#14421c';
 
