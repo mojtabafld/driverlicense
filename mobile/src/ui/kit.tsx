@@ -222,8 +222,9 @@ const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // `tall`: about half the screen high (the sign-in page, its form under it), with the theme switch at its top on a soft
 // round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
-// `lower`: that place this much further down (signing up).
-export function Hero({ look, title, subtitle, tall, lower = 0 }: { look: HeroLook; title: string; subtitle?: string; tall?: boolean; lower?: number }) {
+// `lower`: that place this much further down (signing up). `name`: a line under the title (the user's name on the home
+// page's greeting).
+export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && !!heroArt[String(lightPic)];
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
@@ -244,7 +245,7 @@ export function Hero({ look, title, subtitle, tall, lower = 0 }: { look: HeroLoo
           </View>}
       <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
-      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
+      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: name ? 88 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
         {tall ? (
           <>
             <View style={{ alignSelf: 'flex-end', borderRadius: 19, backgroundColor: light ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)' }}>
@@ -256,6 +257,7 @@ export function Hero({ look, title, subtitle, tall, lower = 0 }: { look: HeroLoo
         ) : null}
         <View style={{ gap: 2, maxWidth: '58%' }}>
           <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
+          {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
         </View>
       </View>
@@ -263,12 +265,12 @@ export function Hero({ look, title, subtitle, tall, lower = 0 }: { look: HeroLoo
   );
 }
 
-export function Screen({ title, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero }: { title: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero }: { title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} subtitle={subtitle} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
