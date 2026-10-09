@@ -765,6 +765,8 @@ const HERO_PROMPTS = [
 ];
 // A dark picture redrawn for the light theme: the same drawing, only its background in the light theme's green.
 const HERO_RECOLOUR = 'Redraw this exact picture for a light theme. Keep every object exactly as it is: the same objects, shapes, sizes, positions, angles, colours, materials, lighting and composition, nothing added, removed or moved. Change only the background: the dark green background and its darker green hills become one soft, light, airy pastel green (#d9ecd5) with gentle slightly deeper pale green (#c4e1be) hills, and the bottom quarter one flat even light pastel green (#d9ecd5); soften the shadows to suit the light background. No text, no letters, no numbers, no logos, no watermarks.';
+// A light picture redrawn for the dark theme, the other way round.
+const HERO_RECOLOUR_DARK = 'Redraw this exact picture for a dark theme. Keep every object exactly as it is: the same objects, shapes, sizes, positions, angles, colours, materials, lighting and composition, nothing added, removed or moved. Change only the background: the light pastel green background and its pale green hills become one rich dark forest green (#1b4827) with soft slightly darker green hills, and the bottom quarter one flat even dark forest green (#1b4827); deepen the shadows to suit the dark background. No text, no letters, no numbers, no logos, no watermarks.';
 // 4–6: the same three for the light theme, on a soft light green that sits with the light page (its title in dark green).
 const HERO_STYLE_LIGHT = HERO_STYLE
   .replace('The whole picture is one rich dark forest green (#14421c) background scene', 'The whole picture is one soft, light, airy pastel green (#d9ecd5) background scene')
@@ -776,10 +778,11 @@ const HERO_LOGIN = 'Signing in to a driving theory app: a large white smartphone
 const HERO_STYLE_TALL = HERO_STYLE.replace('All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a white title will be written there).',
   'The objects stand in the left 55% of the picture, between about 20% and 75% of its height, at least a tenth of the width away from every edge; the right side is calm, plain background with nothing in it (a white title will be written there).');
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
-  prompts: [...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE}`), `${HERO_PROMPTS[0]}\n${HERO_STYLE_LIGHT}`, HERO_RECOLOUR, `${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`,
+  prompts: [HERO_RECOLOUR_DARK, `${HERO_PROMPTS[1]}\n${HERO_STYLE}`, HERO_RECOLOUR_DARK, `${HERO_PROMPTS[0]}\n${HERO_STYLE_LIGHT}`, HERO_RECOLOUR, `${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`,
     { prompt: `${HERO_LOGIN}\n${HERO_STYLE_TALL}`, aspect: '1:1' }, { prompt: HERO_RECOLOUR, aspect: '1:1' }],
-  // The test's light picture is the dark one redrawn (5 from 2), so both show the same drawing.
-  redo: { 2: 'narrow', 7: 'signin' }, derive: { 5: '2', 8: '7' } });
+  // Each page's two pictures are one drawing: the learning and home dark ones redrawn from their light ones (1 from 4,
+  // 3 from 6), the test's and sign-in's light ones from their dark ones (5 from 2, 8 from 7).
+  redo: { 2: 'narrow', 7: 'signin' }, derive: { 1: '4', 3: '6', 5: '2', 8: '7' } });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
