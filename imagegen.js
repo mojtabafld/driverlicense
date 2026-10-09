@@ -587,7 +587,8 @@ const LEARN_PROMPTS = [
 // `derive`: number → another picture of the set this one is redrawn from (image to image, its prompt saying what to
 // change), e.g. a light version of a dark picture with the same drawing; it waits until that one is made and up to date,
 // and is made again whenever that one changes.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {} }) {
+// `fixed`: number → a picture file in `refDir` used as it is (one chosen by hand), put in again whenever the file changes.
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {}, fixed = {} }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
@@ -620,9 +621,14 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         for (const j of Object.values(it)) if (j.done && !j.blob) Object.assign(j, { tries: 0, error: '' });
         meta().retry = retry; await save();
       }
+      for (const [n, file] of Object.entries(fixed)) {   // the hand-chosen pictures, from their files
+        const data = fs.readFileSync(path.join(refDir, file)), mark = `file:${require('node:crypto').createHash('sha1').update(data).digest('hex').slice(0, 10)}`;
+        if ((it[n] || {}).rev !== mark) { await put(n, { mime: 'image/png', data }, `file ${file}`); meta().items[n].rev = mark; await save(); }
+      }
       let running = Object.values(it).filter(j => !j.done && j.taskId).length;
       for (const [n, { prompt, aspect: ar, ref, rev: rev0 }] of list) {
         if (running >= limit) break;
+        if (fixed[n]) continue;
         const x = it[n], rev = revOf(n, rev0), from = derive[n];
         if (!waiting(x, rev0, n)) continue;   // done, running, waiting for its source, or given up after 3 tries
         const again = stale(x, rev);
@@ -773,16 +779,15 @@ const HERO_STYLE_LIGHT = HERO_STYLE
   .replace('soft darker green shapes of rolling hills', 'gentle slightly deeper pale green (#c4e1be) shapes of rolling hills')
   .replace('one flat even dark green', 'one flat even light pastel green (#d9ecd5)')
   .replace('(a white title will be written there)', '(a dark green title will be written there)');
-// 7, 8: the sign-in page's taller header (square), dark and the same drawing for the light theme.
-const HERO_LOGIN = 'Signing in to a driving theory app: a large white smartphone standing at an isometric angle, its screen showing a simple sign-in form (a round faceless avatar silhouette at the top, two blank rounded input fields and a green rounded button, no text); beside it a white driving licence card with a faceless photo silhouette leaning against the phone, a small golden key and a small white padlock with a green check mark, and at the phone\'s foot a short grey road with white dashes with a small rounded coral car and two rounded trees.';
-const HERO_STYLE_TALL = HERO_STYLE.replace('All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a white title will be written there).',
-  'The objects stand in the left 55% of the picture, between about 20% and 75% of its height, at least a tenth of the width away from every edge; the right side is calm, plain background with nothing in it (a white title will be written there).');
+// 7, 8: the sign-in page's taller header (square). The light one (8) is a picture chosen by hand
+// (data/hero-ref/sign-in-light.png: a road through green hills with a coral car, a glowing licence card, a check badge and
+// a Danish flag), the dark one (7) that picture redrawn on dark green.
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
   prompts: [HERO_RECOLOUR_DARK, `${HERO_PROMPTS[1]}\n${HERO_STYLE}`, HERO_RECOLOUR_DARK, `${HERO_PROMPTS[0]}\n${HERO_STYLE_LIGHT}`, HERO_RECOLOUR, `${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`,
-    { prompt: `${HERO_LOGIN}\n${HERO_STYLE_TALL}`, aspect: '1:1' }, { prompt: HERO_RECOLOUR, aspect: '1:1' }],
+    { prompt: HERO_RECOLOUR_DARK, aspect: '1:1' }, { prompt: 'data/hero-ref/sign-in-light.png', aspect: '1:1' }],
   // Each page's two pictures are one drawing: the learning and home dark ones redrawn from their light ones (1 from 4,
-  // 3 from 6), the test's and sign-in's light ones from their dark ones (5 from 2, 8 from 7).
-  redo: { 2: 'narrow', 7: 'signin' }, derive: { 1: '4', 3: '6', 5: '2', 8: '7' } });
+  // 3 from 6, and the sign-in's 7 from its chosen 8), the test's light one from its dark one (5 from 2).
+  redo: { 2: 'narrow' }, derive: { 1: '4', 3: '6', 5: '2', 7: '8' }, fixed: { 8: 'sign-in-light.png' }, refDir: path.join(__dirname, 'data', 'hero-ref') });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
