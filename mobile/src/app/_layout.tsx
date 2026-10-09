@@ -9,7 +9,7 @@ import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadLangAsked, loadOnboarded, saveLangAsked, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
 import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
-import { Backdrop } from '@/ui/kit';
+import { Backdrop, setWebTop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
 import { INTRO_BG, Onboarding } from '@/ui/onboarding';
@@ -62,11 +62,8 @@ function Root() {
   const cover = blocked ? OFFLINE_TOP : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-    const top = cover ?? c.bgGradient[0];
-    document.documentElement.style.colorScheme = cover || dark ? 'dark' : 'light'; document.body.style.backgroundColor = top;
-    let m = document.querySelector('meta[name="theme-color"]');
-    if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
-    m.setAttribute('content', top);
+    document.documentElement.style.colorScheme = cover || dark ? 'dark' : 'light';
+    setWebTop(c.bgGradient[0], cover);   // (a page's picture header, in view, puts its own green there: ui/kit.tsx)
   }, [dark, c.bgGradient, cover]);
   if (blocked) return <Offline onRetry={check} />;
   if (!ready || !fonts || onboarded === null || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;

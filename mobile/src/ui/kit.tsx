@@ -198,6 +198,21 @@ const BAR_ROOM = 64 + 30;
 // Its lower edge melts into the page in the theme's own background colour, so picture and page read as one; the page's
 // content starts below it.
 export type HeroLook = { pic: number; icon: IconName };
+
+// On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
+// screen's cover (intro, language question, offline page) if one is up, else a picture header's green while one is in
+// view, else the page's own top colour. Set from the app's layout (page colour, cover) and from Hero (its green), each
+// keeping the others, so a theme switch on a page with a header does not take the header's green away.
+const webTop = { base: '', cover: null as string | null, hero: null as string | null };
+function paintWebTop() {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+  const top = webTop.cover ?? webTop.hero ?? webTop.base; if (!top) return;
+  document.body.style.backgroundColor = top;
+  let m = document.querySelector('meta[name="theme-color"]');
+  if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
+  m.setAttribute('content', top);
+}
+export function setWebTop(base: string, cover: string | null) { webTop.base = base; webTop.cover = cover; paintWebTop(); }
 // The colour at the top of the header pictures: also the phone's status bar over the header (the Home Screen web app
 // colours it with theme-color), so the header runs up to the screen's edge.
 const HERO_BG = '#1b4827';
@@ -212,10 +227,8 @@ function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string;
   const [menu, setMenu] = useState(false);
   // While the page is in view on the web, the status bar above it in the header's green; back to the page's colour after.
   useFocusEffect(useCallback(() => {
-    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-    const m = document.querySelector('meta[name="theme-color"]'); if (!m) return;
-    const was = m.getAttribute('content'); m.setAttribute('content', HERO_BG); document.body.style.backgroundColor = HERO_BG;
-    return () => { setMenu(false); if (m.getAttribute('content') === HERO_BG && was) { m.setAttribute('content', was); document.body.style.backgroundColor = was; } };
+    webTop.hero = HERO_BG; paintWebTop();
+    return () => { setMenu(false); webTop.hero = null; paintWebTop(); };
   }, []));
   const v = heroArt[String(look.pic)];
   const glass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any) : null;
