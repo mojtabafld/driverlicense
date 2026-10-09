@@ -1,12 +1,12 @@
-// Sign in / sign up, set straight on the page (no card), centred: logo, greeting, a mode switch, fields with icons
-// and one wide button, then the site's three short facts.
+// Sign in / sign up: a tall picture header (as on the tab pages) with the greeting, then on the page (no card) a mode
+// switch, fields with icons and one wide button, then the site's three short facts.
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Logo, TopBar, T, tap } from '@/ui/kit';
+import { Backdrop, Button, Hero, T, tap } from '@/ui/kit';
 import { useColors, useIsDark } from '@/ui/theme';
 
 // Sign in / sign up switch: a soft track with the chosen side raised.
@@ -44,20 +44,11 @@ export default function Login() {
   };
   return (
     <Backdrop>
-      <TopBar />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 48, paddingTop: 8 }}>
-          <View style={{ width: '100%', maxWidth: 360, alignSelf: 'center', gap: 14 }}>
-            {/* Logo on a soft halo, greeting */}
-            <View style={{ alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <View style={{ width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft, marginBottom: 8 }}>
-                <Logo size={56} />
-              </View>
-              <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '800', textAlign: 'center' }}>{mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}</T>
-              <T style={{ color: c.muted, textAlign: 'center', fontSize: 14, lineHeight: 23 }}>
-                {mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید'}
-              </T>
-            </View>
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}>
+          <Hero tall look={{ pic: 7, light: 8, icon: 'person' }} title={mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}
+            subtitle={mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید'} />
+          <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 6 }}>
             <ModeSwitch mode={mode} onChange={m => { setMode(m); setErr(''); }} />
             {mode === 'register' ? <Field icon="person" label="نام نمایشی (مثلاً سارا)" value={name} onChange={setName} /> : null}
             <Field icon={mode === 'register' ? 'clipboard' : 'person'} label="نام کاربری" value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr />
