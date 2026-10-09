@@ -302,7 +302,7 @@ function serveStatic(req, res) {
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
   // And the profile pictures to choose from, and the pictures at the top of the «آموزش» and «آزمون» pages.
-  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-3])\.png$/.exec(p),
+  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-6])\.png$/.exec(p),
     gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p);
   if (im || lm || am || hm || gm2 || cm) {
     return (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : cm ? imagegen.courseBlob(cm[1]) : guideref.blob(gm2[1])).then(b => {

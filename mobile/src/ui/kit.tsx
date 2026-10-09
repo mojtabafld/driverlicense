@@ -212,24 +212,27 @@ function paintWebTop() {
 export function setWebTop(base: string, cover: string | null) { webTop.base = base; webTop.cover = cover; paintWebTop(); }
 // The colour at the top of the header pictures: also the phone's status bar over the header (the Home Screen web app
 // colours it with theme-color), so the header runs up to the screen's edge.
-const HERO_BG = '#1b4827';
+// In the light theme, a light version of the same picture (number + 3, on a soft light green) with a dark green title,
+// once the server has made it; until then the dark one.
+const HERO_BG = '#1b4827', HERO_BG_LIGHT = '#d9ecd5', HERO_INK_LIGHT = '#14421c';
 const HERO_FADE = 110;   // how far up from the header's bottom the picture fades into the page
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 function Hero({ look, title, subtitle }: { look: HeroLook; title: string; subtitle?: string }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width } = useWindowDimensions();
-  const page = c.bgGradient[0];
+  const page = c.bgGradient[0], light = useTheme().theme !== 'dark' && !!heroArt[String(look.pic + 3)];
+  const pic = light ? look.pic + 3 : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
   // While the page is in view on the web, the status bar above it in the header's green; back to the page's colour after.
   useFocusEffect(useCallback(() => {
-    webTop.hero = HERO_BG; paintWebTop();
+    webTop.hero = bg; paintWebTop();
     return () => { webTop.hero = null; paintWebTop(); };
-  }, []));
-  const v = heroArt[String(look.pic)];
-  const shade = { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
+  }, [bg]));
+  const v = heroArt[String(pic)];
+  const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
-    <View style={{ height: ins.top + Math.min(Math.round(width * 0.34), 190) + 70, backgroundColor: HERO_BG, overflow: 'hidden' }}>
-      {v ? <Image source={{ uri: `${API_URL}/hero-art/${look.pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
+    <View style={{ height: ins.top + Math.min(Math.round(width * 0.34), 190) + 70, backgroundColor: bg, overflow: 'hidden' }}>
+      {v ? <Image source={{ uri: `${API_URL}/hero-art/${pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
@@ -237,8 +240,8 @@ function Hero({ look, title, subtitle }: { look: HeroLook; title: string; subtit
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
       <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'flex-end' }}>
         <View style={{ gap: 2, maxWidth: '58%' }}>
-          <T style={{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: '#ffffff', ...shade }}>{title}</T>
-          {subtitle ? <T style={{ color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, ...shade }}>{subtitle}</T> : null}
+          <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
+          {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
         </View>
       </View>
     </View>
