@@ -469,8 +469,22 @@ function shrink(buf, mime) {
 }
 // A large picture kept sharp: at most `max` px on its longer side (averaged down, never halved past it) and stored as a
 // good JPEG (a quarter of a PNG's bytes, no visible loss in a soft 3D picture). A file it cannot read is kept as it is.
+// The size a PNG or JPEG says it is, read from its header without decoding it (null when unknown).
+function imageSize(buf) {
+  if (buf.length > 24 && buf.readUInt32BE(0) === 0x89504e47) return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+  if (buf[0] === 0xff && buf[1] === 0xd8) for (let o = 2; o + 9 < buf.length;) {
+    if (buf[o] !== 0xff) return null;
+    const m = buf[o + 1], len = buf.readUInt16BE(o + 2);
+    if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { h: buf.readUInt16BE(o + 5), w: buf.readUInt16BE(o + 7) };
+    o += 2 + len;
+  }
+  return null;
+}
+const MAX_DECODE = 40e6;   // pixels: a larger picture is not decoded here (its RGBA copy alone would be 160 MB+)
 function sharp(buf, mime, max = 2560) {
   try {
+    const dim = imageSize(buf);
+    if (dim && dim.w * dim.h > MAX_DECODE) return { buf: null, mime, src: `too large ${dim.w}x${dim.h}` };
     let im = png.decode(buf);
     if (!im && buf[0] === 0xff && buf[1] === 0xd8) {   // a JPEG (some models answer with one whatever is asked)
       const j = require('jpeg-js').decode(buf, { useTArray: true, maxMemoryUsageInMB: 1024, maxResolutionInMP: 100 });
@@ -535,7 +549,7 @@ const INTRO_SET = 'v8'; // v8: each slide its own scene (v7 full scenes all on t
 const INTRO_REF = 'sign-in-dark.png';   // in data/hero-ref
 const INTRO_CUT = false;
 const INTRO_UP = 'k4';   // the mark of the pictures redrawn sharper at 4K (startIntro)
-const INTRO_ENH = 'tz1';   // the mark of the pictures sharpened by enhanceTask (startIntro)
+const INTRO_ENH = '';     // the mark of the pictures sharpened by enhanceTask (startIntro)
 const INTRO_STYLE = 'Take ONLY the look from the reference picture: its soft 3D clay style, rounded shapes, smooth matte pastel materials, soft light and soft shadows, colours (white, coral, periwinkle blue, soft greens, warm yellow) and its dark forest green background with soft, slightly lighter dark green rolling hills low in the distance. Do NOT copy its road, car, trees, flag or card: draw only the scene described here, as its own composition. The picture is one full scene that fills the frame from edge to edge, no sky, no frame, no vignette. The main objects stand in the middle of the picture, between about 15% and 70% of its height and within its middle 70% of the width (its sides may be cut off on a narrow screen). The top tenth is calm, plain dark green, and the bottom quarter is one flat, even dark forest green (#14421c) with nothing in it, because the picture fades into the page there. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
 const INTRO_PROMPTS = [
   // 1: «آزمون تئوری دانمارک، در جیب شما» — every theory question with its picture, in Danish or English with a Persian
@@ -596,7 +610,7 @@ async function startIntro() {
   // Made pictures sharpened (the same drawing, finer detail; kept at up to 3840 px).
   for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
     const x = it[n];
-    if (!x || !x.done || !x.blob || x.up !== INTRO_UP || x.enh === INTRO_ENH || (x.enhTries || 0) >= 3) continue;
+    if (!INTRO_ENH || !x || !x.done || !x.blob || x.up !== INTRO_UP || x.enh === INTRO_ENH || (x.enhTries || 0) >= 3) continue;
     const job = it[n] = { ...x, at: Date.now(), done: false, state: 'enhancing', stage: 'enhance', enh: INTRO_ENH, enhTries: (x.enhTries || 0) + 1, error: '' };
     try { job.taskId = await enhanceTask(await blob(x.blob), `intro-${INTRO_SET}-${n}-enh`, INTRO_ENH); }
     catch (e) { enhanceFailed(job, e.message); console.error('intro picture', n, 'enhance', e.message); }
@@ -622,6 +636,7 @@ async function pollIntro() {
   let pending = false;
   for (const [n, job] of Object.entries(intro().items)) {
     if (job.done || !job.taskId) continue;
+    if (job.stage === 'enhance' && !INTRO_ENH) { enhanceFailed(job, 'sharpening switched off'); await saveIntro(); continue; }
     try {
       const d = await kie('GET', `/jobs/recordInfo?taskId=${encodeURIComponent(job.taskId)}`);
       if (d.state === 'success') {
@@ -630,6 +645,7 @@ async function pollIntro() {
         const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
         const raw = Buffer.from(await r.arrayBuffer()), rawMime = r.headers.get('content-type') || 'image/png';
         const s = job.stage === 'enhance' ? sharp(raw, rawMime, ENHANCED_MAX) : shrinkIntro(raw, rawMime);
+        if (!s.buf) throw Object.assign(new Error(s.src || 'unreadable picture'), { final: true });
         job.blob = `intro-${INTRO_SET}-${n}`;
         await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob);
         Object.assign(job, { state: 'done', done: true, stage: null, v: Date.now().toString(36), size: s.buf.length, ...(s.bg ? { bg: s.bg } : {}), ...(s.cut ? { cut: true } : {}) });
@@ -638,7 +654,7 @@ async function pollIntro() {
       else pending = true;
       if (!job.done && job.stage === 'enhance' && Date.now() - job.at > 30 * 60e3) enhanceFailed(job, 'timeout');
       if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' });
-    } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
+    } catch (e) { if (job.stage === 'enhance' && e.final) enhanceFailed(job, e.message); else { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); } }
     await saveIntro();
   }
   return pending;
@@ -780,6 +796,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
     let pending = false;
     for (const [n, job] of Object.entries(meta().items)) {
       if (job.done || !job.taskId) continue;
+      if (job.stage === 'enhance' && !enhance) { enhanceFailed(job, 'sharpening switched off'); await save(); continue; }
       try {
         const d = await kie('GET', `/jobs/recordInfo?taskId=${encodeURIComponent(job.taskId)}`);
         if (d.state === 'success') {
@@ -788,6 +805,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
           const raw = Buffer.from(await r.arrayBuffer()), rawMime = r.headers.get('content-type') || 'image/png';
           const sm = job.stage === 'enhance' ? sharp(raw, rawMime, ENHANCED_MAX) : full ? sharp(raw, rawMime) : shrink(raw, rawMime);
+          if (!sm.buf) throw Object.assign(new Error(sm.src || 'unreadable picture'), { final: true });
           job.blob = `${prefix}-${set}-${n}`;
           await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
           const v = Date.now().toString(36);
@@ -798,7 +816,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         else pending = true;
         if (!job.done && job.stage === 'enhance' && Date.now() - job.at > 30 * 60e3) enhanceFailed(job, 'timeout');
         if (!job.done && Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true, error: 'timeout' }, job.blob && job.upTries ? { up: null } : {});
-      } catch (e) { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); }
+      } catch (e) { if (job.stage === 'enhance' && e.final) enhanceFailed(job, e.message); else { job.error = e.message; pending = true; if (Date.now() - job.at > 30 * 60e3) Object.assign(job, { state: 'fail', done: true }); } }
       await save();
     }
     // With a limit, the next ones start as earlier ones finish.
@@ -919,7 +937,7 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
   // Kept large (2560 px, JPEG); the drawings made before that are redrawn sharper from themselves at 4K, and the ones
   // drawn from them (1, 3, 5, 7) follow from the sharp ones.
   // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
-  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, enhance: { 4: 'rc1' } });
+  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 // The header pictures' state for /api/config's heroDiag: no prompts or keys, only how each was last made / sharpened.
 const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
