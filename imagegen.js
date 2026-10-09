@@ -582,7 +582,8 @@ const LEARN_PROMPTS = [
 // again 20 minutes later. `retry`: a mark kept with the set; changing it gives every picture not made yet new tries.
 // `allow`: which pictures may be made (key → true); none = all.
 // `redo` (a numbered list only): number → a mark; a picture made without that mark is made again (as a changed prompt).
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {} }) {
+// `resolution`: the image model's size ('2K' unless given); a larger one it turns down is asked for again at '2K'.
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K' }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
@@ -621,9 +622,10 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: (again ? 0 : (x && x.tries) || 0) + (broke(x) ? 0 : 1), prompt, rev,
           ...(again ? { blob: x.blob, v: x.v, size: x.size } : {}) };   // the old picture stays until the new one is made
         try {
-          const input = { prompt, aspect_ratio: ar, resolution: '2K' };
+          const input = { prompt, aspect_ratio: ar, resolution };
           if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
-          const d = await kie('POST', '/jobs/createTask', { model: ref ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
+          const task = inp => kie('POST', '/jobs/createTask', { model: ref ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: inp });
+          const d = await task(input).catch(e => { if (resolution === '2K' || NO_CREDIT.test(e.message)) throw e; console.error(metaKey, n, resolution, e.message); return task({ ...input, resolution: '2K' }); });
           job.taskId = d.taskId; job.state = 'generating'; running++;
         } catch (e) {
           Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error(metaKey, n, e.message);
@@ -741,8 +743,8 @@ const avatarVersions = AVATAR.versions, avatarBlob = AVATAR.blob, avatarCount = 
 // ---------- the pictures at the top of the app's home, «آموزش» and «آزمون» pages ----------
 // One wide scene each that fills the page's header from edge to edge (no frame, no gradient over it); the page's title
 // lies on its right side, so the objects stand on the left and the right is left calm. Served at /hero-art/<n>.png.
-const HERO_SET = 'v1';
-const HERO_STYLE = 'Style: a modern, minimal 3D illustration like the header picture of a premium mobile app: a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft light, subtle soft shadows, no clutter, no fine texture. Palette: white, pale mint (#cfe9cf), warm coral (#e8957a) and periwinkle blue (#5b74c4), with small accents of green, red or warm yellow. The whole picture is one rich dark forest green (#14421c) background scene that fills the frame edge to edge, with soft darker green shapes of rolling hills low in the background; no border, no frame, no vignette. All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a white title will be written there). Danish traffic signs follow their official design. No text, no letters, no numbers, no logos, no brand names, no watermarks, no faces.';
+const HERO_SET = 'v2';   // v2: 4K, with calm top and bottom edges (the page's buttons above, the fade into the page below)
+const HERO_STYLE = 'Style: a modern, minimal 3D illustration like the header picture of a premium mobile app: a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft light, subtle soft shadows, no clutter, no fine texture. Palette: white, pale mint (#cfe9cf), warm coral (#e8957a) and periwinkle blue (#5b74c4), with small accents of green, red or warm yellow. The whole picture is one rich dark forest green (#14421c) background scene that fills the frame edge to edge, with soft darker green shapes of rolling hills low in the background; no border, no frame, no vignette. The top tenth and the bottom quarter of the picture are only calm, plain, even background (the bottom quarter one flat even dark green, no hills, no shadows, no objects), because the picture fades smoothly into the page there. All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a white title will be written there). Danish traffic signs follow their official design. No text, no letters, no numbers, no logos, no brand names, no watermarks, no faces.';
 const HERO_PROMPTS = [
   // 1: «آموزش» (learning)
   'Learning to drive: an open periwinkle-blue book lying at an isometric angle, a winding grey road with white dashes rising out of its pages, a small rounded coral car driving on that road, a red-and-white triangular warning sign and a round blue sign on short poles beside the road, and a white graduation cap resting on a corner of the book.',
@@ -751,7 +753,7 @@ const HERO_PROMPTS = [
   // 3: the home page (a greeting and the progress)
   'On the way to the driving licence: a short winding grey road with white dashes rising from the front towards the back, a small rounded coral car driving up it, a white driving licence card with a faceless photo silhouette standing upright at the end of the road beside a small green flag, and a round white speedometer gauge with a green needle floating beside the road. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 30% and 70% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
 ];
-const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, prompts: HERO_PROMPTS, style: HERO_STYLE, aspect: '4:3', prefix: 'hero-art' });
+const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, prompts: HERO_PROMPTS, style: HERO_STYLE, aspect: '4:3', prefix: 'hero-art', resolution: '4K' });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
