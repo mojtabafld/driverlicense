@@ -1,4 +1,4 @@
-// «آموزش»: four parts as tall cards filling the screen, two by two, each with its picture (made by the server's image
+// «آموزش»: four parts as cards, two by two (the page scrolls under its picture header), each with its picture (made by the server's image
 // model; the part's icon on a soft tile until it is there), its title and a line on what is in it; a card opens its
 // part's page: the lessons one by one (and practice by category), the rules, the road signs, and right of way.
 // Beside the theme switch, «جستجو با هوش مصنوعی» (ui/search-ai.tsx); above the parts, «آموزش گام‌به‌گام» (app/course.tsx).
@@ -23,9 +23,9 @@ function Part({ n, icon, title, text, note, href, target }: { n: number; icon: I
   return (
     <View {...target} style={{ flex: 1 }}>
     <Card onPress={() => router.push(href)} style={{ flex: 1, padding: 0, overflow: 'hidden' }}>
-      {/* The picture, whole (never cropped, whatever the card's shape on this screen), in the card's top, the rest of
+      {/* The picture, whole (never cropped), in the card's top, the rest of
           it in the picture's own background colour; the icon on a soft tile until the picture is made. */}
-      <View style={{ flex: 1, minHeight: 90, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ height: short ? 96 : 120, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
         {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="contain" transition={250} />
           : <Icon name={icon} size={40} color={c.link} weight="semibold" />}
       </View>
@@ -79,18 +79,18 @@ export default function Learn() {
   const tour = useTour('learn', TOUR);
   return (
     <>
-    <Screen fill title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" right={<SearchAiButton />}
+    <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" right={<SearchAiButton />}
       hero={{ pic: 1, icon: 'learn' }}>
-      <View style={{ flex: 1, gap: 12 }}>
+      <View style={{ gap: 12 }}>
         {SHOW_COURSE ? <CourseCard /> : null}
-        <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
           <Part n={1} target={tour.target(0)} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
             text={`${faNum(all)} درس به ترتیب، هر کدام با سؤال‌های خودش؛ یا تمرین بر اساس دسته‌بندی رسمی.`}
             note={done ? `${faNum(done)} از ${faNum(all)} درس انجام شده` : undefined} />
           <Part n={2} target={tour.target(1)} icon="rules" title="قوانین" href="/rules"
             text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
         </View>
-        <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
           <Part n={3} target={tour.target(2)} icon="sign" title="علائم رانندگی" href="/signs"
             text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
           <Part n={4} target={tour.target(3)} icon="priority" title="آموزش حق تقدم" href="/priority"
