@@ -870,7 +870,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           ...(again ? { blob: x.blob, v: x.v, size: x.size } : {}) };   // the old picture stays until the new one is made
         try {
           const input = { prompt, aspect_ratio: ar, resolution };
-          if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
+          if (ref) input.input_urls = [await upload({ mime: /\.jpe?g$/i.test(ref) ? 'image/jpeg' : 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
           if (from) { const sb = await blob(it[from].blob); input.input_urls = [await upload({ mime: sb.mime, data: sb.data }, `${prefix}-${set}-${n}-from-${from}.png`)]; }
           const task = inp => imageTask(inp, model);
           const d = await task(input).catch(e => { if (resolution === '2K' || NO_CREDIT.test(e.message)) throw e; console.error(metaKey, n, resolution, e.message); return task({ ...input, resolution: '2K' }); });
@@ -1038,16 +1038,12 @@ const heroVersions = HERO.versions, heroBlob = HERO.blob;
 // The header pictures' state for /api/config's heroDiag: no prompts or keys, only how each was last made / sharpened.
 const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
   [n, { state: j.state, enh: j.enh || null, enhMark: j.enhMark || null, enhTries: j.enhTries || 0, info: j.enhInfo || null, error: j.error ? String(j.error).slice(0, 160) : null }]));
-// A trial of another image model (TRY_MODEL) on the same pictures, to compare with the ones on show; served at
-// /hero-try/<n>.png and not used by the app. 1: the home picture (light), 2: the test picture (dark).
-const TRY_MODEL = 'nano-banana-pro';
-// Nano Banana takes position words literally (a «plain top tenth» became a separate band across the picture), so its
-// style describes one seamless scene and where the group stands, without bands or edges.
-const NB_STYLE = (bg, hills) => `A soft 3D clay illustration like the header art of a premium mobile app: a few simple rounded objects in smooth matte clay, soft studio light and gentle soft shadows, no clutter and no fine texture. Palette: white, pale mint, warm coral and periwinkle blue, with small accents of green, red or warm yellow. It is one single seamless scene that fills the whole frame: the background is one continuous ${bg}, with a few soft ${hills} rolling hills far behind the objects, the same colour everywhere, with no stripes, no bands, no borders, no panels, no frames, no vignette and no repeated parts. The objects form one compact group in the left half of the picture, vertically centred, small enough to leave plenty of empty background around them; the right half and the space below the group are empty background. Danish traffic signs follow their official design. No text, no letters, no numbers, no logos, no watermarks, no faces.`;
-const NB_DARK = NB_STYLE('rich dark forest green (#14421c)', 'slightly lighter dark green'), NB_LIGHT = NB_STYLE('soft light pastel green (#d9ecd5)', 'slightly deeper pale green');
-const subject = p => p.split(' This picture is shown')[0];   // the prompt's scene only (its layout words are GPT Image's)
-const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'nb2', aspect: '4:3', prefix: 'hero-try', resolution: '4K', full: true, model: TRY_MODEL,
-  prompts: [`${subject(HERO_PROMPTS[2])}\n${NB_LIGHT}`, `${subject(HERO_PROMPTS[1])}\n${NB_DARK}`] });
+// A trial, to compare with the pictures on show; served at /hero-try/<n>.png and not used by the app.
+// The home page's two pictures (1: light, 2: dark; data/hero-ref/home-*.jpg, the ones on show at 2560 px) redrawn from
+// themselves at 4K and kept at the model's full size (FULL_MAX), with the background cleaned and the edges sharpened.
+const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'full1', aspect: '4:3', prefix: 'hero-try', resolution: '4K', full: true, clean: 'cl2',
+  refDir: path.join(__dirname, 'data', 'hero-ref'),
+  prompts: { 1: { prompt: UPSCALE_PROMPT, ref: 'home-light.jpg' }, 2: { prompt: UPSCALE_PROMPT, ref: 'home-dark.jpg' } } });
 const heroTryBlob = HERO_TRY.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
