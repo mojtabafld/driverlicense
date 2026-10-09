@@ -182,8 +182,9 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 
 // Scrollable tab screen: the page heading (with the theme switch beside it; no app name or logo, so the page has the
 // room) and the content; it leaves room for the floating tab bar over the page's end.
-// With `fill` the screen does not scroll: its content gets exactly the height between the title and the tab bar, and
-// `gap` can be set tighter for short screens.
+// With `fill` its content gets at least the height between the header and the tab bar (so a part set to flex: 1 takes
+// what is left), and the screen scrolls only when the content needs more than that (a part's own minimum height, e.g.
+// the home page's chart under its picture header on a short screen); `gap` can be set tighter for short screens.
 // `scrollRef` / `onScrollY`: the scroll view and where it is scrolled, e.g. for the first-visit tooltips (tour.tsx).
 // Room for the floating tab bar (src/ui/tabs/app-tabs.tsx: 64 high, above the bottom edge) and a clear gap above it,
 // on every platform.
@@ -300,7 +301,9 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
       <PageIn>
       <View style={{ flex: 1 }}>
       {fill
-        ? <>{top}<View style={[box, { flex: 1, paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) }]}>{head}{children}</View></>
+        ? <ScrollView ref={ref} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+            {top}<View style={[box, { flex: 1, paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) }]}>{head}{children}</View>
+          </ScrollView>
         : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
             {top}<View style={box}>{head}{children}</View>
           </ScrollView>}
