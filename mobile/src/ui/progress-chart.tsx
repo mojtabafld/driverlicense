@@ -84,7 +84,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
     // Nothing to draw yet: say so, with a button to the exam tab.
     return (
       <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 14, paddingVertical: 20 }, fill && { flex: 1 }]}>
-        <T style={{ color: c.muted, fontSize: 13.5, textAlign: 'center' }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>
+        <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>
         <Button label="شروع آزمون" onPress={() => router.navigate('/exam')} icon="play" />
       </View>
     );
