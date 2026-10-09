@@ -79,6 +79,7 @@ function init(s, siteDir) {
     .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
     .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message))
     .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message))
+    .then(() => adoptHomeTrial()).catch(e => console.error('home trial', e.message))
     .then(() => HERO.start()).catch(e => console.error('header pictures', e.message))
     .then(() => HERO_TRY.start()).catch(e => console.error('trial pictures', e.message));
 }
@@ -1024,17 +1025,29 @@ const HERO_STYLE_LIGHT = HERO_STYLE
 // 7, 8: the sign-in page's taller header (square). The light one (8) is a picture chosen by hand
 // (data/hero-ref/sign-in-light.png: a road through green hills with a coral car, a glowing licence card, a check badge and
 // a Danish flag), the dark one (7) that picture redrawn on dark green.
+const HERO_UP = 'k4f';   // the mark of the full-size redraw
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
   prompts: [HERO_RECOLOUR_DARK, `${HERO_PROMPTS[1]}\n${HERO_STYLE}`, HERO_RECOLOUR_DARK, `${HERO_PROMPTS[0]}\n${HERO_STYLE_LIGHT}`, HERO_RECOLOUR, `${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`,
     { prompt: HERO_RECOLOUR_DARK, aspect: '1:1' }, { prompt: 'data/hero-ref/sign-in-light.png', aspect: '1:1' }],
   // Each page's two pictures are one drawing: the learning and home dark ones redrawn from their light ones (1 from 4,
   // 3 from 6, and the sign-in's 7 from its chosen 8), the test's light one from its dark one (5 from 2).
   redo: { 2: 'narrow' }, derive: { 1: '4', 3: '6', 5: '2', 7: '8' }, fixed: { 8: 'sign-in-light.png' }, refDir: path.join(__dirname, 'data', 'hero-ref'),
-  // Kept large (2560 px, JPEG); the drawings made before that are redrawn sharper from themselves at 4K, and the ones
-  // drawn from them (1, 3, 5, 7) follow from the sharp ones.
+  // Kept at the model's full size (FULL_MAX, JPEG); the drawings made before that (at 2560 px) are redrawn from themselves
+  // at 4K, and the ones drawn from them (1, 5, 7) follow from those. The home page's two (3, 6) are the trial's (adoptHomeTrial).
   // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
-  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, clean: 'cl2', enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
+  full: true, upscale: { 2: HERO_UP, 4: HERO_UP, 6: HERO_UP, 8: HERO_UP }, clean: 'cl2', enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
+// The home page's pictures redrawn at full size in the trial (/hero-try/1, 2), chosen to replace the ones on show:
+// put in once as they are (already cleaned), marked as redrawn so they are not drawn again, and with the drawing's
+// version (rv) kept, so the dark one is not redrawn from the light one.
+async function adoptHomeTrial() {
+  const m = store.meta.heroArt;
+  if (!m || m.adopted === 'full1') return;
+  const pics = [await HERO_TRY.blob('1'), await HERO_TRY.blob('2')];
+  if (!pics[0] || !pics[1]) return;
+  for (const [n, b] of [['6', pics[0]], ['3', pics[1]]]) { await HERO.put(n, b); Object.assign(m.items[n], { up: HERO_UP, clean: 'cl2' }); }
+  m.adopted = 'full1'; await store.saveMeta('heroArt', m);
+}
 // The header pictures' state for /api/config's heroDiag: no prompts or keys, only how each was last made / sharpened.
 const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
   [n, { state: j.state, enh: j.enh || null, enhMark: j.enhMark || null, enhTries: j.enhTries || 0, info: j.enhInfo || null, error: j.error ? String(j.error).slice(0, 160) : null }]));
