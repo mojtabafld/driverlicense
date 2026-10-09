@@ -23,9 +23,12 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
   return (
     <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1 }}
       accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={label}>
-      <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 2, height: TAB_BAR_H - 8, borderRadius: (TAB_BAR_H - 8) / 2 },
-        Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null,
-        isFocused && { backgroundColor: dark ? 'rgba(0,0,0,0.38)' : 'rgba(40,40,44,0.42)' }]}>
+      {/* The chosen tab's capsule is a layer of its own under the icon, with its own round corners, and the tab's box
+          clips to the same shape (on Android a rounded background on the box itself could show square). */}
+      <View style={{ alignItems: 'center', justifyContent: 'center', gap: 2, height: TAB_BAR_H - 8, borderRadius: (TAB_BAR_H - 8) / 2, overflow: 'hidden' }}>
+        <View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: (TAB_BAR_H - 8) / 2,
+          backgroundColor: isFocused ? (dark ? 'rgba(0,0,0,0.38)' : 'rgba(40,40,44,0.42)') : 'transparent' },
+          Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null]} />
         <Icon name={TAB_ICON[name]} size={24} color={color} filled={isFocused} contrast={dark ? '#2a2a2c' : '#55555a'} />
         <T style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color }}>{label}</T>
       </View>
