@@ -25,7 +25,7 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
   const bar = useCountUp(progress != null ? Math.min(1, Math.max(0, progress)) : 0); // the bar fills when the app opens
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link;
   return (
-    <Card onPress={onPress} style={{ flex: 1, gap: short ? 2 : 4, paddingVertical: short ? 8 : 10, paddingHorizontal: narrow ? 8 : 10 }}>
+    <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: narrow ? 5 : 6 }}>
         {/* A bare line icon in the card's colour, no tile behind it. */}
         <Icon name={icon} size={narrow ? 18 : 20} color={fg} weight="semibold" />
@@ -77,10 +77,9 @@ const TOUR: TourStep[] = [
 export default function Home() {
   const c = useColors();
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
-  // and a smaller ring, below 830 the secondary lines go too, below 700 also the chance card's averages row, so
-  // everything stays on one screen above the tab bar (the header is lower there too: Hero's `fit`).
+  // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height } = useWindowDimensions();
-  const compact = height < 900, tight = height < 830, tiny = height < 700;
+  const compact = height < 900, tight = height < 680;
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
   const tour = useTour('home', TOUR);
@@ -99,10 +98,10 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     <>
-    <Screen fill gap={tight ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
+    <Screen fill gap={compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
       hero={{ pic: 3, icon: 'house' }}>
       {/* The four cards at the top: the chance of passing and the three counts (one tooltip for them). */}
-      <View {...tour.target(0)} style={{ gap: tight ? 8 : compact ? 10 : 14 }}>
+      <View {...tour.target(0)} style={{ gap: compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
@@ -112,7 +111,7 @@ export default function Home() {
             <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: compact ? 8 : 12, display: tiny ? 'none' : 'flex' }}>
+        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: compact ? 8 : 12 }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
@@ -145,7 +144,7 @@ export default function Home() {
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.forest, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
-        <ProgressChart fill short={tight} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
+        <ProgressChart fill attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
       </Card>
       </Pressable>
       </View>
