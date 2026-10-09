@@ -473,10 +473,12 @@ async function seedOwn() {
 // app's «no internet» page) in the sign-in picture's style, on a plain dark forest-green background (cut out), so the
 // app can lay it on its green intro. Kept in store.meta.intro and served at
 // /intro/<n>.png; the app falls back to its own drawings until a picture is there. Changing INTRO_SET makes new ones.
-const INTRO_SET = 'v6'; // v6: in the sign-in picture's style (v5 on dark forest green, v4 forest green, v3 teal)
-// Each slide is drawn from the sign-in page's picture (image to image), so all of them share its look.
-const INTRO_REF = 'sign-in-light.png';   // in data/hero-ref
-const INTRO_STYLE = 'Draw it in exactly the style of the reference picture: the same soft 3D clay look, rounded shapes, smooth matte pastel materials, soft light and soft shadows, the same small rounded coral car, rounded green trees, gentle rolling pale green hills, grey road with white dashes and little red-and-white roadside posts. The scene stands on a small, softly rounded patch of rolling green hills, compact and centred, filling about three quarters of the picture. Around it the background is ONE plain, flat, solid dark forest green (#14421c): no sky, no gradient, no frame, nothing else. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
+const INTRO_SET = 'v7'; // v7: full scenes for the slide's tall header (v6 cut-out islands, v5 on dark forest green, v4 forest green, v3 teal)
+// Each slide is drawn from the sign-in page's dark picture (image to image), so all of them share its look; the picture
+// fills the slide's header from edge to edge and fades into the page below it, so its background is not cut out.
+const INTRO_REF = 'sign-in-dark.png';   // in data/hero-ref
+const INTRO_CUT = false;
+const INTRO_STYLE = 'Draw it in exactly the style of the reference picture: the same soft 3D clay look, rounded shapes, smooth matte pastel materials, soft light and soft shadows, the same small rounded coral car, rounded green trees, gentle rolling dark green hills, grey road with white dashes and little red-and-white roadside posts. The picture is one full scene that fills the frame from edge to edge like the reference: a dark forest green (#14421c) background with soft, slightly lighter dark green rolling hills, no sky, no frame, no vignette. The main objects stand in the middle of the picture, between about 15% and 70% of its height and within its middle 70% of the width (its sides may be cut off on a narrow screen). The top tenth is calm, plain dark green, and the bottom quarter is one flat, even dark forest green (#14421c) with nothing in it, because the picture fades into the page there. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
 const INTRO_PROMPTS = [
   // 1: what the app is
   'A smartphone standing upright on the green hills, its plain white screen showing a small rounded green app tile with a white speedometer symbol; a winding road with the coral car leads up to it, a white driving licence card with a faceless photo silhouette floats beside it with a soft glow, and a red octagonal stop sign (blank) and a red-and-white triangular give-way sign stand on short poles by the road.',
@@ -496,11 +498,13 @@ function shrinkIntro(buf, mime) {
   try {
     const im = png.decode(buf); if (!im) return { buf, mime };
     const small = im.w > 1200 ? png.half(im) : im, bg = png.edgeColour(small);
+    if (!INTRO_CUT) return { buf: png.encode(small), mime: 'image/png', bg };   // a full scene: only made smaller
     return { buf: png.encode(png.cutout(small, bg)), mime: 'image/png', bg, cut: true };
   } catch (e) { console.error('intro picture shrink', e.message); return { buf, mime }; }
 }
 // Pictures made before shrinking or cutting existed: done once (a cut picture already has no background to cut).
 async function fixIntro() {
+  if (!INTRO_CUT) return;
   for (const job of Object.values(((store.meta.intro || {}).items) || {})) {
     if (!job.blob || job.cut) continue;
     const b = await store.getBlob(job.blob); if (!b) continue;

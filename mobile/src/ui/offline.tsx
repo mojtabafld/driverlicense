@@ -1,5 +1,5 @@
-// The page shown when there is no internet: full screen in the intro's dark forest green, a picture of the lost connection (carried
-// by the app, since the server cannot be reached), «check the connection and sign in again», and «تلاش دوباره».
+// The page shown when there is no internet: full screen in the intro's dark forest green, a tall picture of the lost
+// connection across the top fading into the page, as on the intro (carried by the app, since the server cannot be reached), «check the connection and sign in again», and «تلاش دوباره».
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
@@ -8,9 +8,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from './icon';
 import { T, tap } from './kit';
+import { TallPicture } from './tall-picture';
 
 const PICTURE = require('../../assets/images/offline.png');
-// The intro's dark forest green (the picture is see-through around its objects).
+// The intro's dark forest green (the picture's own background, which it fades into).
 export const OFFLINE_TOP = '#14421c';
 
 // On the web the picture is a file from the server: loaded (invisibly) while online, so the offline page has it.
@@ -19,18 +20,16 @@ export function OfflinePreload() {
 }
 
 export function Offline({ onRetry }: { onRetry: () => Promise<void> }) {
-  const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
+  const ins = useSafeAreaInsets(), { height } = useWindowDimensions();
   const [busy, setBusy] = useState(false);
-  const side = Math.min(width - 32, height * 0.48, 460);
+  const headH = ins.top + Math.min(Math.round(height * 0.52), 520);
   const retry = async () => { tap(); setBusy(true); try { await onRetry(); } finally { setBusy(false); } };
   return (
     <View style={{ flex: 1 }} accessibilityRole="alert">
       <LinearGradient colors={[OFFLINE_TOP, OFFLINE_TOP, '#0d3014']} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-      <View style={{ flex: 1, paddingTop: ins.top + 24, paddingBottom: ins.bottom + 24, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -28 }}>
-          <Image source={PICTURE} style={{ width: side, height: side }} contentFit="contain" />
-        </View>
-        <View style={{ gap: 12, paddingBottom: 28 }}>
+      <TallPicture height={headH} bg={OFFLINE_TOP} source={PICTURE} />
+      <View style={{ flex: 1, marginTop: -28, paddingBottom: ins.bottom + 24, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
+        <View style={{ flex: 1, gap: 12 }}>
           <T style={{ color: '#fff', fontSize: 28, lineHeight: 42, fontWeight: '800' }}>اتصال به اینترنت برقرار نیست</T>
           <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>اتصال اینترنت را بررسی کنید و دوباره وارد شوید. با برقرار شدن اتصال، اپ خودش دوباره باز می‌شود.</T>
         </View>
