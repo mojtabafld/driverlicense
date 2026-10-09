@@ -498,10 +498,13 @@ function boxResize(im, w, h) {
 }
 // Sharpening a made picture with a dedicated upscaler (Topaz, 2×): the drawing stays exactly as it is, only finer detail
 // and crisp edges are added, so it holds up when zoomed. The result is kept at up to ENHANCED_MAX px (sharp()).
-const ENHANCE_MODEL = 'topaz/image-upscale', ENHANCED_MAX = 3840;
-async function enhanceTask(b, name) {
+// (Topaz on kie.ai answered «internal error» for most pictures and the size unchanged for the rest; Recraft's crisp
+// upscale is tried instead.) A mark starting «tz» uses Topaz, any other Recraft.
+const ENHANCED_MAX = 3840;
+async function enhanceTask(b, name, mark = '') {
   const url = await upload({ mime: b.mime, data: b.data }, `${name}.${b.mime === 'image/jpeg' ? 'jpg' : 'png'}`);
-  const d = await kie('POST', '/jobs/createTask', { model: ENHANCE_MODEL, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { image_url: url, upscale_factor: '2' } });
+  const body = /^tz/.test(mark) ? { model: 'topaz/image-upscale', input: { image_url: url, upscale_factor: '2' } } : { model: 'recraft/crisp-upscale', input: { image: url } };
+  const d = await kie('POST', '/jobs/createTask', { ...body, callBackUrl: `${PUBLIC_URL}/api/kiecallback` });
   return d.taskId;
 }
 // A sharpening that failed: the picture stays as it was (done, still on show), tried again on a later start.
@@ -595,7 +598,7 @@ async function startIntro() {
     const x = it[n];
     if (!x || !x.done || !x.blob || x.up !== INTRO_UP || x.enh === INTRO_ENH || (x.enhTries || 0) >= 3) continue;
     const job = it[n] = { ...x, at: Date.now(), done: false, state: 'enhancing', stage: 'enhance', enh: INTRO_ENH, enhTries: (x.enhTries || 0) + 1, error: '' };
-    try { job.taskId = await enhanceTask(await blob(x.blob), `intro-${INTRO_SET}-${n}-enh`); }
+    try { job.taskId = await enhanceTask(await blob(x.blob), `intro-${INTRO_SET}-${n}-enh`, INTRO_ENH); }
     catch (e) { enhanceFailed(job, e.message); console.error('intro picture', n, 'enhance', e.message); }
     await saveIntro();
   }
@@ -739,9 +742,10 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       }
       if (enhance) for (const [n] of list) {   // made pictures sharpened (the same drawing, finer)
         const x = it[n], mark = typeof enhance === 'string' ? enhance : enhance[n];
-        if (!mark || !x || !x.done || !x.blob || x.enh === mark || (x.enhTries || 0) >= 3 || running >= limit) continue;
-        const job = it[n] = { ...x, at: Date.now(), done: false, state: 'enhancing', stage: 'enhance', enh: mark, enhTries: (x.enhTries || 0) + 1, rv: x.rv || x.v, error: '' };
-        try { job.taskId = await enhanceTask(await blob(x.blob), `${prefix}-${set}-${n}-enh`); running++; }
+        const tries = x && x.enhMark === mark ? x.enhTries || 0 : 0;   // tries with this mark
+        if (!mark || !x || !x.done || !x.blob || x.enh === mark || tries >= 3 || running >= limit) continue;
+        const job = it[n] = { ...x, at: Date.now(), done: false, state: 'enhancing', stage: 'enhance', enh: mark, enhMark: mark, enhTries: tries + 1, rv: x.rv || x.v, error: '' };
+        try { job.taskId = await enhanceTask(await blob(x.blob), `${prefix}-${set}-${n}-enh`, mark); running++; }
         catch (e) { enhanceFailed(job, e.message); console.error(metaKey, n, 'enhance', e.message); }
         await save();
       }
@@ -800,7 +804,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
     // With a limit, the next ones start as earlier ones finish.
     const now2 = meta().items;
     // (and a picture redrawn from another starts once that one is made)
-    if (((limit !== Infinity || Object.keys(derive).length) && list.some(([n, { rev }]) => waiting(now2[n], rev, n))) || (enhance && Object.entries(now2).some(([n, j]) => { const m = typeof enhance === 'string' ? enhance : enhance[n]; return m && j.done && j.blob && j.enh !== m && (j.enhTries || 0) < 3; }))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
+    if (((limit !== Infinity || Object.keys(derive).length) && list.some(([n, { rev }]) => waiting(now2[n], rev, n))) || (enhance && Object.entries(now2).some(([n, j]) => { const m = typeof enhance === 'string' ? enhance : enhance[n]; return m && j.done && j.blob && j.enh !== m && (j.enhMark !== m || (j.enhTries || 0) < 3); }))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
     return pending;
   }
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
@@ -915,11 +919,11 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
   // Kept large (2560 px, JPEG); the drawings made before that are redrawn sharper from themselves at 4K, and the ones
   // drawn from them (1, 3, 5, 7) follow from the sharp ones.
   // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
-  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, enhance: { 4: 'tz2' } });
+  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, enhance: { 4: 'rc1' } });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 // The header pictures' state for /api/config's heroDiag: no prompts or keys, only how each was last made / sharpened.
 const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
-  [n, { state: j.state, enh: j.enh || null, enhTries: j.enhTries || 0, info: j.enhInfo || null, error: j.error ? String(j.error).slice(0, 160) : null }]));
+  [n, { state: j.state, enh: j.enh || null, enhMark: j.enhMark || null, enhTries: j.enhTries || 0, info: j.enhInfo || null, error: j.error ? String(j.error).slice(0, 160) : null }]));
 // A trial of another image model (TRY_MODEL) on the same pictures, to compare with the ones on show; served at
 // /hero-try/<n>.png and not used by the app. 1: the home picture (light), 2: the test picture (dark).
 const TRY_MODEL = 'nano-banana-pro';
