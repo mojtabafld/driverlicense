@@ -480,8 +480,57 @@ function imageSize(buf) {
   }
   return null;
 }
+// Background clean-up for the model's pictures: the plain background (near its edge colour) is smoothed with an
+// edge-preserving (bilateral) filter at 1/8 scale, so its blotchy noise goes but hill shapes and objects stay; a faint
+// dither keeps the smooth dark gradients from banding.
+function cleanBackground(im, bg) {
+  const { w, h, ch, px } = im, S = 8, W = Math.ceil(w / S), H = Math.ceil(h / S);
+  const bgc = [parseInt(bg.slice(1, 3), 16), parseInt(bg.slice(3, 5), 16), parseInt(bg.slice(5, 7), 16)];
+  const near = i => Math.hypot(px[i] - bgc[0], px[i + 1] - bgc[1], px[i + 2] - bgc[2]);
+  const small = new Float32Array(W * H * 3), valid = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {   // box-average down, of background-like pixels only
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let yy = y * S; yy < Math.min(h, y * S + S); yy++) for (let xx = x * S; xx < Math.min(w, x * S + S); xx++) { const i = (yy * w + xx) * ch; if (near(i) > 30) continue; r += px[i]; g += px[i + 1]; b += px[i + 2]; n++; }
+    const o = (y * W + x) * 3; valid[y * W + x] = n / (S * S); if (n) { small[o] = r / n; small[o + 1] = g / n; small[o + 2] = b / n; }
+  }
+  const R = 12, sr2 = 2 * 7 * 7, ss2 = 2 * 6.5 * 6.5, out = new Float32Array(W * H * 3);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {   // bilateral at 1/8 scale (≈ 48 px reach at full size)
+    const o = (y * W + x) * 3; let a0 = 0, a1 = 0, a2 = 0, ws = 0;
+    if (!valid[y * W + x]) continue;
+    for (let dy = -R; dy <= R; dy++) { const yy = y + dy; if (yy < 0 || yy >= H) continue;
+      for (let dx = -R; dx <= R; dx++) { const xx = x + dx; if (xx < 0 || xx >= W) continue;
+        const q = (yy * W + xx) * 3, d0 = small[q] - small[o], d1 = small[q + 1] - small[o + 1], d2 = small[q + 2] - small[o + 2];
+        if (!valid[yy * W + xx]) continue;
+        const wt = valid[yy * W + xx] * Math.exp(-(dx * dx + dy * dy) / ss2 - (d0 * d0 + d1 * d1 + d2 * d2) / sr2);
+        a0 += small[q] * wt; a1 += small[q + 1] * wt; a2 += small[q + 2] * wt; ws += wt; } }
+    if (ws) { out[o] = a0 / ws; out[o + 1] = a1 / ws; out[o + 2] = a2 / ws; }
+  }
+  const res = Buffer.from(px);
+  let seed = 12345; const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * ch, d = near(i);
+    const t = d <= 16 ? 1 : d >= 30 ? 0 : (30 - d) / 14, k = t * t * (3 - 2 * t);   // how background-like
+    if (!k) continue;
+    // bilinear sample of the smoothed small picture
+    const fx = Math.min(W - 1, Math.max(0, (x + 0.5) / S - 0.5)), fy = Math.min(H - 1, Math.max(0, (y + 0.5) / S - 0.5));
+    const x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(W - 1, x0 + 1), y1 = Math.min(H - 1, y0 + 1), tx = fx - x0, ty = fy - y0;
+    // the smooth value's own local edge: where the small picture changes fast (a hill's edge), keep the original pixel
+    const cs = [y0 * W + x0, y0 * W + x1, y1 * W + x0, y1 * W + x1], ws4 = [(1 - tx) * (1 - ty), tx * (1 - ty), (1 - tx) * ty, tx * ty];
+    let wsum = 0; const v = [0, 0, 0];
+    for (let q = 0; q < 4; q++) { const wq = ws4[q] * (valid[cs[q]] ? 1 : 0); wsum += wq; for (let c = 0; c < 3; c++) v[c] += out[cs[q] * 3 + c] * wq; }
+    if (!wsum) continue;
+    for (let c = 0; c < 3; c++) v[c] /= wsum;
+    // only where the smooth value is close to the pixel itself: an edge (a hill's outline, an object's rim) keeps its pixel
+    const dv = Math.hypot(v[0] - px[i], v[1] - px[i + 1], v[2] - px[i + 2]), e = dv <= 5 ? 1 : dv >= 10 ? 0 : (10 - dv) / 5;
+    const kk = k * e * e * (3 - 2 * e); if (!kk) continue;
+    const n = rnd() - 0.5 + rnd() - 0.5;   // faint triangular dither (±1 level)
+    for (let c = 0; c < 3; c++) res[i + c] = Math.max(0, Math.min(255, Math.round(px[i + c] * (1 - kk) + (v[c] + n) * kk)));
+  }
+  return { ...im, px: res };
+}
 const MAX_DECODE = 40e6;   // pixels: a larger picture is not decoded here (its RGBA copy alone would be 160 MB+)
-function sharp(buf, mime, max = 2560) {
+// `clean`: the plain background smoothed (cleanBackground), for the full-scene header and intro pictures.
+function sharp(buf, mime, max = 2560, clean = false) {
   try {
     const dim = imageSize(buf);
     if (dim && dim.w * dim.h > MAX_DECODE) return { buf: null, mime, src: `too large ${dim.w}x${dim.h}` };
@@ -491,10 +540,11 @@ function sharp(buf, mime, max = 2560) {
       im = { w: j.width, h: j.height, ch: 4, px: Buffer.from(j.data.buffer, j.data.byteOffset, j.data.length) };
     }
     if (!im) return { buf, mime, src: `unreadable ${mime} ${buf.length}B` };
-    const k = Math.min(1, max / Math.max(im.w, im.h)), out = k < 1 ? boxResize(im, Math.round(im.w * k), Math.round(im.h * k)) : im;
+    const k = Math.min(1, max / Math.max(im.w, im.h)); let out = k < 1 ? boxResize(im, Math.round(im.w * k), Math.round(im.h * k)) : im;
+    if (clean) out = cleanBackground(out, png.edgeColour(out));
     const rgba = Buffer.alloc(out.w * out.h * 4);
     for (let i = 0, j = 0; i < out.w * out.h; i++, j += out.ch) { rgba[i * 4] = out.px[j]; rgba[i * 4 + 1] = out.px[j + (out.ch > 2 ? 1 : 0)]; rgba[i * 4 + 2] = out.px[j + (out.ch > 2 ? 2 : 0)]; rgba[i * 4 + 3] = 255; }
-    return { buf: require('jpeg-js').encode({ data: rgba, width: out.w, height: out.h }, 88).data, mime: 'image/jpeg', bg: png.edgeColour(out), src: `${im.w}x${im.h}`, out: `${out.w}x${out.h}` };
+    return { buf: require('jpeg-js').encode({ data: rgba, width: out.w, height: out.h }, clean ? 92 : 88).data, mime: 'image/jpeg', bg: png.edgeColour(out), src: `${im.w}x${im.h}`, out: `${out.w}x${out.h}` };
   } catch (e) { console.error('picture sharpen', e.message); return { buf, mime }; }
 }
 // Downscaling by averaging every source pixel under each new one (no aliasing, unlike a plain bilinear resize).
@@ -548,6 +598,7 @@ const INTRO_SET = 'v8'; // v8: each slide its own scene (v7 full scenes all on t
 // the page below it, so its background is not cut out.
 const INTRO_REF = 'sign-in-dark.png';   // in data/hero-ref
 const INTRO_CUT = false;
+const INTRO_CLEAN = 'cl1';   // the mark of the pictures whose background was smoothed (startIntro)
 const INTRO_UP = 'k4';   // the mark of the pictures redrawn sharper at 4K (startIntro)
 const INTRO_ENH = '';     // the mark of the pictures sharpened by enhanceTask (startIntro)
 const INTRO_STYLE = 'Take ONLY the look from the reference picture: its soft 3D clay style, rounded shapes, smooth matte pastel materials, soft light and soft shadows, colours (white, coral, periwinkle blue, soft greens, warm yellow) and its dark forest green background with soft, slightly lighter dark green rolling hills low in the distance. Do NOT copy its road, car, trees, flag or card: draw only the scene described here, as its own composition. The picture is one full scene that fills the frame from edge to edge, no sky, no frame, no vignette. The main objects stand in the middle of the picture, between about 15% and 70% of its height and within its middle 70% of the width (its sides may be cut off on a narrow screen). The top tenth is calm, plain dark green, and the bottom quarter is one flat, even dark forest green (#14421c) with nothing in it, because the picture fades into the page there. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
@@ -570,7 +621,7 @@ const INTRO_PROMPTS = [
 function shrinkIntro(buf, mime) {
   try {
     const im = png.decode(buf); if (!im) return { buf, mime };
-    if (!INTRO_CUT) return sharp(buf, mime);   // a full scene: kept large and sharp
+    if (!INTRO_CUT) return sharp(buf, mime, 2560, true);   // a full scene: kept large and sharp, its background smoothed
     const small = im.w > 1200 ? png.half(im) : im, bg = png.edgeColour(small);
     return { buf: png.encode(png.cutout(small, bg)), mime: 'image/png', bg, cut: true };
   } catch (e) { console.error('intro picture shrink', e.message); return { buf, mime }; }
@@ -606,6 +657,15 @@ async function startIntro() {
       job.taskId = d.taskId; job.state = 'generating';
     } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message, up: x.up }); console.error('intro picture', n, 'upscale', e.message); }
     await saveIntro();
+  }
+  // Made pictures' plain backgrounds smoothed, once (no new drawing, no cost).
+  for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
+    const x = it[n];
+    if (!x || !x.done || !x.blob || x.clean === INTRO_CLEAN) continue;
+    const b = await blob(x.blob); if (!b) continue;
+    const r = sharp(b.data, b.mime, 2560, true);
+    if (r.buf) { await store.saveBlob(x.blob, r.mime, r.buf); cache.delete(x.blob); Object.assign(x, { v: Date.now().toString(36), size: r.buf.length }); }
+    x.clean = INTRO_CLEAN; await saveIntro(); await new Promise(res => setImmediate(res));
   }
   // Made pictures sharpened (the same drawing, finer detail; kept at up to 3840 px).
   for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
@@ -648,7 +708,7 @@ async function pollIntro() {
         if (!s.buf) throw Object.assign(new Error(s.src || 'unreadable picture'), { final: true });
         job.blob = `intro-${INTRO_SET}-${n}`;
         await store.saveBlob(job.blob, s.mime, s.buf); cache.delete(job.blob);
-        Object.assign(job, { state: 'done', done: true, stage: null, v: Date.now().toString(36), size: s.buf.length, ...(s.bg ? { bg: s.bg } : {}), ...(s.cut ? { cut: true } : {}) });
+        Object.assign(job, { state: 'done', done: true, stage: null, clean: INTRO_CLEAN, v: Date.now().toString(36), size: s.buf.length, ...(s.bg ? { bg: s.bg } : {}), ...(s.cut ? { cut: true } : {}) });
       } else if (d.state === 'fail' && job.stage === 'enhance') enhanceFailed(job, d.failMsg || 'failed');
       else if (d.state === 'fail') Object.assign(job, { state: 'fail', done: true, error: d.failMsg || 'failed' }, job.blob && job.upTries ? { up: null } : {});
       else pending = true;
@@ -705,9 +765,11 @@ const LEARN_PROMPTS = [
 // `upscale`: number → a mark; a picture made without that mark is redrawn from itself at `resolution` (UPSCALE_PROMPT), so
 // it stays the same drawing, only sharper (the one on show stays until the new one is made).
 // `model`: the image model for this set (the server's IMAGE_MODEL unless given).
+// `clean`: a mark; pictures get their plain background smoothed (cleanBackground): new ones when made, the ones made
+// before once on start (no new drawing, no cost).
 // `enhance`: a mark; every made picture without it is sharpened (enhanceTask) and stored at up to 3840 px. A picture
 // drawn from another follows that one's drawing (rv), not its sharpening, so it is not drawn again.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {}, fixed = {}, full = false, upscale = {}, model = IMAGE_MODEL, enhance = '' }) {
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {}, fixed = {}, full = false, upscale = {}, model = IMAGE_MODEL, enhance = '', clean = '' }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
@@ -755,6 +817,15 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           job.taskId = d.taskId; job.state = 'generating'; running++;
         } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message, up: x.up }); console.error(metaKey, n, 'upscale', e.message); }
         await save();
+      }
+      if (clean) for (const [n] of list) {   // made pictures' backgrounds smoothed, once
+        const x = it[n];
+        if (!x || !x.done || !x.blob || x.clean === clean) continue;
+        const b = await blob(x.blob); if (!b) continue;
+        const r = sharp(b.data, b.mime, 2560, true); if (!r.buf) { x.clean = clean; continue; }
+        await store.saveBlob(x.blob, r.mime, r.buf); cache.delete(x.blob);
+        Object.assign(x, { clean, rv: x.rv || x.v, v: Date.now().toString(36), size: r.buf.length });
+        await save(); await new Promise(res => setImmediate(res));
       }
       if (enhance) for (const [n] of list) {   // made pictures sharpened (the same drawing, finer)
         const x = it[n], mark = typeof enhance === 'string' ? enhance : enhance[n];
@@ -804,7 +875,8 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           if (!url) throw new Error('no result url');
           const r = await fetch(url); if (!r.ok) throw new Error(`download ${r.status}`);
           const raw = Buffer.from(await r.arrayBuffer()), rawMime = r.headers.get('content-type') || 'image/png';
-          const sm = job.stage === 'enhance' ? sharp(raw, rawMime, ENHANCED_MAX) : full ? sharp(raw, rawMime) : shrink(raw, rawMime);
+          const sm = job.stage === 'enhance' ? sharp(raw, rawMime, ENHANCED_MAX, !!clean) : full ? sharp(raw, rawMime, 2560, !!clean) : shrink(raw, rawMime);
+          if (clean && sm.buf) job.clean = clean;
           if (!sm.buf) throw Object.assign(new Error(sm.src || 'unreadable picture'), { final: true });
           job.blob = `${prefix}-${set}-${n}`;
           await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
@@ -937,7 +1009,7 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
   // Kept large (2560 px, JPEG); the drawings made before that are redrawn sharper from themselves at 4K, and the ones
   // drawn from them (1, 3, 5, 7) follow from the sharp ones.
   // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
-  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
+  full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' }, clean: 'cl1', enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 // The header pictures' state for /api/config's heroDiag: no prompts or keys, only how each was last made / sharpened.
 const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
