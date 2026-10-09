@@ -573,7 +573,8 @@ const LEARN_PROMPTS = [
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
 // pictures; each has start (on server start), poll (in the poll round), versions (for /api/config) and blob.
-// `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`) or an object of key → { prompt, aspect, ref }.
+// `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`; an entry may be { prompt, aspect } for its own
+// shape) or an object of key → { prompt, aspect, ref }.
 // `ref`: a picture in `refDir` the model redraws (image to image), e.g. a sign's official drawing; without it, text only.
 // `limit`: at most this many being made at a time (the rest start as earlier ones finish); none = all at once.
 // Keyed prompts carry a revision (a hash of the prompt and its reference): when it changes, that one picture is made
@@ -583,11 +584,14 @@ const LEARN_PROMPTS = [
 // `allow`: which pictures may be made (key → true); none = all.
 // `redo` (a numbered list only): number → a mark; a picture made without that mark is made again (as a changed prompt).
 // `resolution`: the image model's size ('2K' unless given); a larger one it turns down is asked for again at '2K'.
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K' }) {
+// `derive`: number → another picture of the set this one is redrawn from (image to image, its prompt saying what to
+// change), e.g. a light version of a dark picture with the same drawing; it waits until that one is made and up to date,
+// and is made again whenever that one changes.
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {} }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
-    ? prompts.map((p, i) => [String(i + 1), { prompt: `${p}\n${style}`, aspect, rev: redo[String(i + 1)] }])
+    ? prompts.map((p, i) => [String(i + 1), { prompt: `${typeof p === 'string' ? p : p.prompt}\n${style}`, aspect: (typeof p === 'string' ? null : p.aspect) || aspect, rev: redo[String(i + 1)] }])
     : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect, ref: v.ref,
       rev: require('node:crypto').createHash('sha1').update(`${v.prompt}|${v.ref || ''}|${v.aspect || aspect}`).digest('hex').slice(0, 10) }]);
   // Never started, failed with tries left, or made from an earlier version of its prompt.
@@ -598,7 +602,10 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
   const broke = x => !!(x && x.done && !x.blob && NO_CREDIT.test(x.error || ''));
   const due = x => broke(x) && Date.now() - x.at > LATER;
   const may = n => !allow || allow.has(n);
-  const waiting = (x, rev, n) => may(n) && (!x || (!x.blob && x.done && (broke(x) ? due(x) : (x.tries || 0) < 3)) || stale(x, rev));
+  const srcReady = n => { const f = derive[n]; if (!f) return true; const sx = meta().items[f], l = list.find(([k]) => k === f);
+    return !!(sx && sx.done && sx.blob && !stale(sx, l && l[1].rev)); };
+  const revOf = (n, rev) => derive[n] ? `${rev || ''}@${(meta().items[derive[n]] || {}).v || ''}` : rev;   // follows its source's version
+  const waiting = (x, rev, n) => may(n) && srcReady(n) && (!x || (!x.blob && x.done && (broke(x) ? due(x) : (x.tries || 0) < 3)) || stale(x, revOf(n, rev)));
   let later = null;   // the timer that tries the credit failures again
   const retryLater = () => { if (!later && Object.entries(meta().items).some(([n, j]) => may(n) && broke(j))) later = setTimeout(() => { later = null; startSet().catch(() => {}); }, LATER + 5e3); };
   let starting = false;
@@ -614,17 +621,18 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         meta().retry = retry; await save();
       }
       let running = Object.values(it).filter(j => !j.done && j.taskId).length;
-      for (const [n, { prompt, aspect: ar, ref, rev }] of list) {
+      for (const [n, { prompt, aspect: ar, ref, rev: rev0 }] of list) {
         if (running >= limit) break;
-        const x = it[n];
-        if (!waiting(x, rev, n)) continue;   // done, running, or given up after 3 tries
+        const x = it[n], rev = revOf(n, rev0), from = derive[n];
+        if (!waiting(x, rev0, n)) continue;   // done, running, waiting for its source, or given up after 3 tries
         const again = stale(x, rev);
         const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: (again ? 0 : (x && x.tries) || 0) + (broke(x) ? 0 : 1), prompt, rev,
           ...(again ? { blob: x.blob, v: x.v, size: x.size } : {}) };   // the old picture stays until the new one is made
         try {
           const input = { prompt, aspect_ratio: ar, resolution };
           if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
-          const task = inp => kie('POST', '/jobs/createTask', { model: ref ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: inp });
+          if (from) { const sb = await blob(it[from].blob); input.input_urls = [await upload({ mime: sb.mime, data: sb.data }, `${prefix}-${set}-${n}-from-${from}.png`)]; }
+          const task = inp => kie('POST', '/jobs/createTask', { model: ref || from ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: inp });
           const d = await task(input).catch(e => { if (resolution === '2K' || NO_CREDIT.test(e.message)) throw e; console.error(metaKey, n, resolution, e.message); return task({ ...input, resolution: '2K' }); });
           job.taskId = d.taskId; job.state = 'generating'; running++;
         } catch (e) {
@@ -661,7 +669,8 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
     }
     // With a limit, the next ones start as earlier ones finish.
     const now2 = meta().items;
-    if (limit !== Infinity && list.some(([n, { rev }]) => waiting(now2[n], rev, n))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
+    // (and a picture redrawn from another starts once that one is made)
+    if ((limit !== Infinity || Object.keys(derive).length) && list.some(([n, { rev }]) => waiting(now2[n], rev, n))) { await startSet(); pending = Object.values(now2).some(j => !j.done && j.taskId) || pending; }
     return pending;
   }
   const now = () => (store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey].items || {} : {});
@@ -740,7 +749,7 @@ const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
 const avatarVersions = AVATAR.versions, avatarBlob = AVATAR.blob, avatarCount = AVATAR.count;
 
-// ---------- the pictures at the top of the app's home, «آموزش» and «آزمون» pages ----------
+// ---------- the pictures at the top of the app's home, «آموزش», «آزمون» and sign-in pages ----------
 // One wide scene each that fills the page's header from edge to edge (no frame, no gradient over it); the page's title
 // lies on its right side, so the objects stand on the left and the right is left calm. Served at /hero-art/<n>.png.
 const HERO_SET = 'v2';   // v2: 4K, with calm top and bottom edges (the page's buttons above, the fade into the page below)
@@ -750,19 +759,27 @@ const HERO_PROMPTS = [
   'Learning to drive: an open periwinkle-blue book lying at an isometric angle, a winding grey road with white dashes rising out of its pages, a small rounded coral car driving on that road, a red-and-white triangular warning sign and a round blue sign on short poles beside the road, and a white graduation cap resting on a corner of the book.',
   // 2: «آزمون» (the test). Laid out like the learning picture (1), its clipboard lying flat as the book does, so the
   // group is as wide and low as that one and fits the low header the same way.
-  'A driving theory test: a large white clipboard lying flat at an isometric angle (tilted back like an open book lying on a table, not standing upright), on it three rows of answer boxes, two ticked in green and one crossed in coral; a round white stopwatch with a coral button standing at its front corner, a yellow pencil lying across its lower edge, a red-and-white triangular warning sign on a short pole and a small rounded tree behind it, and a small golden star floating just above. The group is as large as an open book seen at that angle: it spans the left 60% of the width and the middle of the height (from about 20% to 70%).',
+  'A driving theory test: a large white clipboard lying flat at an isometric angle (tilted back like an open book lying on a table, not standing upright), on it three rows of answer boxes, two ticked in green and one crossed in coral; a round white stopwatch with a coral button standing at its front corner, a yellow pencil lying across its lower edge, a red-and-white triangular warning sign on a short pole and a small rounded tree behind it, and a small golden star floating just above. The group is a little narrower than an open book seen at that angle: it spans only the left half of the width (from about 8% to 50%) and the middle of the height (from about 20% to 70%), with the clipboard of medium size.',
   // 3: the home page (a greeting and the progress)
   'On the way to the driving licence: a short winding grey road with white dashes rising from the front towards the back, a small rounded coral car driving up it, a white driving licence card with a faceless photo silhouette standing upright at the end of the road beside a small green flag, and a round white speedometer gauge with a green needle floating beside the road. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 30% and 70% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
 ];
+// A dark picture redrawn for the light theme: the same drawing, only its background in the light theme's green.
+const HERO_RECOLOUR = 'Redraw this exact picture for a light theme. Keep every object exactly as it is: the same objects, shapes, sizes, positions, angles, colours, materials, lighting and composition, nothing added, removed or moved. Change only the background: the dark green background and its darker green hills become one soft, light, airy pastel green (#d9ecd5) with gentle slightly deeper pale green (#c4e1be) hills, and the bottom quarter one flat even light pastel green (#d9ecd5); soften the shadows to suit the light background. No text, no letters, no numbers, no logos, no watermarks.';
 // 4–6: the same three for the light theme, on a soft light green that sits with the light page (its title in dark green).
 const HERO_STYLE_LIGHT = HERO_STYLE
   .replace('The whole picture is one rich dark forest green (#14421c) background scene', 'The whole picture is one soft, light, airy pastel green (#d9ecd5) background scene')
   .replace('soft darker green shapes of rolling hills', 'gentle slightly deeper pale green (#c4e1be) shapes of rolling hills')
   .replace('one flat even dark green', 'one flat even light pastel green (#d9ecd5)')
   .replace('(a white title will be written there)', '(a dark green title will be written there)');
+// 7, 8: the sign-in page's taller header (square), dark and the same drawing for the light theme.
+const HERO_LOGIN = 'Welcome to learning to drive in Denmark: a winding grey road with white dashes rising through gentle rolling hills, a small rounded coral car driving on it, a few rounded trees, a small red-and-white Danish flag on a short pole, a white driving licence card with a faceless photo silhouette floating above the road with a soft glow, and a round green badge with a white check mark.';
+const HERO_STYLE_TALL = HERO_STYLE.replace('All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a white title will be written there).',
+  'The objects stand in the upper 60% of the picture, mostly across its left two thirds, at least a tenth of the width away from every edge; the lower right is calm, plain background with nothing in it (a white title will be written there).');
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
-  prompts: [...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE}`), ...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE_LIGHT}`)],
-  redo: { 2: 'flat', 5: 'flat' } });   // the test's pictures again, laid out like the learning one (flat, wide and low)
+  prompts: [...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE}`), `${HERO_PROMPTS[0]}\n${HERO_STYLE_LIGHT}`, HERO_RECOLOUR, `${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`,
+    { prompt: `${HERO_LOGIN}\n${HERO_STYLE_TALL}`, aspect: '1:1' }, { prompt: HERO_RECOLOUR, aspect: '1:1' }],
+  // The test's light picture is the dark one redrawn (5 from 2), so both show the same drawing.
+  redo: { 2: 'narrow' }, derive: { 5: '2', 8: '7' } });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).

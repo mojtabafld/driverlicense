@@ -194,7 +194,8 @@ const BAR_ROOM = 64 + 30;
 // it; the theme is chosen in the settings). Until the picture is made, the app's dark green with the page's icon.
 // Its lower edge melts into the page in the theme's own background colour, so picture and page read as one; the page's
 // content starts below it.
-export type HeroLook = { pic: number; icon: IconName };
+// `light`: the light theme's picture (pic + 3 unless given).
+export type HeroLook = { pic: number; light?: number; icon: IconName };
 
 // On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
 // screen's cover (intro, language question, offline page) if one is up, else a picture header's green while one is in
@@ -219,10 +220,11 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
-function Hero({ look, title, subtitle }: { look: HeroLook; title: string; subtitle?: string }) {
-  const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width } = useWindowDimensions();
-  const page = c.bgGradient[0], light = useTheme().theme !== 'dark' && !!heroArt[String(look.pic + 3)];
-  const pic = light ? look.pic + 3 : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
+// `tall`: about half the screen high (the sign-in page, its form under it).
+export function Hero({ look, title, subtitle, tall }: { look: HeroLook; title: string; subtitle?: string; tall?: boolean }) {
+  const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
+  const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && !!heroArt[String(lightPic)];
+  const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
   // While the page is in view on the web, the status bar above it in the header's green; back to the page's colour after.
   useFocusEffect(useCallback(() => {
     webTop.hero = bg; paintWebTop();
@@ -231,7 +233,7 @@ function Hero({ look, title, subtitle }: { look: HeroLook; title: string; subtit
   const v = heroArt[String(pic)];
   const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
-    <View style={{ height: ins.top + Math.min(Math.round(width * 0.34), 190) + 70, backgroundColor: bg, overflow: 'hidden' }}>
+    <View style={{ height: ins.top + (tall ? Math.min(Math.round(height * 0.42), 440) : Math.min(Math.round(width * 0.34), 190) + 70), backgroundColor: bg, overflow: 'hidden' }}>
       {v ? <Image source={{ uri: `${API_URL}/hero-art/${pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
