@@ -68,7 +68,8 @@ function init(s, siteDir) {
   fixIntro().catch(e => console.error('intro pictures', e.message))
     .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
     .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message))
-    .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message));
+    .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message))
+    .then(() => HERO.start()).catch(e => console.error('header pictures', e.message));
 }
 
 // The pictures ordered by hand (data/art-orders.json): picture keys or group names (data/guide-groups.json).
@@ -183,6 +184,7 @@ async function poll() {
   if (await pollLearn().catch(() => true)) pending = true;
   if (await COURSE.poll().catch(() => true)) pending = true;
   if (await AVATAR.poll().catch(() => true)) pending = true;
+  if (await HERO.poll().catch(() => true)) pending = true;
   if (await GUIDE.poll().catch(() => true)) pending = true;
   if (await pollOneOff().catch(() => true)) pending = true;
   if (pending) schedule();
@@ -478,10 +480,6 @@ const INTRO_PROMPTS = [
   'A winding road with white dashes climbs from the lower left to the upper right like a rising path; a small rounded coral car drives up it. At the top of the road stands a small podium with a yellow trophy and a green flag; beside the road floats a simple white card with three rising periwinkle-blue bars.',
   // 5: the app's «no internet» page (bundled into the app, since it shows when the server cannot be reached).
   'No internet connection: a large rounded white Wi-Fi symbol with a small coral circle and a white diagonal slash over it, floating above a small smartphone lying at an isometric angle whose screen shows a soft grey cloud with a little white x; a thin cable with an unplugged plug lies loose beside the phone.',
-  // 6, 7: the round pictures in the headers of the app's «آموزش» (learning) and «آزمون» (test) pages, shown small inside
-  // a circle, so one tight, simple group with nothing near the edges.
-  'Learning to drive: an open periwinkle-blue book standing at an isometric angle, a short grey road with white dashes running out of its pages, a small rounded coral car on that road, a small red-and-white triangular road sign beside it and a white graduation cap resting on top of the book. The group is very compact and centred, well inside a circle, with empty space around it.',
-  'A driving theory test: a white clipboard at an isometric angle with three rows of answer boxes, two ticked in green and one in coral, a round white stopwatch with a coral button leaning against it and a small yellow star badge at its corner. The group is very compact and centred, well inside a circle, with empty space around it.',
 ];
 // A new picture at half size (2048 → 1024 px, about a quarter of the bytes), with its plain background cut out
 // (see-through, png.cutout), so it lies on the app's own page colour with no edge and no shade of difference; `bg` is
@@ -740,6 +738,20 @@ const guideVersions = GUIDE.versions, guideBlob = GUIDE.blob;
 const AVATAR = artSet({ metaKey: 'avatarArt', set: AVATAR_SET, prompts: AVATAR_PROMPTS, style: AVATAR_STYLE, aspect: '1:1', prefix: 'avatar-art' });
 const avatarVersions = AVATAR.versions, avatarBlob = AVATAR.blob, avatarCount = AVATAR.count;
 
+// ---------- the pictures at the top of the app's «آموزش» and «آزمون» pages ----------
+// One wide scene each that fills the page's header from edge to edge (no frame, no gradient over it); the page's title
+// lies on its right side, so the objects stand on the left and the right is left calm. Served at /hero-art/<n>.png.
+const HERO_SET = 'v1';
+const HERO_STYLE = 'Style: a modern, minimal 3D illustration like the header picture of a premium mobile app: a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft light, subtle soft shadows, no clutter, no fine texture. Palette: white, pale mint (#cfe9cf), warm coral (#e8957a) and periwinkle blue (#5b74c4), with small accents of green, red or warm yellow. The whole picture is one rich dark forest green (#14421c) background scene that fills the frame edge to edge, with soft darker green shapes of rolling hills low in the background; no border, no frame, no vignette. All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a white title will be written there). Danish traffic signs follow their official design. No text, no letters, no numbers, no logos, no brand names, no watermarks, no faces.';
+const HERO_PROMPTS = [
+  // 1: «آموزش» (learning)
+  'Learning to drive: an open periwinkle-blue book lying at an isometric angle, a winding grey road with white dashes rising out of its pages, a small rounded coral car driving on that road, a red-and-white triangular warning sign and a round blue sign on short poles beside the road, and a white graduation cap resting on a corner of the book.',
+  // 2: «آزمون» (the test)
+  'A driving theory test: a white clipboard standing at an isometric angle with three rows of answer boxes, two ticked in green and one crossed in coral, a round white stopwatch with a coral button leaning against it, a yellow pencil lying in front and a small golden star badge floating above the clipboard.',
+];
+const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, prompts: HERO_PROMPTS, style: HERO_STYLE, aspect: '4:3', prefix: 'hero-art' });
+const heroVersions = HERO.versions, heroBlob = HERO.blob;
+
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
 const GUIDE_PROMPTS = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8'));
 const guidePrompt = key => GUIDE_PROMPTS[key] || null;
@@ -836,6 +848,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };

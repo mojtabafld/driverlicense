@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -192,42 +192,39 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 // on every platform.
 const BAR_ROOM = 64 + 30;
 
-// A page's picture header: a gradient in the page's own colours from the top edge (under the status bar), a round
-// framed picture with the title and a line beside it, and the page's buttons on a glass capsule above them.
-// `pic`: the server's intro picture shown in the frame (imagegen.js INTRO_PROMPTS), `alt` while it is not made yet,
-// and `icon` while neither is there.
-export type HeroLook = { colors: readonly [string, string, ...string[]]; pic: number; alt?: number; icon: IconName };
+// A page's picture header: a picture made for the page (imagegen.js HERO_PROMPTS) covering the whole header from the top
+// edge (under the status bar) to its square bottom, the title and a line on its calm right side, and the page's
+// buttons on a glass capsule above. Until the picture is made, the app's dark green with the page's icon.
+export type HeroLook = { pic: number; icon: IconName };
+const HERO_BG = '#14421c';
 function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string; subtitle?: string; right?: React.ReactNode }) {
-  const ins = useSafeAreaInsets(), { intro } = useApp();
-  const n = intro[look.pic] ? look.pic : look.alt && intro[look.alt] ? look.alt : 0;
+  const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width } = useWindowDimensions();
+  const v = heroArt[String(look.pic)];
   const glass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any) : null;
+  const shade = { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
-    <LinearGradient colors={look.colors} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }}
-      style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 22, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, overflow: 'hidden' }}>
-      <View style={{ paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', gap: 10 }}>
+    <View style={{ height: ins.top + Math.min(Math.round(width * 0.62), 320), backgroundColor: HERO_BG, overflow: 'hidden' }}>
+      {v ? <Image source={{ uri: `${API_URL}/hero-art/${look.pic}.png?v=${v}` }} contentFit="cover" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
+        : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
+            <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
+          </View>}
+      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 22, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'space-between' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }} />
           <HeroInk.Provider value="#ffffff">
             <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 4, height: 46, borderRadius: 23,
-              backgroundColor: 'rgba(255,255,255,0.16)', borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.3)' }, glass]}>
+              backgroundColor: 'rgba(0,0,0,0.22)', borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.3)' }, glass]}>
               {right}
               <ThemeButton />
             </View>
           </HeroInk.Provider>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <View style={{ width: 104, height: 104, borderRadius: 52, borderWidth: 3, borderColor: 'rgba(255,255,255,0.9)', backgroundColor: 'rgba(255,255,255,0.14)',
-            alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            {n ? <Image source={{ uri: `${API_URL}/intro/${n}.png?v=${intro[n]}` }} contentFit="contain" transition={250} style={{ width: 96, height: 96 }} accessibilityIgnoresInvertColors />
-              : <Icon name={look.icon} size={44} color="#ffffff" />}
-          </View>
-          <View style={{ flex: 1, gap: 2 }}>
-            <T style={{ fontSize: 30, lineHeight: 40, fontWeight: '700', color: '#ffffff' }}>{title}</T>
-            {subtitle ? <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
-          </View>
+        <View style={{ gap: 2, maxWidth: '58%' }}>
+          <T style={{ fontSize: 32, lineHeight: 42, fontWeight: '700', color: '#ffffff', ...shade }}>{title}</T>
+          {subtitle ? <T style={{ color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, ...shade }}>{subtitle}</T> : null}
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 }
 
