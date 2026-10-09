@@ -111,7 +111,7 @@ export default function Exam() {
   };
   return (
     <>
-    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ colors: ['#14421c', '#1f6e2a', '#b8902a'], pic: 7, alt: 1, icon: 'exam' }} scrollRef={scroll} onScrollY={y => { scrollY.current = y; }}>
+    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam' }} scrollRef={scroll} onScrollY={y => { scrollY.current = y; }}>
       <View {...tour.target(0)}>
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
