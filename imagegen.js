@@ -749,7 +749,7 @@ const HERO_PROMPTS = [
   // 1: «آموزش» (learning)
   'Learning to drive: an open periwinkle-blue book lying at an isometric angle, a winding grey road with white dashes rising out of its pages, a small rounded coral car driving on that road, a red-and-white triangular warning sign and a round blue sign on short poles beside the road, and a white graduation cap resting on a corner of the book.',
   // 2: «آزمون» (the test)
-  'A driving theory test: a white clipboard standing at an isometric angle with three rows of answer boxes, two ticked in green and one crossed in coral, a round white stopwatch with a coral button leaning against it, a yellow pencil lying in front and a small golden star badge floating above the clipboard.',
+  'A driving theory test: a white clipboard standing at an isometric angle with three rows of answer boxes, two ticked in green and one crossed in coral, a round white stopwatch with a coral button leaning against it, a yellow pencil lying in front and a small golden star badge floating beside the clipboard. The clipboard is short and low, not tall. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 30% and 70% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
   // 3: the home page (a greeting and the progress)
   'On the way to the driving licence: a short winding grey road with white dashes rising from the front towards the back, a small rounded coral car driving up it, a white driving licence card with a faceless photo silhouette standing upright at the end of the road beside a small green flag, and a round white speedometer gauge with a green needle floating beside the road. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 30% and 70% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
 ];
@@ -760,7 +760,8 @@ const HERO_STYLE_LIGHT = HERO_STYLE
   .replace('one flat even dark green', 'one flat even light pastel green (#d9ecd5)')
   .replace('(a white title will be written there)', '(a dark green title will be written there)');
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
-  prompts: [...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE}`), ...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE_LIGHT}`)] });
+  prompts: [...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE}`), ...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE_LIGHT}`)],
+  redo: { 2: 'small', 5: 'small' } });   // the test's pictures again, smaller (they were cut off by the low header)
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
