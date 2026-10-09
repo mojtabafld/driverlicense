@@ -18,7 +18,16 @@ const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
 // IMAGE_MODEL: the kie.ai picture model (default GPT Image 2.5 Sunburst; its text-to-image and image-to-image variants);
 // IMAGE_PROMPT_MODEL: the Claude model that writes the console's picture prompts (default Claude Opus 5.5).
 const IMAGE_MODEL = (process.env.IMAGE_MODEL || '').trim().replace(/-(text|image)-to-image$/, '') || 'gpt-image-2-5-sunburst';
-const TEXT_TO_IMAGE = `${IMAGE_MODEL}-text-to-image`, IMAGE_TO_IMAGE = `${IMAGE_MODEL}-image-to-image`;
+// A picture task for the image model, in that model's own form. `input`: { prompt, aspect_ratio, resolution, input_urls? }
+// (input_urls: the pictures it redraws from, none for text to image). GPT Image and the like are two models (…-text-to-
+// image / …-image-to-image) taking input_urls; Google's Nano Banana is one model taking image_input and an output format.
+function imageTask(input, model = IMAGE_MODEL) {
+  const m = model.replace(/-(text|image)-to-image$/, ''), urls = input.input_urls && input.input_urls.length ? input.input_urls : null;
+  const body = /^nano-banana/.test(m)
+    ? { model: m, input: { prompt: input.prompt, image_input: urls || [], aspect_ratio: input.aspect_ratio, resolution: input.resolution, output_format: 'png' } }
+    : { model: `${m}-${urls ? 'image' : 'text'}-to-image`, input };
+  return kie('POST', '/jobs/createTask', { ...body, callBackUrl: `${PUBLIC_URL}/api/kiecallback` });
+}
 const PROMPT_MODEL = (process.env.IMAGE_PROMPT_MODEL || '').trim() || 'claude-opus-5-5';
 const models = () => ({ prompt: PROMPT_MODEL, image: IMAGE_MODEL });
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
@@ -70,7 +79,8 @@ function init(s, siteDir) {
     .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
     .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message))
     .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message))
-    .then(() => HERO.start()).catch(e => console.error('header pictures', e.message));
+    .then(() => HERO.start()).catch(e => console.error('header pictures', e.message))
+    .then(() => HERO_TRY.start()).catch(e => console.error('trial pictures', e.message));
 }
 
 // The pictures ordered by hand (data/art-orders.json): picture keys or group names (data/guide-groups.json).
@@ -129,7 +139,7 @@ async function start(qid, model = 'sunburst', by = '', prompt = '', seed = '', p
   try {
     job.prompt = prompt || ownPrompt(q.id) || await describe(q);
     job.state = 'queued'; await save();
-    const d = await kie('POST', '/jobs/createTask', { model: TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' } });
+    const d = await imageTask({ prompt: job.prompt, aspect_ratio: '4:3', resolution: '2K' });
     job.taskId = d.taskId; job.state = 'generating'; await save();
     schedule();
   } catch (e) {
@@ -186,6 +196,7 @@ async function poll() {
   if (await COURSE.poll().catch(() => true)) pending = true;
   if (await AVATAR.poll().catch(() => true)) pending = true;
   if (await HERO.poll().catch(() => true)) pending = true;
+  if (await HERO_TRY.poll().catch(() => true)) pending = true;
   if (await GUIDE.poll().catch(() => true)) pending = true;
   if (await pollOneOff().catch(() => true)) pending = true;
   if (pending) schedule();
@@ -289,7 +300,7 @@ async function edit(qid, fromJob, instruction, model = 'sunburst', by = '') {
   item.jobs.push(job); await save();
   try {
     const url = await upload(await blob(src.blob), `q${qid}-${src.id}.png`);
-    const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt, input_urls: [url], aspect_ratio: '4:3', resolution: '2K' } });
+    const d = await imageTask({ prompt, input_urls: [url], aspect_ratio: '4:3', resolution: '2K' });
     job.taskId = d.taskId; job.state = 'generating'; await save();
     schedule();
   } catch (e) {
@@ -323,7 +334,7 @@ async function editRegions(qid, fromJob, { instruction, marked, regions, prompt,
   item.jobs.push(job); await save();
   try {
     const urls = [await upload(await blob(src.blob), `q${qid}-${src.id}.png`), await upload(marked, `q${qid}-${job.id}-marked.jpg`)];
-    const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: regionPrompt(instruction), input_urls: urls, aspect_ratio: '4:3', resolution: '2K' } });
+    const d = await imageTask({ prompt: regionPrompt(instruction), input_urls: urls, aspect_ratio: '4:3', resolution: '2K' });
     job.taskId = d.taskId; job.state = 'generating'; await save();
     schedule();
   } catch (e) {
@@ -558,8 +569,7 @@ async function startIntro() {
     const job = it[n] = { ...x, at: Date.now(), done: false, state: 'queued', up: INTRO_UP, upTries: (x.upTries || 0) + 1, error: '' };
     try {
       const own = await blob(x.blob);
-      const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`,
-        input: { prompt: UPSCALE_PROMPT, input_urls: [await upload({ mime: own.mime, data: own.data }, `intro-${INTRO_SET}-${n}-up.${own.mime === 'image/jpeg' ? 'jpg' : 'png'}`)], aspect_ratio: '1:1', resolution: '4K' } });
+      const d = await imageTask({ prompt: UPSCALE_PROMPT, input_urls: [await upload({ mime: own.mime, data: own.data }, `intro-${INTRO_SET}-${n}-up.${own.mime === 'image/jpeg' ? 'jpg' : 'png'}`)], aspect_ratio: '1:1', resolution: '4K' });
       job.taskId = d.taskId; job.state = 'generating';
     } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message, up: x.up }); console.error('intro picture', n, 'upscale', e.message); }
     await saveIntro();
@@ -571,7 +581,7 @@ async function startIntro() {
 ${INTRO_STYLE}` };
     try {
       refUrl = refUrl || await upload({ mime: 'image/png', data: fs.readFileSync(path.join(__dirname, 'data', 'hero-ref', INTRO_REF)) }, `intro-${INTRO_SET}-ref.png`);
-      const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, input_urls: [refUrl], aspect_ratio: '1:1', resolution: '4K' } });
+      const d = await imageTask({ prompt: job.prompt, input_urls: [refUrl], aspect_ratio: '1:1', resolution: '4K' });
       job.taskId = d.taskId; job.state = 'generating';
     } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error('intro picture', n, e.message); }
     await saveIntro();
@@ -647,7 +657,8 @@ const LEARN_PROMPTS = [
 // `full`: keep the pictures large and sharp (sharp(): up to 2560 px, JPEG) instead of halving them.
 // `upscale`: number → a mark; a picture made without that mark is redrawn from itself at `resolution` (UPSCALE_PROMPT), so
 // it stays the same drawing, only sharper (the one on show stays until the new one is made).
-function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {}, fixed = {}, full = false, upscale = {} }) {
+// `model`: the image model for this set (the server's IMAGE_MODEL unless given).
+function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, limit = Infinity, refDir = '', retry = '', allow = null, redo = {}, resolution = '2K', derive = {}, fixed = {}, full = false, upscale = {}, model = IMAGE_MODEL }) {
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
@@ -691,8 +702,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
         const job = it[n] = { ...x, at: Date.now(), done: false, state: 'queued', up: mark, upTries: (x.upTries || 0) + 1, error: '' };
         try {
           const own = await blob(x.blob);
-          const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`,
-            input: { prompt: UPSCALE_PROMPT, aspect_ratio: l[1].aspect, resolution, input_urls: [await upload({ mime: own.mime, data: own.data }, `${prefix}-${set}-${n}-up.${own.mime === 'image/jpeg' ? 'jpg' : 'png'}`)] } });
+          const d = await imageTask({ prompt: UPSCALE_PROMPT, aspect_ratio: l[1].aspect, resolution, input_urls: [await upload({ mime: own.mime, data: own.data }, `${prefix}-${set}-${n}-up.${own.mime === 'image/jpeg' ? 'jpg' : 'png'}`)] }, model);
           job.taskId = d.taskId; job.state = 'generating'; running++;
         } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message, up: x.up }); console.error(metaKey, n, 'upscale', e.message); }
         await save();
@@ -709,7 +719,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
           const input = { prompt, aspect_ratio: ar, resolution };
           if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(path.join(refDir, ref)) }, `${prefix}-${ref}`)];
           if (from) { const sb = await blob(it[from].blob); input.input_urls = [await upload({ mime: sb.mime, data: sb.data }, `${prefix}-${set}-${n}-from-${from}.png`)]; }
-          const task = inp => kie('POST', '/jobs/createTask', { model: ref || from ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: inp });
+          const task = inp => imageTask(inp, model);
           const d = await task(input).catch(e => { if (resolution === '2K' || NO_CREDIT.test(e.message)) throw e; console.error(metaKey, n, resolution, e.message); return task({ ...input, resolution: '2K' }); });
           job.taskId = d.taskId; job.state = 'generating'; running++;
         } catch (e) {
@@ -864,6 +874,12 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
   // drawn from them (1, 3, 5, 7) follow from the sharp ones.
   full: true, upscale: { 2: 'k4', 4: 'k4', 6: 'k4', 8: 'k4' } });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
+// A trial of another image model (TRY_MODEL) on the same pictures, to compare with the ones on show; served at
+// /hero-try/<n>.png and not used by the app. 1: the home picture (light), 2: the test picture (dark).
+const TRY_MODEL = 'nano-banana-pro';
+const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'nb1', aspect: '4:3', prefix: 'hero-try', resolution: '4K', full: true, model: TRY_MODEL,
+  prompts: [`${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`, `${HERO_PROMPTS[1]}\n${HERO_STYLE}`] });
+const heroTryBlob = HERO_TRY.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
 const GUIDE_PROMPTS = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8'));
@@ -890,7 +906,7 @@ async function startOneOff(id, { prompt, aspect = '4:3', ref = '', target = '', 
     if (inputs) input.input_urls = await Promise.all(inputs.map((b, i) => upload(b, `oneoff-${id}-${i}`)));
     else if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(ref) }, `oneoff-${id}`)];
     if (regions && base) { await store.saveBlob(`oneoff-${id}-base`, base.mime, base.data); Object.assign(job, { regions, base: `oneoff-${id}-base` }); }
-    const d = await kie('POST', '/jobs/createTask', { model: input.input_urls ? IMAGE_TO_IMAGE : TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input });
+    const d = await imageTask(input);
     Object.assign(job, { taskId: d.taskId, state: 'generating' });
     schedule();
   } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); }
@@ -961,6 +977,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
