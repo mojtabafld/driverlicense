@@ -1,14 +1,14 @@
-// Progress chart, «نمودار پیشرفت»: a bar for the percent correct of each attempt, ten across the width and older ones
-// by dragging the bars (it opens at the newest); green when the attempt passed or reached 80%, else a neutral grey, with
-// the 80% pass line; the bars grow in when it opens. Tap a bar to pick that attempt; its details and a review button
-// show below. With `fill` it takes the height of the space it is given, at least FILL_MIN (the home screen scrolls a
-// little rather than squeeze the bars when its picture header leaves less).
+// Progress chart, «نمودار پیشرفت»: a point for the percent correct of each attempt on a smooth line with a soft green
+// gradient under it, ten across the width and older ones by dragging (it opens at the newest); a point is green when the
+// attempt passed or reached 80%, else grey, with the 80% pass line; the line rises in when it opens. Tap a point to pick
+// that attempt; its details and a review button show below. With `fill` it takes the height of the space it is given,
+// at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
 // With more than ten attempts, the first time it is drawn after the app opens, it shows that older attempts are there:
 // the bars glide a little towards the older ones and back, under a small arrow that fades in and out.
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
-import Svg, { Line, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
@@ -16,7 +16,7 @@ import { Icon } from './icon';
 import { Button, T, tap, useCountUp } from './kit';
 import { useColors } from './theme';
 
-const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 190;
+const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 120;
 // The scroll hint plays once per app start.
 let hinted = false;
 function takeHint() { if (hinted) return false; hinted = true; return true; }
@@ -92,15 +92,15 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
   // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
   const VIEW = 10, VW = Math.max(0, W - L - R);
   const slot = VW / Math.min(VIEW, data.length), CW = slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
+  const DOT = 5;   // the points' radius (10 across), with a ring in the card's colour
   const x = (i: number) => slot * (i + 0.5);
   const y = (v: number) => TOP + (1 - v / 100) * (H - TOP - B);
   const tops = data.map(a => y(pctOf(a) * 100 * grow));
   const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
-  // A bar with rounded top corners from the baseline up to its value.
-  const bar = (cx: number, top: number) => {
-    const l = cx - bw / 2, r = cx + bw / 2, b = y(0), rr = Math.min(5, bw / 2, Math.max(0, b - top));
-    return `M${l} ${b} L${l} ${top + rr} Q${l} ${top} ${l + rr} ${top} L${r - rr} ${top} Q${r} ${top} ${r} ${top + rr} L${r} ${b} Z`;
-  };
+  // The line through the points, smooth: each step a curve leaving and reaching its points level, so it never swings
+  // above or below them; the area under it down to 0%.
+  const line = data.map((_, i) => (i === 0 ? `M${x(0)} ${tops[0]}` : `C${(x(i - 1) + x(i)) / 2} ${tops[i - 1]} ${(x(i - 1) + x(i)) / 2} ${tops[i]} ${x(i)} ${tops[i]}`)).join(' ');
+  const area = `${line} L${x(data.length - 1)} ${y(0)} L${x(0)} ${y(0)} Z`;
   const every = slot >= 26 ? 1 : 2;
   const ticks = H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
   const font = 'Vazirmatn-400';
@@ -125,23 +125,31 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
                 <Pressable onPress={() => setSel(null)} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
                 <Svg width={CW} height={H} pointerEvents="none">
                   {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
-                  {/* The picked bar stays full strength, the others fade a little. */}
+                  <Defs>
+                    <LinearGradient id="pcArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(0))} gradientUnits="userSpaceOnUse">
+                      <Stop offset="0" stopColor={c.forest} stopOpacity={0.32} />
+                      <Stop offset="1" stopColor={c.forest} stopOpacity={0} />
+                    </LinearGradient>
+                  </Defs>
+                  <Path d={area} fill="url(#pcArea)" />
+                  <Path d={line} fill="none" stroke={c.forest} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
+                  {/* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */}
                   {data.map((d, i) => (
-                    <Path key={i} d={bar(x(i), tops[i])} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
-                      fillOpacity={sel === i ? 1 : (good(d) ? 1 : 0.55) * (sel == null ? 1 : 0.3)} />
+                    <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
+                      stroke={c.surface} strokeWidth={2} fillOpacity={sel == null || sel === i ? 1 : 0.4} />
                   ))}
-                  {/* The picked bar: full strength (a grey one darker) with its percent above it. */}
+                  {/* The picked point's percent above it. */}
                   {sel != null && data[sel] ? (
-                    <SvgText x={x(sel)} y={Math.max(11, tops[sel] - 6)} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
+                    <SvgText x={x(sel)} y={Math.max(11, tops[sel] - DOT - 8)} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
                       {`${faNum(Math.round(pctOf(data[sel]) * 100))}٪`}
                     </SvgText>
                   ) : null}
-                  <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeWidth={1.5} strokeDasharray="5 5" />
+                  <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />
                   {data.map((_, i) => ((data.length - 1 - i) % every === 0
                     ? <SvgText key={`x${i}`} x={x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
                     : null))}
                 </Svg>
-                {/* A tap on an attempt's column picks it (a drag scrolls instead). */}
+                {/* A tap on an attempt's column (around its point) picks it (a drag scrolls instead). */}
                 {data.map((_, i) => (
                   <Pressable key={`p${i}`} onPress={() => { tap(); setSel(sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
                     style={{ position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />

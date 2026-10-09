@@ -71,15 +71,15 @@ function useGreeting() {
 
 const TOUR: TourStep[] = [
   { title: 'خلاصه‌ی پیشرفت شما', text: 'احتمال قبولی: تخمین شانس قبول شدن شما در آزمون واقعی، بر اساس آزمون‌های تصادفی اخیر. زیر آن میانگین ۵ آزمون آخر و تعداد قبولی‌ها را می‌بینید. سه کارت پایین تعداد آزمون‌ها، درس‌های انجام‌شده و اشتباهات شماست؛ روی هر کدام بزنید تا صفحه‌اش باز شود.' },
-  { title: 'نمودار پیشرفت', text: 'هر ستون نتیجه‌ی یکی از آزمون‌های شماست، از قدیمی به جدید. ستون سبز یعنی قبولی و خط‌چین، حد قبولی است. روی هر ستون بزنید تا جزئیات آن آزمون را ببینید و مرورش کنید.' },
+  { title: 'نمودار پیشرفت', text: 'هر نقطه نتیجه‌ی یکی از آزمون‌های شماست، از قدیمی به جدید. نقطه‌ی سبز یعنی قبولی، نقطه‌ی خاکستری مردودی و خط‌چین، حد قبولی است. روی هر نقطه بزنید تا جزئیات آن آزمون را ببینید و مرورش کنید.' },
 ];
 
 export default function Home() {
   const c = useColors();
-  // Screen height decides how compact the page is: below 800 points less padding and a smaller ring, below 680 the
-  // secondary lines go too, so everything stays on one screen.
+  // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
+  // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height } = useWindowDimensions();
-  const compact = height < 800, tight = height < 680;
+  const compact = height < 900, tight = height < 680;
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
   const tour = useTour('home', TOUR);
@@ -139,8 +139,8 @@ export default function Home() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
-            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c.faint, opacity: 0.55, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>زیر حد</T>
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.faint, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.forest, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
