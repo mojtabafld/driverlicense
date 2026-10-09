@@ -478,6 +478,10 @@ const INTRO_PROMPTS = [
   'A winding road with white dashes climbs from the lower left to the upper right like a rising path; a small rounded coral car drives up it. At the top of the road stands a small podium with a yellow trophy and a green flag; beside the road floats a simple white card with three rising periwinkle-blue bars.',
   // 5: the app's «no internet» page (bundled into the app, since it shows when the server cannot be reached).
   'No internet connection: a large rounded white Wi-Fi symbol with a small coral circle and a white diagonal slash over it, floating above a small smartphone lying at an isometric angle whose screen shows a soft grey cloud with a little white x; a thin cable with an unplugged plug lies loose beside the phone.',
+  // 6, 7: the round pictures in the headers of the app's «آموزش» (learning) and «آزمون» (test) pages, shown small inside
+  // a circle, so one tight, simple group with nothing near the edges.
+  'Learning to drive: an open periwinkle-blue book standing at an isometric angle, a short grey road with white dashes running out of its pages, a small rounded coral car on that road, a small red-and-white triangular road sign beside it and a white graduation cap resting on top of the book. The group is very compact and centred, well inside a circle, with empty space around it.',
+  'A driving theory test: a white clipboard at an isometric angle with three rows of answer boxes, two ticked in green and one in coral, a round white stopwatch with a coral button leaning against it and a small yellow star badge at its corner. The group is very compact and centred, well inside a circle, with empty space around it.',
 ];
 // A new picture at half size (2048 → 1024 px, about a quarter of the bytes), with its plain background cut out
 // (see-through, png.cutout), so it lies on the app's own page colour with no edge and no shade of difference; `bg` is

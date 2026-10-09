@@ -77,7 +77,8 @@ export default function Learn() {
   const tour = useTour('learn', TOUR);
   return (
     <>
-    <Screen fill title="آموزش" right={<SearchAiButton />}>
+    <Screen fill title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" right={<SearchAiButton />}
+      hero={{ colors: ['#14421c', '#228B22', '#6cae3c'], pic: 6, alt: 2, icon: 'learn' }}>
       <View style={{ flex: 1, gap: 12 }}>
         <CourseCard />
         <View style={{ flex: 1, flexDirection: 'row', gap: 12 }}>

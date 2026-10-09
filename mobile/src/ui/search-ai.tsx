@@ -4,13 +4,13 @@
 // items, rules and questions.
 import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Animated, Easing, Modal, Platform, Pressable, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '@/lib/api';
 import { Icon } from './icon';
-import { Button, T, tap } from './kit';
+import { Button, HeroInk, T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 
 // The user's earlier searches, kept with the account (the server adds each search; newest first). Loaded once and
@@ -82,7 +82,7 @@ export function openSearch(q: string) {
 }
 
 export function SearchAiButton() {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
+  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), ink = useContext(HeroInk);
   const [open, setOpen] = useState(false), [q, setQ] = useState('');
   const history = useSearchHistory();
   // 0 → 1: the box slides down from above the screen and the blur fades in; back to 0 when it closes.
@@ -96,8 +96,8 @@ export function SearchAiButton() {
   return (
     <>
       <Pressable onPress={() => { tap(); v.setValue(0); setQ(''); setOpen(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="جستجو با هوش مصنوعی"
-        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-        <Icon name="searchAi" size={20} color={dark ? c.text : c.muted} />
+        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? (ink ? 'rgba(255,255,255,0.18)' : c.surface2) : 'transparent' })}>
+        <Icon name="searchAi" size={20} color={ink ?? (dark ? c.text : c.muted)} />
       </Pressable>
       <Modal visible={open} transparent animationType="none" statusBarTranslucent onRequestClose={() => close()}>
         <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: v }}>

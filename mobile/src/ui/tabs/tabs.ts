@@ -1,4 +1,4 @@
-// The app's main parts, in tab-bar order (their icons: app-tabs.tsx on phones, app-tabs.web.tsx on the web).
+// The app's main parts, in tab-bar order (their icons: app-tabs.tsx).
 export const TABS = [
   { name: 'index', href: '/', label: 'خانه' },
   { name: 'learn', href: '/learn', label: 'آموزش' },
