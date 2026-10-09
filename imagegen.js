@@ -834,8 +834,9 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
       let running = Object.values(it).filter(j => !j.done && j.taskId).length;
       for (const [n, mark] of Object.entries(upscale)) {   // made pictures redrawn sharper from themselves
         const x = it[n], l = list.find(([k]) => k === n);
-        if (!l || !x || !x.done || !x.blob || x.up === mark || (x.upTries || 0) >= 3 || running >= limit) continue;
-        const job = it[n] = { ...x, at: Date.now(), done: false, state: 'queued', up: mark, upTries: (x.upTries || 0) + 1, error: '' };
+        const tries = x && x.upMark === mark ? x.upTries || 0 : 0;   // tries with this mark (a new mark gets three again)
+        if (!l || !x || !x.done || !x.blob || x.up === mark || tries >= 3 || running >= limit) continue;
+        const job = it[n] = { ...x, at: Date.now(), done: false, state: 'queued', up: mark, upMark: mark, upTries: tries + 1, error: '' };
         try {
           const own = await blob(x.blob);
           const d = await imageTask({ prompt: UPSCALE_PROMPT, aspect_ratio: l[1].aspect, resolution, input_urls: [await upload({ mime: own.mime, data: own.data }, `${prefix}-${set}-${n}-up.${own.mime === 'image/jpeg' ? 'jpg' : 'png'}`)] }, model);
