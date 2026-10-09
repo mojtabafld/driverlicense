@@ -772,14 +772,14 @@ const HERO_STYLE_LIGHT = HERO_STYLE
   .replace('one flat even dark green', 'one flat even light pastel green (#d9ecd5)')
   .replace('(a white title will be written there)', '(a dark green title will be written there)');
 // 7, 8: the sign-in page's taller header (square), dark and the same drawing for the light theme.
-const HERO_LOGIN = 'Welcome to learning to drive in Denmark: a winding grey road with white dashes rising through gentle rolling hills, a small rounded coral car driving on it, a few rounded trees, a small red-and-white Danish flag on a short pole, a white driving licence card with a faceless photo silhouette floating above the road with a soft glow, and a round green badge with a white check mark.';
+const HERO_LOGIN = 'Signing in to a driving theory app: a large white smartphone standing at an isometric angle, its screen showing a simple sign-in form (a round faceless avatar silhouette at the top, two blank rounded input fields and a green rounded button, no text); beside it a white driving licence card with a faceless photo silhouette leaning against the phone, a small golden key and a small white padlock with a green check mark, and at the phone\'s foot a short grey road with white dashes with a small rounded coral car and two rounded trees.';
 const HERO_STYLE_TALL = HERO_STYLE.replace('All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a white title will be written there).',
-  'The objects stand in the upper 60% of the picture, mostly across its left two thirds, at least a tenth of the width away from every edge; the lower right is calm, plain background with nothing in it (a white title will be written there).');
+  'The objects stand in the left 55% of the picture, between about 20% and 75% of its height, at least a tenth of the width away from every edge; the right side is calm, plain background with nothing in it (a white title will be written there).');
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
   prompts: [...HERO_PROMPTS.map(p => `${p}\n${HERO_STYLE}`), `${HERO_PROMPTS[0]}\n${HERO_STYLE_LIGHT}`, HERO_RECOLOUR, `${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`,
     { prompt: `${HERO_LOGIN}\n${HERO_STYLE_TALL}`, aspect: '1:1' }, { prompt: HERO_RECOLOUR, aspect: '1:1' }],
   // The test's light picture is the dark one redrawn (5 from 2), so both show the same drawing.
-  redo: { 2: 'narrow' }, derive: { 5: '2', 8: '7' } });
+  redo: { 2: 'narrow', 7: 'signin' }, derive: { 5: '2', 8: '7' } });
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
