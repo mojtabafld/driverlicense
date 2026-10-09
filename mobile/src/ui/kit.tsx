@@ -234,8 +234,16 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: H
     return () => { webTop.hero = null; paintWebTop(); };
   }, [bg]));
   const v = heroArt[String(pic)];
-  const H = ins.top + (tall ? Math.min(Math.round(height * 0.42), 440) : Math.min(Math.round(width * 0.34), 190) + 70);
+  // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
+  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : Math.min(Math.round(width * 0.34), 190) + 70);
   const topPad = ins.top + (Platform.OS === 'web' ? 14 : 8);
+  // The sign-in picture (square, laid in from its left edge, its height or width filling the header, the other cut evenly)
+  // has its objects across most of its width, down to about 68% of its height, with calm ground under them. On a narrow
+  // screen the title and line go there, across the width, sized to the screen and to the room left, so they never lie
+  // on the drawing; on a wide one its right side is calm and they stay there.
+  const side = Math.max(width, H), objEnd = Math.round(side * 0.68 - (side - H) / 2), room = H - objEnd - 10;
+  const below = !!tall && room >= 70 && width < H * 1.3;
+  const titleSize = Math.max(20, Math.min(30, Math.round(width * 0.075), Math.floor((room - 46) / 1.35)));
   const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
     <View style={{ height: H, backgroundColor: bg, overflow: 'hidden' }}>
@@ -252,15 +260,21 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: H
               <ThemeButton />
             </View>
             {/* Down to where a title and a two-line line, set on the header's foot (100 above its end), would begin. */}
-            <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />
+            {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        <View style={{ gap: 2, maxWidth: '58%' }}>
+        {below ? null : <View style={{ gap: 2, maxWidth: '58%' }}>
           <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
           {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
-        </View>
+        </View>}
       </View>
+      {below ? (
+        <View style={{ position: 'absolute', top: objEnd, left: 0, right: 0, paddingHorizontal: 16, gap: 2, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
+          <T style={[{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.35), fontWeight: '700', color: ink }, shade]} numberOfLines={1}>{title}</T>
+          {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: width < 360 ? 13 : 14, lineHeight: width < 360 ? 20 : 22 }, shade]}>{subtitle}</T> : null}
+        </View>
+      ) : null}
     </View>
   );
 }
