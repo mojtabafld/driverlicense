@@ -1,7 +1,8 @@
 // Progress chart, «نمودار پیشرفت»: a bar for the percent correct of each attempt, ten across the width and older ones
 // by dragging the bars (it opens at the newest); green when the attempt passed or reached 80%, else a neutral grey, with
 // the 80% pass line; the bars grow in when it opens. Tap a bar to pick that attempt; its details and a review button
-// show below. With `fill` it takes the height of the space it is given (the home screen fits the screen without scrolling).
+// show below. With `fill` it takes the height of the space it is given, at least FILL_MIN (the home screen scrolls a
+// little rather than squeeze the bars when its picture header leaves less).
 // With more than ten attempts, the first time it is drawn after the app opens, it shows that older attempts are there:
 // the bars glide a little towards the older ones and back, under a small arrow that fades in and out.
 import { router } from 'expo-router';
@@ -15,7 +16,7 @@ import { Icon } from './icon';
 import { Button, T, tap, useCountUp } from './kit';
 import { useColors } from './theme';
 
-const L = 38, R = 12, TOP = 14, B = 24;
+const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 190;
 // The scroll hint plays once per app start.
 let hinted = false;
 function takeHint() { if (hinted) return false; hinted = true; return true; }
@@ -58,7 +59,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
-  const H = fill ? Math.max(fillH, 60) : 210;
+  const H = fill ? Math.max(fillH, FILL_MIN) : 210;
   const [selIn, setSelIn] = useState<number | null>(null);
   const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
@@ -107,7 +108,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
   return (
     <View style={fill ? { flex: 1, gap: 8 } : { gap: 10 }}>
       <View onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setFillH(e.nativeEvent.layout.height); }}
-        style={[fill ? { flex: 1, minHeight: 60 } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
+        style={[fill ? { flex: 1, minHeight: FILL_MIN } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
         accessibilityRole="image" accessibilityLabel="نمودار نمره‌ی آزمون‌ها">
         {W > 0 ? (
           <>
