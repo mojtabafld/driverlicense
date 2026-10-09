@@ -1,7 +1,7 @@
 // «آموزش»: four parts as cards, two by two (the page scrolls under its picture header), each with its picture (made by the server's image
 // model; the part's icon on a soft tile until it is there), its title and a line on what is in it; a card opens its
 // part's page: the lessons one by one (and practice by category), the rules, the road signs, and right of way.
-// Beside the theme switch, «جستجو با هوش مصنوعی» (ui/search-ai.tsx); above the parts, «آموزش گام‌به‌گام» (app/course.tsx).
+// Above the parts, «آموزش گام‌به‌گام» (app/course.tsx), hidden for now.
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
@@ -11,7 +11,6 @@ import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
-import { SearchAiButton } from '@/ui/search-ai';
 import { useColors } from '@/ui/theme';
 import { useTour, type TourStep } from '@/ui/tour';
 
@@ -79,8 +78,7 @@ export default function Learn() {
   const tour = useTour('learn', TOUR);
   return (
     <>
-    <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" right={<SearchAiButton />}
-      hero={{ pic: 1, icon: 'learn' }}>
+    <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn' }}>
       <View style={{ gap: 12 }}>
         {SHOW_COURSE ? <CourseCard /> : null}
         <View style={{ flexDirection: 'row', gap: 12 }}>
