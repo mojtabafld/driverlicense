@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -141,15 +141,12 @@ export function Logo({ size = 28 }: { size?: number }) {
 }
 
 // Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
-// The colour of the buttons in a page's picture header (Hero), white on its gradient; null elsewhere.
-export const HeroInk = createContext<string | null>(null);
-
 export function ThemeButton() {
-  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark', ink = useContext(HeroInk);
+  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark';
   return (
     <Pressable onPress={() => { tap(); setMode(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
-      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? (ink ? 'rgba(255,255,255,0.18)' : c.surface2) : 'transparent' })}>
-      {dark ? <Icon name="sun" size={20} color={ink ?? c.text} /> : <Icon name="moon" size={19} color={ink ?? c.muted} />}
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+      {dark ? <Icon name="sun" size={20} color={c.text} /> : <Icon name="moon" size={19} color={c.muted} />}
     </Pressable>
   );
 }
@@ -193,8 +190,8 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 const BAR_ROOM = 64 + 30;
 
 // A page's picture header: a picture made for the page (imagegen.js HERO_PROMPTS) covering the whole header from the top
-// edge (under the status bar) to its square bottom, the title and a line on its calm right side, and the page's
-// buttons on a glass capsule above. Until the picture is made, the app's dark green with the page's icon.
+// edge (under the status bar) to its square bottom, and the title and a line on its calm right side (no buttons on
+// it; the theme is chosen in the settings). Until the picture is made, the app's dark green with the page's icon.
 // Its lower edge melts into the page in the theme's own background colour, so picture and page read as one; the page's
 // content starts below it.
 export type HeroLook = { pic: number; icon: IconName };
@@ -220,18 +217,15 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
-function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string; subtitle?: string; right?: React.ReactNode }) {
+function Hero({ look, title, subtitle }: { look: HeroLook; title: string; subtitle?: string }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width } = useWindowDimensions();
   const page = c.bgGradient[0];
-  // The page's buttons (theme, search…) wait behind a «⋮» button; shown when it is tapped, folded again on leaving.
-  const [menu, setMenu] = useState(false);
   // While the page is in view on the web, the status bar above it in the header's green; back to the page's colour after.
   useFocusEffect(useCallback(() => {
     webTop.hero = HERO_BG; paintWebTop();
-    return () => { setMenu(false); webTop.hero = null; paintWebTop(); };
+    return () => { webTop.hero = null; paintWebTop(); };
   }, []));
   const v = heroArt[String(look.pic)];
-  const glass = Platform.OS === 'web' ? ({ backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any) : null;
   const shade = { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
     <View style={{ height: ins.top + Math.min(Math.round(width * 0.34), 190) + 70, backgroundColor: HERO_BG, overflow: 'hidden' }}>
@@ -241,20 +235,7 @@ function Hero({ look, title, subtitle, right }: { look: HeroLook; title: string;
           </View>}
       <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
-      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 76, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'space-between' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ flex: 1 }} />
-          <HeroInk.Provider value="#ffffff">
-            <View style={[{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 4, height: 46, borderRadius: 23,
-              backgroundColor: 'rgba(0,0,0,0.22)', borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.3)' }, glass]}>
-              {menu ? <>{right}<ThemeButton /></> : null}
-              <Pressable onPress={() => { tap(); setMenu(o => !o); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={menu ? 'بستن' : 'گزینه‌ها'} accessibilityState={{ expanded: menu }}
-                style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', gap: 3, backgroundColor: pressed || menu ? 'rgba(255,255,255,0.18)' : 'transparent' })}>
-                {[0, 1, 2].map(i => <View key={i} style={{ width: 4.5, height: 4.5, borderRadius: 2.25, backgroundColor: '#ffffff' }} />)}
-              </Pressable>
-            </View>
-          </HeroInk.Provider>
-        </View>
+      <View style={{ flex: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: 'flex-end' }}>
         <View style={{ gap: 2, maxWidth: '58%' }}>
           <T style={{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: '#ffffff', ...shade }}>{title}</T>
           {subtitle ? <T style={{ color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, ...shade }}>{subtitle}</T> : null}
@@ -269,7 +250,7 @@ export function Screen({ title, subtitle, children, right, fill, gap = 14, scrol
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} subtitle={subtitle} right={right} /> : null;
+  const top = hero ? <Hero look={hero} title={title} subtitle={subtitle} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
