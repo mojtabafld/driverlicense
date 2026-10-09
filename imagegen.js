@@ -63,9 +63,10 @@ function init(s, siteDir) {
   if (Object.values(images()).some(x => x.jobs.some(j => !j.done))) schedule();
   pruneAll().then(lessonsToProve).catch(e => console.error('prune pictures', e.message));
   if (Object.values(store.meta.oneOff || {}).some(j => !j.done)) schedule();
-  // Nothing is made on its own any more (the image model's credit is limited): only the guide pictures ordered in
-  // data/art-orders.json. The intro, «آموزش» cards, profile pictures and the questions' own pictures keep what was made.
-  fixIntro().catch(e => console.error('intro pictures', e.message))
+  // Only what is asked for is made (the image model's credit is limited): the intro's set when INTRO_SET changes, the guide
+  // pictures ordered in data/art-orders.json, the header pictures; the «آموزش» cards, profile pictures and the questions'
+  // own pictures keep what was made.
+  fixIntro().then(() => startIntro()).catch(e => console.error('intro pictures', e.message))
     .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
     .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message))
     .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message))
@@ -468,18 +469,25 @@ async function seedOwn() {
 }
 
 // ---------- pictures for the app's intro (four slides) ----------
-// Made once by the same image model when the server starts with KIE_API_KEY set: a detailed 3D isometric scene per
-// slide (and one for the app's «no internet» page) on a plain dark forest-green background, so the app can lay it on its green intro. Kept in store.meta.intro and served at
+// Made once by the same image model when the server starts with KIE_API_KEY set: a 3D scene per slide (and one for the
+// app's «no internet» page) in the sign-in picture's style, on a plain dark forest-green background (cut out), so the
+// app can lay it on its green intro. Kept in store.meta.intro and served at
 // /intro/<n>.png; the app falls back to its own drawings until a picture is there. Changing INTRO_SET makes new ones.
-const INTRO_SET = 'v5'; // v5: on dark forest green (v4 forest green, v3 teal)
-const INTRO_STYLE = 'Style: a modern, minimal 3D isometric illustration like the onboarding art of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft ambient light, subtle soft shadows, no clutter, no fine texture; people are small, stylised and faceless. Palette: white, pale mint (#cfe9cf), warm coral (#e8957a) and periwinkle blue (#5b74c4), with one or two small accents of green, red or warm yellow. The background is ONE plain, flat, solid dark forest green (#14421c) with no gradient, no floor, no horizon and no frame. The group of objects is compact, centred and fills about three quarters of the image. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
+const INTRO_SET = 'v6'; // v6: in the sign-in picture's style (v5 on dark forest green, v4 forest green, v3 teal)
+// Each slide is drawn from the sign-in page's picture (image to image), so all of them share its look.
+const INTRO_REF = 'sign-in-light.png';   // in data/hero-ref
+const INTRO_STYLE = 'Draw it in exactly the style of the reference picture: the same soft 3D clay look, rounded shapes, smooth matte pastel materials, soft light and soft shadows, the same small rounded coral car, rounded green trees, gentle rolling pale green hills, grey road with white dashes and little red-and-white roadside posts. The scene stands on a small, softly rounded patch of rolling green hills, compact and centred, filling about three quarters of the picture. Around it the background is ONE plain, flat, solid dark forest green (#14421c): no sky, no gradient, no frame, nothing else. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
 const INTRO_PROMPTS = [
-  'A smartphone standing upright in the centre with a plain white screen showing a small rounded app tile with a speedometer symbol. Around it, joined to it by thin softly glowing white curved lines with small dots at their ends: a small rounded coral car, a simple driving licence card with a faceless photo silhouette, a red octagonal stop sign and a red-and-white triangular give-way sign on short poles.',
-  'A giant closed periwinkle-blue theory book lying flat at an isometric angle, with a winding grey road with white dashes printed across its cover. Two small faceless people sit on the book: one studies on a tablet, the other holds a small clipboard with ticked boxes; a third stands beside the book looking at a phone. A small green round badge with a white check mark rests on the corner of the book.',
-  'A large smartphone lying flat at an isometric angle, used as a stage. On its screen stands a small, friendly, rounded white robot with a softly glowing pale-mint face, next to a big coral speech bubble with three white placeholder lines, and a small white card showing a red-and-white triangular warning road sign; two four-pointed sparkles float above.',
-  'A winding road with white dashes climbs from the lower left to the upper right like a rising path; a small rounded coral car drives up it. At the top of the road stands a small podium with a yellow trophy and a green flag; beside the road floats a simple white card with three rising periwinkle-blue bars.',
+  // 1: what the app is
+  'A smartphone standing upright on the green hills, its plain white screen showing a small rounded green app tile with a white speedometer symbol; a winding road with the coral car leads up to it, a white driving licence card with a faceless photo silhouette floats beside it with a soft glow, and a red octagonal stop sign (blank) and a red-and-white triangular give-way sign stand on short poles by the road.',
+  // 2: the questions and lessons
+  'A large open periwinkle-blue book lying in the hills, the road with white dashes running out of its pages and the coral car driving on it; two small faceless people sit on the book, one studying on a tablet, the other holding a small clipboard with ticked boxes; a round green badge with a white check mark beside the book.',
+  // 3: the AI teacher
+  'A small, friendly, rounded white robot with a softly glowing pale-mint face standing beside the road in the hills, next to a big coral speech bubble with three white placeholder lines and a small white card showing a red-and-white triangular warning road sign; two small four-pointed sparkles float above; the coral car waits on the road.',
+  // 4: progress
+  'The road with white dashes climbing the rolling hills from the front to the top, the coral car driving up it; at the top a small podium with a yellow trophy and a small Danish flag; beside the road a floating white card with three rising periwinkle-blue bars.',
   // 5: the app's «no internet» page (bundled into the app, since it shows when the server cannot be reached).
-  'No internet connection: a large rounded white Wi-Fi symbol with a small coral circle and a white diagonal slash over it, floating above a small smartphone lying at an isometric angle whose screen shows a soft grey cloud with a little white x; a thin cable with an unplugged plug lies loose beside the phone.',
+  'No internet connection: a large rounded white Wi-Fi symbol with a small coral circle and a white diagonal slash over it, floating above the hills; below it the coral car stands on a short piece of road that ends, and a thin cable with an unplugged plug lies on the grass.',
 ];
 // A new picture at half size (2048 → 1024 px, about a quarter of the bytes), with its plain background cut out
 // (see-through, png.cutout), so it lies on the app's own page colour with no edge and no shade of difference; `bg` is
@@ -509,13 +517,15 @@ async function startIntro() {
   const prev = store.meta.intro;
   if (prev && prev.set !== INTRO_SET) for (const j of Object.values(prev.items || {})) if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
   const it = intro().items;
+  let refUrl = null;   // the style picture, uploaded once for all the slides
   for (let n = 1; n <= INTRO_PROMPTS.length; n++) {
     const x = it[n];
     if (x && (x.blob || !x.done || (x.tries || 0) >= 3)) continue;   // done, running, or given up after 3 tries
     const job = it[n] = { at: Date.now(), done: false, state: 'queued', tries: ((x && x.tries) || 0) + 1, prompt: `${INTRO_PROMPTS[n - 1]}
 ${INTRO_STYLE}` };
     try {
-      const d = await kie('POST', '/jobs/createTask', { model: TEXT_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, aspect_ratio: '1:1', resolution: '2K' } });
+      refUrl = refUrl || await upload({ mime: 'image/png', data: fs.readFileSync(path.join(__dirname, 'data', 'hero-ref', INTRO_REF)) }, `intro-${INTRO_SET}-ref.png`);
+      const d = await kie('POST', '/jobs/createTask', { model: IMAGE_TO_IMAGE, callBackUrl: `${PUBLIC_URL}/api/kiecallback`, input: { prompt: job.prompt, input_urls: [refUrl], aspect_ratio: '1:1', resolution: '2K' } });
       job.taskId = d.taskId; job.state = 'generating';
     } catch (e) { Object.assign(job, { state: 'fail', done: true, error: e.message }); console.error('intro picture', n, e.message); }
     await saveIntro();
