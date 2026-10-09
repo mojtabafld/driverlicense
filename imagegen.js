@@ -534,8 +534,8 @@ const INTRO_SET = 'v8'; // v8: each slide its own scene (v7 full scenes all on t
 // the page below it, so its background is not cut out.
 const INTRO_REF = 'sign-in-dark.png';   // in data/hero-ref
 const INTRO_CUT = false;
-const INTRO_UP = 'k4';
-const INTRO_ENH = 'tz1';   // the mark of the pictures sharpened by enhanceTask (startIntro)   // the mark of the pictures redrawn sharper at 4K (startIntro)
+const INTRO_UP = 'k4';   // the mark of the pictures redrawn sharper at 4K (startIntro)
+const INTRO_ENH = 'tz1';   // the mark of the pictures sharpened by enhanceTask (startIntro)
 const INTRO_STYLE = 'Take ONLY the look from the reference picture: its soft 3D clay style, rounded shapes, smooth matte pastel materials, soft light and soft shadows, colours (white, coral, periwinkle blue, soft greens, warm yellow) and its dark forest green background with soft, slightly lighter dark green rolling hills low in the distance. Do NOT copy its road, car, trees, flag or card: draw only the scene described here, as its own composition. The picture is one full scene that fills the frame from edge to edge, no sky, no frame, no vignette. The main objects stand in the middle of the picture, between about 15% and 70% of its height and within its middle 70% of the width (its sides may be cut off on a narrow screen). The top tenth is calm, plain dark green, and the bottom quarter is one flat, even dark forest green (#14421c) with nothing in it, because the picture fades into the page there. No text, no letters, no numbers, no logos, no brand names, no watermarks.';
 const INTRO_PROMPTS = [
   // 1: «آزمون تئوری دانمارک، در جیب شما» — every theory question with its picture, in Danish or English with a Persian
