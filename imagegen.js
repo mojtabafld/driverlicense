@@ -471,7 +471,12 @@ function shrink(buf, mime) {
 // good JPEG (a quarter of a PNG's bytes, no visible loss in a soft 3D picture). A file it cannot read is kept as it is.
 function sharp(buf, mime, max = 2560) {
   try {
-    const im = png.decode(buf); if (!im) return { buf, mime };
+    let im = png.decode(buf);
+    if (!im && buf[0] === 0xff && buf[1] === 0xd8) {   // a JPEG (some models answer with one whatever is asked)
+      const j = require('jpeg-js').decode(buf, { useTArray: true, maxMemoryUsageInMB: 1024, maxResolutionInMP: 100 });
+      im = { w: j.width, h: j.height, ch: 4, px: Buffer.from(j.data.buffer, j.data.byteOffset, j.data.length) };
+    }
+    if (!im) return { buf, mime };
     const k = Math.min(1, max / Math.max(im.w, im.h)), out = k < 1 ? boxResize(im, Math.round(im.w * k), Math.round(im.h * k)) : im;
     const rgba = Buffer.alloc(out.w * out.h * 4);
     for (let i = 0, j = 0; i < out.w * out.h; i++, j += out.ch) { rgba[i * 4] = out.px[j]; rgba[i * 4 + 1] = out.px[j + (out.ch > 2 ? 1 : 0)]; rgba[i * 4 + 2] = out.px[j + (out.ch > 2 ? 2 : 0)]; rgba[i * 4 + 3] = 255; }
@@ -877,8 +882,13 @@ const heroVersions = HERO.versions, heroBlob = HERO.blob;
 // A trial of another image model (TRY_MODEL) on the same pictures, to compare with the ones on show; served at
 // /hero-try/<n>.png and not used by the app. 1: the home picture (light), 2: the test picture (dark).
 const TRY_MODEL = 'nano-banana-pro';
-const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'nb1', aspect: '4:3', prefix: 'hero-try', resolution: '4K', full: true, model: TRY_MODEL,
-  prompts: [`${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`, `${HERO_PROMPTS[1]}\n${HERO_STYLE}`] });
+// Nano Banana takes position words literally (a «plain top tenth» became a separate band across the picture), so its
+// style describes one seamless scene and where the group stands, without bands or edges.
+const NB_STYLE = (bg, hills) => `A soft 3D clay illustration like the header art of a premium mobile app: a few simple rounded objects in smooth matte clay, soft studio light and gentle soft shadows, no clutter and no fine texture. Palette: white, pale mint, warm coral and periwinkle blue, with small accents of green, red or warm yellow. It is one single seamless scene that fills the whole frame: the background is one continuous ${bg}, with a few soft ${hills} rolling hills far behind the objects, the same colour everywhere, with no stripes, no bands, no borders, no panels, no frames, no vignette and no repeated parts. The objects form one compact group in the left half of the picture, vertically centred, small enough to leave plenty of empty background around them; the right half and the space below the group are empty background. Danish traffic signs follow their official design. No text, no letters, no numbers, no logos, no watermarks, no faces.`;
+const NB_DARK = NB_STYLE('rich dark forest green (#14421c)', 'slightly lighter dark green'), NB_LIGHT = NB_STYLE('soft light pastel green (#d9ecd5)', 'slightly deeper pale green');
+const subject = p => p.split(' This picture is shown')[0];   // the prompt's scene only (its layout words are GPT Image's)
+const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'nb2', aspect: '4:3', prefix: 'hero-try', resolution: '4K', full: true, model: TRY_MODEL,
+  prompts: [`${subject(HERO_PROMPTS[2])}\n${NB_LIGHT}`, `${subject(HERO_PROMPTS[1])}\n${NB_DARK}`] });
 const heroTryBlob = HERO_TRY.blob;
 
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
