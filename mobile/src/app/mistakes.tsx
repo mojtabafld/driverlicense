@@ -25,7 +25,7 @@ import { Sheet, SheetScroll } from '@/ui/sheet';
 import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { DA_FONT, useColors } from '@/ui/theme';
+import { ARC, DA_FONT, radius, useColors } from '@/ui/theme';
 
 const TOPICS_SHOWN = 5; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
 
@@ -105,7 +105,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
           left. */}
       <SideSwipe pager={cur ? { i: at, n: items.length, go: step } : undefined} back={() => motion.leave(() => router.back())}>
       <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
-        {!view && open ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
+        {/* arc: the button sits in the «وضعیت مباحث» card, under the count it acts on (Arc: an action beside its data) */}
+        {!view && open && !ARC ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
         {!sorted.length ? <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>هنوز اشتباهی ثبت نشده است.</T></Card> : (
           <>
             {/* «وضعیت مباحث»: the three panels, each opening its own page */}
@@ -117,13 +118,17 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {([['topics', faNum(sorted.length), 'مبحث', c.text], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok], ['open', faNum(open), 'سؤال اصلاح‌نشده', c.bad]] as const).map(([v, n, l, col]) => (
                   <Pressable key={v} onPress={() => choose(v)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })} accessibilityRole="button">
-                    <View style={{ alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: c.surface2 }}>
+                    <View style={[{ alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: c.surface2 },
+                      ARC && { paddingVertical: 10, borderRadius: radius.sm, borderWidth: 1, borderColor: c.cardBorder }]}>
                       <T style={{ fontSize: 18, fontWeight: '800', color: col, textAlign: 'center' }}>{n}</T>
                       <T style={{ fontSize: 11.5, color: c.muted, textAlign: 'center' }}>{l}</T>
                     </View>
                   </Pressable>
                 ))}
               </View>
+              {ARC && open ? (
+                <ActionButton label={`تمرین همه‌ی اشتباهات (${faNum(Math.min(open, 25))} سؤال)`} icon="refresh" onPress={practiceAll} />
+              ) : null}
             </Card>}
             {/* The topics, weakest first: the first 5 on the overview, all of them on the topics page */}
             {!view || view === 'topics' ? (
