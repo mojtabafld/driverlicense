@@ -57,7 +57,7 @@ it replaces the whole variable list and would delete the secrets that were added
 - Every API call except `/api/config` (the health check): 240 per address per minute.
 - AI lessons, AI search and recordings: each user's hourly allowance (40 / 60 / 60) and an hourly total for everyone (400 / 600 / 600).
 - Pages are sent with `X-Frame-Options: DENY`, a `frame-ancestors 'none'` CSP, a Referrer-Policy and HSTS.
-- Teaching pictures (`/guide-art`, `/course-art`, …) are sent as JPEG when they have no transparency (`webpic.js`), about a tenth of the PNG's size, and kept in memory and in the database.
+- Teaching pictures (`/course-art`, `/learn-art`, …; not `/guide-art`) are sent as JPEG when they have no transparency (`webpic.js`), about a tenth of the PNG's size, and kept in memory and in the database.
 
 ### Environment variables
 

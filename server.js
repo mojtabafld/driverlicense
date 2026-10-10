@@ -341,7 +341,7 @@ function serveStatic(req, res) {
     const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : guideref.blob(gm2[1]));
     // Sent smaller and kept in memory (webpic.js) when the picture's version is known; the others as they are.
     const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]]
-      : cm ? imagegen.courseVersions()[cm[1]] : gm2 ? guideref.versions()[gm2[1]] : undefined;
+      : cm ? imagegen.courseVersions()[cm[1]] : undefined;   // (/guide-art has its own sizes)
     return (ver ? webpic.get(`${p}:${ver}`, load) : load()).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       // (A sign chosen from prove.dk can be SVG: shown as a picture only, nothing in it runs.)
@@ -931,11 +931,8 @@ async function main() {
   setTimeout(() => imagegen.learnColours(), 3000);   // the «آموزش» pictures' colours ready for the first visits
   consoleprompts.init(store, imagegen, guideref, consolepics);
   webpic.init(store);
-  // The signs' and right of way's pictures, then the course's, ready in memory soon after a start (webpic.js).
-  webpic.warm(() => [
-    ...Object.entries(guideref.versions()).filter(([, v]) => !/^[op]/.test(v)).map(([k, v]) => [`/guide-art/${k}.png:${v}`, () => guideref.blob(k)]),
-    ...Object.entries(imagegen.courseVersions()).map(([k, v]) => [`/course-art/${k}.png:${v}`, () => imagegen.courseBlob(k)]),
-  ]);
+  // The course's pictures ready in memory soon after a start (webpic.js).
+  webpic.warm(() => Object.entries(imagegen.courseVersions()).map(([k, v]) => [`/course-art/${k}.png:${v}`, () => imagegen.courseBlob(k)]));
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });
