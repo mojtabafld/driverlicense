@@ -92,8 +92,8 @@ function MistakesCard() {
 
 const TOUR: TourStep[] = [
   { title: 'آزمون تصادفی', text: 'آزمونی مثل آزمون واقعی با سؤال‌های تصادفی. تعداد سؤال‌ها را با نوار انتخاب کنید؛ آزمون ۲۵ سؤالی دقیقاً مثل آزمون اصلی است و با حداکثر ۵ اشتباه قبول می‌شوید.' },
-  { title: 'آزمون بر اساس اشتباهات', text: 'هر سؤالی که اشتباه جواب بدهید اینجا جمع می‌شود، به تفکیک مبحث و ضعیف‌ترین اول. روی یک مبحث بزنید تا با اشتباهات همان مبحث آزمون بدهید؛ «همه» همه‌ی اشتباهات را نشان می‌دهد.' },
   { title: 'تاریخچه‌ی آزمون‌ها', text: 'نتیجه‌ی آزمون‌ها و درس‌هایی که انجام داده‌اید. روی هر کدام بزنید تا دوباره مرورش کنید و جواب درست و توضیح هر سؤال را ببینید.' },
+  { title: 'آزمون بر اساس اشتباهات', text: 'هر سؤالی که اشتباه جواب بدهید اینجا جمع می‌شود، به تفکیک مبحث و ضعیف‌ترین اول. روی یک مبحث بزنید تا با اشتباهات همان مبحث آزمون بدهید؛ «همه» همه‌ی اشتباهات را نشان می‌دهد.' },
 ];
 
 export default function Exam() {
@@ -131,8 +131,8 @@ export default function Exam() {
         <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />
       </Card>
       </View>
-      <View {...tour.target(1)}><MistakesCard /></View>
-      <View {...tour.target(2)}><ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" /></View>
+      <View {...tour.target(1)}><ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" /></View>
+      <View {...tour.target(2)}><MistakesCard /></View>
     </Screen>
     {tour.overlay}
     </>
