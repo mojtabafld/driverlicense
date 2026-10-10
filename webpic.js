@@ -1,6 +1,8 @@
 // The app's teaching pictures (/guide-art, /course-art, …) as they are sent to the browser: the image model's PNGs are
 // ~0.7 MB each (1184×888, no transparency), which made switching between signs take seconds. An opaque PNG is sent
 // as a JPEG (quality 85, the same size in pixels, about a tenth of the bytes); one with transparency is sent as it is.
+// With `max`, a larger picture is also halved (mean of four pixels) until its longer side is at most `max` px and sent
+// as a JPEG: the intro's 2560 px scenes show at most ~1200 px wide (a phone at 3×), and four of them load up front.
 // The result is kept in memory (at most CACHE_BYTES, least recently used dropped first) and in the store
 // (blob web-<hash>), so a redeploy does not convert every picture again. The key names the picture's version, so a
 // new picture is never mixed up with an old one.
@@ -21,12 +23,28 @@ function remember(id, b) {
   while (memBytes > CACHE_BYTES && mem.size > 1) { const [k, v] = mem.entries().next().value; mem.delete(k); memBytes -= v.data.length; }
 }
 
-// An opaque PNG as a JPEG; anything else (or a JPEG that would not be much smaller) unchanged.
-function optimize(b) {
+// A JPEG halved to at most `max` px on its longer side (or unchanged when it already is).
+function shrinkJpeg(b, max) {
+  try {
+    const j = jpeg.decode(b.data, { useTArray: true, formatAsRGBA: false, maxMemoryUsageInMB: 1024 });
+    let im = { w: j.width, h: j.height, ch: 3, px: Buffer.from(j.data) };
+    if (Math.max(im.w, im.h) <= max) return b;
+    while (Math.max(im.w, im.h) > max) im = png.half(im);
+    const rgba = Buffer.alloc(im.w * im.h * 4);
+    for (let i = 0; i < im.w * im.h; i++) { rgba[i * 4] = im.px[i * 3]; rgba[i * 4 + 1] = im.px[i * 3 + 1]; rgba[i * 4 + 2] = im.px[i * 3 + 2]; rgba[i * 4 + 3] = 255; }
+    return { mime: 'image/jpeg', data: jpeg.encode({ data: rgba, width: im.w, height: im.h }, QUALITY).data };
+  } catch (e) { console.error('webpic', e.message); return b; }
+}
+
+// An opaque PNG as a JPEG; anything else (or a JPEG that would not be much smaller) unchanged. With `max`: also no
+// more than `max` px on its longer side.
+function optimize(b, max) {
+  if (b && max && b.mime === 'image/jpeg') return shrinkJpeg(b, max);
   if (!b || b.mime !== 'image/png') return b;
   try {
-    const im = png.decode(b.data);
+    let im = png.decode(b.data);
     if (!im || im.ch === 1 || im.ch === 2) return b;
+    if (max) while (Math.max(im.w, im.h) > max) im = png.half(im);
     const n = im.w * im.h, rgba = Buffer.alloc(n * 4);
     for (let i = 0; i < n; i++) {
       const a = im.ch === 4 ? im.px[i * 4 + 3] : 255;
@@ -34,12 +52,13 @@ function optimize(b) {
       rgba[i * 4] = im.px[i * im.ch]; rgba[i * 4 + 1] = im.px[i * im.ch + 1]; rgba[i * 4 + 2] = im.px[i * im.ch + 2]; rgba[i * 4 + 3] = 255;
     }
     const out = jpeg.encode({ data: rgba, width: im.w, height: im.h }, QUALITY).data;
-    return out.length < b.data.length * 0.7 ? { mime: 'image/jpeg', data: out } : b;
+    return max || out.length < b.data.length * 0.7 ? { mime: 'image/jpeg', data: out } : b;
   } catch (e) { console.error('webpic', e.message); return b; }
 }
 
-// id: the picture and its version (e.g. "guide:s-a11:muvdlfdu"); load: () => the original blob.
-async function get(id, load) {
+// id: the picture and its version (e.g. "guide:s-a11:muvdlfdu"); load: () => the original blob; max: see above.
+async function get(id, load, max) {
+  if (max) id = `${id}:${max}`;
   if (mem.has(id)) { const b = mem.get(id); mem.delete(id); mem.set(id, b); return b; }
   if (inflight.has(id)) return inflight.get(id);
   const job = (async () => {
@@ -48,7 +67,7 @@ async function get(id, load) {
     if (!b) {
       const orig = await load();
       if (!orig) return null;
-      b = optimize(orig);
+      b = optimize(orig, max);
       if (store) store.saveBlob(key, b.mime, b.data).catch(e => console.error('webpic save', e.message));
     }
     remember(id, b);
