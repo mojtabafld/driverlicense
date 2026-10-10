@@ -13,7 +13,7 @@ import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
 import { API_URL } from '@/lib/config';
 import { useApp } from '@/lib/store';
-import { DA_FONT, UBER, radius, useColors, useTheme } from './theme';
+import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 
 // A style given in physical left/right terms. Phones running right-to-left swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -421,7 +421,7 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
       style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }, style]}>
-      <View style={{ height: 54, borderRadius: 12, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: bg }}>
+      <View style={{ height: ARC ? 50 : 54, borderRadius: ARC ? radius.btn : 12, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: bg }}>
         {icon ? <Icon name={icon} size={18} color={fg} weight={iconWeight} /> : null}
         <T numberOfLines={1} style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: fg, textAlign: 'center' }}>{label}</T>
       </View>
@@ -431,14 +431,18 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
 
 // The site's .tabs: grey track, the chosen one is a white tab with navy text.
 export function Segmented<V extends string>({ value, options, onChange }: { value: V; options: { value: V; label: string }[]; onChange: (v: V) => void }) {
-  const c = useColors();
+  const c = useColors(), dark = useTheme().theme === 'dark';
+  // arc: the chosen pill a step lighter than its track in the dark theme, white on grey in the light one.
+  const chosen = ARC && dark ? '#3d3d3d' : c.surface;
   return (
-    <View style={{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: radius.sm, backgroundColor: c.surface2 }}>
+    <View style={{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: ARC ? radius.pill : radius.sm, backgroundColor: ARC ? c.nav : c.surface2 }}>
       {options.map(o => {
         const on = o.value === value;
         return (
           <Pressable key={o.value} onPress={() => { tap(); onChange(o.value); }} style={{ flex: 1 }}>
-            <View style={{ paddingVertical: 7, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }}>
+            {/* arc: Arc's segmented control, a pill track and the chosen part a raised pill on it */}
+            <View style={[{ paddingVertical: 7, borderRadius: ARC ? radius.pill : 6, backgroundColor: on ? chosen : 'transparent' },
+              ARC && on ? { boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle : null]}>
               <T style={{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }}>{o.label}</T>
             </View>
           </Pressable>

@@ -2,6 +2,7 @@
 import { createContext, useContext } from 'react';
 import { Platform } from 'react-native';
 
+import { PROVE_PICS } from '@/lib/config';
 import type { ThemeMode, ThemeName } from '@/lib/prefs';
 import { DA_REGULAR } from './fonts';
 
@@ -9,7 +10,11 @@ import { DA_REGULAR } from './fonts';
 // it can come back by setting STYLE = 'teal'. «uber» follows Uber Eats: black and white surfaces, flat cards with soft
 // corners, and one accent for buttons and icons: a jade green, bluer than the green of right answers, and a chosen
 // answer is marked in black / white rather than in the accent (see `pick`), so nothing reads as «right» but a result.
-const STYLE: 'teal' | 'uber' = 'uber';
+// «arc» (October 2026) follows Arc (uiarc.dev, its rules in .claude/skills/arc): white page and cards that rest on a
+// hairline border with no shadow, neutral greys from Arc's foundation.css, Arc's green accent only where it means
+// something (progress, the chosen tab, a link), near-black main buttons, rounder concentric corners and type in two
+// weights. The main site and the phone app use it; the /app copy keeps «uber».
+const STYLE = (PROVE_PICS ? 'uber' : 'arc') as 'teal' | 'uber' | 'arc';
 
 // The app's teal (from its intro and store pictures): a deeper teal for filled buttons so white text reads well,
 // the brighter one for links and highlights in dark mode.
@@ -74,9 +79,38 @@ const uberDark: typeof tealLight = {
   btn: '#c4c4c4', btnFg: '#0c0c0c', // soft light grey with black text
   bgGradient: ['#0c0c0c', '#0c0c0c', '#0c0c0c'] as readonly [string, string, string],
 };
-const light = STYLE === 'uber' ? uberLight : tealLight;
-const dark = STYLE === 'uber' ? uberDark : tealDark;
-export const UBER = STYLE === 'uber';
+// Arc: the values of foundation.css (oklch greys and status colours as hex), with data-accent="green".
+const arcLight: typeof tealLight = {
+  bg: '#ffffff', surface: '#ffffff', surface2: '#f8f8f8', line: '#e9e9e9',
+  text: '#0b0b0b', muted: '#585858', faint: '#7d7d7d',
+  accent: '#0db879', accentText: '#102016', accentSoft: 'rgba(13,184,121,0.13)', link: '#087c54',
+  forest: '#0db879', ok: '#007b12', okSoft: '#e5f4e8', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
+  note: '#f1f1f1', submit: '#1d1d1d', checked: 'rgba(13,184,121,0.13)', cardBorder: '#e9e9e9', hairline: '#f3f3f3',
+  glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e9e9e9',
+  pick: '#1d1d1d', pickSoft: '#f1f1f1',
+  nav: '#f1f1f1', navFg: '#0b0b0b', navOff: '#f8f8f8', navNum: '#585858',
+  strong: '#1d1d1d', strongFg: '#ffffff',
+  btn: '#1d1d1d', btnFg: '#ffffff',
+  bgGradient: ['#ffffff', '#ffffff', '#ffffff'] as readonly [string, string, string],
+};
+const arcDark: typeof tealLight = {
+  bg: '#141414', surface: '#191919', surface2: '#242424', line: '#2b2b2b',
+  text: '#f2f2f2', muted: '#b4b4b4', faint: '#8c8c8c',
+  accent: '#53dca6', accentText: '#0b1a12', accentSoft: 'rgba(13,184,121,0.2)', link: '#53dca6',
+  forest: '#53dca6', ok: '#4cd676', okSoft: '#14281b', bad: '#ff736d', badSoft: '#3a1816', warn: '#ffb90e', warnSoft: '#33270b', info: '#ffffff',
+  note: '#242424', submit: '#e8e8e8', checked: 'rgba(13,184,121,0.2)', cardBorder: '#2b2b2b', hairline: '#222222',
+  glass: '#191919', glassStrong: '#191919', glassBorder: '#2b2b2b',
+  pick: '#e8e8e8', pickSoft: '#2b2b2b',
+  nav: '#2b2b2b', navFg: '#f2f2f2', navOff: '#1f1f1f', navNum: '#b4b4b4',
+  strong: '#e8e8e8', strongFg: '#141414',
+  btn: '#e8e8e8', btnFg: '#141414',
+  bgGradient: ['#141414', '#141414', '#141414'] as readonly [string, string, string],
+};
+const light = STYLE === 'arc' ? arcLight : STYLE === 'uber' ? uberLight : tealLight;
+const dark = STYLE === 'arc' ? arcDark : STYLE === 'uber' ? uberDark : tealDark;
+// UBER: the neutral looks (uber and arc), where main buttons are black / white rather than the accent.
+export const UBER = STYLE !== 'teal';
+export const ARC = STYLE === 'arc';
 // forest: the progress chart's green (forest green, a little lighter in the dark theme).
 // note: the AI text's panel, a soft neutral fill set apart from the white statement cards.
 export type Colors = typeof light;
@@ -88,7 +122,11 @@ export const useIsDark = () => useContext(ThemeContext).theme === 'dark';
 export const useColors = (): Colors => (useIsDark() ? dark : light);
 // teal, as on the site: 10 for cards, 8 for tab groups, 4 for buttons, 12 / 20 on the sign-in card; uber: softer
 // corners everywhere (12 for buttons, 14 for cards), like the sample.
-export const radius = STYLE === 'uber'
+// arc: Arc's --radius-control 18 (buttons, fields), --radius-panel 26 (panels, larger cards), --radius-surface 34;
+// everyday cards 22 so their small inner parts keep concentric corners.
+export const radius = STYLE === 'arc'
+  ? { btn: 18, sm: 14, md: 22, lg: 26, field: 18, xl: 34, pill: 999 }
+  : STYLE === 'uber'
   ? { btn: 12, sm: 10, md: 14, lg: 14, field: 12, xl: 20, pill: 999 }
   : { btn: 4, sm: 8, md: 10, lg: 10, field: 12, xl: 20, pill: 999 };
 export const space = (n: number) => n * 4;
