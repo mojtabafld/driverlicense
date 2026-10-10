@@ -4,6 +4,7 @@
 // with its lessons (a finished one ticked, the next one marked, those still being written locked «به‌زودی»).
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
 import { COURSE, EXAM, lessonCount, readyCount, type CourseChapter, type CourseLesson } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
@@ -43,24 +44,42 @@ function HowSteps() {
   );
 }
 
-// One chapter on the path: its circle on the rail (its number, a tick when all of it is done, dim while all of it is
-// still to come) and the line down to the next chapter, beside its card with the lessons.
+// A chapter's number in a ring that fills, in green, with the share of its lessons done (the ones still being written
+// count as not done); a full ring turns into a green disc with a tick. Dim while none of the chapter is written yet.
+const BADGE = 44, BADGE_STROKE = 4;
+function ChapterBadge({ n, share, open }: { n: number; share: number; open: boolean }) {
+  const c = useColors(), r = (BADGE - BADGE_STROKE) / 2, C = 2 * Math.PI * r, full = share >= 1;
+  return (
+    <View style={{ width: BADGE, height: BADGE, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={BADGE} height={BADGE} style={{ position: 'absolute', top: 0, left: 0, transform: [{ rotate: '-90deg' }] }}>
+        <Circle cx={BADGE / 2} cy={BADGE / 2} r={r} stroke={c.line} strokeWidth={BADGE_STROKE} fill={full ? c.ok : open ? c.surface : c.surface2} />
+        {share > 0 && !full ? <Circle cx={BADGE / 2} cy={BADGE / 2} r={r} stroke={c.ok} strokeWidth={BADGE_STROKE} fill="none" strokeLinecap="round"
+          strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - share)} /> : null}
+      </Svg>
+      {full ? <Icon name="check" size={20} color="#fff" weight="semibold" />
+        : <T style={{ fontWeight: '800', fontSize: 15, color: open ? c.text : c.muted, textAlign: 'center' }}>{faNum(n)}</T>}
+    </View>
+  );
+}
+
+// One chapter on the path: its badge on the rail (ChapterBadge) and the line down to the next chapter (green once the
+// chapter is all done), beside its card with the lessons and how many of them are done.
 function Chapter({ ch, last, done, next }: { ch: CourseChapter; last: boolean; done: Record<string, unknown>; next: string | null }) {
   const c = useColors();
-  const open = ch.lessons.length > 0, complete = open && !ch.planned.length && ch.lessons.every(l => done[l.id]);
-  const dot = complete ? c.ok : open ? c.strong : c.surface2, dotFg = complete || open ? c.strongFg : c.muted;
+  const open = ch.lessons.length > 0, all = ch.lessons.length + ch.planned.length, finished = ch.lessons.filter(l => done[l.id]).length;
+  const share = all ? finished / all : 0, complete = share >= 1;
   return (
     <View style={{ flexDirection: 'row', gap: 10 }}>
-      <View style={{ width: 38, alignItems: 'center' }}>
-        <View style={{ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: dot, borderWidth: open ? 0 : 1.5, borderColor: c.line }}>
-          {complete ? <Icon name="check" size={18} color={dotFg} weight="semibold" />
-            : <T style={{ fontWeight: '800', fontSize: 15, color: dotFg, textAlign: 'center' }}>{faNum(ch.n)}</T>}
-        </View>
+      <View style={{ width: BADGE, alignItems: 'center' }}>
+        <ChapterBadge n={ch.n} share={share} open={open} />
         {last ? null : <View style={{ flex: 1, width: 3, borderRadius: 2, marginVertical: 4, backgroundColor: complete ? c.ok : c.line }} />}
       </View>
       <Card style={{ flex: 1, gap: 10, marginBottom: last ? 0 : 14, opacity: open ? 1 : 0.85 }}>
         <View style={{ gap: 2 }}>
-          <T style={{ fontWeight: '700', fontSize: 15.5 }}>{ch.title}</T>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <T style={{ flex: 1, fontWeight: '700', fontSize: 15.5 }}>{ch.title}</T>
+            <T style={{ color: finished ? c.ok : c.faint, fontSize: 12, fontWeight: '700' }}>{faNum(finished)} از {faNum(all)}</T>
+          </View>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{ch.sub}</T>
         </View>
         <View style={{ gap: 6 }}>
