@@ -20,11 +20,14 @@ import { useColors } from './theme';
 // `guard`: while set (e.g. unsaved changes), leaving — the back button, the drag back or the phone's back button — asks
 // first with this title and text.
 // `scrollKey`: when it changes, the page goes back to its top (e.g. the next step of a lesson).
-export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number; maxWidth?: number;
-  guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook }) {
+// `scrollRef` / `onBodyY`: the page's scroll view and where its content starts under the picture header, so a page can
+// scroll to a part of itself (the rules page to the part it opens).
+export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
+  maxWidth?: number; guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook; scrollRef?: React.RefObject<ScrollView | null>;
+  onBodyY?: (y: number) => void }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
-  const ref = useTopOnFocus();
+  const ref = useTopOnFocus(scrollRef);
   useEffect(() => { if (scrollKey !== undefined) ref.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey, ref]);
   const [headH, setHeadH] = useState(0);
   const [asking, setAsking] = useState(false);
@@ -43,7 +46,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           {hero ? (
             <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: ins.bottom + 40 }}>
               <Hero look={hero} title={title} subtitle={subtitle} />
-              <View style={{ paddingTop: 6, paddingHorizontal: 16, gap, maxWidth, width: '100%', alignSelf: 'center' }}>{children}</View>
+              <View onLayout={e => onBodyY?.(e.nativeEvent.layout.y)} style={{ paddingTop: 6, paddingHorizontal: 16, gap, maxWidth, width: '100%', alignSelf: 'center' }}>{children}</View>
             </ScrollView>
           ) : (
           <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"

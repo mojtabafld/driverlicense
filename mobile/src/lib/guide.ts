@@ -2,6 +2,7 @@
 // short plain Persian (the signs and right of way have their own pages and data, guide-data.ts). Each part names the bank's topics (codes as in
 // bank.topics) whose questions practise it, so a part can end in a practice exam of exactly those questions.
 // Kept short on purpose: what the test asks and what is easy to get wrong, not the whole law (Færdselsloven).
+import type { IconName } from '@/ui/icon-names';
 import type { SignKind } from '@/ui/road-signs';
 
 export type GuidePart = {
@@ -11,11 +12,13 @@ export type GuidePart = {
   topics?: string[];      // bank topic codes to practise
   signs?: SignKind[];     // signs drawn above the points
   tip?: string;           // one line that is easy to get wrong in the test
+  icon?: IconName;        // the part's drawing on its card (the rules page)
 };
 
 export const RULES: GuidePart[] = [
   {
     title: 'سرعت مجاز',
+    icon: 'gauge',
     intro: 'حد سرعت، بیشترین سرعت مجاز است؛ نه سرعتی که همیشه باید با آن رفت.',
     signs: ['speed50'],
     points: [
@@ -31,6 +34,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'فاصله و مسافت توقف',
+    icon: 'distance',
     points: [
       'مسافت توقف = مسافت واکنش (تا وقتی پا به ترمز برسد) + مسافت ترمز.',
       'مسافت واکنش با سرعت به‌طور مستقیم زیاد می‌شود؛ خستگی، الکل، دارو و حواس‌پرتی آن را بیشتر می‌کنند.',
@@ -41,6 +45,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'الکل، مواد مخدر، دارو و خستگی',
+    icon: 'glass',
     points: [
       'حد مجاز الکل خون در دانمارک ۰٫۵ در هزار است؛ ولی هر مقدار الکل توانایی رانندگی را کم می‌کند.',
       'برای مواد مخدر حد مجاز صفر است: رانندگی با هر مقدار مواد مخدر در خون ممنوع است.',
@@ -51,6 +56,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'کمربند ایمنی و کودکان',
+    icon: 'seatbelt',
     points: [
       'همه‌ی سرنشینان، جلو و عقب، باید کمربند ببندند.',
       'راننده مسئول است که سرنشینان زیر ۱۵ سال کمربند یا وسیله‌ی ایمنی مناسب داشته باشند.',
@@ -61,6 +67,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'تلفن همراه',
+    icon: 'phone',
     points: [
       'در حین رانندگی استفاده از تلفن همراه در دست ممنوع است؛ حتی پشت چراغ قرمز یا در ترافیک.',
       'مکالمه با هندزفری مجاز است، ولی حواس شما را پرت می‌کند؛ در موقعیت‌های سخت از آن استفاده نکنید.',
@@ -69,6 +76,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'چراغ‌ها',
+    icon: 'headlight',
     points: [
       'در حین رانندگی همیشه چراغ نور پایین یا چراغ روشنایی روز روشن باشد.',
       'از غروب تا طلوع آفتاب و وقتی دید کم است (مه، باران شدید، برف) چراغ‌ها را روشن کنید.',
@@ -80,6 +88,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'سبقت',
+    icon: 'car',
     signs: ['noOvertaking'],
     points: [
       'سبقت از سمت چپ انجام می‌شود.',
@@ -94,6 +103,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'توقف و پارک',
+    icon: 'parking',
     signs: ['noStopping', 'noParking', 'parking'],
     points: [
       'در سمت راست جاده و در جهت حرکت توقف و پارک کنید (در خیابان یک‌طرفه هر دو طرف مجاز است).',
@@ -108,6 +118,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'بزرگراه',
+    icon: 'road',
     points: [
       'از خط شتاب، سرعت خود را با ترافیک بزرگراه یکی کنید و به خودروهای داخل بزرگراه حق تقدم بدهید.',
       'در خط راست برانید؛ خط‌های چپ برای سبقت هستند.',
@@ -119,6 +130,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'تغییر خط و ادغام',
+    icon: 'lanes',
     points: [
       'پیش از تغییر خط، آینه‌ها و نقطه‌ی کور را نگاه کنید و راهنما بزنید.',
       'کسی که خط عوض می‌کند باید به خودروهای خطی که واردش می‌شود حق تقدم بدهد.',
@@ -128,6 +140,7 @@ export const RULES: GuidePart[] = [
   },
   {
     title: 'گواهینامه و تجهیزات خودرو',
+    icon: 'idCard',
     points: [
       'گواهینامه‌ی B: خودرو تا ۳٬۵۰۰ کیلوگرم وزن کل و حداکثر ۸ سرنشین به‌جز راننده.',
       'هنگام رانندگی گواهینامه (کارتی یا دیجیتال) باید همراه شما باشد.',
@@ -138,6 +151,21 @@ export const RULES: GuidePart[] = [
     ],
     topics: ['10.3', '1.2'],
   },
+];
+
+// The numbers the test asks most, at a glance on the rules page; `rule`: the index in RULES of the part that explains it.
+export type RuleNumber = { value: string; unit: string; label: string; rule: number };
+export const RULE_NUMBERS: RuleNumber[] = [
+  { value: '۵۰', unit: 'km/h', label: 'داخل شهر', rule: 0 },
+  { value: '۸۰', unit: 'km/h', label: 'خارج از شهر', rule: 0 },
+  { value: '۱۳۰', unit: 'km/h', label: 'بزرگراه', rule: 0 },
+  { value: '۰٫۵', unit: '‰', label: 'حد الکل خون', rule: 2 },
+  { value: '۱۳۵', unit: 'cm', label: 'قد کودک برای صندلی کودک', rule: 3 },
+  { value: '۱۰', unit: 'm', label: 'توقف ممنوع تا تقاطع', rule: 7 },
+  { value: '۵', unit: 'm', label: 'توقف ممنوع پیش از گذرگاه', rule: 7 },
+  { value: '۱٫۶', unit: 'mm', label: 'کمترین عمق آج لاستیک', rule: 10 },
+  { value: '۳٬۵۰۰', unit: 'kg', label: 'وزن کل با گواهینامه‌ی B', rule: 10 },
+  { value: '۴', unit: 'برابر', label: 'مسافت ترمز با دو برابر سرعت', rule: 0 },
 ];
 
 // «راهنمای استفاده» in the settings: how the app works, part by part.

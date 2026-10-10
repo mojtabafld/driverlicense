@@ -161,6 +161,40 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'bulbCircle': // a light bulb in a circle (a tip), in the style of checkCircle
       body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M12 7a3.4 3.4 0 0 0-2 6.2c.4.3.6.7.6 1.1v.4h2.8v-.4c0-.4.2-.8.6-1.1A3.4 3.4 0 0 0 12 7zM10.8 16.9h2.4" {...line} /></G>;
       break;
+    // The rules' parts (lib/guide.ts).
+    case 'gauge': // a speedometer
+      body = <G><Path d="M4.6 17.5a8.2 8.2 0 1 1 14.8 0" {...line} /><Path d="M12 14.2l3.6-4.2" {...line} /><Circle cx={12} cy={14.6} r={1.4} {...line} /></G>;
+      break;
+    case 'distance': // a measure between two marks
+      body = <G><Path d="M4 6v12M20 6v12M7 12h10" {...line} /><Path d="M9.5 9.5 7 12l2.5 2.5M14.5 9.5 17 12l-2.5 2.5" {...line} /></G>;
+      break;
+    case 'glass': // a wine glass
+      body = <G><Path d="M7.6 3.8h8.8l-.5 4.8a3.9 3.9 0 0 1-7.8 0z" {...line} /><Path d="M12 12.6v7M8.6 20.2h6.8" {...line} /></G>;
+      break;
+    case 'seatbelt': // a person with the belt across
+      body = <G><Circle cx={12} cy={5.6} r={2.3} {...line} /><Path d="M6.5 20.2v-5.6a5.5 5.5 0 0 1 11 0v5.6" {...line} /><Path d="M8 10.6l8.4 9" {...line} /></G>;
+      break;
+    case 'phone':
+      body = <G><Path d="M8.2 3.4h7.6a1.6 1.6 0 0 1 1.6 1.6v14a1.6 1.6 0 0 1-1.6 1.6H8.2A1.6 1.6 0 0 1 6.6 19V5a1.6 1.6 0 0 1 1.6-1.6z" {...line} /><Path d="M11 17.4h2" {...line} /></G>;
+      break;
+    case 'headlight': // a headlight with its beams
+      body = <G><Path d="M11.5 6.2C7.2 6.2 4.4 8.8 4.4 12s2.8 5.8 7.1 5.8z" {...line} /><Path d="M14.6 8.2h5M14.6 12h5M14.6 15.8h5" {...line} /></G>;
+      break;
+    case 'car': // a car from the front
+      body = <G><Path d="M4.8 16.6v-4.2l1.9-4.6a1.6 1.6 0 0 1 1.5-1h7.6a1.6 1.6 0 0 1 1.5 1l1.9 4.6v4.2zM4.8 12.4h14.4" {...line} /><Path d="M6.8 16.6v2M17.2 16.6v2M8.2 14.4h.01M15.8 14.4h.01" {...line} /></G>;
+      break;
+    case 'parking': // P in a square
+      body = <G><Path d="M5.6 3.8h12.8a1.8 1.8 0 0 1 1.8 1.8v12.8a1.8 1.8 0 0 1-1.8 1.8H5.6a1.8 1.8 0 0 1-1.8-1.8V5.6a1.8 1.8 0 0 1 1.8-1.8z" {...line} /><Path d="M10 16.6V7.4h2.8a2.6 2.6 0 0 1 0 5.2H10" {...line} /></G>;
+      break;
+    case 'road': // a road going off ahead, with its centre line
+      body = <Path d="M9.2 4 5 20M14.8 4 19 20M12 4.6v2.2M12 10v2.6M12 16v3.6" {...line} />;
+      break;
+    case 'lanes': // a lane line and a car's way changing lane
+      body = <G><Path d="M12 4v2.4M12 10.8v2.4M12 17.6V20" {...line} /><Path d="M7 20v-3.4c0-3.6 10-3.2 10-8V4.6M14.4 7 17 4.4 19.6 7" {...line} /></G>;
+      break;
+    case 'idCard': // a driving licence
+      body = <G><Path d="M4.6 5.8h14.8a1.6 1.6 0 0 1 1.6 1.6v9.2a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 16.6V7.4a1.6 1.6 0 0 1 1.6-1.6z" {...line} /><Circle cx={8.6} cy={10.6} r={1.9} {...line} /><Path d="M5.8 15.4a2.9 2.9 0 0 1 5.6 0M14.2 10h3.8M14.2 13.6h2.8" {...line} /></G>;
+      break;
     case 'info':
       body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M12 11v5.5M12 7.6v.01" {...line} /></G>;
       break;

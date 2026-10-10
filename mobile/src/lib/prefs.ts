@@ -40,3 +40,10 @@ export const loadTourSeen = async (page: string, user: string): Promise<boolean>
   try { return (await SecureStore.getItemAsync(tourKey(page, user))) === '1'; } catch { return false; }
 };
 export const saveTourSeen = (page: string, user: string) => SecureStore.setItemAsync(tourKey(page, user), '1').catch(() => {});
+
+// The parts of «قوانین» opened at least once (their titles), kept on the device, so the page can show what is left.
+const RULES_READ = 'tp_rules_read';
+export const loadRulesRead = async (): Promise<string[]> => {
+  try { const v = JSON.parse((await SecureStore.getItemAsync(RULES_READ)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
+};
+export const saveRulesRead = (titles: string[]) => SecureStore.setItemAsync(RULES_READ, JSON.stringify(titles)).catch(() => {});
