@@ -10,7 +10,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GuideImage, prefetchGuide, Rich } from '@/ui/guide-visual';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion } from '@/ui/kit';
@@ -18,7 +18,7 @@ import { GlassTop } from '@/ui/liquid';
 import { Marquee } from '@/ui/marquee';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
-import { swipeWebStyle, usePager } from '@/ui/swipe';
+import { learnRtl, swipeWebStyle, usePager } from '@/ui/swipe';
 import { radius, useColors } from '@/ui/theme';
 
 // The cards of the page (the group's rules, the explanation): one look.
@@ -43,7 +43,7 @@ export default function GuideView() {
   const scroll = useRef<ScrollView>(null);
   // Each page starts at its top.
   useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [i]);
-  const swipe = usePager(i, items.length, setI);
+  const swipe = usePager(i, items.length, setI, learnRtl);
   // The next two pages' pictures and the previous one's are loaded ahead.
   const { guideArt } = useApp();
   useEffect(() => { prefetchGuide([i + 1, i + 2, i - 1].filter(j => j >= 0 && j < items.length).map(j => items[j].key), guideArt); }, [i, items, guideArt]);
@@ -96,10 +96,10 @@ export default function GuideView() {
           </Card>
         </Animated.View>
       </ScrollView>
-      <GlassBar
-        start={<FootBtn label="قبلی" icon="arrowLeft" disabled={i === 0} onPress={() => setI(i - 1)} />}
+      <GlassBar rtl={learnRtl}
+        start={<FootBtn label="قبلی" icon={navIcons(learnRtl).prev} disabled={i === 0} onPress={() => setI(i - 1)} />}
         middle={<ListButton n={i + 1} of={items.length} label="فهرست موارد" onPress={() => setList(true)} />}
-        end={last ? <FootBtn label="پایان" icon="check" submit onPress={back} /> : <FootBtn label="بعدی" icon="arrowRight" onPress={() => setI(i + 1)} />} />
+        end={last ? <FootBtn label="پایان" icon="check" submit onPress={back} /> : <FootBtn label="بعدی" icon={navIcons(learnRtl).next} onPress={() => setI(i + 1)} />} />
       <ItemSheet open={list} items={items} current={i} onClose={() => setList(false)} onPick={k => { setList(false); setI(k); }} />
     </Backdrop>
   );

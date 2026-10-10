@@ -18,7 +18,8 @@ import { useDrillProgress } from '@/lib/drill-progress';
 import { SECONDS_PER_Q, faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
-import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
+import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
+import { learnRtl } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Enter, T, TranslateButton, tap } from '@/ui/kit';
 import { OptionBox } from '@/ui/option-box';
@@ -243,7 +244,7 @@ export default function Drill() {
     <View style={{ flex: 1 }}>
       <SubPage title={title} gap={12} scrollKey={finished ? 'end' : i} scrollRef={scroll} close={!finished}
         // Only forwards, and only once answered: the practice has no way back to a question.
-        pager={finished || !turns?.length ? undefined : { i: 0, n: answer ? 2 : 1, go: k => { if (k === 1) next(); } }}>
+        pager={finished || !turns?.length ? undefined : { i: 0, n: answer ? 2 : 1, go: k => { if (k === 1) next(); }, rtl: learnRtl }}>
         {!turns ? <T style={{ color: c.muted, textAlign: 'center', marginTop: 40 }}>در حال آماده کردن سؤال‌ها…</T>
           : !turns.length ? <T style={{ color: c.muted, textAlign: 'center', marginTop: 40 }}>هنوز سؤالی برای تمرین نیست.</T>
           : finished ? <Enter><End answers={answers} turns={turns} onMore={start} /></Enter>
@@ -273,7 +274,7 @@ export default function Drill() {
         <View style={{ height: 90 }} />
       </SubPage>
       {turns && turns.length > 0 && !finished ? (
-        <GlassBar
+        <GlassBar rtl={learnRtl}
           // Until the question is answered, the two answers («حدس زدم» / «مطمئنم») sit in the bar, always in view; then the
           // position and «بعدی».
           middle={answer ? <BarCount n={i + 1} of={turns.length} label="سؤال" /> : (
@@ -282,7 +283,7 @@ export default function Drill() {
               <FootBtn label="مطمئنم" icon="check" submit onPress={() => submit(true)} />
             </>
           )}
-          end={answer ? <FootBtn label={i === turns.length - 1 ? 'نتیجه' : 'بعدی'} icon={i === turns.length - 1 ? 'check' : 'arrowRight'} onPress={next} /> : null} />
+          end={answer ? <FootBtn label={i === turns.length - 1 ? 'نتیجه' : 'بعدی'} icon={i === turns.length - 1 ? 'check' : navIcons(learnRtl).next} onPress={next} /> : null} />
       ) : null}
     </View>
   );

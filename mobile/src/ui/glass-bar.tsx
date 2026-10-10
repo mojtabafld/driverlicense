@@ -63,16 +63,20 @@ export function BarItem({ icon, label, main, filled, dim, ltr, children }: { ico
 }
 
 // Without `start` or `end`, the middle (e.g. two answers) takes their room too. The way out is the page's ✕ at the top,
-// never a button of the bar.
-export function GlassBar({ start, middle, end }: { start?: React.ReactNode; middle: React.ReactNode; end?: React.ReactNode }) {
+// never a button of the bar. `rtl` (the learning pages, read in Persian): `start` (previous) on the right and `end`
+// (next) on the left; the arrows are the caller's (see navIcons).
+export function GlassBar({ start, middle, end, rtl }: { start?: React.ReactNode; middle: React.ReactNode; end?: React.ReactNode; rtl?: boolean }) {
+  const first = rtl ? end : start, second = rtl ? start : end;
   return (
     <BarShell>
-      {start ? <View style={{ flex: 1 }}>{start}</View> : null}
+      {first ? <View style={{ flex: 1 }}>{first}</View> : null}
       <View style={{ flex: 2, flexDirection: 'row', gap: 4 }}>{middle}</View>
-      {end ? <View style={{ flex: 1 }}>{end}</View> : null}
+      {second ? <View style={{ flex: 1 }}>{second}</View> : null}
     </BarShell>
   );
 }
+// The previous / next arrows, pointing the way the pages turn.
+export const navIcons = (rtl?: boolean) => (rtl ? { prev: 'arrowRight', next: 'arrowLeft' } : { prev: 'arrowLeft', next: 'arrowRight' }) as { prev: IconName; next: IconName };
 
 // The position in the middle of the bar (Persian digits) over what is counted, e.g. «قدم» or «سؤال».
 export function BarCount({ n, of, label }: { n: number; of: number; label: string }) {

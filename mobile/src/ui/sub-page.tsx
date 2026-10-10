@@ -25,10 +25,10 @@ import { useColors } from './theme';
 // `close`: a ✕ in place of the back arrow, for a page with its own previous / next bar (a lesson, a practice), so
 // the way out never looks like the bar's arrows.
 // `pager`: a page with its own previous / next bar turns its steps with a sideways swipe (as the exam does) instead of
-// going back with one, so a swipe for the next step never leaves the page.
+// going back with one, so a swipe for the next step never leaves the page; `rtl`: turning right to left (see swipe.tsx).
 export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close, pager }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
   maxWidth?: number; guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook; scrollRef?: React.RefObject<ScrollView | null>;
-  onBodyY?: (y: number) => void; close?: boolean; pager?: { i: number; n: number; go: (k: number) => void } }) {
+  onBodyY?: (y: number) => void; close?: boolean; pager?: { i: number; n: number; go: (k: number) => void; rtl?: boolean } }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const ref = useTopOnFocus(scrollRef);
@@ -37,7 +37,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
   const [asking, setAsking] = useState(false);
   const leave = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
   const back = () => (guard ? setAsking(true) : leave());
-  const backSwipe = useSwipeBack(back), turn = usePager(pager?.i ?? 0, pager?.n ?? 0, pager?.go ?? noop);
+  const backSwipe = useSwipeBack(back), turn = usePager(pager?.i ?? 0, pager?.n ?? 0, pager?.go ?? noop, pager?.rtl);
   const swipe = pager ? turn : backSwipe;
   useEffect(() => {
     if (!guard) return;

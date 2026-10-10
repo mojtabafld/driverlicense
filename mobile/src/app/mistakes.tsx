@@ -17,9 +17,9 @@ import { topicPracticeIds } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
-import { SideSwipe } from '@/ui/swipe';
+import { learnRtl, SideSwipe } from '@/ui/swipe';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
 import { ActionButton, Backdrop, Button, Card, EmptyState, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
@@ -103,7 +103,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       <RevealScrollProvider value={reveal.value}>
       {/* Question by question a sideways swipe turns the questions; the overview pages go back with a drag from right to
           left. */}
-      <SideSwipe pager={cur ? { i: at, n: items.length, go: step } : undefined} back={() => motion.leave(() => router.back())}>
+      <SideSwipe pager={cur ? { i: at, n: items.length, go: step, rtl: learnRtl } : undefined} back={() => motion.leave(() => router.back())}>
       <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* arc: the button sits in the «وضعیت مباحث» card, under the count it acts on (Arc: an action beside its data) */}
         {!view && open && !ARC ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
@@ -227,10 +227,10 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       </GlassTop>
       {/* As in the review: previous / the position / next, in the questions' language */}
       {cur ? (
-        <GlassBar
-          start={<FootBtn label={ui.prev} icon="arrowLeft" disabled={!at} onPress={() => step(at - 1)} />}
+        <GlassBar rtl={learnRtl}
+          start={<FootBtn label={ui.prev} icon={navIcons(learnRtl).prev} disabled={!at} onPress={() => step(at - 1)} />}
           middle={<ListButton n={at + 1} of={items.length} icon="filter" label="انتخاب دسته‌بندی‌ها" dot={!!secs.length} onPress={() => setSheet(secs.length ? secs : cats.map(x => x.n))} />}
-          end={<FootBtn label={ui.next} icon="arrowRight" disabled={at === items.length - 1} onPress={() => step(at + 1)} />} />
+          end={<FootBtn label={ui.next} icon={navIcons(learnRtl).next} disabled={at === items.length - 1} onPress={() => step(at + 1)} />} />
       ) : null}
       {/* The categories of these mistakes, to choose from */}
       <Sheet open={!!sheet} onClose={() => setSheet(null)} style={{ gap: 12 }}>
