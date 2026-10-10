@@ -1,12 +1,14 @@
 // «آموزش»: four parts as cards, two by two (the page scrolls under its picture header), each with its picture (made by the server's image
 // model; the part's icon on a soft tile until it is there), its title and a line on what is in it; a card opens its
-// part's page: the lessons one by one (and practice by category), the rules, the road signs, and right of way.
-// Above the parts, «آموزش گام‌به‌گام» (app/course.tsx), hidden for now.
+// part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules, the road signs, and right of way.
+// (The official lessons one by one, app/learn-lessons.tsx, are no longer offered here.)
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
 
 import { API_URL } from '@/lib/config';
+import { COURSE } from '@/lib/course';
+import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -43,48 +45,25 @@ function Part({ n, icon, title, text, note, href, target }: { n: number; icon: I
   );
 }
 
-// «آموزش گام‌به‌گام» (the app's own course, app/course.tsx): a slim card above the four parts, marked new.
-// Hidden for now (SHOW_COURSE); the course itself stays at /course.
-const SHOW_COURSE = false;
-function CourseCard() {
-  const c = useColors();
-  return (
-    <Card onPress={() => router.push('/course')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14 }}>
-      <View style={{ width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-        <Icon name="play" size={20} color={c.link} weight="semibold" />
-      </View>
-      <View style={{ flex: 1, gap: 2 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <T style={{ fontWeight: '700', fontSize: 15.5 }}>آموزش گام‌به‌گام</T>
-          <View style={{ backgroundColor: c.ok, borderRadius: 99, paddingHorizontal: 7, paddingVertical: 1 }}><T style={{ color: '#fff', fontSize: 10.5, fontWeight: '700' }}>جدید</T></View>
-        </View>
-        <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={1}>آمادگی آزمون تئوری، فصل به فصل، با سؤال‌های شبیه آزمون</T>
-      </View>
-      <Icon name="chevronLeft" size={15} color={c.faint} weight="semibold" />
-    </Card>
-  );
-}
-
 const TOUR: TourStep[] = [
-  { title: 'آموزش درس‌به‌درس', text: 'درس‌های رسمی آزمون تئوری به ترتیب، هر درس با سؤال‌های خودش. می‌توانید بر اساس دسته‌بندی رسمی هم تمرین کنید و تعداد سؤال‌ها را خودتان انتخاب کنید.' },
+  { title: 'آموزش گام‌به‌گام', text: 'دوره‌ی آمادگی آزمون تئوری، فصل به فصل و به ترتیب برنامه‌ی رسمی آموزش دانمارک. هر درس با چند سؤال به شکل آزمون واقعی تمام می‌شود.' },
   { title: 'قوانین', text: 'مهم‌ترین قوانین رانندگی در دانمارک به زبان ساده: سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک و بزرگراه. هر بخش یک تمرین با سؤال‌های همان مبحث دارد.' },
   { title: 'علائم رانندگی', text: 'گروه‌های تابلوها با شکل و رنگشان، خط‌کشی‌ها و چراغ راهنمایی. با دانستن شکل و رنگ هر گروه، معنای تابلوهای ناآشنا را هم حدس می‌زنید.' },
   { title: 'آموزش حق تقدم', text: 'چه کسی اول می‌رود؟ قاعده‌ی دست راست، حق تقدم مطلق، گردش به چپ و راست، میدان و عابران؛ از پرتکرارترین موضوع‌های آزمون.' },
 ];
 
 export default function Learn() {
-  const { bank, attempts } = useApp();
-  const done = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, all = bank?.tests.length ?? 44;
+  const { done } = useCourseProgress();
+  const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
   const tour = useTour('learn', TOUR);
   return (
     <>
     <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn' }}>
       <View style={{ gap: 12 }}>
-        {SHOW_COURSE ? <CourseCard /> : null}
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Part n={1} target={tour.target(0)} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
-            text={`${faNum(all)} درس به ترتیب، هر کدام با سؤال‌های خودش؛ یا تمرین بر اساس دسته‌بندی رسمی.`}
-            note={done ? `${faNum(done)} از ${faNum(all)} درس انجام شده` : undefined} />
+          <Part n={1} target={tour.target(0)} icon="learn" title="آموزش گام‌به‌گام" href="/course"
+            text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
+            note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
           <Part n={2} target={tour.target(1)} icon="rules" title="قوانین" href="/rules"
             text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
         </View>
