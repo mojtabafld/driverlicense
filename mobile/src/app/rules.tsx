@@ -124,7 +124,7 @@ function RulePart({ p, on, read, n, onToggle, onPractise, onNext }: { p: GuidePa
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>{p.title}</T>
           <T style={{ fontSize: 12, color: read ? c.ok : c.muted, fontWeight: read ? '700' : '400' }}>
-            {read ? 'خوانده‌شده · ' : ''}{faNum(p.points.length)} نکته{n ? `، ${faNum(n)} سؤال تمرینی` : ''}
+            {read ? 'خوانده‌شده، ' : ''}{faNum(p.points.length)} نکته{n ? `، ${faNum(n)} سؤال تمرینی` : ''}
           </T>
         </View>
         {read && !on ? (

@@ -32,15 +32,6 @@ export const loadLangAsked = async (): Promise<boolean> => {
 };
 export const saveLangAsked = () => SecureStore.setItemAsync(LANG_ASKED, ASKED).catch(() => {});
 
-// The first-visit tooltips of each tab (src/ui/tour.tsx), seen or closed: per page and account on this device.
-// TOUR_SET: a new value shows the tooltips to everyone once more.
-const TOUR_SET = 'v2';
-const tourKey = (page: string, user: string) => `tp_tour_${TOUR_SET}_${page}_${user.replace(/[^A-Za-z0-9._-]/g, '_')}`;
-export const loadTourSeen = async (page: string, user: string): Promise<boolean> => {
-  try { return (await SecureStore.getItemAsync(tourKey(page, user))) === '1'; } catch { return false; }
-};
-export const saveTourSeen = (page: string, user: string) => SecureStore.setItemAsync(tourKey(page, user), '1').catch(() => {});
-
 // The parts of «قوانین» opened at least once (their titles), kept on the device, so the page can show what is left.
 const RULES_READ = 'tp_rules_read';
 export const loadRulesRead = async (): Promise<string[]> => {

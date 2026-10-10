@@ -56,9 +56,10 @@ export default function GuideView() {
       <GlassTop onHeight={setHeadH}>
         <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
-            <Pressable onPress={() => { tap(); back(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت"
+            <Pressable onPress={() => { tap(); back(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بستن"
               style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
-              <Icon name="arrowRight" size={20} color={c.text} />
+              {/* ✕, not an arrow: the bar below has the previous / next arrows. */}
+              <Icon name="xmark" size={20} color={c.text} />
             </Pressable>
             <View style={{ flex: 1, height: 26 }}>
               <Marquee text={cat.title} height={26} style={{ fontWeight: '700', fontSize: 16, lineHeight: 26 }} />

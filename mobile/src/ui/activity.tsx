@@ -37,9 +37,9 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontWeight: '700' }}>{modeName(a, bank)}</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{fmtDate(a.at)} · ساعت {fmtClock(a.at)}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{fmtDate(a.at)}، ساعت {fmtClock(a.at)}</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-            {a.secs ? `زمان ${fmtSecs(a.secs)} · ` : ''}{wrong ? `${faNum(wrong)} اشتباه از ${faNum(a.items.length)}` : 'بدون اشتباه'}
+            {a.secs ? `زمان ${fmtSecs(a.secs)}، ` : ''}{wrong ? `${faNum(wrong)} اشتباه از ${faNum(a.items.length)}` : 'بدون اشتباه'}
           </T>
         </View>
         <View style={{ alignItems: 'center', minWidth: 58 }}>

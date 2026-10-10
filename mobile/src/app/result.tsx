@@ -163,9 +163,10 @@ export default function Result() {
           {/* Three parts: the back button and «جزئیات آزمون» on equal sides, so the tabs sit in the middle of the screen. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ flex: 1, flexBasis: 0, alignItems: 'flex-start' }}>
-            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
+            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بستن" hitSlop={6}
               style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
-              <Icon name="arrowRight" size={20} color={c.text} />
+              {/* ✕, not an arrow: the bar below has the previous / next arrows. */}
+              <Icon name="xmark" size={20} color={c.text} />
             </Pressable>
             </View>
             <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
@@ -224,7 +225,7 @@ export default function Result() {
             <T style={{ fontSize: 22, lineHeight: 34, fontWeight: '800', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.link }}>
               {full ? (pass ? '🎉 قبول شدید!' : 'مردود — دوباره تلاش کنید') : `${faNum(pctN)}٪ پاسخ درست`}
             </T>
-            <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)} · {fmtDateTime(a.at)}</T>
+            <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)}، {fmtDateTime(a.at)}</T>
           </View>
           <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
             {([['درست', faNum(right), c.ok], ['اشتباه', faNum(wrongN), wrongN ? c.bad : c.muted], ['علامت‌خورده', faNum(marked), c.warn], ['زمان', fmtTime(a.secs), c.text]] as const).map(([l, v, col]) => (

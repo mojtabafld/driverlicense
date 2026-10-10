@@ -1,7 +1,7 @@
 // Exams: a random exam like the real one, an exam of your mistakes, and the latest exams and lessons (the card stays,
 // with a note, before the first one).
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds } from '@/lib/logic';
@@ -14,7 +14,6 @@ import { SizeSlider } from '@/ui/size-slider';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Screen, T, tap } from '@/ui/kit';
 import { useColors } from '@/ui/theme';
-import { useTour, type TourStep } from '@/ui/tour';
 
 // What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
 function sizeHint(n: number) {
@@ -90,29 +89,17 @@ function MistakesCard() {
   );
 }
 
-const TOUR: TourStep[] = [
-  { title: 'آزمون تصادفی', text: 'آزمونی مثل آزمون واقعی با سؤال‌های تصادفی. تعداد سؤال‌ها را با نوار انتخاب کنید؛ آزمون ۲۵ سؤالی دقیقاً مثل آزمون اصلی است و با حداکثر ۵ اشتباه قبول می‌شوید.' },
-  { title: 'تاریخچه‌ی آزمون‌ها', text: 'نتیجه‌ی آزمون‌ها و درس‌هایی که انجام داده‌اید. روی هر کدام بزنید تا دوباره مرورش کنید و جواب درست و توضیح هر سؤال را ببینید.' },
-  { title: 'آزمون بر اساس اشتباهات', text: 'هر سؤالی که اشتباه جواب بدهید اینجا جمع می‌شود، به تفکیک مبحث و ضعیف‌ترین اول. روی یک مبحث بزنید تا با اشتباهات همان مبحث آزمون بدهید؛ «همه» همه‌ی اشتباهات را نشان می‌دهد.' },
-];
-
 export default function Exam() {
   const c = useColors();
   const { bank, attempts } = useApp();
   const [size, setSize] = useState(FULL);
-  // The first-visit tooltips, which scroll a card that is off screen into view.
-  const scroll = useRef<ScrollView>(null), scrollY = useRef(0);
-  const [tourScroll] = useState(() => ({ ref: scroll, y: () => scrollY.current }));
-  const tour = useTour('exam', TOUR, tourScroll);
   const start = () => {
     if (!bank) return;
     session.plan = { mode: 'random', ids: randomIds(bank, size), title: 'آزمون تصادفی' };
     router.push('/run');
   };
   return (
-    <>
-    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam' }} scrollRef={scroll} onScrollY={y => { scrollY.current = y; }}>
-      <View {...tour.target(0)}>
+    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam' }}>
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -130,11 +117,8 @@ export default function Exam() {
         </View>
         <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />
       </Card>
-      </View>
-      <View {...tour.target(1)}><ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" /></View>
-      <View {...tour.target(2)}><MistakesCard /></View>
+      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" />
+      <MistakesCard />
     </Screen>
-    {tour.overlay}
-    </>
   );
 }

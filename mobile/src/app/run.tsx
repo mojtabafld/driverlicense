@@ -186,13 +186,13 @@ export default function Run() {
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
       <Sheet open={dialog === 'handin'} onClose={() => setDialog(null)} maxHeight="88%">
-        {/* The title, with a back button at the top right that returns to the exam. */}
+        {/* The title, with a ✕ at the top right that returns to the exam. */}
         <View style={{ minHeight: 40, justifyContent: 'center' }}>
           <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
           <Pressable onPress={() => { tap(); setDialog(null); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت به آزمون"
             style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
               backgroundColor: c.nav, opacity: pressed ? 0.8 : 1 })}>
-            <Icon name="arrowRight" size={19} color={c.navFg} weight="semibold" />
+            <Icon name="xmark" size={19} color={c.navFg} weight="semibold" />
           </Pressable>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>

@@ -58,15 +58,15 @@ function TodayCard({ next, finished, ready }: { next: { lesson: CourseLesson; ch
       <View style={{ gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
           <T style={{ flex: 1, fontWeight: '800', fontSize: 18 }}>برنامه‌ی امروز</T>
-          <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(finished)} از {faNum(ready)} درس · ٪{faNum(Math.round(share * 100))}</T>
+          <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(finished)} از {faNum(ready)} درس، ٪{faNum(Math.round(share * 100))}</T>
         </View>
         <View style={{ height: 8, borderRadius: 4, backgroundColor: c.surface2, overflow: 'hidden' }}>
           <View style={{ width: `${Math.max(share * 100, share ? 4 : 0)}%`, height: '100%', borderRadius: 4, backgroundColor: c.ok }} />
         </View>
       </View>
       {next ? (
-        <Task icon="play" tone="main" label={`۱ · درس بعدی · فصل ${faNum(next.chapter.n)}`} title={next.lesson.title}
-          line={`${faNum(next.lesson.minutes)} دقیقه · ${faNum(next.lesson.steps.filter(s => s.kind === 'exam').length)} سؤال آزمونی`}
+        <Task icon="play" tone="main" label={`درس بعدی، فصل ${faNum(next.chapter.n)}`} title={next.lesson.title}
+          line={`${faNum(next.lesson.minutes)} دقیقه، ${faNum(next.lesson.steps.filter(s => s.kind === 'exam').length)} سؤال آزمونی`}
           action={finished ? 'ادامه' : 'شروع'} onPress={() => openLesson(next.lesson)} />
       ) : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -75,7 +75,7 @@ function TodayCard({ next, finished, ready }: { next: { lesson: CourseLesson; ch
         </View>
       )}
       <View style={{ height: 1, backgroundColor: c.line }} />
-      <Task icon="refresh" tone="soft" label={`${next ? '۲ · ' : ''}مرور هوشمند · تسلط ٪${faNum(Math.round(m * 100))} از ${faNum(ITEMS.length)} سؤال`} title="تمرین هوشمند"
+      <Task icon="refresh" tone="soft" label={`مرور هوشمند، تسلط ٪${faNum(Math.round(m * 100))} از ${faNum(ITEMS.length)} سؤال`} title="تمرین هوشمند"
         line={drillLine} action="شروع" onPress={() => openDrill()} />
       {weak && weak.m < 0.6 && loaded && finished ? (
         <Pressable onPress={() => openDrill(weak.lesson.id)} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 12, backgroundColor: c.warnSoft, opacity: pressed ? 0.8 : 1 })}>
@@ -184,9 +184,9 @@ function Timeline({ done, next }: { done: Record<string, unknown>; next: string 
                 </View>
               ) : (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: BADGE }}>
-                  <T numberOfLines={1} style={{ flex: 1, fontSize: 14, color: c.muted }}><T style={{ fontSize: 14, color: c.faint }}>فصل {faNum(ch.n)} · </T>{ch.title}</T>
+                  <T numberOfLines={1} style={{ flex: 1, fontSize: 14, color: c.muted }}><T style={{ fontSize: 14, color: c.faint }}>فصل {faNum(ch.n)}: </T>{ch.title}</T>
                   <View style={{ backgroundColor: c.surface2, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 2 }}>
-                    <T style={{ fontSize: 11.5, color: c.faint }}>به‌زودی · {faNum(ch.planned.length)} درس</T>
+                    <T style={{ fontSize: 11.5, color: c.faint }}>به‌زودی، {faNum(ch.planned.length)} درس</T>
                   </View>
                 </View>
               )}
@@ -211,7 +211,7 @@ function Timeline({ done, next }: { done: Record<string, unknown>; next: string 
                 <View style={{ flex: 1, gap: 2 }}>
                   <T style={{ fontWeight: '700', fontSize: 15, color: isNext ? c.btnFg : c.text }}>{r.lesson.title}</T>
                   <T style={{ fontSize: 12, color: isNext ? c.btnFg : on ? c.ok : c.muted, opacity: isNext ? 0.8 : 1, fontWeight: on ? '700' : '400' }}>
-                    {on ? 'انجام شد · دوباره ببینید' : `${faNum(r.lesson.minutes)} دقیقه · ${faNum(r.lesson.steps.filter(s => s.kind === 'exam').length)} سؤال آزمونی`}
+                    {on ? 'انجام شد، دوباره ببینید' : `${faNum(r.lesson.minutes)} دقیقه، ${faNum(r.lesson.steps.filter(s => s.kind === 'exam').length)} سؤال آزمونی`}
                   </T>
                 </View>
                 {isNext ? (
