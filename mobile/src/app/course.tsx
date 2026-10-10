@@ -1,6 +1,6 @@
 // «آموزش گام‌به‌گام»: preparing for the theory test, under a header like the tabs' but with its own minimal vector
 // drawing (CourseArt, ui/header-art.tsx). First the progress (a ring, and a button to the next lesson), then how a lesson goes (four
-// steps on a line) and the goal (the real test's format), then the way to the licence: the chapters in the official
+// steps on a line), «تمرین هوشمند» (DrillCard) and the goal (the real test's format), then the way to the licence: the chapters in the official
 // curriculum's order on a path, each
 // with its lessons (a finished one ticked, the next one marked, those still being written locked «به‌زودی»).
 import { router } from 'expo-router';
@@ -9,6 +9,8 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { COURSE, EXAM, lessonCount, readyCount, type CourseChapter, type CourseLesson } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
+import { ITEMS, SESSION_SIZE, dueCount, mastery, newCount, weakLessons } from '@/lib/drill';
+import { useDrillProgress } from '@/lib/drill-progress';
 import { faNum } from '@/lib/logic';
 import { CourseArt } from '@/ui/header-art';
 import { Icon, type IconName } from '@/ui/icon';
@@ -24,6 +26,33 @@ const HOW: { icon: IconName; text: string }[] = [
 ];
 
 const openLesson = (l: CourseLesson) => { tap(); router.push({ pathname: '/course-lesson', params: { id: l.id } }); };
+
+// «تمرین هوشمند» (app/drill.tsx): how well the course's questions are known, how many are due again today and how many
+// are new, a button to today's session, and one to the weakest lesson's questions.
+function DrillCard() {
+  const c = useColors();
+  const { cards, loaded } = useDrillProgress();
+  const due = dueCount(cards), fresh = newCount(cards), m = mastery(cards), weak = weakLessons(cards)[0];
+  const open = (lesson?: string) => { tap(); router.push({ pathname: '/drill', params: lesson ? { lesson } : {} }); };
+  return (
+    <Card style={{ gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+        <Ring value={m} size={84} stroke={8} color={c.link} label={`٪${faNum(Math.round(m * 100))}`} />
+        <View style={{ flex: 1, gap: 4 }}>
+          <T style={{ fontWeight: '800', fontSize: 17 }}>تمرین هوشمند</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
+            {!loaded ? 'در حال بارگذاری…' : `${faNum(due)} سؤال برای مرور امروز · ${faNum(fresh)} سؤال تازه از ${faNum(ITEMS.length)}`}
+          </T>
+        </View>
+      </View>
+      <T style={{ color: c.muted, fontSize: 13, lineHeight: 22 }}>
+        جلسه‌های کوتاه به شکل آزمون واقعی، با مباحث درهم. هر سؤالی را که مطمئن و درست جواب دهید دیرتر برمی‌گردد و هر اشتباه با قاعده‌اش همان‌جا مرور می‌شود.
+      </T>
+      <Button label={`شروع جلسه‌ی امروز (${faNum(SESSION_SIZE)} سؤال)`} icon="play" disabled={!loaded} onPress={() => open()} />
+      {weak && weak.m < 0.6 ? <Button kind="glass" label={`تمرین ضعیف‌ترین درس: ${weak.lesson.title}`} icon="refresh" onPress={() => open(weak.lesson.id)} /> : null}
+    </Card>
+  );
+}
 
 // How a lesson goes: four round steps joined by a line, each with its line of text under it.
 function HowSteps() {
@@ -135,6 +164,7 @@ export default function Course() {
             : <T style={{ color: c.ok, fontWeight: '700', fontSize: 13.5, textAlign: 'center' }}>همه‌ی درس‌های آماده را انجام داده‌اید.</T>}
         </Card>
       </Enter>
+      <Enter><DrillCard /></Enter>
       <Enter>
         <Card style={{ gap: 12 }}>
           <T style={{ fontWeight: '700', fontSize: 15.5 }}>هر درس در چهار گام</T>

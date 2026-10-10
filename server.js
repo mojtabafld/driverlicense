@@ -612,6 +612,24 @@ async function api(req, res, route) {
     }
     return send(res, 200, { done: user.course || {} });
   }
+  // «تمرین هوشمند»: the user's spaced-repetition cards (question id → { b: box, due, n: answers, w: wrong, mis: wrong
+  // while sure }). GET → { cards }; POST { cards } keeps the given ones.
+  if (route === 'drill' && (req.method === 'GET' || req.method === 'POST')) {
+    if (req.method === 'POST') {
+      const b = await readBody(req), cards = { ...(user.drill || {}) };
+      const num = (v, max) => (Number.isFinite(v) && v >= 0 && v <= max ? Math.floor(v) : null);
+      for (const [id, c] of Object.entries(b.cards && typeof b.cards === 'object' ? b.cards : {})) {
+        if (!/^[a-z0-9-]{2,40}$/.test(id) || !c || typeof c !== 'object') return send(res, 400, { error: 'bad card' });
+        const card = { b: num(c.b, 5), due: num(c.due, 9e15), n: num(c.n, 1e6), w: num(c.w, 1e6), mis: num(c.mis, 1e6) };
+        if (Object.values(card).some(v => v === null)) return send(res, 400, { error: 'bad card' });
+        cards[id] = card;
+      }
+      if (Object.keys(cards).length > 1000) return send(res, 400, { error: 'too many' });
+      user.drill = cards;
+      await store.saveUser(user);
+    }
+    return send(res, 200, { cards: user.drill || {} });
+  }
   // An AI analysis or summary read aloud in Persian: { text } (the text exactly as the server wrote it) → { id }.
   if (req.method === 'POST' && route === 'ttsai') {
     const b = await readBody(req);

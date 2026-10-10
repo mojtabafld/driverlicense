@@ -6,64 +6,23 @@
 // against the real test's limit (and «تکرار آزمون»), and the summary with the sources. The bar at the bottom: back /
 // the step / next; next waits until a question is checked, and ✓ on the last step finishes the lesson (kept with the
 // account) and goes back to the course.
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { API_URL } from '@/lib/config';
 import { EXAM, lessonById, type CourseStep } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
-import { useApp } from '@/lib/store';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { OptionBox } from '@/ui/option-box';
+import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
 import { Button, Card, Enter, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { DA_FONT, useColors } from '@/ui/theme';
 
-const PIC_BG = '#f2f3f5';
 // Each exam question's ticks (by step index; unticked until touched) and whether it has been checked.
 type Answers = Record<number, boolean[]>;
-
-function Art({ k }: { k: string }) {
-  const c = useColors(), { courseArt } = useApp();
-  const v = courseArt[k];
-  return (
-    <View style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 16, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
-      {v ? <Image source={{ uri: `${API_URL}/course-art/${k}.png?v=${v}` }} style={{ width: '100%', height: '100%' }} contentFit="contain" transition={200} />
-        : <View style={{ alignItems: 'center', gap: 6, padding: 16 }}><Icon name="exam" size={34} color={c.faint} /><T style={{ color: c.faint, fontSize: 12.5, textAlign: 'center' }}>تصویر این موقعیت هنوز ساخته نشده است</T></View>}
-    </View>
-  );
-}
-
-function RuleBox({ text, law }: { text: string; law?: string }) {
-  const c = useColors();
-  return (
-    <View style={{ gap: 8, padding: 14, borderRadius: 14, backgroundColor: c.accentSoft, borderWidth: 1, borderColor: c.link }}>
-      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-        <Icon name="bulbCircle" size={20} color={c.link} />
-        <T style={{ flex: 1, fontWeight: '700', fontSize: 15, lineHeight: 25, color: c.text }}>{text}</T>
-      </View>
-      {law ? <T style={{ fontSize: 12, color: c.muted }}>منبع: {law}</T> : null}
-    </View>
-  );
-}
-
-// «حواستان باشد»: how the exam's statements try to catch you on this rule.
-function TrapBox({ text }: { text: string }) {
-  const c = useColors();
-  return (
-    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', padding: 14, borderRadius: 14, backgroundColor: c.warnSoft }}>
-      <Icon name="warning" size={19} color={c.warn} />
-      <View style={{ flex: 1, gap: 2 }}>
-        <T style={{ fontWeight: '700', fontSize: 13.5, color: c.warn }}>حواستان باشد</T>
-        <T style={{ fontSize: 14, lineHeight: 24 }}>{text}</T>
-      </View>
-    </View>
-  );
-}
 
 // One question of the lesson's test, as in the exam: the picture, the question in Danish (and Persian), and its
 // statements as boxes to tick (ticked «Ja», unticked «Nej»); «بررسی پاسخ» checks it, and each statement then shows
