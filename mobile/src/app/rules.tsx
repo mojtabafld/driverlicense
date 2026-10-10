@@ -4,7 +4,7 @@
 //   exam over all the rules' topics;
 // - «عددهای مهم آزمون» (Numbers): the numbers the test asks most, at a glance; a tap opens the part that explains one;
 // - «قانون‌ها»: each part a card with its drawing, title and size; one opens at a time, with its signs, its points
-//   numbered (numbers in bold), «حواستان باشد», a practice exam of exactly its questions and the way on to the next part.
+//   numbered (numbers in bold), «حواستان باشد» and the way on to the next part.
 // ?open=<index> opens that part.
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -112,8 +112,7 @@ function Numbers({ onOpen }: { onOpen: (i: number) => void }) {
 }
 
 // One rule: its card closed (drawing, title, size, read or not), or open with everything in it.
-function RulePart({ p, on, read, n, onToggle, onPractise, onNext }: { p: GuidePart; on: boolean; read: boolean; n: number; onToggle: () => void;
-  onPractise: () => void; onNext: (() => void) | null }) {
+function RulePart({ p, on, read, onToggle, onNext }: { p: GuidePart; on: boolean; read: boolean; onToggle: () => void; onNext: (() => void) | null }) {
   const c = useColors();
   return (
     <Card style={{ gap: 14, paddingVertical: 12, borderColor: on ? c.text : undefined }}>
@@ -124,7 +123,7 @@ function RulePart({ p, on, read, n, onToggle, onPractise, onNext }: { p: GuidePa
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>{p.title}</T>
           <T style={{ fontSize: 12, color: read ? c.ok : c.muted, fontWeight: read ? '700' : '400' }}>
-            {read ? 'خوانده‌شده، ' : ''}{faNum(p.points.length)} نکته{n ? `، ${faNum(n)} سؤال تمرینی` : ''}
+            {read ? 'خوانده‌شده، ' : ''}{faNum(p.points.length)} نکته
           </T>
         </View>
         {read && !on ? (
@@ -164,13 +163,6 @@ function RulePart({ p, on, read, n, onToggle, onPractise, onNext }: { p: GuidePa
           </View>
           {p.tip ? <TrapBox text={p.tip} /> : null}
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {n ? (
-              <Pressable onPress={onPractise} accessibilityRole="button"
-                style={({ pressed }) => ({ flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 46, borderRadius: 23, backgroundColor: c.btn, opacity: pressed ? 0.85 : 1 })}>
-                <Icon name="play" size={15} color={c.btnFg} weight="bold" />
-                <T style={{ color: c.btnFg, fontWeight: '700', fontSize: 14 }}>تمرین این بخش ({faNum(Math.min(n, FULL))} سؤال)</T>
-              </Pressable>
-            ) : null}
             {onNext ? (
               <Pressable onPress={onNext} accessibilityRole="button" accessibilityLabel="بخش بعدی"
                 style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, height: 46, borderRadius: 23, backgroundColor: c.surface2, opacity: pressed ? 0.85 : 1 })}>
@@ -192,7 +184,7 @@ export default function Rules() {
   const first = p.open !== undefined && Number.isInteger(+p.open) ? Math.min(Math.max(0, +p.open), RULES.length - 1) : null;
   const [open, setOpen] = useState<number | null>(first);
   const [read, setRead] = useState<string[]>([]);
-  // A part counts as read once the user is done with it: closing it, going on to another part or practising it (not
+  // A part counts as read once the user is done with it: closing it or going on to another part (not
   // just opening it, so a tap on a number does not tick a part nobody has read).
   const markRead = useCallback((i: number) => {
     const t = RULES[i].title;
@@ -222,12 +214,11 @@ export default function Rules() {
   }, [open]);
 
   if (!bank) return null;
-  const idsOf = (x: GuidePart) => bank.questions.filter(q => x.topics?.includes(q.c)).map(q => q.id);
   const topics = new Set(RULES.flatMap(x => x.topics ?? []));
   const allIds = bank.questions.filter(q => topics.has(q.c)).map(q => q.id);
   const nextUnread = RULES.findIndex(x => !read.includes(x.title));
   return (
-    <SubPage title="قوانین" subtitle="به زبان ساده، با تمرین هر بخش" hero={{ pic: 0, icon: 'rules', art: RulesArt }} scrollRef={scroll} onBodyY={y => { at.current.body = y; }}>
+    <SubPage title="قوانین" subtitle="به زبان ساده" hero={{ pic: 0, icon: 'rules', art: RulesArt }} scrollRef={scroll} onBodyY={y => { at.current.body = y; }}>
       <Enter><Overview read={RULES.filter(x => read.includes(x.title)).length} all={allIds} next={nextUnread >= 0 ? nextUnread : null}
         onNext={() => nextUnread >= 0 && show(nextUnread)} /></Enter>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
@@ -241,12 +232,10 @@ export default function Rules() {
       </View>
       <View style={{ gap: 10 }} onLayout={e => { at.current.list = e.nativeEvent.layout.y; }}>
         {RULES.map((x, i) => {
-          const n = idsOf(x).length;
           return (
             <View key={x.title} onLayout={e => { at.current.cards[i] = e.nativeEvent.layout.y; }}>
-              <RulePart p={x} on={open === i} read={read.includes(x.title)} n={n}
+              <RulePart p={x} on={open === i} read={read.includes(x.title)}
                 onToggle={() => show(open === i ? null : i)}
-                onPractise={() => { markRead(i); startPractice(shuffle(idsOf(x)).slice(0, FULL), x.title); }}
                 onNext={i < RULES.length - 1 ? () => show(i + 1) : null} />
             </View>
           );
