@@ -28,16 +28,16 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
     </View>
   );
   if (!PROVE_PICS) return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: 10 }}>
       {cats.map(g => (
         <Card key={g.id} onPress={() => open(g)} style={{ padding: 0, overflow: 'hidden' }}>
-          <View accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`} style={{ flexDirection: 'row', alignItems: 'stretch', minHeight: 112 }}>
-            <View style={{ width: 150 }}><GuideImage k={g.thumb} aspect={4 / 3} flat fill size="m" /></View>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14 }}>
-              <View style={{ flex: 1, gap: 3 }}>
-                <T style={{ fontSize: 15.5, lineHeight: 23, fontWeight: '700' }} numberOfLines={2}>{g.title}</T>
-                <T style={{ fontSize: 12, lineHeight: 19, color: c.muted }} numberOfLines={2}>{g.blurb}</T>
-                <T style={{ fontSize: 11.5, lineHeight: 17, fontWeight: '600' }}>{faNum(g.items.length)} مورد</T>
+          <View accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`} style={{ flexDirection: 'row', alignItems: 'stretch', minHeight: 84 }}>
+            <View style={{ width: 112 }}><GuideImage k={g.thumb} aspect={4 / 3} flat fill size="m" /></View>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12 }}>
+              <View style={{ flex: 1, gap: 1 }}>
+                <T style={{ fontSize: 14.5, lineHeight: 21, fontWeight: '700' }} numberOfLines={1}>{g.title}</T>
+                <T style={{ fontSize: 12, lineHeight: 18, color: c.muted }} numberOfLines={1}>{g.blurb}</T>
+                <T style={{ fontSize: 11, lineHeight: 16, fontWeight: '600' }}>{faNum(g.items.length)} مورد</T>
               </View>
               <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
             </View>

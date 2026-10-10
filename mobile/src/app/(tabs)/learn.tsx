@@ -23,17 +23,17 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   const v = learnArt[n];
   return (
     <Card onPress={() => router.push(href)} style={{ padding: 0, overflow: 'hidden' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'stretch', minHeight: 108 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'stretch', minHeight: 84 }}>
         {/* The picture, whole, filling the card's right side up to its edges in the picture's own background colour
             (no frame of its own); the icon on a soft background until the picture is made. */}
-        <View style={{ width: 118, overflow: 'hidden', backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 100, overflow: 'hidden', backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
           {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, transform: [{ scale: 1.2 }] }} contentFit="contain" transition={250} />
             : <Icon name={icon} size={36} color={c.link} weight="semibold" />}
         </View>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14 }}>
-          <View style={{ flex: 1, gap: 3 }}>
-            <T style={{ fontWeight: '700', fontSize: 16, lineHeight: 24 }} numberOfLines={1}>{title}</T>
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }} numberOfLines={3}>{text}</T>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12 }}>
+          <View style={{ flex: 1, gap: 1 }}>
+            <T style={{ fontWeight: '700', fontSize: 15, lineHeight: 22 }} numberOfLines={1}>{title}</T>
+            <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={2}>{text}</T>
             {note ? <T style={{ color: c.text, fontSize: 11.5, lineHeight: 17, fontWeight: '600' }} numberOfLines={1}>{note}</T> : null}
           </View>
           <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
@@ -95,7 +95,7 @@ export default function Learn() {
           </View>
         </View>
       ) : (
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 10 }}>
           <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
             text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
             note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
