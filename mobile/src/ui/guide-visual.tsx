@@ -11,14 +11,14 @@ import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { Card, L, T, tap } from './kit';
+import { LIST_PIC, ListCard } from './list-card';
 import { useColors } from './theme';
 import { ZoomableImage } from './zoom';
 
 export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same in both themes
 
 // The groups as cards: the group's thumbnail, its title, a line about it and how many items it has. On the main site
-// they are wide cards one under the other like «آموزش»'s (the picture whole at the card's right, up to its edges, the
-// text to its left); at /app two to a row with the picture on top. A card opens the group page by page (/guide-view).
+// they are rows one under the other like «آموزش»'s (ui/list-card.tsx); at /app two to a row with the picture on top. A card opens the group page by page (/guide-view).
 export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[] }) {
   const c = useColors();
   const open = (g: { id: string }) => { tap(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
@@ -30,19 +30,8 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
   if (!PROVE_PICS) return (
     <View style={{ gap: 10 }}>
       {cats.map(g => (
-        <Card key={g.id} onPress={() => open(g)} style={{ padding: 0, overflow: 'hidden' }}>
-          <View accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`} style={{ flexDirection: 'row', alignItems: 'stretch', minHeight: 84 }}>
-            <View style={{ width: 112 }}><GuideImage k={g.thumb} aspect={4 / 3} flat fill size="m" /></View>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12 }}>
-              <View style={{ flex: 1, gap: 1 }}>
-                <T style={{ fontSize: 14.5, lineHeight: 21, fontWeight: '700' }} numberOfLines={1}>{g.title}</T>
-                <T style={{ fontSize: 12, lineHeight: 18, color: c.muted }} numberOfLines={1}>{g.blurb}</T>
-                <T style={{ fontSize: 11, lineHeight: 16, fontWeight: '600' }}>{faNum(g.items.length)} مورد</T>
-              </View>
-              <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
-            </View>
-          </View>
-        </Card>
+        <ListCard key={g.id} onPress={() => open(g)} title={g.title} sub={g.blurb} subLines={2} note={`${faNum(g.items.length)} مورد`}
+          label={`${g.title}، ${faNum(g.items.length)} مورد`} pic={<GuideImage k={g.thumb} aspect={LIST_PIC.width / LIST_PIC.height} radius={0} size="m" />} />
       ))}
     </View>
   );
