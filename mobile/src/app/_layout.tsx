@@ -9,12 +9,12 @@ import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadLangAsked, loadOnboarded, saveLangAsked, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
 import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
-import { Backdrop, setWebTop } from '@/ui/kit';
+import { Backdrop, PageSkeleton, setWebTop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
 import { INTRO_BG, Onboarding } from '@/ui/onboarding';
 import { useTapTopToScroll } from '@/ui/tap-top';
-import { useColors, useIsDark } from '@/ui/theme';
+import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -66,7 +66,8 @@ function Root() {
     setWebTop(c.bgGradient[0], cover);   // (a page's picture header, in view, puts its own green there: ui/kit.tsx)
   }, [dark, c.bgGradient, cover]);
   if (blocked) return <Offline onRetry={check} />;
-  if (!ready || !fonts || onboarded === null || (user && !bank)) return <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
+  // arc: Arc's skeleton of a page while it loads; /app keeps the spinner.
+  if (!ready || !fonts || onboarded === null || (user && !bank)) return ARC ? <PageSkeleton /> : <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
       {Platform.OS === 'web' ? <OfflinePreload /> : null}

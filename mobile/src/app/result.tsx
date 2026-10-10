@@ -14,7 +14,7 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, Enter, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, EmptyState, Enter, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { Pager } from '@/ui/swipe';
@@ -152,7 +152,10 @@ export default function Result() {
             </Enter>
           ) : null}
           {anyOld ? <OldNote /> : null}
-          {!total ? <Empty text="موردی نیست." />
+          {!total ? (ARC
+            ? <EmptyState icon={filter === 'wrong' ? 'checkCircle' : 'bookmark'} title={filter === 'wrong' ? 'در این آزمون اشتباهی نداشتید' : 'سؤالی ذخیره نشده است'}
+                action={{ label: `نمایش همه‌ی سؤال‌ها`, icon: 'list', onPress: () => setFilter('all') }} />
+            : <Empty text="موردی نیست." />)
             : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
         </ScrollView>
         </Pager>

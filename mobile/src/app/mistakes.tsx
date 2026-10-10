@@ -22,7 +22,7 @@ import { GlassTop } from '@/ui/liquid';
 import { SideSwipe } from '@/ui/swipe';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
-import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
+import { ActionButton, Backdrop, Button, Card, EmptyState, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { ARC, DA_FONT, radius, useColors } from '@/ui/theme';
@@ -107,7 +107,10 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* arc: the button sits in the «وضعیت مباحث» card, under the count it acts on (Arc: an action beside its data) */}
         {!view && open && !ARC ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
-        {!sorted.length ? <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>هنوز اشتباهی ثبت نشده است.</T></Card> : (
+        {!sorted.length ? (ARC
+          ? <EmptyState icon="checkCircle" title="هنوز اشتباهی ثبت نشده است" text="بعد از هر آزمون، سؤال‌هایی که اشتباه جواب بدهید اینجا جمع می‌شوند تا دوباره تمرینشان کنید."
+              action={{ label: 'شروع آزمون', icon: 'play', onPress: () => router.push('/exam') }} />
+          : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>هنوز اشتباهی ثبت نشده است.</T></Card>) : (
           <>
             {/* «وضعیت مباحث»: the three panels, each opening its own page */}
             {view ? null : <Card style={{ gap: 12 }}>
@@ -199,7 +202,10 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                     badge={{ text: `${faNum(st.wrong)} اشتباه در ${faNum(st.seen)} آزمون`, fg: st.lastOk ? c.ok : c.warn, bg: st.lastOk ? c.okSoft : c.warnSoft }} />
                 </View>
               );
-            })() : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{view === 'open' ? 'هیچ سؤالی در حالت «اصلاح‌نشده» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
+            })() : ARC
+              ? <EmptyState icon={view === 'open' ? 'checkCircle' : 'list'} title={view === 'open' ? 'همه‌ی اشتباهات اصلاح شده‌اند' : 'موردی نیست'}
+                  text={view === 'open' ? 'آخرین بار به همه‌ی این سؤال‌ها درست جواب داده‌اید.' : undefined} />
+              : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{view === 'open' ? 'هیچ سؤالی در حالت «اصلاح‌نشده» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
           </>
         )}
       </ScrollView>
