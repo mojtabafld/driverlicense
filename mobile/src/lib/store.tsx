@@ -30,6 +30,8 @@ type Ctx = {
   logout: () => Promise<void>;
   // Change the shown name and / or the password (with the current one); the username stays.
   updateAccount: (b: { name?: string; current?: string; password?: string }) => Promise<void>;
+  // Delete the account and all its data on the server (with the password), then sign out on the device.
+  deleteAccount: (password: string) => Promise<void>;
   // Delete every past exam and lesson of the user.
   clearAttempts: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -106,6 +108,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setApiToken(null); setToken(null); setMe(null);
       await saveToken(null);
       if (old) api('POST', 'logout', undefined, old).catch(() => {});
+    },
+    // The server removes the account and its sessions, so the device only forgets its token.
+    deleteAccount: async password => {
+      await api('DELETE', 'account', { password });
+      gen.current++;
+      setApiToken(null); setToken(null); setMe(null);
+      await saveToken(null);
     },
     clearAttempts: async () => { await api('DELETE', 'attempts'); setMe(m => (m ? { ...m, attempts: [] } : m)); },
     setAvatar: async b => { const d = await api<{ user: User }>('POST', 'avatar', b); setMe(m => (m ? { ...m, user: d.user } : m)); },
