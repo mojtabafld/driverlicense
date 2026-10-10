@@ -22,6 +22,9 @@ export type DrillItem = { id: string; chapter: CourseChapter; lesson: CourseLess
 
 // The rule each lesson's own test question asks about, by the order of the `exam` steps (index among teach steps).
 const LESSON_RULES: Record<string, number[]> = {
+  'car-check': [2, 1, 0],
+  belts: [2, 1, 0],
+  alcohol: [0, 1, 2],
   'right-rule': [1, 3, 2],
   turns: [0, 1, 2],
   overtaking: [1, 1, 1],
