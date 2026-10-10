@@ -16,7 +16,7 @@ import { SpeakButton } from '@/ui/speak';
 import { ZoomableImage } from '@/ui/zoom';
 import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
-import { ListButton, QuestionSheet } from '@/ui/question-list';
+import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
 import { OptionBox } from '@/ui/option-box';
 import { Pager } from '@/ui/swipe';
@@ -56,7 +56,7 @@ export default function Run() {
   const [showFa, setShowFa] = useState(false);
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
   const [flags, setFlags] = useState<number[]>([]);
-  const [dialog, setDialog] = useState<'quit' | 'handin' | 'list' | null>(null);
+  const [dialog, setDialog] = useState<'quit' | 'handin' | null>(null);
   const [started] = useState(() => Date.now());
   const done = useRef(false);
   const lang = settings.lang === 'en' ? 'en' : 'da';
@@ -124,7 +124,8 @@ export default function Run() {
           </View>
           <Pressable onPress={quit} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از آزمون"
             style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
-            <Icon name="exit" size={20} color={c.text} />
+            {/* ✕, as on every page with a bar of previous / next (the lessons, the practice, the review). */}
+            <Icon name="xmark" size={20} color={c.text} />
           </Pressable>
           {/* Kept clear of the counter in the middle; a long name (e.g. a topic's) glides to show all of it. */}
           <View style={{ width: settings.timer ? '24%' : '62%', height: 24 }}>
@@ -178,21 +179,21 @@ export default function Run() {
       </Pager>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar
-        start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
-        middle={<ListButton n={i + 1} of={qs.length} onPress={() => setDialog('list')} />}
-        end={last ? <FootBtn label={ui.handin} icon="check" submit round onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => setI(i + 1)} />} />
-      <QuestionSheet open={dialog === 'list'} current={i} onClose={() => setDialog(null)} onPick={goTo}
-        items={qs.map((_, k) => ({ n: k + 1, tone: ticks[k].some(Boolean) ? 'answered' : 'empty', marked: flags.includes(k) }))} />
+        start={<FootBtn label={ui.prev} icon="arrowLeft" disabled={i === 0} onPress={() => setI(i - 1)} />}
+        // The list opens the exam's summary: every question (a tap goes to it) and the slide to hand in, so the exam can be
+        // handed in from any question, not only the last.
+        middle={<ListButton n={i + 1} of={qs.length} onPress={handIn} />}
+        end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
       <Sheet open={dialog === 'handin'} onClose={() => setDialog(null)} maxHeight="88%">
-        {/* The title, with a back button at the top right that returns to the exam. */}
+        {/* The title, with a ✕ at the top right that returns to the exam. */}
         <View style={{ minHeight: 40, justifyContent: 'center' }}>
           <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
           <Pressable onPress={() => { tap(); setDialog(null); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت به آزمون"
             style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
               backgroundColor: c.nav, opacity: pressed ? 0.8 : 1 })}>
-            <Icon name="arrowRight" size={19} color={c.navFg} weight="semibold" />
+            <Icon name="xmark" size={19} color={c.navFg} weight="semibold" />
           </Pressable>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>

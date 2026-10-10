@@ -10,13 +10,13 @@
 // step finishes the lesson (kept with the account) and shows the finish: straight on to the next lesson, the lesson's
 // questions in «تمرین هوشمند», or back to the road map.
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { COURSE, EXAM, lessonById, type CourseStep } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { OptionBox } from '@/ui/option-box';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
@@ -154,12 +154,12 @@ function Step({ step, n, of, ticks, checked, onToggle, result, onRetry }: { step
         <Card style={{ gap: 12, alignItems: 'center', paddingVertical: 22 }}>
           <Icon name={pass ? 'checkCircle' : 'xCircle'} size={44} color={pass ? c.ok : c.bad} />
           <T style={{ fontSize: 21, fontWeight: '800', color: pass ? c.ok : c.bad }}>{pass ? 'قبول' : 'هنوز نه'}</T>
-          <T style={{ fontSize: 15, textAlign: 'center' }}>{faNum(result.mistakes)} اشتباه از {faNum(result.statements)} گزینه · حد قبولی: حداکثر {faNum(step.max)} اشتباه</T>
+          <T style={{ fontSize: 15, textAlign: 'center' }}>{faNum(result.mistakes)} اشتباه از {faNum(result.statements)} گزینه، حد قبولی: حداکثر {faNum(step.max)} اشتباه</T>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
             {result.perQ.map((m, k) => (
               <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 99, backgroundColor: m ? c.badSoft : c.okSoft }}>
                 <Icon name={m ? 'xCircle' : 'checkCircle'} size={14} color={m ? c.bad : c.ok} />
-                <T style={{ fontSize: 12.5, fontWeight: '700', color: m ? c.bad : c.ok }}>سؤال {faNum(k + 1)}{m ? ` · ${faNum(m)} اشتباه` : ''}</T>
+                <T style={{ fontSize: 12.5, fontWeight: '700', color: m ? c.bad : c.ok }}>سؤال {faNum(k + 1)}{m ? `: ${faNum(m)} اشتباه` : ''}</T>
               </View>
             ))}
           </View>
@@ -227,6 +227,8 @@ function Lesson({ id }: { id: string }) {
   const [answers, setAnswers] = useState<Answers>({});
   const [checked, setChecked] = useState<Record<number, boolean>>({});
   const [complete, setComplete] = useState(false);
+  // Checking a question scrolls down to the answers' verdicts, so none stays hidden under the bar.
+  const scroll = useRef<ScrollView>(null);
   useEffect(() => { if (!found) router.back(); }, [found]);
   if (!found) return null;
   const { lesson, chapter } = found, steps = lesson.steps, step = steps[i], last = i === steps.length - 1;
@@ -235,7 +237,7 @@ function Lesson({ id }: { id: string }) {
   const ans = step.kind === 'exam' ? ansOf(i, step) : [];
   const toCheck = step.kind === 'exam' && !checked[i];
   const toggle = (k: number) => setAnswers({ ...answers, [i]: ans.map((a, j) => (j === k ? !a : a)) });
-  const check = () => setChecked({ ...checked, [i]: true });
+  const check = () => { setChecked({ ...checked, [i]: true }); setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 80); };
   // The test's result: every statement answered wrongly is one mistake, as in the real test.
   const perQ = examSteps.map(({ s, k }) => { const a = ansOf(k, s); return s.statements.filter((st, j) => a[j] !== st.ok).length; });
   const result: Result = { mistakes: perQ.reduce((a, b) => a + b, 0), statements: examSteps.reduce((n, { s }) => n + s.statements.length, 0), perQ };
@@ -248,7 +250,8 @@ function Lesson({ id }: { id: string }) {
   const phase = PHASE[step.kind];
   return (
     <View style={{ flex: 1 }}>
-      <SubPage title={lesson.title} gap={12} scrollKey={complete ? -1 : i}>
+      <SubPage title={lesson.title} gap={12} scrollKey={complete ? -1 : i} scrollRef={scroll} close={!complete}
+        guard={!complete && Object.keys(checked).length ? { title: 'خروج از درس؟', text: 'جواب‌های آزمون این درس ذخیره نمی‌شوند.' } : null}>
         {complete ? (
           <Enter><Finished title={lesson.title} result={result} next={next} onDrill={() => router.replace({ pathname: '/drill', params: { lesson: lesson.id } })} /></Enter>
         ) : (
@@ -258,7 +261,7 @@ function Lesson({ id }: { id: string }) {
                 <View style={{ backgroundColor: step.kind === 'exam' || step.kind === 'result' ? c.strong : c.accentSoft, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 2 }}>
                   <T style={{ fontSize: 12, fontWeight: '700', color: step.kind === 'exam' || step.kind === 'result' ? c.strongFg : c.link }}>{phase}</T>
                 </View>
-                <T style={{ flex: 1, color: c.muted, fontSize: 12.5 }} numberOfLines={1}>فصل {faNum(chapter.n)} · {chapter.title}</T>
+                <T style={{ flex: 1, color: c.muted, fontSize: 12.5 }} numberOfLines={1}>فصل {faNum(chapter.n)}: {chapter.title}</T>
               </View>
               <View style={{ flexDirection: 'row', gap: 4 }}>
                 {steps.map((s, k) => <View key={k} style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: k <= i ? (s.kind === 'exam' || s.kind === 'result' ? c.strong : c.link) : c.surface2 }} />)}
@@ -271,11 +274,11 @@ function Lesson({ id }: { id: string }) {
       </SubPage>
       {complete ? null : (
         <GlassBar
-          start={<FootBtn label="قبلی" icon="arrowLeft" round disabled={!i} onPress={() => setI(i - 1)} />}
-          middle={<T style={{ fontWeight: '700', fontSize: 15 }}>{faNum(i + 1)} / {faNum(steps.length)}</T>}
-          end={toCheck ? <FootBtn label="بررسی" icon="check" onPress={check} />
+          start={<FootBtn label="قبلی" icon="arrowLeft" disabled={!i} onPress={() => setI(i - 1)} />}
+          middle={<BarCount n={i + 1} of={steps.length} label="قدم" />}
+          end={toCheck ? <FootBtn label="بررسی" icon="check" submit onPress={check} />
             : last ? <FootBtn label="پایان درس" icon="check" submit onPress={end} />
-              : <FootBtn label="بعدی" icon="arrowRight" round onPress={() => setI(i + 1)} />} />
+              : <FootBtn label="بعدی" icon="arrowRight" onPress={() => setI(i + 1)} />} />
       )}
     </View>
   );

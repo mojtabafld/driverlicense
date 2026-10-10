@@ -1,10 +1,11 @@
-// The list of the questions, from the glass bar of the exam and of the review: a round list button beside the
-// position opens a sheet with every question's number; a tap goes to that question. In the exam a number is filled once
+// The list of the questions, from the glass bar of the exam and of the review: the list button (with the
+// position) opens a sheet with every question's number; a tap goes to that question. In the exam a number is filled once
 // answered and carries a bookmark when marked; in the review it is green when right and red when wrong. The current one
 // has a ring in the text colour around it, apart from the tile.
 import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import { faNum } from '@/lib/logic';
+import { BarItem } from './glass-bar';
 import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
 import { Sheet, SheetScroll } from './sheet';
@@ -12,19 +13,19 @@ import { useColors } from './theme';
 
 export type QItem = { n: number; tone: 'answered' | 'empty' | 'ok' | 'bad'; marked?: boolean };
 
-// One capsule: an icon (the list, or the mistakes page's filter) and the position («۷ / ۲۵») together, so the number is
-// part of the button. `dot`: a small accent dot on the icon (a filter in use).
+// The bar's middle item, like a tab of the home page's bar: the icon (the list, or the mistakes page's filter) over the
+// position («۷ / ۲۵»), so the number is part of the button. `dot`: a small accent dot on the icon (a filter in use).
 export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست سؤال‌ها', dot }: { n: number; of: number; onPress: () => void; icon?: IconName; label?: string; dot?: boolean }) {
   const c = useColors();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${label}، سؤال ${faNum(n)} از ${faNum(of)}`}
-      style={({ pressed }) => ({ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, height: 44, paddingLeft: 14, paddingRight: 18, borderRadius: 22,
-        opacity: pressed ? 0.75 : 1, transform: [{ scale: pressed ? 0.97 : 1 }], backgroundColor: c.nav } as any)}>
-      <View>
-        <Icon name={icon} size={19} color={c.navFg} />
-        {dot ? <View style={{ position: 'absolute', top: -3, right: -4, width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent, borderWidth: 1.5, borderColor: c.nav }} /> : null}
-      </View>
-      <T style={{ fontSize: 18, lineHeight: 26, color: c.navFg, fontWeight: '600', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>
+      style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.75 : 1 })}>
+      <BarItem label={`${faNum(n)} / ${faNum(of)}`} ltr>
+        <View>
+          <Icon name={icon} size={24} color="#ffffff" />
+          {dot ? <View style={{ position: 'absolute', top: -3, right: -4, width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent }} /> : null}
+        </View>
+      </BarItem>
     </Pressable>
   );
 }

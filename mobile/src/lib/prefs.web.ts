@@ -29,13 +29,6 @@ export const saveOnboarded = async () => { try { localStorage.setItem(ONBOARDED,
 export const loadLangAsked = async () => true;
 export const saveLangAsked = async () => {};
 
-// The first-visit tooltips of each tab (src/ui/tour.tsx), seen or closed: per page and account in this browser.
-// TOUR_SET: a new value shows the tooltips to everyone once more.
-const TOUR_SET = 'v2';
-const tourKey = (page: string, user: string) => `tp.tour.${TOUR_SET}.${page}.${user}`;
-export const loadTourSeen = async (page: string, user: string) => { try { return localStorage.getItem(tourKey(page, user)) === '1'; } catch { return false; } };
-export const saveTourSeen = async (page: string, user: string) => { try { localStorage.setItem(tourKey(page, user), '1'); } catch {} };
-
 // The parts of «قوانین» opened at least once (their titles), kept in this browser, so the page can show what is left.
 const RULES_READ = 'tp.rules.read';
 export const loadRulesRead = async (): Promise<string[]> => {

@@ -14,13 +14,13 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, Enter, L, T, physical, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, Enter, T, physical, tap, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { Pager } from '@/ui/swipe';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { NUM_FONT, useColors, useIsDark } from '@/ui/theme';
+import { useColors, useIsDark } from '@/ui/theme';
 
 type Filter = 'wrong' | 'saved' | 'all';
 type Row = { it: Item; i: number };
@@ -103,13 +103,13 @@ export default function Result() {
   if (!a) return null;
 
   const lang = settings.lang === 'en' ? 'en' : 'da', ui = uiText(lang);
-  const full = isFull(a), pass = full && right >= passMin(n), pct = right / Math.max(n, 1), pctN = Math.round(pct * 100);
+  const full = isFull(a), pass = right >= passMin(n), pct = right / Math.max(n, 1), pctN = Math.round(pct * 100);
   const isLesson = a.mode === 'lesson';
   const fa = false; // the review opens without the Persian translation; «ترجمه» on each question shows it
   const rows: Row[] = a.items.map((it, i) => ({ it, i })).filter(r => Q.has(r.it.id));
   const list = rows.filter(r => filter === 'all' || (filter === 'saved' ? r.it.m : !r.it.ok));
   const savedN = a.items.filter(it => it.m).length;
-  const tone = full ? (pass ? 'ok' : 'bad') : 'neutral';
+  const tone = pass ? 'ok' : 'bad';
   const toneFg = tone === 'ok' ? c.ok : tone === 'bad' ? c.bad : c.text, toneBg = tone === 'ok' ? c.okSoft : tone === 'bad' ? c.badSoft : c.surface2;
   const anyOld = a.items.some(it => !it.a);
   const toTop = () => scroll.current?.scrollTo({ y: 0, animated: true });
@@ -124,10 +124,10 @@ export default function Result() {
     const finish = () => { tap(); motion.leave(() => (router.canGoBack() ? router.back() : goTo(isLesson ? '/learn' : '/exam'))); };
     const nav = (
       <GlassBar
-        start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!k} onPress={() => step(k - 1)} />}
+        start={<FootBtn label={ui.prev} icon="arrowLeft" disabled={!k} onPress={() => step(k - 1)} />}
         middle={<ListButton n={k + 1} of={total} onPress={() => setListOpen(true)} />}
-        end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" round onPress={finish} />
-          : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => step(k + 1)} />} />
+        end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" submit onPress={finish} />
+          : <FootBtn label={ui.next} icon="arrowRight" onPress={() => step(k + 1)} />} />
     );
     return (
       <Backdrop anim={motion.style}>
@@ -144,7 +144,7 @@ export default function Result() {
               </View>
               <View style={{ flex: 1, gap: 6 }}>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 12, rowGap: 2 }}>
-                  <T style={{ fontSize: 15, fontWeight: '700', color: toneFg }}>{full ? (pass ? '✓ قبول' : '✗ مردود') : `${faNum(pctN)}٪ درست`}</T>
+                  <T style={{ fontSize: 15, fontWeight: '700', color: toneFg }}>{full ? (pass ? '✓ قبول' : '✗ مردود') : `${pass ? '✓ قبول' : '✗ مردود'}، ${faNum(pctN)}٪`}</T>
                   <T style={{ fontSize: 15, color: toneFg }}>{wrongN ? `${faNum(wrongN)} سؤال از ${faNum(n)} سؤال غلط` : `هر ${faNum(n)} سؤال درست`}</T>
                 </View>
                 <T style={{ fontSize: 12.5, color: c.muted }}>{modeName(a, bank)}، {fmtDate(a.at)}</T>
@@ -163,9 +163,10 @@ export default function Result() {
           {/* Three parts: the back button and «جزئیات آزمون» on equal sides, so the tabs sit in the middle of the screen. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ flex: 1, flexBasis: 0, alignItems: 'flex-start' }}>
-            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
+            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بستن" hitSlop={6}
               style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
-              <Icon name="arrowRight" size={20} color={c.text} />
+              {/* ✕, not an arrow: the bar below has the previous / next arrows. */}
+              <Icon name="xmark" size={20} color={c.text} />
             </Pressable>
             </View>
             <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />
@@ -215,16 +216,16 @@ export default function Result() {
           </Pressable>
           <T style={{ fontSize: 19, lineHeight: 30, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
           <View style={{ width: 150, height: 150, alignItems: 'center', justifyContent: 'center' }}>
-            <RingSvg size={150} stroke={12} pct={pct} color={full ? (pass ? c.ok : c.bad) : c.accent} track={c.surface2} />
+            <RingSvg size={150} stroke={12} pct={pct} color={pass ? c.ok : c.bad} track={c.surface2} />
             {full
               ? <><T style={{ fontSize: 38, lineHeight: 46, fontWeight: '700', textAlign: 'center' }}>{faNum(right)}</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>از {faNum(n)}</T></>
               : <><T style={{ fontSize: 32, lineHeight: 42, fontWeight: '700', textAlign: 'center' }}>{faNum(pctN)}٪</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{faNum(right)} از {faNum(n)}</T></>}
           </View>
           <View style={{ alignItems: 'center', gap: 2 }}>
-            <T style={{ fontSize: 22, lineHeight: 34, fontWeight: '800', textAlign: 'center', color: full ? (pass ? c.ok : c.bad) : c.link }}>
-              {full ? (pass ? '🎉 قبول شدید!' : 'مردود — دوباره تلاش کنید') : `${faNum(pctN)}٪ پاسخ درست`}
+            <T style={{ fontSize: 22, lineHeight: 34, fontWeight: '800', textAlign: 'center', color: pass ? c.ok : c.bad }}>
+              {full ? (pass ? '🎉 قبول شدید!' : 'مردود — دوباره تلاش کنید') : `${pass ? 'قبول' : 'مردود'}، ${faNum(pctN)}٪ پاسخ درست`}
             </T>
-            <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)} · {fmtDateTime(a.at)}</T>
+            <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)}، {fmtDateTime(a.at)}</T>
           </View>
           <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
             {([['درست', faNum(right), c.ok], ['اشتباه', faNum(wrongN), wrongN ? c.bad : c.muted], ['علامت‌خورده', faNum(marked), c.warn], ['زمان', fmtTime(a.secs), c.text]] as const).map(([l, v, col]) => (
@@ -240,7 +241,7 @@ export default function Result() {
               <Pressable key={j} onPress={() => review(rows.findIndex(r => r.i === j))} accessibilityLabel={`سؤال ${j + 1}`}
                 style={({ pressed }) => ({ width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
                   backgroundColor: it.ok ? c.okSoft : c.badSoft, borderWidth: 1.5, borderColor: it.m ? c.warn : it.ok ? c.okSoft : c.badSoft })}>
-                <L style={{ fontSize: 15, lineHeight: 20, fontWeight: '600', color: it.ok ? c.ok : c.bad, fontFamily: NUM_FONT }}>{j + 1}</L>
+                <T style={{ fontSize: 15, lineHeight: 20, fontWeight: '600', color: it.ok ? c.ok : c.bad, textAlign: 'center' }}>{faNum(j + 1)}</T>
                 {it.m ? (
                   <View style={{ position: 'absolute', top: -5, right: -5, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
                     <Icon name="bookmark" size={10} filled color="#fff" />

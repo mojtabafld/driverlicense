@@ -169,7 +169,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
                 <T style={{ flex: 1, fontSize: 13 }} numberOfLines={1}>
                   <T style={{ fontSize: 13, fontWeight: '700' }}>آزمون {faNum(sel! + 1 + offset)}</T>
-                  {' · '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`} · {fmtDate(a.at)}
+                  {'، '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`}، {fmtDate(a.at)}
                 </T>
                 <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>مرور</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
               </View>
@@ -180,9 +180,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
         <Pressable onPress={() => onOpen(a)} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
             <View style={{ flex: 1 }}>
-              <T style={{ fontWeight: '700' }}>آزمون {faNum(sel! + 1 + offset)} · {modeName(a)}</T>
+              <T style={{ fontWeight: '700' }}>آزمون {faNum(sel! + 1 + offset)}: {modeName(a)}</T>
               <T style={{ color: c.muted, fontSize: 13 }}>
-                {fmtDate(a.at)} · {isFull(a) ? <>{`نمره ${faNum(scoreOf(a))}/${faNum(a.items.length)} · `}{verdict(a)}</> : `${faNum(a.items.length)} سؤالی · ${faNum(Math.round(pctOf(a) * 100))}٪ درست`}
+                {fmtDate(a.at)}، {isFull(a) ? <>{`نمره ${faNum(scoreOf(a))}/${faNum(a.items.length)}، `}{verdict(a)}</> : `${faNum(a.items.length)} سؤالی، ${faNum(Math.round(pctOf(a) * 100))}٪ درست`}
               </T>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><T style={{ color: c.text, fontWeight: '700' }}>مرور</T><Icon name="chevronLeft" size={15} color={c.text} weight="semibold" /></View>

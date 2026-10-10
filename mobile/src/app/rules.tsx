@@ -5,7 +5,7 @@
 // - «عددهای مهم آزمون» (Numbers): the numbers the test asks most, at a glance; a tap opens the part that explains one;
 // - «قانون‌ها»: each part a card with its drawing, title and size; one opens at a time, with its signs, its points
 //   numbered (numbers in bold), «حواستان باشد», a practice exam of exactly its questions and the way on to the next part.
-// ?open=<index> opens that part (from «جستجو با هوش مصنوعی»).
+// ?open=<index> opens that part.
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View, type ScrollView } from 'react-native';
@@ -124,7 +124,7 @@ function RulePart({ p, on, read, n, onToggle, onPractise, onNext }: { p: GuidePa
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>{p.title}</T>
           <T style={{ fontSize: 12, color: read ? c.ok : c.muted, fontWeight: read ? '700' : '400' }}>
-            {read ? 'خوانده‌شده · ' : ''}{faNum(p.points.length)} نکته{n ? `، ${faNum(n)} سؤال تمرینی` : ''}
+            {read ? 'خوانده‌شده، ' : ''}{faNum(p.points.length)} نکته{n ? `، ${faNum(n)} سؤال تمرینی` : ''}
           </T>
         </View>
         {read && !on ? (
@@ -192,21 +192,23 @@ export default function Rules() {
   const first = p.open !== undefined && Number.isInteger(+p.open) ? Math.min(Math.max(0, +p.open), RULES.length - 1) : null;
   const [open, setOpen] = useState<number | null>(first);
   const [read, setRead] = useState<string[]>([]);
-  // Opening a part marks it read (the one opened by ?open= too).
+  // A part counts as read once the user is done with it: closing it, going on to another part or practising it (not
+  // just opening it, so a tap on a number does not tick a part nobody has read).
   const markRead = useCallback((i: number) => {
     const t = RULES[i].title;
     setRead(r => { if (r.includes(t)) return r; const next = [...r, t]; saveRulesRead(next); return next; });
   }, []);
-  useEffect(() => { loadRulesRead().then(r => { setRead(r); if (first !== null) markRead(first); }); }, [first, markRead]);
+  useEffect(() => { loadRulesRead().then(setRead); }, []);
 
   // Scrolling to the part just opened: where the content starts under the header, the list in it, and each card in the list.
   const scroll = useRef<ScrollView>(null);
   const at = useRef({ body: 0, list: 0, cards: [] as number[], go: first as number | null });
   const show = useCallback((i: number | null) => {
-    tap(); setOpen(i);
-    if (i !== null) markRead(i);
+    tap();
+    if (open !== null && open !== i) markRead(open);
+    setOpen(i);
     at.current.go = i;
-  }, [markRead]);
+  }, [markRead, open]);
   useEffect(() => {
     const i = at.current.go;
     if (i === null) return;
@@ -244,7 +246,7 @@ export default function Rules() {
             <View key={x.title} onLayout={e => { at.current.cards[i] = e.nativeEvent.layout.y; }}>
               <RulePart p={x} on={open === i} read={read.includes(x.title)} n={n}
                 onToggle={() => show(open === i ? null : i)}
-                onPractise={() => startPractice(shuffle(idsOf(x)).slice(0, FULL), x.title)}
+                onPractise={() => { markRead(i); startPractice(shuffle(idsOf(x)).slice(0, FULL), x.title); }}
                 onNext={i < RULES.length - 1 ? () => show(i + 1) : null} />
             </View>
           );

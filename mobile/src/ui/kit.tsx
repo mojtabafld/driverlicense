@@ -172,7 +172,7 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
 }
 
 // A scroll view that is back at the top whenever its page comes into view (a tab chosen again, a page returned to).
-// `given`: the page's own ref to the scroll view, when it has one (e.g. for the first-visit tooltips).
+// `given`: the page's own ref to the scroll view, when it has one.
 export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
   const own = useRef<ScrollView | null>(null);
   // From the top when the page is opened (or its tab chosen), where it was when a page over it is closed.
@@ -185,7 +185,7 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 // With `fill` its content gets at least the height between the header and the tab bar (so a part set to flex: 1 takes
 // what is left), and the screen scrolls only when the content needs more than that (a part's own minimum height, e.g.
 // the home page's chart under its picture header on a short screen); `gap` can be set tighter for short screens.
-// `scrollRef` / `onScrollY`: the scroll view and where it is scrolled, e.g. for the first-visit tooltips (tour.tsx).
+// `scrollRef` / `onScrollY`: the scroll view and where it is scrolled.
 // Room for the floating tab bar (src/ui/tabs/app-tabs.tsx: 64 high, above the bottom edge) and a clear gap above it,
 // on every platform.
 const BAR_ROOM = 64 + 30;
@@ -227,7 +227,8 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 // round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
 // `lower`: that place this much further down (signing up). `name`: a line under the title (the user's name on the home
 // page's greeting).
-export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number }) {
+// `back`: an inner page's back button floats over the header's top right, so the title and its line keep clear of it.
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
@@ -271,7 +272,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: H
             {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        {below ? null : <View style={{ gap: 2, maxWidth: '58%' }}>
+        {below ? null : <View style={{ gap: 2, maxWidth: '58%', ...(back ? physical({ paddingRight: 52 }) : null) }}>
           <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
           {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}

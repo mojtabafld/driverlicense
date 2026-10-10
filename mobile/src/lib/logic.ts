@@ -84,4 +84,5 @@ export function passEstimate(attempts: Attempt[]) {
 // Persian digits, as on the site.
 export const faNum = (v: number | string) => String(v).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[+d]);
 export const lessonNumber = (title: string, i: number) => (title.match(/\d+/) || [String(i + 1)])[0];
-export const fmtDate = (t: number) => new Date(t).toLocaleDateString('fa-IR-u-ca-gregory', { month: 'short', day: 'numeric' });
+// In Copenhagen time, as every date and time of the app (lib/names.ts), so a list and the result never disagree.
+export const fmtDate = (t: number) => new Date(t).toLocaleDateString('fa-IR-u-ca-gregory', { timeZone: 'Europe/Copenhagen', month: 'short', day: 'numeric' });

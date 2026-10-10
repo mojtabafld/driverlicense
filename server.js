@@ -19,7 +19,6 @@ const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
 const consoleprompts = require('./consoleprompts');
-const learnsearch = require('./learnsearch');
 const tts = require('./tts');
 const webpic = require('./webpic');
 const Anthropic = require('@anthropic-ai/sdk');
@@ -220,7 +219,7 @@ function addFail(ip) {
   else f.n++;
 }
 // New accounts: at most 5 an hour from one address and 40 an hour in all, so a script cannot make accounts in bulk
-// (each account has its own hourly allowance of AI lessons, searches and recordings).
+// (each account has its own hourly allowance of AI lessons and recordings).
 const REG_PER_IP_HOUR = 5, REG_ALL_HOUR = 40, regs = new Map();
 function registerAllowed(ip) {
   const now = Date.now(), recent = k => { const l = (regs.get(k) || []).filter(t => now - t < 3600e3); regs.set(k, l); return l; };
@@ -247,14 +246,6 @@ setInterval(() => {
 function safeEqual(a, b) {
   const x = Buffer.from(String(a)), y = Buffer.from(String(b));
   return x.length === y.length && crypto.timingSafeEqual(x, y);
-}
-
-// A search the user made, kept with the account (newest first, each once, at most 30) for the search box.
-async function rememberSearch(user, q) {
-  q = String(q || '').trim().slice(0, 200);
-  if (q.length < 2) return;
-  user.searches = [q, ...(user.searches || []).filter(x => x !== q)].slice(0, 30);
-  await store.saveUser(user).catch(() => {});
 }
 
 // ---------- http helpers ----------
@@ -618,30 +609,6 @@ async function api(req, res, route) {
       return res.end(b.data);
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
-  // «جستجو با هوش مصنوعی» on the «آموزش» page (learnsearch.js): { q } → { results } — the closest signs, right-of-way
-  // items, rules and questions, each with why it matches.
-  if (req.method === 'POST' && route === 'learnsearch') {
-    const b = await readBody(req);
-    try {
-      const out = await learnsearch.search(b.q, user.username);
-      await rememberSearch(user, b.q);
-      return send(res, 200, out);
-    }
-    catch (e) {
-      if (e instanceof Anthropic.APIError) { console.error('search API error', e.status, e.message); return send(res, 502, { error: 'جستجوی هوش مصنوعی الان در دسترس نیست.' }); }
-      if (e.status) return send(res, e.status, { error: e.message }); throw e;
-    }
-  }
-  // The user's earlier searches (newest first), for the search box's suggestions: GET → { items };
-  // POST { remove: text } drops one, POST { clear: true } all.
-  if (route === 'searchhistory' && (req.method === 'GET' || req.method === 'POST')) {
-    if (req.method === 'POST') {
-      const b = await readBody(req);
-      user.searches = b.clear ? [] : (user.searches || []).filter(x => x !== String(b.remove || '').trim());
-      await store.saveUser(user);
-    }
-    return send(res, 200, { items: user.searches || [] });
-  }
   // «آموزش گام‌به‌گام»: the lessons of the course this user has finished (lesson id → when). GET → { done };
   // POST { lesson } marks one finished.
   if (route === 'courseprogress' && (req.method === 'GET' || req.method === 'POST')) {
@@ -927,7 +894,6 @@ async function main() {
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
-  try { learnsearch.init(SITE); } catch (e) { console.error('search init', e.message); }
   setTimeout(() => imagegen.learnColours(), 3000);   // the «آموزش» pictures' colours ready for the first visits
   consoleprompts.init(store, imagegen, guideref, consolepics);
   webpic.init(store);

@@ -9,7 +9,7 @@
 // well each lesson practised is now known.
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
 import { EXAM } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
@@ -18,7 +18,7 @@ import { useDrillProgress } from '@/lib/drill-progress';
 import { SECONDS_PER_Q, faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Enter, T, TranslateButton, tap } from '@/ui/kit';
 import { OptionBox } from '@/ui/option-box';
@@ -105,7 +105,7 @@ function Verdict({ answer }: { answer: Answer }) {
   const [icon, color, bg, title, text] = answer.ok
     ? answer.sure ? ['checkCircle', c.ok, c.okSoft, 'درست و مطمئن', 'این سؤال دیرتر دوباره می‌آید تا در حافظه‌ی بلندمدت بماند.'] as const
       : ['help', c.warn, c.warnSoft, 'درست، ولی حدسی', 'جواب حدسی یاد گرفتن حساب نمی‌شود؛ این سؤال زود دوباره می‌آید.'] as const
-    : answer.sure ? ['warning', c.bad, c.badSoft, `باور غلط · ${faNum(answer.mistakes)} اشتباه`, 'مطمئن بودید ولی جواب غلط بود؛ این خطرناک‌ترین نوع اشتباه در آزمون است. قاعده‌ی زیر را با دقت بخوانید.'] as const
+    : answer.sure ? ['warning', c.bad, c.badSoft, `باور غلط، ${faNum(answer.mistakes)} اشتباه`, 'مطمئن بودید ولی جواب غلط بود؛ این خطرناک‌ترین نوع اشتباه در آزمون است. قاعده‌ی زیر را با دقت بخوانید.'] as const
       : ['xCircle', c.bad, c.badSoft, `${faNum(answer.mistakes)} اشتباه`, 'قاعده‌ی زیر را بخوانید؛ این سؤال چند سؤال بعد دوباره می‌آید.'] as const;
   return (
     <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', padding: 14, borderRadius: 14, backgroundColor: bg }}>
@@ -188,6 +188,7 @@ export default function Drill() {
   const [ticks, setTicks] = useState<boolean[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [left, setLeft] = useState(SECONDS_PER_Q);
+  const scroll = useRef<ScrollView>(null);
   // The answers follow the turns one by one, so the open turn's answer (once given) is answers[i].
   const answer = answers.length > i ? answers[i] : null;
 
@@ -207,6 +208,8 @@ export default function Drill() {
     const a: Answer = { id: turn.item.id, again: !!turn.again, ok, sure, mistakes, statements: st.length };
     save({ [turn.item.id]: review(cards[turn.item.id], ok, sure) });
     setAnswers([...answers, a]);
+    // Down to the verdicts, so none stays hidden under the bar.
+    setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 80);
     // A missed question comes back a few questions later (once).
     if (!ok && !turn.again) {
       const at = Math.min(turns.length, i + 1 + AGAIN_AFTER);
@@ -238,7 +241,7 @@ export default function Drill() {
 
   return (
     <View style={{ flex: 1 }}>
-      <SubPage title={title} gap={12} scrollKey={finished ? 'end' : i}>
+      <SubPage title={title} gap={12} scrollKey={finished ? 'end' : i} scrollRef={scroll} close={!finished}>
         {!turns ? <T style={{ color: c.muted, textAlign: 'center', marginTop: 40 }}>در حال آماده کردن سؤال‌ها…</T>
           : !turns.length ? <T style={{ color: c.muted, textAlign: 'center', marginTop: 40 }}>هنوز سؤالی برای تمرین نیست.</T>
           : finished ? <Enter><End answers={answers} turns={turns} onMore={start} /></Enter>
@@ -262,24 +265,22 @@ export default function Drill() {
                 {settings.timer && !answer ? <TimeBar left={left} /> : null}
               </View>
               <Enter key={i}><Question turn={turn} ticks={ticks} answer={answer} onToggle={k => setTicks(ticks.map((v, j) => (j === k ? !v : v)))} /></Enter>
-              {answer ? null : (
-                <View style={{ gap: 8 }}>
-                  <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>چقدر از جوابتان مطمئنید؟</T>
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <Button kind="glass" label="حدس زدم" icon="help" onPress={() => submit(false)} style={{ flex: 1 }} />
-                    <Button label="مطمئنم" icon="check" onPress={() => submit(true)} style={{ flex: 1 }} />
-                  </View>
-                </View>
-              )}
+              {answer ? null : <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>جواب دادید؟ پایین صفحه بگویید چقدر مطمئنید.</T>}
             </>
           ) : null}
         <View style={{ height: 90 }} />
       </SubPage>
       {turns && turns.length > 0 && !finished ? (
         <GlassBar
-          start={<FootBtn label="پایان تمرین" icon="exit" round onPress={() => router.back()} />}
-          middle={<T style={{ fontWeight: '700', fontSize: 15 }}>{faNum(i + 1)} / {faNum(turns.length)}</T>}
-          end={<FootBtn label={i === turns.length - 1 ? 'نتیجه' : 'بعدی'} icon={i === turns.length - 1 ? 'check' : 'arrowRight'} round disabled={!answer} onPress={next} />} />
+          // Until the question is answered, the two answers («حدس زدم» / «مطمئنم») sit in the bar, always in view; then the
+          // position and «بعدی».
+          middle={answer ? <BarCount n={i + 1} of={turns.length} label="سؤال" /> : (
+            <>
+              <FootBtn label="حدس زدم" icon="help" onPress={() => submit(false)} />
+              <FootBtn label="مطمئنم" icon="check" submit onPress={() => submit(true)} />
+            </>
+          )}
+          end={answer ? <FootBtn label={i === turns.length - 1 ? 'نتیجه' : 'بعدی'} icon={i === turns.length - 1 ? 'check' : 'arrowRight'} onPress={next} /> : null} />
       ) : null}
     </View>
   );

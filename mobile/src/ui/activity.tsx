@@ -24,7 +24,7 @@ export function Pill({ text, fg, bg }: { text: string; fg: string; bg: string })
 // Green or red for an attempt: a full 25-question one by the real pass rule, a shorter one by the same 80%.
 const passed = (a: Attempt) => (isFull(a) ? isPass(a) : pctOf(a) >= 0.8);
 const fmtSecs = (s: number) => `${faNum(Math.floor(s / 60))}:${faNum(String(Math.round(s % 60)).padStart(2, '0'))}`;
-const fmtClock = (t: number) => new Date(t).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+const fmtClock = (t: number) => new Date(t).toLocaleTimeString('fa-IR', { timeZone: 'Europe/Copenhagen', hour: '2-digit', minute: '2-digit' });
 
 function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: Colors; last: boolean }) {
   const ok = passed(a), fg = ok ? c.ok : c.bad, soft = ok ? c.okSoft : c.badSoft;
@@ -37,9 +37,9 @@ function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: C
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontWeight: '700' }}>{modeName(a, bank)}</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{fmtDate(a.at)} · ساعت {fmtClock(a.at)}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{fmtDate(a.at)}، ساعت {fmtClock(a.at)}</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-            {a.secs ? `زمان ${fmtSecs(a.secs)} · ` : ''}{wrong ? `${faNum(wrong)} اشتباه از ${faNum(a.items.length)}` : 'بدون اشتباه'}
+            {a.secs ? `زمان ${fmtSecs(a.secs)}، ` : ''}{wrong ? `${faNum(wrong)} اشتباه از ${faNum(a.items.length)}` : 'بدون اشتباه'}
           </T>
         </View>
         <View style={{ alignItems: 'center', minWidth: 58 }}>

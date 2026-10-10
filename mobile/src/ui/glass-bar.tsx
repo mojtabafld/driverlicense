@@ -1,56 +1,95 @@
-// The floating Liquid Glass bar of the exam and of the step-by-step review, left to right in the questions' language
-// (Danish / English): a button at each end and something in the middle (the position).
-import { Pressable, View } from 'react-native';
+// The floating bar of the exam, the lessons, the practice and the step-by-step pages, drawn like the tab bar of the
+// home page (ui/tabs/app-tabs.tsx): the same grey glass capsule above the bottom edge, each button an icon over its
+// label in white, the main one (hand in, check, «مطمئنم») on a darker capsule in the app's green. Left to right in the
+// questions' language (Danish / English): a button at each end and something in the middle (the position).
+import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
-import { L, T, tap } from './kit';
+import { T, tap } from './kit';
 import { LiquidGlass } from './liquid';
-import { useColors } from './theme';
+import { useColors, useIsDark } from './theme';
 
-export function GlassBar({ start, middle, end }: { start: React.ReactNode; middle: React.ReactNode; end: React.ReactNode }) {
-  const ins = useSafeAreaInsets();
+// The bar's height, and the room the pages keep for it.
+export const BAR_H = 64;
+const ITEM_H = BAR_H - 8;
+
+// The colours of the tab bar, shared by both bars: the glass, the chosen / main item's capsule and its green.
+export function useBarLook() {
+  const dark = useIsDark(), c = useColors();
+  return {
+    dark,
+    grey: dark ? 'rgba(58,58,62,0.78)' : 'rgba(120,120,128,0.72)',
+    solid: dark ? 'rgba(52,52,56,0.96)' : 'rgba(112,112,120,0.95)', // Android, where nothing blurs
+    capsule: dark ? 'rgba(0,0,0,0.38)' : 'rgba(40,40,44,0.42)',
+    green: dark ? c.link : '#5fd16e',
+    contrast: dark ? '#2a2a2c' : '#55555a', // a filled icon's inner lines
+  };
+}
+
+// The capsule itself, floating above the bottom edge (the tab bar and GlassBar).
+export function BarShell({ children }: { children: React.ReactNode }) {
+  const ins = useSafeAreaInsets(), look = useBarLook();
+  const web = Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)' } as any) : null;
+  const row = { flexDirection: 'row', direction: 'ltr', alignItems: 'center', width: '100%', maxWidth: 440, padding: 4 } as any;
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: ins.bottom + 14, paddingHorizontal: 16, alignItems: 'center' }}>
-      <LiquidGlass bar r={30} style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 8, padding: 6, width: '100%', maxWidth: 520 } as any}>
-        {start}
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>{middle}</View>
-        {end}
-      </LiquidGlass>
+    <View pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
+      {Platform.OS === 'ios' ? (
+        <LiquidGlass r={BAR_H / 2} tint={look.grey} style={row}>{children}</LiquidGlass>
+      ) : (
+        <View style={[row, { borderRadius: BAR_H / 2, backgroundColor: Platform.OS === 'android' ? look.solid : look.grey,
+          borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.18)' }, web]}>{children}</View>
+      )}
     </View>
   );
 }
 
-// The position in the middle of the bar (Persian digits), in the grey of the previous / next buttons (`navNum`).
-export function BarCount({ n, of }: { n: number; of: number }) {
-  const c = useColors();
-  return <T style={{ fontSize: 21, lineHeight: 30, color: c.navNum, fontWeight: '500', textAlign: 'center', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>;
+// One item of a bar: an icon over its label, white; `main`: on the darker capsule, in green (the tab bar's chosen tab).
+// `ltr`: a label read left to right (a position, «۷ / ۲۵»).
+export function BarItem({ icon, label, main, filled, dim, ltr, children }: { icon?: IconName; label: string; main?: boolean; filled?: boolean; dim?: boolean; ltr?: boolean;
+  children?: React.ReactNode }) {
+  const look = useBarLook();
+  const color = main ? look.green : '#ffffff';
+  return (
+    <View style={{ alignItems: 'center', justifyContent: 'center', gap: 2, height: ITEM_H, borderRadius: ITEM_H / 2, overflow: 'hidden', opacity: dim ? 0.4 : 1,
+      backgroundColor: main ? look.capsule : 'transparent' }}>
+      {children ?? (icon ? <Icon name={icon} size={24} color={color} filled={filled} contrast={look.contrast} /> : null)}
+      <T style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color, writingDirection: ltr ? 'ltr' : undefined }} numberOfLines={1}>{label}</T>
+    </View>
+  );
 }
 
-// Buttons of the bar. Previous / next are round grey buttons with an arrow (`round`; the label is for screen
-// readers; `nav` colours), pale when they cannot be used; hand in is a round check in the submit colour (`submit`). Without `round`, a labelled
-// capsule, in the submit colour with `submit`. `lead`: icon before the label.
-export function FootBtn({ label, onPress, disabled, submit, icon, lead, round }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; primary?: boolean; icon: IconName; lead?: boolean; round?: boolean }) {
-  const c = useColors();
-  const fg = c.strongFg; // on `submit` / `strong` (white, or near-black on the dark Uber look's light grey)
-  if (round) {
-    return (
-      <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
-        style={({ pressed }) => ({ width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: disabled ? c.navOff : submit ? c.submit : c.nav, opacity: pressed ? 0.8 : 1 })}>
-        <Icon name={icon} size={icon === 'check' ? 22 : 20} color={disabled ? c.faint : submit ? fg : c.navFg} weight={icon === 'check' ? 'bold' : 'semibold'} />
-      </Pressable>
-    );
-  }
+// Without `start` or `end`, the middle (e.g. two answers) takes their room too. The way out is the page's ✕ at the top,
+// never a button of the bar.
+export function GlassBar({ start, middle, end }: { start?: React.ReactNode; middle: React.ReactNode; end?: React.ReactNode }) {
   return (
-    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => ({ opacity: disabled ? 0.35 : pressed ? 0.8 : 1 })}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 48, minWidth: 104, paddingHorizontal: 18, borderRadius: 24, justifyContent: 'center',
-        backgroundColor: submit ? c.submit : c.strong }}>
-        {lead ? <Icon name={icon} size={16} color={fg} weight="semibold" /> : null}
-        <L style={{ color: fg, fontWeight: '700', fontSize: 15.5, lineHeight: 22, textAlign: 'center' }}>{label}</L>
-        {!lead ? <Icon name={icon} size={16} color={fg} weight={icon === 'check' ? 'bold' : 'semibold'} /> : null}
-      </View>
+    <BarShell>
+      {start ? <View style={{ flex: 1 }}>{start}</View> : null}
+      <View style={{ flex: 2, flexDirection: 'row', gap: 4 }}>{middle}</View>
+      {end ? <View style={{ flex: 1 }}>{end}</View> : null}
+    </BarShell>
+  );
+}
+
+// The position in the middle of the bar (Persian digits) over what is counted, e.g. «قدم» or «سؤال».
+export function BarCount({ n, of, label }: { n: number; of: number; label: string }) {
+  return (
+    <View style={{ flex: 1 }}>
+      <BarItem label={label}>
+        <T style={{ fontSize: 18, lineHeight: 24, color: '#ffffff', fontWeight: '700', textAlign: 'center', writingDirection: 'ltr' }}>{faNum(n)} / {faNum(of)}</T>
+      </BarItem>
+    </View>
+  );
+}
+
+// A button of the bar, as an item of the tab bar: pale when it cannot be used. `submit` (hand in, check, finish): the
+// main one, on the darker capsule in green.
+export function FootBtn({ label, onPress, disabled, submit, icon }: { label: string; onPress: () => void; disabled?: boolean; submit?: boolean; icon: IconName }) {
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled }}
+      style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })}>
+      <BarItem icon={icon} label={label} main={submit} filled={submit} dim={disabled} />
     </Pressable>
   );
 }

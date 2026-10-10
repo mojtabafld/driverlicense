@@ -11,6 +11,8 @@ import { Icon } from './icon';
 import { T, physical, tap } from './kit';
 
 const MAX = 4, DOUBLE = 2.5;
+// A mouse rather than a finger (a computer's browser), for the hint under the picture.
+const mouse = Platform.OS === 'web' && typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: fine)').matches;
 
 // The picture as it sits on the page, with a small magnifier in its corner; a tap opens the viewer.
 export function ZoomableImage({ source, style, ratio = 4 / 3, children, transition }: {
@@ -148,7 +150,7 @@ export function ImageViewer({ source, ratio = 4 / 3, onClose }: { source: ImageS
         {hint ? (
           <View pointerEvents="none" style={{ position: 'absolute', left: 16, right: 16, bottom: ins.bottom + 24, alignItems: 'center' }}>
             <T style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13.5, textAlign: 'center', backgroundColor: 'rgba(0,0,0,0.55)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 99, overflow: 'hidden' }}>
-              {Platform.OS === 'web' ? 'برای بزرگ‌نمایی دو بار کلیک کنید یا چرخ ماوس را بچرخانید' : 'برای بزرگ‌نمایی دو انگشت را باز کنید یا دو بار ضربه بزنید'}
+              {mouse ? 'برای بزرگ‌نمایی دو بار کلیک کنید یا چرخ ماوس را بچرخانید' : 'برای بزرگ‌نمایی دو انگشت را باز کنید یا دو بار ضربه بزنید'}
             </T>
           </View>
         ) : null}

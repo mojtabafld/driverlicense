@@ -5,15 +5,17 @@ import { useEffect, useState } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
-import { faNum, isFull, isPass, mistakeIds, passEstimate, pctOf } from '@/lib/logic';
+import { faNum, isFull, isPass, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
+import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
+import { Button, Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
+import { COURSE } from '@/lib/course';
+import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { useColors } from '@/ui/theme';
-import { useTour, type TourStep } from '@/ui/tour';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
@@ -69,10 +71,29 @@ function useGreeting() {
   return g;
 }
 
-const TOUR: TourStep[] = [
-  { title: 'خلاصه‌ی پیشرفت شما', text: 'احتمال قبولی: تخمین شانس قبول شدن شما در آزمون واقعی، بر اساس آزمون‌های تصادفی اخیر. زیر آن میانگین ۵ آزمون آخر و تعداد قبولی‌ها را می‌بینید. سه کارت پایین تعداد آزمون‌ها، درس‌های انجام‌شده و اشتباهات شماست؛ روی هر کدام بزنید تا صفحه‌اش باز شود.' },
-  { title: 'نمودار پیشرفت', text: 'هر نقطه نتیجه‌ی یکی از آزمون‌های شماست، از قدیمی به جدید. نقطه‌ی سبز یعنی قبولی، نقطه‌ی خاکستری مردودی و خط‌چین، حد قبولی است. روی هر نقطه بزنید تا جزئیات آن آزمون را ببینید و مرورش کنید.' },
-];
+// In place of the (still empty) chart until the first exam: where to begin, the course's next lesson first and a
+// short test (5 questions) after it.
+function StartCard({ compact }: { compact: boolean }) {
+  const c = useColors();
+  const { bank } = useApp();
+  const { done } = useCourseProgress();
+  const next = COURSE.flatMap(ch => ch.lessons).find(l => !done[l.id]) ?? null;
+  return (
+    <Card style={{ flex: 1, gap: compact ? 10 : 14, padding: compact ? 14 : 18, justifyContent: 'center' }}>
+      <T style={{ fontWeight: '800', fontSize: 18 }}>از اینجا شروع کنید</T>
+      <T style={{ color: c.muted, fontSize: 14, lineHeight: 23 }}>
+        {next ? `اول درس کوتاه «${next.title}» را بخوانید (${faNum(next.minutes)} دقیقه). بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`
+          : 'با یک آزمون کوتاه ببینید چقدر آماده‌اید؛ بعد از آن، احتمال قبولی و نمودار پیشرفت اینجا نمایش داده می‌شوند.'}
+      </T>
+      {next ? <Button label={Object.keys(done).length ? 'درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => router.push({ pathname: '/course-lesson', params: { id: next.id } })} /> : null}
+      <Button kind={next ? 'glass' : 'primary'} label="آزمون کوتاه ۵ سؤالی" icon="exam" onPress={() => {
+        if (!bank) return;
+        session.plan = { mode: 'random', ids: randomIds(bank, 5), title: 'آزمون تصادفی' };
+        router.push('/run');
+      }} />
+    </Card>
+  );
+}
 
 export default function Home() {
   const c = useColors();
@@ -82,7 +103,6 @@ export default function Home() {
   const compact = height < 900, tight = height < 680;
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
-  const tour = useTour('home', TOUR);
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
   const exams = attempts.filter(a => a.mode !== 'lesson');
@@ -97,11 +117,10 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <>
     <Screen fill gap={compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
       hero={{ pic: 3, icon: 'house' }}>
-      {/* The four cards at the top: the chance of passing and the three counts (one tooltip for them). */}
-      <View {...tour.target(0)} style={{ gap: compact ? 10 : 14 }}>
+      {/* The four cards at the top: the chance of passing and the three counts. */}
+      <View style={{ gap: compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
@@ -127,13 +146,14 @@ export default function Home() {
         </View>
       </Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : 'آزمون نداده‌اید'} />
+        <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
         <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
         <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
       </View>
       </View>
       {/* A tap anywhere in the chart's card, off the bars, clears the picked attempt. */}
-      <View {...tour.target(1)} style={{ flex: 1 }}>
+      {exams.length ? (
+      <View style={{ flex: 1 }}>
       <Pressable onPress={() => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
@@ -148,8 +168,7 @@ export default function Home() {
       </Card>
       </Pressable>
       </View>
+      ) : <StartCard compact={compact} />}
     </Screen>
-    {tour.overlay}
-    </>
   );
 }

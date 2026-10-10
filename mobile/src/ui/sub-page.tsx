@@ -22,9 +22,11 @@ import { useColors } from './theme';
 // `scrollKey`: when it changes, the page goes back to its top (e.g. the next step of a lesson).
 // `scrollRef` / `onBodyY`: the page's scroll view and where its content starts under the picture header, so a page can
 // scroll to a part of itself (the rules page to the part it opens).
-export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
+// `close`: a ✕ in place of the back arrow, for a page with its own previous / next bar (a lesson, a practice), so
+// the way out never looks like the bar's arrows.
+export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
   maxWidth?: number; guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook; scrollRef?: React.RefObject<ScrollView | null>;
-  onBodyY?: (y: number) => void }) {
+  onBodyY?: (y: number) => void; close?: boolean }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const ref = useTopOnFocus(scrollRef);
@@ -45,7 +47,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           {hero ? (
             <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: ins.bottom + 40 }}>
-              <Hero look={hero} title={title} subtitle={subtitle} />
+              <Hero look={hero} title={title} subtitle={subtitle} back />
               <View onLayout={e => onBodyY?.(e.nativeEvent.layout.y)} style={{ paddingTop: 6, paddingHorizontal: 16, gap, maxWidth, width: '100%', alignSelf: 'center' }}>{children}</View>
             </ScrollView>
           ) : (
@@ -60,10 +62,10 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           // Over the picture: only the way back, on a soft round backing.
           <View pointerEvents="box-none" style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 0, right: 0, paddingHorizontal: 16 }}>
             <View pointerEvents="box-none" style={{ flexDirection: 'row', width: '100%', maxWidth, alignSelf: 'center' }}>
-              <Pressable onPress={() => { tap(); back(); }} accessibilityLabel="بازگشت" hitSlop={6}
+              <Pressable onPress={() => { tap(); back(); }} accessibilityLabel={close ? 'بستن' : 'بازگشت'} hitSlop={6}
                 style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, opacity: 0.94,
                   shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 })}>
-                <Icon name="arrowRight" size={20} color={c.text} />
+                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
               </Pressable>
             </View>
           </View>
@@ -72,9 +74,9 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
         <GlassTop onHeight={setHeadH}>
           <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', maxWidth, alignSelf: 'center' }}>
-              <Pressable onPress={() => { tap(); back(); }} accessibilityLabel="بازگشت" hitSlop={6}
+              <Pressable onPress={() => { tap(); back(); }} accessibilityLabel={close ? 'بستن' : 'بازگشت'} hitSlop={6}
                 style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
-                <Icon name="arrowRight" size={20} color={c.text} />
+                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
               </Pressable>
               <View style={{ flex: 1, height: 32 }}>
                 <Marquee text={title} height={32} style={{ fontSize: 22, lineHeight: 32, fontWeight: '700' }} />

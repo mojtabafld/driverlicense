@@ -56,9 +56,10 @@ export default function GuideView() {
       <GlassTop onHeight={setHeadH}>
         <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
-            <Pressable onPress={() => { tap(); back(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت"
+            <Pressable onPress={() => { tap(); back(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بستن"
               style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
-              <Icon name="arrowRight" size={20} color={c.text} />
+              {/* ✕, not an arrow: the bar below has the previous / next arrows. */}
+              <Icon name="xmark" size={20} color={c.text} />
             </Pressable>
             <View style={{ flex: 1, height: 26 }}>
               <Marquee text={cat.title} height={26} style={{ fontWeight: '700', fontSize: 16, lineHeight: 26 }} />
@@ -96,9 +97,9 @@ export default function GuideView() {
         </Animated.View>
       </ScrollView>
       <GlassBar
-        start={<FootBtn label="قبلی" icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
+        start={<FootBtn label="قبلی" icon="arrowLeft" disabled={i === 0} onPress={() => setI(i - 1)} />}
         middle={<ListButton n={i + 1} of={items.length} label="فهرست موارد" onPress={() => setList(true)} />}
-        end={last ? <FootBtn label="پایان" icon="check" submit round onPress={back} /> : <FootBtn label="بعدی" icon="arrowRight" round onPress={() => setI(i + 1)} />} />
+        end={last ? <FootBtn label="پایان" icon="check" submit onPress={back} /> : <FootBtn label="بعدی" icon="arrowRight" onPress={() => setI(i + 1)} />} />
       <ItemSheet open={list} items={items} current={i} onClose={() => setList(false)} onPick={k => { setList(false); setI(k); }} />
     </Backdrop>
   );
