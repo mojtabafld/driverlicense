@@ -196,7 +196,9 @@ const BAR_ROOM = 64 + 30;
 // Its lower edge melts into the page in the theme's own background colour, so picture and page read as one; the page's
 // content starts below it.
 // `light`: the light theme's picture (pic + 3 unless given).
-export type HeroLook = { pic: number; light?: number; icon: IconName };
+// `art`: a drawing made in the app (vector) in place of the server's picture, laid in the header's left part with the
+// header's height; it gets the theme (light) to colour itself.
+export type HeroLook = { pic: number; light?: number; icon: IconName; art?: React.ComponentType<{ light: boolean; height: number }> };
 
 // On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
 // screen's cover (intro, language question, offline page) if one is up, else a picture header's green while one is in
@@ -227,7 +229,7 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 // page's greeting).
 export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
-  const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && !!heroArt[String(lightPic)];
+  const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
   // While the page is in view on the web, the status bar above it in the header's green; back to the page's colour after.
   useFocusEffect(useCallback(() => {
@@ -248,7 +250,12 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0 }: { look: H
   const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
     <View style={{ height: H, backgroundColor: bg, overflow: 'hidden' }}>
-      {v ? <Image source={{ uri: `${API_URL}/hero-art/${pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
+      {look.art ? (
+        // (left to right in its own row, so the drawing stays on the left on every platform)
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { flexDirection: 'row', direction: 'ltr', paddingTop: ins.top } as any]}>
+          <look.art light={light} height={H - ins.top} />
+        </View>
+      ) : v ? <Image source={{ uri: `${API_URL}/hero-art/${pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}

@@ -1,10 +1,11 @@
-// «آموزش گام‌به‌گام»: preparing for the theory test, under its own picture header (like the tabs'). First the
-// progress (a ring, and a button to the next lesson), then how a lesson goes (four steps on a line) and the goal (the
-// real test's format), then the way to the licence: the chapters in the official curriculum's order on a path, each
+// «آموزش گام‌به‌گام»: preparing for the theory test, under a header like the tabs' but with its own minimal vector
+// drawing (CourseArt). First the progress (a ring, and a button to the next lesson), then how a lesson goes (four
+// steps on a line) and the goal (the real test's format), then the way to the licence: the chapters in the official
+// curriculum's order on a path, each
 // with its lessons (a finished one ticked, the next one marked, those still being written locked «به‌زودی»).
 import { router } from 'expo-router';
-import { Pressable, View } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import { Pressable, View, useWindowDimensions } from 'react-native';
+import Svg, { Circle, G, Line, Path, Rect } from 'react-native-svg';
 
 import { COURSE, EXAM, lessonCount, readyCount, type CourseChapter, type CourseLesson } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
@@ -17,9 +18,49 @@ import { useColors } from '@/ui/theme';
 const HOW: { icon: IconName; text: string }[] = [
   { icon: 'exam', text: 'در آزمون چه می‌پرسند' },
   { icon: 'learn', text: 'قاعده با تصویر و منبع' },
-  { icon: 'warning', text: 'فخ‌های آزمون' },
+  { icon: 'warning', text: 'اشتباه‌های رایج' },
   { icon: 'checkCircle', text: 'سؤال‌ها به شکل آزمون' },
 ];
+
+// The page's header drawing (vector, in the theme's colours): a road climbing from the lower left, two steps passed
+// (ticked), the step you are on (a coral ring) and at its end the licence card and a flag.
+const ROAD = 'M18 186 C 70 186, 70 140, 118 138 S 160 96, 196 92 S 236 64, 232 40';
+function CourseArt({ light, height }: { light: boolean; height: number }) {
+  const t = light
+    ? { blob: '#cfe5ca', road: '#ffffff', dash: '#c4dcbf', ok: '#2f8f46', card: '#ffffff', ring: '#9cc49a', pole: '#5f7f63', cardLine: '#c4dcbf', avatar: '#8fb8e8', line: '#d6e6d3', you: '#e8957a' }
+    : { blob: '#1f5130', road: '#2c6a3c', dash: '#4c8a5b', ok: '#5cc47a', card: '#f4f8f3', ring: '#7fb08a', pole: '#cfe3d2', cardLine: '#cfe3d2', avatar: '#8fb8e8', line: '#d6e6d3', you: '#e8957a' };
+  // In the header's left part, at most 46% of its width (the title is on the right), centred in the height above the
+  // fade at the foot.
+  const { width } = useWindowDimensions(), room = height - 44;
+  const w = Math.round(Math.min(room * 1.5, Math.min(width, 980) * 0.46)), h = Math.round(w / 1.5);
+  const tick = (x: number, y: number) => `M${x - 4.5} ${y} l3 3 l6 -6`;
+  return (
+    <Svg width={w} height={h} viewBox="0 0 300 200" style={{ marginLeft: 8, marginTop: Math.max(0, Math.round((room - h) / 2)) + 4 }}>
+      <Circle cx={228} cy={70} r={58} fill={t.blob} />
+      <Circle cx={62} cy={150} r={44} fill={t.blob} />
+      <Path d={ROAD} fill="none" stroke={t.road} strokeWidth={18} strokeLinecap="round" />
+      <Path d={ROAD} fill="none" stroke={t.dash} strokeWidth={2} strokeDasharray="5 7" strokeLinecap="round" />
+      {[[58, 170], [118, 138]].map(([x, y]) => (
+        <G key={x}>
+          <Circle cx={x} cy={y} r={11} fill={t.ok} />
+          <Path d={tick(x, y)} fill="none" stroke="#fff" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+        </G>
+      ))}
+      <Circle cx={196} cy={92} r={11} fill={t.card} stroke={t.you} strokeWidth={3} />
+      <Circle cx={196} cy={92} r={4} fill={t.you} />
+      <Line x1={232} y1={44} x2={232} y2={6} stroke={t.pole} strokeWidth={2.5} strokeLinecap="round" />
+      <Path d="M233 7 L254 13 L233 20 Z" fill={t.ok} />
+      <G transform="translate(150 22) rotate(-6)">
+        <Rect width={56} height={36} rx={6} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Circle cx={14} cy={14} r={5} fill={t.avatar} />
+        <Path d="M6 28 q8 -10 16 0 z" fill={t.avatar} />
+        <Rect x={26} y={10} width={22} height={3.5} rx={1.75} fill={t.line} />
+        <Rect x={26} y={17} width={16} height={3.5} rx={1.75} fill={t.line} />
+        <Rect x={26} y={24} width={19} height={3.5} rx={1.75} fill={t.line} />
+      </G>
+    </Svg>
+  );
+}
 
 const openLesson = (l: CourseLesson) => { tap(); router.push({ pathname: '/course-lesson', params: { id: l.id } }); };
 
@@ -117,7 +158,7 @@ export default function Course() {
   const next = ready.find(l => !done[l.id]) ?? null;
   const total = lessonCount();
   return (
-    <SubPage title="آموزش گام‌به‌گام" subtitle="فصل به فصل، تا گواهینامه" hero={{ pic: 9, light: 10, icon: 'learn' }}>
+    <SubPage title="آموزش گام‌به‌گام" subtitle="فصل به فصل، تا گواهینامه" hero={{ pic: 9, light: 10, icon: 'learn', art: CourseArt }}>
       <Enter>
         <Card style={{ gap: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
