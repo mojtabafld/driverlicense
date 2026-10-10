@@ -929,6 +929,7 @@ const BELTS: CourseLesson = {
     },
     {
       kind: 'exam',
+      art: 'exam-booster',
       da: 'Du kører med en dreng på 8 år, der er 125 cm høj, på bagsædet. Hvad gælder?',
       fa: 'پسری ۸ ساله با قد ۱۲۵ سانتی‌متر در صندلی عقب خودروی شماست. کدام درست است؟',
       statements: [
