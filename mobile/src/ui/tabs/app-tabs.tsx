@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T, tap } from '../kit';
 import { Icon, type IconName } from '../icon';
 import { LiquidGlass } from '../liquid';
-import { useColors, useIsDark } from '../theme';
+import { useBarLook } from '../glass-bar';
 import { TABS } from './tabs';
 
 const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
@@ -18,8 +18,8 @@ const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn
 export const TAB_BAR_H = 64;
 
 const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, onPress, ...props }, ref) => {
-  const c = useColors(), dark = useIsDark();
-  const color = isFocused ? (dark ? c.link : '#5fd16e') : '#ffffff';
+  const look = useBarLook();
+  const color = isFocused ? look.green : '#ffffff';
   return (
     <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1 }}
       accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={label}>
@@ -27,9 +27,9 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
           clips to the same shape (on Android a rounded background on the box itself could show square). */}
       <View style={{ alignItems: 'center', justifyContent: 'center', gap: 2, height: TAB_BAR_H - 8, borderRadius: (TAB_BAR_H - 8) / 2, overflow: 'hidden' }}>
         <View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: (TAB_BAR_H - 8) / 2,
-          backgroundColor: isFocused ? (dark ? 'rgba(0,0,0,0.38)' : 'rgba(40,40,44,0.42)') : 'transparent' },
+          backgroundColor: isFocused ? look.capsule : 'transparent' },
           Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null]} />
-        <Icon name={TAB_ICON[name]} size={24} color={color} filled={isFocused} contrast={dark ? '#2a2a2c' : '#55555a'} />
+        <Icon name={TAB_ICON[name]} size={24} color={color} filled={isFocused} contrast={look.contrast} />
         <T style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color }}>{label}</T>
       </View>
     </Pressable>
@@ -39,8 +39,7 @@ TabButton.displayName = 'TabButton';
 
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
 const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
-  const ins = useSafeAreaInsets(), dark = useIsDark();
-  const grey = dark ? 'rgba(58,58,62,0.78)' : 'rgba(120,120,128,0.72)';
+  const ins = useSafeAreaInsets(), look = useBarLook(), grey = look.grey;
   const web = Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)' } as any) : null;
   return (
     <View ref={ref} {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
@@ -48,7 +47,7 @@ const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>(({ children
         <LiquidGlass r={TAB_BAR_H / 2} tint={grey} style={{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4 }}>{children}</LiquidGlass>
       ) : (
         <View style={[{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4, borderRadius: TAB_BAR_H / 2,
-          backgroundColor: Platform.OS === 'android' ? (dark ? 'rgba(52,52,56,0.96)' : 'rgba(112,112,120,0.95)') : grey,
+          backgroundColor: Platform.OS === 'android' ? look.solid : grey,
           borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.18)' }, web]}>{children}</View>
       )}
     </View>

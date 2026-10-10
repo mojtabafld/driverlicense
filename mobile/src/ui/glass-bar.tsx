@@ -9,22 +9,24 @@ import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
 import { T, tap } from './kit';
 import { LiquidGlass } from './liquid';
-import { useColors, useIsDark } from './theme';
+import { useIsDark } from './theme';
 
 // The bar's height, and the room the pages keep for it.
 export const BAR_H = 64;
 const ITEM_H = BAR_H - 8;
 
-// The colours of the tab bar, shared by both bars: the glass, the chosen / main item's capsule and its green.
+// The colours of the tab bar, shared by both bars: the glass, the chosen / main item's capsule and its green. Light
+// enough to stay glass, dark enough that the white labels (4.7:1) and the chosen item's green on its capsule (6:1) read
+// well in both themes; the same green in both, whatever the app's colour.
 export function useBarLook() {
-  const dark = useIsDark(), c = useColors();
+  const dark = useIsDark();
   return {
     dark,
-    grey: dark ? 'rgba(58,58,62,0.78)' : 'rgba(120,120,128,0.72)',
-    solid: dark ? 'rgba(52,52,56,0.96)' : 'rgba(112,112,120,0.95)', // Android, where nothing blurs
-    capsule: dark ? 'rgba(0,0,0,0.38)' : 'rgba(40,40,44,0.42)',
-    green: dark ? c.link : '#5fd16e',
-    contrast: dark ? '#2a2a2c' : '#55555a', // a filled icon's inner lines
+    grey: dark ? 'rgba(58,58,62,0.78)' : 'rgba(88,88,94,0.84)',
+    solid: dark ? 'rgba(52,52,56,0.96)' : 'rgba(84,84,90,0.96)', // Android, where nothing blurs
+    capsule: dark ? 'rgba(0,0,0,0.38)' : 'rgba(30,30,34,0.6)',
+    green: '#6fdc7c',
+    contrast: dark ? '#1f1f20' : '#3f3f43', // a filled icon's inner lines: the capsule's own colour
   };
 }
 
