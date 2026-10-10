@@ -429,6 +429,53 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
   );
 }
 
+// Arc's Button (uiarc.dev/r/button.json), size lg, ported: primary is the text colour filled with the page colour on
+// it (near-black in light, near-white in dark), secondary the card surface on a 1px border; 50 tall, corners 18, label
+// in weight 500 with a 20px icon beside it. A press springs the button down to 0.985 (0.97 when it is narrower than
+// 220) and dims a primary to 0.84 / fills a secondary with the muted grey; with a mouse, hover lifts a primary with a
+// resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
+export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style }: {
+  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary'; disabled?: boolean; style?: StyleProp<ViewStyle>;
+}) {
+  const c = useColors();
+  const [scale] = useState(() => new Animated.Value(1));
+  const width = useRef(0);
+  const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
+  const primary = variant === 'primary', fg = primary ? c.bg : c.text;
+  // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
+  const [enter] = useState(() => new Animated.Value(1));
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    enter.setValue(0);
+    Animated.timing(enter, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+  }, [label, enter]);
+  const labelIn = { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
+    ...(Platform.OS === 'web' ? { filter: enter.interpolate({ inputRange: [0, 1], outputRange: ['blur(2px)', 'blur(0px)'] }) } : {}) };
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+      onLayout={e => { width.current = e.nativeEvent.layout.width; }}
+      onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
+      {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
+        <Animated.View style={{
+          minHeight: 50, borderRadius: radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+          borderColor: primary ? c.text : c.line,
+          backgroundColor: primary ? c.text : pressed || hovered ? c.surface2 : c.surface,
+          opacity: disabled ? 0.52 : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
+          transform: [{ scale }],
+          ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
+          ...(Platform.OS === 'web' ? { transitionProperty: 'background-color, opacity, box-shadow', transitionDuration: '150ms' } as any : {}),
+        }}>
+          {icon ? <Icon name={icon} size={20} color={fg} /> : null}
+          <Animated.View style={labelIn as any}>
+            <T numberOfLines={1} style={{ fontSize: 15, lineHeight: 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
+          </Animated.View>
+        </Animated.View>
+      )}
+    </Pressable>
+  );
+}
+
 // Arc's segmented control, shared by every switch of two or three parts (Segmented, the review's tabs and «پاسخ شما /
 // پاسخ صحیح», sign in / sign up): a pill track and the chosen part a raised pill on it, its label in the text colour.
 export function useArcSeg() {

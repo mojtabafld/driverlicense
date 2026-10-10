@@ -13,7 +13,7 @@ import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
 import { SizeSlider } from '@/ui/size-slider';
 import { Icon } from '@/ui/icon';
-import { Button, Card, Screen, T, tap } from '@/ui/kit';
+import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 
 // What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
@@ -117,7 +117,8 @@ export default function Exam() {
           <Icon name={size === FULL ? 'checkCircle' : 'clock'} size={17} color={c.muted} />
           <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{sizeHint(size)}</T>
         </View>
-        <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />
+        {ARC ? <ArcButton label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" />
+          : <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />}
       </Card>
       <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" />
       <MistakesCard />

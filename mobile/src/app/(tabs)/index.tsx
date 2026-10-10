@@ -10,13 +10,13 @@ import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, r
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { Button, Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
+import { ArcButton, Button, Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
-import { useColors } from '@/ui/theme';
+import { ARC, useColors } from '@/ui/theme';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
@@ -90,16 +90,21 @@ function StartCard({ compact }: { compact: boolean }) {
           : pt ? `اول درس ${faNum(lessonNumber(pt.title, pi))} را تمرین کنید. بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`
           : 'با یک آزمون کوتاه ببینید چقدر آماده‌اید؛ بعد از آن، احتمال قبولی و نمودار پیشرفت اینجا نمایش داده می‌شوند.'}
       </T>
-      {next ? <Button label={Object.keys(done).length ? 'درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => router.push({ pathname: '/course-lesson', params: { id: next.id } })} />
+      {/* Main site: Arc's primary button (verb and object), the short test beside it Arc's secondary one. */}
+      {next ? <ArcButton label={Object.keys(done).length ? 'شروع درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => router.push({ pathname: '/course-lesson', params: { id: next.id } })} />
         : pt ? <Button label={tried.size ? 'درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => {
           session.plan = { mode: 'lesson', ids: pt.qs.filter(id => Q.has(id)), lesson: pt.id, title: `درس ${faNum(lessonNumber(pt.title, pi))}` };
           router.push('/run');
         }} /> : null}
-      <Button kind={next || pt ? 'glass' : 'primary'} label="آزمون کوتاه ۵ سؤالی" icon="exam" onPress={() => {
-        if (!bank) return;
-        session.plan = { mode: 'random', ids: randomIds(bank, 5), title: 'آزمون تصادفی' };
-        router.push('/run');
-      }} />
+      {(() => {
+        const short = () => {
+          if (!bank) return;
+          session.plan = { mode: 'random', ids: randomIds(bank, 5), title: 'آزمون تصادفی' };
+          router.push('/run');
+        };
+        return ARC ? <ArcButton variant={next ? 'secondary' : 'primary'} label="آزمون کوتاه ۵ سؤالی" icon="exam" onPress={short} />
+          : <Button kind={next || pt ? 'glass' : 'primary'} label="آزمون کوتاه ۵ سؤالی" icon="exam" onPress={short} />;
+      })()}
     </Card>
   );
 }
