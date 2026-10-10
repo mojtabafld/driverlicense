@@ -1,12 +1,11 @@
 // «آموزش گام‌به‌گام»: preparing for the theory test, under its own picture header (like the tabs'). First the
 // progress (a ring, and a button to the next lesson), then how a lesson goes (four steps on a line) and the goal (the
 // real test's format), then the way to the licence: the chapters in the official curriculum's order on a path, each
-// with its lessons (a finished one ticked, the next one marked, those still being written locked «به‌زودی»), and the
-// sources.
+// with its lessons (a finished one ticked, the next one marked, those still being written locked «به‌زودی»).
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { COURSE, EXAM, SOURCES, lessonCount, readyCount, type CourseChapter, type CourseLesson } from '@/lib/course';
+import { COURSE, EXAM, lessonCount, readyCount, type CourseChapter, type CourseLesson } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { Icon, type IconName } from '@/ui/icon';
@@ -139,11 +138,6 @@ export default function Course() {
           <Enter key={ch.id}><Chapter ch={ch} last={i === COURSE.length - 1} done={done} next={next?.id ?? null} /></Enter>
         ))}
       </View>
-      <Card style={{ gap: 6 }}>
-        <T style={{ fontWeight: '700', fontSize: 14 }}>منابع این دوره</T>
-        {Object.values(SOURCES).map(s => <T key={s} style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>• {s}</T>)}
-        <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>متن‌ها را خودمان بر اساس این منابع نوشته‌ایم و تصاویر برای همین دوره ساخته شده‌اند.</T>
-      </Card>
     </SubPage>
   );
 }
