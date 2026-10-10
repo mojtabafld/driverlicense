@@ -16,7 +16,8 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { COURSE, EXAM, lessonById, type CourseStep } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
-import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
+import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
+import { learnRtl } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
 import { OptionBox } from '@/ui/option-box';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
@@ -256,7 +257,7 @@ function Lesson({ id }: { id: string }) {
   return (
     <View style={{ flex: 1 }}>
       <SubPage title={lesson.title} gap={12} scrollKey={complete ? -1 : i} scrollRef={scroll} close={!complete}
-        pager={complete ? undefined : { i, n: toCheck || last ? i + 1 : steps.length, go: setI }}
+        pager={complete ? undefined : { i, n: toCheck || last ? i + 1 : steps.length, go: setI, rtl: learnRtl }}
         guard={!complete && Object.keys(checked).length ? { title: 'خروج از درس؟', text: 'جواب‌های آزمون این درس ذخیره نمی‌شوند.' } : null}>
         {complete ? (
           <Enter><Finished title={lesson.title} result={result} next={next} onDrill={() => router.replace({ pathname: '/drill', params: { lesson: lesson.id } })} /></Enter>
@@ -279,12 +280,12 @@ function Lesson({ id }: { id: string }) {
         )}
       </SubPage>
       {complete ? null : (
-        <GlassBar
-          start={<FootBtn label="قبلی" icon="arrowLeft" disabled={!i} onPress={() => setI(i - 1)} />}
+        <GlassBar rtl={learnRtl}
+          start={<FootBtn label="قبلی" icon={navIcons(learnRtl).prev} disabled={!i} onPress={() => setI(i - 1)} />}
           middle={<BarCount n={i + 1} of={steps.length} label="قدم" />}
           end={toCheck ? <FootBtn label="بررسی" icon="check" submit onPress={check} />
             : last ? <FootBtn label="پایان درس" icon="check" submit onPress={end} />
-              : <FootBtn label="بعدی" icon="arrowRight" onPress={() => setI(i + 1)} />} />
+              : <FootBtn label="بعدی" icon={navIcons(learnRtl).next} onPress={() => setI(i + 1)} />} />
       )}
     </View>
   );

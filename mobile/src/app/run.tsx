@@ -15,11 +15,11 @@ import { SlideToConfirm } from '@/ui/slide-confirm';
 import { SpeakButton } from '@/ui/speak';
 import { ZoomableImage } from '@/ui/zoom';
 import { GlassTop } from '@/ui/liquid';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
 import { OptionBox } from '@/ui/option-box';
-import { Pager } from '@/ui/swipe';
+import { learnRtl, Pager } from '@/ui/swipe';
 import { useWebBackGuard } from '@/ui/web-back';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
@@ -101,6 +101,8 @@ export default function Run() {
   const flag = () => { tap(); setFlags(f => (f.includes(i) ? f.filter(x => x !== i) : [...f, i].sort((a, b) => a - b))); };
   const goTo = (k: number) => { tap(); setDialog(null); setI(k); };
   const ui = uiText(lang === 'en' ? 'en' : 'da');
+  // A lesson, a part of the rules or the mistakes (not the exam itself) turns right to left, as Persian reads.
+  const rtl = learnRtl && plan.mode !== 'random', arrow = navIcons(rtl);
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
   // The clock's colour: the theme's while more than two thirds of the time is left (on a whole minute: 16:00 of 25),
   // then warning (amber), and danger (red) under the last two minutes, when its icon also fades in and out.
@@ -140,7 +142,7 @@ export default function Run() {
       </SafeAreaView>
       </GlassTop>
       {/* A sideways swipe turns to the next or previous question; it never leaves the exam (only the exit button does). */}
-      <Pager i={i} n={qs.length} go={setI}>
+      <Pager i={i} n={qs.length} go={setI} rtl={rtl}>
       <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The picture in its own box with rounded corners like the buttons', the page's own background around the
             question and its statements, which are outlined boxes with a round check. */}
@@ -181,12 +183,12 @@ export default function Run() {
       </ScrollView>
       </Pager>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
-      <GlassBar
-        start={<FootBtn label={ui.prev} icon="arrowLeft" disabled={i === 0} onPress={() => setI(i - 1)} />}
+      <GlassBar rtl={rtl}
+        start={<FootBtn label={ui.prev} icon={arrow.prev} disabled={i === 0} onPress={() => setI(i - 1)} />}
         // The list opens the exam's summary: every question (a tap goes to it) and the slide to hand in, so the exam can be
         // handed in from any question, not only the last.
         middle={<ListButton n={i + 1} of={qs.length} onPress={handIn} />}
-        end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon="arrowRight" onPress={() => setI(i + 1)} />} />
+        end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon={arrow.next} onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
       <Sheet open={dialog === 'handin'} onClose={() => setDialog(null)} maxHeight="88%">

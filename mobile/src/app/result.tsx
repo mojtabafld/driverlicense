@@ -15,9 +15,9 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Button, Card, EmptyState, Enter, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
-import { Pager } from '@/ui/swipe';
+import { learnRtl, Pager } from '@/ui/swipe';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
@@ -105,6 +105,8 @@ export default function Result() {
   const lang = settings.lang === 'en' ? 'en' : 'da', ui = uiText(lang);
   const full = isFull(a), pass = right >= passMin(n), pct = right / Math.max(n, 1), pctN = Math.round(pct * 100);
   const isLesson = a.mode === 'lesson';
+  // The review of a lesson or a practice (not of an exam) turns right to left, as Persian reads.
+  const rtl = learnRtl && a.mode !== 'random', arrow = navIcons(rtl);
   const fa = false; // the review opens without the Persian translation; «ترجمه» on each question shows it
   const rows: Row[] = a.items.map((it, i) => ({ it, i })).filter(r => Q.has(r.it.id));
   const list = rows.filter(r => filter === 'all' || (filter === 'saved' ? r.it.m : !r.it.ok));
@@ -123,17 +125,17 @@ export default function Result() {
     // the review (back to where it was opened from). All round icon buttons.
     const finish = () => { tap(); motion.leave(() => (router.canGoBack() ? router.back() : goTo(isLesson ? '/learn' : '/exam'))); };
     const nav = (
-      <GlassBar
-        start={<FootBtn label={ui.prev} icon="arrowLeft" disabled={!k} onPress={() => step(k - 1)} />}
+      <GlassBar rtl={rtl}
+        start={<FootBtn label={ui.prev} icon={arrow.prev} disabled={!k} onPress={() => step(k - 1)} />}
         middle={<ListButton n={k + 1} of={total} onPress={() => setListOpen(true)} />}
         end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" submit onPress={finish} />
-          : <FootBtn label={ui.next} icon="arrowRight" onPress={() => step(k + 1)} />} />
+          : <FootBtn label={ui.next} icon={arrow.next} onPress={() => step(k + 1)} />} />
     );
     return (
       <Backdrop anim={motion.style}>
         <RevealScrollProvider value={reveal.value}>
         {/* A sideways swipe turns to the next or previous question. */}
-        <Pager i={k} n={total} go={to => { setK(to); toTop(); }}>
+        <Pager i={k} n={total} go={to => { setK(to); toTop(); }} rtl={rtl}>
         <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .res-line */}
           {line === 'shown' ? (

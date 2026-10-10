@@ -1,7 +1,9 @@
 // Sideways swipes.
 // usePager: turning pages (questions, signs, situations) — the content follows the finger (with resistance at the first
 // and last page); past a third of the width or a quick flick it slides out, the page changes, and the new one slides
-// in. Drag to the left: the next page (as the bar's arrow on the right); to the right: the previous one.
+// in. Drag to the left: the next page (as the bar's arrow on the right); to the right: the previous one. `rtl` (the
+// learning pages, read in Persian): the other way round, a drag to the right brings the next page, which comes in from
+// the left (as the bar's «بعدی» on the left).
 // useSwipeBack: an inner page goes back with a drag from right to left — the way such a page leaves (it came in from
 // the left, as Persian reads); the page follows the finger and slides out past a third of the width or on a flick.
 // Both take only clearly sideways moves, so scrolling up and down is left alone.
@@ -9,18 +11,23 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, PanResponder, Platform, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 
 import { tap } from './kit';
+import { PROVE_PICS } from '@/lib/config';
 
 // On the web the browser keeps only vertical scrolling for itself (no sideways history swipe over these views).
 const WEB = Platform.OS === 'web' ? ({ touchAction: 'pan-y' } as any) : null;
 const sideways = (_: unknown, g: { dx: number; dy: number }) => Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.8;
 
-type PagerNow = { i: number; n: number; width: number; go: (k: number) => void };
-export function usePager(i: number, n: number, go: (k: number) => void) {
+// The learning pages (not the exam) turn right to left, as Persian reads; only on the main site, the /app copy stays as
+// it was.
+export const learnRtl = !PROVE_PICS;
+
+type PagerNow = { i: number; n: number; width: number; go: (k: number) => void; rtl: boolean };
+export function usePager(i: number, n: number, go: (k: number) => void, rtl = false) {
   const { width } = useWindowDimensions();
   const [dx] = useState(() => new Animated.Value(0));
   // The page's current values for the gesture's handlers, kept up to date after each render.
-  const [now] = useState<PagerNow>(() => ({ i, n, width, go }));
-  useEffect(() => { Object.assign(now, { i, n, width, go }); }, [now, i, n, width, go]);
+  const [now] = useState<PagerNow>(() => ({ i, n, width, go, rtl }));
+  useEffect(() => { Object.assign(now, { i, n, width, go, rtl }); }, [now, i, n, width, go, rtl]);
   const [pan] = useState(() => pagerResponder(dx, now));
   return { dx, handlers: pan.panHandlers };
 }
@@ -30,18 +37,21 @@ function pagerResponder(dx: Animated.Value, now: PagerNow) {
     onMoveShouldSetPanResponder: sideways,
     onMoveShouldSetPanResponderCapture: sideways,
     onPanResponderMove: (_, g) => {
-      const edge = (g.dx > 0 && now.i === 0) || (g.dx < 0 && now.i === now.n - 1);
+      // `fwd`: the drag towards the next page (to the left, or to the right when rtl).
+      const fwd = now.rtl ? g.dx : -g.dx;
+      const edge = (fwd < 0 && now.i === 0) || (fwd > 0 && now.i === now.n - 1);
       dx.setValue(edge ? g.dx / 3 : g.dx);
     },
     onPanResponderRelease: (_, g) => {
-      const w = now.width;
-      const dir = g.dx < -w / 3 || g.vx < -0.5 ? 1 : g.dx > w / 3 || g.vx > 0.5 ? -1 : 0;
+      const w = now.width, s = now.rtl ? -1 : 1;
+      const fwd = -s * g.dx, vfwd = -s * g.vx;
+      const dir = fwd > w / 3 || vfwd > 0.5 ? 1 : fwd < -w / 3 || vfwd < -0.5 ? -1 : 0;
       const to = now.i + dir;
       if (!dir || to < 0 || to >= now.n) return settle();
       tap();
-      Animated.timing(dx, { toValue: -dir * w, duration: 160, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => {
+      Animated.timing(dx, { toValue: -s * dir * w, duration: 160, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => {
         now.go(to);
-        dx.setValue(dir * w * 0.35);
+        dx.setValue(s * dir * w * 0.35);
         Animated.timing(dx, { toValue: 0, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
       });
     },
@@ -78,8 +88,8 @@ function backResponder(dx: Animated.Value, now: BackNow) {
 }
 
 // The same as components, for pages whose values are known only after their own early returns.
-export function Pager({ i, n, go, style, children }: { i: number; n: number; go: (k: number) => void; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
-  const p = usePager(i, n, go);
+export function Pager({ i, n, go, rtl, style, children }: { i: number; n: number; go: (k: number) => void; rtl?: boolean; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
+  const p = usePager(i, n, go, rtl);
   return <Animated.View {...p.handlers} style={[{ flex: 1 }, WEB, style, { transform: [{ translateX: p.dx }] }]}>{children}</Animated.View>;
 }
 export function SwipeBack({ back, style, children }: { back: () => void; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
@@ -87,8 +97,8 @@ export function SwipeBack({ back, style, children }: { back: () => void; style?:
   return <Animated.View {...p.handlers} style={[{ flex: 1 }, WEB, style, backLean(p.dx)]}>{children}</Animated.View>;
 }
 // One or the other on the same page: with `pager` the questions turn, without it a drag from right to left goes back.
-export function SideSwipe({ pager, back, children }: { pager?: { i: number; n: number; go: (k: number) => void }; back: () => void; children: React.ReactNode }) {
-  const p = usePager(pager?.i ?? 0, pager?.n ?? 0, pager?.go ?? noop), b = useSwipeBack(back);
+export function SideSwipe({ pager, back, children }: { pager?: { i: number; n: number; go: (k: number) => void; rtl?: boolean }; back: () => void; children: React.ReactNode }) {
+  const p = usePager(pager?.i ?? 0, pager?.n ?? 0, pager?.go ?? noop, pager?.rtl), b = useSwipeBack(back);
   const on = pager ? p : b;
   return <Animated.View {...on.handlers} style={[{ flex: 1 }, WEB, pager ? { transform: [{ translateX: p.dx }] } : backLean(b.dx)]}>{children}</Animated.View>;
 }
