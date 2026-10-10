@@ -336,7 +336,7 @@ cat('M', 'تابلوهای خدماتی', 'امکانات نزدیک: پمپ‌�
      n('M51', 'Kirke', 'کلیسا', _s + 'کلیسا.', SERV + 'a simple church with a tower.'),
      n('M52', 'Seværdighed eller attraktion', 'جاذبه‌ی دیدنی', _s + 'جاذبه‌ی دیدنی.', SERV + 'a looped square knot symbol (the place-of-interest symbol).'),
      n('M53', 'UNESCO verdensarvsmonument', 'میراث جهانی یونسکو', 'یک اثر ثبت‌شده در فهرست میراث جهانی یونسکو در نزدیکی است (تابلوی قهوه‌ای).', 'a brown square sign with a white edge and the white UNESCO world-heritage emblem (a square inside a circle).'),
-     n('M54', 'Nationalpark', 'پارک ملی', 'ورود یا نزدیکی به پارک ملی (تابلوی قهوه‌ای).', 'a brown square sign with a white edge and a white crown.'),
+     n('M54', 'Nationalpark', 'پارک ملی', 'ورود یا نزدیکی به پارک ملی (تابلوی قهوه‌ای).', 'a brown square sign with a white edge and a white royal crown (the Danish crown with a small cross on top) in the middle; not the round UNESCO emblem.'),
      n('M57', 'Industriområde', 'منطقه‌ی صنعتی', _s + 'منطقه‌ی صنعتی.', SERV + 'a factory with saw-tooth roofs and a chimney.'),
      n('M61', 'Information', 'اطلاعات گردشگری', _s + 'مرکز اطلاعات.', SERV + 'a lower-case letter "i".'),
      n('M101', 'Dagligvareforretning', 'فروشگاه مواد غذایی', 'فروشگاه مواد غذایی نزدیک است (تابلوی خصوصی با زمینه‌ی سیاه).', 'a black square sign with a white inner square and a black shopping trolley.'),

@@ -1,0 +1,16 @@
+{
+ "about": "Pictures chosen here instead of in the console (guideref.js applies them once for each new mark): 'official' shows the sign's official drawing, 'ai' the made picture. 2026-10-10 review: C23.3 lost its red bar and E16.1 shows no merge in the made pictures; E16.2, E22.4, E69.9, F34.2, F34.3, A72 and E19 showed prove.dk's pictures; M54's «official» drawing is the UNESCO emblem, not the national-park crown.",
+ "mark": "2026-10-10",
+ "choice": {
+  "s-c23-3": "official",
+  "s-e16-1": "official",
+  "s-e16-2": "official",
+  "s-e22-4": "official",
+  "s-e69-9": "official",
+  "s-f34-2": "official",
+  "s-f34-3": "official",
+  "s-a72": "official",
+  "s-e19": "official",
+  "s-m54": "ai"
+ }
+}
