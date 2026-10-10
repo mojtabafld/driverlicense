@@ -14,13 +14,13 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, Enter, T, physical, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, Enter, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { Pager } from '@/ui/swipe';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { useColors, useIsDark } from '@/ui/theme';
+import { ARC, useColors, useIsDark } from '@/ui/theme';
 
 type Filter = 'wrong' | 'saved' | 'all';
 type Row = { it: Item; i: number };
@@ -35,7 +35,7 @@ const goTo = (path: '/' | '/exam' | '/learn') => {
 // The review's tabs, sized to the screen so they stay on one row with the back and details buttons: smaller text and
 // padding on narrow phones, and a shorter «ذخیره» there.
 function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: (f: Filter) => void; n: number; wrong: number; savedN: number }) {
-  const c = useColors(), dark = useIsDark();
+  const c = useColors(), dark = useIsDark(), seg = useArcSeg();
   const w = useWindowDimensions().width;
   const fs = w < 360 ? 12 : w < 410 ? 13 : 14, px = w < 360 ? 7 : w < 410 ? 10 : 14;
   const opts: { v: Filter; label: string }[] = [
@@ -44,13 +44,13 @@ function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: 
     { v: 'all', label: `همه (${faNum(n)})` },
   ];
   return (
-    <View style={{ flexDirection: 'row', flexShrink: 1, padding: 3, gap: 3, borderRadius: 10, backgroundColor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}>
+    <View style={[{ flexDirection: 'row', flexShrink: 1, padding: 3, gap: 3, borderRadius: 10, backgroundColor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }, ARC && seg.track]}>
       {opts.map(o => {
         const on = o.v === value;
         return (
           <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flexShrink: 1 }}>
-            <View style={{ paddingVertical: 7, paddingHorizontal: px, borderRadius: 8, backgroundColor: on ? c.strong : 'transparent' }}>
-              <T numberOfLines={1} style={{ fontSize: fs, fontWeight: '600', color: on ? c.strongFg : c.muted, textAlign: 'center' }}>{o.label}</T>
+            <View style={[{ paddingVertical: 7, paddingHorizontal: px, borderRadius: 8, backgroundColor: on ? c.strong : 'transparent' }, ARC && seg.pill(on)]}>
+              <T numberOfLines={1} style={[{ fontSize: fs, fontWeight: '600', color: on ? c.strongFg : c.muted, textAlign: 'center' }, ARC && seg.label(on)]}>{o.label}</T>
             </View>
           </Pressable>
         );
