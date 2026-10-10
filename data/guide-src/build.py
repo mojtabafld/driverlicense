@@ -152,6 +152,11 @@ src = json.load(open(os.path.join(HERE, 'prove-src.json')))
 codes = {}
 for x in src['signs']:
     codes.setdefault(norm(x['code']), []).append(x['img'])
+# Official drawings on Commons under a name that does not follow «Denmark road sign <code>» (code → file). They are
+# only offered as the official drawing, not used as a reference for the made picture (data/guide-ref is unchanged).
+COMMONS = {'A72': 'Denmark_road_sign_A72.svg', 'E16.1': 'Denmark_road_sign_E16_1.svg', 'E16.2': 'Denmark_road_sign_E16_2.svg',
+           'E19': 'Denmark_road_sign_E19-L.svg', 'E22.4': 'Denmark_road_sign_E22_4.svg', 'E69.9': 'E69_9.svg',
+           'F34.2': 'Denmark_road_sign_F34_2.svg', 'F34.3': 'Denmark_road_sign_F34_3.svg'}
 pmap = {}
 for c in app['signs']:
     seen2 = {}
@@ -162,7 +167,8 @@ for c in app['signs']:
             u = urls[n - 1]; name = u.rsplit('/', 1)[1]
             # The official drawing comes from Wikimedia Commons whenever it is there (data/guide-ref has it).
             ok = n == 1 and os.path.exists(os.path.join(REFS, norm(i['code']) + '.png'))
-            pmap[i['key']] = {'url': u, 'official': ok, **({'commons': f"Denmark_road_sign_{norm(i['code'])}.svg"} if ok else {})}
+            commons = f"Denmark_road_sign_{norm(i['code'])}.svg" if ok else COMMONS.get(norm(i['code'])) if n == 1 else None
+            pmap[i['key']] = {'url': u, 'official': bool(commons), **({'commons': commons} if commons else {})}
 for x in src['priority']:
     k = f"p-drill-{x['id']}"
     if k in art: pmap[k] = {'url': x['picture'], 'official': False}

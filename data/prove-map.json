@@ -155,7 +155,8 @@
 },
 "s-a72": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A72.svg",
-"official": false
+"official": true,
+"commons": "Denmark_road_sign_A72.svg"
 },
 "s-a73": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A73.svg",
@@ -550,11 +551,13 @@
 },
 "s-e16-1": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/E-16%2C1.jpg",
-"official": false
+"official": true,
+"commons": "Denmark_road_sign_E16_1.svg"
 },
 "s-e16-2": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/E-16%2C2.jpg",
-"official": false
+"official": true,
+"commons": "Denmark_road_sign_E16_2.svg"
 },
 "s-e17": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E17.svg",
@@ -583,7 +586,8 @@
 },
 "s-e19": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E19-L.svg",
-"official": false
+"official": true,
+"commons": "Denmark_road_sign_E19-L.svg"
 },
 "s-e21-1": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E21.1.svg",
@@ -620,7 +624,8 @@
 },
 "s-e22-4": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/E-22%2C4.jpg",
-"official": false
+"official": true,
+"commons": "Denmark_road_sign_E22_4.svg"
 },
 "s-e23": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E23.svg",
@@ -797,7 +802,8 @@
 },
 "s-e69-9": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/E-69%2C9.jpg",
-"official": false
+"official": true,
+"commons": "E69_9.svg"
 },
 "s-e70": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/E-70.jpg",
@@ -898,11 +904,13 @@
 },
 "s-f34-2": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/F-34%2C2.jpg",
-"official": false
+"official": true,
+"commons": "Denmark_road_sign_F34_2.svg"
 },
 "s-f34-3": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/F-34%2C3.jpg",
-"official": false
+"official": true,
+"commons": "Denmark_road_sign_F34_3.svg"
 },
 "s-g11": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/G-11.jpg",

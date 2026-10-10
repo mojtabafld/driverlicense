@@ -1,8 +1,9 @@
 # To do later
 
 ## Signs still showing prove.dk's picture on the main site
-On the main site these signs show prove.dk's picture (choice «prove» in the console). Change them to the AI
-picture or the official drawing (the console's «علائم» part):
+On the main site these signs show prove.dk's picture (choice «prove» in the console). Each now has its official drawing
+(public domain, Wikimedia Commons, see COMMONS in data/guide-src/build.py), copied into the database by itself after the
+deploy. In the console's «علائم» part, choose «طرح رسمی» for each, then delete this list:
 
 - `s-a72` (A72; prove.dk's file is a Wikimedia-style `Denmark_road_sign_A72.svg`)
 - `s-e19` (E19; prove.dk's file is a Wikimedia-style `Denmark_road_sign_E19-L.svg`)
