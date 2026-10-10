@@ -20,7 +20,7 @@ import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { OptionBox } from '@/ui/option-box';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
-import { Button, Card, Enter, T, tap } from '@/ui/kit';
+import { Button, Card, Enter, T, TranslateButton, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { DA_FONT, useColors } from '@/ui/theme';
 
@@ -34,6 +34,8 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
   onToggle: (i: number) => void }) {
   const c = useColors();
   const mistakes = step.statements.filter((s, i) => ticks[i] !== s.ok).length;
+  // The Persian translation, behind the translate button as in the exam: shown once checked, until hidden.
+  const [pick, setPick] = useState<boolean | null>(null), fa = pick ?? checked;
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -44,11 +46,13 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
         <T style={{ flex: 1, color: c.faint, fontSize: 12 }}>مثل آزمون واقعی</T>
       </View>
       {step.art ? <Art k={step.art} /> : null}
+      <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', marginBottom: -4 } as any}>
+        <TranslateButton on={fa} onPress={() => setPick(!fa)} />
+      </View>
       <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{step.da}</T>
-        <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{step.fa}</T>
+        {fa ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{step.fa}</T> : null}
       </View>
-      {checked ? null : <T style={{ color: c.faint, fontSize: 12.5, lineHeight: 20 }}>گزینه‌های درست را تیک بزنید (گزینه‌ی بدون تیک یعنی «نه») و بعد «بررسی» را بزنید.</T>}
       {step.statements.map((s, i) => {
         const on = !!ticks[i], wrong = checked && on !== s.ok;
         return (
@@ -57,7 +61,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
               style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               <OptionBox on={on} mark={wrong} review={checked}>
                 <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{s.da}</T>
-                <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{s.fa}</T>
+                {fa ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{s.fa}</T> : null}
               </OptionBox>
             </Pressable>
             {checked ? (

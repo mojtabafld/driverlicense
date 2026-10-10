@@ -51,19 +51,19 @@ function TimeBar({ left }: { left: number }) {
 
 function Question({ turn, ticks, answer, onToggle }: { turn: Turn; ticks: boolean[]; answer: Answer | null; onToggle: (i: number) => void }) {
   const c = useColors();
-  const [showFa, setShowFa] = useState(false);
-  const { q, teach } = turn.item, shown = !!answer, fa = showFa || shown;
+  // The translation shows once answered, until hidden; the button shows or hides it at any time.
+  const [pick, setPick] = useState<boolean | null>(null);
+  const { q, teach } = turn.item, shown = !!answer, fa = pick ?? shown;
   return (
     <View style={{ gap: 12 }}>
       {q.art ? <Art k={q.art} /> : null}
       <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', marginBottom: -4 } as any}>
-        <TranslateButton on={fa} onPress={() => setShowFa(!showFa)} />
+        <TranslateButton on={fa} onPress={() => setPick(!fa)} />
       </View>
       <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{q.da}</T>
         {fa ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{q.fa}</T> : null}
       </View>
-      {shown ? null : <T style={{ color: c.faint, fontSize: 12.5, lineHeight: 20 }}>گزینه‌های درست را تیک بزنید؛ گزینه‌ی بدون تیک یعنی «Nej».</T>}
       {turn.order.map((k, i) => {
         const s = q.statements[k], on = !!ticks[i], wrong = shown && on !== s.ok;
         return (
