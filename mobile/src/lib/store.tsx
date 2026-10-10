@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
-import { API_URL, PROVE_PICS } from './config';
+import { API_URL, FROZEN, PROVE_PICS } from './config';
 import { loadToken, saveToken } from './token';
 
 export type Saved = { id: number; a?: number[]; at: number };
@@ -133,7 +133,7 @@ export function useQuestionImage() {
   const { token, imgv } = useApp();
   return (q: Question) => {
     // At /app the question's original picture (from prove.dk), not a remade one.
-    const base = `${API_URL}/${q.img}`, v = PROVE_PICS ? 'orig=1' : imgv[q.id] ? `v=${encodeURIComponent(imgv[q.id])}` : '';
+    const base = `${API_URL}/${q.img}`, v = PROVE_PICS ? `orig=1${FROZEN ? `&frozen=${FROZEN}` : ''}` : imgv[q.id] ? `v=${encodeURIComponent(imgv[q.id])}` : '';
     return { uri: base, v, token };
   };
 }

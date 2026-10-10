@@ -1,4 +1,4 @@
-import { API_URL } from './config';
+import { API_URL, FROZEN } from './config';
 
 let token: string | null = null;
 export const setApiToken = (t: string | null) => { token = t; };
@@ -28,7 +28,7 @@ export async function api<T = any>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', ro
 
 // The question bank (site/data.js, "window.BANK={...};"), only served to signed-in users.
 export async function fetchBank<T>(): Promise<T> {
-  const res = await fetch(`${API_URL}/data.js`, { credentials: 'omit', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const res = await fetch(`${API_URL}/data.js${FROZEN ? `?frozen=${FROZEN}` : ''}`, { credentials: 'omit', headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (!res.ok) throw new ApiError('بارگذاری سؤال‌ها ناموفق بود.', res.status);
   const js = await res.text();
   return JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;\s*$/, '')) as T;

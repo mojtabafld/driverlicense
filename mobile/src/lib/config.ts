@@ -8,3 +8,6 @@ export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? webOrigin ?? 'https:/
 // The copy of the web version at kore.mintcloud.info/app (built with the base path /app): the same app, but with
 // prove.dk's own pictures — the questions' original pictures and prove.dk's for the signs and right of way.
 export const PROVE_PICS = Platform.OS === 'web' && typeof window !== 'undefined' && /^\/app(\/|$)/.test(window.location.pathname);
+// That copy is fixed: it asks for the question bank (its questions and 44 lessons) and the questions' pictures as they
+// were when it was fixed (the server's frozen/app/), so later changes to them do not reach it.
+export const FROZEN = PROVE_PICS ? 'app' : '';
