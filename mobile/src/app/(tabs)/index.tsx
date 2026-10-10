@@ -1,7 +1,8 @@
 // Home: progress at a glance (chance of passing, counts, progress chart), fitted to the screen without scrolling:
 // the chart takes the height left, and on shorter screens the cards get more compact.
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
@@ -17,6 +18,7 @@ import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { ARC, useColors } from '@/ui/theme';
+import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
@@ -114,7 +116,26 @@ export default function Home() {
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height } = useWindowDimensions();
-  const compact = height < 900, tight = height < 680;
+  // Main site: the page is fitted to the screen it is on. It starts from the height's level and, while the chart's card
+  // has less room than it needs, steps to a denser one (3: the averages row, the pass card's line and the lessons bar go,
+  // tighter padding, the chart may be a little lower), so the chart's card ends just above the tab bar without the page scrolling; a new screen height
+  // starts over.
+  const [more, setMore] = useState(0);
+  useEffect(() => setMore(0), [height]);
+  const level = Math.min(3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? more : 0));
+  const compact = level >= 1, tight = level >= 2, tighter = level >= 3;
+  const chartMin = tighter ? 84 : 120;
+  const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + 8 + 40;
+  // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
+  // page would scroll instead).
+  const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
+  const fit = () => {
+    if (!ARC || level >= 3) return;
+    chartBox.current?.measureInWindow((_x, top) => {
+      const room = height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) - top;
+      if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
+    });
+  };
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
@@ -131,20 +152,20 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <Screen fill gap={compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
-      hero={{ pic: 3, icon: 'house' }}>
+    <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
+      hero={{ pic: 3, icon: 'house' }} barGap={ARC && exams.length ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
-      <View style={{ gap: compact ? 10 : 14 }}>
-      <Card style={{ gap: compact ? 10 : 14, padding: compact ? 12 : 16 }}>
+      <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
+      <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <Ring value={est ? est.prob : 0} size={compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
+          <Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
           <View style={{ flex: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
             <Pill text={probWord} fg={probColor} bg={probSoft} />
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight || tighter ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: compact ? 8 : 12 }}>
+        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: compact ? 8 : 12, display: tighter ? 'none' : 'flex' }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
@@ -161,15 +182,15 @@ export default function Home() {
       </Card>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
-        <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
+        <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
         <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
       </View>
       </View>
       {/* A tap anywhere in the chart's card, off the bars, clears the picked attempt. */}
       {exams.length ? (
-      <View style={{ flex: 1 }}>
+      <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={() => setPicked(null)} style={{ flex: 1 }} accessible={false}>
-      <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: compact ? 12 : 16 }}>
+      <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -178,7 +199,7 @@ export default function Home() {
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.forest, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
-        <ProgressChart fill attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
+        <ProgressChart fill minH={chartMin} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
       </Card>
       </Pressable>
       </View>

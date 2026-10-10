@@ -15,7 +15,7 @@ import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
 import { Button, T, tap, useCountUp } from './kit';
-import { useColors } from './theme';
+import { ARC, useColors } from './theme';
 
 const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 120;
 // The scroll hint plays once per app start.
@@ -55,12 +55,14 @@ function ScrollHint({ run, onDone }: { run: boolean; onDone: () => void }) {
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی');
 
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
-export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void }) {
+// `minH`: with `fill`, the chart's least height (FILL_MIN unless given).
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
-  const H = fill ? Math.max(fillH, FILL_MIN) : 210;
+  const abs = !!fill && ARC;
+  const H = fill ? Math.max(fillH, minH) : 210;
   const [selIn, setSelIn] = useState<number | null>(null);
   const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
@@ -109,10 +111,11 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
   return (
     <View style={fill ? { flex: 1, gap: 8 } : { gap: 10 }}>
       <View onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setFillH(e.nativeEvent.layout.height); }}
-        style={[fill ? { flex: 1, minHeight: FILL_MIN } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
+        style={[fill ? { flex: 1, minHeight: minH } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
         accessibilityRole="image" accessibilityLabel="نمودار نمره‌ی آزمون‌ها">
         {W > 0 ? (
-          <>
+          /* Main site: laid over the box, so the box (and the chart's height) can also shrink when the home page gets denser. */
+          <View style={abs ? { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row', direction: 'ltr' } as any : { flex: 1, flexDirection: 'row', direction: 'ltr' } as any}>
             {/* The percent scale stays put on the left. */}
             <Svg width={L} height={H} pointerEvents="none">
               {ticks.map(v => (
@@ -158,7 +161,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel }: { 
               </View>
             </ScrollView>
             <ScrollHint run={hint} onDone={hideHint} />
-          </>
+          </View>
         ) : null}
       </View>
       {fill ? (
