@@ -429,21 +429,29 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
   );
 }
 
+// Arc's segmented control, shared by every switch of two or three parts (Segmented, the review's tabs and «پاسخ شما /
+// پاسخ صحیح», sign in / sign up): a pill track and the chosen part a raised pill on it, its label in the text colour.
+export function useArcSeg() {
+  const c = useColors(), dark = useTheme().theme === 'dark';
+  return {
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: c.nav } as ViewStyle,
+    pill: (on: boolean) => ({ borderRadius: radius.pill, backgroundColor: on ? (dark ? '#3d3d3d' : c.surface) : 'transparent',
+      ...(on ? { boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } : {}) }) as ViewStyle,
+    label: (on: boolean) => ({ color: on ? c.text : c.muted, fontWeight: '500' }) as TextStyle,
+  };
+}
+
 // The site's .tabs: grey track, the chosen one is a white tab with navy text.
 export function Segmented<V extends string>({ value, options, onChange }: { value: V; options: { value: V; label: string }[]; onChange: (v: V) => void }) {
-  const c = useColors(), dark = useTheme().theme === 'dark';
-  // arc: the chosen pill a step lighter than its track in the dark theme, white on grey in the light one.
-  const chosen = ARC && dark ? '#3d3d3d' : c.surface;
+  const c = useColors(), seg = useArcSeg();
   return (
-    <View style={{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: ARC ? radius.pill : radius.sm, backgroundColor: ARC ? c.nav : c.surface2 }}>
+    <View style={[{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: radius.sm, backgroundColor: c.surface2 }, ARC && seg.track]}>
       {options.map(o => {
         const on = o.value === value;
         return (
           <Pressable key={o.value} onPress={() => { tap(); onChange(o.value); }} style={{ flex: 1 }}>
-            {/* arc: Arc's segmented control, a pill track and the chosen part a raised pill on it */}
-            <View style={[{ paddingVertical: 7, borderRadius: ARC ? radius.pill : 6, backgroundColor: on ? chosen : 'transparent' },
-              ARC && on ? { boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle : null]}>
-              <T style={{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }}>{o.label}</T>
+            <View style={[{ paddingVertical: 7, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }, ARC && seg.pill(on)]}>
+              <T style={[{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }, ARC && seg.label(on)]}>{o.label}</T>
             </View>
           </Pressable>
         );

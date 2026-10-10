@@ -6,21 +6,22 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Hero, T, tap } from '@/ui/kit';
-import { useColors, useIsDark } from '@/ui/theme';
+import { Backdrop, Button, Hero, T, tap, useArcSeg } from '@/ui/kit';
+import { ARC, useColors, useIsDark } from '@/ui/theme';
 
 // Sign in / sign up switch: a soft track with the chosen side raised.
 function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
-  const c = useColors(), dark = useIsDark();
+  const c = useColors(), dark = useIsDark(), seg = useArcSeg();
   return (
-    <View style={{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }}>
+    <View style={[{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }, ARC && seg.track]}>
       {(['login', 'register'] as const).map(m => {
         const on = m === mode;
         return (
           <Pressable key={m} onPress={() => { tap(); onChange(m); }} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: on }}>
-            <View style={{ paddingVertical: 9, borderRadius: 10, backgroundColor: on ? c.surface : 'transparent',
-              ...(on ? { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 } : {}) }}>
-              <T style={{ textAlign: 'center', fontSize: 14.5, fontWeight: on ? '700' : '600', color: on ? c.link : c.muted }}>{m === 'login' ? 'ورود' : 'ثبت‌نام'}</T>
+            <View style={[{ paddingVertical: 9, borderRadius: 10, backgroundColor: on ? c.surface : 'transparent',
+              ...(on ? { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 } : {}) },
+              ARC && { ...seg.pill(on), paddingVertical: 10, shadowOpacity: 0, elevation: 0 }]}>
+              <T style={[{ textAlign: 'center', fontSize: 14.5, fontWeight: on ? '700' : '600', color: on ? c.link : c.muted }, ARC && seg.label(on)]}>{m === 'login' ? 'ورود' : 'ثبت‌نام'}</T>
             </View>
           </Pressable>
         );
