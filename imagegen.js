@@ -81,7 +81,8 @@ function init(s, siteDir) {
     .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message))
     .then(() => adoptHomeTrial()).catch(e => console.error('home trial', e.message))
     .then(() => HERO.start()).catch(e => console.error('header pictures', e.message))
-    .then(() => HERO_TRY.start()).catch(e => console.error('trial pictures', e.message));
+    .then(() => HERO_TRY.start()).catch(e => console.error('trial pictures', e.message))
+    .then(() => STORE.start()).catch(e => console.error('store pictures', e.message));
 }
 
 // The pictures ordered by hand (data/art-orders.json): picture keys or group names (data/guide-groups.json).
@@ -198,6 +199,7 @@ async function poll() {
   if (await AVATAR.poll().catch(() => true)) pending = true;
   if (await HERO.poll().catch(() => true)) pending = true;
   if (await HERO_TRY.poll().catch(() => true)) pending = true;
+  if (await STORE.poll().catch(() => true)) pending = true;
   if (await GUIDE.poll().catch(() => true)) pending = true;
   if (await pollOneOff().catch(() => true)) pending = true;
   if (pending) schedule();
@@ -1060,6 +1062,23 @@ const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'full1', aspect: '4:3', prefi
   prompts: { 1: { prompt: UPSCALE_PROMPT, ref: 'home-light.jpg' }, 2: { prompt: UPSCALE_PROMPT, ref: 'home-dark.jpg' } } });
 const heroTryBlob = HERO_TRY.blob;
 
+// ---------- the pictures behind the app's store screenshots (Play Store / App Store) ----------
+// Six tall scenes, one per feature, laid behind a phone with the app on it and a big title (composed outside the app):
+// the objects stand large in the lower right corner, partly cut by the right edge, the rest one calm dark green.
+// Served at /store-art/<n>.png; not used by the app.
+const STORE_STYLE = 'Style: a modern, minimal 3D illustration for a premium mobile app\'s store page: a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, gentle soft shadows, no clutter, no fine texture. Palette: white, pale mint (#cfe9cf), warm coral (#e8957a) and periwinkle blue (#5b74c4), with small accents of green, red or warm yellow. The background is one rich, even, dark forest green (#14421c) from edge to edge, with no hills, no floor line, no border, no frame and no vignette. The objects form ONE large group in the LOWER RIGHT of the tall picture: from about 58% of the height down to about 95%, and from about 40% of the width to the right edge, the rightmost object running off the right edge a little; the whole upper 55% and the left side are plain, empty dark green (a title and a phone will be laid there). Danish traffic signs follow their official design. No text, no letters, no numbers, no logos, no brand names, no watermarks, no faces, no phones, no screens.';
+const STORE_PROMPTS = [
+  'Ready for the driving licence: a large rounded coral car seen from the front at an angle, and beside it a white driving licence card with a faceless photo silhouette and a green check badge, a small Danish flag on a short pole.',
+  'A real theory test: a large white clipboard with answer boxes ticked in green and one crossed in coral, a round white stopwatch with a coral button, and a yellow pencil.',
+  'Learning step by step: a large open periwinkle-blue book with a winding grey road rising from its pages, a small coral car on the road, and a white graduation cap.',
+  'Danish traffic signs: a cluster of large traffic signs on short grey poles: a red-and-white triangular warning sign, a round red-ringed no-entry sign, a round blue mandatory arrow sign and a yellow diamond priority road sign.',
+  'Understanding each sign: a large red-and-white triangular warning sign on a short pole and a big rounded magnifying glass in front of it, with a small open notebook.',
+  'Right of way at a crossroads: a small rounded grey crossroads with white markings seen from above at an angle, two small rounded cars (coral and periwinkle) meeting at it, a small give-way triangle sign and a traffic light.',
+];
+const STORE = artSet({ metaKey: 'storeArt', set: 'v1', aspect: '2:3', prefix: 'store-art', resolution: '4K', full: true, clean: 'cl2',
+  prompts: STORE_PROMPTS, style: STORE_STYLE });
+const storeBlob = STORE.blob;
+
 // A picture of the teaching pages, as it was ordered: { prompt, aspect, ref } (data/guide-art.json).
 const GUIDE_PROMPTS = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'guide-art.json'), 'utf8'));
 const guidePrompt = key => GUIDE_PROMPTS[key] || null;
@@ -1156,6 +1175,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
