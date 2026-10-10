@@ -22,7 +22,7 @@ const SAMPLE = {
   en: 'Hi! This is how my voice sounds when I read the questions aloud for you.',
 };
 const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
-const PER_USER_PER_HOUR = 60; // new (not yet made) recordings a user may cause per hour
+const PER_USER_PER_HOUR = 60, ALL_PER_HOUR = 600; // new (not yet made) recordings a user may cause per hour
 
 let Q = null;
 const inflight = new Map(), usage = new Map();
@@ -33,11 +33,13 @@ function loadBank(siteDir) {
   const js = fs.readFileSync(path.join(siteDir, 'data.js'), 'utf8');
   Q = new Map(JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, '')).questions.map(q => [q.id, q]));
 }
+// Each user's hourly allowance, and ALL_PER_HOUR for everyone together ('*' is no username), so many accounts at once
+// cannot run up the bill either.
 function allowed(username) {
-  const now = Date.now(), list = (usage.get(username) || []).filter(t => now - t < 3600e3);
-  usage.set(username, list);
-  if (list.length >= PER_USER_PER_HOUR) return false;
-  list.push(now); return true;
+  const now = Date.now(), recent = k => { const l = (usage.get(k) || []).filter(t => now - t < 3600e3); usage.set(k, l); return l; };
+  const list = recent(username), all = recent('*');
+  if (list.length >= PER_USER_PER_HOUR || all.length >= ALL_PER_HOUR) return false;
+  list.push(now); all.push(now); return true;
 }
 
 // What is read: the question, a pause, then each statement with its number.

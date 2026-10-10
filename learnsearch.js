@@ -9,7 +9,7 @@ const path = require('node:path');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const MODEL = process.env.SEARCH_AI_MODEL || 'claude-sonnet-5-5';
-const PER_USER_PER_HOUR = 60, MAX_RESULTS = 12;
+const PER_USER_PER_HOUR = 60, ALL_PER_HOUR = 600, MAX_RESULTS = 12;
 const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 // Letters folded so Persian / Arabic spellings, half-spaces and Danish letters compare alike.
 const norm = s => String(s || '').toLowerCase().replace(/[يى]/g, 'ی').replace(/ك/g, 'ک').replace(/[ة]/g, 'ه').replace(/[أإآ]/g, 'ا')
@@ -75,11 +75,13 @@ Rules:
 - For each, a short reason in Persian (at most 14 words) saying what in it answers the search.
 Answer with JSON only, in exactly this form: {"results":[{"id":"…","why":"…"}]}`;
 
+// Each user's hourly allowance, and ALL_PER_HOUR for everyone together ('*' is no username), so many accounts at once
+// cannot run up the bill either.
 function allowed(username) {
-  const now = Date.now(), list = (usage.get(username) || []).filter(t => now - t < 3600e3);
-  usage.set(username, list);
-  if (list.length >= PER_USER_PER_HOUR) return false;
-  list.push(now); return true;
+  const now = Date.now(), recent = k => { const l = (usage.get(k) || []).filter(t => now - t < 3600e3); usage.set(k, l); return l; };
+  const list = recent(username), all = recent('*');
+  if (list.length >= PER_USER_PER_HOUR || all.length >= ALL_PER_HOUR) return false;
+  list.push(now); all.push(now); return true;
 }
 
 // → { results: [{ id, kind, title, sub, group, why, … }] } (see init for each kind's fields).

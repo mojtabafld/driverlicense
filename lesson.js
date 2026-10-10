@@ -13,7 +13,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const imagegen = require('./imagegen');
 
 const MODEL = process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
-const PER_USER_PER_HOUR = 40; // new (uncached) lessons a user may trigger per hour
+const PER_USER_PER_HOUR = 40, ALL_PER_HOUR = 400; // new (uncached) lessons a user may trigger per hour
 
 // How the picture is used: describe only what it clearly shows and what matters for the question.
 const IMAGE_RULES = `- موقعیت را فقط با چیزهایی توصیف کنید که در تصویر به‌وضوح دیده می‌شود و به سؤال مربوط است؛ جزئیات بی‌ربط تصویر (رنگ ساختمان‌ها، آسمان و…) را نیاورید.
@@ -106,11 +106,13 @@ function loadBank(siteDir) {
 
 const available = () => !!process.env.ANTHROPIC_API_KEY;
 
+// Each user's hourly allowance, and ALL_PER_HOUR for everyone together ('*' is no username), so many accounts at once
+// cannot run up the bill either.
 function allowed(username) {
-  const now = Date.now(), list = (usage.get(username) || []).filter(t => now - t < 3600e3);
-  usage.set(username, list);
-  if (list.length >= PER_USER_PER_HOUR) return false;
-  list.push(now); return true;
+  const now = Date.now(), recent = k => { const l = (usage.get(k) || []).filter(t => now - t < 3600e3); usage.set(k, l); return l; };
+  const list = recent(username), all = recent('*');
+  if (list.length >= PER_USER_PER_HOUR || all.length >= ALL_PER_HOUR) return false;
+  list.push(now); all.push(now); return true;
 }
 
 // The question's picture as an image block: the one the page shows, so a new picture made for the question

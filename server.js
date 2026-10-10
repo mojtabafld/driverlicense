@@ -21,6 +21,7 @@ const consolepics = require('./consolepics');
 const consoleprompts = require('./consoleprompts');
 const learnsearch = require('./learnsearch');
 const tts = require('./tts');
+const webpic = require('./webpic');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
@@ -54,9 +55,10 @@ const CONSOLE_HTML = fs.readFileSync(path.join(__dirname, 'console', 'index.html
 let store; // set in main()
 
 // ---------- auth helpers ----------
-const hashPw = (pw, salt) => crypto.scryptSync(pw, salt, 64).toString('hex');
-function checkPw(pw, user) {
-  const a = Buffer.from(hashPw(pw, user.salt), 'hex'), b = Buffer.from(user.hash, 'hex');
+// scrypt runs on the thread pool (not the event loop), so a flood of sign-in tries does not stall every other request.
+const hashPw = (pw, salt) => new Promise((resolve, reject) => crypto.scrypt(pw, salt, 64, (e, k) => (e ? reject(e) : resolve(k.toString('hex')))));
+async function checkPw(pw, user) {
+  const a = Buffer.from(await hashPw(pw, user.salt), 'hex'), b = Buffer.from(user.hash, 'hex');
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 const isHttps = req => (req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https';
@@ -217,6 +219,31 @@ function addFail(ip) {
   if (!f || Date.now() - f.t > 10 * 60e3) fails.set(ip, { n: 1, t: Date.now() });
   else f.n++;
 }
+// New accounts: at most 5 an hour from one address and 40 an hour in all, so a script cannot make accounts in bulk
+// (each account has its own hourly allowance of AI lessons, searches and recordings).
+const REG_PER_IP_HOUR = 5, REG_ALL_HOUR = 40, regs = new Map();
+function registerAllowed(ip) {
+  const now = Date.now(), recent = k => { const l = (regs.get(k) || []).filter(t => now - t < 3600e3); regs.set(k, l); return l; };
+  const mine = recent(ip), all = recent('*');
+  if (mine.length >= REG_PER_IP_HOUR || all.length >= REG_ALL_HOUR) return false;
+  mine.push(now); all.push(now); return true;
+}
+// Every API call: at most API_PER_MIN a minute from one address (the app makes a few dozen at most), so one client
+// cannot keep the server and its database busy. /api/config (the health check) is not counted.
+const API_PER_MIN = 240, apiHits = new Map();
+function apiAllowed(ip) {
+  const now = Date.now(), h = apiHits.get(ip);
+  if (!h || now - h.t > 60e3) { apiHits.set(ip, { t: now, n: 1 }); return true; }
+  return ++h.n <= API_PER_MIN;
+}
+// The counters above forget old entries, so they cannot grow without end.
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, f] of fails) if (now - f.t > 10 * 60e3) fails.delete(k);
+  for (const [k, h] of apiHits) if (now - h.t > 60e3) apiHits.delete(k);
+  for (const [k, l] of regs) if (!l.length || now - l[l.length - 1] > 3600e3) regs.delete(k);
+  for (const [k, l] of reportTimes) if (!l.length || now - l[l.length - 1] > 3600e3) reportTimes.delete(k);
+}, 5 * 60e3).unref();
 function safeEqual(a, b) {
   const x = Buffer.from(String(a)), y = Buffer.from(String(b));
   return x.length === y.length && crypto.timingSafeEqual(x, y);
@@ -263,6 +290,10 @@ const WEBS = {
     page: b => Buffer.from(b.toString('utf8').replace('href="/manifest.webmanifest"', 'href="/app/manifest.webmanifest"')),
     manifest: () => { const m = JSON.parse(fs.readFileSync(path.join(__dirname, 'app-web', 'manifest.webmanifest'), 'utf8')); return Buffer.from(JSON.stringify({ ...m, start_url: '/app/', scope: '/app/' })); } },
 };
+// The pages themselves: never shown inside another site's frame (clickjacking), no plugins, no <base> tricks, and
+// only the origin (not the path) sent to other sites.
+const PAGE_HEADERS = { 'X-Frame-Options': 'DENY', 'Content-Security-Policy': "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+  'Referrer-Policy': 'strict-origin-when-cross-origin' };
 function serveAppWeb(req, res, p, web = WEBS.root) {
   const dir = web.dir, index = path.join(dir, 'index.html');
   if (web.manifest && p === '/manifest.webmanifest') {
@@ -281,7 +312,7 @@ function serveAppWeb(req, res, p, web = WEBS.root) {
       res.writeHead(200, {
         'Content-Type': APP_MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
         'Cache-Control': isIndex ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
-        'X-Content-Type-Options': 'nosniff',
+        'X-Content-Type-Options': 'nosniff', ...(isIndex ? PAGE_HEADERS : {}),
       });
       res.end(req.method === 'HEAD' ? undefined : buf);
     });
@@ -293,7 +324,7 @@ function serveStatic(req, res) {
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
   // The admin's console (its page; it signs in and reads /api/guideref itself).
   if (p === '/console' || p === '/console/') {
-    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY' });
+    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...PAGE_HEADERS });
     return res.end(req.method === 'HEAD' ? undefined : CONSOLE_HTML);
   }
   // The app's fixed copy with prove.dk's pictures at /app/.
@@ -307,7 +338,11 @@ function serveStatic(req, res) {
   const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-9]|10)\.png$/.exec(p), tm = /^\/hero-try\/([1-2])\.png$/.exec(p), sm = /^\/store-art\/([1-7])\.png$/.exec(p),
     gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p);
   if (im || lm || am || hm || tm || sm || gm2 || cm) {
-    return (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : guideref.blob(gm2[1])).then(b => {
+    const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : guideref.blob(gm2[1]));
+    // Sent smaller and kept in memory (webpic.js) when the picture's version is known; the others as they are.
+    const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]]
+      : cm ? imagegen.courseVersions()[cm[1]] : undefined;   // (/guide-art has its own sizes)
+    return (ver ? webpic.get(`${p}:${ver}`, load) : load()).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       // (A sign chosen from prove.dk can be SVG: shown as a picture only, nothing in it runs.)
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff',
@@ -374,8 +409,10 @@ function serveFile(req, res, p, root = SITE) {
 // ---------- API ----------
 const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 
+let lastKiePoll = 0;
 async function api(req, res, route) {
   const ip = clientIp(req);
+  if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
     return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), heroDiag: imagegen.heroDiag(),
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
@@ -389,12 +426,13 @@ async function api(req, res, route) {
       return send(res, 403, { error: 'کد دعوت نادرست است.' });
     }
     const u = String(username || '').trim().toLowerCase();
+    if (!registerAllowed(ip)) return send(res, 429, { error: 'ساخت حساب از این اتصال زیاد بوده است؛ کمی بعد دوباره امتحان کنید.' });
     if (!USER_RE.test(u)) return send(res, 400, { error: 'نام کاربری باید ۳ تا ۳۲ کاراکتر انگلیسی، عدد، نقطه، خط تیره یا زیرخط باشد.' });
     // Any password is accepted (no length or character rules); only an empty one is refused.
     if (typeof password !== 'string' || !password.length) return send(res, 400, { error: 'رمز عبور را وارد کنید.' });
     if (store.users[u]) return send(res, 409, { error: 'این نام کاربری قبلاً ثبت شده است.' });
     const salt = crypto.randomBytes(16).toString('hex');
-    const user = { username: u, name: String(name || u).trim().slice(0, 40) || u, salt, hash: hashPw(password, salt),
+    const user = { username: u, name: String(name || u).trim().slice(0, 40) || u, salt, hash: await hashPw(password, salt),
       created: Date.now(), attempts: [], settings: {} };
     store.users[u] = user;
     await store.saveUser(user);
@@ -405,7 +443,7 @@ async function api(req, res, route) {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const { username, password } = await readBody(req);
     const user = store.users[String(username || '').trim().toLowerCase()];
-    if (!user || typeof password !== 'string' || !checkPw(password, user)) {
+    if (!user || typeof password !== 'string' || !(await checkPw(password, user))) {
       addFail(ip);
       return send(res, 401, { error: 'نام کاربری یا رمز عبور اشتباه است.' });
     }
@@ -415,7 +453,11 @@ async function api(req, res, route) {
   }
 
   // kie.ai calls this when a picture is ready; the body is not trusted, it only makes the server check its jobs now.
-  if (req.method === 'POST' && route === 'kiecallback') { imagegen.poll().catch(() => {}); return send(res, 200, { ok: true }); }
+  // (At most once every 10 seconds, however often it is called.)
+  if (req.method === 'POST' && route === 'kiecallback') {
+    if (Date.now() - lastKiePoll > 10e3) { lastKiePoll = Date.now(); imagegen.poll().catch(() => {}); }
+    return send(res, 200, { ok: true });
+  }
 
   // Claude Code reads and edits a console item's saved prompt for the admin (consoleprompts.js), with the
   // X-Claude-Code-Key header matching the CLAUDE_CODE_KEY secret (nothing here without it):
@@ -458,9 +500,9 @@ async function api(req, res, route) {
     }
     if (b.password !== undefined) {
       if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
-      if (typeof b.current !== 'string' || !checkPw(b.current, user)) { addFail(ip); return send(res, 403, { error: 'رمز عبور فعلی درست نیست.' }); }
+      if (typeof b.current !== 'string' || !(await checkPw(b.current, user))) { addFail(ip); return send(res, 403, { error: 'رمز عبور فعلی درست نیست.' }); }
       if (typeof b.password !== 'string' || !b.password.length) return send(res, 400, { error: 'رمز عبور جدید را وارد کنید.' });
-      user.salt = crypto.randomBytes(16).toString('hex'); user.hash = hashPw(b.password, user.salt);
+      user.salt = crypto.randomBytes(16).toString('hex'); user.hash = await hashPw(b.password, user.salt);
       for (const [t, x] of Object.entries(store.sessions)) if (x.username === user.username && t !== s.token) { delete store.sessions[t]; await store.deleteSession(t); }
     }
     await store.saveUser(user);
@@ -888,10 +930,15 @@ async function main() {
   try { learnsearch.init(SITE); } catch (e) { console.error('search init', e.message); }
   setTimeout(() => imagegen.learnColours(), 3000);   // the «آموزش» pictures' colours ready for the first visits
   consoleprompts.init(store, imagegen, guideref, consolepics);
+  webpic.init(store);
+  // The course's pictures ready in memory soon after a start (webpic.js).
+  webpic.warm(() => Object.entries(imagegen.courseVersions()).map(([k, v]) => [`/course-art/${k}.png:${v}`, () => imagegen.courseBlob(k)]));
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });
-  http.createServer(async (req, res) => {
+  const server = http.createServer(async (req, res) => {
+    // Browsers keep to HTTPS for this site from the first visit on.
+    if (isHttps(req)) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
     let pathname;
     try { pathname = new URL(req.url, 'http://x').pathname; } catch { res.writeHead(400); return res.end(); }
     // The app's web version runs on another origin and authenticates with a Bearer token (never cookies),
@@ -911,7 +958,10 @@ async function main() {
       }
     } else if (req.method === 'GET' || req.method === 'HEAD') serveStatic(req, res);
     else { res.writeHead(405); res.end(); }
-  }).listen(PORT, HOST, () => {
+  });
+  // A client that sends its request very slowly is dropped instead of holding a connection open for minutes.
+  server.headersTimeout = 30e3; server.requestTimeout = 120e3;
+  server.listen(PORT, HOST, () => {
     const nets = Object.values(require('node:os').networkInterfaces()).flat().filter(n => n && n.family === 'IPv4' && !n.internal);
     console.log(`TeoriPrøve ${VERSION} running:\n  http://localhost:${PORT}`);
     nets.forEach(n => console.log(`  http://${n.address}:${PORT}   (other devices on your Wi-Fi)`));

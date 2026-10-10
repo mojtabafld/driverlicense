@@ -50,6 +50,15 @@ Accounts are stored in `data/db.json` when `DATABASE_URL` is not set.
 edit variables in the dashboard. Do not run `doctl apps update --spec .do/app.yaml` on the live app, since
 it replaces the whole variable list and would delete the secrets that were added only in the dashboard.
 
+### Security limits
+
+- Sign-in, password change and the Claude Code key: 10 failed tries per address per 10 minutes.
+- New accounts: 5 per address per hour, 40 per hour in all.
+- Every API call except `/api/config` (the health check): 240 per address per minute.
+- AI lessons, AI search and recordings: each user's hourly allowance (40 / 60 / 60) and an hourly total for everyone (400 / 600 / 600).
+- Pages are sent with `X-Frame-Options: DENY`, a `frame-ancestors 'none'` CSP, a Referrer-Policy and HSTS.
+- Teaching pictures (`/course-art`, `/learn-art`, …; not `/guide-art`) are sent as JPEG when they have no transparency (`webpic.js`), about a tenth of the PNG's size, and kept in memory and in the database.
+
 ### Environment variables
 
 | Variable | Where it is set | Purpose |
