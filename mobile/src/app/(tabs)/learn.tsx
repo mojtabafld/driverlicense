@@ -1,6 +1,6 @@
-// «آموزش»: four parts as wide cards, one under the other (the page scrolls under its picture header): each card's
-// right side is its picture, whole and up to the card's edges (made by the server's image model; the part's icon
-// until it is there), and to the left of it its title, a line on what is in it and its progress note; a card opens
+// «آموزش»: four parts as rows one under the other (the page scrolls under its picture header), each a quiet card
+// (ui/list-card.tsx) with its picture on a small tile at its right (made by the server's image model; the part's icon
+// until it is there), and to the left of it its title, a line on what is in it and its progress note; a row opens
 // its part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules, the road signs, and right of way.
 // At /app (prove.dk's copy) the cards stay two by two and the first one is prove.dk's 44 lessons one by one
 // (app/learn-lessons.tsx) instead of the app's own course.
@@ -15,32 +15,21 @@ import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
+import { ListCard } from '@/ui/list-card';
 import { useColors } from '@/ui/theme';
 
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const v = learnArt[n];
-  return (
-    <Card onPress={() => router.push(href)} style={{ padding: 0, overflow: 'hidden' }}>
-      <View style={{ flexDirection: 'row', alignItems: 'stretch', minHeight: 84 }}>
-        {/* The picture, whole, filling the card's right side up to its edges in the picture's own background colour
-            (no frame of its own); the icon on a soft background until the picture is made. */}
-        <View style={{ width: 100, overflow: 'hidden', backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-          {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, transform: [{ scale: 1.2 }] }} contentFit="contain" transition={250} />
-            : <Icon name={icon} size={36} color={c.link} weight="semibold" />}
-        </View>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 12 }}>
-          <View style={{ flex: 1, gap: 1 }}>
-            <T style={{ fontWeight: '700', fontSize: 15, lineHeight: 22 }} numberOfLines={1}>{title}</T>
-            <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={2}>{text}</T>
-            {note ? <T style={{ color: c.text, fontSize: 11.5, lineHeight: 17, fontWeight: '600' }} numberOfLines={1}>{note}</T> : null}
-          </View>
-          <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
-        </View>
-      </View>
-    </Card>
+  // The picture, whole, on its tile in the picture's own background colour; the icon until the picture is made.
+  const pic = (
+    <View style={{ flex: 1, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+      {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, transform: [{ scale: 1.15 }] }} contentFit="contain" transition={250} />
+        : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
+    </View>
   );
+  return <ListCard onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={2} note={note} />;
 }
 
 // /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
