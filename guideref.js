@@ -10,7 +10,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const png = require('./png');
 
 const UA = 'TeoriProve/1.0 (https://kore.mintcloud.info; driving-theory study app)';
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8'));
@@ -24,6 +23,7 @@ function init(s, ig) {
   // prove.dk's pictures and the official drawings are copied in on their own: a minute after the start, whatever is
   // not there yet (nothing is fetched again).
   if (missing()) setTimeout(() => { if (missing()) startImport(); }, 60e3).unref();
+  setTimeout(() => warm().catch(e => console.error('guide web warm', e.message)), 90e3).unref();
 }
 const missing = () => Object.entries(MAP).some(([k, x]) => { const it = meta().items[k] || {}; return !it.prove || (x.official && !it.off); });
 const meta = () => (store.meta.guideRef = store.meta.guideRef || { items: {}, choice: {} });
@@ -171,32 +171,6 @@ async function refBlob(kind, key) {
   return store.getBlob(`${kind === 'official' ? 'ref-off' : 'ref-prove'}-${key}`);
 }
 
-// A sign's made picture with its plain light grey background turned white (a levels step against the picture's edge
-// colour, so the sign's own colours only lighten a touch), as it looks on the dark theme's cards. Kept in memory.
-const whiteCache = new Map();
-async function whitened(key) {
-  const b = await imagegen.guideBlob(key);
-  if (!b || b.mime !== 'image/png') return b;
-  const id = `${key}:${imagegen.guideVersions()[key] || ''}:${b.data.length}`;
-  if (whiteCache.has(id)) return whiteCache.get(id);
-  let out = b;
-  try {
-    const im = png.decode(b.data);
-    if (im) {
-      const hex = png.edgeColour(im), bg = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)), ch = im.ch, px = im.px;
-      // Only a light, nearly grey background is whitened (a marking's road scene or a dark edge is left alone).
-      if (bg.every(x => x >= 215) && Math.max(...bg) - Math.min(...bg) <= 18) {
-        const k = bg.map(x => 255 / x);
-        for (let i = 0; i < px.length; i += ch) for (let j = 0; j < 3; j++) px[i + j] = Math.min(255, Math.round(px[i + j] * k[j]));
-        out = { mime: 'image/png', data: png.encode(im) };
-      }
-    }
-  } catch (e) { console.error('whiten', key, e.message); }
-  if (whiteCache.size > 600) whiteCache.clear();
-  whiteCache.set(id, out);
-  return out;
-}
-
 // What the app gets: the made pictures (signs on white), with the official drawing wherever the admin chose it.
 function versions() {
   const m = meta(), v = imagegen.guideVersions();
@@ -206,6 +180,7 @@ function versions() {
     if (c === 'official' && it.off) v[k] = `o${it.off.toString(36)}`;
     else if (c === 'prove' && it.prove) v[k] = `p${it.prove.toString(36)}`;
   }
+  for (const k of Object.keys(v)) v[k] += 'j';   // served small (guideweb.js) since: new pictures for the caches
   return v;
 }
 // For the app's copy at /app: prove.dk's picture wherever it is copied in («p» + when), else what the app gets.
@@ -214,11 +189,73 @@ function proveVersions() {
   for (const [k, it] of Object.entries(m.items)) if (it.prove && MAP[k]) v[k] = `p${it.prove.toString(36)}`;
   return v;
 }
-async function blob(key) {
+// What /guide-art/<key>.png is made from: the official drawing or prove.dk's picture wherever the admin chose it, else
+// the made picture (a sign's to be whitened).
+async function source(key) {
   const m = meta();
-  if (m.choice[key] === 'official' && (m.items[key] || {}).off) { const b = await store.getBlob(`ref-off-${key}`); if (b) return b; }
-  if (m.choice[key] === 'prove' && (m.items[key] || {}).prove) { const b = await store.getBlob(`ref-prove-${key}`); if (b) return b; }
-  return key.startsWith('s-') ? whitened(key) : imagegen.guideBlob(key);
+  if (m.choice[key] === 'official' && (m.items[key] || {}).off) { const b = await store.getBlob(`ref-off-${key}`); if (b) return { b }; }
+  if (m.choice[key] === 'prove' && (m.items[key] || {}).prove) { const b = await store.getBlob(`ref-prove-${key}`); if (b) return { b }; }
+  return { b: await imagegen.guideBlob(key), white: key.startsWith('s-') };
+}
+
+// What the app downloads (guideweb.js): the picture at size l | m | s, made once per version in a worker thread and
+// kept in the database (blobs gw-<size>-<key>-<version>), so neither a restart nor a new deploy makes it again; the
+// last ones used are also kept in memory. A visit never waits on the work of another: each picture is made once at a
+// time, and the ones not made yet are made in the background a little after the start (warm).
+let worker = null, jobs = new Map(), seq = 0;
+function work(b, white) {
+  if (!worker) {
+    const { Worker } = require('node:worker_threads');
+    worker = new Worker(path.join(__dirname, 'guideweb.js'));
+    worker.unref();
+    worker.on('message', ({ id, out, error }) => { const j = jobs.get(id); jobs.delete(id); if (j) error ? j.reject(new Error(error)) : j.resolve(out); });
+    const fail = e => { worker = null; for (const j of jobs.values()) j.reject(e || new Error('worker stopped')); jobs.clear(); };
+    worker.on('error', fail); worker.on('exit', () => fail());
+  }
+  const id = ++seq, data = new Uint8Array(b.data).buffer;   // a copy of its own, handed over to the worker
+  return new Promise((resolve, reject) => { jobs.set(id, { resolve, reject }); worker.postMessage({ id, data, mime: b.mime, white }, [data]); });
+}
+const SIZES = ['l', 'm', 's'], MEM_MAX = 48e6;
+const mem = new Map(); let memBytes = 0;
+const remember = (id, b) => {
+  if (mem.has(id)) return;
+  mem.set(id, b); memBytes += b.data.length;
+  for (const [k, x] of mem) { if (memBytes <= MEM_MAX) break; mem.delete(k); memBytes -= x.data.length; }
+};
+const making = new Map();
+const blobName = (size, key, v) => `gw-${size}-${key}-${v}`;
+async function make(key, v) {
+  const { b, white } = await source(key);
+  if (!b) return null;
+  let out = null;
+  try { out = await work(b, white); } catch (e) { console.error('guide web', key, e.message); }
+  if (!out) out = { l: b, m: b, s: b };   // not a PNG, or the work failed: the picture as it is
+  for (const size of SIZES) { await store.saveBlob(blobName(size, key, v), out[size].mime, out[size].data); remember(`${size}:${key}:${v}`, out[size]); }
+  return out;
+}
+async function webBlob(key, size = 'l') {
+  if (!SIZES.includes(size)) size = 'l';
+  const v = versions()[key];
+  if (!v) return null;
+  const id = `${size}:${key}:${v}`;
+  if (mem.has(id)) { const b = mem.get(id); mem.delete(id); mem.set(id, b); return b; }
+  const saved = await store.getBlob(blobName(size, key, v));
+  if (saved) { remember(id, saved); return saved; }
+  const mk = `${key}:${v}`;
+  if (!making.has(mk)) making.set(mk, make(key, v).finally(() => making.delete(mk)));
+  const out = await making.get(mk);
+  return out && out[size];
+}
+// Makes every picture not in the database yet, one after another, and deletes the ones of older versions.
+async function warm() {
+  if (!store.blobKeys) return;
+  const have = new Set(await store.blobKeys('gw-')), v = versions(), want = new Set();
+  for (const [key, ver] of Object.entries(v)) for (const size of SIZES) want.add(blobName(size, key, ver));
+  for (const k of have) if (!want.has(k)) await store.deleteBlob(k);
+  for (const [key, ver] of Object.entries(v)) {
+    if (have.has(blobName('s', key, ver)) || making.has(`${key}:${ver}`)) continue;
+    await webBlob(key).catch(e => console.error('guide web', key, e.message));
+  }
 }
 
 // One sign or right-of-way item in full for the console's marked list: its row as in list(), its group and its text.
@@ -230,4 +267,4 @@ function item(key) {
   return null;
 }
 
-module.exports = { init, startImport, editRegions, list, item, choose, draft, generate, refBlob, versions, proveVersions, blob };
+module.exports = { init, startImport, editRegions, list, item, choose, draft, generate, refBlob, versions, proveVersions, webBlob };

@@ -9,8 +9,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
+import { useApp } from '@/lib/store';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
-import { GuideImage, Rich } from '@/ui/guide-visual';
+import { GuideImage, prefetchGuide, Rich } from '@/ui/guide-visual';
 import { Icon } from '@/ui/icon';
 import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion } from '@/ui/kit';
 import { GlassTop } from '@/ui/liquid';
@@ -42,6 +43,9 @@ export default function GuideView() {
   // Each page starts at its top.
   useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [i]);
   const swipe = usePager(i, items.length, setI);
+  // The next two pages' pictures and the previous one's are loaded ahead.
+  const { guideArt } = useApp();
+  useEffect(() => { prefetchGuide([i + 1, i + 2, i - 1].filter(j => j >= 0 && j < items.length).map(j => items[j].key), guideArt); }, [i, items, guideArt]);
 
   const it = items[i], last = i === items.length - 1;
   const back = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
