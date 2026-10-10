@@ -2,7 +2,7 @@
 // floating Liquid Glass bar at the bottom with previous / the timer / next.
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, BackHandler, Easing, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Animated, BackHandler, Easing, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { imgSource } from '@/lib/img-source';
@@ -17,6 +17,7 @@ import { ZoomableImage } from '@/ui/zoom';
 import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
+import { Sheet, SheetScroll } from '@/ui/sheet';
 import { OptionBox } from '@/ui/option-box';
 import { Pager } from '@/ui/swipe';
 import { useWebBackGuard } from '@/ui/web-back';
@@ -184,58 +185,53 @@ export default function Run() {
         items={qs.map((_, k) => ({ n: k + 1, tone: ticks[k].some(Boolean) ? 'answered' : 'empty', marked: flags.includes(k) }))} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
-      <Modal visible={dialog === 'handin'} transparent animationType="fade" onRequestClose={() => setDialog(null)}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
-          <View style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
-            borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
-            {/* The title, with a back button at the top right that returns to the exam. */}
-            <View style={{ minHeight: 40, justifyContent: 'center' }}>
-              <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
-              <Pressable onPress={() => { tap(); setDialog(null); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت به آزمون"
-                style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: c.nav, opacity: pressed ? 0.8 : 1 })}>
-                <Icon name="arrowRight" size={19} color={c.navFg} weight="semibold" />
-              </Pressable>
-            </View>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {([[answered, 'پاسخ داده‌شده'], [empty, 'بی‌پاسخ'], [flags.length, 'علامت‌خورده']] as const).map(([n, l]) => (
-                <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: c.surface2 }}>
-                  <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '600', color: c.text, textAlign: 'center' }}>{faNum(n)}</T>
-                  <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{l}</T>
-                </View>
-              ))}
-            </View>
-            {/* Every question by number: filled when answered, outlined when not, a bookmark when marked; a tap opens it. */}
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', direction: 'ltr' } as any}>
-              {qs.map((_, k) => {
-                const ans = ticks[k].some(Boolean), marked = flags.includes(k); // as in the question list
-                return (
-                  <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
-                    style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
-                      backgroundColor: ans ? c.strong : c.nav, borderWidth: 1.5, borderColor: marked ? c.warn : ans ? c.strong : c.nav })}>
-                    <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? c.strongFg : c.navFg, textAlign: 'center' }}>{faNum(k + 1)}</T>
-                    {marked ? (
-                      <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
-                        <Icon name="bookmark" size={11} filled color="#fff" />
-                      </View>
-                    ) : null}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
-              {([['پاسخ داده‌شده', c.strong, c.strong], ['بی‌پاسخ', c.nav, c.nav], ['علامت‌خورده', c.surface, c.warn]] as const).map(([l, bg, bd]) => (
-                <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: bg, borderWidth: 1.5, borderColor: bd }} />
-                  <T style={{ fontSize: 12, color: c.muted }}>{l}</T>
-                </View>
-              ))}
-            </View>
-            {/* Hand in by sliding the handle to the left end, so an exam is never handed in by a stray tap. */}
-            {dialog === 'handin' ? <SlideToConfirm label="برای تحویل و پایان، بکشید" doneLabel="تحویل شد" onConfirm={() => { setDialog(null); finish(); }} /> : null}
-          </View>
+      <Sheet open={dialog === 'handin'} onClose={() => setDialog(null)} maxHeight="88%">
+        {/* The title, with a back button at the top right that returns to the exam. */}
+        <View style={{ minHeight: 40, justifyContent: 'center' }}>
+          <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
+          <Pressable onPress={() => { tap(); setDialog(null); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت به آزمون"
+            style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+              backgroundColor: c.nav, opacity: pressed ? 0.8 : 1 })}>
+            <Icon name="arrowRight" size={19} color={c.navFg} weight="semibold" />
+          </Pressable>
         </View>
-      </Modal>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {([[answered, 'پاسخ داده‌شده'], [empty, 'بی‌پاسخ'], [flags.length, 'علامت‌خورده']] as const).map(([n, l]) => (
+            <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: c.surface2 }}>
+              <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '600', color: c.text, textAlign: 'center' }}>{faNum(n)}</T>
+              <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{l}</T>
+            </View>
+          ))}
+        </View>
+        {/* Every question by number: filled when answered, outlined when not, a bookmark when marked; a tap opens it. */}
+        <SheetScroll contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', direction: 'ltr' } as any}>
+          {qs.map((_, k) => {
+            const ans = ticks[k].some(Boolean), marked = flags.includes(k); // as in the question list
+            return (
+              <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
+                style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
+                  backgroundColor: ans ? c.strong : c.nav, borderWidth: 1.5, borderColor: marked ? c.warn : ans ? c.strong : c.nav })}>
+                <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? c.strongFg : c.navFg, textAlign: 'center' }}>{faNum(k + 1)}</T>
+                {marked ? (
+                  <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
+                    <Icon name="bookmark" size={11} filled color="#fff" />
+                  </View>
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </SheetScroll>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
+          {([['پاسخ داده‌شده', c.strong, c.strong], ['بی‌پاسخ', c.nav, c.nav], ['علامت‌خورده', c.surface, c.warn]] as const).map(([l, bg, bd]) => (
+            <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: bg, borderWidth: 1.5, borderColor: bd }} />
+              <T style={{ fontSize: 12, color: c.muted }}>{l}</T>
+            </View>
+          ))}
+        </View>
+        {/* Hand in by sliding the handle to the left end, so an exam is never handed in by a stray tap. */}
+        {dialog === 'handin' ? <SlideToConfirm label="برای تحویل و پایان، بکشید" doneLabel="تحویل شد" onConfirm={() => { setDialog(null); finish(); }} /> : null}
+      </Sheet>
     </Backdrop>
   );
 }

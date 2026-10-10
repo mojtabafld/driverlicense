@@ -35,3 +35,10 @@ const TOUR_SET = 'v2';
 const tourKey = (page: string, user: string) => `tp.tour.${TOUR_SET}.${page}.${user}`;
 export const loadTourSeen = async (page: string, user: string) => { try { return localStorage.getItem(tourKey(page, user)) === '1'; } catch { return false; } };
 export const saveTourSeen = async (page: string, user: string) => { try { localStorage.setItem(tourKey(page, user), '1'); } catch {} };
+
+// The parts of «قوانین» opened at least once (their titles), kept in this browser, so the page can show what is left.
+const RULES_READ = 'tp.rules.read';
+export const loadRulesRead = async (): Promise<string[]> => {
+  try { const v = JSON.parse(localStorage.getItem(RULES_READ) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
+};
+export const saveRulesRead = async (titles: string[]) => { try { localStorage.setItem(RULES_READ, JSON.stringify(titles)); } catch {} };

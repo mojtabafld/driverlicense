@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { ActivityIndicator, Modal, PanResponder, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Modal, PanResponder, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
@@ -14,7 +14,8 @@ import { imgSource } from '@/lib/img-source';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { ActionButton, T, tap } from './kit';
-import { useColors, useIsDark } from './theme';
+import { Sheet, SheetScroll } from './sheet';
+import { useColors } from './theme';
 
 const COUNT = 10, OUT = 400; // made pictures to choose from; the saved photo's size in pixels
 
@@ -33,7 +34,7 @@ export function Avatar({ size }: { size: number }) {
 }
 
 export function AvatarSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
+  const c = useColors();
   const { user, avatarArt, setAvatar } = useApp();
   const [busy, setBusy] = useState(false), [err, setErr] = useState('');
   const [photo, setPhoto] = useState<{ uri: string; w: number; h: number } | null>(null);
@@ -46,40 +47,35 @@ export function AvatarSheet({ open, onClose }: { open: boolean; onClose: () => v
   };
   const cur = user?.avatar;
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
-        <Pressable onPress={() => {}} style={{ maxHeight: '88%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
-          borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
-          <View style={{ gap: 2 }}>
-            <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>عکس پروفایل</T>
-            <T style={{ fontSize: 13, color: c.muted, textAlign: 'center' }}>یکی از تصویرها را انتخاب کنید یا عکسی از گالری بگذارید</T>
-          </View>
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, paddingVertical: 4 }}>
-            {Array.from({ length: COUNT }, (_, i) => i + 1).map(n => {
-              const v = avatarArt[n], on = cur?.preset === n;
-              return (
-                <Pressable key={n} disabled={!v || busy} onPress={() => { tap(); run(setAvatar({ preset: n })); }} accessibilityRole="button" accessibilityLabel={`تصویر ${n}`}
-                  style={({ pressed }) => ({ width: 62, height: 62, borderRadius: 31, padding: 2, borderWidth: 2.5, borderColor: on ? c.text : 'transparent', opacity: pressed ? 0.8 : 1 })}>
-                  <View style={{ flex: 1, borderRadius: 29, overflow: 'hidden', backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>
-                    {v ? <Image source={{ uri: `${API_URL}/avatar-art/${n}.png?v=${v}` }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={150} />
-                      : <Icon name="person" size={22} color={c.faint} />}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-          {err ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
-          {busy ? <ActivityIndicator /> : null}
-          <ActionButton label="انتخاب از گالری" icon="person" onPress={pick} disabled={busy} />
-          {cur ? (
-            <Pressable onPress={() => { tap(); run(setAvatar({ remove: true })); }} disabled={busy} style={{ alignItems: 'center', paddingVertical: 6 }}>
-              <T style={{ color: c.bad, fontWeight: '600', fontSize: 14 }}>حذف عکس پروفایل</T>
+    <Sheet open={open} onClose={onClose} maxHeight="88%">
+      <View style={{ gap: 2 }}>
+        <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>عکس پروفایل</T>
+        <T style={{ fontSize: 13, color: c.muted, textAlign: 'center' }}>یکی از تصویرها را انتخاب کنید یا عکسی از گالری بگذارید</T>
+      </View>
+      <SheetScroll contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, paddingVertical: 4 }}>
+        {Array.from({ length: COUNT }, (_, i) => i + 1).map(n => {
+          const v = avatarArt[n], on = cur?.preset === n;
+          return (
+            <Pressable key={n} disabled={!v || busy} onPress={() => { tap(); run(setAvatar({ preset: n })); }} accessibilityRole="button" accessibilityLabel={`تصویر ${n}`}
+              style={({ pressed }) => ({ width: 62, height: 62, borderRadius: 31, padding: 2, borderWidth: 2.5, borderColor: on ? c.text : 'transparent', opacity: pressed ? 0.8 : 1 })}>
+              <View style={{ flex: 1, borderRadius: 29, overflow: 'hidden', backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                {v ? <Image source={{ uri: `${API_URL}/avatar-art/${n}.png?v=${v}` }} style={{ width: '100%', height: '100%' }} contentFit="cover" transition={150} />
+                  : <Icon name="person" size={22} color={c.faint} />}
+              </View>
             </Pressable>
-          ) : null}
+          );
+        })}
+      </SheetScroll>
+      {err ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
+      {busy ? <ActivityIndicator /> : null}
+      <ActionButton label="انتخاب از گالری" icon="person" onPress={pick} disabled={busy} />
+      {cur ? (
+        <Pressable onPress={() => { tap(); run(setAvatar({ remove: true })); }} disabled={busy} style={{ alignItems: 'center', paddingVertical: 6 }}>
+          <T style={{ color: c.bad, fontWeight: '600', fontSize: 14 }}>حذف عکس پروفایل</T>
         </Pressable>
-      </Pressable>
+      ) : null}
       {photo ? <AvatarCrop photo={photo} onCancel={() => setPhoto(null)} onDone={image => { setPhoto(null); run(setAvatar({ image })); }} /> : null}
-    </Modal>
+    </Sheet>
   );
 }
 

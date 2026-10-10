@@ -7,7 +7,7 @@
 // in, with their counts; only the chosen ones are then shown. No question is shown until something is chosen.
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Attempt, Question } from '@/lib/bank';
@@ -21,10 +21,11 @@ import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { SideSwipe } from '@/ui/swipe';
 import { ListButton } from '@/ui/question-list';
+import { Sheet, SheetScroll } from '@/ui/sheet';
 import { ActionButton, Backdrop, Button, Card, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { DA_FONT, useColors, useIsDark } from '@/ui/theme';
+import { DA_FONT, useColors } from '@/ui/theme';
 
 const TOPICS_SHOWN = 5; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
 
@@ -56,7 +57,7 @@ export default function Mistakes() { return <MistakesScreen />; }
 
 // Without `detail` the overview; with it, the page of one panel or topic.
 export function MistakesScreen({ detail }: { detail?: View_ }) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
+  const c = useColors(), ins = useSafeAreaInsets();
   const { attempts, bank, Q, settings } = useApp();
   const view = detail;
   const motion = usePageMotion('push');
@@ -220,39 +221,34 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
           end={<FootBtn label={ui.next} icon="arrowRight" round disabled={at === items.length - 1} onPress={() => step(at + 1)} />} />
       ) : null}
       {/* The categories of these mistakes, to choose from */}
-      <Modal visible={!!sheet} transparent animationType="fade" onRequestClose={() => setSheet(null)}>
-        <Pressable onPress={() => setSheet(null)} style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
-          <Pressable onPress={() => {}} style={{ maxHeight: '85%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 12,
-            borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
-            <View style={{ gap: 2 }}>
-              <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>اشتباهات بر اساس دسته‌بندی</T>
-              <T style={{ fontSize: 13, color: c.muted, textAlign: 'center' }}>دسته‌هایی را که می‌خواهید مرور کنید انتخاب کنید</T>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              {cats.map(sec => {
-                const on = picked.includes(sec.n);
-                return (
-                  <Pressable key={sec.n} onPress={() => { tap(); setSheet(on ? picked.filter(x => x !== sec.n) : [...picked, sec.n]); }}
-                    accessibilityRole="checkbox" accessibilityState={{ checked: on }}
-                    style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5,
-                      borderColor: on ? c.strong : c.line, backgroundColor: on ? c.surface2 : c.surface, opacity: pressed ? 0.85 : 1 })}>
-                    <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center', borderColor: on ? c.strong : c.muted, backgroundColor: on ? c.strong : 'transparent' }}>
-                      {on ? <Icon name="check" size={13} color={c.strongFg} weight="bold" /> : null}
-                    </View>
-                    <T style={{ flex: 1, fontSize: 15, fontWeight: '600' }} numberOfLines={1}>{sec.fa}</T>
-                    <T style={{ fontSize: 13.5, fontWeight: '700', color: c.bad }}>{faNum(sec.count)}</T>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <ActionButton label="همه" icon="checkCircle" tone="soft" onPress={() => setSheet(cats.map(x => x.n))} style={{ flex: 1 }} />
-              <ActionButton disabled={!pickedN} icon="eye" style={{ flex: 2 }} onPress={() => { setSecs(pickedN >= cats.length ? [] : picked); setK(0); setSheet(null); }}
-                label={pickedN ? `نمایش ${faNum(cats.filter(x => picked.includes(x.n)).reduce((t, x) => t + x.count, 0))} سؤال` : 'یک دسته را انتخاب کنید'} />
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <Sheet open={!!sheet} onClose={() => setSheet(null)} style={{ gap: 12 }}>
+        <View style={{ gap: 2 }}>
+          <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>اشتباهات بر اساس دسته‌بندی</T>
+          <T style={{ fontSize: 13, color: c.muted, textAlign: 'center' }}>دسته‌هایی را که می‌خواهید مرور کنید انتخاب کنید</T>
+        </View>
+        <SheetScroll contentContainerStyle={{ gap: 8 }}>
+          {cats.map(sec => {
+            const on = picked.includes(sec.n);
+            return (
+              <Pressable key={sec.n} onPress={() => { tap(); setSheet(on ? picked.filter(x => x !== sec.n) : [...picked, sec.n]); }}
+                accessibilityRole="checkbox" accessibilityState={{ checked: on }}
+                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1.5,
+                  borderColor: on ? c.strong : c.line, backgroundColor: on ? c.surface2 : c.surface, opacity: pressed ? 0.85 : 1 })}>
+                <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center', borderColor: on ? c.strong : c.muted, backgroundColor: on ? c.strong : 'transparent' }}>
+                  {on ? <Icon name="check" size={13} color={c.strongFg} weight="bold" /> : null}
+                </View>
+                <T style={{ flex: 1, fontSize: 15, fontWeight: '600' }} numberOfLines={1}>{sec.fa}</T>
+                <T style={{ fontSize: 13.5, fontWeight: '700', color: c.bad }}>{faNum(sec.count)}</T>
+              </Pressable>
+            );
+          })}
+        </SheetScroll>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <ActionButton label="همه" icon="checkCircle" tone="soft" onPress={() => setSheet(cats.map(x => x.n))} style={{ flex: 1 }} />
+          <ActionButton disabled={!pickedN} icon="eye" style={{ flex: 2 }} onPress={() => { setSecs(pickedN >= cats.length ? [] : picked); setK(0); setSheet(null); }}
+            label={pickedN ? `نمایش ${faNum(cats.filter(x => picked.includes(x.n)).reduce((t, x) => t + x.count, 0))} سؤال` : 'یک دسته را انتخاب کنید'} />
+        </View>
+      </Sheet>
     </Backdrop>
   );
 }

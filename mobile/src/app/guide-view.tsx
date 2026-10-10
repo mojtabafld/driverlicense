@@ -4,7 +4,7 @@
 // (to the left: the next one, as on the bar), the content following the finger. ?kind=signs|priority&cat=<group id>[&i=<index>]
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Modal, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Animated, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
@@ -17,8 +17,9 @@ import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion } from '@/
 import { GlassTop } from '@/ui/liquid';
 import { Marquee } from '@/ui/marquee';
 import { ListButton } from '@/ui/question-list';
+import { Sheet, SheetScroll } from '@/ui/sheet';
 import { swipeWebStyle, usePager } from '@/ui/swipe';
-import { radius, useColors, useIsDark } from '@/ui/theme';
+import { radius, useColors } from '@/ui/theme';
 
 // The cards of the page (the group's rules, the explanation): one look.
 const BOX = { paddingVertical: 14, paddingHorizontal: 16 };
@@ -165,32 +166,27 @@ function Legend() {
 
 // Every item of the group: number, small picture, code and name; the current one marked; a tap goes to it.
 function ItemSheet({ open, items, current, onPick, onClose }: { open: boolean; items: Item[]; current: number; onPick: (k: number) => void; onClose: () => void }) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
+  const c = useColors(), ins = useSafeAreaInsets();
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable onPress={onClose} style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
-        <Pressable onPress={() => {}} style={{ maxHeight: '82%', width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 20, paddingHorizontal: 14, paddingBottom: ins.bottom + 14, gap: 12,
-          borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface }}>
-          <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>فهرست موارد</T>
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
-            {items.map((x, k) => {
-              const on = k === current;
-              return (
-                <Pressable key={x.key} onPress={() => { tap(); onPick(k); }} accessibilityRole="button" accessibilityLabel={`${faNum(k + 1)}. ${label(x)}`} accessibilityState={{ selected: on }}
-                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 6, paddingStart: 10, borderRadius: 14, opacity: pressed ? 0.75 : 1,
-                    backgroundColor: on ? c.surface2 : 'transparent', borderWidth: 1.5, borderColor: on ? c.text : 'transparent' })}>
-                  <T style={{ width: 28, fontSize: 14, fontWeight: '700', color: c.muted, textAlign: 'center' }}>{faNum(k + 1)}</T>
-                  <View style={{ width: 56 }}><GuideImage k={x.key} aspect={4 / 3} radius={8} compact /></View>
-                  <View style={{ flex: 1, gap: 1 }}>
-                    {isSign(x) ? <L style={{ fontSize: 12, fontWeight: '700', color: c.muted }}>{x.code}</L> : null}
-                    <T style={{ fontSize: 14, lineHeight: 21, fontWeight: on ? '700' : '500' }} numberOfLines={2}>{label(x)}</T>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    <Sheet open={open} onClose={onClose} maxHeight="82%" style={{ paddingHorizontal: 14, paddingBottom: ins.bottom + 14, gap: 12 }}>
+      <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>فهرست موارد</T>
+      <SheetScroll contentContainerStyle={{ gap: 6 }}>
+        {items.map((x, k) => {
+          const on = k === current;
+          return (
+            <Pressable key={x.key} onPress={() => { tap(); onPick(k); }} accessibilityRole="button" accessibilityLabel={`${faNum(k + 1)}. ${label(x)}`} accessibilityState={{ selected: on }}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 6, paddingStart: 10, borderRadius: 14, opacity: pressed ? 0.75 : 1,
+                backgroundColor: on ? c.surface2 : 'transparent', borderWidth: 1.5, borderColor: on ? c.text : 'transparent' })}>
+              <T style={{ width: 28, fontSize: 14, fontWeight: '700', color: c.muted, textAlign: 'center' }}>{faNum(k + 1)}</T>
+              <View style={{ width: 56 }}><GuideImage k={x.key} aspect={4 / 3} radius={8} compact /></View>
+              <View style={{ flex: 1, gap: 1 }}>
+                {isSign(x) ? <L style={{ fontSize: 12, fontWeight: '700', color: c.muted }}>{x.code}</L> : null}
+                <T style={{ fontSize: 14, lineHeight: 21, fontWeight: on ? '700' : '500' }} numberOfLines={2}>{label(x)}</T>
+              </View>
+            </Pressable>
+          );
+        })}
+      </SheetScroll>
+    </Sheet>
   );
 }
