@@ -5,7 +5,7 @@
 // - Færdselsstyrelsen's Undervisningsplan for kategori B (the official curriculum for the car licence, fstyr.dk).
 // The chapters follow the curriculum. Each lesson prepares for the exam: what the exam asks about the topic → one rule
 // per step with its picture, the law and the exam's trap → a short test in the exam's own format (a situation in a
-// picture, the question in Danish with its translation, «Ja / Nej» for each statement, every wrong answer one mistake)
+// picture, the question in Danish with its translation, its statements to tick, every wrong tick or missed one a mistake)
 // → its result against the real test's limit → summary with the sources. Progress is kept with the account
 // (/api/courseprogress). Pictures are made for the course (data/course-art.json → /course-art); one not ordered yet
 // shows a placeholder. Chapters without lessons yet are shown as «به‌زودی». Pictures and points centre on everything

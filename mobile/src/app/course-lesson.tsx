@@ -1,10 +1,11 @@
 // One lesson of «آموزش گام‌به‌گام» (?id=), one step per page, aimed at the theory test: what the exam asks about the
 // topic, one rule per step (its picture, the rule in a box with its law, and «حواستان باشد»: how the exam tries to catch you),
 // then the lesson's test in the exam's own format (the situation in a picture, the question in Danish with its Persian
-// translation, «Ja / Nej» for each statement; once all are answered, which were right and why), its result counted in
-// mistakes against the real test's limit (and «تکرار آزمون»), and the summary with the sources. The bar at the bottom:
-// back / the step / next; next waits until a question is answered, and ✓ on the last step finishes the lesson (kept
-// with the account) and goes back to the course.
+// translation, and its statements as boxes to tick, as in the real test and the app's exam: a ticked statement is
+// «Ja», one left unticked «Nej»; «بررسی پاسخ» then shows which were right and why), its result counted in mistakes
+// against the real test's limit (and «تکرار آزمون»), and the summary with the sources. The bar at the bottom: back /
+// the step / next; next waits until a question is checked, and ✓ on the last step finishes the lesson (kept with the
+// account) and goes back to the course.
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -17,12 +18,14 @@ import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
+import { OptionBox } from '@/ui/option-box';
 import { Button, Card, Enter, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { DA_FONT, useColors } from '@/ui/theme';
 
 const PIC_BG = '#f2f3f5';
-type Answers = Record<number, (boolean | null)[]>;
+// Each exam question's ticks (by step index; unticked until touched) and whether it has been checked.
+type Answers = Record<number, boolean[]>;
 
 function Art({ k }: { k: string }) {
   const c = useColors(), { courseArt } = useApp();
@@ -62,12 +65,13 @@ function TrapBox({ text }: { text: string }) {
   );
 }
 
-// One question of the lesson's test, as in the exam: the picture, the question in Danish (and Persian), and «Ja / Nej»
-// for each statement; once all are answered, each shows whether it was right and why.
-function ExamQuestion({ step, n, of, answers, onAnswer }: { step: Extract<CourseStep, { kind: 'exam' }>; n: number; of: number; answers: (boolean | null)[]; onAnswer: (i: number, v: boolean) => void }) {
+// One question of the lesson's test, as in the exam: the picture, the question in Danish (and Persian), and its
+// statements as boxes to tick (ticked «Ja», unticked «Nej»); «بررسی پاسخ» checks it, and each statement then shows
+// whether it was right and why.
+function ExamQuestion({ step, n, of, ticks, checked, onToggle, onCheck }: { step: Extract<CourseStep, { kind: 'exam' }>; n: number; of: number; ticks: boolean[]; checked: boolean;
+  onToggle: (i: number) => void; onCheck: () => void }) {
   const c = useColors();
-  const all = answers.every(a => a !== null);
-  const mistakes = step.statements.filter((s, i) => answers[i] !== s.ok).length;
+  const mistakes = step.statements.filter((s, i) => ticks[i] !== s.ok).length;
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -78,42 +82,41 @@ function ExamQuestion({ step, n, of, answers, onAnswer }: { step: Extract<Course
         <T style={{ flex: 1, color: c.faint, fontSize: 12 }}>مثل آزمون واقعی</T>
       </View>
       {step.art ? <Art k={step.art} /> : null}
-      <Card style={{ gap: 6 }}>
+      <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{step.da}</T>
         <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{step.fa}</T>
-      </Card>
+      </View>
+      {checked ? null : <T style={{ color: c.faint, fontSize: 12.5, lineHeight: 20 }}>گزینه‌های درست را تیک بزنید؛ گزینه‌ی بدون تیک یعنی «نه».</T>}
       {step.statements.map((s, i) => {
-        const a = answers[i], wrong = all && a !== s.ok;
+        const on = !!ticks[i], wrong = checked && on !== s.ok;
         return (
-          <View key={i} style={{ gap: 10, padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: all ? (wrong ? c.bad : c.ok) : c.line, backgroundColor: all ? (wrong ? c.badSoft : c.okSoft) : c.surface }}>
-            <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 23, writingDirection: 'ltr', textAlign: 'left' }}>{s.da}</T>
-            <T style={{ fontSize: 13, lineHeight: 21, color: c.muted }}>{s.fa}</T>
-            <View style={{ flexDirection: 'row', direction: 'ltr', gap: 8 } as object}>
-              {([[true, 'Ja'], [false, 'Nej']] as const).map(([v, label]) => {
-                const on = a === v;
-                return (
-                  <Pressable key={label} disabled={all} onPress={() => { tap(); onAnswer(i, v); }} accessibilityRole="button" accessibilityState={{ selected: on }}
-                    style={{ flex: 1, paddingVertical: 9, borderRadius: 10, alignItems: 'center', borderWidth: 1.5, borderColor: on ? c.strong : c.line, backgroundColor: on ? c.strong : 'transparent' }}>
-                    <T style={{ fontFamily: DA_FONT, fontWeight: '700', fontSize: 15, color: on ? c.strongFg : c.text }}>{label}</T>
-                  </Pressable>
-                );
-              })}
-            </View>
-            {all ? <T style={{ fontSize: 13, lineHeight: 21, color: wrong ? c.bad : c.ok, fontWeight: '600' }}>{wrong ? `اشتباه؛ پاسخ درست: ${s.ok ? 'Ja' : 'Nej'}. ` : 'درست. '}{s.why}</T> : null}
+          <View key={i} style={{ gap: 6 }}>
+            <Pressable disabled={checked} onPress={() => { tap(); onToggle(i); }} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
+              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
+              <OptionBox on={on} mark={wrong} review={checked}>
+                <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{s.da}</T>
+                <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{s.fa}</T>
+              </OptionBox>
+            </Pressable>
+            {checked ? (
+              <T style={{ fontSize: 13, lineHeight: 21, color: wrong ? c.bad : c.ok, fontWeight: '600', paddingHorizontal: 4 }}>
+                {wrong ? (s.ok ? 'اشتباه؛ این گزینه درست است و باید تیک می‌خورد. ' : 'اشتباه؛ این گزینه نادرست است و نباید تیک می‌خورد. ') : 'درست. '}{s.why}
+              </T>
+            ) : null}
           </View>
         );
       })}
-      {all ? (
+      {checked ? (
         <Enter>
           <T style={{ fontWeight: '700', fontSize: 14, color: mistakes ? c.warn : c.ok, textAlign: 'center' }}>{mistakes ? `${faNum(mistakes)} اشتباه در این سؤال` : 'بدون اشتباه!'}</T>
         </Enter>
-      ) : null}
+      ) : <Button label="بررسی پاسخ" icon="check" onPress={onCheck} />}
     </View>
   );
 }
 
-function Step({ step, n, of, answers, onAnswer, result, onRetry }: { step: CourseStep; n: number; of: number; answers: (boolean | null)[]; onAnswer: (i: number, v: boolean) => void;
-  result: { mistakes: number; statements: number }; onRetry: () => void }) {
+function Step({ step, n, of, ticks, checked, onToggle, onCheck, result, onRetry }: { step: CourseStep; n: number; of: number; ticks: boolean[]; checked: boolean;
+  onToggle: (i: number) => void; onCheck: () => void; result: { mistakes: number; statements: number }; onRetry: () => void }) {
   const c = useColors();
   if (step.kind === 'intro') {
     return (
@@ -164,7 +167,7 @@ function Step({ step, n, of, answers, onAnswer, result, onRetry }: { step: Cours
       </View>
     );
   }
-  if (step.kind === 'exam') return <ExamQuestion step={step} n={n} of={of} answers={answers} onAnswer={onAnswer} />;
+  if (step.kind === 'exam') return <ExamQuestion step={step} n={n} of={of} ticks={ticks} checked={checked} onToggle={onToggle} onCheck={onCheck} />;
   if (step.kind === 'result') {
     const pass = result.mistakes <= step.max;
     return (
@@ -206,22 +209,23 @@ export default function CourseLesson() {
   const found = lessonById(String(p.id || ''));
   const { finish } = useCourseProgress();
   const [i, setI] = useState(0);
-  // Answers of each exam question (by step index): null until answered.
   const [answers, setAnswers] = useState<Answers>({});
+  const [checked, setChecked] = useState<Record<number, boolean>>({});
   useEffect(() => { if (!found) router.back(); }, [found]);
   if (!found) return null;
   const { lesson, chapter } = found, steps = lesson.steps, step = steps[i], last = i === steps.length - 1;
   const examSteps = steps.map((s, k) => ({ s, k })).filter((x): x is { s: Extract<CourseStep, { kind: 'exam' }>; k: number } => x.s.kind === 'exam');
-  const ansOf = (k: number, s: Extract<CourseStep, { kind: 'exam' }>) => answers[k] ?? s.statements.map(() => null);
+  const ansOf = (k: number, s: Extract<CourseStep, { kind: 'exam' }>) => answers[k] ?? s.statements.map(() => false);
   const ans = step.kind === 'exam' ? ansOf(i, step) : [];
-  const blocked = step.kind === 'exam' && ans.some(a => a === null);
-  const answer = (k: number, v: boolean) => setAnswers({ ...answers, [i]: ans.map((a, j) => (j === k ? v : a)) });
+  const blocked = step.kind === 'exam' && !checked[i];
+  const toggle = (k: number) => setAnswers({ ...answers, [i]: ans.map((a, j) => (j === k ? !a : a)) });
+  const check = () => setChecked({ ...checked, [i]: true });
   // The test's result: every statement answered wrongly is one mistake, as in the real test.
   const result = examSteps.reduce((r, { s, k }) => {
     const a = ansOf(k, s);
     return { mistakes: r.mistakes + s.statements.filter((st, j) => a[j] !== st.ok).length, statements: r.statements + s.statements.length };
   }, { mistakes: 0, statements: 0 });
-  const retry = () => { setAnswers({}); setI(examSteps[0]?.k ?? 0); };
+  const retry = () => { setAnswers({}); setChecked({}); setI(examSteps[0]?.k ?? 0); };
   const n = examSteps.findIndex(x => x.k === i) + 1;
   const done = () => { finish(lesson.id); router.back(); };
   return (
@@ -236,7 +240,7 @@ export default function CourseLesson() {
             {steps.map((s, k) => <View key={k} style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: k <= i ? (s.kind === 'exam' || s.kind === 'result' ? c.strong : c.link) : c.surface2 }} />)}
           </View>
         </View>
-        <Enter key={i}><Step step={step} n={n} of={examSteps.length} answers={ans} onAnswer={answer} result={result} onRetry={retry} /></Enter>
+        <Enter key={i}><Step step={step} n={n} of={examSteps.length} ticks={ans} checked={!!checked[i]} onToggle={toggle} onCheck={check} result={result} onRetry={retry} /></Enter>
         <View style={{ height: 90 }} />
       </SubPage>
       <GlassBar
