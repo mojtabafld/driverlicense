@@ -10,10 +10,11 @@ import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { ActivityList } from '@/ui/activity';
+import { SizeSegment } from '@/ui/size-segment';
 import { SizeSlider } from '@/ui/size-slider';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Screen, T, tap } from '@/ui/kit';
-import { useColors } from '@/ui/theme';
+import { ARC, useColors } from '@/ui/theme';
 
 // What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
 function sizeHint(n: number) {
@@ -109,8 +110,9 @@ export default function Exam() {
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
         </View>
         {/* How to choose the number of questions, then what the chosen number means */}
-        <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را با کشیدن نوار زیر انتخاب کنید.</T>
-        <SizeSlider value={size} values={SIZES} onChange={setSize} grey />
+        {/* Main site: Arc's segmented control, tap a number; /app keeps the slider. */}
+        <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>{ARC ? 'تعداد سؤال‌ها را انتخاب کنید.' : 'تعداد سؤال‌ها را با کشیدن نوار زیر انتخاب کنید.'}</T>
+        {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
           <Icon name={size === FULL ? 'checkCircle' : 'clock'} size={17} color={c.muted} />
           <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{sizeHint(size)}</T>
