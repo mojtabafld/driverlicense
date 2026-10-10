@@ -429,8 +429,8 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
   );
 }
 
-// Arc's Button (uiarc.dev/r/button.json), size lg, ported: primary is the text colour filled with the page colour on
-// it (near-black in light, near-white in dark), secondary the card surface on a 1px border; 50 tall, corners 18, label
+// Arc's Button (uiarc.dev/r/button.json), size lg, ported: primary in the theme's accent (Arc's green, with its dark
+// accent text on it; asked for by the owner over Arc's black), secondary the card surface on a 1px border; 50 tall, corners 18, label
 // in weight 500 with a 20px icon beside it. A press springs the button down to 0.985 (0.97 when it is narrower than
 // 220) and dims a primary to 0.84 / fills a secondary with the muted grey; with a mouse, hover lifts a primary with a
 // resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
@@ -441,7 +441,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const [scale] = useState(() => new Animated.Value(1));
   const width = useRef(0);
   const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
-  const primary = variant === 'primary', fg = primary ? c.bg : c.text;
+  const primary = variant === 'primary', fg = primary ? c.accentText : c.text;
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
   const first = useRef(true);
@@ -459,8 +459,8 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
           minHeight: 50, borderRadius: radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
-          borderColor: primary ? c.text : c.line,
-          backgroundColor: primary ? c.text : pressed || hovered ? c.surface2 : c.surface,
+          borderColor: primary ? c.accent : c.line,
+          backgroundColor: primary ? c.accent : pressed || hovered ? c.surface2 : c.surface,
           opacity: disabled ? 0.52 : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
           transform: [{ scale }],
           ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
