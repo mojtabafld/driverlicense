@@ -891,6 +891,20 @@ async function main() {
     }
     await store.saveMeta('removeNegin2223', 1);
   }
+  // One-time, asked by the owner: user test starts over as if just registered (same username, name and password).
+  // A copy of what it had is kept in meta (`removed:test:reset`) so it can be restored.
+  if (store.meta.resetTest !== 1) {
+    const u = store.users.test;
+    if (u) {
+      await store.saveMeta('removed:test:reset', { user: { ...u, salt: undefined, hash: undefined } });
+      if (u.avatar && u.avatar.photo) await store.deleteBlob('avatar-test').catch(() => {});
+      for (const k of Object.keys(u)) if (!['username', 'name', 'salt', 'hash'].includes(k)) delete u[k];
+      Object.assign(u, { created: Date.now(), attempts: [], settings: {} });
+      await store.saveUser(u);
+      await store.saveMeta('resetTest', 1);
+      console.log('reset user test', Object.keys(u));
+    } else console.log('reset user test: no such user');
+  }
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
