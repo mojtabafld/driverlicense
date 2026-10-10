@@ -16,7 +16,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { COURSE, EXAM, lessonById, type CourseStep } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { OptionBox } from '@/ui/option-box';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
@@ -273,11 +273,11 @@ function Lesson({ id }: { id: string }) {
       </SubPage>
       {complete ? null : (
         <GlassBar
-          start={<FootBtn label="قبلی" icon="arrowLeft" round disabled={!i} onPress={() => setI(i - 1)} />}
-          middle={<T style={{ fontWeight: '700', fontSize: 15 }}>{faNum(i + 1)} / {faNum(steps.length)}</T>}
-          end={toCheck ? <FootBtn label="بررسی" icon="check" onPress={check} />
+          start={<FootBtn label="قبلی" icon="arrowLeft" disabled={!i} onPress={() => setI(i - 1)} />}
+          middle={<BarCount n={i + 1} of={steps.length} label="قدم" />}
+          end={toCheck ? <FootBtn label="بررسی" icon="check" submit onPress={check} />
             : last ? <FootBtn label="پایان درس" icon="check" submit onPress={end} />
-              : <FootBtn label="بعدی" icon="arrowRight" round onPress={() => setI(i + 1)} />} />
+              : <FootBtn label="بعدی" icon="arrowRight" onPress={() => setI(i + 1)} />} />
       )}
     </View>
   );

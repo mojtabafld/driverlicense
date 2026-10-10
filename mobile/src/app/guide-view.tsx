@@ -97,9 +97,9 @@ export default function GuideView() {
         </Animated.View>
       </ScrollView>
       <GlassBar
-        start={<FootBtn label="قبلی" icon="arrowLeft" round disabled={i === 0} onPress={() => setI(i - 1)} />}
+        start={<FootBtn label="قبلی" icon="arrowLeft" disabled={i === 0} onPress={() => setI(i - 1)} />}
         middle={<ListButton n={i + 1} of={items.length} label="فهرست موارد" onPress={() => setList(true)} />}
-        end={last ? <FootBtn label="پایان" icon="check" submit round onPress={back} /> : <FootBtn label="بعدی" icon="arrowRight" round onPress={() => setI(i + 1)} />} />
+        end={last ? <FootBtn label="پایان" icon="check" submit onPress={back} /> : <FootBtn label="بعدی" icon="arrowRight" onPress={() => setI(i + 1)} />} />
       <ItemSheet open={list} items={items} current={i} onClose={() => setList(false)} onPick={k => { setList(false); setI(k); }} />
     </Backdrop>
   );

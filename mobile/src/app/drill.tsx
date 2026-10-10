@@ -18,7 +18,7 @@ import { useDrillProgress } from '@/lib/drill-progress';
 import { SECONDS_PER_Q, faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
-import { FootBtn, GlassBar } from '@/ui/glass-bar';
+import { BarCount, FootBtn, GlassBar } from '@/ui/glass-bar';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Enter, T, TranslateButton, tap } from '@/ui/kit';
 import { OptionBox } from '@/ui/option-box';
@@ -272,16 +272,16 @@ export default function Drill() {
       </SubPage>
       {turns && turns.length > 0 && !finished ? (
         <GlassBar
-          start={<FootBtn label="پایان تمرین" icon="exit" round onPress={() => router.back()} />}
+          start={<FootBtn label="پایان تمرین" icon="exit" onPress={() => router.back()} />}
           // Until the question is answered, the two answers («حدس زدم» / «مطمئنم») sit in the bar, always in view; then the
           // position and «بعدی».
-          middle={answer ? <T style={{ fontWeight: '700', fontSize: 15 }}>{faNum(i + 1)} / {faNum(turns.length)}</T> : (
-            <View style={{ flexDirection: 'row', direction: 'rtl', gap: 8, width: '100%' } as any}>
-              <FootBtn label="مطمئنم" icon="check" lead grow onPress={() => submit(true)} />
-              <FootBtn label="حدس زدم" icon="help" lead soft grow onPress={() => submit(false)} />
-            </View>
+          middle={answer ? <BarCount n={i + 1} of={turns.length} label="سؤال" /> : (
+            <>
+              <FootBtn label="حدس زدم" icon="help" onPress={() => submit(false)} />
+              <FootBtn label="مطمئنم" icon="check" submit onPress={() => submit(true)} />
+            </>
           )}
-          end={answer ? <FootBtn label={i === turns.length - 1 ? 'نتیجه' : 'بعدی'} icon={i === turns.length - 1 ? 'check' : 'arrowRight'} round onPress={next} /> : null} />
+          end={answer ? <FootBtn label={i === turns.length - 1 ? 'نتیجه' : 'بعدی'} icon={i === turns.length - 1 ? 'check' : 'arrowRight'} onPress={next} /> : null} />
       ) : null}
     </View>
   );

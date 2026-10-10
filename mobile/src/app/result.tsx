@@ -124,10 +124,10 @@ export default function Result() {
     const finish = () => { tap(); motion.leave(() => (router.canGoBack() ? router.back() : goTo(isLesson ? '/learn' : '/exam'))); };
     const nav = (
       <GlassBar
-        start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!k} onPress={() => step(k - 1)} />}
+        start={<FootBtn label={ui.prev} icon="arrowLeft" disabled={!k} onPress={() => step(k - 1)} />}
         middle={<ListButton n={k + 1} of={total} onPress={() => setListOpen(true)} />}
-        end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" round onPress={finish} />
-          : <FootBtn label={ui.next} icon="arrowRight" round onPress={() => step(k + 1)} />} />
+        end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" submit onPress={finish} />
+          : <FootBtn label={ui.next} icon="arrowRight" onPress={() => step(k + 1)} />} />
     );
     return (
       <Backdrop anim={motion.style}>

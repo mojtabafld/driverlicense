@@ -216,9 +216,9 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       {/* As in the review: previous / the position / next, in the questions' language */}
       {cur ? (
         <GlassBar
-          start={<FootBtn label={ui.prev} icon="arrowLeft" round disabled={!at} onPress={() => step(at - 1)} />}
+          start={<FootBtn label={ui.prev} icon="arrowLeft" disabled={!at} onPress={() => step(at - 1)} />}
           middle={<ListButton n={at + 1} of={items.length} icon="filter" label="انتخاب دسته‌بندی‌ها" dot={!!secs.length} onPress={() => setSheet(secs.length ? secs : cats.map(x => x.n))} />}
-          end={<FootBtn label={ui.next} icon="arrowRight" round disabled={at === items.length - 1} onPress={() => step(at + 1)} />} />
+          end={<FootBtn label={ui.next} icon="arrowRight" disabled={at === items.length - 1} onPress={() => step(at + 1)} />} />
       ) : null}
       {/* The categories of these mistakes, to choose from */}
       <Sheet open={!!sheet} onClose={() => setSheet(null)} style={{ gap: 12 }}>
