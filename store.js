@@ -3,7 +3,8 @@
 // - otherwise         → a local JSON file (data/db.json), handy for running on your own computer.
 // Everything is kept in memory; writes go through saveUser / saveSession / deleteSession / saveMeta.
 // meta holds small site-wide documents by key (e.g. 'visits' for the admin panel's visit counts).
-// Blobs (generated question pictures) are binary files kept apart from meta and read on demand: saveBlob / getBlob.
+// Blobs (generated question pictures) are binary files kept apart from meta and read on demand: saveBlob / getBlob
+// (blobKeys lists the keys that start with a prefix).
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -64,6 +65,7 @@ async function openStore({ dbFile }) {
       saveBlob: (key, mime, buf) => pool.query(
         'INSERT INTO tp_blobs (key, mime, data) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET mime = EXCLUDED.mime, data = EXCLUDED.data', [key, mime, buf]),
       deleteBlob: key => pool.query('DELETE FROM tp_blobs WHERE key = $1', [key]),
+      blobKeys: async prefix => (await pool.query("SELECT key FROM tp_blobs WHERE key LIKE $1 || '%'", [prefix])).rows.map(r => r.key),
       getBlob: async key => { const r = (await pool.query('SELECT mime, data FROM tp_blobs WHERE key = $1', [key])).rows[0]; return r ? { mime: r.mime, data: r.data } : null; },
     };
   }
@@ -90,7 +92,9 @@ async function openStore({ dbFile }) {
   const saveBlob = async (key, mime, buf) => { fs.mkdirSync(blobDir, { recursive: true }); fs.writeFileSync(blobPath(key), buf); fs.writeFileSync(blobPath(key) + '.mime', mime); };
   const getBlob = async key => { try { return { data: fs.readFileSync(blobPath(key)), mime: fs.readFileSync(blobPath(key) + '.mime', 'utf8') }; } catch { return null; } };
   const deleteBlob = async key => { for (const f of [blobPath(key), blobPath(key) + '.mime']) try { fs.unlinkSync(f); } catch {} };
-  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); }, saveBlob, getBlob, deleteBlob };
+  // (The keys as their file names: the same for the keys made only of letters, digits and - _ .)
+  const blobKeys = async prefix => { try { return fs.readdirSync(blobDir).filter(f => f.startsWith(prefix) && !f.endsWith('.mime')); } catch { return []; } };
+  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); }, saveBlob, getBlob, deleteBlob, blobKeys };
 }
 
 module.exports = { openStore };

@@ -27,7 +27,7 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
           accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`}
           style={({ pressed }) => ({ width: '48.4%', opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <Card style={{ padding: 0, overflow: 'hidden', flex: 1 }}>
-            <GuideImage k={g.thumb} aspect={4 / 3} flat />
+            <GuideImage k={g.thumb} aspect={4 / 3} flat size="m" />
             <View style={{ padding: 10, gap: 3, flex: 1 }}>
               <T style={{ fontSize: 14.5, lineHeight: 22, fontWeight: '700' }} numberOfLines={2}>{g.title}</T>
               <T style={{ fontSize: 12, lineHeight: 19, color: c.muted }} numberOfLines={2}>{g.blurb}</T>
@@ -47,17 +47,27 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
   );
 }
 
+// The made picture's address at a size the server makes (l: full, m: half, s: a quarter, for the lists' thumbnails).
+export type GuideSize = 'l' | 'm' | 's';
+export const guideUri = (k: string, v: string, size: GuideSize = 'l') => `${API_URL}/guide-art/${k}.png?v=${v}${size === 'l' ? '' : `&s=${size}`}`;
+// The made pictures of `keys` loaded ahead (the next and previous pages), so turning the page shows them at once.
+export function prefetchGuide(keys: string[], guideArt: Record<string, string>) {
+  if (PROVE_PICS) return;
+  const uris = keys.filter(k => guideArt[k]).map(k => guideUri(k, guideArt[k]));
+  if (uris.length) Image.prefetch(uris).catch(() => {});
+}
+
 // An item's picture at its aspect ratio; until the server has made it, a soft tile with `label` (e.g. the code), or
 // only a small icon when `compact` (the list's thumbnails).
 // `flat`: at the top of a card, flush with its edges (no rounding or edge of its own). `zoom`: a tap opens it full screen
-// to look at closely, like the exam's pictures (ZoomableImage).
-export function GuideImage({ k, aspect, label, radius = 12, compact, flat, zoom }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; zoom?: boolean }) {
+// to look at closely, like the exam's pictures (ZoomableImage). `size`: which of the server's sizes (compact: the smallest).
+export function GuideImage({ k, aspect, label, radius = 12, compact, flat, zoom, size }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; zoom?: boolean; size?: GuideSize }) {
   const c = useColors();
   const { guideArt, token } = useApp();
   const v = guideArt[k];
   // prove.dk's picture (at /app; only for signed-in users, like the questions' pictures) or the made one.
   const prove = PROVE_PICS && !!v?.startsWith('p');
-  const src = prove ? imgSource({ uri: `${API_URL}/img/guideprove/${k}.png`, v: `v=${v}`, token }) : { uri: `${API_URL}/guide-art/${k}.png?v=${v}` };
+  const src = prove ? imgSource({ uri: `${API_URL}/img/guideprove/${k}.png`, v: `v=${v}`, token }) : { uri: guideUri(k, v, size ?? (compact ? 's' : 'l')) };
   // prove.dk's sign drawings reach their edges: a little room around them, as the made pictures have.
   const inset = prove && k.startsWith('s-') ? { transform: [{ scale: 0.82 }] } : null;
   return (
