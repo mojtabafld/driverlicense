@@ -35,6 +35,8 @@ const tealLight = {
   // The main flat button (start exam, sign in, hand in, the dialogs' confirm): `btn` with `btnFg` on it.
   btn: '#2e8285', btnFg: '#ffffff',
   // Page background: a very soft top-to-bottom gradient around bg, with a hint of the teal.
+  // The call to action (ArcButton): here the main button's colours.
+  cta: '#2e8285', ctaFg: '#ffffff',
   bgGradient: ['#f5fafa', '#edf4f4', '#e1eded'] as readonly [string, string, string],
 };
 const tealDark: typeof tealLight = {
@@ -48,6 +50,7 @@ const tealDark: typeof tealLight = {
   nav: '#2f8f92', navFg: '#ffffff', navOff: '#163637', navNum: '#7ccbcd',
   strong: '#2f8f92', strongFg: '#ffffff',
   btn: '#2f8f92', btnFg: '#ffffff',
+  cta: '#2f8f92', ctaFg: '#ffffff',
   bgGradient: ['#152a2b', '#0f1c1d', '#0a1415'] as readonly [string, string, string],
 };
 // Uber Eats: near-white page, white cards, near-black text, no tints of colour in the surfaces; one green throughout,
@@ -64,6 +67,7 @@ const uberLight: typeof tealLight = {
   nav: '#e4e4e4', navFg: '#141414', navOff: '#f0f0f0', navNum: '#5e5e5e',
   strong: '#333333', strongFg: '#ffffff',
   btn: '#222222', btnFg: '#ffffff', // near-black, the light theme's counterpart
+  cta: '#222222', ctaFg: '#ffffff',
   bgGradient: ['#f3f3f3', '#f3f3f3', '#f3f3f3'] as readonly [string, string, string],
 };
 const uberDark: typeof tealLight = {
@@ -77,6 +81,7 @@ const uberDark: typeof tealLight = {
   nav: '#3a3a3a', navFg: '#ffffff', navOff: '#262626', navNum: '#a7a7a7',
   strong: '#e6e6e6', strongFg: '#141414',
   btn: '#c4c4c4', btnFg: '#0c0c0c', // soft light grey with black text
+  cta: '#c4c4c4', ctaFg: '#0c0c0c',
   bgGradient: ['#0c0c0c', '#0c0c0c', '#0c0c0c'] as readonly [string, string, string],
 };
 // Arc: the values of foundation.css (oklch greys and status colours as hex), with data-accent="green".
@@ -91,6 +96,8 @@ const arcLight: typeof tealLight = {
   nav: '#f1f1f1', navFg: '#0b0b0b', navOff: '#f8f8f8', navNum: '#585858',
   strong: '#1d1d1d', strongFg: '#ffffff',
   btn: '#1d1d1d', btnFg: '#ffffff',
+  // The main site's call to action (home's next lesson, the exam's start: ArcButton): a deep green like the page headers.
+  cta: '#1f5a32', ctaFg: '#ffffff',
   bgGradient: ['#ffffff', '#ffffff', '#ffffff'] as readonly [string, string, string],
 };
 const arcDark: typeof tealLight = {
@@ -104,6 +111,7 @@ const arcDark: typeof tealLight = {
   nav: '#2b2b2b', navFg: '#f2f2f2', navOff: '#1f1f1f', navNum: '#b4b4b4',
   strong: '#e8e8e8', strongFg: '#141414',
   btn: '#e8e8e8', btnFg: '#141414',
+  cta: '#2f7d47', ctaFg: '#ffffff',
   bgGradient: ['#141414', '#141414', '#141414'] as readonly [string, string, string],
 };
 const light = STYLE === 'arc' ? arcLight : STYLE === 'uber' ? uberLight : tealLight;
