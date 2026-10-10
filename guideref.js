@@ -5,7 +5,7 @@
 // for the admin's comparison (/console) and for the app's copy at /app, which shows them instead of the made pictures
 // (/img/guideprove/<key>.png, signed-in users only); for a sign the admin may choose the official drawing (public
 // domain) instead of the made picture, which /guide-art/<key>.png then serves.
-// store.meta.guideRef = { items: { [key]: { prove?: at, off?: at } }, choice: { [key]: 'official' }, run: {…} }.
+// store.meta.guideRef = { items: { [key]: { prove?: at, off?: at } }, choice: { [key]: 'official' }, choiceMark, run: {…} }.
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -20,6 +20,7 @@ function init(s, ig) {
   try { MAP = read('data/prove-map.json'); DATA = read('mobile/src/lib/guide-data.json'); } catch (e) { console.error('guide refs', e.message); }
   const r = meta().run;
   if (r && !r.done) { r.done = true; r.stopped = true; save().catch(() => {}); }   // an import cut short by a restart
+  applyChoices();
   // prove.dk's pictures and the official drawings are copied in on their own: a minute after the start, whatever is
   // not there yet (nothing is fetched again).
   if (missing()) setTimeout(() => { if (missing()) startImport(); }, 60e3).unref();
@@ -28,6 +29,17 @@ function init(s, ig) {
 const missing = () => Object.entries(MAP).some(([k, x]) => { const it = meta().items[k] || {}; return !it.prove || (x.official && !it.off); });
 const meta = () => (store.meta.guideRef = store.meta.guideRef || { items: {}, choice: {} });
 const save = () => store.saveMeta('guideRef', meta());
+// Choices made in the repository (data/guide-choice.json: key → 'official' | 'ai'), e.g. after a review found a made
+// picture wrong: applied once for each new `mark`, as if the admin had chosen them; the console can change them later.
+function applyChoices() {
+  let f;
+  try { f = read('data/guide-choice.json'); } catch { return; }
+  const m = meta();
+  if (!f.mark || m.choiceMark === f.mark) return;
+  for (const [k, c] of Object.entries(f.choice || {})) { if (c === 'official') m.choice[k] = 'official'; else if (c === 'ai') delete m.choice[k]; }
+  m.choiceMark = f.mark;
+  save().catch(e => console.error('guide choices', e.message));
+}
 
 // The official drawing on Wikimedia Commons, rendered at 960 px.
 function commonsUrl(name) {

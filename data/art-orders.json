@@ -2,7 +2,17 @@
  "about": "Pictures are made only when ordered here (the image model's credit is limited). guide: picture keys (e.g. s-a42-2), group ids (e.g. A, UA, round, drill-right) or signs / priority / thumbs. A listed picture is made if it is missing or its prompt changed; once made it stays. learn: the «آموزش» tab's cards to make again, card number (1 lessons, 2 rules, 3 signs, 4 right of way) → a mark; a new mark makes it once more.",
  "guide": [
   "order",
-  "right"
+  "right",
+  "pc-drill-right",
+  "s-a38",
+  "s-f34-1",
+  "s-m54",
+  "p-order-signal",
+  "p-yield-b11",
+  "p-turn-left",
+  "p-turn-two-left",
+  "p-signal-arrow",
+  "p-ped-cycle-street"
  ],
  "learn": {
   "1": "2026-10-06"
