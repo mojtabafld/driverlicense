@@ -1,5 +1,6 @@
 // «علائم رانندگی»: every Danish road sign, marking and signal in the groups of the road-marking order (A–Z and the
-// sub-signs). The groups as cards, two to a row, each with its thumbnail; a card opens the group page by page.
+// sub-signs). The groups as cards, each with its thumbnail (ui/guide-visual.tsx CatGrid); a card opens the group
+// page by page.
 import { SIGN_CATS } from '@/lib/guide-data';
 import { CatGrid } from '@/ui/guide-visual';
 import { SignsArt } from '@/ui/header-art';

@@ -16,14 +16,40 @@ import { ZoomableImage } from './zoom';
 
 export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same in both themes
 
-// The groups as cards, two to a row: the group's thumbnail, its title, a line about it and how many items it has.
-// A card opens the group page by page (/guide-view).
+// The groups as cards: the group's thumbnail, its title, a line about it and how many items it has. On the main site
+// they are wide cards one under the other like «آموزش»'s (the picture whole at the card's right, up to its edges, the
+// text to its left); at /app two to a row with the picture on top. A card opens the group page by page (/guide-view).
 export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[] }) {
   const c = useColors();
+  const open = (g: { id: string }) => { tap(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
+  const count = (g: { items: unknown[] }) => (
+    <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
+      <T style={{ fontSize: 11.5, fontWeight: '600', color: c.muted }}>{faNum(g.items.length)} مورد</T>
+    </View>
+  );
+  if (!PROVE_PICS) return (
+    <View style={{ gap: 12 }}>
+      {cats.map(g => (
+        <Card key={g.id} onPress={() => open(g)} style={{ padding: 0, overflow: 'hidden' }}>
+          <View accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`} style={{ flexDirection: 'row', alignItems: 'stretch', minHeight: 112 }}>
+            <View style={{ width: 150 }}><GuideImage k={g.thumb} aspect={4 / 3} flat fill size="m" /></View>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14 }}>
+              <View style={{ flex: 1, gap: 3 }}>
+                <T style={{ fontSize: 15.5, lineHeight: 23, fontWeight: '700' }} numberOfLines={2}>{g.title}</T>
+                <T style={{ fontSize: 12, lineHeight: 19, color: c.muted }} numberOfLines={2}>{g.blurb}</T>
+                <T style={{ fontSize: 11.5, lineHeight: 17, fontWeight: '600' }}>{faNum(g.items.length)} مورد</T>
+              </View>
+              <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
+            </View>
+          </View>
+        </Card>
+      ))}
+    </View>
+  );
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
       {cats.map(g => (
-        <Pressable key={g.id} onPress={() => { tap(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); }}
+        <Pressable key={g.id} onPress={() => open(g)}
           accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`}
           style={({ pressed }) => ({ width: '48.4%', opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <Card style={{ padding: 0, overflow: 'hidden', flex: 1 }}>
@@ -33,9 +59,7 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
               <T style={{ fontSize: 12, lineHeight: 19, color: c.muted }} numberOfLines={2}>{g.blurb}</T>
               <View style={{ flex: 1 }} />
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
-                  <T style={{ fontSize: 11.5, fontWeight: '600', color: c.muted }}>{faNum(g.items.length)} مورد</T>
-                </View>
+                {count(g)}
                 <View style={{ flex: 1 }} />
                 <Icon name="chevronLeft" size={14} color={c.faint} />
               </View>
@@ -59,9 +83,10 @@ export function prefetchGuide(keys: string[], guideArt: Record<string, string>) 
 
 // An item's picture at its aspect ratio; until the server has made it, a soft tile with `label` (e.g. the code), or
 // only a small icon when `compact` (the list's thumbnails).
-// `flat`: at the top of a card, flush with its edges (no rounding or edge of its own). `zoom`: a tap opens it full screen
+// `flat`: at the top or side of a card, flush with its edges (no rounding or edge of its own); `fill`: as tall as its
+// box instead of `aspect` (the picture covering it). `zoom`: a tap opens it full screen
 // to look at closely, like the exam's pictures (ZoomableImage). `size`: which of the server's sizes (compact: the smallest).
-export function GuideImage({ k, aspect, label, radius = 12, compact, flat, zoom, size }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; zoom?: boolean; size?: GuideSize }) {
+export function GuideImage({ k, aspect, label, radius = 12, compact, flat, fill, zoom, size }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; fill?: boolean; zoom?: boolean; size?: GuideSize }) {
   const c = useColors();
   const { guideArt, token } = useApp();
   const v = guideArt[k];
@@ -71,7 +96,7 @@ export function GuideImage({ k, aspect, label, radius = 12, compact, flat, zoom,
   // prove.dk's sign drawings reach their edges: a little room around them, as the made pictures have.
   const inset = prove && k.startsWith('s-') ? { transform: [{ scale: 0.82 }] } : null;
   return (
-    <View style={{ width: '100%', aspectRatio: aspect, borderRadius: flat ? 0 : radius, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: '100%', ...(fill ? { height: '100%' } : { aspectRatio: aspect }), borderRadius: flat ? 0 : radius, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
       {v && zoom ? (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
           <ZoomableImage source={src} style={[{ width: '100%', aspectRatio: aspect }, inset]} ratio={aspect} transition={200} />
