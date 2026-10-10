@@ -1240,8 +1240,7 @@
 },
 "s-m54": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/M-54.jpg",
-"official": true,
-"commons": "Denmark_road_sign_M54.svg"
+"official": false
 },
 "s-m57": {
 "url": "https://prove.dk/storage/app/media/traffic_signs/M-57.jpg",

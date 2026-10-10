@@ -1,18 +1,5 @@
 # To do later
 
-## Signs still showing prove.dk's picture on the main site
-On the main site these signs show prove.dk's picture (choice «prove» in the console). Each now has its official drawing
-(public domain, Wikimedia Commons, see COMMONS in data/guide-src/build.py), copied into the database by itself after the
-deploy. In the console's «علائم» part, choose «طرح رسمی» for each, then delete this list:
-
-- `s-a72` (A72; prove.dk's file is a Wikimedia-style `Denmark_road_sign_A72.svg`)
-- `s-e19` (E19; prove.dk's file is a Wikimedia-style `Denmark_road_sign_E19-L.svg`)
-- `s-e16-2` (E16.2; prove.dk's own picture)
-- `s-e22-4` (E22.4; prove.dk's own picture)
-- `s-e69-9` (E69.9; prove.dk's own picture)
-- `s-f34-2` (F34.2; prove.dk's own picture)
-- `s-f34-3` (F34.3; prove.dk's own picture)
-
 ## Lessons
 Once the step-by-step course («آموزش گام‌به‌گام», mobile/src/lib/course.ts) is complete, remove the lessons built on
 prove.dk's questions and pictures («آموزش درس‌به‌درس»).

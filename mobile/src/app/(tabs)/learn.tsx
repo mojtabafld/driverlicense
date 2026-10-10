@@ -1,8 +1,9 @@
-// «آموزش»: four parts as cards, two by two (the page scrolls under its picture header), each with its picture (made by the server's image
-// model; the part's icon on a soft tile until it is there), its title and a line on what is in it; a card opens its
-// part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules, the road signs, and right of way.
-// At /app (prove.dk's copy) the first card is prove.dk's 44 lessons one by one (app/learn-lessons.tsx) instead of the
-// app's own course.
+// «آموزش»: four parts as rows one under the other (the page scrolls under its picture header), each a quiet card
+// (ui/list-card.tsx) with its picture on a small tile at its right (made by the server's image model; the part's icon
+// until it is there), and to the left of it its title, a line on what is in it and its progress note; a row opens
+// its part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules, the road signs, and right of way.
+// At /app (prove.dk's copy) the cards stay two by two and the first one is prove.dk's 44 lessons one by one
+// (app/learn-lessons.tsx) instead of the app's own course.
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
@@ -14,9 +15,25 @@ import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
+import { ListCard } from '@/ui/list-card';
 import { useColors } from '@/ui/theme';
 
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
+  const c = useColors();
+  const { learnArt, learnBg } = useApp();
+  const v = learnArt[n];
+  // The picture, whole, on its tile in the picture's own background colour; the icon until the picture is made.
+  const pic = (
+    <View style={{ flex: 1, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+      {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, transform: [{ scale: 1.15 }] }} contentFit="contain" transition={250} />
+        : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
+    </View>
+  );
+  return <ListCard onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={2} note={note} />;
+}
+
+// /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
+function Tile({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const short = useWindowDimensions().height < 700; // less text on short screens
@@ -50,27 +67,35 @@ export default function Learn() {
   const tried = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, all = bank?.tests.length ?? 44;
   return (
     <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn' }}>
-      <View style={{ gap: 12 }}>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          {PROVE_PICS ? (
-            <Part n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
+      {PROVE_PICS ? (
+        <View style={{ gap: 12 }}>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <Tile n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
               text="۴۴ درس رسمی، یکی‌یکی، یا تمرین بر اساس دسته‌بندی رسمی آزمون."
               note={tried ? `${faNum(tried)} از ${faNum(all)} درس انجام شده` : undefined} />
-          ) : (
-            <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
-              text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
-              note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
-          )}
+            <Tile n={2} icon="rules" title="قوانین" href="/rules"
+              text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
+          </View>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <Tile n={3} icon="sign" title="علائم رانندگی" href="/signs"
+              text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
+            <Tile n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
+              text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
+          </View>
+        </View>
+      ) : (
+        <View style={{ gap: 10 }}>
+          <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
+            text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
+            note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
           <Part n={2} icon="rules" title="قوانین" href="/rules"
             text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
-        </View>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
           <Part n={3} icon="sign" title="علائم رانندگی" href="/signs"
             text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
             text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
         </View>
-      </View>
+      )}
     </Screen>
   );
 }
