@@ -1014,6 +1014,8 @@ const HERO_PROMPTS = [
   'A driving theory test: a large white clipboard lying flat at an isometric angle (tilted back like an open book lying on a table, not standing upright), on it three rows of answer boxes, two ticked in green and one crossed in coral; a round white stopwatch with a coral button standing at its front corner, a yellow pencil lying across its lower edge, a red-and-white triangular warning sign on a short pole and a small rounded tree behind it, and a small golden star floating just above. The group is a little narrower than an open book seen at that angle: it spans only the left half of the width (from about 8% to 50%) and the middle of the height (from about 20% to 70%), with the clipboard of medium size.',
   // 3: the home page (a greeting and the progress)
   'On the way to the driving licence: a short winding grey road with white dashes rising from the front towards the back, a small rounded coral car driving up it, a white driving licence card with a faceless photo silhouette standing upright at the end of the road beside a small green flag, and a round white speedometer gauge with a green needle floating beside the road. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 30% and 70% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
+  // 4: «آموزش گام‌به‌گام» (the app's own course, its steps to the licence)
+  'The way to the driving licence, step by step: a grey road with white dashes climbing in a gentle zigzag from the front towards the back, with four round white milestone markers along it (blank, no numbers), the first ones with small green check marks; a small rounded coral car at the start of the road; a red-and-white triangular warning sign on a short pole beside it; and at the top end of the road a white driving licence card with a faceless photo silhouette and a round green check badge, standing beside a small green flag. This picture is shown in a wide, low header that cuts off its top and bottom: the objects are small and stay in a band through the vertical middle (between 28% and 72% of the height) and within the left 45% of the width; above, below and to the right of them only background.',
 ];
 // A dark picture redrawn for the light theme: the same drawing, only its background in the light theme's green.
 const HERO_RECOLOUR = 'Redraw this exact picture for a light theme. Keep every object exactly as it is: the same objects, shapes, sizes, positions, angles, colours, materials, lighting and composition, nothing added, removed or moved. Change only the background: the dark green background and its darker green hills become one soft, light, airy pastel green (#d9ecd5) with gentle slightly deeper pale green (#c4e1be) hills, and the bottom quarter one flat even light pastel green (#d9ecd5); soften the shadows to suit the light background. No text, no letters, no numbers, no logos, no watermarks.';
@@ -1031,10 +1033,12 @@ const HERO_STYLE_LIGHT = HERO_STYLE
 const HERO_UP = 'k4f';   // the mark of the full-size redraw
 const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 'hero-art', resolution: '4K',
   prompts: [HERO_RECOLOUR_DARK, `${HERO_PROMPTS[1]}\n${HERO_STYLE}`, HERO_RECOLOUR_DARK, `${HERO_PROMPTS[0]}\n${HERO_STYLE_LIGHT}`, HERO_RECOLOUR, `${HERO_PROMPTS[2]}\n${HERO_STYLE_LIGHT}`,
-    { prompt: HERO_RECOLOUR_DARK, aspect: '1:1' }, { prompt: 'data/hero-ref/sign-in-light.png', aspect: '1:1' }],
+    { prompt: HERO_RECOLOUR_DARK, aspect: '1:1' }, { prompt: 'data/hero-ref/sign-in-light.png', aspect: '1:1' },
+    HERO_RECOLOUR_DARK, `${HERO_PROMPTS[3]}\n${HERO_STYLE_LIGHT}`],
   // Each page's two pictures are one drawing: the learning and home dark ones redrawn from their light ones (1 from 4,
-  // 3 from 6, and the sign-in's 7 from its chosen 8), the test's light one from its dark one (5 from 2).
-  redo: { 2: 'narrow' }, derive: { 1: '4', 3: '6', 5: '2', 7: '8' }, fixed: { 8: 'sign-in-light.png' }, refDir: path.join(__dirname, 'data', 'hero-ref'),
+  // 3 from 6, the sign-in's 7 from its chosen 8, and the course's 9 from 10), the test's light one from its dark one
+  // (5 from 2).
+  redo: { 2: 'narrow' }, derive: { 1: '4', 3: '6', 5: '2', 7: '8', 9: '10' }, fixed: { 8: 'sign-in-light.png' }, refDir: path.join(__dirname, 'data', 'hero-ref'),
   // Kept at the model's full size (FULL_MAX, JPEG); the drawings made before that (at 2560 px) are redrawn from themselves
   // at 4K, and the ones drawn from them (1, 5, 7) follow from those. The home page's two (3, 6) are the trial's (adoptHomeTrial).
   // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
