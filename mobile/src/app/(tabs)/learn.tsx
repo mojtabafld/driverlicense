@@ -1,12 +1,13 @@
 // «آموزش»: four parts as cards, two by two (the page scrolls under its picture header), each with its picture (made by the server's image
 // model; the part's icon on a soft tile until it is there), its title and a line on what is in it; a card opens its
 // part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules, the road signs, and right of way.
-// (The official lessons one by one, app/learn-lessons.tsx, are no longer offered here.)
+// At /app (prove.dk's copy) the first card is prove.dk's 44 lessons one by one (app/learn-lessons.tsx) instead of the
+// app's own course.
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
 
-import { API_URL } from '@/lib/config';
+import { API_URL, PROVE_PICS } from '@/lib/config';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
@@ -44,14 +45,22 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
 
 export default function Learn() {
   const { done } = useCourseProgress();
+  const { bank, attempts } = useApp();
   const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
+  const tried = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, all = bank?.tests.length ?? 44;
   return (
     <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn' }}>
       <View style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
-            text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
-            note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
+          {PROVE_PICS ? (
+            <Part n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
+              text="۴۴ درس رسمی، یکی‌یکی، یا تمرین بر اساس دسته‌بندی رسمی آزمون."
+              note={tried ? `${faNum(tried)} از ${faNum(all)} درس انجام شده` : undefined} />
+          ) : (
+            <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
+              text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
+              note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
+          )}
           <Part n={2} icon="rules" title="قوانین" href="/rules"
             text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
         </View>

@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
-import { faNum, isFull, isPass, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
+import { PROVE_PICS } from '@/lib/config';
+import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -75,18 +76,26 @@ function useGreeting() {
 // short test (5 questions) after it.
 function StartCard({ compact }: { compact: boolean }) {
   const c = useColors();
-  const { bank } = useApp();
+  const { bank, attempts, Q } = useApp();
   const { done } = useCourseProgress();
-  const next = COURSE.flatMap(ch => ch.lessons).find(l => !done[l.id]) ?? null;
+  // At /app the next of prove.dk's lessons not tried yet, in place of the app's own course.
+  const tried = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson));
+  const pi = PROVE_PICS && bank ? bank.tests.findIndex(t => !tried.has(t.id)) : -1, pt = bank && pi >= 0 ? bank.tests[pi] : null;
+  const next = PROVE_PICS ? null : COURSE.flatMap(ch => ch.lessons).find(l => !done[l.id]) ?? null;
   return (
     <Card style={{ flex: 1, gap: compact ? 10 : 14, padding: compact ? 14 : 18, justifyContent: 'center' }}>
       <T style={{ fontWeight: '800', fontSize: 18 }}>از اینجا شروع کنید</T>
       <T style={{ color: c.muted, fontSize: 14, lineHeight: 23 }}>
         {next ? `اول درس کوتاه «${next.title}» را بخوانید (${faNum(next.minutes)} دقیقه). بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`
+          : pt ? `اول درس ${faNum(lessonNumber(pt.title, pi))} را تمرین کنید. بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`
           : 'با یک آزمون کوتاه ببینید چقدر آماده‌اید؛ بعد از آن، احتمال قبولی و نمودار پیشرفت اینجا نمایش داده می‌شوند.'}
       </T>
-      {next ? <Button label={Object.keys(done).length ? 'درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => router.push({ pathname: '/course-lesson', params: { id: next.id } })} /> : null}
-      <Button kind={next ? 'glass' : 'primary'} label="آزمون کوتاه ۵ سؤالی" icon="exam" onPress={() => {
+      {next ? <Button label={Object.keys(done).length ? 'درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => router.push({ pathname: '/course-lesson', params: { id: next.id } })} />
+        : pt ? <Button label={tried.size ? 'درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => {
+          session.plan = { mode: 'lesson', ids: pt.qs.filter(id => Q.has(id)), lesson: pt.id, title: `درس ${faNum(lessonNumber(pt.title, pi))}` };
+          router.push('/run');
+        }} /> : null}
+      <Button kind={next || pt ? 'glass' : 'primary'} label="آزمون کوتاه ۵ سؤالی" icon="exam" onPress={() => {
         if (!bank) return;
         session.plan = { mode: 'random', ids: randomIds(bank, 5), title: 'آزمون تصادفی' };
         router.push('/run');
