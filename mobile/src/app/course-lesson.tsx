@@ -72,9 +72,10 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
           </View>
         );
       })}
-      {checked ? (
+      {/* Only the mistakes are counted; a question without any needs no line (each statement already says «درست»). */}
+      {checked && mistakes ? (
         <Enter>
-          <T style={{ fontWeight: '700', fontSize: 14, color: mistakes ? c.warn : c.ok, textAlign: 'center' }}>{mistakes ? `${faNum(mistakes)} اشتباه در این سؤال` : 'بدون اشتباه!'}</T>
+          <T style={{ fontWeight: '700', fontSize: 14, color: c.warn, textAlign: 'center' }}>{faNum(mistakes)} اشتباه در این سؤال</T>
         </Enter>
       ) : null}
     </View>
