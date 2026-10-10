@@ -1,14 +1,16 @@
-// «آموزش گام‌به‌گام»: preparing for the theory test. The real test's format, the overall progress and how the lessons
-// work, then the chapters in the official curriculum's order (each ending with its test, the course with full
-// simulated exams), each with its lessons (a finished one ticked; those still being written «به‌زودی»), and the sources.
+// «آموزش گام‌به‌گام»: preparing for the theory test, under its own picture header (like the tabs'). First the
+// progress (a ring, and a button to the next lesson), then how a lesson goes (four steps on a line) and the goal (the
+// real test's format), then the way to the licence: the chapters in the official curriculum's order on a path, each
+// with its lessons (a finished one ticked, the next one marked, those still being written locked «به‌زودی»), and the
+// sources.
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { COURSE, EXAM, SOURCES, lessonCount, readyCount } from '@/lib/course';
+import { COURSE, EXAM, SOURCES, lessonCount, readyCount, type CourseChapter, type CourseLesson } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { Icon, type IconName } from '@/ui/icon';
-import { Card, Enter, T, tap } from '@/ui/kit';
+import { Button, Card, Enter, Ring, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
@@ -16,16 +18,109 @@ const HOW: { icon: IconName; text: string }[] = [
   { icon: 'exam', text: 'در آزمون چه می‌پرسند' },
   { icon: 'learn', text: 'قاعده با تصویر و منبع' },
   { icon: 'warning', text: 'فخ‌های آزمون' },
-  { icon: 'checkCircle', text: 'سؤال‌ها به شکل آزمون واقعی' },
+  { icon: 'checkCircle', text: 'سؤال‌ها به شکل آزمون' },
 ];
+
+const openLesson = (l: CourseLesson) => { tap(); router.push({ pathname: '/course-lesson', params: { id: l.id } }); };
+
+// How a lesson goes: four round steps joined by a line, each with its line of text under it.
+function HowSteps() {
+  const c = useColors();
+  return (
+    <View style={{ flexDirection: 'row' }}>
+      {HOW.map((h, i) => (
+        <View key={h.text} style={{ flex: 1, alignItems: 'center', gap: 6 }}>
+          <View style={{ width: '100%', height: 40, alignItems: 'center', justifyContent: 'center' }}>
+            {/* The line to the neighbours, behind the circle (none before the first or after the last). */}
+            <View style={{ position: 'absolute', top: 19, height: 2, backgroundColor: c.line, left: i === HOW.length - 1 ? '50%' : 0, right: i === 0 ? '50%' : 0 }} />
+            <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft, borderWidth: 2, borderColor: c.surface }}>
+              <Icon name={h.icon} size={18} color={c.link} />
+            </View>
+          </View>
+          <T style={{ fontSize: 11.5, lineHeight: 17, color: c.muted, textAlign: 'center', paddingHorizontal: 2 }}>{h.text}</T>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// One chapter on the path: its circle on the rail (its number, a tick when all of it is done, dim while all of it is
+// still to come) and the line down to the next chapter, beside its card with the lessons.
+function Chapter({ ch, last, done, next }: { ch: CourseChapter; last: boolean; done: Record<string, unknown>; next: string | null }) {
+  const c = useColors();
+  const open = ch.lessons.length > 0, complete = open && !ch.planned.length && ch.lessons.every(l => done[l.id]);
+  const dot = complete ? c.ok : open ? c.strong : c.surface2, dotFg = complete || open ? c.strongFg : c.muted;
+  return (
+    <View style={{ flexDirection: 'row', gap: 10 }}>
+      <View style={{ width: 38, alignItems: 'center' }}>
+        <View style={{ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: dot, borderWidth: open ? 0 : 1.5, borderColor: c.line }}>
+          {complete ? <Icon name="check" size={18} color={dotFg} weight="semibold" />
+            : <T style={{ fontWeight: '800', fontSize: 15, color: dotFg, textAlign: 'center' }}>{faNum(ch.n)}</T>}
+        </View>
+        {last ? null : <View style={{ flex: 1, width: 3, borderRadius: 2, marginVertical: 4, backgroundColor: complete ? c.ok : c.line }} />}
+      </View>
+      <Card style={{ flex: 1, gap: 10, marginBottom: last ? 0 : 14, opacity: open ? 1 : 0.85 }}>
+        <View style={{ gap: 2 }}>
+          <T style={{ fontWeight: '700', fontSize: 15.5 }}>{ch.title}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{ch.sub}</T>
+        </View>
+        <View style={{ gap: 6 }}>
+          {ch.lessons.map(l => {
+            const on = !!done[l.id], isNext = l.id === next;
+            return (
+              <Pressable key={l.id} onPress={() => openLesson(l)} accessibilityRole="button"
+                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12,
+                  borderWidth: 1.5, borderColor: on ? c.ok : isNext ? c.link : c.line, backgroundColor: pressed ? c.surface2 : on ? c.okSoft : isNext ? c.accentSoft : c.surface })}>
+                <Icon name={on ? 'checkCircle' : 'play'} size={18} color={on ? c.ok : c.link} />
+                <T style={{ flex: 1, fontWeight: '700', fontSize: 14.5 }}>{l.title}</T>
+                {isNext ? <View style={{ backgroundColor: c.link, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 1 }}><T style={{ color: c.surface, fontSize: 11, fontWeight: '700' }}>بعدی</T></View>
+                  : <T style={{ color: c.muted, fontSize: 12 }}>{on ? 'انجام شد' : `${faNum(l.minutes)} دقیقه`}</T>}
+                <Icon name="chevronLeft" size={14} color={c.faint} />
+              </Pressable>
+            );
+          })}
+          {ch.planned.map(t => (
+            <View key={t} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.surface2, opacity: 0.75 }}>
+              <Icon name="lock" size={16} color={c.faint} />
+              <T style={{ flex: 1, fontSize: 14, color: c.muted }}>{t}</T>
+              <T style={{ color: c.faint, fontSize: 12 }}>به‌زودی</T>
+            </View>
+          ))}
+        </View>
+      </Card>
+    </View>
+  );
+}
 
 export default function Course() {
   const c = useColors();
   const { done } = useCourseProgress();
   const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
+  const next = ready.find(l => !done[l.id]) ?? null;
   const total = lessonCount();
   return (
-    <SubPage title="آموزش گام‌به‌گام" subtitle="آمادگی کامل برای آزمون تئوری گواهینامه‌ی B: فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی، بر اساس قانون و برنامه‌ی رسمی آموزش دانمارک.">
+    <SubPage title="آموزش گام‌به‌گام" subtitle="فصل به فصل، تا گواهینامه" hero={{ pic: 9, light: 10, icon: 'learn' }}>
+      <Enter>
+        <Card style={{ gap: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+            <Ring value={ready.length ? finished / ready.length : 0} size={84} stroke={8} color={c.ok} label={`${faNum(finished)}/${faNum(ready.length)}`} />
+            <View style={{ flex: 1, gap: 4 }}>
+              <T style={{ fontWeight: '800', fontSize: 17 }}>پیشرفت شما</T>
+              <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
+                {faNum(finished)} از {faNum(ready.length)} درس آماده انجام شده؛ {faNum(total - readyCount())} درس دیگر به‌زودی اضافه می‌شود.
+              </T>
+            </View>
+          </View>
+          {next ? <Button label={finished ? `ادامه: ${next.title}` : `شروع: ${next.title}`} icon="play" onPress={() => openLesson(next)} />
+            : <T style={{ color: c.ok, fontWeight: '700', fontSize: 13.5, textAlign: 'center' }}>همه‌ی درس‌های آماده را انجام داده‌اید.</T>}
+        </Card>
+      </Enter>
+      <Enter>
+        <Card style={{ gap: 12 }}>
+          <T style={{ fontWeight: '700', fontSize: 15.5 }}>هر درس در چهار گام</T>
+          <HowSteps />
+        </Card>
+      </Enter>
       <Enter>
         <Card style={{ gap: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -38,64 +133,12 @@ export default function Course() {
           </T>
         </Card>
       </Enter>
-      <Enter>
-        <Card style={{ gap: 12 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <T style={{ flex: 1, fontWeight: '700', fontSize: 16 }}>پیشرفت شما</T>
-            <T style={{ color: c.muted, fontSize: 13 }}>{faNum(finished)} از {faNum(total)} درس</T>
-          </View>
-          <View style={{ height: 8, borderRadius: 4, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
-            <View style={{ width: `${Math.round((finished / Math.max(1, total)) * 100)}%`, backgroundColor: c.ok }} />
-          </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {HOW.map((h, i) => (
-              <View key={h.text} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.surface2, borderRadius: 99, paddingVertical: 5, paddingHorizontal: 10 }}>
-                <T style={{ fontSize: 12, color: c.faint }}>{faNum(i + 1)}</T>
-                <Icon name={h.icon} size={14} color={c.link} />
-                <T style={{ fontSize: 12.5, color: c.muted }}>{h.text}</T>
-              </View>
-            ))}
-          </View>
-          <T style={{ color: c.faint, fontSize: 12 }}>{faNum(readyCount())} درس آماده است؛ بقیه به‌زودی اضافه می‌شوند.</T>
-        </Card>
-      </Enter>
-      {COURSE.map(ch => (
-        <Enter key={ch.id}>
-          <Card style={{ gap: 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: ch.lessons.length ? c.strong : c.surface2 }}>
-                <T style={{ fontWeight: '800', fontSize: 15, color: ch.lessons.length ? c.strongFg : c.muted, textAlign: 'center' }}>{faNum(ch.n)}</T>
-              </View>
-              <View style={{ flex: 1, gap: 2 }}>
-                <T style={{ fontWeight: '700', fontSize: 15.5 }}>{ch.title}</T>
-                <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{ch.sub}</T>
-              </View>
-            </View>
-            <View style={{ gap: 6 }}>
-              {ch.lessons.map(l => {
-                const on = !!done[l.id];
-                return (
-                  <Pressable key={l.id} onPress={() => { tap(); router.push({ pathname: '/course-lesson', params: { id: l.id } }); }} accessibilityRole="button"
-                    style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12,
-                      borderWidth: 1.5, borderColor: on ? c.ok : c.link, backgroundColor: pressed ? c.surface2 : on ? c.okSoft : c.accentSoft })}>
-                    <Icon name={on ? 'checkCircle' : 'play'} size={18} color={on ? c.ok : c.link} />
-                    <T style={{ flex: 1, fontWeight: '700', fontSize: 14.5 }}>{l.title}</T>
-                    <T style={{ color: c.muted, fontSize: 12 }}>{on ? 'انجام شد' : `${faNum(l.minutes)} دقیقه`}</T>
-                    <Icon name="chevronLeft" size={14} color={c.faint} />
-                  </Pressable>
-                );
-              })}
-              {ch.planned.map(t => (
-                <View key={t} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.surface2, opacity: 0.75 }}>
-                  <Icon name="lock" size={16} color={c.faint} />
-                  <T style={{ flex: 1, fontSize: 14, color: c.muted }}>{t}</T>
-                  <T style={{ color: c.faint, fontSize: 12 }}>به‌زودی</T>
-                </View>
-              ))}
-            </View>
-          </Card>
-        </Enter>
-      ))}
+      <T style={{ fontWeight: '800', fontSize: 18, marginTop: 4 }}>مسیر شما تا گواهینامه</T>
+      <View>
+        {COURSE.map((ch, i) => (
+          <Enter key={ch.id}><Chapter ch={ch} last={i === COURSE.length - 1} done={done} next={next?.id ?? null} /></Enter>
+        ))}
+      </View>
       <Card style={{ gap: 6 }}>
         <T style={{ fontWeight: '700', fontSize: 14 }}>منابع این دوره</T>
         {Object.values(SOURCES).map(s => <T key={s} style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>• {s}</T>)}
