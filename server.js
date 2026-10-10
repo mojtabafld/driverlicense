@@ -333,7 +333,7 @@ function serveStatic(req, res) {
     // Sent smaller and kept in memory (webpic.js) when the picture's version is known; the others as they are.
     const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]]
       : cm ? imagegen.courseVersions()[cm[1]] : undefined;   // (/guide-art has its own sizes and store: guideref.webBlob)
-    return (ver ? webpic.get(`${p}:${ver}`, load) : load()).then(b => {
+    return (ver ? webpic.get(`${p}:${ver}`, load, im ? 1280 : undefined) : load()).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       // (A sign chosen from prove.dk can be SVG: shown as a picture only, nothing in it runs.)
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff',
