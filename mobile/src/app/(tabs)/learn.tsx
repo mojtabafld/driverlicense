@@ -1,12 +1,13 @@
-// «آموزش»: four parts as wide cards, one under the other (the page scrolls under its picture header): each card has its
-// picture on a square tile at its right (made by the server's image model; the part's icon on a soft tile until it is
-// there) and, to the left of it, its title, a line on what is in it and its progress note; a card opens its part's
-// page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules, the road signs, and right of way.
+// «آموزش»: four parts as rows, one under the other with no card around them, a thin line between them (the page
+// scrolls under its picture header): each row has its picture on a square tile at its right (made by the server's
+// image model; the part's icon on a soft tile until it is there) and, to the left of it, its title, a line on what
+// is in it and its progress note; a row opens its part's page: the app's own course «آموزش گام‌به‌گام»
+// (app/course.tsx), the rules, the road signs, and right of way.
 // At /app (prove.dk's copy) the cards stay two by two and the first one is prove.dk's 44 lessons one by one
 // (app/learn-lessons.tsx) instead of the app's own course.
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
-import { View, useWindowDimensions } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { COURSE } from '@/lib/course';
@@ -17,12 +18,12 @@ import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
 import { useColors } from '@/ui/theme';
 
-function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
+function Part({ n, icon, title, text, note, href, last }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href; last?: boolean }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const v = learnArt[n];
   return (
-    <Card onPress={() => router.push(href)} style={{ padding: 12 }}>
+    <Pressable onPress={() => router.push(href)} style={({ pressed }) => [{ paddingVertical: 14, borderBottomWidth: last ? 0 : 1, borderColor: c.line }, pressed && { opacity: 0.7 }]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         {/* The picture, a little enlarged (its own margins are wide), on a square tile in the picture's own background colour; the icon on a
             soft tile until the picture is made. */}
@@ -37,7 +38,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         </View>
         <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
       </View>
-    </Card>
+    </Pressable>
   );
 }
 
@@ -93,7 +94,7 @@ export default function Learn() {
           </View>
         </View>
       ) : (
-        <View style={{ gap: 12 }}>
+        <View>
           <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
             text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
             note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
@@ -102,7 +103,7 @@ export default function Learn() {
           <Part n={3} icon="sign" title="علائم رانندگی" href="/signs"
             text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
-            text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
+            text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." last />
         </View>
       )}
     </Screen>
