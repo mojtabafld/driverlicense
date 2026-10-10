@@ -252,7 +252,8 @@ const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 // single-page app, so a path that is no file of it (and nothing else of the server's) gets its index.html; its hashed
 // bundles are cached for a year. A copy of the app built with the base path /app (app-web-app/) is served at /app/:
 // that copy shows prove.dk's own pictures (PROVE_PICS in mobile/src/lib/config.ts). It is a fixed copy, kept as it was
-// built (`npm run build:web` builds the root only; `npm run build:web-app` builds the copy again).
+// built (`npm run build:web` builds the root only; `npm run build:web-app` builds the copy again), and its question
+// bank and the questions' pictures are fixed too (frozen/app/, FROZEN in config.ts).
 const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
 const WEBS = {
   root: { dir: path.join(__dirname, 'app-web') },
@@ -315,6 +316,9 @@ function serveStatic(req, res) {
     }).catch(() => { res.writeHead(500); res.end(); });
   }
   if (isProtected(p) && !sessionUser(req)) { res.writeHead(401, { 'Cache-Control': 'no-store' }); return res.end('Sign in first'); }
+  // The fixed copy of the app at /app (?frozen=app): its question bank (the questions and the 44 lessons) and the
+  // questions' original pictures as they were when it was fixed (frozen/app/), so later changes do not reach it.
+  if ((p === '/data.js' || /^\/img\/q\d+\.jpg$/.test(p)) && new URL(req.url, 'http://x').searchParams.get('frozen') === 'app') return serveFile(req, res, p, FROZEN_APP);
   // The admin's picture comparison (guideref.js): the made picture, prove.dk's copy and the official drawing, admin only.
   const rm = /^\/img\/guideref\/(ai|prove|official|cand)\/([a-z0-9-]{3,40})$/.exec(p);
   if (rm) {
@@ -350,9 +354,10 @@ function serveStatic(req, res) {
   return serveFile(req, res, p);
 }
 
-function serveFile(req, res, p) {
-  const file = path.normalize(path.join(SITE, p));
-  if (!file.startsWith(SITE + path.sep)) { res.writeHead(403); return res.end(); }
+const FROZEN_APP = path.join(__dirname, 'frozen', 'app');
+function serveFile(req, res, p, root = SITE) {
+  const file = path.normalize(path.join(root, p));
+  if (!file.startsWith(root + path.sep)) { res.writeHead(403); return res.end(); }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) { res.writeHead(404); return res.end('Not found'); }
     const ext = path.extname(file).toLowerCase();
