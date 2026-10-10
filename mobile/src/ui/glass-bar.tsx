@@ -60,11 +60,12 @@ export function BarItem({ icon, label, main, filled, dim, ltr, children }: { ico
   );
 }
 
-// Without `end`, the middle (e.g. two answers) takes its room too.
-export function GlassBar({ start, middle, end }: { start: React.ReactNode; middle: React.ReactNode; end?: React.ReactNode }) {
+// Without `start` or `end`, the middle (e.g. two answers) takes their room too. The way out is the page's ✕ at the top,
+// never a button of the bar.
+export function GlassBar({ start, middle, end }: { start?: React.ReactNode; middle: React.ReactNode; end?: React.ReactNode }) {
   return (
     <BarShell>
-      <View style={{ flex: 1 }}>{start}</View>
+      {start ? <View style={{ flex: 1 }}>{start}</View> : null}
       <View style={{ flex: 2, flexDirection: 'row', gap: 4 }}>{middle}</View>
       {end ? <View style={{ flex: 1 }}>{end}</View> : null}
     </BarShell>

@@ -91,7 +91,6 @@ function Root() {
           <Stack.Screen name="signs" />
           <Stack.Screen name="priority" />
           <Stack.Screen name="guide-view" />
-          <Stack.Screen name="search" />
           <Stack.Screen name="course" />
           <Stack.Screen name="course-lesson" />
           <Stack.Screen name="drill" />

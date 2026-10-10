@@ -24,7 +24,7 @@ export function Pill({ text, fg, bg }: { text: string; fg: string; bg: string })
 // Green or red for an attempt: a full 25-question one by the real pass rule, a shorter one by the same 80%.
 const passed = (a: Attempt) => (isFull(a) ? isPass(a) : pctOf(a) >= 0.8);
 const fmtSecs = (s: number) => `${faNum(Math.floor(s / 60))}:${faNum(String(Math.round(s % 60)).padStart(2, '0'))}`;
-const fmtClock = (t: number) => new Date(t).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
+const fmtClock = (t: number) => new Date(t).toLocaleTimeString('fa-IR', { timeZone: 'Europe/Copenhagen', hour: '2-digit', minute: '2-digit' });
 
 function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: Colors; last: boolean }) {
   const ok = passed(a), fg = ok ? c.ok : c.bad, soft = ok ? c.okSoft : c.badSoft;

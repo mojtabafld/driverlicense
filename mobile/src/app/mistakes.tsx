@@ -204,9 +204,10 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       <GlassTop onHeight={setHeadH}>
         <View style={{ paddingTop: ins.top + 10, paddingBottom: 10, paddingHorizontal: 16, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بازگشت" hitSlop={6}
+            <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel={cur ? 'بستن' : 'بازگشت'} hitSlop={6}
               style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
-              <Icon name="arrowRight" size={20} color={c.text} />
+              {/* ✕ while stepping through the questions with the bar below, as on the other such pages; the back arrow otherwise. */}
+              <Icon name={cur ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
             </Pressable>
             {/* A long title glides to show all of it instead of ending in «…». */}
             <Marquee text={title} height={34} style={{ fontSize: 24, lineHeight: 34, fontWeight: '700' }} />

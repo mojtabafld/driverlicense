@@ -272,7 +272,6 @@ export default function Drill() {
       </SubPage>
       {turns && turns.length > 0 && !finished ? (
         <GlassBar
-          start={<FootBtn label="پایان تمرین" icon="exit" onPress={() => router.back()} />}
           // Until the question is answered, the two answers («حدس زدم» / «مطمئنم») sit in the bar, always in view; then the
           // position and «بعدی».
           middle={answer ? <BarCount n={i + 1} of={turns.length} label="سؤال" /> : (
