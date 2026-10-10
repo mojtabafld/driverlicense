@@ -11,6 +11,7 @@ import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { Button, Card, Enter, T, tap } from './kit';
 import { RoadSign, SIGN_NAME } from './road-signs';
+import type { HeroLook } from './kit';
 import { SubPage } from './sub-page';
 import { useColors } from './theme';
 
@@ -21,7 +22,8 @@ const LAW = 'خلاصه‌ای برای آمادگی آزمون تئوری؛ م�
 
 // `footer`: the line at the end (by default, that this is a summary of the law; null for none); `initialOpen`: the part
 // open at first.
-export function GuidePage({ title, subtitle, parts, footer = LAW, initialOpen = 0 }: { title: string; subtitle: string; parts: GuidePart[]; footer?: string | null; initialOpen?: number }) {
+// `hero`: a header like the tabs' (SubPage's), e.g. with a vector drawing (ui/header-art.tsx).
+export function GuidePage({ title, subtitle, parts, footer = LAW, initialOpen = 0, hero }: { title: string; subtitle: string; parts: GuidePart[]; footer?: string | null; initialOpen?: number; hero?: HeroLook }) {
   const c = useColors();
   const { bank } = useApp();
   const [open, setOpen] = useState<number | null>(initialOpen);
@@ -29,7 +31,7 @@ export function GuidePage({ title, subtitle, parts, footer = LAW, initialOpen = 
   const idsOf = (p: GuidePart) => bank.questions.filter(q => p.topics?.includes(q.c)).map(q => q.id);
   const practise = (p: GuidePart) => startPractice(shuffle(idsOf(p)).slice(0, FULL), p.title);
   return (
-    <SubPage title={title} subtitle={subtitle} gap={10}>
+    <SubPage title={title} subtitle={subtitle} gap={10} hero={hero}>
       {parts.map((p, i) => {
         const on = open === i, n = idsOf(p).length;
         return (

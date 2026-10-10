@@ -2,11 +2,12 @@
 // sub-signs). The groups as cards, two to a row, each with its thumbnail; a card opens the group page by page.
 import { SIGN_CATS } from '@/lib/guide-data';
 import { CatGrid } from '@/ui/guide-visual';
+import { SignsArt } from '@/ui/header-art';
 import { SubPage } from '@/ui/sub-page';
 
 export default function Signs() {
   return (
-    <SubPage title="علائم رانندگی" subtitle="همه‌ی تابلوها، خط‌کشی‌ها و چراغ‌های دانمارک، گروه به گروه؛ روی هر گروه بزنید تا تک‌تک موارد را با تصویر و توضیح ببینید.">
+    <SubPage title="علائم رانندگی" subtitle="تابلوها، خط‌کشی‌ها و چراغ‌ها" hero={{ pic: 0, icon: 'sign', art: SignsArt }}>
       <CatGrid kind="signs" cats={SIGN_CATS} />
     </SubPage>
   );
