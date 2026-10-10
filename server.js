@@ -250,8 +250,9 @@ const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 
 // The app's web version (mobile/, built into app-web/ with `npm run build:web`) is the site at the root: a
 // single-page app, so a path that is no file of it (and nothing else of the server's) gets its index.html; its hashed
-// bundles are cached for a year. The same app is built a second time with the base path /app (app-web-app/) and
-// served at /app/: that copy shows prove.dk's own pictures (PROVE_PICS in mobile/src/lib/config.ts).
+// bundles are cached for a year. A copy of the app built with the base path /app (app-web-app/) is served at /app/:
+// that copy shows prove.dk's own pictures (PROVE_PICS in mobile/src/lib/config.ts). It is a fixed copy, kept as it was
+// built (`npm run build:web` builds the root only; `npm run build:web-app` builds the copy again).
 const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
 const WEBS = {
   root: { dir: path.join(__dirname, 'app-web') },
@@ -294,7 +295,7 @@ function serveStatic(req, res) {
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY' });
     return res.end(req.method === 'HEAD' ? undefined : CONSOLE_HTML);
   }
-  // The app's copy with prove.dk's pictures at /app/.
+  // The app's fixed copy with prove.dk's pictures at /app/.
   if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
   if (p.startsWith('/app/')) return serveAppWeb(req, res, p.slice(4), WEBS.app);
   // The app at the root (everything that is not the API's or a shared file).
