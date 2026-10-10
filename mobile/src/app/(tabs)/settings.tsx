@@ -4,11 +4,13 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { PROVE_PICS } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp } from '@/lib/store';
 import { Avatar, AvatarSheet } from '@/ui/avatar';
 import { Confirm } from '@/ui/confirm';
+import { Field } from '@/ui/field';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, Segmented, T, physical, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
@@ -48,19 +50,40 @@ function LinkRow({ icon, title, sub, onPress }: { icon: IconName; title: string;
 
 export default function Settings() {
   const c = useColors();
-  const { user, settings, setSettings, logout, tts } = useApp();
+  const { user, settings, setSettings, logout, deleteAccount, tts } = useApp();
   const { mode, setMode } = useTheme();
   // Sign-out asks first, in the app's own dialog.
   const [askOut, setAskOut] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const confirmLogout = () => setAskOut(true);
+  // Deleting the account (main site only, not /app) asks first, with the password, in the same dialog.
+  const [askDel, setAskDel] = useState(false), [delPw, setDelPw] = useState(''), [delErr, setDelErr] = useState(''), [delBusy, setDelBusy] = useState(false);
+  const closeDel = () => { if (delBusy) return; setAskDel(false); setDelPw(''); setDelErr(''); };
+  const doDelete = async () => {
+    if (delBusy) return;
+    if (!delPw) return setDelErr('رمز عبور را وارد کنید.');
+    setDelBusy(true); setDelErr('');
+    try { await deleteAccount(delPw); }
+    catch (e) { setDelErr(e instanceof Error && e.message ? e.message : 'حذف نشد؛ دوباره امتحان کنید.'); setDelBusy(false); }
+  };
   // Switches in the app's teal.
   return (
     <Screen title="تنظیمات">
       <AvatarSheet open={avatarOpen} onClose={() => setAvatarOpen(false)} />
       <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
         cancel="ماندن" ok="خروج" okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
-      <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+      {!PROVE_PICS ? (
+        <Confirm open={askDel} icon="trash" danger title="حذف حساب کاربری؟"
+          text="حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، رمز عبور خود را وارد کنید."
+          cancel="انصراف" ok={delBusy ? 'در حال حذف…' : 'حذف حساب'} okIcon="trash" onCancel={closeDel} onOk={doDelete}>
+          <View style={{ gap: 8 }}>
+            <Field icon="lock" label="رمز عبور" value={delPw} onChange={v => { setDelPw(v); setDelErr(''); }} secure ltr onSubmit={doDelete} />
+            {delErr ? <T style={{ fontSize: 13.5, color: c.bad, textAlign: 'center' }}>{delErr}</T> : null}
+          </View>
+        </Confirm>
+      ) : null}
+      <Card style={{ gap: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         {/* The name opens the account page (name and password); sign-out stays at the end. */}
         <Pressable onPress={() => { tap(); router.push('/account'); }} accessibilityRole="button" accessibilityLabel="حساب کاربری"
           style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? 0.7 : 1 })}>
@@ -85,6 +108,15 @@ export default function Settings() {
           style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
           <Icon name="exit" size={20} color={c.bad} weight="semibold" />
         </Pressable>
+      </View>
+        {/* Delete the account: a quiet red line under the user, it asks first (main site only). */}
+        {!PROVE_PICS ? (
+          <Pressable onPress={() => { tap(); setAskDel(true); }} accessibilityRole="button" accessibilityLabel="حذف حساب کاربری"
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: c.line, opacity: pressed ? 0.6 : 1 })}>
+            <Icon name="trash" size={16} color={c.bad} />
+            <T style={{ flex: 1, color: c.bad, fontWeight: '700', fontSize: 14 }}>حذف حساب کاربری</T>
+          </Pressable>
+        ) : null}
       </Card>
       <Card style={{ gap: 10 }}>
         <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />

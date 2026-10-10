@@ -499,6 +499,25 @@ async function api(req, res, route) {
     await store.saveUser(user);
     return send(res, 200, { user: publicUser(user) });
   }
+  // Delete the account, asked from the settings with the user's password (failed tries count like failed sign-ins):
+  // the user, all their sessions, their own profile picture and their error reports are removed, and the cookie cleared.
+  if (req.method === 'DELETE' && route === 'account') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const b = await readBody(req);
+    if (typeof b.password !== 'string' || !(await checkPw(b.password, user))) { addFail(ip); return send(res, 403, { error: 'رمز عبور درست نیست.' }); }
+    const u = user.username;
+    for (const [t, x] of Object.entries(store.sessions)) if (x.username === u) delete store.sessions[t];
+    delete store.users[u];
+    await store.deleteUser(u);
+    if (user.avatar && user.avatar.photo) await store.deleteBlob(`avatar-${u}`).catch(() => {});
+    if ((store.meta.reports || []).some(r => r.username === u)) {
+      store.meta.reports = store.meta.reports.filter(r => r.username !== u);
+      await store.saveMeta('reports', store.meta.reports);
+    }
+    reportTimes.delete(u);
+    res.setHeader('Set-Cookie', cookie(req, '', 0));
+    return send(res, 200, { ok: true });
+  }
   // Profile picture: { preset: n } (one of the made pictures), { image: base64 JPEG } (their own, cropped and made
   // small by the app; kept in blob avatar-<username>) or { remove: true }. GET returns their own picture.
   if (route === 'avatar') {

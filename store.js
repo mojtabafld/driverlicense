@@ -1,7 +1,8 @@
 // Persistence for users and sessions.
 // - DATABASE_URL set  → PostgreSQL (DigitalOcean App Platform / Managed DB); data survives redeploys.
 // - otherwise         → a local JSON file (data/db.json), handy for running on your own computer.
-// Everything is kept in memory; writes go through saveUser / saveSession / deleteSession / saveMeta.
+// Everything is kept in memory; writes go through saveUser / deleteUser / saveSession / deleteSession / saveMeta
+// (deleteUser removes the user's row and sessions in the database; the caller drops them from memory).
 // meta holds small site-wide documents by key (e.g. 'visits' for the admin panel's visit counts).
 // Blobs (generated question pictures) are binary files kept apart from meta and read on demand: saveBlob / getBlob
 // (blobKeys lists the keys that start with a prefix).
@@ -60,6 +61,7 @@ async function openStore({ dbFile }) {
         'INSERT INTO tp_sessions (token, username, exp) VALUES ($1, $2, $3) ON CONFLICT (token) DO UPDATE SET exp = EXCLUDED.exp',
         [token, s.username, s.exp]),
       deleteSession: token => pool.query('DELETE FROM tp_sessions WHERE token = $1', [token]),
+      deleteUser: async username => { await pool.query('DELETE FROM tp_sessions WHERE username = $1', [username]); await pool.query('DELETE FROM tp_users WHERE username = $1', [username]); },
       saveMeta: (key, data) => pool.query(
         'INSERT INTO tp_meta (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data', [key, data]),
       saveBlob: (key, mime, buf) => pool.query(
@@ -94,7 +96,7 @@ async function openStore({ dbFile }) {
   const deleteBlob = async key => { for (const f of [blobPath(key), blobPath(key) + '.mime']) try { fs.unlinkSync(f); } catch {} };
   // (The keys as their file names: the same for the keys made only of letters, digits and - _ .)
   const blobKeys = async prefix => { try { return fs.readdirSync(blobDir).filter(f => f.startsWith(prefix) && !f.endsWith('.mime')); } catch { return []; } };
-  return { ...mem, kind: 'file', saveUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); }, saveBlob, getBlob, deleteBlob, blobKeys };
+  return { ...mem, kind: 'file', saveUser: flush, deleteUser: flush, saveSession: flush, deleteSession: flush, saveMeta: (key, data) => { mem.meta[key] = data; return flush(); }, saveBlob, getBlob, deleteBlob, blobKeys };
 }
 
 module.exports = { openStore };
