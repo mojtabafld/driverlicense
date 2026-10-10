@@ -494,3 +494,57 @@ export function Ring({ value, size = 76, stroke = 8, color, label, format }: { v
     </View>
   );
 }
+
+// Arc's skeleton: a muted block in the final layout while its content loads, with a soft pulse (Arc: a skeleton, not a
+// page spinner). `w` / `h` / `r`: its size and corner.
+export function Skeleton({ w = '100%', h = 14, r = radius.pill, style }: { w?: ViewStyle['width']; h?: number; r?: number; style?: StyleProp<ViewStyle> }) {
+  const c = useColors(), dark = useTheme().theme === 'dark';
+  const [pulse] = useState(() => new Animated.Value(0.6));
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(pulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(pulse, { toValue: 0.6, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]));
+    loop.start(); return () => loop.stop();
+  }, [pulse]);
+  return <Animated.View style={[{ width: w, height: h, borderRadius: r, backgroundColor: dark ? c.surface2 : c.nav, opacity: pulse }, style]} />;
+}
+
+// The app's first load (fonts, the account, the question bank) as Arc's skeleton of a tab page: the header, a large
+// card and a row of three, so the page that follows takes the same places. (flex-start: the start of the line, the
+// right edge in the app's right-to-left layout.)
+export function PageSkeleton() {
+  const c = useColors(), ins = useSafeAreaInsets();
+  const card = { borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, padding: 16, gap: 12 } as const;
+  return (
+    <View style={{ flex: 1, backgroundColor: c.bg }} accessibilityRole="progressbar" accessibilityLabel="در حال بارگذاری">
+      <View style={{ paddingTop: ins.top + 24, paddingHorizontal: 16, gap: 14, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
+        <View style={{ alignItems: 'flex-start', gap: 10, paddingVertical: 24 }}>
+          <Skeleton w="45%" h={26} r={radius.sm} />
+          <Skeleton w="62%" h={14} />
+        </View>
+        <View style={card}>
+          <Skeleton w="38%" h={18} r={radius.sm} style={{ alignSelf: 'flex-start' }} />
+          <Skeleton h={12} /><Skeleton w="80%" h={12} style={{ alignSelf: 'flex-start' }} />
+          <Skeleton h={50} r={radius.btn} style={{ marginTop: 6 }} />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          {[0, 1, 2].map(k => <View key={k} style={[card, { flex: 1, height: 96 }]}><Skeleton w="60%" h={14} style={{ alignSelf: 'flex-start' }} /><Skeleton w="35%" h={20} r={radius.sm} style={{ alignSelf: 'flex-start' }} /></View>)}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// Arc's empty state: what is missing, why, and the one thing to do next, centred, with a plain icon (no tile) over it.
+export function EmptyState({ icon, title, text, action }: { icon: IconName; title: string; text?: string; action?: { label: string; onPress: () => void; icon?: IconName } }) {
+  const c = useColors();
+  return (
+    <View style={{ alignItems: 'center', gap: 6, paddingVertical: 28, paddingHorizontal: 20, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, backgroundColor: c.surface }}>
+      <Icon name={icon} size={28} color={c.muted} />
+      <T style={{ fontSize: 16, lineHeight: 26, fontWeight: '500', textAlign: 'center', marginTop: 6 }}>{title}</T>
+      {text ? <T style={{ fontSize: 13.5, lineHeight: 22, color: c.muted, textAlign: 'center', maxWidth: 360 }}>{text}</T> : null}
+      {action ? <Button kind="glass" label={action.label} icon={action.icon} onPress={action.onPress} style={{ marginTop: 10 }} /> : null}
+    </View>
+  );
+}
