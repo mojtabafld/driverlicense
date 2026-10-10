@@ -192,7 +192,7 @@ async function whitened(key) {
       }
     }
   } catch (e) { console.error('whiten', key, e.message); }
-  if (whiteCache.size > 600) whiteCache.clear();
+  if (whiteCache.size > 20) whiteCache.clear();   // (the app's copies are kept by webpic.js; a few MB each here)
   whiteCache.set(id, out);
   return out;
 }
