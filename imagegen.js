@@ -1055,11 +1055,11 @@ async function adoptHomeTrial() {
 const heroDiag = () => Object.fromEntries(Object.entries((store.meta.heroArt || {}).items || {}).map(([n, j]) =>
   [n, { state: j.state, enh: j.enh || null, enhMark: j.enhMark || null, enhTries: j.enhTries || 0, info: j.enhInfo || null, error: j.error ? String(j.error).slice(0, 160) : null }]));
 // A trial, to compare with the pictures on show; served at /hero-try/<n>.png and not used by the app.
-// The home page's two pictures (1: light, 2: dark; data/hero-ref/home-*.jpg, the ones on show at 2560 px) redrawn from
-// themselves at 4K and kept at the model's full size (FULL_MAX), with the background cleaned and the edges sharpened.
-const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'full1', aspect: '4:3', prefix: 'hero-try', resolution: '4K', full: true, clean: 'cl2',
-  refDir: path.join(__dirname, 'data', 'hero-ref'),
-  prompts: { 1: { prompt: UPSCALE_PROMPT, ref: 'home-light.jpg' }, 2: { prompt: UPSCALE_PROMPT, ref: 'home-dark.jpg' } } });
+// The home page's header in another style: a flat cartoon vector illustration instead of 3D clay, the same scene and
+// layout (1: light theme; 2: the dark one, redrawn from it). (The trial before, at full size, was taken in: adoptHomeTrial.)
+const HERO_VECTOR_STYLE = 'Style: a clean, colorful cartoon vector illustration with a polished, modern, friendly Scandinavian aesthetic, like the header illustration of a professional educational app. Smooth, simple, rounded shapes with little detail; crisp, clean outlines of even weight in a slightly darker shade of each shape\'s own colour (not black); soft cel shading with one gentle highlight and one soft shadow tone per shape; vibrant natural colours: coral red, warm white, sunny yellow, fresh leaf green, sky blue and Danish red. The car is simple and toy-like, cartoon proportions, not a realistic car. Flat vector look: not a 3D render, not clay, no photorealism, no glossy reflections, no texture, no grain, no noise. The whole picture is one soft, light, airy pastel green (#d9ecd5) background scene that fills the frame edge to edge, with gentle, flat, slightly deeper pale green (#c4e1be) rolling hills low in the background; no border, no frame, no vignette. The top tenth and the bottom quarter of the picture are only calm, plain, even background (the bottom quarter one flat even light pastel green (#d9ecd5), no hills, no shadows, no objects), because the picture fades smoothly into the page there. All the objects stand in the LEFT half, vertically centred, at least a tenth of the width away from every edge; the RIGHT half is calm, plain background with nothing in it (a dark green title will be written there). Danish traffic signs follow their official design. No text, no letters, no numbers, no logos, no brand names, no watermarks, no faces.';
+const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'vec1', aspect: '4:3', prefix: 'hero-try', resolution: '4K', full: true, clean: 'cl2',
+  prompts: [`${HERO_PROMPTS[2]}\n${HERO_VECTOR_STYLE}`, HERO_RECOLOUR_DARK.replace('Redraw this exact picture', 'Redraw this exact flat vector illustration, in the same flat cartoon vector style,')], derive: { 2: '1' } });
 const heroTryBlob = HERO_TRY.blob;
 
 // ---------- the pictures behind the app's store screenshots (Play Store / App Store) ----------
