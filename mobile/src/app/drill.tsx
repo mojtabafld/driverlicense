@@ -241,7 +241,9 @@ export default function Drill() {
 
   return (
     <View style={{ flex: 1 }}>
-      <SubPage title={title} gap={12} scrollKey={finished ? 'end' : i} scrollRef={scroll} close={!finished}>
+      <SubPage title={title} gap={12} scrollKey={finished ? 'end' : i} scrollRef={scroll} close={!finished}
+        // Only forwards, and only once answered: the practice has no way back to a question.
+        pager={finished || !turns?.length ? undefined : { i: 0, n: answer ? 2 : 1, go: k => { if (k === 1) next(); } }}>
         {!turns ? <T style={{ color: c.muted, textAlign: 'center', marginTop: 40 }}>در حال آماده کردن سؤال‌ها…</T>
           : !turns.length ? <T style={{ color: c.muted, textAlign: 'center', marginTop: 40 }}>هنوز سؤالی برای تمرین نیست.</T>
           : finished ? <Enter><End answers={answers} turns={turns} onMore={start} /></Enter>

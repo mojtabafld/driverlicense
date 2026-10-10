@@ -14,7 +14,7 @@ import { Icon } from './icon';
 import { Backdrop, Hero, T, tap, usePageMotion, useTopOnFocus, type HeroLook } from './kit';
 import { GlassTop } from './liquid';
 import { Marquee } from './marquee';
-import { backLean, swipeWebStyle, useSwipeBack } from './swipe';
+import { backLean, swipeWebStyle, usePager, useSwipeBack } from './swipe';
 import { useColors } from './theme';
 
 // `guard`: while set (e.g. unsaved changes), leaving — the back button, the drag back or the phone's back button — asks
@@ -24,9 +24,11 @@ import { useColors } from './theme';
 // scroll to a part of itself (the rules page to the part it opens).
 // `close`: a ✕ in place of the back arrow, for a page with its own previous / next bar (a lesson, a practice), so
 // the way out never looks like the bar's arrows.
-export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
+// `pager`: a page with its own previous / next bar turns its steps with a sideways swipe (as the exam does) instead of
+// going back with one, so a swipe for the next step never leaves the page.
+export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close, pager }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
   maxWidth?: number; guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook; scrollRef?: React.RefObject<ScrollView | null>;
-  onBodyY?: (y: number) => void; close?: boolean }) {
+  onBodyY?: (y: number) => void; close?: boolean; pager?: { i: number; n: number; go: (k: number) => void } }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const ref = useTopOnFocus(scrollRef);
@@ -35,7 +37,8 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
   const [asking, setAsking] = useState(false);
   const leave = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
   const back = () => (guard ? setAsking(true) : leave());
-  const swipe = useSwipeBack(back);
+  const backSwipe = useSwipeBack(back), turn = usePager(pager?.i ?? 0, pager?.n ?? 0, pager?.go ?? noop);
+  const swipe = pager ? turn : backSwipe;
   useEffect(() => {
     if (!guard) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { setAsking(true); return true; });
@@ -43,7 +46,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
   }, [guard]);
   return (
     <Backdrop anim={motion.style}>
-      <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, backLean(swipe.dx)]}>
+      <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, pager ? { transform: [{ translateX: turn.dx }] } : backLean(backSwipe.dx)]}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           {hero ? (
             <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: ins.bottom + 40 }}>
@@ -93,3 +96,4 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
     </Backdrop>
   );
 }
+const noop = () => {};
