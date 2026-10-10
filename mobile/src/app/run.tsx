@@ -49,6 +49,9 @@ export default function Run() {
   const [plan] = useState(() => session.plan);
   const qs = useMemo(() => (plan ? plan.ids.map(id => Q.get(id)!).filter(Boolean) : []), [plan, Q]);
   const [i, setI] = useState(0);
+  // Each question starts at its top, however it was reached (the bar, a swipe, the hand-in sheet).
+  const scroll = useRef<ScrollView>(null);
+  useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [i]);
   const [ticks, setTicks] = useState<boolean[][]>(() => qs.map(q => q.st.map(() => false)));
   const [left, setLeft] = useState(qs.length * SECONDS_PER_Q);
   const [headH, setHeadH] = useState(0); // the glass top bar's height, the page's top padding
@@ -138,7 +141,7 @@ export default function Run() {
       </GlassTop>
       {/* A sideways swipe turns to the next or previous question; it never leaves the exam (only the exit button does). */}
       <Pager i={i} n={qs.length} go={setI}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The picture in its own box with rounded corners like the buttons', the page's own background around the
             question and its statements, which are outlined boxes with a round check. */}
         {/* The picture comes in again with each question. */}
