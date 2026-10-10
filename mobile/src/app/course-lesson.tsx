@@ -1,5 +1,5 @@
 // One lesson of «آموزش گام‌به‌گام» (?id=), one step per page, aimed at the theory test: what the exam asks about the
-// topic, one rule per step (its picture, the rule in a box with its law, and «فخ آزمون»: how the exam tries to catch you),
+// topic, one rule per step (its picture, the rule in a box with its law, and «حواستان باشد»: how the exam tries to catch you),
 // then the lesson's test in the exam's own format (the situation in a picture, the question in Danish with its Persian
 // translation, «Ja / Nej» for each statement; once all are answered, which were right and why), its result counted in
 // mistakes against the real test's limit (and «تکرار آزمون»), and the summary with the sources. The bar at the bottom:
@@ -48,14 +48,14 @@ function RuleBox({ text, law }: { text: string; law?: string }) {
   );
 }
 
-// «فخ آزمون»: how the exam's statements try to catch you on this rule.
+// «حواستان باشد»: how the exam's statements try to catch you on this rule.
 function TrapBox({ text }: { text: string }) {
   const c = useColors();
   return (
     <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', padding: 14, borderRadius: 14, backgroundColor: c.warnSoft }}>
       <Icon name="warning" size={19} color={c.warn} />
       <View style={{ flex: 1, gap: 2 }}>
-        <T style={{ fontWeight: '700', fontSize: 13.5, color: c.warn }}>فخ آزمون</T>
+        <T style={{ fontWeight: '700', fontSize: 13.5, color: c.warn }}>حواستان باشد</T>
         <T style={{ fontSize: 14, lineHeight: 24 }}>{text}</T>
       </View>
     </View>
