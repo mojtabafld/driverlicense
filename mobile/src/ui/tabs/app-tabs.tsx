@@ -10,7 +10,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T, tap } from '../kit';
 import { Icon, type IconName } from '../icon';
 import { LiquidGlass } from '../liquid';
-import { useBarLook } from '../glass-bar';
+import { barSurface, useBarLook, useBarShade } from '../glass-bar';
+import { BarLight } from '../bar-shade';
 import { TABS } from './tabs';
 
 const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
@@ -19,7 +20,7 @@ export const TAB_BAR_H = 64;
 
 const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, onPress, ...props }, ref) => {
   const look = useBarLook();
-  const color = isFocused ? look.green : '#ffffff';
+  const color = isFocused ? look.green : look.fg;
   return (
     <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1 }}
       accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={label}>
@@ -38,22 +39,25 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
 TabButton.displayName = 'TabButton';
 
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
-const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
+// The bar's shade (light, or grey over something dark: glass-bar.tsx) goes to the tabs through BarLight.
+const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>((props, ref) => {
+  const light = useBarShade();
+  return <BarLight.Provider value={light}><TabShell ref={ref} {...props} /></BarLight.Provider>;
+});
+GlassTabBar.displayName = 'GlassTabBar';
+const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
   const ins = useSafeAreaInsets(), look = useBarLook(), grey = look.grey;
-  const web = Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)' } as any) : null;
   return (
     <View ref={ref} {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
       {Platform.OS === 'ios' ? (
         <LiquidGlass r={TAB_BAR_H / 2} tint={grey} style={{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4 }}>{children}</LiquidGlass>
       ) : (
-        <View style={[{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4, borderRadius: TAB_BAR_H / 2,
-          backgroundColor: Platform.OS === 'android' ? look.solid : grey,
-          borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.18)' }, web]}>{children}</View>
+        <View style={[{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4 }, ...barSurface(look)]}>{children}</View>
       )}
     </View>
   );
 });
-GlassTabBar.displayName = 'GlassTabBar';
+TabShell.displayName = 'TabShell';
 
 export default function AppTabs() {
   return (

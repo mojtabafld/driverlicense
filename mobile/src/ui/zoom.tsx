@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Modal, PanResponder, Platform, Pressable, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useUnderBar } from './bar-shade';
 import { Icon } from './icon';
 import { T, physical, tap } from './kit';
 
@@ -23,9 +24,10 @@ export function ZoomableImage({ source, style, ratio = 4 / 3, children, transiti
   // and open it again; taps in the first moment after closing are ignored.
   const closedAt = useRef(0);
   const close = () => { closedAt.current = Date.now(); setOpen(false); };
+  const under = useUnderBar(); // a photo: the floating bar turns dark over it (ui/bar-shade.tsx)
   return (
     <View>
-      <Pressable onPress={() => { if (Date.now() - closedAt.current < 600) return; tap(); setOpen(true); }} accessibilityRole="imagebutton" accessibilityLabel="بزرگ‌نمایی تصویر">
+      <Pressable ref={under} onPress={() => { if (Date.now() - closedAt.current < 600) return; tap(); setOpen(true); }} accessibilityRole="imagebutton" accessibilityLabel="بزرگ‌نمایی تصویر">
         <Image source={source} style={style} contentFit="contain" transition={transition} />
         <View pointerEvents="none" style={{ position: 'absolute', bottom: 8, ...physical({ right: 8 }), width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)' }}>
           <Icon name="zoom" size={17} color="#fff" />
