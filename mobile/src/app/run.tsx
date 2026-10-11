@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, BackHandler, Easing, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PROVE_PICS } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
@@ -25,6 +26,11 @@ import { Icon } from '@/ui/icon';
 import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { radius, useColors, useIsDark } from '@/ui/theme';
+
+// The summary's numbers: in the Latin font and digits on the main site (as the bar's count and the clock), in Persian
+// digits in the /app copy.
+const Num = PROVE_PICS ? T : L;
+const num = (n: number) => (PROVE_PICS ? faNum(n) : String(n));
 
 // The timer's clock icon; with `pulse` it fades out and in again (the last two minutes).
 function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
@@ -123,7 +129,10 @@ export default function Run() {
             {settings.timer ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, direction: 'ltr' } as any}>
                 <ClockIcon color={clock} pulse={urgent} />
-                <T style={{ fontSize: 20, lineHeight: 28, fontWeight: '500', color: clock, writingDirection: 'ltr' }}>{faNum(mm)}</T>
+                {/* The main site's clock in the Latin font and digits, the /app copy's in Persian digits. */}
+                {PROVE_PICS
+                  ? <T style={{ fontSize: 20, lineHeight: 28, fontWeight: '500', color: clock, writingDirection: 'ltr' }}>{faNum(mm)}</T>
+                  : <L style={{ fontSize: 20, lineHeight: 28, fontWeight: '500', color: clock, fontVariant: ['tabular-nums'] }}>{mm}</L>}
               </View>
             ) : null}
           </View>
@@ -204,7 +213,7 @@ export default function Run() {
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {([[answered, 'پاسخ داده‌شده'], [empty, 'بی‌پاسخ'], [flags.length, 'علامت‌خورده']] as const).map(([n, l]) => (
             <View key={l} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 14, backgroundColor: c.surface2 }}>
-              <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '600', color: c.text, textAlign: 'center' }}>{faNum(n)}</T>
+              <Num style={{ fontSize: 22, lineHeight: 30, fontWeight: '600', color: c.text, textAlign: 'center' }}>{num(n)}</Num>
               <T style={{ fontSize: 12, color: c.muted, textAlign: 'center' }}>{l}</T>
             </View>
           ))}
@@ -217,7 +226,7 @@ export default function Run() {
               <Pressable key={k} onPress={() => goTo(k)} accessibilityLabel={`سؤال ${k + 1}`}
                 style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.75 : 1,
                   backgroundColor: ans ? c.strong : c.nav, borderWidth: 1.5, borderColor: marked ? c.warn : ans ? c.strong : c.nav })}>
-                <T style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? c.strongFg : c.navFg, textAlign: 'center' }}>{faNum(k + 1)}</T>
+                <Num style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: ans ? c.strongFg : c.navFg, textAlign: 'center' }}>{num(k + 1)}</Num>
                 {marked ? (
                   <View style={{ position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.warn }}>
                     <Icon name="bookmark" size={11} filled color="#fff" />

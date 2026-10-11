@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
-import { T, tap } from './kit';
+import { L, T, tap } from './kit';
 import { LiquidGlass } from './liquid';
 import { useIsDark } from './theme';
 
@@ -49,15 +49,18 @@ export function BarShell({ children }: { children: React.ReactNode }) {
 
 // One item of a bar: an icon over its label, white; `main`: on the darker capsule, in green (the tab bar's chosen tab).
 // `ltr`: a label read left to right (a position, «۷ / ۲۵»).
-export function BarItem({ icon, label, main, filled, dim, ltr, children }: { icon?: IconName; label: string; main?: boolean; filled?: boolean; dim?: boolean; ltr?: boolean;
-  children?: React.ReactNode }) {
+// `latin`: the label in the Latin font (Inter) and its digits, e.g. the question count «3 / 25» on the main site.
+export function BarItem({ icon, label, main, filled, dim, ltr, latin, children }: { icon?: IconName; label: string; main?: boolean; filled?: boolean; dim?: boolean; ltr?: boolean;
+  latin?: boolean; children?: React.ReactNode }) {
   const look = useBarLook();
   const color = main ? look.green : '#ffffff';
   return (
     <View style={{ alignItems: 'center', justifyContent: 'center', gap: 2, height: ITEM_H, borderRadius: ITEM_H / 2, overflow: 'hidden', opacity: dim ? 0.4 : 1,
       backgroundColor: main ? look.capsule : 'transparent' }}>
       {children ?? (icon ? <Icon name={icon} size={24} color={color} filled={filled} contrast={look.contrast} /> : null)}
-      <T style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color, writingDirection: ltr ? 'ltr' : undefined }} numberOfLines={1}>{label}</T>
+      {latin
+        ? <L style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color }} numberOfLines={1}>{label}</L>
+        : <T style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color, writingDirection: ltr ? 'ltr' : undefined }} numberOfLines={1}>{label}</T>}
     </View>
   );
 }
