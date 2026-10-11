@@ -68,7 +68,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
             </Pressable>
             {checked ? (
               <T style={{ fontSize: 13, lineHeight: 21, color: wrong ? c.bad : c.ok, fontWeight: '600', paddingHorizontal: 4 }}>
-                {wrong ? (s.ok ? 'اشتباه؛ این گزینه درست است و باید تیک می‌خورد. ' : 'اشتباه؛ این گزینه نادرست است و نباید تیک می‌خورد. ') : 'درست. '}{s.why}
+                {wrong ? (s.ok ? 'اشتباه؛ این گزینه درست است و باید انتخاب می‌شد. ' : 'اشتباه؛ این گزینه نادرست است و نباید انتخاب می‌شد. ') : 'درست. '}{s.why}
               </T>
             ) : null}
           </View>
