@@ -191,6 +191,24 @@ export default function Home() {
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={() => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
+        {ARC ? (() => {
+          // Main site, as a forecast card: a small grey caption, the last attempt's score large, and its change against
+          // the attempt before (green up, red down).
+          const last = Math.round(pctOf(attempts[attempts.length - 1]) * 100);
+          const before = attempts.length > 1 ? Math.round(pctOf(attempts[attempts.length - 2]) * 100) : null;
+          const d = before == null ? 0 : last - before;
+          return (
+            <View style={{ gap: 2 }}>
+              <T style={{ color: c.muted, fontSize: 12.5 }}>نمره‌ی آخرین آزمون</T>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
+                <T style={{ fontSize: tighter ? 24 : 32, fontWeight: '400', lineHeight: tighter ? 34 : 44 }}>{faNum(last)}٪</T>
+                {before != null && d !== 0 ? (
+                  <T style={{ color: d > 0 ? c.ok : c.bad, fontSize: 13, fontWeight: '600' }}>{d > 0 ? '↗' : '↘'} {faNum(Math.abs(d))}٪ نسبت به آزمون قبل</T>
+                ) : before != null ? <T style={{ color: c.muted, fontSize: 13 }}>مثل آزمون قبل</T> : null}
+              </View>
+            </View>
+          );
+        })() : (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -199,6 +217,7 @@ export default function Home() {
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.forest, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
+        )}
         <ProgressChart fill minH={chartMin} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
       </Card>
       </Pressable>
