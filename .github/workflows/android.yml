@@ -1,10 +1,10 @@
-# Builds the Android app (an APK to install directly, arm64 phones) from mobile/ on every change to it on main, and
+# Builds the Android app (an APK to install directly, arm64 phones) from mobile/ when run by hand, and
 # publishes it as a GitHub Release «Android build N» with the file teoriprove.apk. Run it by hand from the Actions tab
 # too («Run workflow»).
 #
 # N, the release number, counts from 1 since 2026-10-11 (the owner asked; the releases before it, tagged android-*, are
-# deleted by this workflow): N = the run number - RUN_OFFSET (run 113 was release 1). The APK's versionCode stays the run number, so a new APK
-# still installs over the ones built before.
+# deleted by this workflow): one more than the highest release-N there is, so a cancelled run skips no number. The APK's
+# versionCode stays the run number, so a new APK still installs over the ones built before.
 #
 # Signing: with the repository secrets ANDROID_KEYSTORE_BASE64 (the .jks file in base64), ANDROID_KEYSTORE_PASSWORD
 # and ANDROID_KEY_ALIAS every build is signed with that key, so a new APK installs over the old one. Without them a
@@ -12,10 +12,9 @@
 # before installing the next APK).
 name: Android APK
 
+# Only by hand (the owner asked, 2026-10-10: an APK is built and published only when he asks for one), from the Actions
+# tab or the API.
 on:
-  push:
-    branches: [main]
-    paths: ['mobile/**', '.github/workflows/android.yml']
   workflow_dispatch:
 
 permissions:
@@ -34,12 +33,15 @@ jobs:
         working-directory: mobile
     env:
       HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
-      RUN_OFFSET: 112
     steps:
       - uses: actions/checkout@v4
 
       - name: Release number
-        run: echo "RELEASE_N=$((GITHUB_RUN_NUMBER - RUN_OFFSET))" >> "$GITHUB_ENV"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 500 --json tagName --jq '.[].tagName' | { grep -E '^release-[0-9]+$' || true; } | sed 's/release-//' | sort -n | tail -1)
+          echo "RELEASE_N=$(( ${last:-0} + 1 ))" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v4
         with:
