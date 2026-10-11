@@ -87,11 +87,11 @@ function StartCard({ compact }: { compact: boolean }) {
   return (
     <Card style={{ flex: 1, gap: compact ? 10 : 14, padding: compact ? 14 : 18, justifyContent: 'center' }}>
       <T style={{ fontWeight: '800', fontSize: 18 }}>از اینجا شروع کنید</T>
-      <T style={{ color: c.muted, fontSize: 14, lineHeight: 23 }}>
-        {next ? `اول درس کوتاه «${next.title}» را بخوانید (${faNum(next.minutes)} دقیقه). بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`
-          : pt ? `اول درس ${faNum(lessonNumber(pt.title, pi))} را تمرین کنید. بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`
+      {/* With a course lesson next (main site), the two buttons speak for themselves: no line here, Mojtaba asked. */}
+      {next ? null : <T style={{ color: c.muted, fontSize: 14, lineHeight: 23 }}>
+        {pt ? `اول درس ${faNum(lessonNumber(pt.title, pi))} را تمرین کنید. بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`
           : 'با یک آزمون کوتاه ببینید چقدر آماده‌اید؛ بعد از آن، احتمال قبولی و نمودار پیشرفت اینجا نمایش داده می‌شوند.'}
-      </T>
+      </T>}
       {/* Main site: Arc's primary button (verb and object), the short test beside it Arc's secondary one. */}
       {next ? <ArcButton label={Object.keys(done).length ? 'شروع آموزش' : 'شروع درس اول'} icon="play" onPress={() => router.push({ pathname: '/course-lesson', params: { id: next.id } })} />
         : pt ? <Button label={tried.size ? 'درس بعدی' : 'شروع درس اول'} icon="play" onPress={() => {
