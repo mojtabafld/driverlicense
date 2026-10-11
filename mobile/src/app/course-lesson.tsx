@@ -44,7 +44,6 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
           <Icon name="exam" size={14} color={c.strongFg} />
           <T style={{ fontSize: 12.5, fontWeight: '700', color: c.strongFg }}>سؤال آزمون {faNum(n)} از {faNum(of)}</T>
         </View>
-        <T style={{ flex: 1, color: c.faint, fontSize: 12 }}>مثل آزمون واقعی</T>
       </View>
       {step.art ? <Art k={step.art} /> : null}
       <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', marginBottom: -4 } as any}>
