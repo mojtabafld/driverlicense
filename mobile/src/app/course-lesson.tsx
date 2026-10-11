@@ -207,7 +207,7 @@ function Finished({ title, result, next, onDrill }: { title: string; result: Res
           <Icon name="check" size={38} color="#fff" weight="bold" />
         </View>
         <T style={{ fontSize: 22, fontWeight: '800', marginTop: 6 }}>درس تمام شد!</T>
-        <T style={{ fontSize: 14.5, color: c.muted, textAlign: 'center' }}>«{title}» در نقشه‌ی راه شما تیک خورد.</T>
+        <T style={{ fontSize: 14.5, color: c.muted, textAlign: 'center' }}>«{title}» در نقشه‌ی راه شما کامل شد.</T>
         <T style={{ fontSize: 13.5, color: c.muted, textAlign: 'center' }}>آزمون درس: {faNum(result.mistakes)} اشتباه از {faNum(result.statements)} گزینه</T>
       </Card>
       {next ? <Button icon="play" label={`درس بعدی: ${next.title}`} onPress={() => router.replace({ pathname: '/course-lesson', params: { id: next.id } })} /> : null}
