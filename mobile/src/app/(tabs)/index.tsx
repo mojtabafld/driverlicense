@@ -166,7 +166,8 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
+    // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
+    <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
       hero={{ pic: 3, icon: 'house' }} barGap={ARC ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
@@ -176,11 +177,12 @@ export default function Home() {
           <View>
             <Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
           </View>
-          <View style={{ flex: ARC ? undefined : 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
+          {/* Main site: the title, the pill and the line centred on one another (the pill right under the title), Mojtaba asked. */}
+          <View style={{ flex: ARC ? undefined : 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: ARC ? 'center' : 'flex-start' }}>
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
             <Pill text={probWord} fg={probColor} bg={probSoft} />
             {/* Main site: no line before the first exam. */}
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight || tighter || (ARC && !est) ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, textAlign: ARC ? 'center' : undefined, display: tight || tighter || (ARC && !est) ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
         </View>
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter && !ARC ? 'none' : 'flex' }}>
