@@ -82,12 +82,6 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'chevronUp':
       body = <Path d="M6 14.5l6-6 6 6" {...line} />;
       break;
-    case 'trendUp':
-      body = <G><Path d="M3.5 17l6-6 4 4 7-7.5" {...line} /><Path d="M15 7.5h5.5V13" {...line} /></G>;
-      break;
-    case 'trendDown':
-      body = <G><Path d="M3.5 7l6 6 4-4 7 7.5" {...line} /><Path d="M15 16.5h5.5V11" {...line} /></G>;
-      break;
     case 'chart':
       body = <Path d="M5 20V11M10.5 20V5M16 20v-7M21 20H3" {...line} />;
       break;

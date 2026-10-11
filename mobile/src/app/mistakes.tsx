@@ -22,10 +22,10 @@ import { GlassTop } from '@/ui/liquid';
 import { learnRtl, SideSwipe } from '@/ui/swipe';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
-import { ActionButton, Backdrop, Button, Card, EmptyState, Enter, T, tap, usePageMotion, useTopOnFocus, headBtn } from '@/ui/kit';
+import { ActionButton, Backdrop, Button, Card, EmptyState, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { ARC, DA_FONT, radius, useColors, ROSE } from '@/ui/theme';
+import { ARC, DA_FONT, radius, useColors } from '@/ui/theme';
 
 const TOPICS_SHOWN = 5; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
 
@@ -216,12 +216,12 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
         <View style={{ paddingTop: ins.top + 10, paddingBottom: 10, paddingHorizontal: 16, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel={cur ? 'بستن' : 'بازگشت'} hitSlop={6}
-              style={({ pressed }) => (ROSE ? headBtn(pressed) : { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line })}>
+              style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1.5, borderColor: c.line }}>
               {/* ✕ while stepping through the questions with the bar below, as on the other such pages; the back arrow otherwise. */}
-              <Icon name={cur ? 'xmark' : 'arrowRight'} size={20} color={ROSE ? c.topInk : c.text} />
+              <Icon name={cur ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
             </Pressable>
             {/* A long title glides to show all of it instead of ending in «…». */}
-            <Marquee text={title} height={34} style={{ fontSize: 24, lineHeight: 34, fontWeight: ROSE ? '500' : '700', color: ROSE ? c.topInk : undefined }} />
+            <Marquee text={title} height={34} style={{ fontSize: 24, lineHeight: 34, fontWeight: '700' }} />
           </View>
         </View>
       </GlassTop>

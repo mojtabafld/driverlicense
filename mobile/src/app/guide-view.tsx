@@ -15,13 +15,13 @@ import SIGN_EN from '@/lib/guide-en.json';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GuideImage, prefetchGuide, Rich } from '@/ui/guide-visual';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion, headBtn } from '@/ui/kit';
+import { Backdrop, Card, Enter, L, T, ThemeButton, tap, usePageMotion } from '@/ui/kit';
 import { GlassTop } from '@/ui/liquid';
 import { Marquee } from '@/ui/marquee';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
 import { learnRtl, swipeWebStyle, usePager } from '@/ui/swipe';
-import { radius, useColors, ROSE } from '@/ui/theme';
+import { radius, useColors } from '@/ui/theme';
 
 // The cards of the page (the group's rules, the explanation): one look.
 const BOX = { paddingVertical: 14, paddingHorizontal: 16 };
@@ -59,12 +59,12 @@ export default function GuideView() {
         <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 760, alignSelf: 'center' }}>
             <Pressable onPress={() => { tap(); back(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بستن"
-              style={({ pressed }) => (ROSE ? headBtn(pressed) : { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
+              style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
               {/* ✕, not an arrow: the bar below has the previous / next arrows. */}
-              <Icon name="xmark" size={20} color={ROSE ? c.topInk : c.text} />
+              <Icon name="xmark" size={20} color={c.text} />
             </Pressable>
             <View style={{ flex: 1, height: 26 }}>
-              <Marquee text={cat.title} height={26} style={{ fontWeight: '700', fontSize: 16, lineHeight: 26, color: ROSE ? c.topInk : undefined }} />
+              <Marquee text={cat.title} height={26} style={{ fontWeight: '700', fontSize: 16, lineHeight: 26 }} />
             </View>
             <ThemeButton />
           </View>
