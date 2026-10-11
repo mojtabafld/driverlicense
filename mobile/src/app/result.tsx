@@ -128,7 +128,7 @@ export default function Result() {
     const nav = (
       <GlassBar rtl={rtl}
         start={<FootBtn label={ui.prev} icon={arrow.prev} disabled={!k} onPress={() => step(k - 1)} />}
-        middle={<ListButton n={k + 1} of={total} onPress={() => setListOpen(true)} />}
+        middle={<ListButton n={k + 1} of={total} exam={a.mode === 'random'} onPress={() => setListOpen(true)} />}
         end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" submit onPress={finish} />
           : <FootBtn label={ui.next} icon={arrow.next} onPress={() => step(k + 1)} />} />
     );

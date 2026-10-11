@@ -16,13 +16,16 @@ export type QItem = { n: number; tone: 'answered' | 'empty' | 'ok' | 'bad'; mark
 
 // The bar's middle item, like a tab of the home page's bar: the icon (the list, or the mistakes page's filter) over the
 // position («۷ / ۲۵»), so the number is part of the button. `dot`: a small accent dot on the icon (a filter in use).
-export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست سؤال‌ها', dot }: { n: number; of: number; onPress: () => void; icon?: IconName; label?: string; dot?: boolean }) {
+// `exam`: an exam or its review, where the main site writes the count in the Latin font and digits («7 / 25»); elsewhere
+// (lessons, signs, mistakes…) it stays in Persian digits, Mojtaba asked.
+export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست سؤال‌ها', dot, exam }: { n: number; of: number; onPress: () => void; icon?: IconName; label?: string; dot?: boolean; exam?: boolean }) {
+  const latin = !PROVE_PICS && !!exam;
   const c = useColors(), look = useBarLook();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${label}، سؤال ${faNum(n)} از ${faNum(of)}`}
       style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.75 : 1 })}>
-      {/* The main site writes the count in the Latin font and digits; the /app copy in Persian digits. */}
-      <BarItem label={PROVE_PICS ? `${faNum(n)} / ${faNum(of)}` : `${n} / ${of}`} ltr latin={!PROVE_PICS}>
+      {/* The main site's exams write the count in the Latin font and digits; everything else in Persian digits. */}
+      <BarItem label={latin ? `${n} / ${of}` : `${faNum(n)} / ${faNum(of)}`} ltr latin={latin}>
         <View>
           <Icon name={icon} size={24} color={look.fg} />
           {dot ? <View style={{ position: 'absolute', top: -3, right: -4, width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent }} /> : null}
