@@ -13,8 +13,13 @@ import { DA_REGULAR } from './fonts';
 // «arc» (October 2026) follows Arc (uiarc.dev, its rules in .claude/skills/arc): white page and cards that rest on a
 // hairline border with no shadow, neutral greys from Arc's foundation.css, Arc's green accent only where it means
 // something (progress, the chosen tab, a link), near-black main buttons, rounder concentric corners and type in two
-// weights. The main site and the phone app use it; the /app copy keeps «uber».
-const STYLE = (PROVE_PICS ? 'uber' : 'arc') as 'teal' | 'uber' | 'arc';
+// weights. Kept whole so it can come back by setting STYLE = 'arc'.
+// «rose» (October 2026, the owner's redesign after the Oripova health app): a warm coral / rose glow at the top of every
+// page fading down into a soft light grey, frosted glass cards (translucent white on a bright edge, blurred where the
+// platform can), white and coral pill buttons, large light numerals, and a bottom menu of round glass buttons held
+// together in one pill, the chosen one filled. Its dark theme is the same glow in a deep wine over near-black.
+// The main site and the phone app use it; the /app copy keeps «uber».
+const STYLE = (PROVE_PICS ? 'uber' : 'rose') as 'teal' | 'uber' | 'arc' | 'rose';
 
 // The app's teal (from its intro and store pictures): a deeper teal for filled buttons so white text reads well,
 // the brighter one for links and highlights in dark mode.
@@ -114,11 +119,54 @@ const arcDark: typeof tealLight = {
   cta: '#2f7d47', ctaFg: '#ffffff',
   bgGradient: ['#141414', '#141414', '#141414'] as readonly [string, string, string],
 };
-const light = STYLE === 'arc' ? arcLight : STYLE === 'uber' ? uberLight : tealLight;
-const dark = STYLE === 'arc' ? arcDark : STYLE === 'uber' ? uberDark : tealDark;
+// Rose: warm near-black ink with rose-tinted greys; the accent a coral (the glow's own colour, a little deeper so white
+// reads on it); right answers stay green and wrong ones a crimson set apart from the coral. `surface` is a solid
+// near-white for what must hide what lies under it; cards themselves are glass (ui/glass.tsx, `glassFill`).
+// top / topInk: the glow's colour at the top of the page and the text on it (page titles, the round head buttons).
+const roseLight = {
+  bg: '#ecebec', surface: '#fbfafa', surface2: '#f3f0f1', line: 'rgba(60,20,28,0.10)',
+  text: '#1f1719', muted: '#6c5f62', faint: '#a1959a', accent: '#e0605b', accentText: '#ffffff', accentSoft: '#fae3e0', link: '#c0433f',
+  forest: '#e0605b', ok: '#24935a', okSoft: '#e1f2e8', bad: '#c72a40', badSoft: '#fbe5e8', warn: '#c26a12', warnSoft: '#fcefe0', info: '#000000',
+  note: 'rgba(255,255,255,0.5)', submit: '#1f1719', checked: 'rgba(224,96,91,0.13)', cardBorder: 'rgba(255,255,255,0.78)', hairline: 'rgba(60,20,28,0.06)',
+  glass: 'rgba(255,255,255,0.58)', glassStrong: 'rgba(255,255,255,0.78)', glassBorder: 'rgba(255,255,255,0.8)',
+  pick: '#1f1719', pickSoft: 'rgba(255,255,255,0.7)',
+  nav: 'rgba(255,255,255,0.62)', navFg: '#1f1719', navOff: 'rgba(255,255,255,0.35)', navNum: '#6c5f62',
+  strong: '#1f1719', strongFg: '#ffffff',
+  btn: '#1f1719', btnFg: '#ffffff',
+  cta: '#e0605b', ctaFg: '#ffffff',
+  bgGradient: ['#c8585d', '#ecebec', '#ebebeb'] as readonly [string, string, string],
+  top: '#c8585d', topInk: '#ffffff',
+  // The glow, top to bottom (Backdrop), and the warm gradient of a highlighted card (the coral buttons, the score).
+  glow: ['#c4545a', '#d27675', '#df9f9c', '#e6c9c9', '#ebe3e4', '#ecebec'] as readonly string[],
+  warm: ['#f2a067', '#ec7a62', '#e05e66'] as readonly string[],
+  glassFill: 'rgba(255,255,255,0.55)',
+};
+const roseDark: typeof roseLight = {
+  bg: '#141011', surface: '#211a1c', surface2: '#2a2124', line: 'rgba(255,235,238,0.10)',
+  text: '#f6eef0', muted: '#bcadb0', faint: '#857679', accent: '#ff7d72', accentText: '#ffffff', accentSoft: '#3d2222', link: '#ff9a90',
+  forest: '#ff7d72', ok: '#4fd18a', okSoft: '#17291f', bad: '#ff6b7f', badSoft: '#3b1b22', warn: '#ffb35c', warnSoft: '#35271a', info: '#ffffff',
+  note: 'rgba(255,255,255,0.05)', submit: '#f6eef0', checked: 'rgba(255,125,114,0.16)', cardBorder: 'rgba(255,255,255,0.09)', hairline: 'rgba(255,255,255,0.05)',
+  glass: 'rgba(255,255,255,0.06)', glassStrong: 'rgba(255,255,255,0.1)', glassBorder: 'rgba(255,255,255,0.1)',
+  pick: '#f6eef0', pickSoft: 'rgba(255,255,255,0.1)',
+  nav: 'rgba(255,255,255,0.09)', navFg: '#f6eef0', navOff: 'rgba(255,255,255,0.04)', navNum: '#bcadb0',
+  strong: '#f6eef0', strongFg: '#1a1416',
+  btn: '#f6eef0', btnFg: '#1a1416',
+  cta: '#ec6a63', ctaFg: '#ffffff',
+  bgGradient: ['#5a2029', '#141011', '#141011'] as readonly [string, string, string],
+  top: '#5a2029', topInk: '#ffffff',
+  glow: ['#5e212b', '#4a1b23', '#33151a', '#221416', '#171112', '#141011'] as readonly string[],
+  warm: ['#e98a5c', '#e3645c', '#cf4a5c'] as readonly string[],
+  glassFill: 'rgba(255,255,255,0.055)',
+};
+// The other looks have no glow: their top is the page's own colour.
+const plain = (t: typeof tealLight) => ({ ...t, top: t.bgGradient[0], topInk: t.text, glow: [...t.bgGradient] as readonly string[], warm: [t.accent, t.accent, t.accent] as readonly string[], glassFill: t.surface });
+const light = STYLE === 'rose' ? roseLight : plain(STYLE === 'arc' ? arcLight : STYLE === 'uber' ? uberLight : tealLight);
+const dark = STYLE === 'rose' ? roseDark : plain(STYLE === 'arc' ? arcDark : STYLE === 'uber' ? uberDark : tealDark);
 // UBER: the neutral looks (uber and arc), where main buttons are black / white rather than the accent.
 export const UBER = STYLE !== 'teal';
-export const ARC = STYLE === 'arc';
+// ARC: the main site's behaviour that came with Arc (fitted home page, Arc's buttons and switches), kept by «rose».
+export const ARC = STYLE === 'arc' || STYLE === 'rose';
+export const ROSE = STYLE === 'rose';
 // forest: the progress chart's green (forest green, a little lighter in the dark theme).
 // note: the AI text's panel, a soft neutral fill set apart from the white statement cards.
 export type Colors = typeof light;
@@ -132,7 +180,9 @@ export const useColors = (): Colors => (useIsDark() ? dark : light);
 // corners everywhere (12 for buttons, 14 for cards), like the sample.
 // arc: Arc's --radius-control 18 (buttons, fields), --radius-panel 26 (panels, larger cards), --radius-surface 34;
 // everyday cards 22 so their small inner parts keep concentric corners.
-export const radius = STYLE === 'arc'
+export const radius = STYLE === 'rose'
+  ? { btn: 18, sm: 14, md: 24, lg: 28, field: 18, xl: 34, pill: 999 }
+  : STYLE === 'arc'
   ? { btn: 18, sm: 14, md: 22, lg: 26, field: 18, xl: 34, pill: 999 }
   : STYLE === 'uber'
   ? { btn: 12, sm: 10, md: 14, lg: 14, field: 12, xl: 20, pill: 999 }

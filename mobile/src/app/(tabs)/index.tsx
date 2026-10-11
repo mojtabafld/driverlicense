@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, View, useWindowDimensions } from 'react-native';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_PICS } from '@/lib/config';
@@ -12,12 +13,13 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { ArcButton, Button, Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
+import { Glass } from '@/ui/glass';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
-import { ARC, useColors } from '@/ui/theme';
+import { ARC, ROSE, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
@@ -37,7 +39,7 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
         <T style={{ flexShrink: 1, color: c.text, fontSize: narrow ? 12 : 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-        <T style={{ flex: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : progress != null && tone === 'ok' ? c.ok : c.text }} numberOfLines={1}>
+        <T style={{ flex: 1, fontSize: ROSE ? 26 : 22, lineHeight: ROSE ? 34 : 30, fontWeight: ROSE ? '300' : '800', color: tone === 'bad' ? c.bad : progress != null && tone === 'ok' ? c.ok : c.text }} numberOfLines={1}>
           {value}{extra ? <T style={{ color: progress != null && tone === 'ok' ? c.ok : c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
         </T>
         <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
@@ -51,6 +53,44 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
     </Card>
+  );
+}
+
+// Rose: the chance of passing as the reference's health score, on the glow itself: an open white arc filling with the
+// chance, a coral knob at its end, the percent in large light numerals inside it, and under it a glass pill with the
+// change of the last five exams' average and the word for where the user stands. `h`: the space it may take.
+function Gauge({ value, label, word, trend, h }: { value: number | null; label: string; word: string; trend: number | null; h: number }) {
+  const c = useColors(), { width } = useWindowDimensions();
+  const shown = useCountUp(value ?? 0, 1600);
+  const W = Math.min(width - 32, 360), R = Math.min(W / 2 - 14, h * 0.62), cx = W / 2, cy = R + 14;
+  // From 200° round the top to -20° (an arc of 220°), 0 at its left end.
+  const SWEEP = 220, A0 = 200, at = (f: number) => {
+    const a = ((A0 - SWEEP * f) * Math.PI) / 180;
+    return { x: cx + R * Math.cos(a), y: cy - R * Math.sin(a) };
+  };
+  const arc = (f: number) => {
+    const p0 = at(0), p1 = at(Math.max(0.0001, f));
+    return `M${p0.x} ${p0.y} A${R} ${R} 0 ${SWEEP * f > 180 ? 1 : 0} 1 ${p1.x} ${p1.y}`;
+  };
+  const end = at(shown), svgH = cy + R * Math.sin((20 * Math.PI) / 180) + 16;
+  const ink = c.topInk, big = Math.round(Math.min(72, R * 0.62));
+  return (
+    <View style={{ alignItems: 'center', height: Math.max(svgH, cy + big * 0.5 + 64) }} accessible accessibilityLabel={`${label}: ${value != null ? pctText(value) : word}`}>
+      <Svg width={W} height={svgH} style={{ position: 'absolute', top: 0 }}>
+        <Path d={arc(1)} stroke="rgba(255,255,255,0.28)" strokeWidth={15} strokeLinecap="round" fill="none" />
+        {value != null ? <Path d={arc(shown)} stroke="#ffffff" strokeWidth={15} strokeLinecap="round" fill="none" /> : null}
+        {value != null ? <Circle cx={end.x} cy={end.y} r={13} fill={c.accent} stroke="#ffffff" strokeWidth={3.5} /> : null}
+      </Svg>
+      <View style={{ position: 'absolute', top: cy - big * 0.95, left: 0, right: 0, alignItems: 'center', gap: 6 }}>
+        <T style={{ fontSize: big, lineHeight: Math.round(big * 1.3), fontWeight: '300', color: ink, textAlign: 'center', letterSpacing: -1 }}>{value != null ? pctText(shown) : '–'}</T>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 3, borderRadius: 99, borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.4)', backgroundColor: 'rgba(255,255,255,0.18)' }}>
+          {trend != null ? <Icon name={trend >= 0 ? 'trendUp' : 'trendDown'} size={14} color={ink} /> : null}
+          <T style={{ color: ink, fontSize: 12.5, lineHeight: 20 }}>{trend != null ? `${pctText(Math.abs(trend))} ${trend >= 0 ? 'بهتر' : 'کمتر'} از ۵ آزمون قبل` : word}</T>
+        </View>
+        <T style={{ color: ink, fontSize: 17, lineHeight: 26, fontWeight: '500', textAlign: 'center' }}>{label}{value != null ? `: ${word}` : ''}</T>
+      </View>
+    </View>
   );
 }
 
@@ -125,7 +165,8 @@ export default function Home() {
   const level = Math.min(3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? more : 0));
   const compact = level >= 1, tight = level >= 2, tighter = level >= 3;
   const chartMin = tighter ? 84 : 120;
-  const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + 8 + 40;
+  // (rose: its hint line and rounder card take a little more)
+  const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + 8 + 40 + (ROSE ? 28 : 0);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
   const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
@@ -136,6 +177,14 @@ export default function Home() {
       if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
     });
   };
+  // A denser level moves the chart's card up without changing its size, and the web reports a layout only when a size
+  // changes: so each new level measures again itself.
+  useEffect(() => {
+    if (!more) return;
+    const t = setTimeout(fit, 60);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [more]);
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
@@ -152,10 +201,31 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
+    <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight || ROSE ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
       hero={{ pic: 3, icon: 'house' }} barGap={ARC && exams.length ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
+      {ROSE ? (
+        <>
+          <Gauge value={est ? est.prob : null} label="احتمال قبولی" word={probWord} trend={trend} h={tighter ? 104 : tight ? 124 : compact ? 146 : 176} />
+          {/* The two averages as the reference's figures card: a light number over each label, a hairline between. */}
+          {tighter ? null : (
+            <Glass style={{ flexDirection: 'row', paddingVertical: compact ? 10 : 14, paddingHorizontal: 12 }}>
+              <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
+                <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
+                <T style={{ fontWeight: '300', fontSize: compact ? 24 : 28, lineHeight: compact ? 34 : 40, textAlign: 'center' }}>{avg5 != null ? pctText(avg5) : '–'}</T>
+              </View>
+              <View style={{ width: 1, backgroundColor: c.line, marginVertical: 4 }} />
+              <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
+                <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>قبولی در آزمون کامل</T>
+                <T style={{ fontWeight: '300', fontSize: compact ? 24 : 28, lineHeight: compact ? 34 : 40, textAlign: 'center' }}>
+                  {fullN ? faNum(passN) : '–'}{fullN ? <T style={{ color: c.muted, fontSize: 14, fontWeight: '400' }}> از {faNum(fullN)}</T> : null}
+                </T>
+              </View>
+            </Glass>
+          )}
+        </>
+      ) : (
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
@@ -180,6 +250,7 @@ export default function Home() {
           </View>
         </View>
       </Card>
+      )}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
         <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
