@@ -164,7 +164,7 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
-      hero={{ pic: 3, icon: 'house' }} barGap={ARC && exams.length ? 8 : undefined}>
+      hero={{ pic: 3, icon: 'house' }} barGap={ARC ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>
@@ -198,7 +198,8 @@ export default function Home() {
       </View>
       </View>
       {/* A tap anywhere in the chart's card, off the bars, clears the picked attempt. */}
-      {exams.length ? (
+      {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
+      {exams.length || ARC ? (
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={() => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
