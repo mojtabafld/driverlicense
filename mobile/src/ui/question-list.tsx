@@ -4,6 +4,7 @@
 // has a ring in the text colour around it, apart from the tile.
 import { Pressable, View, useWindowDimensions } from 'react-native';
 
+import { PROVE_PICS } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { BarItem } from './glass-bar';
 import { Icon, type IconName } from './icon';
@@ -20,7 +21,8 @@ export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست 
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${label}، سؤال ${faNum(n)} از ${faNum(of)}`}
       style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.75 : 1 })}>
-      <BarItem label={`${faNum(n)} / ${faNum(of)}`} ltr>
+      {/* The main site writes the count in the Latin font and digits; the /app copy in Persian digits. */}
+      <BarItem label={PROVE_PICS ? `${faNum(n)} / ${faNum(of)}` : `${n} / ${of}`} ltr latin={!PROVE_PICS}>
         <View>
           <Icon name={icon} size={24} color="#ffffff" />
           {dot ? <View style={{ position: 'absolute', top: -3, right: -4, width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent }} /> : null}
