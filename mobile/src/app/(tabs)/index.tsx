@@ -58,22 +58,24 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
 }
 
 // Rose: the chance of passing as the reference's health score, on the glow itself: a broad white arc from the screen's
-// left edge over the top to its right edge (the ends fading out where the screen cuts them), filled from the left with
+// left edge over the top to its right edge (its ends running out of the screen at a slant), filled from the left with
 // the chance up to a coral knob in a soft halo, the rest of its way a faint track. Inside it the percent in large light
 // numerals, a glass pill with the change of the last five exams' average, and the word for where the user stands under
 // them. `ry`: the arc's height (lower on shorter screens; its width is always the screen's).
 function Gauge({ value, label, word, trend, ry: ryWant }: { value: number | null; label: string; word: string; trend: number | null; ry: number }) {
   const c = useColors(), { width } = useWindowDimensions();
   const shown = useCountUp(value ?? 0, 1600);
-  const W = Math.min(width, 520), SW = 28, rx = W / 2, ry = Math.min(rx, ryWant), cx = W / 2, cy = ry + SW / 2 + 2;
-  // A full chance ends the fill at 25° above the right edge, so the knob always stays in view; the faint track runs on
-  // to the edge (`f` above 1 is the track's own end).
-  const at = (f: number) => {
-    const t = Math.PI - Math.max(0, Math.min(1.2, f)) * (Math.PI * 155 / 180);
-    return { x: cx + rx * Math.cos(t), y: cy - ry * Math.sin(t) };
-  };
-  const arc = (f: number) => { const p0 = at(0), p1 = at(Math.max(0.002, f)); return `M${p0.x} ${p0.y} A${rx} ${ry} 0 0 1 ${p1.x} ${p1.y}`; };
+  const W = Math.min(width, 520), SW = 28, ry = Math.min(W / 2, ryWant), cx = W / 2, cy = ry + SW / 2 + 2;
+  // As the reference: the ellipse is a little wider than the screen, so the arc comes in through the left edge and leaves
+  // through the right at a slant, both ends out of view (no cut end shows). `tOf(x)`: the angle where the arc is at `x`.
+  const rx = W * 0.55, P = (t: number) => ({ x: cx + rx * Math.cos(t), y: cy - ry * Math.sin(t) });
+  const tOf = (x: number) => Math.acos(Math.max(-1, Math.min(1, (x - cx) / rx)));
+  const tOff = Math.PI, tA = tOf(18), tFull = tOf(W - 42);
+  // The fill starts off screen; 0 puts its knob just in from the left edge, a full chance just in from the right.
+  const at = (f: number) => P(tA - Math.max(0, Math.min(1, f)) * (tA - tFull));
+  const seg = (t0: number, t1: number) => { const p0 = P(t0), p1 = P(t1); return `M${p0.x} ${p0.y} A${rx} ${ry} 0 0 1 ${p1.x} ${p1.y}`; };
   const end = at(shown), svgH = cy + SW / 2;
+  const fillD = seg(tOff, tA - Math.max(0, Math.min(1, shown)) * (tA - tFull) - 0.001);
   const ink = c.topInk, big = Math.round(Math.min(76, Math.max(46, ry * 0.42)));
   const colH = Math.round(big * 1.2) + 6 + 26 + 4 + 26, H = cy + 30, colTop = H - colH;
   const pct = Math.round(shown * 100);
@@ -95,8 +97,8 @@ function Gauge({ value, label, word, trend, ry: ryWant }: { value: number | null
               <Stop offset="1" stopColor="#ffffff" stopOpacity={1} />
             </LinearGradient>
           </Defs>
-          <Path d={arc(180 / 155)} stroke="url(#gTrack)" strokeWidth={SW} fill="none" />
-          {value != null ? <Path d={arc(shown)} stroke="url(#gFill)" strokeWidth={SW} fill="none" /> : null}
+          <Path d={seg(tOff, Math.PI - tOff)} stroke="url(#gTrack)" strokeWidth={SW} fill="none" />
+          {value != null ? <Path d={fillD} stroke="url(#gFill)" strokeWidth={SW} fill="none" /> : null}
           {value != null ? <Circle cx={end.x} cy={end.y} r={SW * 0.95} fill="#ffffff" fillOpacity={0.22} /> : null}
           {value != null ? <Circle cx={end.x} cy={end.y} r={SW / 2 + 2} fill={c.accent} stroke="#ffffff" strokeOpacity={0.9} strokeWidth={3} /> : null}
         </Svg>
