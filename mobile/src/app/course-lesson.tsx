@@ -44,7 +44,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.strong, borderRadius: 99, paddingVertical: 4, paddingHorizontal: 10 }}>
           <Icon name="exam" size={14} color={c.strongFg} />
-          <T style={{ fontSize: 12.5, fontWeight: '700', color: c.strongFg }}>سؤال آزمون {faNum(n)} از {faNum(of)}</T>
+          <T style={{ fontSize: 12.5, lineHeight: 18, fontWeight: '700', textAlign: 'center', color: c.strongFg }}>سؤال آزمون {faNum(n)} از {faNum(of)}</T>
         </View>
       </View>
       {step.art ? <Art k={step.art} /> : null}
@@ -266,8 +266,9 @@ function Lesson({ id }: { id: string }) {
           <>
             <View style={{ gap: 6 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ backgroundColor: step.kind === 'exam' || step.kind === 'result' ? c.strong : c.accentSoft, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 2 }}>
-                  <T style={{ fontSize: 12, fontWeight: '700', color: step.kind === 'exam' || step.kind === 'result' ? c.strongFg : c.link }}>{phase}</T>
+                <View style={{ backgroundColor: step.kind === 'exam' || step.kind === 'result' ? c.strong : c.accentSoft, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3, alignItems: 'center', justifyContent: 'center' }}>
+                  {/* The line as tall as the type (not the page's 24), so the word sits in the middle of its tag. */}
+                  <T style={{ fontSize: 12, lineHeight: 18, fontWeight: '700', textAlign: 'center', color: step.kind === 'exam' || step.kind === 'result' ? c.strongFg : c.link }}>{phase}</T>
                 </View>
                 <T style={{ flex: 1, color: c.muted, fontSize: 12.5 }} numberOfLines={1}>فصل {faNum(chapter.n)}: {chapter.title}</T>
               </View>
