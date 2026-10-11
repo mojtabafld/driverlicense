@@ -196,7 +196,7 @@ export default function Run() {
         start={<FootBtn label={ui.prev} icon={arrow.prev} disabled={i === 0} onPress={() => setI(i - 1)} />}
         // The list opens the exam's summary: every question (a tap goes to it) and the slide to hand in, so the exam can be
         // handed in from any question, not only the last.
-        middle={<ListButton n={i + 1} of={qs.length} onPress={handIn} />}
+        middle={<ListButton n={i + 1} of={qs.length} exam={plan.mode === 'random'} onPress={handIn} />}
         end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon={arrow.next} onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
