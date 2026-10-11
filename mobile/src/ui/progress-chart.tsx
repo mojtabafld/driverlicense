@@ -17,9 +17,7 @@ import { Icon } from './icon';
 import { ArcButton, Button, T, tap, useCountUp } from './kit';
 import { ARC, useColors } from './theme';
 
-// The main site (ARC) draws it flat, as a cash-forecast card: no percent scale or grid, the green line edge to edge
-// over a soft green fill, the pass line dashed grey with its label, a red point on each failed attempt, dates below.
-const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
+const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 120;
 // The scroll hint plays once per app start.
 let hinted = false;
 function takeHint() { if (hinted) return false; hinted = true; return true; }
@@ -98,21 +96,17 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const data = attempts.slice(-200), offset = attempts.length - data.length;
   // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
   const VIEW = 10, VW = Math.max(0, W - L - R);
-  // ARC: the first and last points sit on the edges, so the line runs the full width.
-  const slot = ARC ? VW / Math.max(1, Math.min(VIEW, data.length) - 1) : VW / Math.min(VIEW, data.length);
-  const CW = ARC ? slot * (data.length - 1) : slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
-  const DOT = ARC ? 4 : 5;   // the points' radius (10 across), with a ring in the card's colour
-  const x = (i: number) => (ARC ? slot * i : slot * (i + 0.5));
-  // ARC: the scale starts a little under the lowest score (in tens, at most 60%), so the line uses the card's height.
-  const lo = ARC ? Math.max(0, Math.min(60, Math.floor((Math.min(...data.map(a => pctOf(a) * 100)) - 15) / 10) * 10)) : 0;
-  const y = (v: number) => TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B);
-  const tops = data.map(a => y(lo + (pctOf(a) * 100 - lo) * grow));
+  const slot = VW / Math.min(VIEW, data.length), CW = slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
+  const DOT = 5;   // the points' radius (10 across), with a ring in the card's colour
+  const x = (i: number) => slot * (i + 0.5);
+  const y = (v: number) => TOP + (1 - v / 100) * (H - TOP - B);
+  const tops = data.map(a => y(pctOf(a) * 100 * grow));
   const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
   // The line through the points, smooth: each step a curve leaving and reaching its points level, so it never swings
   // above or below them; the area under it down to 0%.
   const line = data.map((_, i) => (i === 0 ? `M${x(0)} ${tops[0]}` : `C${(x(i - 1) + x(i)) / 2} ${tops[i - 1]} ${(x(i - 1) + x(i)) / 2} ${tops[i]} ${x(i)} ${tops[i]}`)).join(' ');
-  const area = `${line} L${x(data.length - 1)} ${y(lo)} L${x(0)} ${y(lo)} Z`;
-  const every = ARC ? Math.max(1, Math.ceil(90 / slot)) : slot >= 26 ? 1 : 2;
+  const area = `${line} L${x(data.length - 1)} ${y(0)} L${x(0)} ${y(0)} Z`;
+  const every = slot >= 26 ? 1 : 2;
   const ticks = H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
   const font = 'Vazirmatn-400';
   const a = sel != null ? data[sel] : null;
@@ -125,38 +119,28 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           /* Main site: laid over the box, so the box (and the chart's height) can also shrink when the home page gets denser. */
           <View style={abs ? { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row', direction: 'ltr' } as any : { flex: 1, flexDirection: 'row', direction: 'ltr' } as any}>
             {/* The percent scale stays put on the left. */}
-            {ARC ? null : <Svg width={L} height={H} pointerEvents="none">
+            <Svg width={L} height={H} pointerEvents="none">
               {ticks.map(v => (
                 <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{`${faNum(v)}٪`}</SvgText>
               ))}
-            </Svg>}
+            </Svg>
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
               onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })} onScrollBeginDrag={() => setHint(false)}>
-              {/* ARC: clipped, so the edge points' tap areas do not widen the scroll past the line's end. */}
-              <View style={{ width: CW, height: H, overflow: ARC ? 'hidden' : 'visible' }}>
+              <View style={{ width: CW, height: H }}>
                 {/* A tap between the bars clears the pick. */}
                 <Pressable onPress={() => setSel(null)} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
                 <Svg width={CW} height={H} pointerEvents="none">
-                  {ARC ? null : ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
+                  {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
                   <Defs>
                     <LinearGradient id="pcArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(0))} gradientUnits="userSpaceOnUse">
                       <Stop offset="0" stopColor={c.forest} stopOpacity={0.32} />
                       <Stop offset="1" stopColor={c.forest} stopOpacity={0} />
                     </LinearGradient>
                   </Defs>
-                  {ARC ? <>
-                    <Path d={area} fill={c.forest} fillOpacity={0.13} />
-                    <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.faint} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" />
-                    <Path d={line} fill="none" stroke={c.cta} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.6} />
-                  </> : <>
-                    <Path d={area} fill="url(#pcArea)" />
-                    <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
-                  </>}
-                  {/* ARC: a red point on each failed attempt and the picked one, nothing on the others. */}
-                  {ARC ? data.map((d, i) => (good(d) && sel !== i ? null
-                    : <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.cta : c.bad} stroke={c.surface} strokeWidth={2} />))
-                  /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
-                  : data.map((d, i) => (
+                  <Path d={area} fill="url(#pcArea)" />
+                  <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
+                  {/* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */}
+                  {data.map((d, i) => (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
                       stroke={c.surface} strokeWidth={2} fillOpacity={sel == null || sel === i ? 1 : 0.4} />
                   ))}
@@ -166,11 +150,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                       {`${faNum(Math.round(pctOf(data[sel]) * 100))}٪`}
                     </SvgText>
                   ) : null}
-                  {ARC ? null : <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />}
-                  {/* ARC: dates under the line, the newest at the right edge and the oldest in view at the left. */}
-                  {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && x(i) - (CW - VW) > 0 && x(i) - (CW - VW) < 36)
-                    ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font}
-                        textAnchor="middle">{ARC ? fmtDate(d.at) : faNum(i + 1 + offset)}</SvgText>
+                  <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />
+                  {data.map((_, i) => ((data.length - 1 - i) % every === 0
+                    ? <SvgText key={`x${i}`} x={x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
                     : null))}
                 </Svg>
                 {/* A tap on an attempt's column (around its point) picks it (a drag scrolls instead). */}
@@ -180,11 +162,6 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                 ))}
               </View>
             </ScrollView>
-            {ARC ? (
-              <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: y(80) + 4 }}>
-                <T style={{ color: c.muted, fontSize: 11.5 }}>حد قبولی ۸۰٪</T>
-              </View>
-            ) : null}
             <ScrollHint run={hint} onDone={hideHint} />
           </View>
         ) : null}
