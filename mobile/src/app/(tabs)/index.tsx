@@ -171,12 +171,12 @@ export default function Home() {
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          {/* Main site: the ring in the middle of its own half, over the column below it, Mojtaba asked. */}
-          <View style={ARC ? { flex: 1, alignItems: 'center' } : undefined}>
+        {/* Main site: the ring and its words close together, the pair in the middle of the card, Mojtaba asked. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 20 : 16, justifyContent: ARC ? 'center' : undefined }}>
+          <View>
             <Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
           </View>
-          <View style={{ flex: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
+          <View style={{ flex: ARC ? undefined : 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
             <Pill text={probWord} fg={probColor} bg={probSoft} />
             {/* Main site: no line before the first exam. */}
