@@ -18,7 +18,7 @@ import { ArcButton, Button, T, tap, useCountUp } from './kit';
 import { ARC, useColors } from './theme';
 
 // The main site (ARC) draws it flat, as a cash-forecast card: no percent scale or grid, the green line edge to edge
-// over a soft green fill, the pass line dashed grey with its label, a red point on each failed attempt, dates below.
+// over a soft green fill, the pass line dashed grey with its label, green points on passed attempts and red on failed ones, dates below.
 const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
 // The scroll hint plays once per app start.
 let hinted = false;
@@ -152,9 +152,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                     <Path d={area} fill="url(#pcArea)" />
                     <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
                   </>}
-                  {/* ARC: a red point on each failed attempt and the picked one, nothing on the others. */}
-                  {ARC ? data.map((d, i) => (good(d) && sel !== i ? null
-                    : <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.cta : c.bad} stroke={c.surface} strokeWidth={2} />))
+                  {/* ARC: a green point on each passed attempt (or 80% and over), a red one on the others. */}
+                  {ARC ? data.map((d, i) => (
+                    <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.ok : c.bad} stroke={c.surface} strokeWidth={2} />))
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
                   : data.map((d, i) => (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
