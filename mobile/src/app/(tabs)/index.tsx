@@ -161,7 +161,7 @@ export default function Home() {
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
-    <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
+    <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
       hero={{ pic: 3, icon: 'house' }} barGap={ARC && exams.length ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
