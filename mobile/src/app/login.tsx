@@ -6,7 +6,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Hero, T, tap, useArcSeg } from '@/ui/kit';
+import { ArcButton, Backdrop, Button, Hero, T, tap, useArcSeg } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 
 // Sign in / sign up switch: a soft track with the chosen side raised.
@@ -60,7 +60,9 @@ export default function Login() {
                 <T style={{ flex: 1, color: c.bad, fontSize: 13.5 }}>{err}</T>
               </View>
             ) : null}
-            <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} kind="grey" style={{ marginTop: 2 }} icon={mode === 'login' ? 'person' : 'personAdd'} />
+            {/* Main site: the same deep green as the home and exam buttons (ArcButton), faded while it can't be used. */}
+            {ARC ? <ArcButton label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} style={{ marginTop: 2 }} icon={mode === 'login' ? 'person' : 'personAdd'} />
+              : <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} kind="grey" style={{ marginTop: 2 }} icon={mode === 'login' ? 'person' : 'personAdd'} />}
             {/* The site's three facts */}
             <View style={{ alignItems: 'center', gap: 4, marginTop: 10 }}>
               {['🇩🇰 آزمون تئوری گواهینامه‌ی دانمارک', 'بیش از ۱۰۰۰ سؤال در ۴۴ آزمون', 'ترجمه‌ی فارسی و آموزش'].map(f => (
