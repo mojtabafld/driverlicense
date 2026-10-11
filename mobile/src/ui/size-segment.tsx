@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, View } from 'react-native';
 
 import { faNum } from '@/lib/logic';
-import { T, tap, useArcSeg } from './kit';
+import { T, physical, tap, useArcSeg } from './kit';
 
 type Props = { value: number; values: number[]; onChange: (v: number) => void };
 export function SizeSegment({ value, values, onChange }: Props) {
   const seg = useArcSeg();
   // Each part's place in the track (physical x and width, so it also holds in right to left), and the glide to it.
+  // The pill is pinned to the physical left edge and moved with translateX, which phones running right to left do not
+  // mirror (a plain `left: x` they turn into `right: x`, which put the pill on the mirrored size).
   const [boxes, setBoxes] = useState<Record<number, { x: number; w: number }>>({});
   const x = useRef(new Animated.Value(0)).current, w = useRef(new Animated.Value(0)).current;
   const placed = useRef(false);
@@ -24,7 +26,7 @@ export function SizeSegment({ value, values, onChange }: Props) {
   }, [box?.x, box?.w]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel="تعداد سؤال‌ها" style={[seg.track, { flexDirection: 'row' }]}>
-      {box ? <Animated.View pointerEvents="none" style={[seg.pill(true), { position: 'absolute', top: 3, bottom: 3, left: x, width: w }]} /> : null}
+      {box ? <Animated.View pointerEvents="none" style={[seg.pill(true), physical({ position: 'absolute' as const, top: 3, bottom: 3, left: 0 }), { width: w, transform: [{ translateX: x }] }]} /> : null}
       {values.map(n => {
         const on = n === value;
         return (
