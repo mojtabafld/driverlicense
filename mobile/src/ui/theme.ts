@@ -86,7 +86,7 @@ const uberDark: typeof tealLight = {
 };
 // Arc: the values of foundation.css (oklch greys and status colours as hex), with data-accent="green".
 const arcLight: typeof tealLight = {
-  bg: '#ffffff', surface: '#ffffff', surface2: '#f8f8f8', line: '#e9e9e9',
+  bg: '#f0f1eb', surface: '#ffffff', surface2: '#f8f8f8', line: '#e9e9e9',
   text: '#0b0b0b', muted: '#585858', faint: '#7d7d7d',
   accent: '#0db879', accentText: '#102016', accentSoft: 'rgba(13,184,121,0.13)', link: '#087c54',
   forest: '#0db879', ok: '#007b12', okSoft: '#e5f4e8', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
@@ -98,7 +98,7 @@ const arcLight: typeof tealLight = {
   btn: '#1d1d1d', btnFg: '#ffffff',
   // The main site's call to action (home's next lesson, the exam's start: ArcButton): a deep green like the page headers.
   cta: '#1f5a32', ctaFg: '#ffffff',
-  bgGradient: ['#ffffff', '#ffffff', '#ffffff'] as readonly [string, string, string],
+  bgGradient: ['#f0f1eb', '#f0f1eb', '#f0f1eb'] as readonly [string, string, string],
 };
 const arcDark: typeof tealLight = {
   bg: '#141414', surface: '#191919', surface2: '#242424', line: '#2b2b2b',
