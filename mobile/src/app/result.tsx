@@ -14,13 +14,13 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, EmptyState, Enter, SegPill, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, EmptyState, Enter, SegPill, T, physical, tap, useArcSeg, usePageMotion, headBtn } from '@/ui/kit';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { learnRtl, Pager } from '@/ui/swipe';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { ARC, useColors, useIsDark } from '@/ui/theme';
+import { ARC, useColors, useIsDark, ROSE } from '@/ui/theme';
 
 type Filter = 'wrong' | 'saved' | 'all';
 type Row = { it: Item; i: number };
@@ -170,9 +170,9 @@ export default function Result() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <View style={{ flex: 1, flexBasis: 0, alignItems: 'flex-start' }}>
             <Pressable onPress={() => { tap(); motion.leave(() => router.back()); }} accessibilityLabel="بستن" hitSlop={6}
-              style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
+              style={({ pressed }) => (ROSE ? headBtn(pressed) : { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
               {/* ✕, not an arrow: the bar below has the previous / next arrows. */}
-              <Icon name="xmark" size={20} color={c.text} />
+              <Icon name="xmark" size={20} color={ROSE ? c.topInk : c.text} />
             </Pressable>
             </View>
             <Tabs value={filter} onChange={changeFilter} n={n} wrong={wrongN} savedN={savedN} />

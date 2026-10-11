@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Defs, Ellipse, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
@@ -15,7 +15,7 @@ import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
-import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
+import { ARC, DA_FONT, ROSE, UBER, radius, useColors, useIsDark, useTheme } from './theme';
 
 // A style given in physical left/right terms. Phones running right-to-left swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -119,14 +119,61 @@ export function PageIn({ children, motion = 'tab' }: { children?: React.ReactNod
 
 // Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes. `anim`: the
 // style from usePageMotion, for the page's content.
+// Rose: the warm glow at the top fading into the light grey (or, dark, the deep wine into near-black), with a soft
+// light bloom in it, as behind the Oripova app's score; it stays in place while the page scrolls over it.
 export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?: object }) {
   const c = useColors();
+  if (ROSE) return (
+    <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
+      <RoseGlow />
+      {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
+    </View>
+  );
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
       <LinearGradient colors={c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
       {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
     </View>
   );
+}
+
+// The glow alone (also under covers that draw their own content): `h`, how far down it reaches (at most 560).
+export function RoseGlow() {
+  const c = useColors(), dark = useIsDark(), { width, height } = useWindowDimensions();
+  const h = Math.min(700, Math.round(height * 0.74));
+  const stops = c.glow as unknown as readonly [string, string, ...string[]];
+  return (
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { height: h }]}>
+      <LinearGradient colors={stops} locations={[0, 0.24, 0.48, 0.68, 0.85, 1]} style={StyleSheet.absoluteFill} />
+      {/* The bloom: a soft round light, off-centre to the left and a little down, as the reference's lit figure. */}
+      <Svg width={width} height={h} style={StyleSheet.absoluteFill}>
+        <Defs>
+          <RadialGradient id="bloom" cx="50%" cy="50%" rx="50%" ry="50%">
+            <Stop offset="0" stopColor={dark ? '#ff8f7a' : '#ffffff'} stopOpacity={dark ? 0.18 : 0.42} />
+            <Stop offset="0.55" stopColor={dark ? '#ff8f7a' : '#ffffff'} stopOpacity={dark ? 0.06 : 0.14} />
+            <Stop offset="1" stopColor={dark ? '#ff8f7a' : '#ffffff'} stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="ember" cx="50%" cy="50%" rx="50%" ry="50%">
+            <Stop offset="0" stopColor={dark ? '#c23a4a' : '#f0a07a'} stopOpacity={dark ? 0.3 : 0.38} />
+            <Stop offset="1" stopColor={dark ? '#c23a4a' : '#f0a07a'} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Ellipse cx={width * 0.3} cy={h * 0.42} rx={Math.max(220, width * 0.62)} ry={h * 0.36} fill="url(#bloom)" />
+        <Ellipse cx={width * 0.9} cy={h * 0.08} rx={Math.max(160, width * 0.45)} ry={h * 0.24} fill="url(#ember)" />
+      </Svg>
+    </View>
+  );
+}
+
+// A round glass button of a page's head, on the glow (the theme switch, back, close): white line icon on a light
+// frosted circle with a bright edge, as the Oripova app's bell and back buttons.
+export function useHeadBtn() { return headBtn; }
+export function headBtn(pressed: boolean, size = 44): ViewStyle {
+  return ({
+    width: size, height: size, borderRadius: size / 2, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: pressed ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.16)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.34)',
+    ...(Platform.OS === 'web' ? { backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', transitionProperty: 'background-color', transitionDuration: '150ms' } as any : {}),
+  });
 }
 
 // The site's logo: a rounded navy square with a speedometer.
@@ -144,7 +191,13 @@ export function Logo({ size = 28 }: { size?: number }) {
 
 // Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
 export function ThemeButton() {
-  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark';
+  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark', head = useHeadBtn();
+  if (ROSE) return (
+    <Pressable onPress={() => { tap(); setMode(dark ? 'light' : 'dark'); }} hitSlop={6} accessibilityRole="button" accessibilityLabel="تغییر تم"
+      style={({ pressed }) => head(pressed)}>
+      <Icon name={dark ? 'sun' : 'moon'} size={20} color={c.topInk} />
+    </Pressable>
+  );
   return (
     <Pressable onPress={() => { tap(); setMode(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
@@ -231,7 +284,44 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 // page's greeting).
 // `back`: an inner page's back button floats over the header's top right; the title and its line stay at the right
 // edge, where a tab's are, set a little lower so they start under the button.
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean }) {
+export function Hero(p: HeroProps) {
+  return ROSE ? <RoseHero {...p} /> : <PicHero {...p} />;
+}
+type HeroProps = { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean };
+
+// Rose: no picture; the page's head lies on the glow itself. A row with the page's icon in a round glass badge and the
+// app's name (the Oripova app's logo row) and the theme switch across from it, then the title in large light type and
+// its line, all in white. An inner page (`back`) keeps the row's room for its floating back button. `tall`: the sign-in
+// page, its title further down.
+function RoseHero({ look, title, name, subtitle, tall, back }: HeroProps) {
+  const c = useColors(), ins = useSafeAreaInsets(), { height } = useWindowDimensions();
+  useFocusEffect(useCallback(() => {
+    webTop.hero = c.top; paintWebTop();
+    return () => { webTop.hero = null; paintWebTop(); };
+  }, [c.top]));
+  const ink = c.topInk;
+  return (
+    <View style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingHorizontal: 16, paddingBottom: tall ? 28 : 22, maxWidth: 980, width: '100%', alignSelf: 'center',
+      minHeight: tall ? Math.min(Math.round(height * 0.4), 380) + ins.top : undefined, justifyContent: 'space-between' }}>
+      <View style={{ height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        {back ? <View /> : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={headBtn(false)}><Icon name={look.icon} size={21} color={ink} /></View>
+            <Text style={{ fontFamily: DA_FONT, fontSize: 19, color: ink, letterSpacing: -0.2 }}>TeoriPrøve</Text>
+          </View>
+        )}
+        {back ? null : <ThemeButton />}
+      </View>
+      <View style={{ gap: 2, marginTop: tall ? 0 : name ? 14 : 26 }}>
+        {name ? <T style={{ fontSize: 15, lineHeight: 24, color: ink, opacity: 0.86 }}>{title}</T> : null}
+        <T style={{ fontSize: tall ? 34 : 30, lineHeight: tall ? 48 : 44, fontWeight: '500', color: ink, letterSpacing: -0.3 }} numberOfLines={2}>{name ?? title}</T>
+        {subtitle ? <T style={{ color: ink, opacity: 0.86, fontSize: 14.5, lineHeight: 23, maxWidth: 520 }}>{subtitle}</T> : null}
+      </View>
+    </View>
+  );
+}
+
+function PicHero({ look, title, name, subtitle, tall, lower = 0, back }: HeroProps) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
@@ -302,8 +392,8 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
-        <T style={{ fontSize: 26, lineHeight: 34, fontWeight: '700', color: c.text }}>{title}</T>
-        {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
+        <T style={{ fontSize: ROSE ? 30 : 26, lineHeight: ROSE ? 44 : 34, fontWeight: ROSE ? '500' : '700', color: c.topInk }}>{title}</T>
+        {subtitle ? <T style={{ color: ROSE ? c.topInk : c.muted, opacity: ROSE ? 0.86 : 1, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
       </View>
       {right}
       <ThemeButton />
@@ -403,6 +493,7 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
   const grey = kind === 'grey' || (UBER && kind === 'primary'), primary = kind === 'primary' && !grey;
   if (grey) return <ActionButton label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} />;
   const fg = primary ? c.accentText : kind === 'danger' ? c.bad : UBER ? c.text : c.link;
+  if (ROSE) return <PillButton label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} fg={fg} big={big} />;
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
       <View style={{
@@ -416,6 +507,42 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
   );
 }
 
+// Rose's secondary button: a white frosted pill on a bright edge with a soft shadow (the reference's «Skip» and «Share
+// now»), its label in `fg`.
+function PillButton({ label, onPress, icon, disabled, style, fg, big }: { label: string; onPress: () => void; icon?: IconName; disabled?: boolean; style?: StyleProp<ViewStyle>; fg: string; big?: boolean }) {
+  const dark = useIsDark();
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+      style={({ pressed }) => [{ opacity: disabled ? 0.45 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
+      {({ pressed }) => (
+        <View style={[{ minHeight: big ? 52 : 46, paddingHorizontal: 20, borderRadius: radius.pill, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1 }, pillGlass(dark, pressed)]}>
+          {icon ? <Icon name={icon} size={18} color={fg} /> : null}
+          <T numberOfLines={1} style={{ color: fg, fontWeight: '500', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+// The white glass of rose's secondary pills (and the dialogs' cancel).
+export function pillGlass(dark: boolean, pressed = false): ViewStyle {
+  return {
+    backgroundColor: dark ? (pressed ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.08)') : pressed ? 'rgba(255,255,255,0.62)' : 'rgba(255,255,255,0.86)',
+    borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.95)',
+    ...(Platform.OS === 'web'
+      ? { boxShadow: dark ? '0 6px 18px -10px rgba(0,0,0,0.7)' : '0 6px 18px -10px rgba(110,40,48,0.35), 0 1px 2px rgba(110,40,48,0.06)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' } as any
+      : { shadowColor: '#6e2830', shadowOpacity: dark ? 0 : 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: dark ? 0 : 2 }),
+  };
+}
+// Rose's main button: a pill in the warm gradient (orange into rose, as the reference's activity card) with white text
+// and a soft coral glow under it.
+export function WarmFill({ r = radius.pill }: { r?: number }) {
+  const c = useColors();
+  return <LinearGradient pointerEvents="none" colors={c.warm as unknown as readonly [string, string, ...string[]]} start={{ x: 1, y: 0 }} end={{ x: 0, y: 1 }} style={[StyleSheet.absoluteFill, { borderRadius: r }]} />;
+}
+export const warmGlow: ViewStyle = Platform.OS === 'web'
+  ? ({ boxShadow: '0 10px 24px -10px rgba(224,96,91,0.65), inset 0 1px 0 rgba(255,255,255,0.28)' } as any)
+  : { shadowColor: '#e0605b', shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 4 };
+
 // The flat, minimal action button, like a «Confirm order» button: a solid fill, no border, sheen or shadow, 54 tall
 // with corners rounded 12. main: `btn` (soft light grey with black text in dark mode, near-black with white text in
 // light mode); soft: the grey of the secondary buttons (cancel, back to the exam); danger: red with white text.
@@ -425,6 +552,25 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
 }) {
   const c = useColors();
   const bg = tone === 'main' ? c.btn : tone === 'danger' ? c.bad : c.nav, fg = tone === 'main' ? c.btnFg : tone === 'danger' ? '#ffffff' : c.navFg;
+  const dark = useIsDark();
+  if (ROSE) {
+    // main: the warm pill; soft: the white glass pill; danger: a crimson pill.
+    const fgR = tone === 'soft' ? c.text : '#ffffff';
+    return (
+      <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+        style={({ pressed }) => [{ opacity: disabled ? 0.45 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
+        {({ pressed }) => (
+          <View style={[{ height: 52, borderRadius: radius.pill, paddingHorizontal: 18, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' },
+            tone === 'main' ? warmGlow : tone === 'danger' ? { backgroundColor: dark ? '#d24a5e' : c.bad } : [{ borderWidth: 1 }, pillGlass(dark, pressed)],
+            pressed && tone !== 'soft' ? { opacity: 0.88 } : null]}>
+            {tone === 'main' ? <WarmFill /> : null}
+            {icon ? <Icon name={icon} size={18} color={fgR} weight={iconWeight} /> : null}
+            <T numberOfLines={1} style={{ fontSize: 16, lineHeight: 24, fontWeight: '500', color: fgR, textAlign: 'center' }}>{label}</T>
+          </View>
+        )}
+      </Pressable>
+    );
+  }
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
       style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }, style]}>
@@ -448,7 +594,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const [scale] = useState(() => new Animated.Value(1));
   const width = useRef(0);
   const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
-  const primary = variant === 'primary', fg = primary ? c.ctaFg : c.text;
+  const primary = variant === 'primary', fg = primary ? c.ctaFg : c.text, dark = useIsDark();
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
@@ -465,6 +611,17 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       onLayout={e => { width.current = e.nativeEvent.layout.width; }}
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
+        ROSE ? (
+          <Animated.View style={[{ minHeight: 52, borderRadius: radius.pill, borderWidth: primary ? 0 : 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+            opacity: disabled ? 0.52 : primary && pressed ? 0.88 : 1, transform: [{ scale }] },
+            primary ? warmGlow : pillGlass(dark, pressed || !!hovered)] as any}>
+            {primary ? <WarmFill /> : null}
+            {icon ? <Icon name={icon} size={20} color={fg} /> : null}
+            <Animated.View style={labelIn as any}>
+              <T numberOfLines={1} style={{ fontSize: 15.5, lineHeight: 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
+            </Animated.View>
+          </Animated.View>
+        ) :
         <Animated.View style={{
           minHeight: 50, borderRadius: radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
           borderColor: primary ? c.cta : c.line,
@@ -489,12 +646,13 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
 export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
   return {
-    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: c.nav } as ViewStyle,
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: ROSE ? (dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.45)') : c.nav,
+      ...(ROSE ? { borderWidth: 1, borderColor: c.cardBorder } : null) } as ViewStyle,
     // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
     // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
     pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
-    raised: { borderRadius: radius.pill, backgroundColor: dark ? '#3d3d3d' : c.surface,
-      boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
+    raised: { borderRadius: radius.pill, backgroundColor: ROSE ? (dark ? 'rgba(255,255,255,0.16)' : '#ffffff') : dark ? '#3d3d3d' : c.surface,
+      boxShadow: ROSE && !dark ? '0 2px 8px -2px rgba(110,40,48,0.22), 0 0 0 0.5px rgba(110,40,48,0.06)' : '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
     label: (on: boolean) => ({ color: on ? c.text : c.muted, fontWeight: '500' }) as TextStyle,
   };
 }
@@ -551,11 +709,11 @@ export function Ring({ value, size = 76, stroke = 8, color, label, format }: { v
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.line} strokeWidth={stroke} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={ROSE ? c.accentSoft : c.line} strokeWidth={stroke} fill="none" />
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={color ?? c.accent} strokeWidth={stroke} fill="none" strokeLinecap="round"
           strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - shown)} />
       </Svg>
-      <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{format ? format(shown) : label}</T>
+      <T style={{ fontWeight: ROSE ? '300' : '700', fontSize: size / (ROSE ? 3.9 : 4.6), textAlign: 'center', letterSpacing: ROSE ? -0.5 : 0 }}>{format ? format(shown) : label}</T>
     </View>
   );
 }
@@ -580,9 +738,10 @@ export function Skeleton({ w = '100%', h = 14, r = radius.pill, style }: { w?: V
 // right edge in the app's right-to-left layout.)
 export function PageSkeleton() {
   const c = useColors(), ins = useSafeAreaInsets();
-  const card = { borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, padding: 16, gap: 12 } as const;
+  const card = { borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, padding: 16, gap: 12, backgroundColor: ROSE ? c.glassFill : undefined } as const;
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }} accessibilityRole="progressbar" accessibilityLabel="در حال بارگذاری">
+      {ROSE ? <RoseGlow /> : null}
       <View style={{ paddingTop: ins.top + 24, paddingHorizontal: 16, gap: 14, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ alignItems: 'flex-start', gap: 10, paddingVertical: 24 }}>
           <Skeleton w="45%" h={26} r={radius.sm} />
@@ -605,7 +764,7 @@ export function PageSkeleton() {
 export function EmptyState({ icon, title, text, action }: { icon: IconName; title: string; text?: string; action?: { label: string; onPress: () => void; icon?: IconName } }) {
   const c = useColors();
   return (
-    <View style={{ alignItems: 'center', gap: 6, paddingVertical: 28, paddingHorizontal: 20, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, backgroundColor: c.surface }}>
+    <View style={{ alignItems: 'center', gap: 6, paddingVertical: 28, paddingHorizontal: 20, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, backgroundColor: c.glassFill }}>
       <Icon name={icon} size={28} color={c.muted} />
       <T style={{ fontSize: 16, lineHeight: 26, fontWeight: '500', textAlign: 'center', marginTop: 6 }}>{title}</T>
       {text ? <T style={{ fontSize: 13.5, lineHeight: 22, color: c.muted, textAlign: 'center', maxWidth: 360 }}>{text}</T> : null}

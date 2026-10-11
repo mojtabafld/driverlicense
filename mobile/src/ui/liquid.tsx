@@ -3,7 +3,7 @@
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { useColors, useIsDark } from './theme';
+import { ROSE, useColors, useIsDark } from './theme';
 
 const nativeGlass = Platform.OS === 'ios' && (() => { try { return isLiquidGlassAvailable(); } catch { return false; } })();
 
@@ -65,6 +65,12 @@ export function GlassTop({ children, onHeight, style }: { children?: React.React
     return <GlassView onLayout={onLayout} style={[box, style]} glassEffectStyle="regular">{children}</GlassView>;
   }
   const web = Platform.OS === 'web' ? ({ backdropFilter: 'blur(22px) saturate(180%)', WebkitBackdropFilter: 'blur(22px) saturate(180%)' } as any) : null;
+  // Rose: the glow's own colour, see-through, so the head reads as part of the glow it lies on.
+  if (ROSE) return (
+    <View onLayout={onLayout} style={[box, { backgroundColor: `${c.top}${web ? 'C4' : 'F2'}` }, web, style]}>
+      {children}
+    </View>
+  );
   return (
     <View onLayout={onLayout} style={[box, {
       backgroundColor: `${c.bg}${web ? 'BD' : 'F5'}`, // the page colour, about 74% (web) / 96% see-through

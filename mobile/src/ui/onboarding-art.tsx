@@ -1,7 +1,12 @@
 // Flat illustrations for the intro slides, drawn in the app's own colours on its forest-green background (a 300 × 260 grid).
+import { ROSE } from './theme';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
-const C = {
+// (rose, theme.ts: the same drawings in its warm colours, for the coral intro)
+const C = ROSE ? {
+  white: '#ffffff', pale: '#fde9e6', sky: '#f7c9c2', mid: '#e8875f', navy: '#e0605b', ink: '#3a1a1f', phone: '#3a1d22',
+  green: '#4fc27e', red: '#c72a40', yellow: '#f2b05a', shadow: 'rgba(80,10,20,0.18)', line: '#ffe3de',
+} : {
   white: '#ffffff', pale: '#e6f3e6', sky: '#bfe3bf', mid: '#5b74c4', navy: '#1d7a1d', ink: '#123312', phone: '#1c361c',
   green: '#5cc47a', red: '#e5534b', yellow: '#f0b24a', shadow: 'rgba(0,0,0,0.16)', line: '#dcf0dc',
 };
@@ -139,7 +144,7 @@ export function ArtAi() {
     <Svg width="100%" height="100%" viewBox="0 0 300 260">
       <Defs>
         <LinearGradient id="ai" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#8fd08f" /><Stop offset="1" stopColor="#1d7a1d" />
+          <Stop offset="0" stopColor={ROSE ? "#f7b39a" : "#8fd08f"} /><Stop offset="1" stopColor={ROSE ? "#e0605b" : "#1d7a1d"} />
         </LinearGradient>
       </Defs>
       <Phone x={96} y={30} w={108} h={196}>
