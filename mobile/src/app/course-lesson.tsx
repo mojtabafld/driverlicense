@@ -257,7 +257,7 @@ function Lesson({ id }: { id: string }) {
   const phase = PHASE[step.kind];
   return (
     <View style={{ flex: 1 }}>
-      <SubPage title={lesson.title} gap={12} scrollKey={complete ? -1 : i} scrollRef={scroll} close={!complete}
+      <SubPage theme title={lesson.title} gap={12} scrollKey={complete ? -1 : i} scrollRef={scroll} close={!complete}
         pager={complete ? undefined : { i, n: toCheck || last ? i + 1 : steps.length, go: setI, rtl: learnRtl }}
         guard={!complete && Object.keys(checked).length ? { title: 'خروج از درس؟', text: 'جواب‌های آزمون این درس ذخیره نمی‌شوند.' } : null}>
         {complete ? (
