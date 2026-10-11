@@ -85,6 +85,21 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
+  if (attempts.length < 2 && ARC && fill) {
+    // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
+    return (
+      <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
+        <View pointerEvents="none" style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
+          <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
+          <View style={{ position: 'absolute', right: 0, top: '30%', marginTop: 4 }}>
+            <T style={{ color: c.muted, fontSize: 11.5 }}>حد قبولی ۸۰٪</T>
+          </View>
+        </View>
+        {/* Where the dates go once there are attempts. */}
+        <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>بعد از حداقل دو آزمون، نمودار پیشرفت به‌روز می‌شود.</T>
+      </View>
+    );
+  }
   if (attempts.length < 2) {
     // Nothing to draw yet: say so, with a button to the exam tab.
     return (
