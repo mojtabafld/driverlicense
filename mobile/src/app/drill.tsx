@@ -12,11 +12,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { EXAM } from '@/lib/course';
+import { courseText } from '@/lib/course-en';
 import { useCourseProgress } from '@/lib/course-progress';
 import { buildSession, lessonItems, mastery, realTestMistakes, review, statementOrder, type DrillItem } from '@/lib/drill';
 import { useDrillProgress } from '@/lib/drill-progress';
 import { SECONDS_PER_Q, faNum } from '@/lib/logic';
-import { useApp } from '@/lib/store';
+import { useApp, useExamLang } from '@/lib/store';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
 import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { learnRtl } from '@/ui/swipe';
@@ -51,7 +52,7 @@ function TimeBar({ left }: { left: number }) {
 }
 
 function Question({ turn, ticks, answer, onToggle }: { turn: Turn; ticks: boolean[]; answer: Answer | null; onToggle: (i: number) => void }) {
-  const c = useColors();
+  const c = useColors(), lang = useExamLang();
   // The translation shows once answered, until hidden; the button shows or hides it at any time.
   const [pick, setPick] = useState<boolean | null>(null);
   const { q, teach } = turn.item, shown = !!answer, fa = pick ?? shown;
@@ -62,7 +63,7 @@ function Question({ turn, ticks, answer, onToggle }: { turn: Turn; ticks: boolea
         <TranslateButton on={fa} onPress={() => setPick(!fa)} />
       </View>
       <View style={{ gap: 4 }}>
-        <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{q.da}</T>
+        <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(q.da, lang)}</T>
         {fa ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{q.fa}</T> : null}
       </View>
       {turn.order.map((k, i) => {
@@ -72,7 +73,7 @@ function Question({ turn, ticks, answer, onToggle }: { turn: Turn; ticks: boolea
             <Pressable disabled={shown} onPress={() => { tap(); onToggle(i); }} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
               style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               <OptionBox on={on} mark={wrong} review={shown}>
-                <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{s.da}</T>
+                <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
                 {fa ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{s.fa}</T> : null}
               </OptionBox>
             </Pressable>

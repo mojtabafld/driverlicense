@@ -9,7 +9,9 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
-import { useApp } from '@/lib/store';
+import { useApp, useExamLang } from '@/lib/store';
+import { PROVE_PICS } from '@/lib/config';
+import SIGN_EN from '@/lib/guide-en.json';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GuideImage, prefetchGuide, Rich } from '@/ui/guide-visual';
 import { Icon } from '@/ui/icon';
@@ -105,9 +107,12 @@ export default function GuideView() {
   );
 }
 
-// A sign: its code, Persian and Danish names, and what it means and what to do.
+// The sign's official name in the user's exam language: English (lib/guide-en.json) when the exam is in English.
+const signName = (item: SignItem, lang: string) => (lang === 'en' && !PROVE_PICS && (SIGN_EN as Record<string, string>)[item.key]) || item.da;
+
+// A sign: its code, Persian and Danish (or English) names, and what it means and what to do.
 function SignText({ item }: { item: SignItem }) {
-  const c = useColors();
+  const c = useColors(), lang = useExamLang();
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row' }}>
@@ -119,7 +124,7 @@ function SignText({ item }: { item: SignItem }) {
       {/* The sign's Danish name in a box like «چه کسی اول می‌رود؟», laid out left to right: the green check on the left. */}
       <View style={{ direction: 'ltr', flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
         <Icon name="checkCircle" size={20} color={c.ok} />
-        <L style={{ flex: 1, fontSize: 14, lineHeight: 21, color: c.text, fontWeight: '600', textAlign: 'left' }}>{item.da}</L>
+        <L style={{ flex: 1, fontSize: 14, lineHeight: 21, color: c.text, fontWeight: '600', textAlign: 'left' }}>{signName(item, lang)}</L>
       </View>
       <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
     </View>

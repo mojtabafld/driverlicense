@@ -14,6 +14,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { COURSE, EXAM, lessonById, type CourseStep } from '@/lib/course';
+import { courseText } from '@/lib/course-en';
+import { useExamLang } from '@/lib/store';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
@@ -33,7 +35,7 @@ type Answers = Record<number, boolean[]>;
 // whether it was right and why.
 function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract<CourseStep, { kind: 'exam' }>; n: number; of: number; ticks: boolean[]; checked: boolean;
   onToggle: (i: number) => void }) {
-  const c = useColors();
+  const c = useColors(), lang = useExamLang();
   const mistakes = step.statements.filter((s, i) => ticks[i] !== s.ok).length;
   // The Persian translation, behind the translate button as in the exam: shown once checked, until hidden.
   const [pick, setPick] = useState<boolean | null>(null), fa = pick ?? checked;
@@ -50,7 +52,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
         <TranslateButton on={fa} onPress={() => setPick(!fa)} />
       </View>
       <View style={{ gap: 4 }}>
-        <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{step.da}</T>
+        <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(step.da, lang)}</T>
         {fa ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{step.fa}</T> : null}
       </View>
       {step.statements.map((s, i) => {
@@ -60,7 +62,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
             <Pressable disabled={checked} onPress={() => { tap(); onToggle(i); }} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
               style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               <OptionBox on={on} mark={wrong} review={checked}>
-                <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{s.da}</T>
+                <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
                 {fa ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{s.fa}</T> : null}
               </OptionBox>
             </Pressable>

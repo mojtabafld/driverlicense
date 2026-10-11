@@ -131,6 +131,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
+// The exam language, also where there may be no AppProvider yet (kit's T): 'da' then.
+export function useExamLang(): 'da' | 'en' {
+  return useContext(AppCtx)?.settings.lang === 'en' ? 'en' : 'da';
+}
+
 export function useApp() {
   const c = useContext(AppCtx);
   if (!c) throw new Error('useApp outside AppProvider');
