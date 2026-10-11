@@ -6,7 +6,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'rea
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { ArcButton, Backdrop, Button, Hero, T, tap, useArcSeg } from '@/ui/kit';
+import { ArcButton, Backdrop, Button, Hero, SegPill, T, tap, useArcSeg } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 
 // Sign in / sign up switch: a soft track with the chosen side raised.
@@ -21,6 +21,7 @@ function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: 
             <View style={[{ paddingVertical: 9, borderRadius: 10, backgroundColor: on ? c.surface : 'transparent',
               ...(on ? { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 1 } : {}) },
               ARC && { ...seg.pill(on), paddingVertical: 10, shadowOpacity: 0, elevation: 0 }]}>
+              {ARC ? <SegPill on={on} /> : null}
               <T style={[{ textAlign: 'center', fontSize: 14.5, fontWeight: on ? '700' : '600', color: on ? c.link : c.muted }, ARC && seg.label(on)]}>{m === 'login' ? 'ورود' : 'ثبت‌نام'}</T>
             </View>
           </Pressable>

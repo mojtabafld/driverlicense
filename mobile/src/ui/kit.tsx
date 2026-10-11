@@ -490,10 +490,19 @@ export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
   return {
     track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: c.nav } as ViewStyle,
-    pill: (on: boolean) => ({ borderRadius: radius.pill, backgroundColor: on ? (dark ? '#3d3d3d' : c.surface) : 'transparent',
-      ...(on ? { boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } : {}) }) as ViewStyle,
+    // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
+    // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
+    pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
+    raised: { borderRadius: radius.pill, backgroundColor: dark ? '#3d3d3d' : c.surface,
+      boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
     label: (on: boolean) => ({ color: on ? c.text : c.muted, fontWeight: '500' }) as TextStyle,
   };
+}
+
+// The chosen part's raised pill (useArcSeg), the first child of each part: shown on the chosen one, clear on the others.
+export function SegPill({ on }: { on: boolean }) {
+  const seg = useArcSeg();
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, seg.raised, { opacity: on ? 1 : 0 }]} />;
 }
 
 // The site's .tabs: grey track, the chosen one is a white tab with navy text.
@@ -506,6 +515,7 @@ export function Segmented<V extends string>({ value, options, onChange }: { valu
         return (
           <Pressable key={o.value} onPress={() => { tap(); onChange(o.value); }} style={{ flex: 1 }}>
             <View style={[{ paddingVertical: 7, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }, ARC && seg.pill(on)]}>
+              {ARC ? <SegPill on={on} /> : null}
               <T style={[{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }, ARC && seg.label(on)]}>{o.label}</T>
             </View>
           </Pressable>

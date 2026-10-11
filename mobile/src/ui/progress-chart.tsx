@@ -14,7 +14,7 @@ import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } 
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
-import { Button, T, tap, useCountUp } from './kit';
+import { ArcButton, Button, T, tap, useCountUp } from './kit';
 import { ARC, useColors } from './theme';
 
 const L = 38, R = 12, TOP = 14, B = 24, FILL_MIN = 120;
@@ -87,7 +87,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     return (
       <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 14, paddingVertical: 20 }, fill && { flex: 1 }]}>
         <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>
-        <Button label="شروع آزمون" onPress={() => router.navigate('/exam')} icon="play" />
+        {/* On the main site the theme's call to action, as home's and the exam's other start buttons (ArcButton). */}
+        {ARC ? <ArcButton label="شروع آزمون" onPress={() => router.navigate('/exam')} icon="play" />
+          : <Button label="شروع آزمون" onPress={() => router.navigate('/exam')} icon="play" />}
       </View>
     );
   }

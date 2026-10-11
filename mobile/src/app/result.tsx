@@ -14,7 +14,7 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Button, Card, EmptyState, Enter, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
+import { Backdrop, Button, Card, EmptyState, Enter, SegPill, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { learnRtl, Pager } from '@/ui/swipe';
@@ -50,6 +50,7 @@ function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: 
         return (
           <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flexShrink: 1 }}>
             <View style={[{ paddingVertical: 7, paddingHorizontal: px, borderRadius: 8, backgroundColor: on ? c.strong : 'transparent' }, ARC && seg.pill(on)]}>
+              {ARC ? <SegPill on={on} /> : null}
               <T numberOfLines={1} style={[{ fontSize: fs, fontWeight: '600', color: on ? c.strongFg : c.muted, textAlign: 'center' }, ARC && seg.label(on)]}>{o.label}</T>
             </View>
           </Pressable>
