@@ -26,7 +26,7 @@ export function SizeSegment({ value, values, onChange }: Props) {
   }, [box?.x, box?.w]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel="تعداد سؤال‌ها" style={[seg.track, { flexDirection: 'row' }]}>
-      {box ? <Animated.View pointerEvents="none" style={[seg.pill(true), physical({ position: 'absolute' as const, top: 3, bottom: 3, left: 0 }), { width: w, transform: [{ translateX: x }] }]} /> : null}
+      {box ? <Animated.View pointerEvents="none" style={[seg.raised, physical({ position: 'absolute' as const, top: 3, bottom: 3, left: 0 }), { width: w, transform: [{ translateX: x }] }]} /> : null}
       {values.map(n => {
         const on = n === value;
         return (

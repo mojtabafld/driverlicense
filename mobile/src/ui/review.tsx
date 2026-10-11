@@ -11,7 +11,7 @@ import { faNum } from '@/lib/logic';
 import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon, type IconName } from './icon';
-import { Enter, L, T, TranslateButton, physical, tap, useArcSeg } from './kit';
+import { Enter, L, SegPill, T, TranslateButton, physical, tap, useArcSeg } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
 import { OptionBox } from './option-box';
@@ -364,6 +364,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                 return (
                   <Pressable key={v} onPress={() => { tap(); setView(v); }} style={{ flex: 1 }} accessibilityRole="tab" accessibilityState={{ selected: sel }}>
                     <View style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 8, borderRadius: radius.btn - 3, backgroundColor: sel ? c.strong : 'transparent' }, ARC && seg.pill(sel)]}>
+                      {ARC ? <SegPill on={sel} /> : null}
                       {/* arc: the dot keeps its status colour on the raised pill, no ring */}
                       {v === 'mine' ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: it.ok ? c.ok : c.bad, ...(sel && !ARC ? { borderWidth: 1.5, borderColor: c.strongFg, width: 10, height: 10, borderRadius: 5 } : {}) }} /> : null}
                       <T style={[{ fontSize: 14, fontWeight: '600', color: sel ? c.strongFg : c.muted, textAlign: 'center' }, ARC && seg.label(sel)]}>{v === 'mine' ? 'پاسخ شما' : 'پاسخ صحیح'}</T>
