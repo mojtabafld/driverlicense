@@ -194,9 +194,10 @@ export default function Home() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            {/* Main site: the chart marks only failed attempts (red) and draws the pass line dashed grey. */}
+            {/* Main site: the chart marks passed attempts green and failed ones red, and draws the pass line dashed grey. */}
             {ARC ? <>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.bad }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.ok }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.bad, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
               <View style={{ width: 14, borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: c.faint, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
             </> : <>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
