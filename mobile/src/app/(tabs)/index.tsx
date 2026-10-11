@@ -11,7 +11,7 @@ import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, r
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, Button, Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
+import { ArcButton, Button, Card, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
@@ -23,14 +23,14 @@ import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
 // `progress` (every lesson done) turns the icon, the number and the bar green.
-function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number }) {
+// `bare`: no card of its own, a pressable cell in the shared card (main site).
+function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, bare }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number; bare?: boolean }) {
   const c = useColors();
   const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
   if (progress != null && progress >= 1) tone = 'ok';
   const bar = useCountUp(progress != null ? Math.min(1, Math.max(0, progress)) : 0); // the bar fills when the app opens
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link;
-  return (
-    <Card onPress={onPress} style={{ flex: 1, gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 }}>
+  const body = (<>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: narrow ? 5 : 6 }}>
         {/* A bare line icon in the card's colour, no tile behind it. */}
         <Icon name={icon} size={narrow ? 18 : 20} color={fg} weight="semibold" />
@@ -50,8 +50,11 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
           <T style={{ color: tone === 'ok' ? c.ok : c.muted, fontSize: 10.5, lineHeight: 16, fontWeight: '600' }}>{pctText(bar)}</T>
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
-    </Card>
-  );
+  </>);
+  const pad = { gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 };
+  return bare ? (
+    <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ flex: 1 }, pad, pressed && { opacity: 0.7 }]}>{body}</Pressable>
+  ) : <Card onPress={onPress} style={{ flex: 1, ...pad }}>{body}</Card>;
 }
 
 // A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
@@ -191,11 +194,22 @@ export default function Home() {
           </View>
         </View>
       </Card>
+      {/* Main site: the three counts share one card, split by thin vertical lines, Mojtaba asked. */}
+      {ARC ? (
+        <Card style={{ flexDirection: 'row', padding: 0 }}>
+          <Stat bare onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
+          <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
+          <Stat bare onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
+          <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
+          <Stat bare onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
+        </Card>
+      ) : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
         <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
         <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
       </View>
+      )}
       </View>
       {/* A tap anywhere in the chart's card, off the bars, clears the picked attempt. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
