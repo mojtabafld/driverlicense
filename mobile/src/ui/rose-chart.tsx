@@ -12,7 +12,7 @@ import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } 
 import type { Attempt } from '@/lib/bank';
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import { Icon } from './icon';
-import { T, pillGlass, tap, useCountUp } from './kit';
+import { L, T, pillGlass, tap, useCountUp } from './kit';
 import { useColors, useIsDark } from './theme';
 
 // AX: the scale's width; PAD: room right of the newest point for its percent, as the reference's «84 +17%».
@@ -68,19 +68,19 @@ export function RoseChart({ attempts, onOpen, sel, onSel, minH = 120 }: { attemp
                   {/* The picked attempt: a white point (the newest keeps its knob). */}
                   {sel != null && sel !== last && data[sel] ? <Circle cx={x(sel)} cy={tops[sel]} r={6} fill="#ffffff" stroke={c.accent} strokeWidth={2.5} /> : null}
                   {sel != null && sel !== last && data[sel] ? (
-                    <SvgText x={x(sel)} y={Math.max(12, tops[sel] - 12)} fill={ink} fontSize={13} fontFamily="Vazirmatn-500" textAnchor="middle">{`${faNum(Math.round(pctOf(data[sel]) * 100))}٪`}</SvgText>
+                    <SvgText x={x(sel)} y={Math.max(12, tops[sel] - 12)} fill={ink} fontSize={13} fontFamily="Inter-500" textAnchor="middle">{`${Math.round(pctOf(data[sel]) * 100)}%`}</SvgText>
                   ) : null}
                   {/* The newest: a white knob in a soft halo. */}
                   <Circle cx={x(last)} cy={tops[last]} r={15} fill="#ffffff" fillOpacity={0.28} />
                   <Circle cx={x(last)} cy={tops[last]} r={6.5} fill="#ffffff" />
                   {data.map((_, i) => ((last - i) % every === 0
-                    ? <SvgText key={`x${i}`} x={x(i)} y={H - 7} fill={i === last ? c.text : label} fontSize={11.5} fontFamily={i === last ? 'Vazirmatn-500' : 'Vazirmatn-400'} textAnchor="middle">{faNum(i + 1 + offset)}</SvgText>
+                    ? <SvgText key={`x${i}`} x={x(i)} y={H - 7} fill={i === last ? c.text : label} fontSize={11.5} fontFamily={i === last ? 'Inter-500' : 'Inter-400'} textAnchor="middle">{String(i + 1 + offset)}</SvgText>
                     : null))}
                 </Svg>
                 {/* The newest's percent and its change, right of the knob. */}
                 <View pointerEvents="none" style={{ position: 'absolute', left: x(last) + 16, width: PAD - 10, top: Math.max(0, Math.min(H - B - 52, tops[last] - 26)), alignItems: 'flex-start' }}>
-                  <T style={{ fontSize: 28, lineHeight: 36, fontWeight: '300', color: ink, textAlign: 'left', letterSpacing: -0.5 }}>{faNum(lastPct)}</T>
-                  {delta != null ? <T style={{ fontSize: 11.5, lineHeight: 16, color: ink, opacity: 0.85, textAlign: 'left', writingDirection: 'ltr' }}>{`${delta >= 0 ? '+' : '−'}${faNum(Math.abs(delta))}٪`}</T> : null}
+                  <L style={{ fontSize: 30, lineHeight: 36, fontWeight: '300', color: ink, letterSpacing: -0.8 }}>{String(lastPct)}</L>
+                  {delta != null ? <L style={{ fontSize: 11.5, lineHeight: 16, color: ink, opacity: 0.85 }}>{`${delta >= 0 ? '+' : '−'}${Math.abs(delta)}%`}</L> : null}
                 </View>
                 {data.map((_, i) => (
                   <Pressable key={`p${i}`} onPress={() => { tap(); onSel(sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
@@ -90,7 +90,7 @@ export function RoseChart({ attempts, onOpen, sel, onSel, minH = 120 }: { attemp
             </ScrollView>
             {/* The scale on the right. */}
             <Svg width={AX} height={H} pointerEvents="none">
-              {ticks.map(v => <SvgText key={v} x={AX - 2} y={y(v) + 4} fill={label} fontSize={11} fontFamily="Vazirmatn-400" textAnchor="end">{faNum(v)}</SvgText>)}
+              {ticks.map(v => <SvgText key={v} x={AX - 2} y={y(v) + 4} fill={label} fontSize={11} fontFamily="Inter-400" textAnchor="end">{String(v)}</SvgText>)}
             </Svg>
           </View>
         ) : null}
