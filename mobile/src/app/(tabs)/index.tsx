@@ -86,7 +86,9 @@ function StartCard({ compact }: { compact: boolean }) {
   const next = PROVE_PICS ? null : COURSE.flatMap(ch => ch.lessons).find(l => !done[l.id]) ?? null;
   return (
     <Card style={{ flex: 1, gap: compact ? 10 : 14, padding: compact ? 14 : 18, justifyContent: 'center' }}>
-      <T style={{ fontWeight: '800', fontSize: 18 }}>از اینجا شروع کنید</T>
+      {/* Main site: a smaller lead naming both ways to start, Mojtaba asked. */}
+      {PROVE_PICS ? <T style={{ fontWeight: '800', fontSize: 18 }}>از اینجا شروع کنید</T>
+        : <T style={{ fontWeight: '700', fontSize: 15, lineHeight: 24 }}>با آموزش گام به گام یا یک آزمون کوتاه شروع کنید.</T>}
       {/* With a course lesson next (main site), the two buttons speak for themselves: no line here, Mojtaba asked. */}
       {next ? null : <T style={{ color: c.muted, fontSize: 14, lineHeight: 23 }}>
         {pt ? `اول درس ${faNum(lessonNumber(pt.title, pi))} را تمرین کنید. بعد با یک آزمون کوتاه ببینید چقدر یاد گرفته‌اید.`

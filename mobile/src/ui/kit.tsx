@@ -228,10 +228,10 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 // `tall`: about half the screen high (the sign-in page, its form under it), with the theme switch at its top on a soft
 // round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
 // `lower`: that place this much further down (signing up). `name`: a line under the title (the user's name on the home
-// page's greeting); with `inline`, on the title's own line right after it («عصر به‌خیر، نگین»), cut short if too long.
+// page's greeting).
 // `back`: an inner page's back button floats over the header's top right; the title and its line stay at the right
 // edge, where a tab's are, set a little lower so they start under the button.
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back, inline }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; inline?: boolean }) {
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean }) {
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
@@ -265,7 +265,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, inlin
           </View>}
       <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />
-      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: name && !inline ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
+      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
         {tall ? (
           <>
             <View style={{ alignSelf: 'flex-end', borderRadius: 19, backgroundColor: light ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)' }}>
@@ -275,11 +275,9 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, inlin
             {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        {below ? null : <View style={{ gap: 2, maxWidth: name && inline ? '68%' : '58%' }}>
-          {name && inline
-            ? <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]} numberOfLines={1}>{title} {name}</T>
-            : <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>}
-          {name && !inline ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, shade]} numberOfLines={1}>{name}</T> : null}
+        {below ? null : <View style={{ gap: 2, maxWidth: '58%' }}>
+          <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
+          {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
         </View>}
       </View>
@@ -300,8 +298,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  // Main site: the name on the greeting's own line (Mojtaba asked).
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} inline={ARC} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
