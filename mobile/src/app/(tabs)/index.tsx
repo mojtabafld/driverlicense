@@ -12,7 +12,7 @@ import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, r
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, Button, Card, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
+import { ArcButton, Button, Card, L, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
 import { RoseChart } from '@/ui/rose-chart';
 import { Glass } from '@/ui/glass';
 import { COURSE } from '@/lib/course';
@@ -101,13 +101,14 @@ function Gauge({ value, label, word, trend, ry: ryWant }: { value: number | null
           {value != null ? <Circle cx={end.x} cy={end.y} r={SW / 2 + 2} fill={c.accent} stroke="#ffffff" strokeOpacity={0.9} strokeWidth={3} /> : null}
         </Svg>
         <View style={{ position: 'absolute', top: colTop, left: 0, right: 0, alignItems: 'center', gap: 4 }}>
-          <T style={{ fontSize: big, lineHeight: Math.round(big * 1.2), fontWeight: '300', color: ink, textAlign: 'center', letterSpacing: -1 }}>
-            {value != null ? faNum(pct) : '–'}{value != null ? <T style={{ fontSize: Math.round(big * 0.42), fontWeight: '300', color: ink }}>٪</T> : null}
-          </T>
+          {/* The arc's and the chart's numbers in Latin digits (Inter, light), as the reference. */}
+          <L style={{ fontSize: big, lineHeight: Math.round(big * 1.2), fontWeight: '300', color: ink, textAlign: 'center', letterSpacing: -1.5 }}>
+            {value != null ? String(pct) : '–'}{value != null ? <L style={{ fontSize: Math.round(big * 0.42), fontWeight: '300', color: ink }}>%</L> : null}
+          </L>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 26, paddingHorizontal: 12, borderRadius: 13, borderWidth: 1,
             borderColor: 'rgba(255,255,255,0.45)', backgroundColor: 'rgba(255,255,255,0.18)' }}>
             {trend != null ? <Icon name={trend >= 0 ? 'trendUp' : 'trendDown'} size={14} color={ink} /> : null}
-            <T style={{ color: ink, fontSize: 12.5, lineHeight: 20 }}>{trend != null ? `${pctText(Math.abs(trend))} ${trend >= 0 ? 'بهتر' : 'کمتر'} از ۵ آزمون قبل` : word}</T>
+            <T style={{ color: ink, fontSize: 12.5, lineHeight: 20 }}>{trend != null ? `\u200e${Math.round(Math.abs(trend) * 100)}%\u200e ${trend >= 0 ? 'بهتر' : 'کمتر'} از 5 آزمون قبل` : word}</T>
           </View>
           <T style={{ color: ink, fontSize: 17, lineHeight: 26, fontWeight: '500', textAlign: 'center' }}>{label}{value != null ? `: ${word}` : ''}</T>
         </View>
@@ -321,9 +322,9 @@ function RoseHome() {
     });
   };
   // Measured again at each level: a denser level moves the card without changing its size, and the web reports a
-  // layout only when a size changes.
+  // layout only when a size changes. Measured once the page has come in (its rise of 10px would read as too low).
   useEffect(() => {
-    const t = setTimeout(fit, 120);
+    const t = setTimeout(fit, 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [more, height]);
@@ -340,7 +341,8 @@ function RoseHome() {
   const trend = avg5 != null && prev5 != null ? avg5 - prev5 : null;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   const ink = c.topInk;
-  // The chart's averages, as the reference's «Sleep quality High»: a soft label and its value in white.
+  // The chart's averages, as the reference's «Sleep quality High»: a soft label and its value in white. (A Latin
+  // percent is held left to right by marks around it, or the right-to-left line moves its % to the other side.)
   const fact = (k: string, v: string) => (
     <T style={{ color: ink, opacity: 0.78, fontSize: 12, lineHeight: 19, textAlign: 'left' }}>{k} <T style={{ color: ink, fontSize: 12.5, fontWeight: '500' }}>{v}</T></T>
   );
@@ -354,15 +356,15 @@ function RoseHome() {
             <T style={{ color: ink, fontSize: 16, lineHeight: 26, fontWeight: '500' }}>نمودار پیشرفت</T>
             {tight ? null : (
               <View style={{ alignItems: 'flex-end' }}>
-                {fact('میانگین ۵ آزمون اخیر', avg5 != null ? pctText(avg5) : '–')}
-                {fact('قبولی در آزمون کامل', fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–')}
+                {fact('میانگین 5 آزمون اخیر', avg5 != null ? `\u200e${Math.round(avg5 * 100)}%\u200e` : '–')}
+                {fact('قبولی در آزمون کامل', fullN ? `${passN} از ${fullN}` : '–')}
               </View>
             )}
           </View>
           <RoseChart attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} minH={tighter ? 90 : tight ? 110 : 130} />
         </View>
       ) : <StartCard compact={compact} />}
-      <View ref={foot} onLayout={fit}>
+      <View ref={foot} onLayout={() => setTimeout(fit, 400)}>
         <Figures compact={compact} items={[
           { label: 'آزمون‌ها', value: faNum(exams.length), unit: fullN ? `| ${faNum(passN)} قبولی` : undefined, onPress: () => router.navigate('/exam') },
           { label: 'درس‌ها', value: faNum(lessonsDone), unit: `/ ${faNum(lessonsAll)}`, onPress: () => router.navigate('/learn') },

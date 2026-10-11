@@ -6,6 +6,7 @@ import { Vazirmatn_500Medium } from '@expo-google-fonts/vazirmatn/500Medium';
 import { Vazirmatn_600SemiBold } from '@expo-google-fonts/vazirmatn/600SemiBold';
 import { Vazirmatn_700Bold } from '@expo-google-fonts/vazirmatn/700Bold';
 import { Vazirmatn_800ExtraBold } from '@expo-google-fonts/vazirmatn/800ExtraBold';
+import { Inter_300Light } from '@expo-google-fonts/inter/300Light';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_400Regular_Italic } from '@expo-google-fonts/inter/400Regular_Italic';
 import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
@@ -19,7 +20,7 @@ import { PROVE_PICS } from '@/lib/config';
 // the main site and in the app a heavier weight is drawn as 500; the /app copy keeps its bold.
 const MAX_FA = PROVE_PICS ? 800 : 500, MAX_DA = PROVE_PICS ? 700 : 500;
 // The rose look (theme.ts) sets its large numbers (the chance of passing, the counts, a result's score) light, in 300.
-const MIN_FA = PROVE_PICS ? 400 : 300;
+const MIN_FA = PROVE_PICS ? 400 : 300, MIN_DA = MIN_FA;
 
 export const FA_FONTS = {
   'Vazirmatn-300': Vazirmatn_300Light,
@@ -30,7 +31,7 @@ export const FA_FONTS = {
 // The font of the Danish / English text (questions, statements, explanations), bundled the same way as Vazirmatn:
 // Inter (SIL Open Font License) in four weights and the regular italic.
 export const DA_FONTS = {
-  'Inter-400': Inter_400Regular, 'Inter-500': Inter_500Medium, 'Inter-600': Inter_600SemiBold, 'Inter-700': Inter_700Bold,
+  'Inter-300': Inter_300Light, 'Inter-400': Inter_400Regular, 'Inter-500': Inter_500Medium, 'Inter-600': Inter_600SemiBold, 'Inter-700': Inter_700Bold,
   'Inter-400i': Inter_400Regular_Italic,
 };
 // The regular family, for text that sets no weight.
@@ -41,7 +42,7 @@ export const DA_REGULAR = 'Inter-400';
 export function daFamily(weight: TextStyle['fontWeight'], italic?: boolean): { family: string; slant: boolean } {
   const w = weight === 'bold' ? 700 : weight === 'normal' || weight == null ? 400 : Number(weight) || 400;
   if (italic) return { family: 'Inter-400i', slant: false };
-  return { family: `Inter-${Math.min(MAX_DA, Math.max(400, Math.round(w / 100) * 100))}`, slant: false };
+  return { family: `Inter-${Math.min(MAX_DA, Math.max(MIN_DA, Math.round(w / 100) * 100))}`, slant: false };
 }
 
 // The Vazirmatn family for a fontWeight ('bold' → 700; lighter → 300 on the main site, 400 at /app; heavier → 800).
