@@ -12,8 +12,9 @@ import { useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
-import { API_URL } from '@/lib/config';
-import { useApp } from '@/lib/store';
+import { API_URL, PROVE_PICS } from '@/lib/config';
+import { enTerms } from '@/lib/en-terms';
+import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 
 // A style given in physical left/right terms. Phones running right-to-left swap left and right in styles,
@@ -327,8 +328,11 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
 
 // Persian text (right to left).
 // Set in Vazirmatn; the weight picks the font file, so fontWeight itself is reset (no faux bold).
+// On the main site, with the exam in English, the Danish terms in a Persian text are given in English (lib/en-terms.ts).
+const enKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ? enTerms(k) : Array.isArray(k) ? k.map(enKids) : k);
 export function T({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
-  const c = useColors();
+  const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS;
+  if (en) p = { ...p, children: enKids(p.children) };
   const flat = StyleSheet.flatten(style) ?? {};
   const font = flat.fontFamily ? null : { fontFamily: faFamily(flat.fontWeight), fontWeight: 'normal' as const };
   // On phones the text is laid out right to left wherever it sits (also in a row set to 'ltr'), so its alignment,
