@@ -3,7 +3,7 @@
 # too («Run workflow»).
 #
 # N, the release number, counts from 1 since 2026-10-11 (the owner asked; the releases before it, tagged android-*, are
-# deleted by this workflow): N = the run number - RUN_OFFSET. The APK's versionCode stays the run number, so a new APK
+# deleted by this workflow): N = the run number - RUN_OFFSET (run 113 was release 1). The APK's versionCode stays the run number, so a new APK
 # still installs over the ones built before.
 #
 # Signing: with the repository secrets ANDROID_KEYSTORE_BASE64 (the .jks file in base64), ANDROID_KEYSTORE_PASSWORD
@@ -34,7 +34,7 @@ jobs:
         working-directory: mobile
     env:
       HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
-      RUN_OFFSET: 110
+      RUN_OFFSET: 112
     steps:
       - uses: actions/checkout@v4
 
