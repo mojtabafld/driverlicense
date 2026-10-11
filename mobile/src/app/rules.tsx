@@ -10,6 +10,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View, type ScrollView } from 'react-native';
 
+import { PROVE_PICS } from '@/lib/config';
 import { RULES, RULE_NUMBERS, type GuidePart } from '@/lib/guide';
 import { FULL, faNum, shuffle } from '@/lib/logic';
 import { loadRulesRead, saveRulesRead } from '@/lib/prefs';
@@ -241,7 +242,8 @@ export default function Rules() {
           );
         })}
       </View>
-      <T style={{ color: c.faint, fontSize: 12, lineHeight: 20, textAlign: 'center', marginTop: 6 }}>{LAW}</T>
+      {/* (the main site leaves the law's note out, asked by the owner) */}
+      {PROVE_PICS ? <T style={{ color: c.faint, fontSize: 12, lineHeight: 20, textAlign: 'center', marginTop: 6 }}>{LAW}</T> : null}
     </SubPage>
   );
 }
