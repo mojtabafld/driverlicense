@@ -6,21 +6,23 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, Switch } from 'react-native';
 
 import { tap } from './kit';
-import { useColors } from './theme';
+import { ARC, useColors } from './theme';
 
 const W = 51, H = 31, PAD = 2, KNOB = H - PAD * 2;
 
 export function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label?: string }) {
   const c = useColors();
+  // Main site: on in the deep green of its buttons (`cta`), so switches and buttons match.
+  const on = ARC ? c.cta : c.accent;
   const [pos] = useState(() => new Animated.Value(value ? 1 : 0));
   useEffect(() => {
     Animated.timing(pos, { toValue: value ? 1 : 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   }, [value, pos]);
   if (Platform.OS !== 'web') {
-    return <Switch value={value} onValueChange={v => { tap(); onChange(v); }} trackColor={{ false: c.line, true: c.accent }} thumbColor="#fff" accessibilityLabel={label} />;
+    return <Switch value={value} onValueChange={v => { tap(); onChange(v); }} trackColor={{ false: c.line, true: on }} thumbColor="#fff" accessibilityLabel={label} />;
   }
   const left = pos.interpolate({ inputRange: [0, 1], outputRange: [W - PAD - KNOB, PAD] });
-  const bg = pos.interpolate({ inputRange: [0, 1], outputRange: [c.line, c.accent] });
+  const bg = pos.interpolate({ inputRange: [0, 1], outputRange: [c.line, on] });
   return (
     <Pressable onPress={() => { tap(); onChange(!value); }} accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={label} hitSlop={6}>
       <Animated.View style={{ width: W, height: H, borderRadius: H / 2, backgroundColor: bg, direction: 'ltr' } as any}>

@@ -84,8 +84,7 @@ export default function Learn() {
           </View>
         </View>
       ) : (
-        // (a little room under the picture header, so the first card doesn't start right where the picture ends)
-        <View style={{ gap: 10, marginTop: 20 }}>
+        <View style={{ gap: 10 }}>
           <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
             text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
             note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
