@@ -8,6 +8,7 @@ import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, Vi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
@@ -444,6 +445,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const width = useRef(0);
   const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
   const primary = variant === 'primary', fg = primary ? c.ctaFg : c.text;
+  const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
   const first = useRef(true);
@@ -455,7 +457,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const labelIn = { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
     ...(Platform.OS === 'web' ? { filter: enter.interpolate({ inputRange: [0, 1], outputRange: ['blur(2px)', 'blur(0px)'] }) } : {}) };
   return (
-    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+    <Pressable ref={primary ? under : undefined} disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
       onLayout={e => { width.current = e.nativeEvent.layout.width; }}
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (

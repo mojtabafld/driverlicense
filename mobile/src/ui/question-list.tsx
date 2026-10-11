@@ -6,7 +6,7 @@ import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import { PROVE_PICS } from '@/lib/config';
 import { faNum } from '@/lib/logic';
-import { BarItem } from './glass-bar';
+import { BarItem, useBarLook } from './glass-bar';
 import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
 import { Sheet, SheetScroll } from './sheet';
@@ -17,14 +17,14 @@ export type QItem = { n: number; tone: 'answered' | 'empty' | 'ok' | 'bad'; mark
 // The bar's middle item, like a tab of the home page's bar: the icon (the list, or the mistakes page's filter) over the
 // position («۷ / ۲۵»), so the number is part of the button. `dot`: a small accent dot on the icon (a filter in use).
 export function ListButton({ n, of, onPress, icon = 'list', label = 'فهرست سؤال‌ها', dot }: { n: number; of: number; onPress: () => void; icon?: IconName; label?: string; dot?: boolean }) {
-  const c = useColors();
+  const c = useColors(), look = useBarLook();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={`${label}، سؤال ${faNum(n)} از ${faNum(of)}`}
       style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.75 : 1 })}>
       {/* The main site writes the count in the Latin font and digits; the /app copy in Persian digits. */}
       <BarItem label={PROVE_PICS ? `${faNum(n)} / ${faNum(of)}` : `${n} / ${of}`} ltr latin={!PROVE_PICS}>
         <View>
-          <Icon name={icon} size={24} color="#ffffff" />
+          <Icon name={icon} size={24} color={look.fg} />
           {dot ? <View style={{ position: 'absolute', top: -3, right: -4, width: 9, height: 9, borderRadius: 5, backgroundColor: c.accent }} /> : null}
         </View>
       </BarItem>
