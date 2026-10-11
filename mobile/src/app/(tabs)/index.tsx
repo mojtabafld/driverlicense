@@ -117,15 +117,17 @@ export default function Home() {
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height } = useWindowDimensions();
   // Main site: the page is fitted to the screen it is on. It starts from the height's level and, while the chart's card
-  // has less room than it needs, steps to a denser one (3: the averages row, the pass card's line and the lessons bar go,
-  // tighter padding, the chart may be a little lower), so the chart's card ends just above the tab bar without the page scrolling; a new screen height
-  // starts over.
+  // has less room than it needs, steps to a denser one (3: the pass card's line and the lessons bar go, tighter padding,
+  // the chart may be lower; the averages row stays, Mojtaba asked), so the chart's card ends just above the tab bar
+  // without the page scrolling; a new screen height starts over.
   const [more, setMore] = useState(0);
   useEffect(() => setMore(0), [height]);
   const level = Math.min(3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? more : 0));
   const compact = level >= 1, tight = level >= 2, tighter = level >= 3;
-  const chartMin = tighter ? 84 : 120;
-  const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + 8 + 40;
+  const chartMin = tighter ? (ARC ? 64 : 84) : 120;
+  // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
+  const noHint = ARC && tighter;
+  const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
   const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
@@ -136,6 +138,13 @@ export default function Home() {
       if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
     });
   };
+  // On the web the box's layout event does not fire when only its top moves (the cards above it filling in), so look
+  // again a little after each change.
+  useEffect(() => {
+    const ts = [300, 1000, 2500].map(ms => setTimeout(fit, ms));
+    return () => ts.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  });
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
@@ -165,7 +174,7 @@ export default function Home() {
             <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight || tighter ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: compact ? 8 : 12, display: tighter ? 'none' : 'flex' }}>
+        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter && !ARC ? 'none' : 'flex' }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
@@ -206,7 +215,7 @@ export default function Home() {
             </>}
           </View>
         </View>
-        <ProgressChart fill minH={chartMin} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
+        <ProgressChart fill minH={chartMin} noHint={noHint} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} />
       </Card>
       </Pressable>
       </View>

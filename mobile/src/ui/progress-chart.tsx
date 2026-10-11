@@ -58,7 +58,8 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
 // `minH`: with `fill`, the chart's least height (FILL_MIN unless given).
-export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number }) {
+// `noHint`: with `fill`, the line under the chart shows only for a picked attempt (no «tap the chart» hint), for small screens.
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
@@ -168,7 +169,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   ) : null}
                   {ARC ? null : <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />}
                   {/* ARC: dates under the line, the newest at the right edge and the oldest in view at the left. */}
-                  {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && x(i) - (CW - VW) > 0 && x(i) - (CW - VW) < 36)
+                  {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && Math.abs(x(i) - (CW - VW)) < 36)
                     ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font}
                         textAnchor="middle">{ARC ? fmtDate(d.at) : faNum(i + 1 + offset)}</SvgText>
                     : null))}
@@ -189,7 +190,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           </View>
         ) : null}
       </View>
-      {fill ? (
+      {fill && noHint && !a ? null : fill ? (
         // Fitted to the screen: one fixed line, so the chart keeps its height when an attempt is picked.
         <View style={{ height: 40, justifyContent: 'center' }}>
           {a ? (
