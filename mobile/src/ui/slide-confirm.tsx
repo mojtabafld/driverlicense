@@ -4,6 +4,7 @@
 // Let go before the end and it glides back; at the end the fill covers it all, «done» shows with a check and
 // `onConfirm` runs a moment later. Screen readers get one «activate» action instead of dragging. PanResponder and
 // Animated only, so it needs no extra native module.
+// `toRight`: mirrored, the handle at the left end, dragged to the right (the main site's exam hand-in, Mojtaba asked).
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Animated, Easing, PanResponder, Platform, View, type LayoutChangeEvent } from 'react-native';
@@ -21,8 +22,9 @@ const buzz = (kind: 'start' | 'done') => {
 };
 
 // The drag, made once: `room` is how far the handle can travel (the track's width less the handle), set on layout.
-function makeSlide(onDone: () => void, onFinishing: () => void) {
-  const x = new Animated.Value(0);   // 0 … room, as a distance to the LEFT
+function makeSlide(onDone: () => void, onFinishing: () => void, toRight: boolean) {
+  const x = new Animated.Value(0);   // 0 … room, as a distance from the handle's start (to the left, or the right with `toRight`)
+  const dir = toRight ? 1 : -1;
   const st = { room: 1, done: false, from: 0 };
   const native = false; // the fill's width follows the same value, and width cannot run on the native driver
   const finish = () => {
@@ -35,10 +37,10 @@ function makeSlide(onDone: () => void, onFinishing: () => void) {
     onMoveShouldSetPanResponder: () => !st.done,
     onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: () => { x.stopAnimation(v => { st.from = v; }); buzz('start'); },
-    onPanResponderMove: (_, g) => x.setValue(Math.min(st.room, Math.max(0, st.from - g.dx))),
+    onPanResponderMove: (_, g) => x.setValue(Math.min(st.room, Math.max(0, st.from + dir * g.dx))),
     onPanResponderRelease: (_, g) => {
-      const v = Math.min(st.room, Math.max(0, st.from - g.dx));
-      if (v >= st.room * DONE_AT || (g.vx < -1.2 && v > st.room * 0.4)) finish();
+      const v = Math.min(st.room, Math.max(0, st.from + dir * g.dx));
+      if (v >= st.room * DONE_AT || (dir * g.vx > 1.2 && v > st.room * 0.4)) finish();
       else Animated.spring(x, { toValue: 0, useNativeDriver: native, bounciness: 4, speed: 18 }).start();
     },
     onPanResponderTerminate: () => Animated.spring(x, { toValue: 0, useNativeDriver: native, bounciness: 4, speed: 18 }).start(),
@@ -57,10 +59,12 @@ function DragArrow({ color }: { color: string }) {
   );
 }
 
-export function SlideToConfirm({ label, doneLabel, onConfirm }: { label: string; doneLabel: string; onConfirm: () => void }) {
+export function SlideToConfirm({ label, doneLabel, onConfirm, toRight = false }: { label: string; doneLabel: string; onConfirm: () => void; toRight?: boolean }) {
   const c = useColors();
   const [done, setDone] = useState(false);
-  const [s] = useState(() => makeSlide(onConfirm, () => setDone(true)));
+  const [s] = useState(() => makeSlide(onConfirm, () => setDone(true), toRight));
+  // The handle's own end of the track, and the far end it is dragged to.
+  const near = toRight ? 'left' : 'right', far = toRight ? 'right' : 'left';
   const [w, setW] = useState(KNOB + 1);
   const layout = (e: LayoutChangeEvent) => { const tw = e.nativeEvent.layout.width; s.setRoom(Math.max(1, tw - KNOB)); setW(tw); };
   const confirm = () => { if (!s.isDone()) s.finish(); };
@@ -73,21 +77,21 @@ export function SlideToConfirm({ label, doneLabel, onConfirm }: { label: string;
       accessibilityActions={[{ name: 'activate' }]} onAccessibilityAction={confirm}
       style={{ height: H, borderRadius: R, backgroundColor: c.nav, overflow: 'hidden', justifyContent: 'center', direction: 'ltr' } as any}>
       {/* The label on the track, beside the handle; it fades out as the handle comes over it. */}
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: KNOB, alignItems: 'center', opacity: fade }}>
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', [far]: 0, [near]: KNOB, alignItems: 'center', opacity: fade }}>
         <T style={[text, { color: c.navFg }]} numberOfLines={1}>{label}</T>
       </Animated.View>
       {/* The handle and the fill it grows into, from the right end. The same label inside it, standing still with the
           track, shows in the button's text colour where the fill covers it. */}
       <Animated.View {...s.pan.panHandlers}
-        style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: fill, borderRadius: R, backgroundColor: c.btn, overflow: 'hidden',
+        style={{ position: 'absolute', top: 0, bottom: 0, [near]: 0, width: fill, borderRadius: R, backgroundColor: c.btn, overflow: 'hidden',
           ...(Platform.OS === 'web' ? { cursor: 'grab', touchAction: 'none' } as any : {}) }}>
         {done ? (
-          <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: w, paddingLeft: KNOB, alignItems: 'center', justifyContent: 'center' }}>
+          <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, [near]: 0, width: w, [toRight ? 'paddingRight' : 'paddingLeft']: KNOB, alignItems: 'center', justifyContent: 'center' }}>
             <T style={[text, { color: c.btnFg }]} numberOfLines={1}>{doneLabel}</T>
           </View>
         ) : null}
-        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: KNOB, alignItems: 'center', justifyContent: 'center' }}>
-          {done ? <Icon name="check" size={22} color={c.btnFg} weight="bold" /> : <DragArrow color={c.btnFg} />}
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, [far]: 0, width: KNOB, alignItems: 'center', justifyContent: 'center' }}>
+          {done ? <Icon name="check" size={22} color={c.btnFg} weight="bold" /> : <View style={toRight ? { transform: [{ scaleX: -1 }] } : undefined}><DragArrow color={c.btnFg} /></View>}
         </View>
       </Animated.View>
     </View>
