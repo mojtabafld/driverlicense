@@ -245,7 +245,7 @@ export default function Run() {
           ))}
         </View>
         {/* Hand in by sliding the handle to the left end, so an exam is never handed in by a stray tap. */}
-        {dialog === 'handin' ? <SlideToConfirm label="برای تحویل و پایان، بکشید" doneLabel="تحویل شد" onConfirm={() => { setDialog(null); finish(); }} /> : null}
+        {dialog === 'handin' ? <SlideToConfirm toRight={!PROVE_PICS} label="برای تحویل و پایان، بکشید" doneLabel="تحویل شد" onConfirm={() => { setDialog(null); finish(); }} /> : null}
       </Sheet>
     </Backdrop>
   );
