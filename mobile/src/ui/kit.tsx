@@ -121,11 +121,12 @@ export function PageIn({ children, motion = 'tab' }: { children?: React.ReactNod
 // style from usePageMotion, for the page's content.
 // Rose: the warm glow at the top fading into the light grey (or, dark, the deep wine into near-black), with a soft
 // light bloom in it, as behind the Oripova app's score; it stays in place while the page scrolls over it.
-export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?: object }) {
+// `reach`: how far down the glow runs, as a share of the screen's height (the home page's runs nearly to its end).
+export function Backdrop({ children, anim, reach }: { children?: React.ReactNode; anim?: object; reach?: number }) {
   const c = useColors();
   if (ROSE) return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
-      <RoseGlow />
+      <RoseGlow reach={reach} />
       {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
     </View>
   );
@@ -138,9 +139,9 @@ export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?
 }
 
 // The glow alone (also under covers that draw their own content): `h`, how far down it reaches (at most 560).
-export function RoseGlow() {
+export function RoseGlow({ reach = 0.74 }: { reach?: number }) {
   const c = useColors(), dark = useIsDark(), { width, height } = useWindowDimensions();
-  const h = Math.min(700, Math.round(height * 0.74));
+  const h = reach > 0.8 ? Math.round(height * reach) : Math.min(700, Math.round(height * reach));
   const stops = c.glow as unknown as readonly [string, string, ...string[]];
   return (
     <View pointerEvents="none" style={[StyleSheet.absoluteFill, { height: h }]}>
@@ -287,13 +288,14 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 export function Hero(p: HeroProps) {
   return ROSE ? <RoseHero {...p} /> : <PicHero {...p} />;
 }
-type HeroProps = { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean };
+// `inline` (rose): the title (and name) in the head's row in place of the app's name, with no title block under it.
+type HeroProps = { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; inline?: boolean };
 
 // Rose: no picture; the page's head lies on the glow itself. A row with the page's icon in a round glass badge and the
 // app's name (the Oripova app's logo row) and the theme switch across from it, then the title in large light type and
 // its line, all in white. An inner page (`back`) keeps the row's room for its floating back button. `tall`: the sign-in
 // page, its title further down.
-function RoseHero({ look, title, name, subtitle, tall, back }: HeroProps) {
+function RoseHero({ look, title, name, subtitle, tall, back, inline }: HeroProps) {
   const c = useColors(), ins = useSafeAreaInsets(), { height } = useWindowDimensions();
   useFocusEffect(useCallback(() => {
     webTop.hero = c.top; paintWebTop();
@@ -307,16 +309,17 @@ function RoseHero({ look, title, name, subtitle, tall, back }: HeroProps) {
         {back ? <View /> : (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <View style={headBtn(false)}><Icon name={look.icon} size={21} color={ink} /></View>
-            <Text style={{ fontFamily: DA_FONT, fontSize: 19, color: ink, letterSpacing: -0.2 }}>TeoriPrøve</Text>
+            {inline ? <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '500', color: ink }} numberOfLines={1}>{name ? `${title} ${name}` : title}</T>
+              : <Text style={{ fontFamily: DA_FONT, fontSize: 19, color: ink, letterSpacing: -0.2 }}>TeoriPrøve</Text>}
           </View>
         )}
         {back ? null : <ThemeButton />}
       </View>
-      <View style={{ gap: 2, marginTop: tall ? 0 : name ? 14 : 26 }}>
+      {inline ? null : <View style={{ gap: 2, marginTop: tall ? 0 : name ? 14 : 26 }}>
         {name ? <T style={{ fontSize: 15, lineHeight: 24, color: ink, opacity: 0.86 }}>{title}</T> : null}
         <T style={{ fontSize: tall ? 34 : 30, lineHeight: tall ? 48 : 44, fontWeight: '500', color: ink, letterSpacing: -0.3 }} numberOfLines={2}>{name ?? title}</T>
         {subtitle ? <T style={{ color: ink, opacity: 0.86, fontSize: 14.5, lineHeight: 23, maxWidth: 520 }}>{subtitle}</T> : null}
-      </View>
+      </View>}
     </View>
   );
 }
@@ -383,12 +386,13 @@ function PicHero({ look, title, name, subtitle, tall, lower = 0, back }: HeroPro
 
 // `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
 // page's chart ends just above the bar).
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, barGap }: { title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, barGap, heroInline, glowReach }: { title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+  /** rose: the title in the head's row (Hero `inline`) and how far down the glow runs (Backdrop `reach`). */ heroInline?: boolean; glowReach?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} inline={heroInline} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
@@ -400,7 +404,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
     </View>
   );
   return (
-    <Backdrop>
+    <Backdrop reach={glowReach}>
       <PageIn>
       <View style={{ flex: 1 }}>
       {fill
