@@ -255,9 +255,9 @@ export default function Drill() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: c.strong, borderRadius: 99, paddingVertical: 4, paddingHorizontal: 10 }}>
                     <Icon name="exam" size={14} color={c.strongFg} />
-                    <T style={{ fontSize: 12.5, fontWeight: '700', color: c.strongFg }}>سؤال {faNum(i + 1)} از {faNum(turns.length)}</T>
+                    <T style={{ fontSize: 12.5, lineHeight: 18, fontWeight: '700', textAlign: 'center', color: c.strongFg }}>سؤال {faNum(i + 1)} از {faNum(turns.length)}</T>
                   </View>
-                  {turn.again ? <View style={{ backgroundColor: c.warnSoft, borderRadius: 99, paddingVertical: 3, paddingHorizontal: 9 }}><T style={{ fontSize: 11.5, fontWeight: '700', color: c.warn }}>دوباره</T></View> : null}
+                  {turn.again ? <View style={{ backgroundColor: c.warnSoft, borderRadius: 99, paddingVertical: 3, paddingHorizontal: 9 }}><T style={{ fontSize: 11.5, lineHeight: 17, fontWeight: '700', textAlign: 'center', color: c.warn }}>دوباره</T></View> : null}
                   <T style={{ flex: 1, color: c.faint, fontSize: 12, textAlign: 'left' }} numberOfLines={1}>{turn.item.lesson.title}</T>
                 </View>
                 <View style={{ flexDirection: 'row', gap: 3 }}>
