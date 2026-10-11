@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Pressable, View, useWindowDimensions } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_PICS } from '@/lib/config';
@@ -12,15 +11,13 @@ import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, r
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, Button, Card, L, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
-import { RoseChart } from '@/ui/rose-chart';
-import { Glass } from '@/ui/glass';
+import { ArcButton, Button, Card, Ring, Screen, T, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
-import { ARC, ROSE, useColors } from '@/ui/theme';
+import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
@@ -54,90 +51,6 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress }
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
     </Card>
-  );
-}
-
-// Rose: the chance of passing as the reference's health score, on the glow itself: a broad white arc from the screen's
-// left edge over the top to its right edge (its ends running out of the screen at a slant), filled from the left with
-// the chance up to a coral knob in a soft halo, the rest of its way a faint track. Inside it the percent in large light
-// numerals, a glass pill with the change of the last five exams' average, and the word for where the user stands under
-// them. `ry`: the arc's height (lower on shorter screens; its width is always the screen's).
-function Gauge({ value, label, word, trend, ry: ryWant }: { value: number | null; label: string; word: string; trend: number | null; ry: number }) {
-  const c = useColors(), { width } = useWindowDimensions();
-  const shown = useCountUp(value ?? 0, 1600);
-  const W = Math.min(width, 520), SW = 28, ry = Math.min(W / 2, ryWant), cx = W / 2, cy = ry + SW / 2 + 2;
-  // As the reference: the ellipse is a little wider than the screen, so the arc comes in through the left edge and leaves
-  // through the right at a slant, both ends out of view (no cut end shows). `tOf(x)`: the angle where the arc is at `x`.
-  const rx = W * 0.55, P = (t: number) => ({ x: cx + rx * Math.cos(t), y: cy - ry * Math.sin(t) });
-  const tOf = (x: number) => Math.acos(Math.max(-1, Math.min(1, (x - cx) / rx)));
-  const tOff = Math.PI, tA = tOf(18), tFull = tOf(W - 42);
-  // The fill starts off screen; 0 puts its knob just in from the left edge, a full chance just in from the right.
-  const at = (f: number) => P(tA - Math.max(0, Math.min(1, f)) * (tA - tFull));
-  const seg = (t0: number, t1: number) => { const p0 = P(t0), p1 = P(t1); return `M${p0.x} ${p0.y} A${rx} ${ry} 0 0 1 ${p1.x} ${p1.y}`; };
-  const end = at(shown), svgH = cy + SW / 2;
-  const fillD = seg(tOff, tA - Math.max(0, Math.min(1, shown)) * (tA - tFull) - 0.001);
-  const ink = c.topInk, big = Math.round(Math.min(76, Math.max(46, ry * 0.42)));
-  const colH = Math.round(big * 1.2) + 6 + 26 + 4 + 26, H = cy + 30, colTop = H - colH;
-  const pct = Math.round(shown * 100);
-  return (
-    // Out to the screen's edges, past the page's side padding.
-    <View style={{ marginHorizontal: -16, alignItems: 'center', height: H }} accessible accessibilityLabel={`${label}: ${value != null ? pctText(value) : word}`}>
-      <View style={{ width: W, height: H }}>
-        <Svg width={W} height={svgH} style={{ position: 'absolute', top: 0, left: 0 }}>
-          <Defs>
-            <LinearGradient id="gTrack" x1="0" y1="0" x2={String(W)} y2="0" gradientUnits="userSpaceOnUse">
-              <Stop offset="0" stopColor="#ffffff" stopOpacity={0.04} />
-              <Stop offset="0.3" stopColor="#ffffff" stopOpacity={0.3} />
-              <Stop offset="0.7" stopColor="#ffffff" stopOpacity={0.3} />
-              <Stop offset="1" stopColor="#ffffff" stopOpacity={0.04} />
-            </LinearGradient>
-            <LinearGradient id="gFill" x1="0" y1="0" x2={String(W)} y2="0" gradientUnits="userSpaceOnUse">
-              <Stop offset="0" stopColor="#ffffff" stopOpacity={0.12} />
-              <Stop offset="0.24" stopColor="#ffffff" stopOpacity={0.96} />
-              <Stop offset="1" stopColor="#ffffff" stopOpacity={1} />
-            </LinearGradient>
-          </Defs>
-          <Path d={seg(tOff, Math.PI - tOff)} stroke="url(#gTrack)" strokeWidth={SW} fill="none" />
-          {value != null ? <Path d={fillD} stroke="url(#gFill)" strokeWidth={SW} fill="none" /> : null}
-          {value != null ? <Circle cx={end.x} cy={end.y} r={SW * 0.95} fill="#ffffff" fillOpacity={0.22} /> : null}
-          {value != null ? <Circle cx={end.x} cy={end.y} r={SW / 2 + 2} fill={c.accent} stroke="#ffffff" strokeOpacity={0.9} strokeWidth={3} /> : null}
-        </Svg>
-        <View style={{ position: 'absolute', top: colTop, left: 0, right: 0, alignItems: 'center', gap: 4 }}>
-          {/* The arc's and the chart's numbers in Latin digits (Inter, light), as the reference. */}
-          <L style={{ fontSize: big, lineHeight: Math.round(big * 1.2), fontWeight: '300', color: ink, textAlign: 'center', letterSpacing: -1.5 }}>
-            {value != null ? String(pct) : '–'}{value != null ? <L style={{ fontSize: Math.round(big * 0.42), fontWeight: '300', color: ink }}>%</L> : null}
-          </L>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, height: 26, paddingHorizontal: 12, borderRadius: 13, borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.45)', backgroundColor: 'rgba(255,255,255,0.18)' }}>
-            {trend != null ? <Icon name={trend >= 0 ? 'trendUp' : 'trendDown'} size={14} color={ink} /> : null}
-            <T style={{ color: ink, fontSize: 12.5, lineHeight: 20 }}>{trend != null ? `\u200e${Math.round(Math.abs(trend) * 100)}%\u200e ${trend >= 0 ? 'بهتر' : 'کمتر'} از 5 آزمون قبل` : word}</T>
-          </View>
-          <T style={{ color: ink, fontSize: 17, lineHeight: 26, fontWeight: '500', textAlign: 'center' }}>{label}{value != null ? `: ${word}` : ''}</T>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-// Rose: the three counts as the reference's figures card at the page's foot, above the menu: each a small label over a
-// large light number (and its unit), a hairline between them; each opens its own page.
-function Figures({ items, compact }: { items: { label: string; value: string; unit?: string; tone?: string; onPress: () => void }[]; compact: boolean }) {
-  const c = useColors();
-  return (
-    <Glass style={{ flexDirection: 'row', paddingVertical: compact ? 8 : 12, paddingHorizontal: 6 }}>
-      {items.map((it, k) => (
-        <View key={it.label} style={{ flex: 1, flexDirection: 'row' }}>
-          {k ? <View style={{ width: 1, backgroundColor: c.line, marginVertical: 6 }} /> : null}
-          <Pressable onPress={() => { tap(); it.onPress(); }} accessibilityRole="button" accessibilityLabel={`${it.label}: ${it.value}${it.unit ?? ''}`}
-            style={({ pressed }) => ({ flex: 1, paddingHorizontal: 12, gap: 0, opacity: pressed ? 0.7 : 1 })}>
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{it.label}</T>
-            <T style={{ fontSize: compact ? 24 : 28, lineHeight: compact ? 34 : 40, fontWeight: '300', color: it.tone ?? c.text }} numberOfLines={1}>
-              {it.value}{it.unit ? <T style={{ fontSize: 13, fontWeight: '400', color: c.muted }}>{` ${it.unit}`}</T> : null}
-            </T>
-          </Pressable>
-        </View>
-      ))}
-    </Glass>
   );
 }
 
@@ -198,7 +111,7 @@ function StartCard({ compact }: { compact: boolean }) {
   );
 }
 
-function PlainHome() {
+export default function Home() {
   const c = useColors();
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
@@ -223,14 +136,6 @@ function PlainHome() {
       if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
     });
   };
-  // A denser level moves the chart's card up without changing its size, and the web reports a layout only when a size
-  // changes: so each new level measures again itself.
-  useEffect(() => {
-    if (!more) return;
-    const t = setTimeout(fit, 60);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [more]);
   const { user, attempts, bank } = useApp();
   const hello = useGreeting();
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
@@ -301,82 +206,4 @@ function PlainHome() {
       ) : <StartCard compact={compact} />}
     </Screen>
   );
-}
-
-// Home in the rose look (theme.ts), after the reference: the greeting and the user's name in the head's row, the chance
-// of passing as the broad arc on the glow, the progress chart on the glow under it (ui/rose-chart.tsx), and the three
-// counts in one figures card at the foot above the menu. Fitted to the screen like the other look: while the figures
-// card would end under the menu, the page steps to a denser level (a lower arc, a shorter chart, the chart's averages
-// hidden), so nothing scrolls on an ordinary phone.
-function RoseHome() {
-  const c = useColors(), ins = useSafeAreaInsets(), { height } = useWindowDimensions();
-  // The steps taken for this screen height (a new height starts over).
-  const [fitted, setFitted] = useState({ h: height, more: 0 });
-  const more = fitted.h === height ? fitted.more : 0;
-  const level = Math.min(3, (height < 700 ? 2 : height < 800 ? 1 : 0) + more);
-  const compact = level >= 1, tight = level >= 2, tighter = level >= 3;
-  const foot = useRef<View>(null);
-  const fit = () => {
-    if (level >= 3) return;
-    foot.current?.measureInWindow((_x, top, _w, h) => {
-      const barTop = height - TAB_BAR_H - Math.max(16, ins.bottom);
-      if (h > 0 && top + h > barTop - 4) setFitted(f => ({ h: height, more: (f.h === height ? f.more : 0) + 1 }));
-    });
-  };
-  // Measured again at each level: a denser level moves the card without changing its size, and the web reports a
-  // layout only when a size changes. Measured once the page has come in (its rise of 10px would read as too low).
-  useEffect(() => {
-    const t = setTimeout(fit, 400);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [more, height]);
-  const { user, attempts, bank } = useApp();
-  const hello = useGreeting();
-  const [picked, setPicked] = useState<number | null>(null);
-  const est = passEstimate(attempts);
-  const exams = attempts.filter(a => a.mode !== 'lesson');
-  const fullN = attempts.filter(isFull).length, passN = attempts.filter(isPass).length;
-  const lessonsDone = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, lessonsAll = bank?.tests.length ?? 44;
-  const mistakes = mistakeIds(attempts).length;
-  const avg = (xs: Attempt[]) => (xs.length ? xs.reduce((s, a) => s + pctOf(a), 0) / xs.length : null);
-  const avg5 = avg(attempts.slice(-5)), prev5 = avg(attempts.slice(-10, -5));
-  const trend = avg5 != null && prev5 != null ? avg5 - prev5 : null;
-  const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
-  const ink = c.topInk;
-  // The chart's averages, as the reference's «Sleep quality High»: a soft label and its value in white. (A Latin
-  // percent is held left to right by marks around it, or the right-to-left line moves its % to the other side.)
-  const fact = (k: string, v: string) => (
-    <T style={{ color: ink, opacity: 0.78, fontSize: 12, lineHeight: 19, textAlign: 'left' }}>{k} <T style={{ color: ink, fontSize: 12.5, fontWeight: '500' }}>{v}</T></T>
-  );
-  return (
-    <Screen fill gap={tighter ? 6 : compact ? 8 : 12} title={user?.name ? `${hello}،` : hello} name={user?.name || undefined} hero={{ pic: 3, icon: 'house' }} heroInline
-      glowReach={0.9} barGap={10}>
-      <Gauge value={est ? est.prob : null} label="احتمال قبولی" word={probWord} trend={trend} ry={tighter ? 104 : tight ? 128 : compact ? 156 : 190} />
-      {attempts.length >= 2 && exams.length ? (
-        <View style={{ flex: 1, gap: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-            <T style={{ color: ink, fontSize: 16, lineHeight: 26, fontWeight: '500' }}>نمودار پیشرفت</T>
-            {tight ? null : (
-              <View style={{ alignItems: 'flex-end' }}>
-                {fact('میانگین 5 آزمون اخیر', avg5 != null ? `\u200e${Math.round(avg5 * 100)}%\u200e` : '–')}
-                {fact('قبولی در آزمون کامل', fullN ? `${passN} از ${fullN}` : '–')}
-              </View>
-            )}
-          </View>
-          <RoseChart attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} minH={tighter ? 90 : tight ? 110 : 130} />
-        </View>
-      ) : <StartCard compact={compact} />}
-      <View ref={foot} onLayout={() => setTimeout(fit, 400)}>
-        <Figures compact={compact} items={[
-          { label: 'آزمون‌ها', value: faNum(exams.length), unit: fullN ? `| ${faNum(passN)} قبولی` : undefined, onPress: () => router.navigate('/exam') },
-          { label: 'درس‌ها', value: faNum(lessonsDone), unit: `/ ${faNum(lessonsAll)}`, onPress: () => router.navigate('/learn') },
-          { label: 'اشتباهات', value: faNum(mistakes), unit: 'سؤال', tone: mistakes ? c.bad : undefined, onPress: () => router.push('/mistakes') },
-        ]} />
-      </View>
-    </Screen>
-  );
-}
-
-export default function Home() {
-  return ROSE ? <RoseHome /> : <PlainHome />;
 }

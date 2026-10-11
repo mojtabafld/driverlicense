@@ -10,7 +10,7 @@ import { faNum } from '@/lib/logic';
 import { L, T, tap } from './kit';
 import { LiquidGlass } from './liquid';
 import { BarLight, useBarLight, useDarkUnder } from './bar-shade';
-import { ARC, ROSE, useIsDark } from './theme';
+import { ARC, useIsDark } from './theme';
 
 // The bar's height, and the room the pages keep for it.
 export const BAR_H = 64;
@@ -24,17 +24,6 @@ const ITEM_H = BAR_H - 8;
 // Glass does.
 export function useBarLook() {
   const dark = useIsDark(), light = useBarLight();
-  // Rose: the tab bar's frosted pill (ui/tabs/app-tabs.tsx); the main item filled near-black with white (dark: light
-  // with near-black), as the chosen tab.
-  if (ROSE) {
-    return dark ? {
-      dark, light, grey: 'rgba(40,32,35,0.62)', solid: 'rgba(40,32,35,0.96)', capsule: '#f6eef0', green: '#1a1416', fg: '#f6eef0',
-      edge: 'rgba(255,255,255,0.09)', contrast: '#f6eef0',
-    } : {
-      dark, light, grey: 'rgba(255,255,255,0.55)', solid: 'rgba(242,238,239,0.97)', capsule: '#1f1719', green: '#ffffff', fg: '#1f1719',
-      edge: 'rgba(255,255,255,0.9)', contrast: '#1f1719',
-    };
-  }
   if (light) {
     return {
       dark, light,
@@ -61,16 +50,15 @@ export function useBarLook() {
 
 // The shade both bars take: light on the main site's light theme unless something dark lies under the bar.
 export function useBarShade() {
-  const dark = useIsDark(), under = useDarkUnder(ARC && !ROSE && !dark, BAR_H);
+  const dark = useIsDark(), under = useDarkUnder(ARC && !dark, BAR_H);
   return ARC && !dark && !under;
 }
 
 // The bar's surface, with a short fade between its two shades on the web.
 export function barSurface(look: ReturnType<typeof useBarLook>) {
   return [{ borderRadius: BAR_H / 2, backgroundColor: Platform.OS === 'android' ? look.solid : look.grey, borderWidth: 0.5, borderColor: look.edge },
-    look.light ? { shadowColor: ROSE ? '#6e2830' : '#000', shadowOpacity: ROSE ? 0.2 : 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 6 }, elevation: 6 } : null,
+    look.light ? { shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 6 } : null,
     Platform.OS === 'web' ? ({ backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-      ...(ROSE ? { boxShadow: look.dark ? '0 14px 34px -12px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06)' : '0 16px 36px -14px rgba(110,40,48,0.4), inset 0 1px 0 rgba(255,255,255,0.9)' } : {}),
       transitionProperty: 'background-color, border-color, box-shadow', transitionDuration: '220ms' } as any) : null];
 }
 

@@ -2,7 +2,7 @@
 import type { SymbolWeight } from 'expo-symbols';
 
 export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles' | 'clipboard' | 'warning'
-  | 'arrowRight' | 'arrowLeft' | 'bookmark' | 'chevronDown' | 'chart' | 'translate' | 'trendUp' | 'trendDown'
+  | 'arrowRight' | 'arrowLeft' | 'bookmark' | 'chevronDown' | 'chart' | 'translate'
   | 'person' | 'lock' | 'eye' | 'eyeSlash' | 'clock' | 'exit' | 'trash' | 'refresh' | 'filter'
   | 'play' | 'personAdd' | 'chevronUp' | 'xmark' | 'edit' | 'shuffle' | 'list' | 'zoom' | 'speaker' | 'stop'
   | 'rules' | 'sign' | 'priority' | 'help' | 'bug' | 'info' | 'send' | 'bulbCircle'

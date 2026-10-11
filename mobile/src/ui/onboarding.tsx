@@ -11,7 +11,6 @@ import { API_URL } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { T, tap } from './kit';
-import { ROSE } from './theme';
 import { TallPicture } from './tall-picture';
 import { ArtAi, ArtBank, ArtExam, ArtProgress } from './onboarding-art';
 
@@ -23,11 +22,9 @@ const SLIDES = [
 ];
 // Flat dark forest green, the colour the server's intro pictures are made on (so they sit in the page seamlessly),
 // going only a shade darker at the very bottom.
-// Rose: the coral glow of the reference's first screen, a little deeper at the foot, and the app's drawings on it (the
-// server's pictures are made on the green).
-export const INTRO_BG = (ROSE ? ['#c4545a', '#cd6966', '#b5454f'] : ['#14421c', '#14421c', '#0d3014']) as readonly [string, string, string];
+export const INTRO_BG = ['#14421c', '#14421c', '#0d3014'] as const;
 const BG = INTRO_BG;
-const BUTTON = '#ffffff', BUTTON_TEXT = ROSE ? '#1f1719' : '#14421c';
+const BUTTON = '#ffffff', BUTTON_TEXT = '#14421c';
 
 // The slide's title on one line: measured once at full size in an invisible, very wide box, then set just small
 // enough to fit the width it has (never larger than `size`).
@@ -75,7 +72,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
   };
   const { Art, title, text } = SLIDES[i];
   // The server's picture for this slide: a full scene on the page's dark green, its bottom plain so it melts into it.
-  const pic = ROSE ? null : intro[i + 1], top = BG[0];
+  const pic = intro[i + 1], top = BG[0];
   useEffect(() => { onTop?.(top); }, [top, onTop]);
   // Every slide's picture is fetched up front, so a new slide never shows the previous picture on its own colour while
   // the next one loads (that was a brief mismatch of the picture's background).
@@ -106,8 +103,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 54 }}>
           <View style={{ flex: 1, alignItems: 'flex-start' }}>
             {last ? null : (
-              <Pressable onPress={() => { tap(); onDone(); }} hitSlop={10} accessibilityRole="button"
-                style={ROSE ? { height: 50, paddingHorizontal: 20, borderRadius: 25, borderWidth: 1, borderColor: 'rgba(255,255,255,0.55)', justifyContent: 'center' } : undefined}>
+              <Pressable onPress={() => { tap(); onDone(); }} hitSlop={10} accessibilityRole="button">
                 <T style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16 }}>رد شدن</T>
               </Pressable>
             )}
@@ -115,15 +111,13 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
           <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: last ? 'flex-start' : 'center', gap: 8 }}>
             {SLIDES.map((_, k) => (
               <Pressable key={k} onPress={() => go(k)} hitSlop={6} accessibilityLabel={`اسلاید ${k + 1}`}>
-                {/* Rose: short dashes, the current one bright, as the reference. */}
-                <View style={ROSE ? { width: 22, height: 3, borderRadius: 2, backgroundColor: k === i ? '#fff' : 'rgba(255,255,255,0.4)' }
-                  : { width: k === i ? 12 : 7, height: k === i ? 12 : 7, borderRadius: 6, backgroundColor: k === i ? '#fff' : 'rgba(255,255,255,0.55)' }} />
+                <View style={{ width: k === i ? 12 : 7, height: k === i ? 12 : 7, borderRadius: 6, backgroundColor: k === i ? '#fff' : 'rgba(255,255,255,0.55)' }} />
               </Pressable>
             ))}
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
             <Pressable onPress={() => (last ? (tap(), onDone()) : go(i + 1))} accessibilityRole="button"
-              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, height: 50, paddingHorizontal: 22, borderRadius: ROSE ? 25 : 12, backgroundColor: BUTTON })}>
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, height: 50, paddingHorizontal: 22, borderRadius: 12, backgroundColor: BUTTON })}>
               <T style={{ color: BUTTON_TEXT, fontSize: 16, fontWeight: '600' }}>{last ? 'شروع کنید' : 'بعدی'}</T>
               <Icon name="chevronLeft" size={16} color={BUTTON_TEXT} weight="semibold" />
             </Pressable>

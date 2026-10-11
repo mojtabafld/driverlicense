@@ -23,9 +23,9 @@ import { OptionBox } from '@/ui/option-box';
 import { learnRtl, Pager } from '@/ui/swipe';
 import { useWebBackGuard } from '@/ui/web-back';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion, headBtn } from '@/ui/kit';
+import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
-import { radius, useColors, useIsDark, ROSE } from '@/ui/theme';
+import { radius, useColors, useIsDark } from '@/ui/theme';
 
 // The summary's numbers: in the Latin font and digits on the main site (as the bar's count and the clock), in Persian
 // digits in the /app copy.
@@ -137,13 +137,13 @@ export default function Run() {
             ) : null}
           </View>
           <Pressable onPress={quit} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از آزمون"
-            style={({ pressed }) => (ROSE ? headBtn(pressed) : { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
+            style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1, borderColor: c.line })}>
             {/* ✕, as on every page with a bar of previous / next (the lessons, the practice, the review). */}
-            <Icon name="xmark" size={20} color={ROSE ? c.topInk : c.text} />
+            <Icon name="xmark" size={20} color={c.text} />
           </Pressable>
           {/* Kept clear of the counter in the middle; a long name (e.g. a topic's) glides to show all of it. */}
           <View style={{ width: settings.timer ? '24%' : '62%', height: 24 }}>
-            <Marquee text={plan.title} height={24} style={{ fontWeight: '700', fontSize: 15, lineHeight: 24, color: ROSE ? c.topInk : undefined }} />
+            <Marquee text={plan.title} height={24} style={{ fontWeight: '700', fontSize: 15, lineHeight: 24 }} />
           </View>
           <View style={{ flex: 1 }} />
           <ThemeButton />

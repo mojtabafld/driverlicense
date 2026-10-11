@@ -11,11 +11,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Confirm } from './confirm';
 import { Icon } from './icon';
-import { Backdrop, Hero, T, ThemeButton, tap, useHeadBtn, usePageMotion, useTopOnFocus, type HeroLook } from './kit';
+import { Backdrop, Hero, T, ThemeButton, tap, usePageMotion, useTopOnFocus, type HeroLook } from './kit';
 import { GlassTop } from './liquid';
 import { Marquee } from './marquee';
 import { backLean, swipeWebStyle, usePager, useSwipeBack } from './swipe';
-import { ROSE, useColors } from './theme';
+import { useColors } from './theme';
 
 // `guard`: while set (e.g. unsaved changes), leaving — the back button, the drag back or the phone's back button — asks
 // first with this title and text.
@@ -30,7 +30,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
   maxWidth?: number; guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook; scrollRef?: React.RefObject<ScrollView | null>;
   onBodyY?: (y: number) => void; close?: boolean; pager?: { i: number; n: number; go: (k: number) => void; rtl?: boolean };
   /** The light / dark switch in the head, as on the signs' and right of way's pages (the course's lessons). */ theme?: boolean }) {
-  const c = useColors(), ins = useSafeAreaInsets(), head = useHeadBtn();
+  const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const ref = useTopOnFocus(scrollRef);
   useEffect(() => { if (scrollKey !== undefined) ref.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey, ref]);
@@ -57,7 +57,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           ) : (
           <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap, maxWidth, width: '100%', alignSelf: 'center' }}>
-            {subtitle ? <T style={{ color: ROSE ? c.topInk : c.muted, opacity: ROSE ? 0.88 : 1, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
+            {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
             {children}
           </ScrollView>
           )}
@@ -67,9 +67,9 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           <View pointerEvents="box-none" style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 0, right: 0, paddingHorizontal: 16 }}>
             <View pointerEvents="box-none" style={{ flexDirection: 'row', width: '100%', maxWidth, alignSelf: 'center' }}>
               <Pressable onPress={() => { tap(); back(); }} accessibilityLabel={close ? 'بستن' : 'بازگشت'} hitSlop={6}
-                style={({ pressed }) => (ROSE ? head(pressed) : { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, opacity: 0.94,
+                style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, opacity: 0.94,
                   shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 })}>
-                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={ROSE ? c.topInk : c.text} />
+                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
               </Pressable>
             </View>
           </View>
@@ -79,11 +79,11 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', maxWidth, alignSelf: 'center' }}>
               <Pressable onPress={() => { tap(); back(); }} accessibilityLabel={close ? 'بستن' : 'بازگشت'} hitSlop={6}
-                style={({ pressed }) => (ROSE ? head(pressed) : { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
-                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={ROSE ? c.topInk : c.text} />
+                style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
+                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
               </Pressable>
               <View style={{ flex: 1, height: 32 }}>
-                <Marquee text={title} height={32} style={{ fontSize: 22, lineHeight: 32, fontWeight: ROSE ? '500' : '700', color: ROSE ? c.topInk : undefined }} />
+                <Marquee text={title} height={32} style={{ fontSize: 22, lineHeight: 32, fontWeight: '700' }} />
               </View>
               {theme ? <ThemeButton /> : null}
             </View>

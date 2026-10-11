@@ -6,13 +6,13 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, View, type StyleProp, type TextStyle } from 'react-native';
 
 import { T } from './kit';
-import { ROSE, useColors } from './theme';
+import { useColors } from './theme';
 
 const SPEED = 32, PAUSE = 1600, FADE = 18; // px per second, ms at each end, width of the faded edges
 
 // `bg`: the colour behind it, for the faded edges (the page colour by default; a card's inside a card).
 export function Marquee({ text, style, height, bg }: { text: string; style?: StyleProp<TextStyle>; height: number; bg?: string }) {
-  const c = useColors(), edge = bg ?? (ROSE ? c.top : c.bg);
+  const c = useColors(), edge = bg ?? c.bg;
   const [room, setRoom] = useState(0), [full, setFull] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
   // Too long: it travels so that both its ends come out from under the faded edges.
