@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { UI_LANG, setUiLang, type UiLang } from '@/lib/i18n';
+import { UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
@@ -122,7 +122,7 @@ export default function Settings() {
       {/* «نسخه‌ی ویژه»: when it can be bought (a Stripe key on the server), or the account has it. */}
       {pay || user?.premium ? (
         <Card style={{ gap: 4 }}>
-          <LinkRow icon="sparkles" title="نسخه‌ی ویژه" sub={premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />
+          <LinkRow icon="sparkles" title="نسخه‌ی ویژه" sub={premium && user?.premium ? fmt('فعال تا {0}', fmtDay(user.premium.until)) : premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />
         </Card>
       ) : null}
       {/* The app's language (main site): Persian, English or Danish, each named in its own language; a change reloads

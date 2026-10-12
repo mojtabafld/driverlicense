@@ -14,8 +14,8 @@ type Ctx = {
   imgv: Record<string, string>; token: string | null;
   // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
   saved: Saved[]; aiLessons: boolean; tts: boolean;
-  // Premium (bought with Stripe, app/premium.tsx): what it costs when it can be bought, whether this account has it
-  // (bought, or an admin), and `locked`: the AI analysis and the read-aloud need it here and this account has not got it
+  // Premium (a pass bought with Stripe, app/premium.tsx): its plans when it can be bought, whether this account has it
+  // now (a pass that has not run out, or an admin), and `locked`: the AI analysis and the read-aloud need it here and this account has not got it
   // (then `tts` is off and the AI button leads to the premium page).
   pay: Pay | null; premium: boolean; locked: boolean;
   // After coming back from Stripe: the server checks the Checkout session; true once premium is on the account.
@@ -45,7 +45,8 @@ type Ctx = {
   saveAttempt: (a: Omit<Attempt, 'at'>) => Promise<void>;
   setSettings: (s: Partial<Settings>) => Promise<void>;
 };
-export type Pay = { price: number; gate?: boolean; test?: boolean };
+export type Plan = { id: 'week' | 'month' | 'quarter'; days: number; price: number };
+export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean };
 const AppCtx = createContext<Ctx | null>(null);
 const DEFAULTS: Settings = { showFa: true, timer: true, lang: 'da' };
 
@@ -101,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signedIn = async (t: string) => { setApiToken(t); setToken(t); await saveToken(t); await load(); };
-  const premium = !!(me?.user.premium || me?.user.admin), locked = !!pay?.gate && !premium;
+  const premium = (me?.user.premium?.until ?? 0) > Date.now() || !!me?.user.admin, locked = !!pay?.gate && !premium;
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
@@ -109,7 +110,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     confirmPremium: async id => {
       const d = await api<{ user: User; pending?: boolean }>('POST', 'checkoutdone', { id });
       setMe(m => (m ? { ...m, user: d.user } : m));
-      return !!d.user.premium;
+      return (d.user.premium?.until ?? 0) > Date.now();
     },
     saved: me?.saved ?? [], aiLessons, tts: tts && !locked, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, guideArt,
     toggleSaved: async (id, a) => {
