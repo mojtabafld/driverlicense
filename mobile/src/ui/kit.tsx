@@ -252,6 +252,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
   const side = Math.max(width, H), objEnd = Math.round(side * 0.68 - (side - H) / 2), room = H - objEnd - 10;
   const below = !!tall && room >= 70 && width < H * 1.3;
   const titleSize = Math.max(20, Math.min(30, Math.round(width * 0.075), Math.floor((room - 46) / 1.35)));
+  // The title (and name) in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts).
+  const bold = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
   const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   return (
     <View style={{ height: H, backgroundColor: bg, overflow: 'hidden' }}>
@@ -277,14 +279,14 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
           </>
         ) : null}
         {below ? null : <View style={{ gap: 2, maxWidth: '58%', ...(back && !RTL ? { minWidth: '58%', paddingLeft: 52 } : null) }}>
-          <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
-          {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, shade]} numberOfLines={1}>{name}</T> : null}
+          <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</T>
+          {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
         </View>}
       </View>
       {below ? (
         <View style={{ position: 'absolute', top: objEnd, left: 0, right: 0, paddingHorizontal: 16, gap: 2, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
-          <T style={[{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.35), fontWeight: '700', color: ink }, shade]} numberOfLines={1}>{title}</T>
+          <T style={[{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.35), fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{title}</T>
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: width < 360 ? 13 : 14, lineHeight: width < 360 ? 20 : 22 }, shade]}>{subtitle}</T> : null}
         </View>
       ) : null}
