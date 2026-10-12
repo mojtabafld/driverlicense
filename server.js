@@ -5,7 +5,8 @@
 // ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review),
 // LESSON_AI_MODEL (Claude model for those lessons, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
-// ELEVENLABS_API_KEY (questions read aloud).
+// ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_DKK and PREMIUM_GATE
+// (premium bought with Stripe Checkout, payments.js).
 // See README.md for all variables.
 'use strict';
 process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
@@ -21,6 +22,7 @@ const consolepics = require('./consolepics');
 const consoleprompts = require('./consoleprompts');
 const tts = require('./tts');
 const webpic = require('./webpic');
+const payments = require('./payments');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
@@ -99,7 +101,13 @@ function sessionUser(req) {
   return null;
 }
 // avatar: { preset: n } (one of the made pictures) or { photo: version } (their own, at GET /api/avatar), or none.
-const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined });
+// premium: bought with Stripe (payments.js); admins have its features too (hasPremium).
+const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined,
+  premium: u.premium ? { at: u.premium.at } : undefined });
+const hasPremium = u => !!u.premium || isAdmin(u);
+// With PREMIUM_GATE on, the AI analysis and the read-aloud answer 402 to accounts without premium.
+const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه است.';
+const needsPremium = u => payments.gated() && !hasPremium(u);
 
 // ---------- usage tracking & admin stats ----------
 // Days are counted in Danish time.
@@ -252,6 +260,15 @@ function safeEqual(a, b) {
 function send(res, code, obj) {
   res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(JSON.stringify(obj));
+}
+// The body as it came (the Stripe webhook's signature is over the exact bytes).
+function readRaw(req, limit = 512e3) {
+  return new Promise((resolve, reject) => {
+    let size = 0; const chunks = [];
+    req.on('data', c => { size += c.length; if (size > limit) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
 }
 function readBody(req, limit = 256e3) {
   return new Promise((resolve, reject) => {
@@ -406,6 +423,8 @@ async function api(req, res, route) {
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
     return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), heroDiag: imagegen.heroDiag(),
+      // Premium can be bought (a Stripe key is set): its price in kroner, whether the AI and read-aloud need it, test mode.
+      pay: payments.available() ? { price: payments.priceDkk(), gate: payments.gated() || undefined, test: payments.testMode() || undefined } : undefined,
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
       guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions() });
   }
@@ -450,6 +469,32 @@ async function api(req, res, route) {
     return send(res, 200, { ok: true });
   }
 
+  // Stripe's webhook (Developers → Webhooks, events checkout.session.completed, checkout.session.async_payment_succeeded
+  // and charge.refunded): only a correctly signed event counts. A paid session gives its account premium; a fully
+  // refunded payment takes it back.
+  if (req.method === 'POST' && route === 'stripehook') {
+    const ev = payments.verifyEvent(await readRaw(req), req.headers['stripe-signature']);
+    if (!ev) return send(res, 400, { error: 'bad signature' });
+    const o = (ev.data && ev.data.object) || {};
+    if ((ev.type === 'checkout.session.completed' || ev.type === 'checkout.session.async_payment_succeeded') && o.payment_status === 'paid') {
+      const u = store.users[String(o.client_reference_id || '')];
+      if (u && !(u.premium && u.premium.session === o.id)) {
+        u.premium = payments.grantOf(o);
+        await store.saveUser(u);
+        console.log('premium bought', u.username, o.amount_total, o.currency, o.livemode ? 'live' : 'test');
+      }
+    } else if (ev.type === 'charge.refunded' && o.refunded && o.payment_intent) {
+      const u = Object.values(store.users).find(x => x.premium && x.premium.pi === o.payment_intent);
+      if (u) {
+        await store.saveMeta(`refunded:premium:${u.username}:${Date.now()}`, { premium: u.premium });
+        delete u.premium;
+        await store.saveUser(u);
+        console.log('premium refunded', u.username);
+      }
+    }
+    return send(res, 200, { received: true });
+  }
+
   // Claude Code reads and edits a console item's saved prompt for the admin (consoleprompts.js), with the
   // X-Claude-Code-Key header matching the CLAUDE_CODE_KEY secret (nothing here without it):
   // GET ?id=q:<qid>|g:<key> → the prompt and what the item is about; POST { id, prompt, note } saves the new prompt,
@@ -478,6 +523,31 @@ async function api(req, res, route) {
     for (const t of new Set([s.token, ck && ck[1]].filter(Boolean))) { delete store.sessions[t]; await store.deleteSession(t); }
     res.setHeader('Set-Cookie', cookie(req, '', 0));
     return send(res, 200, { ok: true });
+  }
+  // Premium: POST checkout { lang } → { url } of a Stripe Checkout page for this account; POST checkoutdone { id } (the
+  // session Stripe sent the user back with) checks it with Stripe at once, so premium is there even before the webhook.
+  if (req.method === 'POST' && route === 'checkout') {
+    if (!payments.available()) return send(res, 404, { error: 'پرداخت فعال نیست.' });
+    if (user.premium) return send(res, 409, { error: 'نسخه‌ی ویژه برای این حساب فعال است.' });
+    const b = await readBody(req);
+    const origin = `${isHttps(req) ? 'https' : 'http'}://${String(req.headers.host || 'localhost').replace(/[^a-zA-Z0-9.:-]/g, '')}`;
+    try { return send(res, 200, { url: await payments.createCheckout(user.username, origin, b.lang) }); }
+    catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+  }
+  if (req.method === 'POST' && route === 'checkoutdone') {
+    if (!payments.available()) return send(res, 404, { error: 'پرداخت فعال نیست.' });
+    const id = String((await readBody(req)).id || '');
+    if (!/^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(id)) return send(res, 400, { error: 'bad session' });
+    if (!(user.premium && user.premium.session === id)) {
+      let s;
+      try { s = await payments.getSession(id); } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+      if (s.client_reference_id !== user.username) return send(res, 403, { error: 'forbidden' });
+      if (s.payment_status !== 'paid') return send(res, 200, { user: publicUser(user), pending: true });
+      user.premium = payments.grantOf(s);
+      await store.saveUser(user);
+      console.log('premium bought', user.username, s.amount_total, s.currency, s.livemode ? 'live' : 'test');
+    }
+    return send(res, 200, { user: publicUser(user) });
   }
   // The account: { name } changes the shown name; { current, password } the password, only with the current one
   // (failed tries count like failed sign-ins); the username never changes. A new password signs out the user's
@@ -559,6 +629,7 @@ async function api(req, res, route) {
     else { att.ai.q = att.ai.q || {}; if (att.ai.q[slot] === key) return; att.ai.q[slot] = key; }
     await store.saveUser(user);
   };
+  if (['lesson', 'summary', 'ttsai'].includes(route) && needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
   if (req.method === 'POST' && route === 'lesson') {
     const b = await readBody(req);
     const qid = +b.qid, att = attemptAt(b.at);
@@ -620,6 +691,7 @@ async function api(req, res, route) {
   // recording made by POST /api/ttsai.
   if (req.method === 'GET' && route === 'tts') {
     const u = new URL(req.url, 'http://x');
+    if (u.searchParams.get('sample') !== '1' && needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
     try {
       const b = u.searchParams.has('ai') ? await tts.getAi({ store, id: u.searchParams.get('ai') })
         : await tts.get({ store, siteDir: SITE, qid: u.searchParams.get('qid'), lang: u.searchParams.get('lang'), gender: u.searchParams.get('voice'),

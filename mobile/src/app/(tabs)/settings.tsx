@@ -32,11 +32,11 @@ function Row({ title, sub, right }: { title: string; sub?: string; right: React.
 }
 
 // A row that opens a page: its icon, title and a line under it, and an arrow.
-function LinkRow({ icon, title, sub, onPress }: { icon: IconName; title: string; sub: string; onPress: () => void }) {
+function LinkRow({ icon, title, sub, onPress, last }: { icon: IconName; title: string; sub: string; onPress: () => void; last?: boolean }) {
   const c = useColors();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={title}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: c.line, opacity: pressed ? 0.7 : 1 })}>
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: last ? 0 : 1, borderBottomColor: c.line, opacity: pressed ? 0.7 : 1 })}>
       <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
         <Icon name={icon} size={19} color={c.text} />
       </View>
@@ -51,7 +51,7 @@ function LinkRow({ icon, title, sub, onPress }: { icon: IconName; title: string;
 
 export default function Settings() {
   const c = useColors();
-  const { user, settings, setSettings, logout, deleteAccount, tts } = useApp();
+  const { user, settings, setSettings, logout, deleteAccount, tts, pay, premium } = useApp();
   const { mode, setMode } = useTheme();
   // Sign-out asks first, in the app's own dialog.
   const [askOut, setAskOut] = useState(false);
@@ -119,6 +119,12 @@ export default function Settings() {
           </Pressable>
         ) : null}
       </Card>
+      {/* «نسخه‌ی ویژه»: when it can be bought (a Stripe key on the server), or the account has it. */}
+      {pay || user?.premium ? (
+        <Card style={{ gap: 4 }}>
+          <LinkRow icon="sparkles" title="نسخه‌ی ویژه" sub={premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />
+        </Card>
+      ) : null}
       {/* The app's language (main site): Persian, English or Danish, each named in its own language; a change reloads
           the page in it and is kept in the account too. */}
       {!PROVE_PICS ? (
