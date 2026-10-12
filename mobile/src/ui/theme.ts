@@ -100,8 +100,9 @@ const arcLight: typeof tealLight = {
   cta: '#1f5a32', ctaFg: '#ffffff',
   bgGradient: ['#f3f3f3', '#f3f3f3', '#f3f3f3'] as readonly [string, string, string],
 };
+// (The page behind the cards pure black, Mojtaba asked; the cards keep their dark grey.)
 const arcDark: typeof tealLight = {
-  bg: '#141414', surface: '#191919', surface2: '#242424', line: '#2b2b2b',
+  bg: '#000000', surface: '#191919', surface2: '#242424', line: '#2b2b2b',
   text: '#f2f2f2', muted: '#b4b4b4', faint: '#8c8c8c',
   accent: '#53dca6', accentText: '#0b1a12', accentSoft: 'rgba(13,184,121,0.2)', link: '#53dca6',
   forest: '#53dca6', ok: '#4cd676', okSoft: '#14281b', bad: '#ff736d', badSoft: '#3a1816', warn: '#ffb90e', warnSoft: '#33270b', info: '#ffffff',
@@ -112,7 +113,7 @@ const arcDark: typeof tealLight = {
   strong: '#e8e8e8', strongFg: '#141414',
   btn: '#e8e8e8', btnFg: '#141414',
   cta: '#2f7d47', ctaFg: '#ffffff',
-  bgGradient: ['#141414', '#141414', '#141414'] as readonly [string, string, string],
+  bgGradient: ['#000000', '#000000', '#000000'] as readonly [string, string, string],
 };
 const light = STYLE === 'arc' ? arcLight : STYLE === 'uber' ? uberLight : tealLight;
 const dark = STYLE === 'arc' ? arcDark : STYLE === 'uber' ? uberDark : tealDark;
