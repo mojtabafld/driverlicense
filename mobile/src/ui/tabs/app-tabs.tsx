@@ -2,7 +2,6 @@
 // bottom edge, each tab an icon over its label in white; the chosen tab sits on a darker grey capsule, its icon (filled)
 // and label in the app's green. The glass blurs what lies under it where the platform can (iOS's own glass, the web's
 // backdrop blur); on Android it is a nearly solid grey. The pages keep room for it under their end (Screen).
-// The tabs keep their Persian order (home at the right) in every language of the app.
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { forwardRef } from 'react';
 import { Platform, Pressable, View } from 'react-native';
@@ -51,9 +50,9 @@ const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, .
   return (
     <View ref={ref} {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
       {Platform.OS === 'ios' ? (
-        <LiquidGlass r={TAB_BAR_H / 2} tint={grey} style={{ flexDirection: 'row', direction: 'rtl', width: '100%', maxWidth: 440, padding: 4 } as any}>{children}</LiquidGlass>
+        <LiquidGlass r={TAB_BAR_H / 2} tint={grey} style={{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4 }}>{children}</LiquidGlass>
       ) : (
-        <View style={[{ flexDirection: 'row', direction: 'rtl', width: '100%', maxWidth: 440, padding: 4 } as any, ...barSurface(look)]}>{children}</View>
+        <View style={[{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4 }, ...barSurface(look)]}>{children}</View>
       )}
     </View>
   );
