@@ -2,7 +2,7 @@
 // drawn in the theme's colours on two soft circles, no cars and no road signs. «آموزش گام‌به‌گام»: a road of steps to
 // the licence; «قوانین»: an open rule book; «حق تقدم»: two crossing ways and who goes first; «علائم رانندگی»: the
 // shapes signs are learnt by, on a card, with a magnifier.
-import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 type Art = { light: boolean; height: number };
 
@@ -108,3 +108,102 @@ export function SignsArt({ light, height }: Art) {
     </Frame>
   );
 }
+
+// Samples for the home page's header (Mojtaba asked for a modern, minimal picture there): one is picked, the others go.
+// Each keeps to the drawing box's left 60% (x ≤ 185), clear of the greeting on the right.
+const HomeBlobs = ({ t }: { t: Tone }) => <><Circle cx={140} cy={66} r={50} fill={t.blob} /><Circle cx={46} cy={148} r={38} fill={t.blob} /></>;
+
+// «گواهینامه»: the licence card the app leads to, with a Danish flag and a green seal.
+export function HomeLicenceArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  return (
+    <Frame height={height}>
+      <HomeBlobs t={t} />
+      <G transform="translate(22 66) rotate(-8) scale(0.84)">
+        <Rect x={6} y={10} width={150} height={96} rx={14} fill={light ? '#b9d7b3' : '#143a20'} />
+        <Rect width={150} height={96} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Rect x={14} y={14} width={26} height={18} rx={3} fill="#c8102e" />
+        <Rect x={22} y={14} width={4} height={18} fill="#fff" />
+        <Rect x={14} y={21} width={26} height={4} fill="#fff" />
+        <Rect x={48} y={18} width={40} height={4} rx={2} fill={t.line} />
+        <Rect x={48} y={26} width={26} height={4} rx={2} fill={t.line} />
+        <Rect x={14} y={42} width={40} height={42} rx={8} fill="#e3eef9" />
+        <Circle cx={34} cy={57} r={8} fill={t.avatar} />
+        <Path d="M20 80 q14 -18 28 0 z" fill={t.avatar} />
+        {[[50, 64], [62, 50], [74, 58]].map(([y, w]) => <Rect key={y} x={66} y={y} width={w} height={5} rx={2.5} fill={t.line} />)}
+        <SvgText x={128} y={30} fontSize={14} fontWeight="700" textAnchor="middle" fill={t.ok}>B</SvgText>
+      </G>
+      <Circle cx={150} cy={140} r={19} fill={t.ok} />
+      <Circle cx={150} cy={140} r={24} fill="none" stroke={t.ok} strokeOpacity={0.35} strokeWidth={2} />
+      <Path d="M141.5 140 l6 6 l11 -12" fill="none" stroke="#fff" strokeWidth={3.6} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={26} cy={48} r={3} fill={t.gold} />
+      <Circle cx={176} cy={30} r={4} fill={t.gold} />
+      <Circle cx={182} cy={168} r={2.5} fill={t.you} />
+    </Frame>
+  );
+}
+
+// «جاده تا افق»: in a round window, a road running to the horizon under a low sun, a finish flag where it ends.
+export function HomeRoadArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  const sky = light ? '#e9f4e6' : '#24603a', hill = light ? '#bfdcb8' : '#2c6f44', hill2 = light ? '#a9cfa1' : '#357c4d';
+  const dashes = [[166, 14, 5], [146, 10, 4], [132, 7, 3], [122, 5, 2.4], [115, 3, 1.8]];
+  return (
+    <Frame height={height}>
+      <Defs><ClipPath id="homeRoad"><Circle cx={98} cy={100} r={78} /></ClipPath></Defs>
+      <G clipPath="url(#homeRoad)">
+        <Rect x={0} y={0} width={200} height={200} fill={sky} />
+        <Circle cx={98} cy={98} r={26} fill={t.gold} />
+        <Path d="M10 108 Q 60 88 110 104 T 190 98 L190 200 L10 200 Z" fill={hill} />
+        <Path d="M10 132 Q 70 112 120 126 T 190 120 L190 200 L10 200 Z" fill={hill2} />
+        <Path d="M93 106 L103 106 L160 200 L36 200 Z" fill={t.road} />
+        {dashes.map(([y, h, w]) => <Rect key={y} x={98 - w / 2} y={y} width={w} height={h} rx={w / 2} fill={light ? '#c4dcbf' : '#cfe3d2'} />)}
+      </G>
+      <Circle cx={98} cy={100} r={78} fill="none" stroke={light ? '#ffffff' : '#2c6a3c'} strokeWidth={3} />
+      <Line x1={108} y1={106} x2={108} y2={80} stroke={t.pole} strokeWidth={2} strokeLinecap="round" />
+      <G transform="translate(108 80)">
+        {[0, 1, 2].map(i => [0, 1].map(j => <Rect key={`${i}${j}`} x={i * 6} y={j * 5} width={6} height={5} fill={(i + j) % 2 ? '#ffffff' : '#1b1b1b'} />))}
+      </G>
+      <Circle cx={176} cy={34} r={4} fill={t.gold} />
+      <Circle cx={182} cy={160} r={2.5} fill={t.you} />
+    </Frame>
+  );
+}
+
+// «فرمان و آزمون»: a steering wheel behind a question card with the right answer ticked.
+export function HomeWheelArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  const wheel = light ? '#6f9c77' : '#cfe3d2';
+  return (
+    <Frame height={height}>
+      <HomeBlobs t={t} />
+      <G opacity={light ? 0.85 : 0.75}>
+        <Circle cx={66} cy={104} r={50} fill="none" stroke={wheel} strokeWidth={10} />
+        <Circle cx={66} cy={104} r={11} fill={wheel} />
+        <Path d="M18 98 Q 66 88 114 98" fill="none" stroke={wheel} strokeWidth={8} strokeLinecap="round" />
+        <Path d="M66 115 L66 152" stroke={wheel} strokeWidth={8} strokeLinecap="round" />
+      </G>
+      <G transform="translate(86 52) rotate(4) scale(0.8)">
+        <Rect x={4} y={8} width={120} height={112} rx={14} fill={light ? '#b9d7b3' : '#143a20'} />
+        <Rect width={120} height={112} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Rect x={14} y={14} width={70} height={6} rx={3} fill={t.line} />
+        <Rect x={14} y={25} width={48} height={6} rx={3} fill={t.line} />
+        {[0, 1, 2].map(i => {
+          const y = 42 + i * 22, right = i === 1;
+          return (
+            <G key={i}>
+              <Rect x={12} y={y} width={96} height={17} rx={8.5} fill={right ? '#e2f1df' : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
+              <Circle cx={24} cy={y + 8.5} r={5} fill={right ? t.ok : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
+              <Rect x={36} y={y + 6} width={right ? 50 : 40 + i * 6} height={5} rx={2.5} fill={right ? t.ok : t.line} opacity={right ? 0.55 : 1} />
+            </G>
+          );
+        })}
+      </G>
+      <Circle cx={182} cy={52} r={13} fill={t.ok} />
+      <Tick x={182} y={52} />
+      <Circle cx={22} cy={34} r={3.5} fill={t.gold} />
+    </Frame>
+  );
+}
+
+export const HOME_ARTS = [HomeLicenceArt, HomeRoadArt, HomeWheelArt];
