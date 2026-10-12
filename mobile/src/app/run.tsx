@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, BackHandler, Easing, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { transText } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
@@ -173,7 +174,7 @@ export default function Run() {
         </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
-          {showFa && q.sfa ? <T style={{ color: c.muted }}>{q.sfa}</T> : null}
+          {showFa && transText(lang, { fa: q.sfa, en: q.sen, da: q.sda }) ? <T style={{ color: c.muted }}>{transText(lang, { fa: q.sfa, en: q.sen, da: q.sda })}</T> : null}
         </View>
         {q.st.map((s, k) => {
           const on = ticks[i][k];
@@ -183,7 +184,7 @@ export default function Run() {
             <Pressable onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               <OptionBox on={on}>
                 <L style={{ fontSize: 15.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
-                {showFa && s.fa ? <T style={{ color: c.muted, fontSize: 14 }}>{s.fa}</T> : null}
+                {showFa && transText(lang, s) ? <T style={{ color: c.muted, fontSize: 14 }}>{transText(lang, s)}</T> : null}
               </OptionBox>
             </Pressable>
             </Enter>

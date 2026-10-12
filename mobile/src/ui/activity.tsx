@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import type { Attempt, Bank } from '@/lib/bank';
+import { DATE_LOCALE, RTL } from '@/lib/i18n';
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import { modeName } from '@/lib/names';
 import { session } from '@/lib/session';
@@ -15,7 +16,7 @@ import { Card, Enter, T, tap } from './kit';
 import { useColors, type Colors } from './theme';
 
 export const openAttempt = (a: Attempt) => { session.result = a; session.fresh = false; router.push('/result'); };
-export const pctText = (p: number) => `${faNum(Math.round(p * 100))}٪`;
+export const pctText = (p: number) => `${faNum(Math.round(p * 100))}${RTL ? '٪' : '%'}`;
 // A small coloured label, like the site's .pill.
 export function Pill({ text, fg, bg }: { text: string; fg: string; bg: string }) {
   return <View style={{ paddingHorizontal: 9, paddingVertical: 2, borderRadius: 99, backgroundColor: bg }}><T style={{ color: fg, fontSize: 12, lineHeight: 19, fontWeight: '700' }}>{text}</T></View>;
@@ -24,7 +25,7 @@ export function Pill({ text, fg, bg }: { text: string; fg: string; bg: string })
 // Green or red for an attempt: a full 25-question one by the real pass rule, a shorter one by the same 80%.
 const passed = (a: Attempt) => (isFull(a) ? isPass(a) : pctOf(a) >= 0.8);
 const fmtSecs = (s: number) => `${faNum(Math.floor(s / 60))}:${faNum(String(Math.round(s % 60)).padStart(2, '0'))}`;
-const fmtClock = (t: number) => new Date(t).toLocaleTimeString('fa-IR', { timeZone: 'Europe/Copenhagen', hour: '2-digit', minute: '2-digit' });
+const fmtClock = (t: number) => new Date(t).toLocaleTimeString(DATE_LOCALE, { timeZone: 'Europe/Copenhagen', hour: '2-digit', minute: '2-digit' });
 
 function ActivityRow({ a, bank, c, last }: { a: Attempt; bank: Bank | null; c: Colors; last: boolean }) {
   const ok = passed(a), fg = ok ? c.ok : c.bad, soft = ok ? c.okSoft : c.badSoft;

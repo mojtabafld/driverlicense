@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import { useState } from 'react';
 import { Platform, TextInput, View } from 'react-native';
 
+import { RTL, tr } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Segmented, T } from '@/ui/kit';
@@ -38,9 +39,9 @@ export default function Report() {
           {kind === 'bug' ? 'چه اتفاقی افتاد و در کدام صفحه؟ اگر به سؤال خاصی مربوط است، شماره‌ی درس و سؤال را هم بنویسید.' : 'چه چیزی را دوست دارید اضافه یا بهتر شود؟'}
         </T>
         <TextInput value={text} onChangeText={v => { setText(v.slice(0, MAX)); setMsg(null); }} multiline textAlignVertical="top"
-          placeholder={kind === 'bug' ? 'مثلاً: در درس ۳، سؤال ۵ تصویر نمایش داده نمی‌شود.' : 'پیشنهاد شما…'} placeholderTextColor={c.faint}
+          placeholder={tr(kind === 'bug' ? 'مثلاً: در درس ۳، سؤال ۵ تصویر نمایش داده نمی‌شود.' : 'پیشنهاد شما…')} placeholderTextColor={c.faint}
           style={{ minHeight: 150, padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: c.line, color: c.text, fontSize: 15, lineHeight: 24,
-            fontFamily: 'Vazirmatn-400', textAlign: 'right', writingDirection: 'rtl', backgroundColor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)' }} />
+            fontFamily: RTL ? 'Vazirmatn-400' : 'Inter-400', textAlign: RTL ? 'right' : 'left', writingDirection: RTL ? 'rtl' : 'ltr', backgroundColor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)' }} />
         <T style={{ color: c.faint, fontSize: 11.5, textAlign: 'left', writingDirection: 'ltr' }}>{`${text.length} / ${MAX}`}</T>
         {msg ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

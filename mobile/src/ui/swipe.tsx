@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, PanResponder, Platform, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 
+import { RTL } from '@/lib/i18n';
 import { tap } from './kit';
 import { PROVE_PICS } from '@/lib/config';
 
@@ -19,7 +20,7 @@ const sideways = (_: unknown, g: { dx: number; dy: number }) => Math.abs(g.dx) >
 
 // The learning pages (not the exam) turn right to left, as Persian reads; only on the main site, the /app copy stays as
 // it was.
-export const learnRtl = !PROVE_PICS;
+export const learnRtl = !PROVE_PICS && RTL;
 
 type PagerNow = { i: number; n: number; width: number; go: (k: number) => void; rtl: boolean };
 export function usePager(i: number, n: number, go: (k: number) => void, rtl = false) {

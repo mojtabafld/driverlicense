@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Platform, Pressable, TextInput, View } from 'react-native';
 
+import { RTL, tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { physicalAlign, tap } from './kit';
 import { DA_FONT, useColors, useIsDark } from './theme';
@@ -20,15 +21,15 @@ export function Field({ icon, label, value, onChange, secure, ltr, onSubmit }: {
         ...(Platform.OS === 'web' ? { boxShadow: focus ? `0 0 0 4px ${c.accentSoft}` : '0 1px 2px rgba(0,0,0,.05)', transition: 'border-color .15s, box-shadow .15s, background-color .15s' } as any : {}) }}>
         <Icon name={icon} size={19} color={focus ? c.link : c.faint} />
         <TextInput value={value} onChangeText={onChange} secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false}
-          placeholder={label} accessibilityLabel={label} placeholderTextColor={c.muted} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
+          placeholder={tr(label)} accessibilityLabel={tr(label)} placeholderTextColor={c.muted} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
           onSubmitEditing={onSubmit} returnKeyType={onSubmit ? 'go' : 'next'}
-          style={{ flex: 1, height: 50, fontSize: 16, fontFamily: ltr && value ? DA_FONT : 'Vazirmatn-400', color: c.text,
+          style={{ flex: 1, height: 50, fontSize: 16, fontFamily: (ltr && value) || !RTL ? DA_FONT : 'Vazirmatn-400', color: c.text,
             // Username and password (ltr): written and shown from the left, the placeholder too, laid out left to right so
             // the phone does not swap the side; other fields from the right.
-            ...(ltr ? { textAlign: 'left' as const, direction: 'ltr' as const } : { textAlign: physicalAlign('right' as const) }),
-            writingDirection: ltr ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
+            ...(ltr || !RTL ? { textAlign: 'left' as const, direction: 'ltr' as const } : { textAlign: physicalAlign('right' as const) }),
+            writingDirection: ltr || !RTL ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {secure ? (
-          <Pressable onPress={() => { tap(); setShow(!show); }} hitSlop={10} accessibilityLabel={show ? 'پنهان کردن رمز' : 'نمایش رمز'}>
+          <Pressable onPress={() => { tap(); setShow(!show); }} hitSlop={10} accessibilityLabel={tr(show ? 'پنهان کردن رمز' : 'نمایش رمز')}>
             <Icon name={show ? 'eyeSlash' : 'eye'} size={19} color={show ? c.link : c.faint} />
           </Pressable>
         ) : null}

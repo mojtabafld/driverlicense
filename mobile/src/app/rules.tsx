@@ -10,6 +10,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, View, type ScrollView } from 'react-native';
 
+import { RTL, tr } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { RULES, RULE_NUMBERS, type GuidePart } from '@/lib/guide';
 import { FULL, faNum, shuffle } from '@/lib/logic';
@@ -31,11 +32,13 @@ function startPractice(ids: number[], title: string) { tap(); session.plan = { m
 
 // A number in the text with its unit («۵۰ کیلومتر در ساعت», «۰٫۵ در هزار», «۳ سال»), drawn in bold.
 const NUM = /([۰-۹0-9][۰-۹0-9٬٫,.]*(?:\s?(?:کیلومتر در ساعت|کیلومتر|سانتی‌متر|میلی‌متر|متری|متر|کیلوگرم|سال|در هزار|برابر))?)/;
+// (In English and Danish the translated text, its numbers with their units.)
+const NUM_LATIN = /(\d[\d.,]*(?:\s?(?:km\/h|km|cm|mm|kg|m|‰|per mille|promille|years?|år|times|gange))?)/;
 function Bold({ text, size }: { text: string; size: number }) {
   const c = useColors();
   return (
     <T style={{ flex: 1, fontSize: size, lineHeight: size * 1.72 }}>
-      {text.split(NUM).map((s, k) => (k % 2 ? <T key={k} style={{ fontSize: size, lineHeight: size * 1.72, fontWeight: '800', color: c.text }}>{s}</T> : s))}
+      {(RTL ? text : tr(text)).split(RTL ? NUM : NUM_LATIN).map((s, k) => (k % 2 ? <T key={k} style={{ fontSize: size, lineHeight: size * 1.72, fontWeight: '800', color: c.text }}>{s}</T> : s))}
     </T>
   );
 }

@@ -11,6 +11,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import { transText } from '@/lib/i18n';
 import { EXAM } from '@/lib/course';
 import { courseText } from '@/lib/course-en';
 import { useCourseProgress } from '@/lib/course-progress';
@@ -64,7 +65,7 @@ function Question({ turn, ticks, answer, onToggle }: { turn: Turn; ticks: boolea
       </View>
       <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(q.da, lang)}</T>
-        {fa ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{q.fa}</T> : null}
+        {fa && transText(lang, { fa: q.fa, en: courseText(q.da, 'en'), da: q.da }) ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{transText(lang, { fa: q.fa, en: courseText(q.da, 'en'), da: q.da })}</T> : null}
       </View>
       {turn.order.map((k, i) => {
         const s = q.statements[k], on = !!ticks[i], wrong = shown && on !== s.ok;
@@ -74,7 +75,7 @@ function Question({ turn, ticks, answer, onToggle }: { turn: Turn; ticks: boolea
               style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               <OptionBox on={on} mark={wrong} review={shown}>
                 <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
-                {fa ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{s.fa}</T> : null}
+                {fa && transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da }) ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da })}</T> : null}
               </OptionBox>
             </Pressable>
             {shown ? (

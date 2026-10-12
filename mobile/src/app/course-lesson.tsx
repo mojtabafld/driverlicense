@@ -13,6 +13,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
+import { transText } from '@/lib/i18n';
 import { COURSE, EXAM, lessonById, type CourseStep } from '@/lib/course';
 import { courseText } from '@/lib/course-en';
 import { useExamLang } from '@/lib/store';
@@ -53,7 +54,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
       </View>
       <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(step.da, lang)}</T>
-        {fa ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{step.fa}</T> : null}
+        {fa && transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da }) ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da })}</T> : null}
       </View>
       {step.statements.map((s, i) => {
         const on = !!ticks[i], wrong = checked && on !== s.ok;
@@ -63,7 +64,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
               style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
               <OptionBox on={on} mark={wrong} review={checked}>
                 <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
-                {fa ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{s.fa}</T> : null}
+                {fa && transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da }) ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da })}</T> : null}
               </OptionBox>
             </Pressable>
             {checked ? (

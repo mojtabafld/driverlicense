@@ -8,6 +8,7 @@ import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, Vi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { RTL, tr, tryTr } from '@/lib/i18n';
 import { useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
@@ -256,7 +257,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
     <View style={{ height: H, backgroundColor: bg, overflow: 'hidden' }}>
       {look.art ? (
         // (left to right in its own row, so the drawing stays on the left on every platform)
-        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { flexDirection: 'row', direction: 'ltr', paddingTop: ins.top } as any]}>
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { flexDirection: 'row', direction: 'ltr', justifyContent: RTL ? 'flex-start' : 'flex-end', paddingTop: ins.top } as any]}>
           <look.art light={light} height={H - ins.top} />
         </View>
       ) : v ? <Image source={{ uri: `${API_URL}/hero-art/${pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
@@ -330,10 +331,22 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
 // Set in Vazirmatn; the weight picks the font file, so fontWeight itself is reset (no faux bold).
 // On the main site, with the exam in English, the Danish terms in a Persian text are given in English (lib/en-terms.ts).
 const enKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ? enTerms(k) : Array.isArray(k) ? k.map(enKids) : k);
-export function T({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
+// In English or Danish, the text in that language (lib/i18n.ts): a text given in parts (JSX «درس {n}») as one.
+const trKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ? tr(k)
+  : Array.isArray(k) ? (k.every(x => typeof x === 'string' || typeof x === 'number') ? tryTr(k.join('')) ?? k.map(trKids) : k.map(trKids)) : k);
+const swapAlign = (a: TextStyle['textAlign']) => (a === 'left' ? 'right' : a === 'right' ? 'left' : a);
+export function T({ style, raw, ...p }: TextProps & { style?: StyleProp<TextStyle>; raw?: boolean }) {
   const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS;
+  if (!RTL && !raw) p = { ...p, children: trKids(p.children) };
   if (en) p = { ...p, children: enKids(p.children) };
   const flat = StyleSheet.flatten(style) ?? {};
+  if (!RTL) {
+    // English / Danish: left to right in the Latin font, the alignment the mirror of the Persian one (its start edge).
+    const { family } = daFamily(flat.fontWeight);
+    const font = flat.fontFamily ? null : { fontFamily: Platform.OS === 'web' ? `${family}, Vazirmatn-400, sans-serif` : family, fontWeight: 'normal' as const };
+    const side = { writingDirection: 'ltr' as const, textAlign: flat.writingDirection === 'ltr' ? flat.textAlign ?? 'left' : swapAlign(flat.textAlign ?? 'right'), ...(Platform.OS === 'web' ? null : { direction: 'ltr' as const }) };
+    return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24 }, style, font, side]} />;
+  }
   const font = flat.fontFamily ? null : { fontFamily: faFamily(flat.fontWeight), fontWeight: 'normal' as const };
   // On phones the text is laid out right to left wherever it sits (also in a row set to 'ltr'), so its alignment,
   // the physical edge as on the web, is always swapped the same way. Text asking for writingDirection 'ltr' (counts
@@ -363,7 +376,7 @@ export function TranslateButton({ on, onPress }: { on: boolean; onPress: () => v
   const c = useColors();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
-      accessibilityLabel={on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه'}
+      accessibilityLabel={tr(on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه')}
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
         backgroundColor: on ? c.strong : c.nav })}>
       <Icon name="translate" size={19} color={on ? c.strongFg : c.navFg} />
@@ -506,7 +519,8 @@ export function SegPill({ on }: { on: boolean }) {
 }
 
 // The site's .tabs: grey track, the chosen one is a white tab with navy text.
-export function Segmented<V extends string>({ value, options, onChange }: { value: V; options: { value: V; label: string }[]; onChange: (v: V) => void }) {
+// `raw`: a label shown as it is, never translated (a language's own name).
+export function Segmented<V extends string>({ value, options, onChange }: { value: V; options: { value: V; label: string; raw?: boolean }[]; onChange: (v: V) => void }) {
   const c = useColors(), seg = useArcSeg();
   return (
     <View style={[{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: radius.sm, backgroundColor: c.surface2 }, ARC && seg.track]}>
@@ -516,7 +530,7 @@ export function Segmented<V extends string>({ value, options, onChange }: { valu
           <Pressable key={o.value} onPress={() => { tap(); onChange(o.value); }} style={{ flex: 1 }}>
             <View style={[{ paddingVertical: 7, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }, ARC && seg.pill(on)]}>
               {ARC ? <SegPill on={on} /> : null}
-              <T style={[{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }, ARC && seg.label(on)]}>{o.label}</T>
+              <T style={[{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }, ARC && seg.label(on), o.raw ? { fontFamily: 'Vazirmatn-500', writingDirection: 'rtl' } : null]} raw={o.raw}>{o.label}</T>
             </View>
           </Pressable>
         );

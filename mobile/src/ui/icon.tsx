@@ -3,6 +3,7 @@
 // saved). `weight` and `contrast` are kept for callers but no longer change the drawing.
 import Svg, { Circle, G, Path } from 'react-native-svg';
 
+import { RTL } from '@/lib/i18n';
 import type { IconProps } from './icon-names';
 
 export type { IconName } from './icon-names';
@@ -205,5 +206,7 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
       body = <G><Circle cx={12} cy={12} r={8.6} {...line} /><Path d="M12 7.5V12l3 2" {...line} /></G>;
       break;
   }
-  return <Svg width={size} height={size} viewBox="0 0 24 24">{body}</Svg>;
+  // The arrows are drawn for Persian (right to left); in English and Danish they point the other way.
+  const flip = !RTL && (name === 'chevronLeft' || name === 'arrowLeft' || name === 'arrowRight');
+  return <Svg width={size} height={size} viewBox="0 0 24 24" style={flip ? { transform: [{ scaleX: -1 }] } : undefined}>{body}</Svg>;
 }

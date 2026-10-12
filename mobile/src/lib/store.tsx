@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_PICS } from './config';
+import { UI_CHOSEN, UI_LANG, setUiLang } from './i18n';
 import { loadToken, saveToken } from './token';
 
 export type Saved = { id: number; a?: number[]; at: number };
@@ -63,6 +64,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const g = gen.current;
     const d = await api<Me>('GET', 'me');
     if (g !== gen.current) return;
+    // The app's language: the account's, unless one was chosen in this browser (then the account takes that one).
+    if (!PROVE_PICS) {
+      const ui = d.settings?.ui;
+      if (ui && !UI_CHOSEN && ui !== UI_LANG) { if (setUiLang(ui)) return; }
+      else if ((UI_CHOSEN || UI_LANG !== 'fa') && ui !== UI_LANG) api('PUT', 'settings', { ...DEFAULTS, ...d.settings, ui: UI_LANG }).catch(() => {});
+    }
     setMe(d);
     api<{ aiLessons?: boolean; tts?: boolean }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); }).catch(() => {});
     if (!bank) setBank(await fetchBank<Bank>());

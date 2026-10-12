@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, View, type StyleProp, type TextStyle } from 'react-native';
 
+import { tr } from '@/lib/i18n';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
 import type { GuideKind } from '@/lib/guide-data';
@@ -108,7 +109,7 @@ export function GuideImage({ k, aspect, label, radius = 12, compact, flat, fill,
 export function Rich({ text, style }: { text: string; style?: StyleProp<TextStyle> }) {
   return (
     <T style={style}>
-      {text.split(/(\*\*.+?\*\*)/g).map((p, i) => (/^\*\*.+\*\*$/.test(p) ? <T key={i} style={[style, { fontWeight: '800' }]}>{p.slice(2, -2)}</T> : p))}
+      {tr(text).split(/(\*\*.+?\*\*)/g).map((p, i) => (/^\*\*.+\*\*$/.test(p) ? <T key={i} style={[style, { fontWeight: '800' }]}>{p.slice(2, -2)}</T> : p))}
     </T>
   );
 }

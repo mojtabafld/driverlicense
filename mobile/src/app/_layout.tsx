@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
+import { RTL, UI_LANG } from '@/lib/i18n';
 import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadLangAsked, loadOnboarded, saveLangAsked, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
@@ -19,13 +20,13 @@ import { ThemeModeProvider } from '@/ui/theme-mode';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// The web version is a right-to-left Persian page, with no visible scroll bars. Vazirmatn comes with the app (src/ui/fonts.ts); Inter for
+// The web version is a right-to-left Persian page (left to right in English and Danish, lib/i18n.ts), with no visible scroll bars. Vazirmatn comes with the app (src/ui/fonts.ts); Inter for
 // Danish text too; Poppins (numbers) is loaded from Google Fonts.
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  document.documentElement.dir = 'rtl'; document.documentElement.lang = 'fa';
+  document.documentElement.dir = RTL ? 'rtl' : 'ltr'; document.documentElement.lang = UI_LANG;
   const l = document.createElement('link'); l.rel = 'stylesheet';
   l.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap'; document.head.appendChild(l);
-  const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%;overscroll-behavior:none}body,div,span,input,textarea{font-family:Vazirmatn-400,system-ui,sans-serif}*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0}'; document.head.appendChild(s);
+  const s = document.createElement('style'); s.textContent = 'html,body{overflow:hidden;height:100%;overscroll-behavior:none}body,div,span,input,textarea{font-family:' + (RTL ? 'Vazirmatn-400' : 'Inter-400, Vazirmatn-400') + ',system-ui,sans-serif}*{scrollbar-width:none}*::-webkit-scrollbar{display:none;width:0;height:0}'; document.head.appendChild(s);
 }
 
 function Root() {

@@ -9,6 +9,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 
+import { RTL } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { L, T, tap } from './kit';
@@ -79,7 +80,7 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
                       <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: on ? '#143f14' : '#fff' }}>{name}</L>
-                      <T style={{ fontSize: 14, color: on ? '#3f5e3f' : 'rgba(255,255,255,0.75)' }}>{fa}</T>
+                      {RTL ? <T style={{ fontSize: 14, color: on ? '#3f5e3f' : 'rgba(255,255,255,0.75)' }}>{fa}</T> : null}
                     </View>
                     <T style={{ fontSize: 12.5, lineHeight: 20, color: on ? '#557055' : 'rgba(255,255,255,0.7)' }}>{note}</T>
                   </View>
