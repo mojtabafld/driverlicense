@@ -13,10 +13,14 @@ const DARK = { blob: '#1f5130', road: '#2c6a3c', dash: '#4c8a5b', ok: '#5cc47a',
 type Tone = typeof LIGHT;
 
 // The drawing's box: the header's height (less its fading foot), three to two, on the left.
-function Frame({ height, children }: { height: number; children: React.ReactNode }) {
-  const h = height - 30, w = Math.round(h * 1.5);
-  // In English and Danish (on the right, the title at the left): a little further out towards the right edge.
-  return <Svg width={w} height={h} viewBox="0 0 300 200" style={RTL ? { marginLeft: 4 } : { marginRight: -Math.round(w * 0.14) }}>{children}</Svg>;
+// In English and Danish it is on the right (the title at the left). `edge`: where the drawing's own shapes end on the
+// right (viewBox units, the tab pages' drawings end at about 192 of 300): it is then laid as the mirror of the Persian
+// page, its shapes as close to the right edge as they are to the left one in Persian. Without it, a little further out
+// towards the right edge (the course, rules, signs and right of way, whose shapes run to the box's end).
+function Frame({ height, edge, children }: { height: number; edge?: number; children: React.ReactNode }) {
+  const h = height - 30, w = Math.round(h * 1.5), s = w / 300;
+  const right = edge == null ? -Math.round(w * 0.14) : Math.round(4 + 8 * s - (300 - edge) * s);
+  return <Svg width={w} height={h} viewBox="0 0 300 200" style={RTL ? { marginLeft: 4 } : { marginRight: right }}>{children}</Svg>;
 }
 const Blobs = ({ t }: { t: Tone }) => <><Circle cx={228} cy={70} r={58} fill={t.blob} /><Circle cx={62} cy={150} r={44} fill={t.blob} /></>;
 const tick = (x: number, y: number) => `M${x - 4.5} ${y} l3 3 l6 -6`;
@@ -119,7 +123,7 @@ const HomeBlobs = ({ t }: { t: Tone }) => <><Circle cx={140} cy={66} r={50} fill
 export function HomeLicenceArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
   return (
-    <Frame height={height}>
+    <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
       <G transform="translate(22 66) rotate(-8) scale(0.84)">
         <Rect x={6} y={10} width={150} height={96} rx={14} fill={light ? '#b9d7b3' : '#143a20'} />
@@ -151,7 +155,7 @@ export function ExamWheelArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
   const wheel = light ? '#6f9c77' : '#cfe3d2';
   return (
-    <Frame height={height}>
+    <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
       <G opacity={light ? 0.85 : 0.75}>
         <Circle cx={66} cy={104} r={50} fill="none" stroke={wheel} strokeWidth={10} />
@@ -188,7 +192,7 @@ export function LearnBookArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
   const back = light ? '#b9d7b3' : '#143a20';
   return (
-    <Frame height={height}>
+    <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
       <G transform="translate(16 82) rotate(-4) scale(0.86)">
         <Path d="M4 16 Q 44 2 84 16 L84 106 Q 44 92 4 106 Z M84 16 Q 124 2 164 16 L164 106 Q 124 92 84 106 Z" fill={back} transform="translate(4 6)" />
