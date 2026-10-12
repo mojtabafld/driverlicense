@@ -13,12 +13,15 @@ import { Icon } from './icon';
 import { T, tap } from './kit';
 import { TallPicture } from './tall-picture';
 import { ArtAi, ArtBank, ArtExam, ArtProgress } from './onboarding-art';
+import { IntroAi, IntroBank, IntroExam, IntroProgress } from './intro-art';
+import { ARC } from './theme';
 
+// Main site: its own minimal drawings (ui/intro-art.tsx) in place of the server's pictures, Mojtaba asked.
 const SLIDES = [
-  { Art: ArtBank, title: 'آزمون تئوری دانمارک، در جیب شما', text: 'همه‌ی سؤال‌های آزمون تئوری با تصویر، به دانمارکی یا انگلیسی و با ترجمه‌ی فارسی؛ همراه درس‌های کوتاه هر مبحث.' },
-  { Art: ArtExam, title: 'آزمون، درست مثل روز امتحان', text: '۲۵ سؤال تصویری با زمان‌سنج و همان معیار قبولی. قبل از رفتن سر جلسه بدانید چقدر آماده‌اید.' },
-  { Art: ArtAi, title: 'هوش مصنوعی، همراه شما', text: 'برای هر سؤال توضیحی ساده به فارسی بگیرید: چرا پاسخ شما درست یا اشتباه بود و چه نکته‌ای را برای دفعه‌ی بعد به خاطر بسپارید.' },
-  { Art: ArtProgress, title: 'پیشرفت‌تان را ببینید', text: 'نمودار پیشرفت، احتمال قبولی و تمرین هدفمند همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید.' },
+  { Art: ARC ? IntroBank : ArtBank, title: 'آزمون تئوری دانمارک، در جیب شما', text: 'همه‌ی سؤال‌های آزمون تئوری با تصویر، به دانمارکی یا انگلیسی و با ترجمه‌ی فارسی؛ همراه درس‌های کوتاه هر مبحث.' },
+  { Art: ARC ? IntroExam : ArtExam, title: 'آزمون، درست مثل روز امتحان', text: '۲۵ سؤال تصویری با زمان‌سنج و همان معیار قبولی. قبل از رفتن سر جلسه بدانید چقدر آماده‌اید.' },
+  { Art: ARC ? IntroAi : ArtAi, title: 'هوش مصنوعی، همراه شما', text: 'برای هر سؤال توضیحی ساده به فارسی بگیرید: چرا پاسخ شما درست یا اشتباه بود و چه نکته‌ای را برای دفعه‌ی بعد به خاطر بسپارید.' },
+  { Art: ARC ? IntroProgress : ArtProgress, title: 'پیشرفت‌تان را ببینید', text: 'نمودار پیشرفت، احتمال قبولی و تمرین هدفمند همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید.' },
 ];
 // Flat dark forest green, the colour the server's intro pictures are made on (so they sit in the page seamlessly),
 // going only a shade darker at the very bottom.
@@ -72,12 +75,12 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
   };
   const { Art, title, text } = SLIDES[i];
   // The server's picture for this slide: a full scene on the page's dark green, its bottom plain so it melts into it.
-  const pic = intro[i + 1], top = BG[0];
+  const pic = ARC ? undefined : intro[i + 1], top = BG[0];
   useEffect(() => { onTop?.(top); }, [top, onTop]);
   // Every slide's picture is fetched up front, so a new slide never shows the previous picture on its own colour while
   // the next one loads (that was a brief mismatch of the picture's background).
   useEffect(() => {
-    const urls = SLIDES.map((_, k) => intro[k + 1] ? `${API_URL}/intro/${k + 1}.png?v=${intro[k + 1]}` : null).filter((u): u is string => !!u);
+    const urls = ARC ? [] : SLIDES.map((_, k) => intro[k + 1] ? `${API_URL}/intro/${k + 1}.png?v=${intro[k + 1]}` : null).filter((u): u is string => !!u);
     if (urls.length) Image.prefetch(urls).catch(() => {});
   }, [intro]);
   // The picture: a tall header across the top, fading into the page (the app's own drawing there until the server's
