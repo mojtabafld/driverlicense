@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { UI_LANG, setUiLang, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
@@ -118,6 +119,15 @@ export default function Settings() {
           </Pressable>
         ) : null}
       </Card>
+      {/* The app's language (main site): Persian, English or Danish, each named in its own language; a change reloads
+          the page in it and is kept in the account too. */}
+      {!PROVE_PICS ? (
+        <Card style={{ gap: 10 }}>
+          <Row title="زبان برنامه" sub="متن‌ها، درس‌ها و منوهای اپ به این زبان نمایش داده می‌شوند." right={null} />
+          <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui }).catch(() => {}).finally(() => setUiLang(ui)); }}
+            options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
+        </Card>
+      ) : null}
       <Card style={{ gap: 10 }}>
         <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />
         <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
@@ -132,7 +142,7 @@ export default function Settings() {
             <VoiceChoice />
           </View>
         ) : null}
-        <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />
+        {UI_LANG === (settings.lang ?? 'da') ? null : <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />}
         <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
       {/* «راهنما»: how to use the app, reporting a problem, and the version. */}

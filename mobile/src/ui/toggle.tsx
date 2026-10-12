@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, Switch } from 'react-native';
 
+import { RTL } from '@/lib/i18n';
 import { tap } from './kit';
 import { ARC, useColors } from './theme';
 
@@ -21,7 +22,8 @@ export function Toggle({ value, onChange, label }: { value: boolean; onChange: (
   if (Platform.OS !== 'web') {
     return <Switch value={value} onValueChange={v => { tap(); onChange(v); }} trackColor={{ false: c.line, true: on }} thumbColor="#fff" accessibilityLabel={label} />;
   }
-  const left = pos.interpolate({ inputRange: [0, 1], outputRange: [W - PAD - KNOB, PAD] });
+  // (On is the knob at the right in English and Danish.)
+  const left = pos.interpolate({ inputRange: [0, 1], outputRange: RTL ? [W - PAD - KNOB, PAD] : [PAD, W - PAD - KNOB] });
   const bg = pos.interpolate({ inputRange: [0, 1], outputRange: [c.line, on] });
   return (
     <Pressable onPress={() => { tap(); onChange(!value); }} accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={label} hitSlop={6}>

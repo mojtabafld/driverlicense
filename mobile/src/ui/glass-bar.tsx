@@ -5,6 +5,7 @@
 import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { RTL } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
 import { L, T, tap } from './kit';
@@ -113,7 +114,8 @@ export function GlassBar({ start, middle, end, rtl }: { start?: React.ReactNode;
   );
 }
 // The previous / next arrows, pointing the way the pages turn.
-export const navIcons = (rtl?: boolean) => (rtl ? { prev: 'arrowRight', next: 'arrowLeft' } : { prev: 'arrowLeft', next: 'arrowRight' }) as { prev: IconName; next: IconName };
+// (Icons are mirrored in English and Danish (ui/icon.tsx), so there the names are given as in Persian.)
+export const navIcons = (rtl?: boolean) => (!!rtl === RTL ? { prev: 'arrowRight', next: 'arrowLeft' } : { prev: 'arrowLeft', next: 'arrowRight' }) as { prev: IconName; next: IconName };
 
 // The position in the middle of the bar (Persian digits) over what is counted, e.g. «قدم» or «سؤال».
 export function BarCount({ n, of, label }: { n: number; of: number; label: string }) {

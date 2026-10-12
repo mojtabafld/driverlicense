@@ -1,6 +1,7 @@
 // Exam rules and statistics, the same as on the web site (site/app.js).
 import type { Attempt, Bank, Item, Question } from './bank';
 import { PROVE_PICS } from './config';
+import { DATE_LOCALE, RTL, latin } from './i18n';
 
 export const FULL = 25;
 export const SIZES = [5, 10, 15, 20, 25];
@@ -85,7 +86,7 @@ export function passEstimate(attempts: Attempt[]) {
 }
 
 // Persian digits, as on the site.
-export const faNum = (v: number | string) => String(v).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[+d]);
+export const faNum = (v: number | string) => (RTL ? String(v).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[+d]) : latin(String(v)));
 export const lessonNumber = (title: string, i: number) => (title.match(/\d+/) || [String(i + 1)])[0];
 // In Copenhagen time, as every date and time of the app (lib/names.ts), so a list and the result never disagree.
-export const fmtDate = (t: number) => new Date(t).toLocaleDateString('fa-IR-u-ca-gregory', { timeZone: 'Europe/Copenhagen', month: 'short', day: 'numeric' });
+export const fmtDate = (t: number) => new Date(t).toLocaleDateString(DATE_LOCALE, { timeZone: 'Europe/Copenhagen', month: 'short', day: 'numeric' });

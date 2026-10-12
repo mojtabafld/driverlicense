@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { API_URL } from '@/lib/config';
+import { RTL, UI_LANG, setUiLang } from '@/lib/i18n';
+import { API_URL, PROVE_PICS } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { T, tap } from './kit';
@@ -70,7 +71,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
     onTouchEnd: (e: GestureResponderEvent) => {
       const t = touch.current; touch.current = null; if (!t) return;
       const dx = e.nativeEvent.pageX - t.x, dy = e.nativeEvent.pageY - t.y;
-      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(i + (dx > 0 ? 1 : -1));
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(i + ((dx > 0) === RTL ? 1 : -1));
     },
   };
   const { Art, title, text } = SLIDES[i];
@@ -101,6 +102,23 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
           <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>{text}</T>
         </View>
       </Animated.View>
+      {/* The app's language, before anything else (main site): each named in its own language; a tap reloads the
+          intro in it. */}
+      {PROVE_PICS ? null : (
+        <View style={{ position: 'absolute', top: ins.top + 14, left: 0, right: 0, alignItems: 'flex-end', paddingHorizontal: 16 }}>
+          <View style={{ flexDirection: 'row', gap: 2, padding: 3, borderRadius: 99, backgroundColor: 'rgba(0,0,0,0.28)' }} accessibilityRole="radiogroup">
+            {(['fa', 'en', 'da'] as const).map(l => {
+              const on = l === UI_LANG;
+              return (
+                <Pressable key={l} onPress={() => { tap(); setUiLang(l); }} accessibilityRole="radio" accessibilityState={{ checked: on }} hitSlop={4}
+                  style={({ pressed }) => ({ height: 30, minWidth: 44, paddingHorizontal: 10, borderRadius: 99, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1, backgroundColor: on ? '#fff' : 'transparent' })}>
+                  <T raw style={{ fontSize: 13, lineHeight: 18, fontWeight: '600', color: on ? BUTTON_TEXT : '#fff', textAlign: 'center', fontFamily: l === 'fa' ? 'Vazirmatn-500' : 'Inter-500' }}>{{ fa: 'فارسی', en: 'English', da: 'Dansk' }[l]}</T>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      )}
       <View style={{ paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         {/* Skip at the start, the dots in the middle (at the start on the last slide, beside the wider «شروع کنید»), next / start at the end */}
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 54 }}>

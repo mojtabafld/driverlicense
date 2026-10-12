@@ -2,6 +2,7 @@
 // two soft circles behind white cards, on the intro's forest green (a 300 × 260 grid). /app keeps onboarding-art.tsx
 // and the server's pictures.
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import { RTL, UI_LANG } from '@/lib/i18n';
 
 const t = {
   blob: '#1d5229', back: '#0d3014', card: '#f4f8f3', cardLine: '#cfe3d2', line: '#d6e6d3', ok: '#5cc47a', okDeep: '#2f8f46',
@@ -60,7 +61,7 @@ export function IntroBank() {
       </Card>
       <Flag x={214} y={70} rot={-10} />
       <Card x={44} y={96} w={58} h={40} r={12}>
-        <SvgText x={73} y={122} fontSize={15} fontFamily="Vazirmatn-700" fontWeight="700" textAnchor="middle" fill={t.okDeep}>فارسی</SvgText>
+        <SvgText x={73} y={122} fontSize={15} fontFamily={RTL ? 'Vazirmatn-700' : 'Inter-600'} fontWeight="700" textAnchor="middle" fill={t.okDeep}>{RTL ? 'فارسی' : UI_LANG === 'da' ? 'Dansk' : 'English'}</SvgText>
       </Card>
       <Seal x={206} y={190} r={17} />
       <Circle cx={58} cy={62} r={4} fill={t.gold} />
@@ -151,7 +152,7 @@ export function IntroProgress() {
         <Circle r={31} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
         <Circle r={22} fill="none" stroke="#dcebd8" strokeWidth={7} />
         <Path d="M0 -22 A22 22 0 1 1 -20.9 6.8" fill="none" stroke={t.ok} strokeWidth={7} strokeLinecap="round" />
-        <SvgText y={5} fontSize={14} fontFamily="Vazirmatn-700" fontWeight="700" textAnchor="middle" fill={t.okDeep}>۸۰٪</SvgText>
+        <SvgText y={5} fontSize={14} fontFamily="Vazirmatn-700" fontWeight="700" textAnchor="middle" fill={t.okDeep}>{RTL ? '۸۰٪' : '80%'}</SvgText>
       </G>
       <Seal x={66} y={70} r={14} />
       <Circle cx={262} cy={170} r={3.5} fill={t.gold} />

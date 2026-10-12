@@ -1,5 +1,6 @@
 // Names and labels shared by the home screen and the answer review, worded as on the site.
 import type { Attempt, Bank } from './bank';
+import { DATE_LOCALE } from './i18n';
 import { faNum, lessonNumber } from './logic';
 
 // «آزمون تصادفی», «درس ۱۲», …
@@ -26,7 +27,7 @@ export const topicName = (bank: Bank, c: string) => bank.topics[c]?.fa ?? 'سا�
 const TZ = 'Europe/Copenhagen';
 // «۲ اکتبر ۲۰۲۶»: a day with its year, e.g. when an account was made.
 export const fmtDay = (t: number) =>
-  new Date(t).toLocaleDateString('fa-IR-u-ca-gregory', { timeZone: TZ, year: 'numeric', month: 'long', day: 'numeric' });
+  new Date(t).toLocaleDateString(DATE_LOCALE, { timeZone: TZ, year: 'numeric', month: 'long', day: 'numeric' });
 export const fmtDateTime = (t: number) =>
-  new Date(t).toLocaleString('fa-IR-u-ca-gregory', { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  new Date(t).toLocaleString(DATE_LOCALE, { timeZone: TZ, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 export const fmtTime = (s: number) => faNum(`${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.round(s % 60)).padStart(2, '0')}`);

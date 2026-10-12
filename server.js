@@ -883,7 +883,9 @@ async function api(req, res, route) {
     const langChosen = !!b.langChosen || !!(user.settings || {}).langChosen;
     // voice: the read-aloud voice, 'woman' or 'man' (kept when a client that does not know it saves, like the old site).
     const voice = ['woman', 'man'].includes(b.voice) ? b.voice : (user.settings || {}).voice;
-    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}) };
+    // ui: the app's own language (Persian, English or Danish), so it follows the user to another device.
+    const ui = ['fa', 'en', 'da'].includes(b.ui) ? b.ui : (user.settings || {}).ui;
+    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}), ...(ui ? { ui } : {}) };
     await store.saveUser(user);
     return send(res, 200, { settings: user.settings });
   }

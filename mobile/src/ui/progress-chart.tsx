@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 
+import { RTL } from '@/lib/i18n';
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
@@ -130,7 +131,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const area = `${line} L${x(data.length - 1)} ${y(lo)} L${x(0)} ${y(lo)} Z`;
   const every = ARC ? Math.max(1, Math.ceil(90 / slot)) : slot >= 26 ? 1 : 2;
   const ticks = H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
-  const font = 'Vazirmatn-400';
+  const font = RTL ? 'Vazirmatn-400' : 'Inter-400';
   const a = sel != null ? data[sel] : null;
   return (
     <View style={fill ? { flex: 1, gap: 8 } : { gap: 10 }}>
@@ -143,7 +144,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
             {/* The percent scale stays put on the left. */}
             {ARC ? null : <Svg width={L} height={H} pointerEvents="none">
               {ticks.map(v => (
-                <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{`${faNum(v)}٪`}</SvgText>
+                <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{`${faNum(v)}${RTL ? '٪' : '%'}`}</SvgText>
               ))}
             </Svg>}
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
@@ -179,7 +180,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   {/* The picked point's percent above it. */}
                   {sel != null && data[sel] ? (
                     <SvgText x={x(sel)} y={Math.max(11, tops[sel] - DOT - 8)} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
-                      {`${faNum(Math.round(pctOf(data[sel]) * 100))}٪`}
+                      {`${faNum(Math.round(pctOf(data[sel]) * 100))}${RTL ? '٪' : '%'}`}
                     </SvgText>
                   ) : null}
                   {ARC ? null : <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />}

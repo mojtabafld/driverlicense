@@ -4,6 +4,7 @@
 // shapes signs are learnt by, on a card, with a magnifier.
 import { View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import { RTL, latin } from '@/lib/i18n';
 
 type Art = { light: boolean; height: number };
 
@@ -69,7 +70,7 @@ export function RulesArt({ light, height }: Art) {
 export function PriorityArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
   const badge = (x: number, y: number, fill: string, n: string) => (
-    <G><Circle cx={x} cy={y} r={14} fill={fill} /><SvgText x={x} y={y + 5.5} fontSize={16} fontFamily="Vazirmatn-700" fontWeight="700" textAnchor="middle" fill="#fff">{n}</SvgText></G>
+    <G><Circle cx={x} cy={y} r={14} fill={fill} /><SvgText x={x} y={y + 5.5} fontSize={16} fontFamily="Vazirmatn-700" fontWeight="700" textAnchor="middle" fill="#fff">{RTL ? n : latin(n)}</SvgText></G>
   );
   return (
     <Frame height={height}>
