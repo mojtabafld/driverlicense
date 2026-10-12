@@ -108,3 +108,104 @@ export function SignsArt({ light, height }: Art) {
     </Frame>
   );
 }
+
+// The home page's header (main site; Mojtaba picked it from three samples), kept to the drawing box's left 60% (x ≤ 185),
+// clear of the greeting on the right.
+const HomeBlobs = ({ t }: { t: Tone }) => <><Circle cx={140} cy={66} r={50} fill={t.blob} /><Circle cx={46} cy={148} r={38} fill={t.blob} /></>;
+// «گواهینامه»: the licence card the app leads to, with a Danish flag and a green seal.
+export function HomeLicenceArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  return (
+    <Frame height={height}>
+      <HomeBlobs t={t} />
+      <G transform="translate(22 66) rotate(-8) scale(0.84)">
+        <Rect x={6} y={10} width={150} height={96} rx={14} fill={light ? '#b9d7b3' : '#143a20'} />
+        <Rect width={150} height={96} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Rect x={14} y={14} width={26} height={18} rx={3} fill="#c8102e" />
+        <Rect x={22} y={14} width={4} height={18} fill="#fff" />
+        <Rect x={14} y={21} width={26} height={4} fill="#fff" />
+        <Rect x={48} y={18} width={40} height={4} rx={2} fill={t.line} />
+        <Rect x={48} y={26} width={26} height={4} rx={2} fill={t.line} />
+        <Rect x={14} y={42} width={40} height={42} rx={8} fill="#e3eef9" />
+        <Circle cx={34} cy={57} r={8} fill={t.avatar} />
+        <Path d="M20 80 q14 -18 28 0 z" fill={t.avatar} />
+        {[[50, 64], [62, 50], [74, 58]].map(([y, w]) => <Rect key={y} x={66} y={y} width={w} height={5} rx={2.5} fill={t.line} />)}
+        <SvgText x={128} y={30} fontSize={14} fontWeight="700" textAnchor="middle" fill={t.ok}>B</SvgText>
+      </G>
+      <Circle cx={150} cy={140} r={19} fill={t.ok} />
+      <Circle cx={150} cy={140} r={24} fill="none" stroke={t.ok} strokeOpacity={0.35} strokeWidth={2} />
+      <Path d="M141.5 140 l6 6 l11 -12" fill="none" stroke="#fff" strokeWidth={3.6} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={26} cy={48} r={3} fill={t.gold} />
+      <Circle cx={176} cy={30} r={4} fill={t.gold} />
+      <Circle cx={182} cy={168} r={2.5} fill={t.you} />
+    </Frame>
+  );
+}
+
+
+// The exam tab's header (main site): «فرمان و آزمون», a steering wheel behind a question card with the right answer ticked.
+export function ExamWheelArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  const wheel = light ? '#6f9c77' : '#cfe3d2';
+  return (
+    <Frame height={height}>
+      <HomeBlobs t={t} />
+      <G opacity={light ? 0.85 : 0.75}>
+        <Circle cx={66} cy={104} r={50} fill="none" stroke={wheel} strokeWidth={10} />
+        <Circle cx={66} cy={104} r={11} fill={wheel} />
+        <Path d="M18 98 Q 66 88 114 98" fill="none" stroke={wheel} strokeWidth={8} strokeLinecap="round" />
+        <Path d="M66 115 L66 152" stroke={wheel} strokeWidth={8} strokeLinecap="round" />
+      </G>
+      <G transform="translate(86 52) rotate(4) scale(0.8)">
+        <Rect x={4} y={8} width={120} height={112} rx={14} fill={light ? '#b9d7b3' : '#143a20'} />
+        <Rect width={120} height={112} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Rect x={14} y={14} width={70} height={6} rx={3} fill={t.line} />
+        <Rect x={14} y={25} width={48} height={6} rx={3} fill={t.line} />
+        {[0, 1, 2].map(i => {
+          const y = 42 + i * 22, right = i === 1;
+          return (
+            <G key={i}>
+              <Rect x={12} y={y} width={96} height={17} rx={8.5} fill={right ? '#e2f1df' : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
+              <Circle cx={24} cy={y + 8.5} r={5} fill={right ? t.ok : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
+              <Rect x={36} y={y + 6} width={right ? 50 : 40 + i * 6} height={5} rx={2.5} fill={right ? t.ok : t.line} opacity={right ? 0.55 : 1} />
+            </G>
+          );
+        })}
+      </G>
+      <Circle cx={182} cy={52} r={13} fill={t.ok} />
+      <Tick x={182} y={52} />
+      <Circle cx={22} cy={34} r={3.5} fill={t.gold} />
+    </Frame>
+  );
+}
+
+// The learning tab's header (main site): an open book, a warning sign on its left page and text on its right, a
+// graduation cap above it and a green seal at its corner.
+export function LearnBookArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  const back = light ? '#b9d7b3' : '#143a20';
+  return (
+    <Frame height={height}>
+      <HomeBlobs t={t} />
+      <G transform="translate(16 82) rotate(-4) scale(0.86)">
+        <Path d="M4 16 Q 44 2 84 16 L84 106 Q 44 92 4 106 Z M84 16 Q 124 2 164 16 L164 106 Q 124 92 84 106 Z" fill={back} transform="translate(4 6)" />
+        <Path d="M0 16 Q 40 2 80 16 L80 106 Q 40 92 0 106 Z" fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Path d="M80 16 Q 120 2 160 16 L160 106 Q 120 92 80 106 Z" fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Line x1={80} y1={16} x2={80} y2={106} stroke={t.cardLine} strokeWidth={1.5} />
+        <Path d="M40 34 L60 68 L20 68 Z" fill="#fff" stroke="#c8102e" strokeWidth={5} strokeLinejoin="round" />
+        <Rect x={22} y={80} width={36} height={5} rx={2.5} fill={t.line} />
+        {[[30, 52], [42, 60], [54, 44], [66, 56], [78, 38]].map(([y, w]) => <Rect key={y} x={94} y={y} width={w} height={5} rx={2.5} fill={t.line} />)}
+        <Path d="M136 9 v26 l7 -6 l7 6 v-26 z" fill={t.you} />
+      </G>
+      <G transform="translate(112 34) rotate(-10) scale(0.9)">
+        <Path d="M0 18 L30 6 L60 18 L30 30 Z" fill={light ? '#2a5a35' : '#e8f1e6'} />
+        <Path d="M12 23 v12 q18 9 36 0 v-12 l-18 7 z" fill={light ? '#2a5a35' : '#e8f1e6'} opacity={0.85} />
+        <Path d="M52 21 v14" stroke={t.gold} strokeWidth={2.2} strokeLinecap="round" />
+        <Circle cx={52} cy={37} r={3} fill={t.gold} />
+      </G>
+      <Circle cx={170} cy={150} r={15} fill={t.ok} />
+      <Tick x={170} y={150} />
+      <Circle cx={24} cy={40} r={3.5} fill={t.gold} />
+    </Frame>
+  );
+}

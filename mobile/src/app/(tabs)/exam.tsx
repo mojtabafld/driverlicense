@@ -15,6 +15,7 @@ import { SizeSlider } from '@/ui/size-slider';
 import { Icon } from '@/ui/icon';
 import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
+import { ExamWheelArt } from '@/ui/header-art';
 
 // What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
 function sizeHint(n: number) {
@@ -100,7 +101,7 @@ export default function Exam() {
     router.push('/run');
   };
   return (
-    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam' }}>
+    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}>
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
