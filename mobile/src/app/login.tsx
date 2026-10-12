@@ -8,6 +8,7 @@ import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
 import { ArcButton, Backdrop, Button, Hero, SegPill, T, tap, useArcSeg } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
+import { LoginArt } from '@/ui/header-art';
 
 // Sign in / sign up switch: a soft track with the chosen side raised.
 function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
@@ -48,7 +49,7 @@ export default function Login() {
     <Backdrop>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}>
-          <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}
+          <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person', art: ARC ? LoginArt : undefined }} title={mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}
             subtitle={mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید'} />
           <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 6 }}>
             <ModeSwitch mode={mode} onChange={m => { setMode(m); setErr(''); }} />

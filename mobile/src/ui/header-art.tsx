@@ -2,6 +2,7 @@
 // drawn in the theme's colours on two soft circles, no cars and no road signs. «آموزش گام‌به‌گام»: a road of steps to
 // the licence; «قوانین»: an open rule book; «حق تقدم»: two crossing ways and who goes first; «علائم رانندگی»: the
 // shapes signs are learnt by, on a card, with a magnifier.
+import { View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 type Art = { light: boolean; height: number };
@@ -208,4 +209,49 @@ export function LearnBookArt({ light, height }: Art) {
       <Circle cx={24} cy={40} r={3.5} fill={t.gold} />
     </Frame>
   );
+}
+
+// The sign-in page's tall header (main site): a phone with a profile, a password field and a green button, a shield
+// with a tick beside it. On a narrow screen it spans the width in the header's upper two thirds, the title
+// and line under them; on a wide one it sits on the left like the tabs' drawings, the title on the right.
+export function LoginArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  const { width } = useWindowDimensions();
+  const wide = width >= (height + 40) * 1.3;
+  const back = light ? '#b9d7b3' : '#143a20';
+  const body = (
+    <>
+      <Circle cx={190} cy={58} r={48} fill={t.blob} />
+      <Circle cx={104} cy={128} r={40} fill={t.blob} />
+      <G transform="translate(118 14) rotate(5)">
+        <Rect x={5} y={7} width={74} height={140} rx={14} fill={back} />
+        <Rect width={74} height={140} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Rect x={28} y={7} width={18} height={4} rx={2} fill={t.line} />
+        <Circle cx={37} cy={36} r={13} fill="#e3eef9" />
+        <Circle cx={37} cy={33} r={5} fill={t.avatar} />
+        <Path d="M28 44 q9 -10 18 0 z" fill={t.avatar} />
+        <Rect x={10} y={60} width={54} height={14} rx={7} fill="none" stroke={t.cardLine} strokeWidth={1.5} />
+        <Rect x={17} y={65} width={28} height={4} rx={2} fill={t.line} />
+        <Rect x={10} y={80} width={54} height={14} rx={7} fill="none" stroke={t.cardLine} strokeWidth={1.5} />
+        {[0, 1, 2, 3, 4].map(i => <Circle key={i} cx={19 + i * 7} cy={87} r={2.2} fill={light ? '#5f7f63' : '#5f7f63'} />)}
+        <Rect x={10} y={102} width={54} height={15} rx={7.5} fill={t.ok} />
+        <Rect x={28} y={108} width={18} height={3.5} rx={1.75} fill="#fff" />
+      </G>
+      <G transform="translate(84 92)">
+        <Path d="M22 0 L42 7 V22 Q42 38 22 46 Q2 38 2 22 V7 Z" fill={t.ok} />
+        <Path d="M14 23 l6 6 l10 -11" fill="none" stroke="#fff" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round" />
+      </G>
+      <G transform="translate(206 112) rotate(-12)">
+        <Rect width={30} height={21} rx={4} fill="#c8102e" />
+        <Rect x={9} width={5} height={21} fill="#fff" />
+        <Rect y={8} width={30} height={5} fill="#fff" />
+      </G>
+      <Circle cx={92} cy={42} r={3.5} fill={t.gold} />
+      <Circle cx={232} cy={28} r={4} fill={t.gold} />
+      <Circle cx={240} cy={160} r={2.5} fill={t.you} />
+    </>
+  );
+  // (wide: the drawing's own middle, x 80–245, in the left of the page's centred column, beside the theme button)
+  return wide ? <View style={{ marginLeft: Math.max(0, (width - 980) / 2 + 56) }}><Frame height={height}><G transform="translate(-60 10)">{body}</G></Frame></View>
+    : <Svg width={width} height={Math.round(height * 0.66)} viewBox="40 4 220 166" preserveAspectRatio="xMidYMin meet">{body}</Svg>;
 }
