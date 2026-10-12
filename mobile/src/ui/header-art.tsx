@@ -54,7 +54,7 @@ export function CourseArt({ light, height }: Art) {
 export function RulesArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
   return (
-    <Frame height={height}>
+    <Frame height={height} edge={192}>
       <Blobs t={t} />
       <G transform="translate(14 58) scale(0.86)">
         <Path d="M0 18 Q 50 0 100 18 L100 120 Q 50 102 0 120 Z" fill={t.card} stroke={t.cardLine} strokeWidth={2} />
@@ -78,7 +78,7 @@ export function PriorityArt({ light, height }: Art) {
     <G><Circle cx={x} cy={y} r={14} fill={fill} /><SvgText x={x} y={y + 5.5} fontSize={16} fontFamily="Vazirmatn-700" fontWeight="700" textAnchor="middle" fill="#fff">{RTL ? n : latin(n)}</SvgText></G>
   );
   return (
-    <Frame height={height}>
+    <Frame height={height} edge={190}>
       <Blobs t={t} />
       <Rect x={14} y={100} width={170} height={32} rx={16} fill={t.road} />
       <Rect x={84} y={34} width={32} height={160} rx={16} fill={t.road} />
@@ -99,7 +99,7 @@ export function PriorityArt({ light, height }: Art) {
 export function SignsArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
   return (
-    <Frame height={height}>
+    <Frame height={height} edge={196}>
       <Blobs t={t} />
       <G transform="translate(-6 30) scale(0.82)">
         <Rect x={34} y={40} width={190} height={130} rx={16} fill={t.card} stroke={t.cardLine} strokeWidth={2} />
