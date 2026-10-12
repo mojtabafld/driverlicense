@@ -15,7 +15,8 @@ type Tone = typeof LIGHT;
 // The drawing's box: the header's height (less its fading foot), three to two, on the left.
 function Frame({ height, children }: { height: number; children: React.ReactNode }) {
   const h = height - 30, w = Math.round(h * 1.5);
-  return <Svg width={w} height={h} viewBox="0 0 300 200" style={{ marginLeft: 4 }}>{children}</Svg>;
+  // In English and Danish (on the right, the title at the left): a little further out towards the right edge.
+  return <Svg width={w} height={h} viewBox="0 0 300 200" style={RTL ? { marginLeft: 4 } : { marginRight: -Math.round(w * 0.14) }}>{children}</Svg>;
 }
 const Blobs = ({ t }: { t: Tone }) => <><Circle cx={228} cy={70} r={58} fill={t.blob} /><Circle cx={62} cy={150} r={44} fill={t.blob} /></>;
 const tick = (x: number, y: number) => `M${x - 4.5} ${y} l3 3 l6 -6`;

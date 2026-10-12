@@ -276,7 +276,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
             {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        {below ? null : <View style={{ gap: 2, maxWidth: '58%' }}>
+        {below ? null : <View style={{ gap: 2, maxWidth: '58%', ...(back && !RTL ? { minWidth: '58%', paddingLeft: 52 } : null) }}>
           <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, shade]}>{title}</T>
           {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
