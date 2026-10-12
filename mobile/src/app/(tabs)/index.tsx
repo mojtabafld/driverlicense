@@ -19,11 +19,7 @@ import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
-import { HOME_ARTS } from '@/ui/header-art';
-
-// Sample only: ?hero=1..3 on the web shows one of the header drawings.
-const SAMPLE = typeof location !== 'undefined' ? Number(new URLSearchParams(location.search).get('hero') || 0) : 0;
-const HOME_ART = HOME_ARTS[SAMPLE - 1];
+import { HomeLicenceArt } from '@/ui/header-art';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
@@ -173,7 +169,7 @@ export default function Home() {
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
-      hero={{ pic: 3, icon: 'house', art: HOME_ART }} barGap={ARC ? 8 : undefined}>
+      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} barGap={ARC ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>

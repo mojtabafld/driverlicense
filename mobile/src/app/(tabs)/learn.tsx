@@ -16,7 +16,8 @@ import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
 import { ListCard } from '@/ui/list-card';
-import { useColors } from '@/ui/theme';
+import { ARC, useColors } from '@/ui/theme';
+import { LearnBookArt } from '@/ui/header-art';
 
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
@@ -66,7 +67,7 @@ export default function Learn() {
   const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
   const tried = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, all = bank?.tests.length ?? 44;
   return (
-    <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn' }}>
+    <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 12 }}>

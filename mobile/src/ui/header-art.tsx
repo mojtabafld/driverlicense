@@ -2,7 +2,7 @@
 // drawn in the theme's colours on two soft circles, no cars and no road signs. «آموزش گام‌به‌گام»: a road of steps to
 // the licence; «قوانین»: an open rule book; «حق تقدم»: two crossing ways and who goes first; «علائم رانندگی»: the
 // shapes signs are learnt by, on a card, with a magnifier.
-import Svg, { Circle, ClipPath, Defs, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 
 type Art = { light: boolean; height: number };
 
@@ -109,10 +109,9 @@ export function SignsArt({ light, height }: Art) {
   );
 }
 
-// Samples for the home page's header (Mojtaba asked for a modern, minimal picture there): one is picked, the others go.
-// Each keeps to the drawing box's left 60% (x ≤ 185), clear of the greeting on the right.
+// The home page's header (main site; Mojtaba picked it from three samples), kept to the drawing box's left 60% (x ≤ 185),
+// clear of the greeting on the right.
 const HomeBlobs = ({ t }: { t: Tone }) => <><Circle cx={140} cy={66} r={50} fill={t.blob} /><Circle cx={46} cy={148} r={38} fill={t.blob} /></>;
-
 // «گواهینامه»: the licence card the app leads to, with a Danish flag and a green seal.
 export function HomeLicenceArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
@@ -143,35 +142,9 @@ export function HomeLicenceArt({ light, height }: Art) {
   );
 }
 
-// «جاده تا افق»: in a round window, a road running to the horizon under a low sun, a finish flag where it ends.
-export function HomeRoadArt({ light, height }: Art) {
-  const t = light ? LIGHT : DARK;
-  const sky = light ? '#e9f4e6' : '#24603a', hill = light ? '#bfdcb8' : '#2c6f44', hill2 = light ? '#a9cfa1' : '#357c4d';
-  const dashes = [[166, 14, 5], [146, 10, 4], [132, 7, 3], [122, 5, 2.4], [115, 3, 1.8]];
-  return (
-    <Frame height={height}>
-      <Defs><ClipPath id="homeRoad"><Circle cx={98} cy={100} r={78} /></ClipPath></Defs>
-      <G clipPath="url(#homeRoad)">
-        <Rect x={0} y={0} width={200} height={200} fill={sky} />
-        <Circle cx={98} cy={98} r={26} fill={t.gold} />
-        <Path d="M10 108 Q 60 88 110 104 T 190 98 L190 200 L10 200 Z" fill={hill} />
-        <Path d="M10 132 Q 70 112 120 126 T 190 120 L190 200 L10 200 Z" fill={hill2} />
-        <Path d="M93 106 L103 106 L160 200 L36 200 Z" fill={t.road} />
-        {dashes.map(([y, h, w]) => <Rect key={y} x={98 - w / 2} y={y} width={w} height={h} rx={w / 2} fill={light ? '#c4dcbf' : '#cfe3d2'} />)}
-      </G>
-      <Circle cx={98} cy={100} r={78} fill="none" stroke={light ? '#ffffff' : '#2c6a3c'} strokeWidth={3} />
-      <Line x1={108} y1={106} x2={108} y2={80} stroke={t.pole} strokeWidth={2} strokeLinecap="round" />
-      <G transform="translate(108 80)">
-        {[0, 1, 2].map(i => [0, 1].map(j => <Rect key={`${i}${j}`} x={i * 6} y={j * 5} width={6} height={5} fill={(i + j) % 2 ? '#ffffff' : '#1b1b1b'} />))}
-      </G>
-      <Circle cx={176} cy={34} r={4} fill={t.gold} />
-      <Circle cx={182} cy={160} r={2.5} fill={t.you} />
-    </Frame>
-  );
-}
 
-// «فرمان و آزمون»: a steering wheel behind a question card with the right answer ticked.
-export function HomeWheelArt({ light, height }: Art) {
+// The exam tab's header (main site): «فرمان و آزمون», a steering wheel behind a question card with the right answer ticked.
+export function ExamWheelArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
   const wheel = light ? '#6f9c77' : '#cfe3d2';
   return (
@@ -206,4 +179,33 @@ export function HomeWheelArt({ light, height }: Art) {
   );
 }
 
-export const HOME_ARTS = [HomeLicenceArt, HomeRoadArt, HomeWheelArt];
+// The learning tab's header (main site): an open book, a warning sign on its left page and text on its right, a
+// graduation cap above it and a green seal at its corner.
+export function LearnBookArt({ light, height }: Art) {
+  const t = light ? LIGHT : DARK;
+  const back = light ? '#b9d7b3' : '#143a20';
+  return (
+    <Frame height={height}>
+      <HomeBlobs t={t} />
+      <G transform="translate(16 82) rotate(-4) scale(0.86)">
+        <Path d="M4 16 Q 44 2 84 16 L84 106 Q 44 92 4 106 Z M84 16 Q 124 2 164 16 L164 106 Q 124 92 84 106 Z" fill={back} transform="translate(4 6)" />
+        <Path d="M0 16 Q 40 2 80 16 L80 106 Q 40 92 0 106 Z" fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Path d="M80 16 Q 120 2 160 16 L160 106 Q 120 92 80 106 Z" fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Line x1={80} y1={16} x2={80} y2={106} stroke={t.cardLine} strokeWidth={1.5} />
+        <Path d="M40 34 L60 68 L20 68 Z" fill="#fff" stroke="#c8102e" strokeWidth={5} strokeLinejoin="round" />
+        <Rect x={22} y={80} width={36} height={5} rx={2.5} fill={t.line} />
+        {[[30, 52], [42, 60], [54, 44], [66, 56], [78, 38]].map(([y, w]) => <Rect key={y} x={94} y={y} width={w} height={5} rx={2.5} fill={t.line} />)}
+        <Path d="M136 9 v26 l7 -6 l7 6 v-26 z" fill={t.you} />
+      </G>
+      <G transform="translate(112 34) rotate(-10) scale(0.9)">
+        <Path d="M0 18 L30 6 L60 18 L30 30 Z" fill={light ? '#2a5a35' : '#e8f1e6'} />
+        <Path d="M12 23 v12 q18 9 36 0 v-12 l-18 7 z" fill={light ? '#2a5a35' : '#e8f1e6'} opacity={0.85} />
+        <Path d="M52 21 v14" stroke={t.gold} strokeWidth={2.2} strokeLinecap="round" />
+        <Circle cx={52} cy={37} r={3} fill={t.gold} />
+      </G>
+      <Circle cx={170} cy={150} r={15} fill={t.ok} />
+      <Tick x={170} y={150} />
+      <Circle cx={24} cy={40} r={3.5} fill={t.gold} />
+    </Frame>
+  );
+}
