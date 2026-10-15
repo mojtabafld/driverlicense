@@ -8,9 +8,10 @@ import { Icon } from './icon';
 import { T, tap } from './kit';
 import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { useTheme } from './theme';
+import { px } from './palette';
 
 const SIZE = 40, ROUND = { width: SIZE, height: SIZE, borderRadius: SIZE / 2, alignItems: 'center', justifyContent: 'center' } as const;
-const ON = '#2f55d4';
+const ON = px('#2f55d4');
 
 export function ThemeButton() {
   const { theme, setMode } = useTheme();
@@ -39,7 +40,7 @@ export function LangButton({ open, setOpen }: { open: boolean; setOpen: (v: bool
             return (
               <Pressable key={l} onPress={() => { tap(); setOpen(false); setUiLang(l); }} accessibilityRole="menuitem" accessibilityState={{ selected: on }}
                 style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 44, paddingHorizontal: 12, borderRadius: 11,
-                  backgroundColor: on ? '#e5e8f2' : pressed || hovered ? '#f2f2f2' : 'transparent' })}>
+                  backgroundColor: on ? px('#e5e8f2') : pressed || hovered ? '#f2f2f2' : 'transparent' })}>
                 <T raw style={{ flex: 1, fontSize: 15.5, lineHeight: 22, color: on ? ON : '#1b1b1b', fontFamily: LANG_FONT(l, on ? 700 : 500), fontWeight: 'normal', textAlign: 'left', writingDirection: 'ltr' }}>{LANG_NAMES[l]}</T>
                 {on ? <Icon name="check" size={16} color={ON} weight="bold" /> : null}
               </Pressable>

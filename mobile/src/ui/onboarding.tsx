@@ -18,6 +18,7 @@ import { IntroAi, IntroBank, IntroExam, IntroProgress } from './intro-art';
 import { ARC, useIsDark } from './theme';
 import { LangButton, ThemeButton } from './intro-top';
 import { LangWheel } from './lang-wheel';
+import { px } from './palette';
 
 // Main site: its own minimal drawings (ui/intro-art.tsx) in place of the server's pictures, Mojtaba asked.
 const SLIDES = [
@@ -30,13 +31,13 @@ const SLIDES = [
 // going only a shade darker at the very bottom.
 // Main site (Mojtaba, 2026-10-15): the light theme's in the login button's green, the dark theme's in the page headers'
 // dark green.
-const INTRO_LIGHT = ['#2f55d4', '#2f55d4', '#13255f'] as const, INTRO_DARK = ARC ? ['#141c3d', '#141c3d', '#0d1330'] as const : ['#1b483d', '#1b483d', '#123329'] as const;
+const INTRO_LIGHT = [px('#2f55d4'), px('#2f55d4'), px('#13255f')] as const, INTRO_DARK = ARC ? [px('#141c3d'), px('#141c3d'), px('#0d1330')] as const : ['#1b483d', '#1b483d', '#123329'] as const;
 const INTRO_APP = ['#14421c', '#14421c', '#0d3014'] as const;
 export function useIntroBg(): readonly [string, string, string] {
   const dark = useIsDark();
   return ARC ? (dark ? INTRO_DARK : INTRO_LIGHT) : INTRO_APP;
 }
-const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? '#2f55d4' : '#14421c';
+const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? px('#2f55d4') : '#14421c';
 
 // The slide's title on one line: measured once at full size in an invisible, very wide box, then set just small
 // enough to fit the width it has (never larger than `size`).
