@@ -85,12 +85,14 @@ const uberDark: typeof tealLight = {
   bgGradient: ['#0c0c0c', '#0c0c0c', '#0c0c0c'] as readonly [string, string, string],
 };
 // Arc: the values of foundation.css (oklch greys and status colours as hex), with data-accent="green".
+// (Main site, 2026-10-15: accent, links, icons and the chart in the reference's button green #1f6f5c; in the dark theme its
+// lighter sage #6fb09b.)
 const arcLight: typeof tealLight = {
   bg: '#f3f3f3', surface: '#ffffff', surface2: '#f8f8f8', line: '#e9e9e9',
   text: '#0b0b0b', muted: '#585858', faint: '#7d7d7d',
-  accent: '#0db88f', accentText: '#10201c', accentSoft: 'rgba(13,184,143,0.13)', link: '#087c60',
-  forest: '#0db88f', ok: '#007b5e', okSoft: '#e5f4f0', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
-  note: '#f1f1f1', submit: '#1d1d1d', checked: 'rgba(13,184,143,0.13)', cardBorder: '#e9e9e9', hairline: '#f3f3f3',
+  accent: '#1f6f5c', accentText: '#ffffff', accentSoft: 'rgba(31,111,92,0.13)', link: '#1f6f5c',
+  forest: '#1f6f5c', ok: '#007b5e', okSoft: '#e5f4f0', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
+  note: '#f1f1f1', submit: '#1d1d1d', checked: 'rgba(31,111,92,0.13)', cardBorder: '#e9e9e9', hairline: '#f3f3f3',
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e9e9e9',
   pick: '#1d1d1d', pickSoft: '#f1f1f1',
   nav: '#f1f1f1', navFg: '#0b0b0b', navOff: '#f8f8f8', navNum: '#585858',
@@ -104,9 +106,9 @@ const arcLight: typeof tealLight = {
 const arcDark: typeof tealLight = {
   bg: '#000000', surface: '#191919', surface2: '#242424', line: '#2b2b2b',
   text: '#f2f2f2', muted: '#b4b4b4', faint: '#8c8c8c',
-  accent: '#53dcbb', accentText: '#0b1a16', accentSoft: 'rgba(13,184,143,0.2)', link: '#53dcbb',
-  forest: '#53dcbb', ok: '#4cd6b5', okSoft: '#142823', bad: '#ff736d', badSoft: '#3a1816', warn: '#ffb90e', warnSoft: '#33270b', info: '#ffffff',
-  note: '#242424', submit: '#e8e8e8', checked: 'rgba(13,184,143,0.2)', cardBorder: '#2b2b2b', hairline: '#222222',
+  accent: '#6fb09b', accentText: '#0b1a16', accentSoft: 'rgba(111,176,155,0.2)', link: '#6fb09b',
+  forest: '#6fb09b', ok: '#4cd6b5', okSoft: '#142823', bad: '#ff736d', badSoft: '#3a1816', warn: '#ffb90e', warnSoft: '#33270b', info: '#ffffff',
+  note: '#242424', submit: '#e8e8e8', checked: 'rgba(111,176,155,0.2)', cardBorder: '#2b2b2b', hairline: '#222222',
   glass: '#191919', glassStrong: '#191919', glassBorder: '#2b2b2b',
   pick: '#e8e8e8', pickSoft: '#2b2b2b',
   nav: '#2b2b2b', navFg: '#f2f2f2', navOff: '#1f1f1f', navNum: '#b4b4b4',
