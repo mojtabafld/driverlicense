@@ -30,7 +30,7 @@ const SLIDES = [
 // going only a shade darker at the very bottom.
 // Main site (Mojtaba, 2026-10-15): the light theme's in the login button's green, the dark theme's in the page headers'
 // dark green.
-const INTRO_LIGHT = ['#1f6f5c', '#1f6f5c', '#185a49'] as const, INTRO_DARK = ['#1b483d', '#1b483d', '#123329'] as const;
+const INTRO_LIGHT = ['#1f6f5c', '#1f6f5c', '#185a49'] as const, INTRO_DARK = ARC ? ['#141c3d', '#141c3d', '#0d1330'] as const : ['#1b483d', '#1b483d', '#123329'] as const;
 const INTRO_APP = ['#14421c', '#14421c', '#0d3014'] as const;
 export function useIntroBg(): readonly [string, string, string] {
   const dark = useIsDark();

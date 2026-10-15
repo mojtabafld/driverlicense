@@ -39,13 +39,13 @@ export function useBarLook() {
   }
   return {
     dark, light,
-    grey: dark ? 'rgba(58,58,62,0.78)' : 'rgba(88,88,94,0.84)',
-    solid: dark ? 'rgba(52,52,56,0.96)' : 'rgba(84,84,90,0.96)', // Android, where nothing blurs
+    grey: dark ? (ARC ? 'rgba(30,35,58,0.82)' : 'rgba(58,58,62,0.78)') : 'rgba(88,88,94,0.84)',
+    solid: dark ? (ARC ? 'rgba(26,30,49,0.97)' : 'rgba(52,52,56,0.96)') : 'rgba(84,84,90,0.96)', // Android, where nothing blurs
     capsule: dark ? 'rgba(0,0,0,0.38)' : 'rgba(30,30,34,0.6)',
-    green: (ARC ? '#6fdcc2' : '#6fdc7c'),
+    green: (ARC ? (dark ? '#8ea8ff' : '#6fdcc2') : '#6fdc7c'),
     fg: '#ffffff',
     edge: 'rgba(255,255,255,0.18)',
-    contrast: dark ? '#1f1f20' : '#3f3f43', // a filled icon's inner lines: the capsule's own colour
+    contrast: dark ? (ARC ? '#1a1e31' : '#1f1f20') : '#3f3f43', // a filled icon's inner lines: the capsule's own colour
   };
 }
 
