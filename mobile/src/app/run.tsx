@@ -204,7 +204,15 @@ export default function Run() {
       <Sheet open={dialog === 'handin'} onClose={() => setDialog(null)} maxHeight="88%">
         {/* The title, with a ✕ at the top right that returns to the exam. */}
         <View style={{ minHeight: 40, justifyContent: 'center' }}>
-          <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
+          {/* (main site: a clipboard icon in the accent beside the title, Mojtaba 2026-10-15) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            {!PROVE_PICS ? (
+              <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+                <Icon name="clipboard" size={18} color={c.accent} />
+              </View>
+            ) : null}
+            <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
+          </View>
           <Pressable onPress={() => { tap(); setDialog(null); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="بازگشت به آزمون"
             style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
               backgroundColor: c.nav, opacity: pressed ? 0.8 : 1 })}>
