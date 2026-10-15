@@ -3,10 +3,10 @@
 // at once.
 import { Pressable, View } from 'react-native';
 
-import { UI_LANG, UI_LANGS, setUiLang, tr } from '@/lib/i18n';
+import { UI_LANG, setUiLang, tr } from '@/lib/i18n';
 import { Icon } from './icon';
 import { T, tap } from './kit';
-import { LANG_FONT, LANG_NAMES } from './lang-wheel';
+import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { useTheme } from './theme';
 
 const SIZE = 40, ROUND = { width: SIZE, height: SIZE, borderRadius: SIZE / 2, alignItems: 'center', justifyContent: 'center' } as const;
@@ -34,7 +34,7 @@ export function LangButton({ open, setOpen }: { open: boolean; setOpen: (v: bool
       {open ? (
         <View accessibilityRole="menu" style={{ position: 'absolute', top: SIZE + 8, left: 0, minWidth: 168, padding: 6, borderRadius: 16, backgroundColor: '#fff',
           shadowColor: '#000', shadowOpacity: 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 8 }}>
-          {UI_LANGS.map(l => {
+          {LANGS.map(l => {
             const on = l === UI_LANG;
             return (
               <Pressable key={l} onPress={() => { tap(); setOpen(false); setUiLang(l); }} accessibilityRole="menuitem" accessibilityState={{ selected: on }}
