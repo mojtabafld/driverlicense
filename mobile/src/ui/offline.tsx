@@ -7,12 +7,14 @@ import { ActivityIndicator, Pressable, View, useWindowDimensions } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from './icon';
+import { ARC } from './theme';
 import { T, tap } from './kit';
 import { TallPicture } from './tall-picture';
 
 const PICTURE = require('../../assets/images/offline.jpg');
 // The intro's dark forest green (the picture's own background, which it fades into).
-export const OFFLINE_TOP = '#14421c';
+export const OFFLINE_TOP = ARC ? '#144237' : '#14421c';
+const OFFLINE_FOOT = ARC ? '#0d3028' : '#0d3014';
 
 // On the web the picture is a file from the server: loaded (invisibly) while online, so the offline page has it.
 export function OfflinePreload() {
@@ -26,7 +28,7 @@ export function Offline({ onRetry }: { onRetry: () => Promise<void> }) {
   const retry = async () => { tap(); setBusy(true); try { await onRetry(); } finally { setBusy(false); } };
   return (
     <View style={{ flex: 1 }} accessibilityRole="alert">
-      <LinearGradient colors={[OFFLINE_TOP, OFFLINE_TOP, '#0d3014']} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient colors={[OFFLINE_TOP, OFFLINE_TOP, OFFLINE_FOOT]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <TallPicture height={headH} bg={OFFLINE_TOP} source={PICTURE} />
       <View style={{ flex: 1, marginTop: -28, paddingBottom: ins.bottom + 24, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <View style={{ flex: 1, gap: 12 }}>
@@ -35,8 +37,8 @@ export function Offline({ onRetry }: { onRetry: () => Promise<void> }) {
         </View>
         <Pressable disabled={busy} onPress={retry} accessibilityRole="button"
           style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 54, borderRadius: 12, backgroundColor: '#ffffff' })}>
-          {busy ? <ActivityIndicator color="#14421c" /> : <Icon name="refresh" size={18} color="#14421c" weight="semibold" />}
-          <T style={{ color: '#14421c', fontSize: 17, fontWeight: '600' }}>تلاش دوباره</T>
+          {busy ? <ActivityIndicator color={OFFLINE_TOP} /> : <Icon name="refresh" size={18} color={OFFLINE_TOP} weight="semibold" />}
+          <T style={{ color: OFFLINE_TOP, fontSize: 17, fontWeight: '600' }}>تلاش دوباره</T>
         </Pressable>
       </View>
     </View>

@@ -26,9 +26,9 @@ const SLIDES = [
 ];
 // Flat dark forest green, the colour the server's intro pictures are made on (so they sit in the page seamlessly),
 // going only a shade darker at the very bottom.
-export const INTRO_BG = ['#14421c', '#14421c', '#0d3014'] as const;
+export const INTRO_BG = ARC ? ['#144237', '#144237', '#0d3028'] as const : ['#14421c', '#14421c', '#0d3014'] as const;
 const BG = INTRO_BG;
-const BUTTON = '#ffffff', BUTTON_TEXT = '#14421c';
+const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? '#144237' : '#14421c';
 
 // The slide's title on one line: measured once at full size in an invisible, very wide box, then set just small
 // enough to fit the width it has (never larger than `size`).

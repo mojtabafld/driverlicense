@@ -221,7 +221,8 @@ export function setWebTop(base: string, cover: string | null) { webTop.base = ba
 // colours it with theme-color), so the header runs up to the screen's edge.
 // In the light theme, a light version of the same picture (number + 3, on a soft light green) with a dark green title,
 // once the server has made it; until then the dark one.
-const HERO_BG = '#1b4827', HERO_BG_LIGHT = '#d9ecd5', HERO_INK_LIGHT = '#14421c';
+// (the main site's in its teal green, from Mojtaba's reference)
+const HERO_BG = ARC ? '#1b483d' : '#1b4827', HERO_BG_LIGHT = ARC ? '#d5ece7' : '#d9ecd5', HERO_INK_LIGHT = ARC ? '#144237' : '#14421c';
 const HERO_FADE = 110;   // how far up from the header's bottom the picture fades into the page
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;

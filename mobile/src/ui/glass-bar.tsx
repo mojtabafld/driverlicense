@@ -30,8 +30,8 @@ export function useBarLook() {
       dark, light,
       grey: 'rgba(255,255,255,0.82)',
       solid: 'rgba(252,252,252,0.97)',
-      capsule: 'rgba(31,90,50,0.12)',
-      green: '#1f5a32',
+      capsule: 'rgba(31,111,92,0.12)',
+      green: '#1f6f5c',
       fg: '#1d1d1d',
       edge: 'rgba(0,0,0,0.08)',
       contrast: '#e6ede8',
@@ -42,7 +42,7 @@ export function useBarLook() {
     grey: dark ? 'rgba(58,58,62,0.78)' : 'rgba(88,88,94,0.84)',
     solid: dark ? 'rgba(52,52,56,0.96)' : 'rgba(84,84,90,0.96)', // Android, where nothing blurs
     capsule: dark ? 'rgba(0,0,0,0.38)' : 'rgba(30,30,34,0.6)',
-    green: '#6fdc7c',
+    green: (ARC ? '#6fdcc2' : '#6fdc7c'),
     fg: '#ffffff',
     edge: 'rgba(255,255,255,0.18)',
     contrast: dark ? '#1f1f20' : '#3f3f43', // a filled icon's inner lines: the capsule's own colour

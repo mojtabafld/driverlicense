@@ -82,6 +82,7 @@ function init(s, siteDir) {
     .then(() => adoptHomeTrial()).catch(e => console.error('home trial', e.message))
     .then(() => HERO.start()).catch(e => console.error('header pictures', e.message))
     .then(() => HERO_TRY.start()).catch(e => console.error('trial pictures', e.message))
+    .then(() => LOGIN.start()).catch(e => console.error('sign-in pictures', e.message))
     .then(() => STORE.start()).catch(e => console.error('store pictures', e.message));
 }
 
@@ -199,6 +200,7 @@ async function poll() {
   if (await AVATAR.poll().catch(() => true)) pending = true;
   if (await HERO.poll().catch(() => true)) pending = true;
   if (await HERO_TRY.poll().catch(() => true)) pending = true;
+  if (await LOGIN.poll().catch(() => true)) pending = true;
   if (await STORE.poll().catch(() => true)) pending = true;
   if (await GUIDE.poll().catch(() => true)) pending = true;
   if (await pollOneOff().catch(() => true)) pending = true;
@@ -1044,6 +1046,15 @@ const HERO = artSet({ metaKey: 'heroArt', set: HERO_SET, aspect: '4:3', prefix: 
   // (sharpening tried on one picture first, to see what the upscaler sends back: heroDiag)
   full: true, upscale: { 2: HERO_UP, 4: HERO_UP, 6: HERO_UP, 8: HERO_UP }, clean: 'cl2', enhance: '' });   // sharpening off (see enhanceTask): kie.ai's upscalers failed or sent pictures too large
 const heroVersions = HERO.versions, heroBlob = HERO.blob;
+// The sign-in page's picture on the main site (Mojtaba's mountain reference, 2026-10-15): a flat landscape in solid
+// colours, the light theme's drawn first (1) and the dark theme's redrawn from it (2). Served at /login-art/<n>.png;
+// until one is made the app shows its own vector drawing of the same scene (ui/header-art.tsx LoginScene).
+const LOGIN_FLAT = 'Style: a flat vector illustration like a modern minimal mobile app onboarding screen: only solid flat fills, no gradients at all, no shading, no texture, no grain, no outlines, no 3D, no shadows; clean simple geometric shapes with straight or gently curved edges. The picture fills the whole frame edge to edge, no border, no frame, no vignette. No text, no letters, no numbers, no logos, no watermarks, no people.';
+const LOGIN_LIGHT = 'A wide calm landscape for the sign-in screen of a Danish driving-theory app. The sky is one flat even pale mint colour (#c8e6da) over the whole upper part. A large round flat orange sun (#f2a541) stands in the upper right of the middle area, well away from the top edge. Behind, a range of sharp triangular mountains in flat soft sage green (#6fb09b); in front of them a lower range of sharp triangular hills in flat deep teal green (#1f6f5c) that reaches down to the bottom edge and fills the whole bottom fifth of the picture with that one flat deep teal green. A light grey road (#eef3f1) with a dashed warm yellow centre line winds from the bottom middle up between the front hills and disappears into a gap in them, narrowing with distance. Beside the road on the left stands one small Danish triangular warning traffic sign (white triangle with a red border, point up) on a thin pale grey pole. Keep the sun, the road and the sign inside the central area of the picture, so the left and right edges and the top edge can be cut off.';
+const LOGIN_DARK = 'Redraw this exact picture for a dark night theme. Keep every shape exactly as it is: the same mountains, hills, road, sign, sun and composition, nothing added, removed or moved, still a flat vector illustration with solid flat fills, no gradients, no shading, no texture. Change only the colours: the sky one flat even very dark green-black (#0f241f), the sun a soft warm amber (#e8a447), the back mountains a muted dark teal green (#2b6a5a), the front hills a deeper dark teal green (#183f35) that fills the bottom fifth evenly, the road a dark grey green (#334741) with its dashed yellow centre line. No text, no letters, no numbers, no logos, no watermarks.';
+const LOGIN = artSet({ metaKey: 'loginArt', set: 'flat1', aspect: '3:2', prefix: 'login-art', resolution: '2K', full: true,
+  prompts: [`${LOGIN_LIGHT}\n${LOGIN_FLAT}`, LOGIN_DARK], derive: { 2: '1' } });
+const loginVersions = LOGIN.versions, loginBlob = LOGIN.blob;
 // The home page's pictures redrawn at full size in the trial (/hero-try/1, 2), chosen to replace the ones on show:
 // put in once as they are (already cleaned), marked as redrawn so they are not drawn again, and with the drawing's
 // version (rv) kept, so the dark one is not redrawn from the light one.
@@ -1189,6 +1200,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
