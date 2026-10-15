@@ -22,7 +22,7 @@ import { faNum } from '@/lib/logic';
 import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { learnRtl } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
-import { OptionBox } from '@/ui/option-box';
+import { OptionBox, OptionGroup } from '@/ui/option-box';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
 import { Button, Card, Enter, T, TranslateButton, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
@@ -56,25 +56,22 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(step.da, lang)}</T>
         {fa && transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da }) ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da })}</T> : null}
       </View>
+      <OptionGroup>
       {step.statements.map((s, i) => {
         const on = !!ticks[i], wrong = checked && on !== s.ok;
         return (
-          <View key={i} style={{ gap: 6 }}>
-            <Pressable disabled={checked} onPress={() => { tap(); onToggle(i); }} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
-              style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
-              <OptionBox on={on} mark={wrong} review={checked}>
-                <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
-                {fa && transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da }) ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da })}</T> : null}
-              </OptionBox>
-            </Pressable>
-            {checked ? (
+          <OptionBox key={i} on={on} mark={wrong} review={checked} n={i} disabled={checked} onPress={() => { tap(); onToggle(i); }}
+              extra={checked ? (
               <T style={{ fontSize: 13, lineHeight: 21, color: wrong ? c.bad : c.ok, fontWeight: '600', paddingHorizontal: 4 }}>
                 {wrong ? (s.ok ? 'اشتباه؛ این گزینه درست است و باید انتخاب می‌شد. ' : 'اشتباه؛ این گزینه نادرست است و نباید انتخاب می‌شد. ') : 'درست. '}{s.why}
               </T>
-            ) : null}
-          </View>
+            ) : null}>
+                <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
+                {fa && transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da }) ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da })}</T> : null}
+              </OptionBox>
         );
       })}
+      </OptionGroup>
       {/* Only the mistakes are counted; a question without any needs no line (each statement already says «درست»). */}
       {checked && mistakes ? (
         <Enter>
