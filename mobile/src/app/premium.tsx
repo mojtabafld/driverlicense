@@ -109,7 +109,7 @@ export default function Premium() {
       ) : until ? (
         <Card><T style={{ color: c.muted, textAlign: 'center' }}>{t('نسخه‌ی ویژه‌ی شما {0} تمام شد.', fmtDay(until))}</T></Card>
       ) : null}
-      {pay && !user?.admin ? (
+      {pay ? (
         <Card style={{ gap: 12 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>{premium ? 'تمدید' : 'انتخاب مدت'}</T>
           <View accessibilityRole="radiogroup" style={{ gap: 10 }}>

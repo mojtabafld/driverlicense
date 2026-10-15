@@ -107,7 +107,11 @@ const publicUser = u => ({ username: u.username, name: u.name, created: u.create
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
 const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه است.';
-const needsPremium = u => payments.gated() && !hasPremium(u);
+// With a test key (sk_/rk_test_) payments are only for the admins and the usernames in PREMIUM_TESTERS (comma-separated),
+// so nobody else meets a test checkout or a lock while it is tried out; with a live key they are for everyone.
+const TESTERS = new Set((process.env.PREMIUM_TESTERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
+const payFor = u => payments.available() && (!payments.testMode() || !!(u && (isAdmin(u) || TESTERS.has(u.username))));
+const needsPremium = u => payments.gated() && payFor(u) && !hasPremium(u);
 
 // ---------- usage tracking & admin stats ----------
 // Days are counted in Danish time.
@@ -424,7 +428,7 @@ async function api(req, res, route) {
   if (req.method === 'GET' && route === 'config') {
     return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
-      pay: payments.available() ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined } : undefined,
+      pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined } : undefined,
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
       guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions() });
   }
@@ -525,14 +529,14 @@ async function api(req, res, route) {
   // POST checkoutdone { id } (the session Stripe sent the user back with) checks it with Stripe at once, so the pass is
   // there even before the webhook.
   if (req.method === 'POST' && route === 'checkout') {
-    if (!payments.available()) return send(res, 404, { error: 'پرداخت فعال نیست.' });
+    if (!payFor(user)) return send(res, 404, { error: 'پرداخت فعال نیست.' });
     const b = await readBody(req);
     const origin = `${isHttps(req) ? 'https' : 'http'}://${String(req.headers.host || 'localhost').replace(/[^a-zA-Z0-9.:-]/g, '')}`;
     try { return send(res, 200, { url: await payments.createCheckout(user.username, String(b.plan || ''), origin, b.lang) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   if (req.method === 'POST' && route === 'checkoutdone') {
-    if (!payments.available()) return send(res, 404, { error: 'پرداخت فعال نیست.' });
+    if (!payFor(user)) return send(res, 404, { error: 'پرداخت فعال نیست.' });
     const id = String((await readBody(req)).id || '');
     if (!/^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(id)) return send(res, 400, { error: 'bad session' });
     if (!payments.hasSession(user, id)) {
