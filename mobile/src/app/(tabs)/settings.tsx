@@ -17,7 +17,7 @@ import { Card, Screen, Segmented, T, physical, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
-import { PalettePick } from '@/ui/palette-pick';
+import { PaletteRow } from '@/ui/palette-pick';
 
 function Row({ title, sub, right }: { title: string; sub?: string; right: React.ReactNode }) {
   const c = useColors();
@@ -140,10 +140,7 @@ export default function Settings() {
         <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
         {/* The colour theme (main site, web): ten named themes; a change reloads the page in it. */}
         {!PROVE_PICS && Platform.OS === 'web' ? (
-          <View style={{ gap: 10, marginTop: 6 }}>
-            <Row title="رنگ برنامه" sub="یکی از تم‌های رنگی را انتخاب کنید؛ هم در حالت روشن و هم تیره اعمال می‌شود." right={null} />
-            <PalettePick />
-          </View>
+          <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}><PaletteRow /></View>
         ) : null}
       </Card>
       <Card style={{ gap: 10 }}>
