@@ -266,8 +266,11 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
   // The title (and name) in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts).
   const bold = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
   const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
+  // An inner page (`back`): the title and its line under the way back (Mojtaba, 2026-10-15), where a tab's title sits,
+  // the header growing when a long line needs the room.
+  const under = !!back && !tall;
   return (
-    <View style={{ height: H, backgroundColor: bg, overflow: 'hidden' }}>
+    <View style={{ ...(under ? { minHeight: H } : { height: H }), backgroundColor: bg, overflow: 'hidden' }}>
       {look.art ? (
         // (left to right in its own row, so the drawing stays on the left on every platform)
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { flexDirection: 'row', direction: 'ltr', justifyContent: RTL ? 'flex-start' : 'flex-end', paddingTop: ins.top } as any]}>
@@ -278,7 +281,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
       <HeroFade />
-      <View style={{ flex: 1, paddingTop: topPad, paddingBottom: name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall ? 'flex-start' : 'flex-end' }}>
+      <View style={{ flex: 1, paddingTop: under ? topPad + 48 : topPad, paddingBottom: name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall || under ? 'flex-start' : 'flex-end' }}>
         {tall ? (
           <>
             <View style={{ alignSelf: 'flex-end', borderRadius: 19, backgroundColor: light ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)' }}>
@@ -288,7 +291,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
             {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        {below ? null : <View style={{ gap: 2, maxWidth: '58%', ...(back ? { minWidth: '58%', [RTL ? 'paddingRight' : 'paddingLeft']: 52 } : null) }}>
+        {below ? null : <View style={{ gap: 2, maxWidth: '58%' }}>
           <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
           {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
