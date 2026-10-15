@@ -1138,6 +1138,8 @@
 "خودرویی که عرضش (با بار) بیش از عدد تابلو باشد نباید وارد شود.":["A vehicle whose width (including load) exceeds the figure on the sign must not enter.","Et køretøj, hvis bredde (inkl. last) overstiger tallet på tavlen, må ikke køre ind."],
 "خودرویی که فلش سبز دارد.":["The vehicle that has the green arrow.","Det køretøj, der har den grønne pil."],
 "خودکار":["Auto","Automatisk"],
+"ورود به عنوان کاربر مهمان":["Continue as a guest","Fortsæt som gæst"],
+"مهمان":["Guest","Gæst"],
 "خوش آمدید":["Welcome","Velkommen"],
 "خیابان دوچرخه":["Cycle street","Cykelgade"],
 "خیابان دوچرخه (cykelgade)":["Cycle street (cykelgade)","Cykelgade"],
