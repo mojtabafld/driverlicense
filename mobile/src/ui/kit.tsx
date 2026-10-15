@@ -226,6 +226,14 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
+// While a page with a coloured header is in view on the web, the status bar above it in the header's colour; back to the
+// page's colour after.
+export function useHeaderTop(color: string) {
+  useFocusEffect(useCallback(() => {
+    webTop.hero = color; paintWebTop();
+    return () => { webTop.hero = null; paintWebTop(); };
+  }, [color]));
+}
 // `tall`: about half the screen high (the sign-in page, its form under it), with the theme switch at its top on a soft
 // round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
 // `lower`: that place this much further down (signing up). `name`: a line under the title (the user's name on the home
@@ -236,11 +244,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
   const c = useColors(), ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   const page = c.bgGradient[0], lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
-  // While the page is in view on the web, the status bar above it in the header's green; back to the page's colour after.
-  useFocusEffect(useCallback(() => {
-    webTop.hero = bg; paintWebTop();
-    return () => { webTop.hero = null; paintWebTop(); };
-  }, [bg]));
+  useHeaderTop(bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
   const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : Math.min(Math.round(width * 0.34), 190) + 70);
@@ -456,8 +460,9 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
 // in weight 500 with a 20px icon beside it. A press springs the button down to 0.985 (0.97 when it is narrower than
 // 220) and dims a primary to 0.84 / fills a secondary with the muted grey; with a mouse, hover lifts a primary with a
 // resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
-export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style }: {
-  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary'; disabled?: boolean; style?: StyleProp<ViewStyle>;
+// `big`: taller, with a larger label (the sign-in page's one wide button).
+export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big }: {
+  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
 }) {
   const c = useColors();
   const [scale] = useState(() => new Animated.Value(1));
@@ -481,17 +486,17 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
-          minHeight: 50, borderRadius: radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+          minHeight: big ? 56 : 50, borderRadius: big ? 16 : radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
           borderColor: primary ? c.cta : c.line,
           backgroundColor: primary ? c.cta : pressed || hovered ? c.surface2 : c.surface,
-          opacity: disabled ? 0.52 : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
+          opacity: disabled ? (big ? 0.72 : 0.52) : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
           transform: [{ scale }],
           ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
           ...(Platform.OS === 'web' ? { transitionProperty: 'background-color, opacity, box-shadow', transitionDuration: '150ms' } as any : {}),
         }}>
           {icon ? <Icon name={icon} size={20} color={fg} /> : null}
           <Animated.View style={labelIn as any}>
-            <T numberOfLines={1} style={{ fontSize: 15, lineHeight: 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
+            <T numberOfLines={1} style={{ fontSize: big ? 16.5 : 15, lineHeight: big ? 24 : 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
           </Animated.View>
         </Animated.View>
       )}

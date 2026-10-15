@@ -1,14 +1,16 @@
-// Sign in / sign up: a tall picture header (as on the tab pages) with the greeting, then on the page (no card) a mode
+// Sign in / sign up: a tall picture header (as on the tab pages; on the main site a flat landscape) with the greeting, then on the page (no card) a mode
 // switch, fields with icons and one wide button, then the site's three short facts.
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { ArcButton, Backdrop, Button, Hero, SegPill, T, tap, useArcSeg } from '@/ui/kit';
+import { ArcButton, Backdrop, Button, Hero, SegPill, T, ThemeButton, tap, useArcSeg, useHeaderTop } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
-import { LoginArt } from '@/ui/header-art';
+import { LOGIN_SKY, LoginScene } from '@/ui/header-art';
+import { RTL } from '@/lib/i18n';
 
 // Sign in / sign up switch: a soft track with the chosen side raised.
 function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
@@ -32,6 +34,31 @@ function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: 
   );
 }
 
+// Main site: the flat landscape across the top, its foot a clean edge on the page (no fade), the theme switch over its
+// sky; the app's name, the greeting and its line under it on the page, in the form's column.
+function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
+  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
+  const sky = dark ? LOGIN_SKY.dark : LOGIN_SKY.light;
+  useHeaderTop(sky);
+  const H = Math.round(Math.max(230, Math.min(height * 0.36, 360)));
+  const bold = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
+  return (
+    <>
+      <View style={{ height: H + ins.top, backgroundColor: sky, paddingTop: ins.top, overflow: 'hidden' }}>
+        <LoginScene light={!dark} width={width} height={H} />
+        <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, maxWidth: 980 - 32, alignSelf: 'center', alignItems: 'flex-end' }}>
+          <View style={{ borderRadius: 19, backgroundColor: dark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.55)' }}><ThemeButton /></View>
+        </View>
+      </View>
+      <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 26, paddingBottom: 18, gap: 6 }}>
+        <T raw style={{ fontSize: 13, letterSpacing: 0.4, color: dark ? c.link : c.cta, fontWeight: '600' }}>TeoriPrøve</T>
+        <T style={[{ fontSize: 28, lineHeight: 38, color: c.text }, bold]}>{title}</T>
+        <T style={{ fontSize: 15, lineHeight: 24, color: c.muted }}>{subtitle}</T>
+      </View>
+    </>
+  );
+}
+
 export default function Login() {
   const c = useColors();
   const { login, register } = useApp();
@@ -45,13 +72,15 @@ export default function Login() {
     try { if (mode === 'login') await login(user.trim(), pw); else await register(name.trim(), user.trim(), pw); }
     catch (e: any) { setErr(e.message); setBusy(false); }
   };
+  const title = mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری';
+  const subtitle = mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید';
   return (
     <Backdrop>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}>
-          <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person', art: ARC ? LoginArt : undefined }} title={mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری'}
-            subtitle={mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید'} />
-          <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: 6 }}>
+          {ARC ? <SceneHead title={title} subtitle={subtitle} />
+            : <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={title} subtitle={subtitle} />}
+          <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: ARC ? 0 : 6 }}>
             <ModeSwitch mode={mode} onChange={m => { setMode(m); setErr(''); }} />
             {mode === 'register' ? <Field icon="person" label="نام نمایشی (مثلاً سارا)" value={name} onChange={setName} /> : null}
             <Field icon={mode === 'register' ? 'clipboard' : 'person'} label="نام کاربری" value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr />
@@ -62,8 +91,8 @@ export default function Login() {
                 <T style={{ flex: 1, color: c.bad, fontSize: 13.5 }}>{err}</T>
               </View>
             ) : null}
-            {/* Main site: the same deep green as the home and exam buttons (ArcButton), faded while it can't be used. */}
-            {ARC ? <ArcButton label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} style={{ marginTop: 2 }} icon={mode === 'login' ? 'person' : 'personAdd'} />
+            {/* Main site: a plain solid deep green button (the hills' green), its label alone, faded while it can't be used. */}
+            {ARC ? <ArcButton big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} style={{ marginTop: 4 }} />
               : <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} kind="grey" style={{ marginTop: 2 }} icon={mode === 'login' ? 'person' : 'personAdd'} />}
             {/* The site's three facts */}
             <View style={{ alignItems: 'center', gap: 4, marginTop: 10 }}>

@@ -2,8 +2,7 @@
 // drawn in the theme's colours on two soft circles, no cars and no road signs. «آموزش گام‌به‌گام»: a road of steps to
 // the licence; «قوانین»: an open rule book; «حق تقدم»: two crossing ways and who goes first; «علائم رانندگی»: the
 // shapes signs are learnt by, on a card, with a magnifier.
-import { View, useWindowDimensions } from 'react-native';
-import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { RTL, latin } from '@/lib/i18n';
 
 type Art = { light: boolean; height: number };
@@ -217,47 +216,46 @@ export function LearnBookArt({ light, height }: Art) {
   );
 }
 
-// The sign-in page's tall header (main site): a phone with a profile, a password field and a green button, a shield
-// with a tick beside it. On a narrow screen it spans the width in the header's upper two thirds, the title
-// and line under them; on a wide one it sits on the left like the tabs' drawings, the title on the right.
-export function LoginArt({ light, height }: Art) {
-  const t = light ? LIGHT : DARK;
-  const { width } = useWindowDimensions();
-  const wide = width >= (height + 40) * 1.3;
-  const back = light ? '#b9d7b3' : '#143a20';
-  const body = (
-    <>
-      <Circle cx={190} cy={58} r={48} fill={t.blob} />
-      <Circle cx={104} cy={128} r={40} fill={t.blob} />
-      <G transform="translate(118 14) rotate(5)">
-        <Rect x={5} y={7} width={74} height={140} rx={14} fill={back} />
-        <Rect width={74} height={140} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
-        <Rect x={28} y={7} width={18} height={4} rx={2} fill={t.line} />
-        <Circle cx={37} cy={36} r={13} fill="#e3eef9" />
-        <Circle cx={37} cy={33} r={5} fill={t.avatar} />
-        <Path d="M28 44 q9 -10 18 0 z" fill={t.avatar} />
-        <Rect x={10} y={60} width={54} height={14} rx={7} fill="none" stroke={t.cardLine} strokeWidth={1.5} />
-        <Rect x={17} y={65} width={28} height={4} rx={2} fill={t.line} />
-        <Rect x={10} y={80} width={54} height={14} rx={7} fill="none" stroke={t.cardLine} strokeWidth={1.5} />
-        {[0, 1, 2, 3, 4].map(i => <Circle key={i} cx={19 + i * 7} cy={87} r={2.2} fill={light ? '#5f7f63' : '#5f7f63'} />)}
-        <Rect x={10} y={102} width={54} height={15} rx={7.5} fill={t.ok} />
-        <Rect x={28} y={108} width={18} height={3.5} rx={1.75} fill="#fff" />
+// The sign-in page's picture (main site): a flat landscape in solid colours, no fades: a sky, a sun, two ranges of
+// hills, and a road winding up from the page through the near hills to the horizon, a warning sign at its side. Drawn
+// at the box's own size (no stretching): the hills repeat in tiles of about a phone's width from the middle out, so a
+// wide screen shows a longer range rather than bigger hills.
+export const LOGIN_SKY = { light: '#d4eadb', dark: '#0f2417' };
+export function LoginScene({ light, width, height }: { light: boolean; width: number; height: number }) {
+  const w = width, h = height;
+  const t = light
+    ? { sky: LOGIN_SKY.light, sun: '#f2a33f', far: '#7db590', near: '#1f5a32', road: '#e9efe7', dash: '#f6c445', pole: '#c9d3c8' }
+    : { sky: LOGIN_SKY.dark, sun: '#f2a33f', far: '#2b6a3d', near: '#183f25', road: '#33473a', dash: '#e8b93c', pole: '#5c6d61' };
+  const T = Math.min(w, 460), mid = w / 2;
+  // A range: peaks (x as a share of a tile from its middle, y as a share of the height), repeated across the width.
+  const range = (pts: [number, number][]) => {
+    const n = Math.ceil(w / T / 2) + 1, out: string[] = [];
+    for (let k = -n; k <= n; k++) for (const [x, y] of pts) out.push(`${(mid + (k + x) * T).toFixed(1)} ${(y * h).toFixed(1)}`);
+    return `M${mid - (n + 1) * T} ${h} L${out.join(' L')} L${mid + (n + 1) * T} ${h} Z`;
+  };
+  const far = range([[-0.5, 0.6], [-0.3, 0.38], [-0.12, 0.55], [0.1, 0.3], [0.32, 0.56]]);
+  const near = range([[-0.5, 0.82], [-0.3, 0.64], [-0.1, 0.76], [0.12, 0.6], [0.34, 0.8]]);
+  // The road: from the page's edge (wide), curving up to a gap in the near hills (a point).
+  const u = T / 390, top = 0.68 * h;
+  const road = `M${mid - 92 * u} ${h} C ${mid - 40 * u} ${h - 0.12 * h}, ${mid + 66 * u} ${top + 0.14 * h}, ${mid + 6 * u} ${top}`
+    + ` C ${mid + 56 * u} ${top + 0.13 * h}, ${mid + 40 * u} ${h - 0.12 * h}, ${mid + 112 * u} ${h} Z`;
+  const line = `M${mid + 10 * u} ${h} C ${mid + 6 * u} ${h - 0.12 * h}, ${mid + 62 * u} ${top + 0.14 * h}, ${mid + 6 * u} ${top + 4}`;
+  const sun = { x: mid + T * 0.22, y: h * 0.3, r: Math.max(26, T * 0.11) };
+  const sign = { x: mid - 128 * u, y: h - 0.07 * h, s: Math.max(0.8, u) };
+  return (
+    <Svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
+      <Rect width={w} height={h} fill={t.sky} />
+      <Circle cx={sun.x} cy={sun.y} r={sun.r} fill={t.sun} />
+      <Path d={far} fill={t.far} />
+      <Path d={near} fill={t.near} />
+      <Defs><ClipPath id="login-road"><Path d={road} /></ClipPath></Defs>
+      <Path d={road} fill={t.road} />
+      <Path clipPath="url(#login-road)" d={line} fill="none" stroke={t.dash} strokeWidth={3.2 * u} strokeDasharray={`${12 * u} ${11 * u}`} strokeLinecap="round" />
+      <G transform={`translate(${sign.x} ${sign.y}) scale(${sign.s})`}>
+        <Rect x={-2.5} y={-58} width={5} height={58} rx={2} fill={t.pole} />
+        <Path d="M0 -92 L22 -54 L-22 -54 Z" fill="#c8102e" stroke="#c8102e" strokeWidth={4} strokeLinejoin="round" />
+        <Path d="M0 -80 L12.5 -59 L-12.5 -59 Z" fill="#ffffff" />
       </G>
-      <G transform="translate(84 92)">
-        <Path d="M22 0 L42 7 V22 Q42 38 22 46 Q2 38 2 22 V7 Z" fill={t.ok} />
-        <Path d="M14 23 l6 6 l10 -11" fill="none" stroke="#fff" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round" />
-      </G>
-      <G transform="translate(206 112) rotate(-12)">
-        <Rect width={30} height={21} rx={4} fill="#c8102e" />
-        <Rect x={9} width={5} height={21} fill="#fff" />
-        <Rect y={8} width={30} height={5} fill="#fff" />
-      </G>
-      <Circle cx={92} cy={42} r={3.5} fill={t.gold} />
-      <Circle cx={232} cy={28} r={4} fill={t.gold} />
-      <Circle cx={240} cy={160} r={2.5} fill={t.you} />
-    </>
+    </Svg>
   );
-  // (wide: the drawing's own middle, x 80–245, in the left of the page's centred column, beside the theme button)
-  return wide ? <View style={{ marginLeft: Math.max(0, (width - 980) / 2 + 56) }}><Frame height={height}><G transform="translate(-60 10)">{body}</G></Frame></View>
-    : <Svg width={width} height={Math.round(height * 0.66)} viewBox="40 4 220 166" preserveAspectRatio="xMidYMin meet">{body}</Svg>;
 }
