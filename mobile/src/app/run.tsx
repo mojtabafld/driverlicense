@@ -20,7 +20,7 @@ import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
-import { OptionBox } from '@/ui/option-box';
+import { OptionBox, OptionGroup } from '@/ui/option-box';
 import { learnRtl, Pager } from '@/ui/swipe';
 import { useWebBackGuard } from '@/ui/web-back';
 import { Icon } from '@/ui/icon';
@@ -176,20 +176,20 @@ export default function Run() {
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
           {showFa && transText(lang, { fa: q.sfa, en: q.sen, da: q.sda }) ? <T style={{ color: c.muted }}>{transText(lang, { fa: q.sfa, en: q.sen, da: q.sda })}</T> : null}
         </View>
+        <OptionGroup key={`g-${i}`}>
         {q.st.map((s, k) => {
           const on = ticks[i][k];
           return (
             // Keyed by question too, so each new question's statements come in one after another.
             <Enter key={`${i}-${k}`}>
-            <Pressable onPress={() => toggle(k)} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>
-              <OptionBox on={on}>
+              <OptionBox on={on} n={k} onPress={() => toggle(k)}>
                 <L style={{ fontSize: 15.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                 {showFa && transText(lang, s) ? <T style={{ color: c.muted, fontSize: 14 }}>{transText(lang, s)}</T> : null}
               </OptionBox>
-            </Pressable>
             </Enter>
           );
         })}
+        </OptionGroup>
       </ScrollView>
       </Pager>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}

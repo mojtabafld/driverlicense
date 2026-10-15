@@ -16,7 +16,7 @@ import { Icon, type IconName } from './icon';
 import { Enter, L, SegPill, T, TranslateButton, physical, tap, useArcSeg } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
-import { OptionBox } from './option-box';
+import { OptionBox, OptionGroup } from './option-box';
 import { ARC, DA_FONT, radius, useColors, useIsDark } from './theme';
 
 const UI = {
@@ -380,6 +380,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
             </View>
           ) : <T style={{ fontWeight: '700', color: c.ok, marginTop: 4, marginBottom: 12 }}>پاسخ صحیح</T>}
           <View style={{ gap: flat ? 10 : 6, marginBottom: 12 }}>
+            <OptionList flat={flat}>
             {q.st.map((s, k) => {
               const me = !!(it.a && it.a[k]);
               const mark = view === 'mine' && it.a && (me ? !s.ok : !!s.ok); // a wrong tick or a missing one
@@ -387,17 +388,18 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               const eda = (lang === 'en' ? s.een || s.eda : s.eda || '').trim() || (s.ok ? ui.yes : ui.no);
               const efa = (transText(lang, { fa: s.efa, en: s.een, da: s.eda }) || '').trim() || tr(s.ok ? 'بله.' : 'خیر.');
               const sfa = transText(lang, s);
+              const expl = view === 'right' ? (
+                <View>
+                  <L style={{ marginTop: ARC ? 0 : 6, fontSize: 14.5, lineHeight: 23 }}>{ui.expl} <L style={{ fontStyle: 'italic', fontSize: 14.5, lineHeight: 23 }}>{eda}</L></L>
+                  {fa && sfa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>{fmt('توضیح: {0}', efa)}</T> : null}
+                </View>
+              ) : null;
               return (
                 flat ? (
-                  <Enter key={k}><OptionBox on={checked} mark={!!mark} review>
+                  <Enter key={k}><OptionBox on={checked} mark={!!mark} review n={k} extra={ARC ? expl : undefined}>
                     <L style={{ fontSize: 15, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                     {fa && sfa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{sfa}</T> : null}
-                    {view === 'right' ? (
-                      <View>
-                        <L style={{ marginTop: 6, fontSize: 14.5, lineHeight: 23 }}>{ui.expl} <L style={{ fontStyle: 'italic', fontSize: 14.5, lineHeight: 23 }}>{eda}</L></L>
-                        {fa && sfa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>{fmt('توضیح: {0}', efa)}</T> : null}
-                      </View>
-                    ) : null}
+                    {ARC ? null : expl}
                   </OptionBox></Enter>
                 ) : (
                 <Enter key={k}><Statement mark={!!mark}>
@@ -421,6 +423,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                 )
               );
             })}
+            </OptionList>
           </View>
           {aiLessons ? <AiTips q={q} a={it.a} at={at} lang={lang} />
             : t ? (
@@ -441,4 +444,9 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       ) : null}
     </View>
   );
+}
+
+// The always-open review's statements sit in one card on the main site; the folding list keeps its own boxes.
+function OptionList({ flat, children }: { flat: boolean; children: React.ReactNode }) {
+  return flat ? <OptionGroup>{children}</OptionGroup> : <>{children}</>;
 }
