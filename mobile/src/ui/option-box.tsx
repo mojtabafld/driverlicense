@@ -1,6 +1,6 @@
 // A statement of a question. On the main site (arc) the statements of a question are rows of one rounded card
-// (OptionGroup), like a list of notices: each row has a small tinted tile on the left (the statement's letter, or a ✓
-// when ticked), then the text, with a thin line between rows; every row is as tall as the tallest one. Elsewhere (/app)
+// (OptionGroup), like a list of notices: each row has a round check box on the left (a ✓ in a filled circle when
+// ticked), then the text, with a thin line between rows; every row is as tall as the tallest one. Elsewhere (/app)
 // each statement is its own outlined box with a square check box. `on`: ticked; `mark`: shown wrong in a review (a soft
 // red tint); `review`: in a review only a wrong statement is coloured, a ticked right one stays quiet. `extra` (the
 // explanation after checking) goes under the text inside the row on the main site, under the box elsewhere.
@@ -10,8 +10,6 @@ import { Pressable, View } from 'react-native';
 import { Icon } from './icon';
 import { T } from './kit';
 import { ARC, radius, useColors, useIsDark } from './theme';
-
-const LETTERS = 'ABCDEFGH';
 
 // The rows report their text's own height; the group hands back the tallest so all rows match.
 const Group = createContext<{ min: number; report: (id: number, h: number) => void; drop: (id: number) => void } | null>(null);
@@ -40,24 +38,23 @@ export function OptionBox(p: Props) {
 }
 
 function OptionRow({ on, mark, review, n = 0, onPress, disabled, extra, children }: Props) {
-  const c = useColors(), dark = useIsDark(), group = useContext(Group);
+  const c = useColors(), group = useContext(Group);
   const id = useRef(0);
   if (!id.current) id.current = nextId++;
   const drop = group?.drop;
   useEffect(() => () => drop?.(id.current), [drop]);
-  const tile = mark ? (on ? c.bad : c.badSoft) : on ? c.pick : c.surface2;
   return (
     <Pressable onPress={onPress} disabled={disabled || !onPress} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
       style={({ pressed }) => ({ flexDirection: 'row', direction: 'ltr', alignItems: extra ? 'flex-start' : 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 16,
         borderTopWidth: n ? 1 : 0, borderTopColor: c.line,
         backgroundColor: mark ? c.badSoft : pressed ? c.surface2 : on && !review ? c.pickSoft : 'transparent' }) as any}>
-      <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: tile,
-        borderWidth: mark && !on ? 1.5 : 0, borderColor: c.bad }}>
-        {on ? <Icon name="check" size={16} color={mark || dark ? '#fff' : c.surface} weight="bold" />
-          : <T style={{ fontSize: 14, lineHeight: 18, fontWeight: '700', color: mark ? c.bad : c.muted }}>{LETTERS[n] ?? ''}</T>}
+      {/* A round check box: an outline ring, filled with a ✓ when ticked (red when shown wrong in a review). */}
+      <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: on ? (mark ? c.bad : c.pick) : 'transparent', borderWidth: on ? 0 : 1.75, borderColor: mark ? c.bad : c.faint }}>
+        {on ? <Icon name="check" size={14} color="#fff" weight="bold" /> : null}
       </View>
       <View style={{ flex: 1, gap: 8 }}>
-        <View style={{ minHeight: Math.max(34, group?.min ?? 0), justifyContent: 'center' }}>
+        <View style={{ minHeight: Math.max(26, group?.min ?? 0), justifyContent: 'center' }}>
           <View style={{ gap: 4 }} onLayout={(e) => group?.report(id.current, Math.ceil(e.nativeEvent.layout.height))}>{children}</View>
         </View>
         {extra}
