@@ -14,11 +14,12 @@ import { LOGIN_SKY, LoginScene } from '@/ui/header-art';
 import { API_URL } from '@/lib/config';
 import { RTL, tr } from '@/lib/i18n';
 
-// Sign in / sign up switch: a soft track with the chosen side raised.
+// Sign in / sign up switch: a soft track with the chosen side raised. (Main site, light: the track a step darker than
+// the page, as the app's switches look on their white cards, «پاسخ شما / پاسخ صحیح» for one.)
 function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
   const c = useColors(), dark = useIsDark(), seg = useArcSeg();
   return (
-    <View style={[{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }, ARC && seg.track]}>
+    <View style={[{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }, ARC && seg.track, ARC && !dark && { backgroundColor: '#e4e4e4' }]}>
       {(['login', 'register'] as const).map(m => {
         const on = m === mode;
         return (
@@ -55,7 +56,6 @@ function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
         </View>
       </View>
       <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 26, paddingBottom: 18, gap: 6 }}>
-        <T raw style={{ fontSize: 13, letterSpacing: 0.4, color: dark ? c.link : c.cta, fontWeight: '600' }}>TeoriPrøve</T>
         <T style={[{ fontSize: 28, lineHeight: 38, color: c.text }, bold]}>{title}</T>
         <T style={{ fontSize: 15, lineHeight: 24, color: c.muted }}>{subtitle}</T>
       </View>
