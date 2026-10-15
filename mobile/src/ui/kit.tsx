@@ -288,15 +288,15 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
             {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        {below ? null : <View style={{ gap: 2, maxWidth: '58%', ...(back && !RTL ? { minWidth: '58%', paddingLeft: 52 } : null) }}>
-          <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</T>
+        {below ? null : <View style={{ gap: 2, maxWidth: '58%', ...(back ? { minWidth: '58%', [RTL ? 'paddingRight' : 'paddingLeft']: 52 } : null) }}>
+          <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
           {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
         </View>}
       </View>
       {below ? (
         <View style={{ position: 'absolute', top: objEnd, left: 0, right: 0, paddingHorizontal: 16, gap: 2, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
-          <T style={[{ fontSize: titleSize, lineHeight: Math.round(titleSize * 1.35), fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{title}</T>
+          <FitLine size={titleSize} min={16} style={[{ lineHeight: Math.round(titleSize * 1.35), fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: width < 360 ? 13 : 14, lineHeight: width < 360 ? 20 : 22 }, shade]}>{subtitle}</T> : null}
         </View>
       ) : null}
@@ -315,7 +315,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
-        <T style={{ fontSize: 26, lineHeight: 34, fontWeight: '700', color: c.text }}>{title}</T>
+        <FitLine size={26} min={16} style={{ lineHeight: 34, fontWeight: '700', color: c.text }}>{title}</FitLine>
         {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
       </View>
       {right}
