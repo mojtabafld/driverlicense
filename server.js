@@ -343,16 +343,16 @@ function serveStatic(req, res) {
   if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
   if (p.startsWith('/app/')) return serveAppWeb(req, res, p.slice(4), WEBS.app);
   // The app at the root (everything that is not the API's or a shared file).
-  if (!p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/course-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/hero-art/') && !p.startsWith('/hero-try/') && !p.startsWith('/store-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
+  if (!p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/course-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/hero-art/') && !p.startsWith('/hero-try/') && !p.startsWith('/login-art/') && !p.startsWith('/store-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
   // And the profile pictures to choose from, and the pictures at the top of the «آموزش» and «آزمون» pages.
-  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-9]|10)\.png$/.exec(p), tm = /^\/hero-try\/([1-2])\.png$/.exec(p), sm = /^\/store-art\/([1-7])\.png$/.exec(p),
+  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-9]|10)\.png$/.exec(p), tm = /^\/hero-try\/([1-2])\.png$/.exec(p), lg = /^\/login-art\/([1-2])\.png$/.exec(p), sm = /^\/store-art\/([1-7])\.png$/.exec(p),
     gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p);
-  if (im || lm || am || hm || tm || sm || gm2 || cm) {
-    const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : guideref.webBlob(gm2[1], new URL(req.url, 'http://x').searchParams.get('s') || 'l'));
+  if (im || lm || am || hm || tm || lg || sm || gm2 || cm) {
+    const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : lg ? imagegen.loginBlob(lg[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : guideref.webBlob(gm2[1], new URL(req.url, 'http://x').searchParams.get('s') || 'l'));
     // Sent smaller and kept in memory (webpic.js) when the picture's version is known; the others as they are.
-    const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]]
+    const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]] : lg ? imagegen.loginVersions()[lg[1]]
       : cm ? imagegen.courseVersions()[cm[1]] : undefined;   // (/guide-art has its own sizes and store: guideref.webBlob)
     return (ver ? webpic.get(`${p}:${ver}`, load, im ? 1280 : undefined) : load()).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
@@ -426,7 +426,7 @@ async function api(req, res, route) {
   const ip = clientIp(req);
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), heroDiag: imagegen.heroDiag(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined } : undefined,
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.

@@ -7,8 +7,8 @@ import { RTL, latin } from '@/lib/i18n';
 
 type Art = { light: boolean; height: number };
 
-const LIGHT = { blob: '#cfe5ca', road: '#ffffff', dash: '#c4dcbf', ok: '#2f8f46', card: '#ffffff', pole: '#5f7f63', cardLine: '#c4dcbf', avatar: '#8fb8e8', line: '#d6e6d3', you: '#e8957a', blue: '#5b74c4', gold: '#f2b84b' };
-const DARK = { blob: '#1f5130', road: '#2c6a3c', dash: '#4c8a5b', ok: '#5cc47a', card: '#f4f8f3', pole: '#cfe3d2', cardLine: '#cfe3d2', avatar: '#8fb8e8', line: '#d6e6d3', you: '#e8957a', blue: '#7d93dc', gold: '#f2b84b' };
+const LIGHT = { blob: '#cae5df', road: '#ffffff', dash: '#bfdcd5', ok: '#2f8f78', card: '#ffffff', pole: '#5f7f77', cardLine: '#bfdcd5', avatar: '#8fb8e8', line: '#d3e6e1', you: '#e8957a', blue: '#5b74c4', gold: '#f2b84b' };
+const DARK = { blob: '#1f5145', road: '#2c6a5b', dash: '#4c8a7b', ok: '#5cc4ab', card: '#f4f8f3', pole: '#cfe3de', cardLine: '#cfe3de', avatar: '#8fb8e8', line: '#d3e6e1', you: '#e8957a', blue: '#7d93dc', gold: '#f2b84b' };
 type Tone = typeof LIGHT;
 
 // The drawing's box: the header's height (less its fading foot), three to two, on the left.
@@ -125,7 +125,7 @@ export function HomeLicenceArt({ light, height }: Art) {
     <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
       <G transform="translate(22 66) rotate(-8) scale(0.84)">
-        <Rect x={6} y={10} width={150} height={96} rx={14} fill={light ? '#b9d7b3' : '#143a20'} />
+        <Rect x={6} y={10} width={150} height={96} rx={14} fill={light ? '#b3d7ce' : '#143a31'} />
         <Rect width={150} height={96} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
         <Rect x={14} y={14} width={26} height={18} rx={3} fill="#c8102e" />
         <Rect x={22} y={14} width={4} height={18} fill="#fff" />
@@ -152,7 +152,7 @@ export function HomeLicenceArt({ light, height }: Art) {
 // The exam tab's header (main site): «فرمان و آزمون», a steering wheel behind a question card with the right answer ticked.
 export function ExamWheelArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
-  const wheel = light ? '#6f9c77' : '#cfe3d2';
+  const wheel = light ? '#6f9c91' : '#cfe3de';
   return (
     <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
@@ -163,7 +163,7 @@ export function ExamWheelArt({ light, height }: Art) {
         <Path d="M66 115 L66 152" stroke={wheel} strokeWidth={8} strokeLinecap="round" />
       </G>
       <G transform="translate(86 52) rotate(4) scale(0.8)">
-        <Rect x={4} y={8} width={120} height={112} rx={14} fill={light ? '#b9d7b3' : '#143a20'} />
+        <Rect x={4} y={8} width={120} height={112} rx={14} fill={light ? '#b3d7ce' : '#143a31'} />
         <Rect width={120} height={112} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
         <Rect x={14} y={14} width={70} height={6} rx={3} fill={t.line} />
         <Rect x={14} y={25} width={48} height={6} rx={3} fill={t.line} />
@@ -171,7 +171,7 @@ export function ExamWheelArt({ light, height }: Art) {
           const y = 42 + i * 22, right = i === 1;
           return (
             <G key={i}>
-              <Rect x={12} y={y} width={96} height={17} rx={8.5} fill={right ? '#e2f1df' : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
+              <Rect x={12} y={y} width={96} height={17} rx={8.5} fill={right ? '#dff1ed' : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
               <Circle cx={24} cy={y + 8.5} r={5} fill={right ? t.ok : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
               <Rect x={36} y={y + 6} width={right ? 50 : 40 + i * 6} height={5} rx={2.5} fill={right ? t.ok : t.line} opacity={right ? 0.55 : 1} />
             </G>
@@ -189,7 +189,7 @@ export function ExamWheelArt({ light, height }: Art) {
 // graduation cap above it and a green seal at its corner.
 export function LearnBookArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
-  const back = light ? '#b9d7b3' : '#143a20';
+  const back = light ? '#b3d7ce' : '#143a31';
   return (
     <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
@@ -204,8 +204,8 @@ export function LearnBookArt({ light, height }: Art) {
         <Path d="M136 9 v26 l7 -6 l7 6 v-26 z" fill={t.you} />
       </G>
       <G transform="translate(112 34) rotate(-10) scale(0.9)">
-        <Path d="M0 18 L30 6 L60 18 L30 30 Z" fill={light ? '#2a5a35' : '#e8f1e6'} />
-        <Path d="M12 23 v12 q18 9 36 0 v-12 l-18 7 z" fill={light ? '#2a5a35' : '#e8f1e6'} opacity={0.85} />
+        <Path d="M0 18 L30 6 L60 18 L30 30 Z" fill={light ? '#2a5a4f' : '#e6f1ee'} />
+        <Path d="M12 23 v12 q18 9 36 0 v-12 l-18 7 z" fill={light ? '#2a5a4f' : '#e6f1ee'} opacity={0.85} />
         <Path d="M52 21 v14" stroke={t.gold} strokeWidth={2.2} strokeLinecap="round" />
         <Circle cx={52} cy={37} r={3} fill={t.gold} />
       </G>
@@ -220,12 +220,12 @@ export function LearnBookArt({ light, height }: Art) {
 // hills, and a road winding up from the page through the near hills to the horizon, a warning sign at its side. Drawn
 // at the box's own size (no stretching): the hills repeat in tiles of about a phone's width from the middle out, so a
 // wide screen shows a longer range rather than bigger hills.
-export const LOGIN_SKY = { light: '#d4eadb', dark: '#0f2417' };
+export const LOGIN_SKY = { light: '#c8e6da', dark: '#0f241f' };
 export function LoginScene({ light, width, height }: { light: boolean; width: number; height: number }) {
   const w = width, h = height;
   const t = light
-    ? { sky: LOGIN_SKY.light, sun: '#f2a33f', far: '#7db590', near: '#1f5a32', road: '#e9efe7', dash: '#f6c445', pole: '#c9d3c8' }
-    : { sky: LOGIN_SKY.dark, sun: '#f2a33f', far: '#2b6a3d', near: '#183f25', road: '#33473a', dash: '#e8b93c', pole: '#5c6d61' };
+    ? { sky: LOGIN_SKY.light, sun: '#f2a541', far: '#6fb09b', near: '#1f6f5c', road: '#eef3f1', dash: '#f6c445', pole: '#c9d3c8' }
+    : { sky: LOGIN_SKY.dark, sun: '#f2a33f', far: '#2b6a5b', near: '#183f36', road: '#334742', dash: '#e8b93c', pole: '#5c6d61' };
   const T = Math.min(w, 460), mid = w / 2;
   // A range: peaks (x as a share of a tile from its middle, y as a share of the height), repeated across the width.
   const range = (pts: [number, number][]) => {
