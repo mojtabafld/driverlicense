@@ -220,7 +220,7 @@ export function LearnBookArt({ light, height }: Art) {
 // hills, and a road winding up from the page through the near hills to the horizon, a warning sign at its side. Drawn
 // at the box's own size (no stretching): the hills repeat in tiles of about a phone's width from the middle out, so a
 // wide screen shows a longer range rather than bigger hills.
-export const LOGIN_SKY = { light: '#c8e6da', dark: '#0f241f' };
+export const LOGIN_SKY = { light: '#c8e6da', dark: '#0b1714' };
 export function LoginScene({ light, width, height }: { light: boolean; width: number; height: number }) {
   const w = width, h = height;
   const t = light
