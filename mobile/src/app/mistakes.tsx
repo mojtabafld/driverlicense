@@ -11,6 +11,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Attempt, Question } from '@/lib/bank';
+import { RTL } from '@/lib/i18n';
 import { faNum, mistakeStats, shuffle, type MistakeStat } from '@/lib/logic';
 import { topicFa, topicName } from '@/lib/names';
 import { topicPracticeIds } from '@/lib/practice';
@@ -25,7 +26,7 @@ import { Sheet, SheetScroll } from '@/ui/sheet';
 import { ActionButton, Backdrop, Button, Card, EmptyState, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { ARC, DA_FONT, radius, useColors } from '@/ui/theme';
+import { ARC, DA_FONT, radius, useColors, useIsDark } from '@/ui/theme';
 
 const TOPICS_SHOWN = 5; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
 
@@ -57,7 +58,7 @@ export default function Mistakes() { return <MistakesScreen />; }
 
 // Without `detail` the overview; with it, the page of one panel or topic.
 export function MistakesScreen({ detail }: { detail?: View_ }) {
-  const c = useColors(), ins = useSafeAreaInsets();
+  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
   const { attempts, bank, Q, settings } = useApp();
   const view = detail;
   const motion = usePageMotion('push');
@@ -136,28 +137,32 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
             </Card>}
             {/* The topics, weakest first: the first 5 on the overview, all of them on the topics page */}
             {!view || view === 'topics' ? (
-              <Card style={{ gap: 6 }}>
-                <T style={{ fontSize: 12.5, color: c.muted }}>ضعیف‌ترین مبحث بالا — روی هر مبحث بزنید</T>
+              <Card style={{ gap: 4 }}>
+                {/* Weakest first, one row each: name, a bar of the share answered right, the percent (Mojtaba, 2026-10-15,
+                    after a "where your next points are" card). */}
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                  <T style={{ fontSize: 16, fontWeight: '700' }}>ضعیف‌ترین مباحث</T>
+                  <T style={{ fontSize: 13, color: c.muted }}>پاسخ درست</T>
+                </View>
                 <View>
-                  {(view ? sorted : sorted.slice(0, TOPICS_SHOWN)).map((g, i) => {
-                    const p = accOf(g.c);
+                  {(view ? sorted : sorted.slice(0, TOPICS_SHOWN)).map(g => {
+                    const p = accOf(g.c), pct = Math.round(p * 100);
                     return (
                       <Enter key={g.c}>
-                      <Pressable onPress={() => choose({ topic: g.c })} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-                        <View style={{ gap: 6, paddingVertical: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                            {/* A long topic name glides to show all of it. */}
-                            <Marquee text={topicName(bank, g.c)} height={24} bg={c.surface} style={{ fontSize: 14, lineHeight: 24, fontWeight: '700' }} />
-                            <T style={{ fontSize: 12.5, fontWeight: '700', color: tone(p) }}>{faNum(Math.round(p * 100))}٪ پاسخ درست</T>
-                            <Icon name="chevronLeft" size={14} color={c.faint} />
+                      <Pressable onPress={() => choose({ topic: g.c })} accessibilityRole="button" accessibilityLabel={`${topicName(bank, g.c)}: ${pct}%`}
+                        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}>
+                          {/* A long topic name glides to show all of it. */}
+                          <Marquee text={topicName(bank, g.c)} height={24} bg={c.surface} style={{ fontSize: 15, lineHeight: 24, fontWeight: '500' }} />
+                          <View style={{ width: '30%', height: 16, borderRadius: 8, backgroundColor: dark ? 'rgba(255,255,255,0.1)' : '#ececec', overflow: 'hidden', flexDirection: 'row' }}>
+                            {/* (none right: a dot, the bar's own height) */}
+                            <View style={{ width: `${pct}%`, minWidth: 16, borderRadius: 8, backgroundColor: tone(p) }} />
                           </View>
-                          <View style={{ height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
-                            <View style={{ width: `${Math.max(p * 100, 2)}%`, borderRadius: 3, backgroundColor: tone(p) }} />
+                          <View style={{ width: 46, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'baseline' }}>
+                            {RTL
+                              ? <T style={{ fontSize: 17, fontWeight: '500' }}>{faNum(pct)}<T style={{ fontSize: 17, fontWeight: '500', color: tone(p) }}>٪</T></T>
+                              : <T style={{ fontSize: 17, fontWeight: '500' }}>{String(pct)}<T style={{ fontSize: 17, fontWeight: '500', color: tone(p) }}>%</T></T>}
                           </View>
-                          <T style={{ fontSize: 12, color: c.muted }}>
-                            {g.open ? <T style={{ fontSize: 12, color: c.bad, fontWeight: '700' }}>{faNum(g.open)} مورد</T> : <T style={{ fontSize: 12, color: c.ok, fontWeight: '700' }}>همه اصلاح شد ✓</T>}
-                            {g.fixed && g.open ? <T style={{ fontSize: 12, color: c.ok }}>، {faNum(g.fixed)} اصلاح‌شده</T> : null}
-                          </T>
                         </View>
                       </Pressable>
                       </Enter>
