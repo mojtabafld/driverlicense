@@ -121,10 +121,11 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {([['topics', faNum(sorted.length), 'مبحث', c.text], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok], ['open', faNum(open), 'سؤال اصلاح‌نشده', c.bad]] as const).map(([v, n, l, col]) => (
                   <Pressable key={v} onPress={() => choose(v)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })} accessibilityRole="button">
-                    <View style={[{ alignItems: 'center', paddingVertical: 8, borderRadius: 8, backgroundColor: c.surface2 },
+                    {/* (all three as tall as the tallest, when a label takes two lines: Mojtaba, 2026-10-15) */}
+                    <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 3, borderRadius: 8, backgroundColor: c.surface2 },
                       ARC && { paddingVertical: 10, borderRadius: radius.sm, borderWidth: 1, borderColor: c.cardBorder }]}>
                       <T style={{ fontSize: 18, fontWeight: '800', color: col, textAlign: 'center' }}>{n}</T>
-                      <T style={{ fontSize: 11.5, color: c.muted, textAlign: 'center' }}>{l}</T>
+                      <T numberOfLines={2} style={{ fontSize: 11, lineHeight: 16, color: c.muted, textAlign: 'center' }}>{l}</T>
                     </View>
                   </Pressable>
                 ))}
