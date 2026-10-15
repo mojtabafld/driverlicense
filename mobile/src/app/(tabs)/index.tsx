@@ -11,7 +11,7 @@ import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, r
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, Button, Card, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
+import { ArcButton, Button, Card, FitLine, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
@@ -188,7 +188,7 @@ export default function Home() {
         </View>
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter && !ARC ? 'none' : 'flex' }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-            <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</T>
+            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</FitLine>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
               <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avg5 != null ? pctText(avg5) : '–'}</T>
               {trend != null ? <T style={{ fontSize: 11, fontWeight: '700', color: trend >= 0 ? c.ok : c.bad }}>{trend >= 0 ? '▲' : '▼'} {pctText(Math.abs(trend))}</T> : null}
@@ -196,7 +196,7 @@ export default function Home() {
           </View>
           <View style={{ width: 1, backgroundColor: c.line }} />
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-            <T style={{ color: c.muted, fontSize: 12, textAlign: 'center' }}>قبولی در آزمون کامل</T>
+            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>قبولی در آزمون کامل</FitLine>
             <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–'}</T>
           </View>
         </View>

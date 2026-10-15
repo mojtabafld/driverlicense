@@ -369,6 +369,24 @@ export function T({ style, raw, ...p }: TextProps & { style?: StyleProp<TextStyl
     : ltr ? { direction: 'ltr' as const } : { direction: 'rtl' as const, textAlign: physicalAlign(flat.textAlign ?? 'right') };
   return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font, side]} />;
 }
+// A label kept on one line in every language (Mojtaba, 2026-10-15): measured once at `size` in a hidden, very wide
+// box, then set just small enough to fit the width it has (never below `min`).
+export function FitLine({ children, size, min = 9, style }: { children: string; size: number; min?: number; style?: StyleProp<TextStyle> }) {
+  const [full, setFull] = useState<{ text: string; w: number } | null>(null);
+  const [room, setRoom] = useState(0);
+  const w = full && full.text === children ? full.w : 0;
+  const fs = w && room ? Math.max(min, Math.min(size, Math.floor(size * room / w * 0.97 * 10) / 10)) : size;
+  return (
+    <View onLayout={e => setRoom(e.nativeEvent.layout.width)} style={{ alignSelf: 'stretch', overflow: 'hidden' }}>
+      <View pointerEvents="none" style={{ position: 'absolute', opacity: 0, top: 0, left: 0, width: 4000, flexDirection: 'row' }}>
+        <View onLayout={e => setFull({ text: children, w: e.nativeEvent.layout.width })} style={{ flexShrink: 0, flexGrow: 0 }}>
+          <T numberOfLines={1} style={[style, { fontSize: size }]}>{children}</T>
+        </View>
+      </View>
+      <T numberOfLines={1} style={[style, { fontSize: fs, opacity: w && room ? 1 : 0 }]}>{children}</T>
+    </View>
+  );
+}
 // Danish / English text (left to right).
 // In the Latin font (src/ui/fonts.ts), its weight (and italic) picked by family as for T; on the web Vazirmatn follows
 // for the Persian digits.
