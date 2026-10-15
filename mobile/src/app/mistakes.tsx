@@ -28,7 +28,7 @@ import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { ARC, DA_FONT, radius, useColors, useIsDark } from '@/ui/theme';
 
-const TOPICS_SHOWN = 5; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
+const TOPICS_SHOWN = 7; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
 
 export type View_ = 'topics' | 'open' | 'fixed' | { topic: string };
 type Group = { c: string; list: MistakeStat[]; open: number; fixed: number; wrong: number };
@@ -122,8 +122,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {([['topics', faNum(sorted.length), 'مبحث', c.text, 'list'], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok, 'checkCircle'], ['open', faNum(open), 'سؤال اصلاح‌نشده', c.bad, 'xCircle']] as const).map(([v, n, l, col, icon]) => (
                   <Pressable key={v} onPress={() => choose(v)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })} accessibilityRole="button">
-                    {/* (all three as tall as the tallest, when a label takes two lines: Mojtaba, 2026-10-15) */}
-                    <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 3, borderRadius: 8, backgroundColor: c.surface2 },
+                    {/* (all three as tall as the tallest, each icon and number on one line across the three, its label under it: Mojtaba, 2026-10-15) */}
+                    <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingVertical: 8, paddingHorizontal: 3, borderRadius: 8, backgroundColor: c.surface2 },
                       ARC && { paddingVertical: 10, borderRadius: radius.sm, borderWidth: 1, borderColor: c.cardBorder }]}>
                       {/* the number with its icon beside it (Mojtaba, 2026-10-15) */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
