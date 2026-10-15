@@ -530,10 +530,11 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
 
 // Arc's segmented control, shared by every switch of two or three parts (Segmented, the review's tabs and «پاسخ شما /
 // پاسخ صحیح», sign in / sign up): a pill track and the chosen part a raised pill on it, its label in the text colour.
+// In the light theme the track is the sign-in switch's grey (Mojtaba, 2026-10-15), so it shows on the white cards.
 export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
   return {
-    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: c.nav } as ViewStyle,
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: dark ? c.nav : '#e4e4e4' } as ViewStyle,
     // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
     // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
     pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
