@@ -2,14 +2,16 @@
 // in the exam's language (the server's ElevenLabs recording, made once and kept), in the voice chosen in the settings
 // (a woman's or a man's). A tap plays, a second tap stops; while the recording is fetched the icon breathes. Only one
 // recording plays at a time, and leaving the question stops it. Shown only when the server can read aloud (an
-// ElevenLabs key is set). VoiceChoice is the settings' choice of voice, each option playing a short sample;
+// ElevenLabs key is set); on the main site an account without the premium it needs still sees it, and a tap opens the
+// premium page. VoiceChoice is the settings' choice of voice, each option playing a short sample;
 // TextSpeakButton reads an AI analysis or summary aloud in Persian.
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import { api } from '@/lib/api';
-import { API_URL } from '@/lib/config';
+import { API_URL, PROVE_PICS } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { T, tap } from './kit';
@@ -66,16 +68,17 @@ function useBreath(on: boolean) {
 
 export function SpeakButton({ qid, lang }: { qid: number; lang: 'da' | 'en' }) {
   const c = useColors();
-  const { tts, settings } = useApp();
+  const { tts, ttsServer, locked, settings } = useApp();
   const voice = settings.voice ?? 'woman';
   const { state, play, stop, me } = usePlayer();
   const pulse = useBreath(state === 'loading');
   // Leaving the question (or the page) stops it.
   useEffect(() => () => { me.current?.stop(); }, [qid, lang, me]);
-  if (!tts) return null;
+  // Without premium (where it is needed) the button still shows and opens the premium page.
+  if (!tts && !(ttsServer && locked && !PROVE_PICS)) return null;
   const on = state !== 'idle';
   return (
-    <Pressable onPress={() => { tap(); if (on) stop(); else play(`qid=${qid}&lang=${lang}&voice=${voice}`); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
+    <Pressable onPress={() => { tap(); if (!tts) { router.push('/premium'); return; } if (on) stop(); else play(`qid=${qid}&lang=${lang}&voice=${voice}`); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
       accessibilityLabel={on ? 'توقف خواندن سؤال' : 'خواندن سؤال و گزینه‌ها'}
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
         backgroundColor: on ? c.strong : c.nav })}>

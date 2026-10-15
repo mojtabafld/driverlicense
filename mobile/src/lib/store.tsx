@@ -14,6 +14,8 @@ type Ctx = {
   imgv: Record<string, string>; token: string | null;
   // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
   saved: Saved[]; aiLessons: boolean; tts: boolean;
+  // Whether the server can read aloud at all (even when `locked`): the exam's read-aloud button then shows and leads to the premium page.
+  ttsServer: boolean;
   // Premium (a pass bought with Stripe, app/premium.tsx): its plans when it can be bought, whether this account has it
   // now (a pass that has not run out, or an admin), and `locked`: the AI analysis and the read-aloud need it here and this account has not got it
   // (then `tts` is off and the AI button leads to the premium page).
@@ -114,7 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMe(m => (m ? { ...m, user: d.user } : m));
       return (d.user.premium?.until ?? 0) > Date.now();
     },
-    saved: me?.saved ?? [], aiLessons, tts: tts && !locked, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, loginArt, guideArt,
+    saved: me?.saved ?? [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, loginArt, guideArt,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
