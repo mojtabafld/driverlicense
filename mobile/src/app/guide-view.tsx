@@ -8,6 +8,7 @@ import { Animated, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
+import { tr, UI_LANG } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { useApp, useExamLang } from '@/lib/store';
 import { PROVE_PICS } from '@/lib/config';
@@ -113,6 +114,10 @@ const signName = (item: SignItem, lang: string) => (lang === 'en' && !PROVE_PICS
 // A sign: its code, Persian and Danish (or English) names, and what it means and what to do.
 function SignText({ item }: { item: SignItem }) {
   const c = useColors(), lang = useExamLang();
+  const name = signName(item, lang);
+  // No name box when it would only repeat the title: the app in Danish with the Danish name, or the same words.
+  const same = (a: string) => a.replace(/\s+/g, ' ').trim().toLowerCase();
+  const repeat = (UI_LANG === 'da' && name === item.da) || same(tr(item.fa)) === same(name);
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row' }}>
@@ -122,10 +127,12 @@ function SignText({ item }: { item: SignItem }) {
       </View>
       <T style={{ fontSize: 20, lineHeight: 31, fontWeight: '800' }}>{item.fa}</T>
       {/* The sign's Danish name in a box like «چه کسی اول می‌رود؟», laid out left to right: the green check on the left. */}
-      <View style={{ direction: 'ltr', flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
-        <Icon name="checkCircle" size={20} color={c.ok} />
-        <L style={{ flex: 1, fontSize: 14, lineHeight: 21, color: c.text, fontWeight: '600', textAlign: 'left' }}>{signName(item, lang)}</L>
-      </View>
+      {repeat ? null : (
+        <View style={{ direction: 'ltr', flexDirection: 'row', gap: 10, padding: 12, borderRadius: radius.md, backgroundColor: c.surface2, alignItems: 'flex-start' }}>
+          <Icon name="checkCircle" size={20} color={c.ok} />
+          <L style={{ flex: 1, fontSize: 14, lineHeight: 21, color: c.text, fontWeight: '600', textAlign: 'left' }}>{name}</L>
+        </View>
+      )}
       <Rich text={item.text} style={{ fontSize: 15.5, lineHeight: 28 }} />
     </View>
   );
