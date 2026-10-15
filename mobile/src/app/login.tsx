@@ -1,6 +1,5 @@
 // Sign in / sign up: a tall picture header (as on the tab pages; on the main site a flat landscape) with the greeting, then on the page (no card) a mode
 // switch, fields with icons and one wide button, then the site's three short facts.
-import { Image } from 'expo-image';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,10 +7,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { ArcButton, Backdrop, Button, Hero, SegPill, T, ThemeButton, tap, useArcSeg, useHeaderTop } from '@/ui/kit';
+import { ArcButton, Backdrop, Button, Hero, SegPill, T, ThemeButton, HeroFade, tap, useArcSeg, useHeaderTop } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
-import { LOGIN_SKY, LoginScene } from '@/ui/header-art';
-import { API_URL } from '@/lib/config';
+import { LOGIN_BG, LoginArt } from '@/ui/header-art';
 import { RTL, tr } from '@/lib/i18n';
 
 // Sign in / sign up switch: a soft track with the chosen side raised. (Main site, light: the track a step darker than
@@ -37,20 +35,19 @@ function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: 
   );
 }
 
-// Main site: the flat landscape across the top (the server's picture made for each theme, imagegen.js LOGIN; the app's
-// own drawing of it until that is made), its foot a clean edge on the page (no fade), the theme switch over its sky; the app's name, the greeting and its line under it on the page, in the form's column.
+// Main site: a drawing like the tab pages' headers across the top (LoginArt, both themes), its foot fading into
+// the page as theirs do, the theme switch over it; the greeting and its line under it on the page, in the form's column.
 function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions(), { loginArt } = useApp();
-  const n = dark ? '2' : '1', v = loginArt[n];
-  const sky = dark ? LOGIN_SKY.dark : LOGIN_SKY.light;
+  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
+  const sky = dark ? LOGIN_BG.dark : LOGIN_BG.light;
   useHeaderTop(sky);
-  const wide = width >= 700, H = Math.round(Math.max(230, Math.min(height * (wide ? 0.5 : 0.36), wide ? 420 : 360)));   // (wide: more of the picture shows)
+  const wide = width >= 700, H = Math.round(Math.max(230, Math.min(height * (wide ? 0.5 : 0.36), wide ? 420 : 360)));
   const bold = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
   return (
     <>
       <View style={{ height: H + ins.top, backgroundColor: sky, paddingTop: ins.top, overflow: 'hidden' }}>
-        {v ? <Image source={{ uri: `${API_URL}/login-art/${n}.png?v=${v}` }} contentFit="cover" contentPosition="center" transition={250} style={{ width, height: H }} accessibilityIgnoresInvertColors />
-          : <LoginScene light={!dark} width={width} height={H} />}
+        <LoginArt light={!dark} width={width} height={H - 84} />{/* (above the fade, as on the tab pages) */}
+        <HeroFade />
         <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, maxWidth: 980 - 32, alignSelf: 'center', alignItems: 'flex-end' }}>
           <View style={{ borderRadius: 19, backgroundColor: dark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.55)' }}><ThemeButton /></View>
         </View>
