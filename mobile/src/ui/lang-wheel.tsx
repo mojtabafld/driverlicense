@@ -15,8 +15,9 @@ import { ThemeButton } from './intro-top';
 
 export const LANG_NAMES: Record<UiLang, string> = { fa: 'فارسی', en: 'English', da: 'Dansk' };
 export const LANG_FONT = (l: UiLang, w: 500 | 700 = 500) => (l === 'fa' ? `Vazirmatn-${w}` : `Inter-${w}`);
-// English first, then Danish, then Persian (Mojtaba, 2026-10-15); also the order of the intro's language list.
-export const LANGS: UiLang[] = ['en', 'da', 'fa'];
+// Danish on top, English in the middle (chosen to begin with), Persian below (Mojtaba, 2026-10-15); also the order
+// of the intro's language list.
+export const LANGS: UiLang[] = ['da', 'en', 'fa'];
 const TITLE: Record<UiLang, string> = { fa: 'زبان برنامه را انتخاب کنید', en: 'Choose your language', da: 'Vælg dit sprog' };
 const NOTE: Record<UiLang, string> = { fa: 'بعداً هم از تنظیمات قابل تغییر است.', en: 'You can change it later in the settings.', da: 'Du kan ændre det senere i indstillingerne.' };
 const GO: Record<UiLang, string> = { fa: 'ادامه', en: 'Continue', da: 'Fortsæt' };
