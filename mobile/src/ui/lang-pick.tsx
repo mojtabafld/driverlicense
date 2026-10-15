@@ -13,11 +13,11 @@ import { RTL } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { L, T, tap } from './kit';
-import { INTRO_BG as BG } from './onboarding';
+import { useIntroBg } from './onboarding';
 import { ARC, useTheme } from './theme';
 import type { ThemeName } from '@/lib/prefs';
 
-const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? '#144237' : '#14421c';
+const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? '#1f6f5c' : '#14421c';
 
 function FlagDK() {
   return (
@@ -55,6 +55,7 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
   const { settings, setSettings } = useApp();
   const [lang, setLang] = useState<'da' | 'en'>(settings.lang === 'en' ? 'en' : 'da');
   const [busy, setBusy] = useState(false);
+  const BG = useIntroBg();
   const { theme, setMode } = useTheme(); // theme: the one in use (the device's while the mode follows it)
   const save = () => { tap(); setBusy(true); setSettings({ lang, langChosen: true }).then(() => onDone?.(), () => setBusy(false)); };
   return (
