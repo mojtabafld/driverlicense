@@ -40,7 +40,7 @@ export function OptionBox(p: Props) {
 }
 
 function OptionRow({ on, mark, review, n = 0, onPress, disabled, extra, children }: Props) {
-  const c = useColors(), group = useContext(Group);
+  const c = useColors(), dark = useIsDark(), group = useContext(Group);
   const id = useRef(0);
   if (!id.current) id.current = nextId++;
   const drop = group?.drop;
@@ -53,7 +53,7 @@ function OptionRow({ on, mark, review, n = 0, onPress, disabled, extra, children
         backgroundColor: mark ? c.badSoft : pressed ? c.surface2 : on && !review ? c.pickSoft : 'transparent' }) as any}>
       <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: tile,
         borderWidth: mark && !on ? 1.5 : 0, borderColor: c.bad }}>
-        {on ? <Icon name="check" size={16} color={mark ? '#fff' : c.surface} weight="bold" />
+        {on ? <Icon name="check" size={16} color={mark || dark ? '#fff' : c.surface} weight="bold" />
           : <T style={{ fontSize: 14, lineHeight: 18, fontWeight: '700', color: mark ? c.bad : c.muted }}>{LETTERS[n] ?? ''}</T>}
       </View>
       <View style={{ flex: 1, gap: 8 }}>

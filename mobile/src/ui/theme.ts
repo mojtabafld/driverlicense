@@ -102,20 +102,21 @@ const arcLight: typeof tealLight = {
   cta: '#1f6f5c', ctaFg: '#ffffff',
   bgGradient: ['#f3f3f3', '#f3f3f3', '#f3f3f3'] as readonly [string, string, string],
 };
-// (The page behind the cards pure black, Mojtaba asked; the cards keep their dark grey.)
+// (2026-10-15, Mojtaba: the dark theme after a coaching app's screens: a blue-black page, navy cards with thin
+// lines, a blue accent for ticks and links, a navy highlight on the chosen row and white main buttons.)
 const arcDark: typeof tealLight = {
-  bg: '#000000', surface: '#191919', surface2: '#242424', line: '#2b2b2b',
-  text: '#f2f2f2', muted: '#b4b4b4', faint: '#8c8c8c',
-  accent: '#6fb09b', accentText: '#0b1a16', accentSoft: 'rgba(111,176,155,0.2)', link: '#6fb09b',
-  forest: '#6fb09b', ok: '#4cd6b5', okSoft: '#142823', bad: '#ff736d', badSoft: '#3a1816', warn: '#ffb90e', warnSoft: '#33270b', info: '#ffffff',
-  note: '#242424', submit: '#e8e8e8', checked: 'rgba(111,176,155,0.2)', cardBorder: '#2b2b2b', hairline: '#222222',
-  glass: '#191919', glassStrong: '#191919', glassBorder: '#2b2b2b',
-  pick: '#e8e8e8', pickSoft: '#2b2b2b',
-  nav: '#2b2b2b', navFg: '#f2f2f2', navOff: '#1f1f1f', navNum: '#b4b4b4',
-  strong: '#e8e8e8', strongFg: '#141414',
-  btn: '#e8e8e8', btnFg: '#141414',
-  cta: '#2f7d6a', ctaFg: '#ffffff',
-  bgGradient: ['#000000', '#000000', '#000000'] as readonly [string, string, string],
+  bg: '#07080f', surface: '#121524', surface2: '#1a1e31', line: '#232840',
+  text: '#f3f4f8', muted: '#9a9fb8', faint: '#6e7491',
+  accent: '#4a73f5', accentText: '#ffffff', accentSoft: 'rgba(74,115,245,0.18)', link: '#8ea8ff',
+  forest: '#5b82ff', ok: '#4fd1a5', okSoft: '#0f2a26', bad: '#f2706e', badSoft: '#341620', warn: '#f5b84a', warnSoft: '#30260f', info: '#ffffff',
+  note: '#1a1e31', submit: '#ffffff', checked: 'rgba(74,115,245,0.2)', cardBorder: '#1c2136', hairline: '#1c2136',
+  glass: '#121524', glassStrong: '#121524', glassBorder: '#232840',
+  pick: '#3e6bf0', pickSoft: '#15204a',
+  nav: '#1a1e31', navFg: '#f3f4f8', navOff: '#121524', navNum: '#9a9fb8',
+  strong: '#ffffff', strongFg: '#0b0d18',
+  btn: '#ffffff', btnFg: '#0b0d18',
+  cta: '#ffffff', ctaFg: '#0b0d18',
+  bgGradient: ['#07080f', '#07080f', '#07080f'] as readonly [string, string, string],
 };
 const light = STYLE === 'arc' ? arcLight : STYLE === 'uber' ? uberLight : tealLight;
 const dark = STYLE === 'arc' ? arcDark : STYLE === 'uber' ? uberDark : tealDark;
