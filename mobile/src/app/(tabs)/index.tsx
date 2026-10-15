@@ -174,17 +174,17 @@ export default function Home() {
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>
         {/* Main site: the ring and its words close together, the pair in the middle of the card, Mojtaba asked. */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 20 : 16, justifyContent: ARC ? 'center' : undefined }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 12 : 16, justifyContent: ARC ? 'center' : undefined }}>
           <View>
             <Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
           </View>
           {/* Main site: the title, the pill and the line centred on one another (the pill right under the title), Mojtaba asked. */}
-          <View style={{ flex: 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: ARC ? 'center' : 'flex-start' }}>
+          <View style={{ flex: ARC ? undefined : 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: ARC ? 'center' : 'flex-start' }}>
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
+            {/* Main site: «بر اساس ۵۰ تست اخیر» small, right under the title, Mojtaba asked. */}
+            {ARC && est && !tight ? <T style={{ color: c.muted, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: compact ? -4 : -6 }}>{`بر اساس ${faNum(est.n)} تست اخیر`}</T> : null}
             <Pill text={probWord} fg={probColor} bg={probSoft} />
             {/* Main site: no line before the first exam. */}
-            {/* Main site: a short line, kept on one line (shrinking only when the card is too narrow), Mojtaba asked. */}
-            {ARC && est && !tight ? <FitLine size={12.5} min={8} style={{ color: c.muted, lineHeight: 20, textAlign: 'center' }}>{`بر اساس ${faNum(est.n)} تست اخیر`}</FitLine> : null}
             <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, textAlign: ARC ? 'center' : undefined, display: tight || tighter || ARC ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
         </View>
