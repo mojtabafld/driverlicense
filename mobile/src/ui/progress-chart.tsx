@@ -92,9 +92,6 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
       <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
         <View pointerEvents="none" style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
           <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
-          <View style={{ position: 'absolute', right: 0, top: '30%', marginTop: 4 }}>
-            <T style={{ color: c.muted, fontSize: 11.5 }}>حد قبولی ۸۰٪</T>
-          </View>
         </View>
         {/* Where the dates go once there are attempts. */}
         <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>بعد از حداقل دو آزمون، نمودار پیشرفت به‌روز می‌شود.</T>
@@ -197,11 +194,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                 ))}
               </View>
             </ScrollView>
-            {ARC ? (
-              <View pointerEvents="none" style={{ position: 'absolute', right: 0, top: y(80) + 4 }}>
-                <T style={{ color: c.muted, fontSize: 11.5 }}>حد قبولی ۸۰٪</T>
-              </View>
-            ) : null}
+            {/* Main site: no «حد قبولی ۸۰٪» under the dashed line (the legend names it), Mojtaba asked. */}
             <ScrollHint run={hint} onDone={hideHint} />
           </View>
         ) : null}
