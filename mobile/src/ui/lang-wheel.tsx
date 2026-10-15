@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { UI_LANG, type UiLang } from '@/lib/i18n';
+import { UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
 import { Icon } from './icon';
 import { T, tap } from './kit';
 import { useIntroBg } from './onboarding';
@@ -26,7 +26,8 @@ const ROW = 54, VISIBLE = 5, PAD = ROW * ((VISIBLE - 1) / 2);
 export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
   const ins = useSafeAreaInsets();
   const BG = useIntroBg();
-  const start = Math.max(0, LANGS.indexOf(UI_LANG));
+  // English in the middle band to begin with (Mojtaba, 2026-10-15), until another is chosen.
+  const start = Math.max(0, LANGS.indexOf(UI_CHOSEN ? UI_LANG : 'en'));
   const [at, setAt] = useState(start);
   const [y] = useState(() => new Animated.Value(start * ROW));
   const ref = useRef<ScrollView>(null);
