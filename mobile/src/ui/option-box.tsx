@@ -51,7 +51,7 @@ function OptionRow({ on, mark, review, n = 0, onPress, disabled, extra, children
       {/* A round check box: an outline ring, filled with a ✓ when ticked (red when shown wrong in a review). */}
       <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
         backgroundColor: on ? (mark ? c.bad : c.pick) : 'transparent', borderWidth: on ? 0 : 1.75, borderColor: mark ? c.bad : c.faint }}>
-        {on ? <Icon name="check" size={14} color="#fff" weight="bold" /> : null}
+        {on ? <Icon name="check" size={14} color={mark ? '#fff' : c.accentText} weight="bold" /> : null}
       </View>
       <View style={{ flex: 1, gap: 8 }}>
         <View style={{ minHeight: Math.max(26, group?.min ?? 0), justifyContent: 'center' }}>

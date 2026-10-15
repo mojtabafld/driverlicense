@@ -3,10 +3,11 @@
 // and the server's pictures.
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { RTL, UI_LANG } from '@/lib/i18n';
+import { px } from './palette';
 
 const t = {
-  blob: '#192756', back: '#0a1433', card: '#f4f8f3', cardLine: '#cdd3e4', line: '#d2d7e7', ok: '#5470cc', okDeep: '#284296',
-  okSoft: '#dee2f2', gold: '#f2b84b', you: '#e8957a', avatar: '#8fb8e8', blue: '#5b74c4', red: '#c8102e', pole: '#cdd3e4',
+  blob: px('#192756'), back: px('#0a1433'), card: '#f4f8f3', cardLine: px('#cdd3e4'), line: px('#d2d7e7'), ok: px('#5470cc'), okDeep: px('#284296'),
+  okSoft: px('#dee2f2'), gold: '#f2b84b', you: '#e8957a', avatar: '#8fb8e8', blue: '#5b74c4', red: '#c8102e', pole: px('#cdd3e4'),
 };
 const Box = ({ children }: { children: React.ReactNode }) => <Svg width="100%" height="100%" viewBox="0 0 300 260">{children}</Svg>;
 const Blobs = ({ a = [196, 86, 64], b = [92, 182, 52] }: { a?: number[]; b?: number[] }) => (
@@ -50,8 +51,8 @@ export function IntroBank() {
       <Blobs />
       <Card x={106} y={30} w={92} h={176} r={18}>
         <Bar x={140} y={38} w={24} h={4} />
-        <Rect x={116} y={52} width={72} height={46} rx={8} fill="#d7dcec" />
-        <Path d="M116 88 L140 70 L156 82 L168 74 L188 88 V90 Q188 98 180 98 H124 Q116 98 116 90 Z" fill="#b0bada" />
+        <Rect x={116} y={52} width={72} height={46} rx={8} fill={px('#d7dcec')} />
+        <Path d="M116 88 L140 70 L156 82 L168 74 L188 88 V90 Q188 98 180 98 H124 Q116 98 116 90 Z" fill={px('#b0bada')} />
         <Path d="M146 58 L156 76 L136 76 Z" fill="#fff" stroke={t.red} strokeWidth={3} strokeLinejoin="round" />
         <Bar x={116} y={108} w={60} />
         <Bar x={116} y={117} w={42} />
@@ -83,14 +84,14 @@ export function IntroExam() {
           <Option x={88} y={102} w={122} />
           <Option x={88} y={128} w={122} on />
           <Option x={88} y={154} w={122} />
-          <Bar x={90} y={184} w={118} h={5} fill="#d7dcec" />
+          <Bar x={90} y={184} w={118} h={5} fill={px('#d7dcec')} />
           <Bar x={90} y={184} w={56} h={5} fill={t.ok} />
         </Card>
       </G>
       <G transform="translate(214 66)">
         <Rect x={-6} y={-38} width={12} height={9} rx={3} fill={t.pole} />
         <Circle r={30} fill={t.card} stroke={t.cardLine} strokeWidth={2} />
-        <Circle r={23} fill="none" stroke="#d7dcec" strokeWidth={5} />
+        <Circle r={23} fill="none" stroke={px('#d7dcec')} strokeWidth={5} />
         <Path d="M0 -23 A23 23 0 1 1 -21.9 7.1" fill="none" stroke={t.ok} strokeWidth={5} strokeLinecap="round" />
         <Line x1={0} y1={0} x2={0} y2={-14} stroke={t.okDeep} strokeWidth={3} strokeLinecap="round" />
         <Circle r={3.5} fill={t.okDeep} />
@@ -111,10 +112,10 @@ export function IntroAi() {
       <Blobs a={[192, 80, 60]} b={[96, 184, 54]} />
       <G>
         <Rect x={147} y={47} width={110} height={52} rx={18} fill={t.back} />
-        <Rect x={142} y={40} width={110} height={52} rx={18} fill="#d7dcec" />
-        <Path d="M232 88 L246 104 L222 92 Z" fill="#d7dcec" />
-        <Bar x={158} y={56} w={76} fill="#b0bada" />
-        <Bar x={170} y={70} w={64} fill="#b0bada" />
+        <Rect x={142} y={40} width={110} height={52} rx={18} fill={px('#d7dcec')} />
+        <Path d="M232 88 L246 104 L222 92 Z" fill={px('#d7dcec')} />
+        <Bar x={158} y={56} w={76} fill={px('#b0bada')} />
+        <Bar x={170} y={70} w={64} fill={px('#b0bada')} />
       </G>
       <Card x={48} y={112} w={168} h={92} r={20}>
         <Path d="M64 200 L52 220 L84 204 Z" fill={t.card} />
@@ -142,7 +143,7 @@ export function IntroProgress() {
       <Blobs a={[206, 76, 58]} b={[86, 190, 52]} />
       <Card x={56} y={66} w={176} h={140} r={18}>
         <Bar x={72} y={80} w={60} h={6} />
-        <Line x1={72} y1={134} x2={218} y2={134} stroke="#b5baca" strokeWidth={1.5} strokeDasharray="5 5" />
+        <Line x1={72} y1={134} x2={218} y2={134} stroke={px('#b5baca')} strokeWidth={1.5} strokeDasharray="5 5" />
         <Path d={`${d} L208 190 L78 190 Z`} fill={t.okSoft} />
         <Path d={d} fill="none" stroke={t.okDeep} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         {pts.map(([x, y]) => <Circle key={x} cx={x} cy={y} r={4} fill={y < 134 ? t.okDeep : '#cd1526'} stroke="#fff" strokeWidth={1.5} />)}
@@ -150,7 +151,7 @@ export function IntroProgress() {
       <G transform="translate(236 70)">
         <Circle r={31} fill={t.back} cx={4} cy={5} />
         <Circle r={31} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
-        <Circle r={22} fill="none" stroke="#d7dcec" strokeWidth={7} />
+        <Circle r={22} fill="none" stroke={px('#d7dcec')} strokeWidth={7} />
         <Path d="M0 -22 A22 22 0 1 1 -20.9 6.8" fill="none" stroke={t.ok} strokeWidth={7} strokeLinecap="round" />
         <SvgText y={5} fontSize={14} fontFamily="Vazirmatn-700" fontWeight="700" textAnchor="middle" fill={t.okDeep}>{RTL ? '۸۰٪' : '80%'}</SvgText>
       </G>

@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { PROVE_PICS } from '@/lib/config';
 import type { ThemeMode, ThemeName } from '@/lib/prefs';
 import { DA_REGULAR } from './fonts';
+import { paletteColors } from './palette';
 
 // Two looks; STYLE picks the one in use. «teal» is the app's look until October 2026 (main at ed597e7), kept whole so
 // it can come back by setting STYLE = 'teal'. «uber» follows Uber Eats: black and white surfaces, flat cards with soft
@@ -120,8 +121,10 @@ const arcDark: typeof tealLight = {
   cta: '#ffffff', ctaFg: '#0b0d18',
   bgGradient: ['#07080f', '#07080f', '#07080f'] as readonly [string, string, string],
 };
-const light = STYLE === 'arc' ? arcLight : STYLE === 'uber' ? uberLight : tealLight;
-const dark = STYLE === 'arc' ? arcDark : STYLE === 'uber' ? uberDark : tealDark;
+// The main site's chosen colour theme (ui/palette.ts) replaces arc's own ocean colours.
+const PAL = STYLE === 'arc' ? paletteColors() : null;
+const light: typeof tealLight = STYLE === 'arc' ? (PAL?.light ?? arcLight) : STYLE === 'uber' ? uberLight : tealLight;
+const dark: typeof tealLight = STYLE === 'arc' ? (PAL?.dark ?? arcDark) : STYLE === 'uber' ? uberDark : tealDark;
 // UBER: the neutral looks (uber and arc), where main buttons are black / white rather than the accent.
 export const UBER = STYLE !== 'teal';
 export const ARC = STYLE === 'arc';

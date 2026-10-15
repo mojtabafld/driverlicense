@@ -16,8 +16,9 @@ import { L, T, tap } from './kit';
 import { useIntroBg } from './onboarding';
 import { ARC, useTheme } from './theme';
 import type { ThemeName } from '@/lib/prefs';
+import { px } from './palette';
 
-const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? '#2f55d4' : '#14421c';
+const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? px('#2f55d4') : '#14421c';
 
 function FlagDK() {
   return (
@@ -80,13 +81,13 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
                   <View style={{ borderRadius: 5, overflow: 'hidden' }}><Flag /></View>
                   <View style={{ flex: 1, gap: 2 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-                      <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: on ? (ARC ? '#111c42' : '#143f14') : '#fff' }}>{name}</L>
-                      {RTL ? <T style={{ fontSize: 14, color: on ? (ARC ? '#3d4560' : '#3f5e3f') : 'rgba(255,255,255,0.75)' }}>{fa}</T> : null}
+                      <L style={{ fontSize: 19, lineHeight: 26, fontWeight: '700', color: on ? (ARC ? px('#111c42') : '#143f14') : '#fff' }}>{name}</L>
+                      {RTL ? <T style={{ fontSize: 14, color: on ? (ARC ? px('#3d4560') : '#3f5e3f') : 'rgba(255,255,255,0.75)' }}>{fa}</T> : null}
                     </View>
-                    <T style={{ fontSize: 12.5, lineHeight: 20, color: on ? (ARC ? '#535a72' : '#557055') : 'rgba(255,255,255,0.7)' }}>{note}</T>
+                    <T style={{ fontSize: 12.5, lineHeight: 20, color: on ? (ARC ? px('#535a72') : '#557055') : 'rgba(255,255,255,0.7)' }}>{note}</T>
                   </View>
                   <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 2,
-                    borderColor: on ? (ARC ? '#1a3693' : '#228B22') : 'rgba(255,255,255,0.5)', backgroundColor: on ? (ARC ? '#1a3693' : '#228B22') : 'transparent' }}>
+                    borderColor: on ? (ARC ? px('#1a3693') : '#228B22') : 'rgba(255,255,255,0.5)', backgroundColor: on ? (ARC ? px('#1a3693') : '#228B22') : 'transparent' }}>
                     {on ? <Icon name="check" size={14} color="#fff" weight="bold" /> : null}
                   </View>
                 </Pressable>

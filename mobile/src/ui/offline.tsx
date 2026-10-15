@@ -10,11 +10,12 @@ import { Icon } from './icon';
 import { ARC } from './theme';
 import { T, tap } from './kit';
 import { TallPicture } from './tall-picture';
+import { px } from './palette';
 
 const PICTURE = require('../../assets/images/offline.jpg');
 // The intro's dark forest green (the picture's own background, which it fades into).
-export const OFFLINE_TOP = ARC ? '#111d45' : '#14421c';
-const OFFLINE_FOOT = ARC ? '#0a1433' : '#0d3014';
+export const OFFLINE_TOP = ARC ? px('#111d45') : '#14421c';
+const OFFLINE_FOOT = ARC ? px('#0a1433') : '#0d3014';
 
 // On the web the picture is a file from the server: loaded (invisibly) while online, so the offline page has it.
 export function OfflinePreload() {
