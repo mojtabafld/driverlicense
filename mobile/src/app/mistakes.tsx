@@ -120,12 +120,16 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                 <T style={{ fontSize: 12.5, color: c.muted }}>روی هر بخش بزنید تا سؤال‌هایش نمایش داده شود</T>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {([['topics', faNum(sorted.length), 'مبحث', c.text], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok], ['open', faNum(open), 'سؤال اصلاح‌نشده', c.bad]] as const).map(([v, n, l, col]) => (
+                {([['topics', faNum(sorted.length), 'مبحث', c.text, 'list'], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok, 'checkCircle'], ['open', faNum(open), 'سؤال اصلاح‌نشده', c.bad, 'xCircle']] as const).map(([v, n, l, col, icon]) => (
                   <Pressable key={v} onPress={() => choose(v)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })} accessibilityRole="button">
                     {/* (all three as tall as the tallest, when a label takes two lines: Mojtaba, 2026-10-15) */}
                     <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 3, borderRadius: 8, backgroundColor: c.surface2 },
                       ARC && { paddingVertical: 10, borderRadius: radius.sm, borderWidth: 1, borderColor: c.cardBorder }]}>
-                      <T style={{ fontSize: 18, fontWeight: '800', color: col, textAlign: 'center' }}>{n}</T>
+                      {/* the number with its icon beside it (Mojtaba, 2026-10-15) */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                        <Icon name={icon} size={17} color={col} weight="semibold" />
+                        <T style={{ fontSize: 18, fontWeight: '800', color: col, textAlign: 'center' }}>{n}</T>
+                      </View>
                       <T numberOfLines={2} style={{ fontSize: 11, lineHeight: 16, color: c.muted, textAlign: 'center' }}>{l}</T>
                     </View>
                   </Pressable>
