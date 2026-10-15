@@ -8,8 +8,8 @@ import { RTL, latin } from '@/lib/i18n';
 
 type Art = { light: boolean; height: number };
 
-const LIGHT = { blob: '#cae5df', road: '#ffffff', dash: '#bfdcd5', ok: '#2f8f78', card: '#ffffff', pole: '#5f7f77', cardLine: '#bfdcd5', avatar: '#8fb8e8', line: '#d3e6e1', you: '#e8957a', blue: '#5b74c4', gold: '#f2b84b' };
-const DARK = { blob: '#1f5145', road: '#2c6a5b', dash: '#4c8a7b', ok: '#5cc4ab', card: '#f4f8f3', pole: '#cfe3de', cardLine: '#cfe3de', avatar: '#8fb8e8', line: '#d3e6e1', you: '#e8957a', blue: '#7d93dc', gold: '#f2b84b' };
+const LIGHT = { blob: '#c8cfe7', road: '#ffffff', dash: '#bdc5de', ok: '#284296', card: '#ffffff', pole: '#5d6581', cardLine: '#bdc5de', avatar: '#8fb8e8', line: '#d2d7e7', you: '#e8957a', blue: '#5b74c4', gold: '#f2b84b' };
+const DARK = { blob: '#1b2955', road: '#27386f', dash: '#47588f', ok: '#5470cc', card: '#f4f8f3', pole: '#cdd3e4', cardLine: '#cdd3e4', avatar: '#8fb8e8', line: '#d2d7e7', you: '#e8957a', blue: '#7d93dc', gold: '#f2b84b' };
 type Tone = typeof LIGHT;
 
 // The drawing's box: the header's height (less its fading foot), three to two, on the left.
@@ -126,7 +126,7 @@ export function HomeLicenceArt({ light, height }: Art) {
     <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
       <G transform="translate(22 66) rotate(-8) scale(0.84)">
-        <Rect x={6} y={10} width={150} height={96} rx={14} fill={light ? '#b3d7ce' : '#143a31'} />
+        <Rect x={6} y={10} width={150} height={96} rx={14} fill={light ? '#b0bada' : '#111b3d'} />
         <Rect width={150} height={96} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
         <Rect x={14} y={14} width={26} height={18} rx={3} fill="#c8102e" />
         <Rect x={22} y={14} width={4} height={18} fill="#fff" />
@@ -158,7 +158,7 @@ export function ExamWheelArt({ light, height }: Art) {
     <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
       <G transform="translate(86 52) rotate(4) scale(0.8)">
-        <Rect x={4} y={8} width={120} height={112} rx={14} fill={light ? '#b3d7ce' : '#143a31'} />
+        <Rect x={4} y={8} width={120} height={112} rx={14} fill={light ? '#b0bada' : '#111b3d'} />
         <Rect width={120} height={112} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
         <Rect x={14} y={14} width={70} height={6} rx={3} fill={t.line} />
         <Rect x={14} y={25} width={48} height={6} rx={3} fill={t.line} />
@@ -166,7 +166,7 @@ export function ExamWheelArt({ light, height }: Art) {
           const y = 42 + i * 22, right = i === 1;
           return (
             <G key={i}>
-              <Rect x={12} y={y} width={96} height={17} rx={8.5} fill={right ? '#dff1ed' : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
+              <Rect x={12} y={y} width={96} height={17} rx={8.5} fill={right ? '#dee2f2' : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
               <Circle cx={24} cy={y + 8.5} r={5} fill={right ? t.ok : 'none'} stroke={right ? t.ok : t.cardLine} strokeWidth={1.5} />
               <Rect x={36} y={y + 6} width={right ? 50 : 40 + i * 6} height={5} rx={2.5} fill={right ? t.ok : t.line} opacity={right ? 0.55 : 1} />
             </G>
@@ -177,7 +177,7 @@ export function ExamWheelArt({ light, height }: Art) {
       <G transform="translate(62 126)">
         <Rect x={-6} y={-46} width={12} height={9} rx={3} fill={t.pole} />
         <Rect x={21} y={-38} width={9} height={7} rx={2.5} fill={t.pole} transform="rotate(40 25 -34)" />
-        <Circle cx={2} cy={4} r={34} fill={light ? '#b3d7ce' : '#143a31'} />
+        <Circle cx={2} cy={4} r={34} fill={light ? '#b0bada' : '#111b3d'} />
         <Circle r={34} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
         <Path d="M0 -25 A25 25 0 1 1 -23.8 7.7" fill="none" stroke={t.ok} strokeWidth={5} strokeLinecap="round" />
         <Path d="M0 0 L0 -17" stroke={t.you} strokeWidth={3.2} strokeLinecap="round" />
@@ -194,7 +194,7 @@ export function ExamWheelArt({ light, height }: Art) {
 // graduation cap above it and a green seal at its corner.
 export function LearnBookArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
-  const back = light ? '#b3d7ce' : '#143a31';
+  const back = light ? '#b0bada' : '#111b3d';
   return (
     <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
@@ -209,8 +209,8 @@ export function LearnBookArt({ light, height }: Art) {
         <Path d="M136 9 v26 l7 -6 l7 6 v-26 z" fill={t.you} />
       </G>
       <G transform="translate(112 34) rotate(-10) scale(0.9)">
-        <Path d="M0 18 L30 6 L60 18 L30 30 Z" fill={light ? '#2a5a4f' : '#e6f1ee'} />
-        <Path d="M12 23 v12 q18 9 36 0 v-12 l-18 7 z" fill={light ? '#2a5a4f' : '#e6f1ee'} opacity={0.85} />
+        <Path d="M0 18 L30 6 L60 18 L30 30 Z" fill={light ? '#26335e' : '#e5e8f2'} />
+        <Path d="M12 23 v12 q18 9 36 0 v-12 l-18 7 z" fill={light ? '#26335e' : '#e5e8f2'} opacity={0.85} />
         <Path d="M52 21 v14" stroke={t.gold} strokeWidth={2.2} strokeLinecap="round" />
         <Circle cx={52} cy={37} r={3} fill={t.gold} />
       </G>
@@ -224,9 +224,9 @@ export function LearnBookArt({ light, height }: Art) {
 // The sign-in page's picture (main site), drawn like the home, exam and learn headers (Mojtaba, 2026-10-15): a phone
 // with a profile, a password field and a green button, a shield with a tick beside it and the Danish flag, on two soft
 // circles, in the middle of a plain box in the headers' own green (light / dark), as wide as the screen.
-export const LOGIN_BG = { light: '#d5ece7', dark: ARC ? '#141c3d' : '#1b483d' };
+export const LOGIN_BG = { light: '#d3d9ee', dark: ARC ? '#141c3d' : '#18244b' };
 export function LoginArt({ light, width, height }: { light: boolean; width: number; height: number }) {
-  const t = light ? LIGHT : DARK, back = light ? '#b3d7cf' : '#143a31';
+  const t = light ? LIGHT : DARK, back = light ? '#b0bada' : '#111b3d';
   return (
     <Svg width={width} height={height} viewBox="34 2 232 172" preserveAspectRatio="xMidYMid meet">
       <Circle cx={190} cy={58} r={48} fill={t.blob} />
@@ -242,7 +242,7 @@ export function LoginArt({ light, width, height }: { light: boolean; width: numb
         <Rect x={17} y={65} width={28} height={4} rx={2} fill={t.line} />
         <Rect x={10} y={80} width={54} height={14} rx={7} fill="none" stroke={t.cardLine} strokeWidth={1.5} />
         {[0, 1, 2, 3, 4].map(i => <Circle key={i} cx={19 + i * 7} cy={87} r={2.2} fill={t.pole} />)}
-        <Rect x={10} y={102} width={54} height={15} rx={7.5} fill="#1f6f5c" />
+        <Rect x={10} y={102} width={54} height={15} rx={7.5} fill="#2f55d4" />
         <Rect x={28} y={108} width={18} height={3.5} rx={1.75} fill="#fff" />
       </G>
       <G transform="translate(84 92)">

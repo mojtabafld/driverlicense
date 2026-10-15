@@ -222,7 +222,7 @@ export function setWebTop(base: string, cover: string | null) { webTop.base = ba
 // In the light theme, a light version of the same picture (number + 3, on a soft light green) with a dark green title,
 // once the server has made it; until then the dark one.
 // (the main site's in its teal green, from Mojtaba's reference)
-const HERO_BG = ARC ? '#141c3d' : '#1b4827', HERO_BG_LIGHT = ARC ? '#d5ece7' : '#d9ecd5', HERO_INK_LIGHT = ARC ? '#144237' : '#14421c';
+const HERO_BG = ARC ? '#141c3d' : '#1b4827', HERO_BG_LIGHT = ARC ? '#d3d9ee' : '#d9ecd5', HERO_INK_LIGHT = ARC ? '#111d45' : '#14421c';
 const HERO_FADE = 110;   // how far up from the header's bottom the picture fades into the page
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
@@ -537,7 +537,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
 export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
   return {
-    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: dark ? c.nav : '#e4e4e4' } as ViewStyle,
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: dark ? c.nav : '#e3e6ef' } as ViewStyle,
     // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
     // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
     pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
