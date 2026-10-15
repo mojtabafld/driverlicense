@@ -88,19 +88,21 @@ const uberDark: typeof tealLight = {
 // (Main site, 2026-10-15: accent, links, icons and the chart in the reference's button green #1f6f5c; in the dark theme its
 // lighter sage #6fb09b.)
 const arcLight: typeof tealLight = {
-  bg: '#f3f3f3', surface: '#ffffff', surface2: '#f8f8f8', line: '#e9e9e9',
-  text: '#0b0b0b', muted: '#585858', faint: '#7d7d7d',
-  accent: '#1f6f5c', accentText: '#ffffff', accentSoft: 'rgba(31,111,92,0.13)', link: '#1f6f5c',
-  forest: '#1f6f5c', ok: '#007b5e', okSoft: '#e5f4f0', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
-  note: '#f1f1f1', submit: '#1d1d1d', checked: 'rgba(31,111,92,0.13)', cardBorder: '#e9e9e9', hairline: '#f3f3f3',
-  glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e9e9e9',
-  pick: '#1d1d1d', pickSoft: '#f1f1f1',
-  nav: '#f1f1f1', navFg: '#0b0b0b', navOff: '#f8f8f8', navNum: '#585858',
-  strong: '#1d1d1d', strongFg: '#ffffff',
-  btn: '#1d1d1d', btnFg: '#ffffff',
-  // The main site's call to action (home's next lesson, the exam's start: ArcButton): a deep green like the page headers.
-  cta: '#1f6f5c', ctaFg: '#ffffff',
-  bgGradient: ['#f3f3f3', '#f3f3f3', '#f3f3f3'] as readonly [string, string, string],
+  // (2026-10-15, Mojtaba: the light theme in the dark theme's blues: a cool grey page, white cards, blue accent and ticks,
+  // navy main buttons and a soft blue on the chosen row.)
+  bg: '#f3f4f8', surface: '#ffffff', surface2: '#f5f6fa', line: '#e5e8f0',
+  text: '#0b0d18', muted: '#565c73', faint: '#7a8098',
+  accent: '#2f55d4', accentText: '#ffffff', accentSoft: 'rgba(47,85,212,0.12)', link: '#2f55d4',
+  forest: '#2f55d4', ok: '#0f8a68', okSoft: '#e3f4ee', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
+  note: '#f0f2f8', submit: '#121a3a', checked: 'rgba(47,85,212,0.12)', cardBorder: '#e5e8f0', hairline: '#eef0f6',
+  glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e5e8f0',
+  pick: '#3e6bf0', pickSoft: '#edf1fe',
+  nav: '#eef0f6', navFg: '#0b0d18', navOff: '#f5f6fa', navNum: '#565c73',
+  strong: '#121a3a', strongFg: '#ffffff',
+  btn: '#121a3a', btnFg: '#ffffff',
+  // The main site's call to action (home's next lesson, the exam's start: ArcButton).
+  cta: '#2f55d4', ctaFg: '#ffffff',
+  bgGradient: ['#f3f4f8', '#f3f4f8', '#f3f4f8'] as readonly [string, string, string],
 };
 // (2026-10-15, Mojtaba: the dark theme after a coaching app's screens: a blue-black page, navy cards with thin
 // lines, a blue accent for ticks and links, a navy highlight on the chosen row and white main buttons.)

@@ -30,11 +30,11 @@ export function useBarLook() {
       dark, light,
       grey: 'rgba(255,255,255,0.82)',
       solid: 'rgba(252,252,252,0.97)',
-      capsule: 'rgba(31,111,92,0.12)',
-      green: '#1f6f5c',
+      capsule: ARC ? 'rgba(47,85,212,0.12)' : 'rgba(31,111,92,0.12)',
+      green: ARC ? '#2f55d4' : '#1f6f5c',
       fg: '#1d1d1d',
       edge: 'rgba(0,0,0,0.08)',
-      contrast: '#e6ede8',
+      contrast: ARC ? '#e6eaf5' : '#e6ede8',
     };
   }
   return {
@@ -42,7 +42,7 @@ export function useBarLook() {
     grey: dark ? (ARC ? 'rgba(30,35,58,0.82)' : 'rgba(58,58,62,0.78)') : 'rgba(88,88,94,0.84)',
     solid: dark ? (ARC ? 'rgba(26,30,49,0.97)' : 'rgba(52,52,56,0.96)') : 'rgba(84,84,90,0.96)', // Android, where nothing blurs
     capsule: dark ? 'rgba(0,0,0,0.38)' : 'rgba(30,30,34,0.6)',
-    green: (ARC ? (dark ? '#8ea8ff' : '#6fdcc2') : '#6fdc7c'),
+    green: (ARC ? (dark ? '#8ea8ff' : '#9db3ff') : '#6fdc7c'),
     fg: '#ffffff',
     edge: 'rgba(255,255,255,0.18)',
     contrast: dark ? (ARC ? '#1a1e31' : '#1f1f20') : '#3f3f43', // a filled icon's inner lines: the capsule's own colour
