@@ -12,7 +12,7 @@ import { ArcButton, Backdrop, Button, Hero, SegPill, T, ThemeButton, tap, useArc
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { LOGIN_SKY, LoginScene } from '@/ui/header-art';
 import { API_URL } from '@/lib/config';
-import { RTL } from '@/lib/i18n';
+import { RTL, tr } from '@/lib/i18n';
 
 // Sign in / sign up switch: a soft track with the chosen side raised.
 function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
@@ -64,8 +64,8 @@ function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
 }
 
 export default function Login() {
-  const c = useColors();
-  const { login, register } = useApp();
+  const c = useColors(), dark = useIsDark();
+  const { login, register, guest } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState(''), [user, setUser] = useState(''), [pw, setPw] = useState('');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
@@ -75,6 +75,11 @@ export default function Login() {
     setErr(''); setBusy(true);
     try { if (mode === 'login') await login(user.trim(), pw); else await register(name.trim(), user.trim(), pw); }
     catch (e: any) { setErr(e.message); setBusy(false); }
+  };
+  const asGuest = async () => {
+    if (busy) return;
+    setErr(''); setBusy(true);
+    try { await guest(tr('مهمان')); } catch (e: any) { setErr(e.message); setBusy(false); }
   };
   const title = mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری';
   const subtitle = mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید';
@@ -98,12 +103,18 @@ export default function Login() {
             {/* Main site: a plain solid deep green button (the hills' green), its label alone, faded while it can't be used. */}
             {ARC ? <ArcButton big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} style={{ marginTop: 4 }} />
               : <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} kind="grey" style={{ marginTop: 2 }} icon={mode === 'login' ? 'person' : 'personAdd'} />}
-            {/* The site's three facts */}
-            <View style={{ alignItems: 'center', gap: 4, marginTop: 10 }}>
+            {/* Main site: a plain link under the button, to use the site without an account (a guest account, server's /api/guest). */}
+            {ARC ? (
+              <Pressable onPress={() => { tap(); asGuest(); }} disabled={busy} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6, marginTop: 2 }}>
+                {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ color: dark ? c.link : c.cta, fontSize: 15.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>ورود به عنوان کاربر مهمان</T>}
+              </Pressable>
+            ) : null}
+            {/* The site's three facts (/app) */}
+            {ARC ? null : <View style={{ alignItems: 'center', gap: 4, marginTop: 10 }}>
               {['🇩🇰 آزمون تئوری گواهینامه‌ی دانمارک', 'بیش از ۱۰۰۰ سؤال در ۴۴ آزمون', 'ترجمه‌ی فارسی و آموزش'].map(f => (
                 <T key={f} style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>{f}</T>
               ))}
-            </View>
+            </View>}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

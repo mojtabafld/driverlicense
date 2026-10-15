@@ -453,6 +453,21 @@ async function api(req, res, route) {
     const token = await newSession(req, res, u);
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
+  // «ورود به عنوان کاربر مهمان» (the sign-in page): a new account with a made-up name and a random password nobody sees,
+  // kept in this browser by its session; progress is saved as for anyone. Refused where signing up needs an invite.
+  if (req.method === 'POST' && route === 'guest') {
+    if (INVITE_CODE) return send(res, 403, { error: 'ورود مهمان در این سایت ممکن نیست.' });
+    if (!registerAllowed(ip)) return send(res, 429, { error: 'ساخت حساب از این اتصال زیاد بوده است؛ کمی بعد دوباره امتحان کنید.' });
+    const { name } = await readBody(req);
+    let u; do u = `guest-${crypto.randomBytes(4).toString('hex')}`; while (store.users[u]);
+    const salt = crypto.randomBytes(16).toString('hex');
+    const user = { username: u, name: String(name || '').trim().slice(0, 40) || 'مهمان', salt, hash: await hashPw(crypto.randomBytes(24).toString('hex'), salt),
+      created: Date.now(), attempts: [], settings: {}, guest: true };
+    store.users[u] = user;
+    await store.saveUser(user);
+    const token = await newSession(req, res, u);
+    return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
+  }
   if (req.method === 'POST' && route === 'login') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const { username, password } = await readBody(req);

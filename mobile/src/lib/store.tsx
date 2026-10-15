@@ -34,6 +34,7 @@ type Ctx = {
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   register: (name: string, username: string, password: string) => Promise<void>;
+  guest: (name: string) => Promise<void>;
   logout: () => Promise<void>;
   // Change the shown name and / or the password (with the current one); the username stays.
   updateAccount: (b: { name?: string; current?: string; password?: string }) => Promise<void>;
@@ -124,6 +125,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     Q: new Map((bank?.questions || []).map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
     register: async (name, username, password) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password }); await signedIn(d.token); },
+    guest: async name => { const d = await api<{ token: string }>('POST', 'guest', { name }); await signedIn(d.token); },
     // Signed out on the device at once; the server is told in the background (with the old token), so a slow or
     // missing connection never keeps the user signed in.
     logout: async () => {
