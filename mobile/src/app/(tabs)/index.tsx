@@ -183,9 +183,12 @@ export default function Home() {
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
             <Pill text={probWord} fg={probColor} bg={probSoft} />
             {/* Main site: no line before the first exam. */}
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, textAlign: ARC ? 'center' : undefined, display: tight || tighter || (ARC && !est) ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, textAlign: ARC ? 'center' : undefined, display: tight || tighter || ARC ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
         </View>
+        {/* Main site: the line under the pair, across the card on one line in every language (Mojtaba, 2026-10-15); none
+            before the first exam. */}
+        {ARC && est && !tight ? <FitLine size={12.5} style={{ color: c.muted, lineHeight: 20, textAlign: 'center' }}>{`بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی`}</FitLine> : null}
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter && !ARC ? 'none' : 'flex' }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</FitLine>
