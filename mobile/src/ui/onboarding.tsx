@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { RTL, UI_LANG, setUiLang } from '@/lib/i18n';
+import { RTL, UI_CHOSEN, setUiLang, tr } from '@/lib/i18n';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
@@ -16,6 +16,8 @@ import { TallPicture } from './tall-picture';
 import { ArtAi, ArtBank, ArtExam, ArtProgress } from './onboarding-art';
 import { IntroAi, IntroBank, IntroExam, IntroProgress } from './intro-art';
 import { ARC, useIsDark } from './theme';
+import { LangButton, ThemeButton } from './intro-top';
+import { LangWheel } from './lang-wheel';
 
 // Main site: its own minimal drawings (ui/intro-art.tsx) in place of the server's pictures, Mojtaba asked.
 const SLIDES = [
@@ -58,6 +60,10 @@ function FitTitle({ text, size }: { text: string; size: number }) {
 // `onTop`: the colour at the top of the screen, for the browser's own bar on the web.
 export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: string) => void }) {
   const BG = useIntroBg();
+  // Main site: the language first, on its wheel, when this browser has none chosen yet (a language other than
+  // Persian reloads the page, which then opens on the slides).
+  const [wheel, setWheel] = useState(!PROVE_PICS && !UI_CHOSEN);
+  const [menu, setMenu] = useState(false);
   const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
   const { intro } = useApp();
@@ -95,6 +101,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
   // picture is made), the title and line under it.
   const headH = ins.top + Math.min(Math.round(height * 0.56), 540), artH = Math.min(height * 0.42, 340);
   const shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
+  if (wheel) return <LangWheel onDone={l => { if (!setUiLang(l)) setWheel(false); }} />;
   return (
     <View style={{ flex: 1 }} {...swipe}>
       <LinearGradient colors={[BG[0], BG[0], BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
@@ -109,23 +116,15 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
           <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>{text}</T>
         </View>
       </Animated.View>
-      {/* The app's language, before anything else (main site): each named in its own language; a tap reloads the
-          intro in it. */}
-      {PROVE_PICS ? null : (
-        <View style={{ position: 'absolute', top: ins.top + 14, left: 0, right: 0, alignItems: 'flex-end', paddingHorizontal: 16 }}>
-          <View style={{ flexDirection: 'row', gap: 2, padding: 3, borderRadius: 99, backgroundColor: 'rgba(0,0,0,0.28)' }} accessibilityRole="radiogroup">
-            {(['fa', 'en', 'da'] as const).map(l => {
-              const on = l === UI_LANG;
-              return (
-                <Pressable key={l} onPress={() => { tap(); setUiLang(l); }} accessibilityRole="radio" accessibilityState={{ checked: on }} hitSlop={4}
-                  style={({ pressed }) => ({ height: 30, minWidth: 44, paddingHorizontal: 10, borderRadius: 99, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1, backgroundColor: on ? '#fff' : 'transparent' })}>
-                  <T raw style={{ fontSize: 13, lineHeight: 18, fontWeight: '600', color: on ? BUTTON_TEXT : '#fff', textAlign: 'center', fontFamily: l === 'fa' ? 'Vazirmatn-500' : 'Inter-500' }}>{{ fa: 'فارسی', en: 'English', da: 'Dansk' }[l]}</T>
-                </Pressable>
-              );
-            })}
-          </View>
+      {/* The language and the theme, at the top (main site): the language button opens the three to pick from. A tap
+          anywhere else closes that list. */}
+      {PROVE_PICS ? null : (<>
+        {menu ? <Pressable onPress={() => setMenu(false)} accessibilityLabel={tr('بستن')} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2 }} /> : null}
+        <View style={{ position: 'absolute', top: ins.top + 14, left: 16, flexDirection: 'row', gap: 10, zIndex: 3 }}>
+          <LangButton open={menu} setOpen={setMenu} />
+          <ThemeButton />
         </View>
-      )}
+      </>)}
       <View style={{ paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         {/* Skip at the start, the dots in the middle (at the start on the last slide, beside the wider «شروع کنید»), next / start at the end */}
         <View style={{ flexDirection: 'row', alignItems: 'center', height: 54 }}>
