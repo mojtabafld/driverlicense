@@ -149,19 +149,13 @@ export function HomeLicenceArt({ light, height }: Art) {
 }
 
 
-// The exam tab's header (main site): «فرمان و آزمون», a steering wheel behind a question card with the right answer ticked.
+// The exam tab's header (main site): a question card with the right answer ticked and a stopwatch for the exam's time
+// in front of it (the steering wheel taken out, Mojtaba 2026-10-15).
 export function ExamWheelArt({ light, height }: Art) {
   const t = light ? LIGHT : DARK;
-  const wheel = light ? '#6f9c91' : '#cfe3de';
   return (
     <Frame height={height} edge={192}>
       <HomeBlobs t={t} />
-      <G opacity={light ? 0.85 : 0.75}>
-        <Circle cx={66} cy={104} r={50} fill="none" stroke={wheel} strokeWidth={10} />
-        <Circle cx={66} cy={104} r={11} fill={wheel} />
-        <Path d="M18 98 Q 66 88 114 98" fill="none" stroke={wheel} strokeWidth={8} strokeLinecap="round" />
-        <Path d="M66 115 L66 152" stroke={wheel} strokeWidth={8} strokeLinecap="round" />
-      </G>
       <G transform="translate(86 52) rotate(4) scale(0.8)">
         <Rect x={4} y={8} width={120} height={112} rx={14} fill={light ? '#b3d7ce' : '#143a31'} />
         <Rect width={120} height={112} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
@@ -177,6 +171,16 @@ export function ExamWheelArt({ light, height }: Art) {
             </G>
           );
         })}
+      </G>
+      {/* the exam's clock: a stopwatch in front of the card's lower left */}
+      <G transform="translate(62 126)">
+        <Rect x={-6} y={-46} width={12} height={9} rx={3} fill={t.pole} />
+        <Rect x={21} y={-38} width={9} height={7} rx={2.5} fill={t.pole} transform="rotate(40 25 -34)" />
+        <Circle cx={2} cy={4} r={34} fill={light ? '#b3d7ce' : '#143a31'} />
+        <Circle r={34} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
+        <Path d="M0 -25 A25 25 0 1 1 -23.8 7.7" fill="none" stroke={t.ok} strokeWidth={5} strokeLinecap="round" />
+        <Path d="M0 0 L0 -17" stroke={t.you} strokeWidth={3.2} strokeLinecap="round" />
+        <Circle r={4} fill={t.you} />
       </G>
       <Circle cx={182} cy={52} r={13} fill={t.ok} />
       <Tick x={182} y={52} />
