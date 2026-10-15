@@ -11,4 +11,4 @@ export type Attempt = { at: number; secs: number; mode: string; lesson?: number;
 // langChosen: the user picked the questions' language when the app asked (once).
 export type Settings = { showFa: boolean; timer: boolean; lang?: 'da' | 'en'; langChosen?: boolean; voice?: 'woman' | 'man'; ui?: 'fa' | 'en' | 'da' };
 // avatar: one of the made pictures ({ preset }) or their own photo ({ photo: version }).
-export type User = { username: string; name: string; created: number; admin?: boolean; avatar?: { preset?: number; photo?: string } };
+export type User = { username: string; name: string; created: number; admin?: boolean; avatar?: { preset?: number; photo?: string }; premium?: { until: number; plan?: string } };

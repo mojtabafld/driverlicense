@@ -14,6 +14,12 @@ type Ctx = {
   imgv: Record<string, string>; token: string | null;
   // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
   saved: Saved[]; aiLessons: boolean; tts: boolean;
+  // Premium (a pass bought with Stripe, app/premium.tsx): its plans when it can be bought, whether this account has it
+  // now (a pass that has not run out, or an admin), and `locked`: the AI analysis and the read-aloud need it here and this account has not got it
+  // (then `tts` is off and the AI button leads to the premium page).
+  pay: Pay | null; premium: boolean; locked: boolean;
+  // After coming back from Stripe: the server checks the Checkout session; true once premium is on the account.
+  confirmPremium: (sessionId: string) => Promise<boolean>;
   // The intro's pictures that the server has made: slide number → version, and → the picture's background colour.
   intro: Record<string, string>; introBg: Record<string, string>;
   // The «آموزش» cards' pictures that the server has made: card number → version.
@@ -39,6 +45,8 @@ type Ctx = {
   saveAttempt: (a: Omit<Attempt, 'at'>) => Promise<void>;
   setSettings: (s: Partial<Settings>) => Promise<void>;
 };
+export type Plan = { id: 'week' | 'month' | 'quarter'; days: number; price: number };
+export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean };
 const AppCtx = createContext<Ctx | null>(null);
 const DEFAULTS: Settings = { showFa: true, timer: true, lang: 'da' };
 
@@ -49,6 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [bank, setBank] = useState<Bank | null>(null);
   const [aiLessons, setAiLessons] = useState(false);
   const [tts, setTts] = useState(false); // questions read aloud (the server has an ElevenLabs key)
+  const [pay, setPay] = useState<Pay | null>(null);
   const [intro, setIntro] = useState<Record<string, string>>({});
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
   const [learnArt, setLearnArt] = useState<Record<string, string>>({});
@@ -71,7 +80,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       else if ((UI_CHOSEN || UI_LANG !== 'fa') && ui !== UI_LANG) api('PUT', 'settings', { ...DEFAULTS, ...d.settings, ui: UI_LANG }).catch(() => {});
     }
     setMe(d);
-    api<{ aiLessons?: boolean; tts?: boolean }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); }).catch(() => {});
+    api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); }).catch(() => {});
     if (!bank) setBank(await fetchBank<Bank>());
   }, [bank]);
 
@@ -93,10 +102,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signedIn = async (t: string) => { setApiToken(t); setToken(t); await saveToken(t); await load(); };
+  const premium = (me?.user.premium?.until ?? 0) > Date.now() || !!me?.user.admin, locked = !!pay?.gate && !premium;
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
-    saved: me?.saved ?? [], aiLessons, tts, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, guideArt,
+    pay: PROVE_PICS ? null : pay, premium, locked,
+    confirmPremium: async id => {
+      const d = await api<{ user: User; pending?: boolean }>('POST', 'checkoutdone', { id });
+      setMe(m => (m ? { ...m, user: d.user } : m));
+      return (d.user.premium?.until ?? 0) > Date.now();
+    },
+    saved: me?.saved ?? [], aiLessons, tts: tts && !locked, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, guideArt,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
@@ -134,7 +150,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons, tts, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, guideArt]);
+  }), [ready, token, me, bank, aiLessons, tts, pay, premium, locked, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, guideArt]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

@@ -3,6 +3,7 @@
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { Animated, Easing, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
+import { router } from 'expo-router';
 
 import { t as fmt, tr, transText } from '@/lib/i18n';
 import { api } from '@/lib/api';
@@ -245,6 +246,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const [typing, setTyping] = useState(false); // fetched just now: typed out
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [err, setErr] = useState('');
+  const { locked } = useApp();
   const load = () => {
     setState('loading');
     api<{ text: string }>('POST', 'lesson', { qid: q.id, a, lang, at })
@@ -254,6 +256,8 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const fold = useFold();
   const press = () => {
     if (state === 'loading') return;
+    // Without premium where it is needed: the premium page instead.
+    if (locked && !text) { router.push('/premium'); return; }
     if (!shown && !text) load();
     if (fold.closing) return;
     const next = !shown || (!text && state === 'error');
@@ -264,7 +268,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const { ref, panel, follow } = useReveal(shown);
   return (
     <View ref={ref} style={{ marginTop: 14 }}>
-      <AiButton title="تحلیل پاسخ شما" sub="با استفاده از هوش مصنوعی" shown={shown} onPress={press} />
+      <AiButton title="تحلیل پاسخ شما" sub={locked && !text ? 'مخصوص نسخه‌ی ویژه' : 'با استفاده از هوش مصنوعی'} shown={shown} onPress={press} />
       {shown ? (
         <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
         <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
