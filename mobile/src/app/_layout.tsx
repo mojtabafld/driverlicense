@@ -13,7 +13,7 @@ import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
 import { Backdrop, PageSkeleton, setWebTop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
-import { INTRO_BG, Onboarding } from '@/ui/onboarding';
+import { Onboarding, useIntroBg } from '@/ui/onboarding';
 import { useTapTopToScroll } from '@/ui/tap-top';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
@@ -45,7 +45,7 @@ function Root() {
     if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
     else refresh().catch(() => {});
   }, [blocked, online, refresh]);
-  const dark = useIsDark(), c = useColors();
+  const dark = useIsDark(), c = useColors(), INTRO_BG = useIntroBg();
   const [fontsLoaded, fontError] = useFonts({ ...FA_FONTS, ...DA_FONTS });
   const fonts = fontsLoaded || !!fontError;
   // The intro, once per device (also on devices that ran a version without it): over everything until it is closed.
