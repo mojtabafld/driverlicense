@@ -17,17 +17,13 @@ import { Button, Card, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
-function Perk({ icon, title, sub }: { icon: IconName; title: string; sub: string }) {
+// What premium adds, short: an icon and a few words, side by side.
+function Perk({ icon, title }: { icon: IconName; title: string }) {
   const c = useColors();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 }}>
-      <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.strong }}>
-        <Icon name={icon} size={18} color={c.strongFg} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <T style={{ fontWeight: '700' }}>{title}</T>
-        <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{sub}</T>
-      </View>
+    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+      <Icon name={icon} size={18} color={c.text} />
+      <T style={{ flex: 1, fontWeight: '700', fontSize: 13.5 }} numberOfLines={2}>{title}</T>
     </View>
   );
 }
@@ -56,7 +52,8 @@ function PlanOption({ plan, on, best, onPress }: { plan: Plan; on: boolean; best
 
 export default function Premium() {
   const c = useColors();
-  const { user, pay, premium, confirmPremium, redeemPromo, refresh } = useApp();
+  const { user, pay, premium, confirmPremium, redeemPromo, refresh, logout } = useApp();
+  const guest = !!user?.guest;
   const { paid, canceled } = useLocalSearchParams<{ paid?: string; canceled?: string }>();
   const [busy, setBusy] = useState<'buy' | 'check' | null>(paid ? 'check' : null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(canceled ? { ok: false, text: 'پرداخت لغو شد؛ پولی از حساب شما کم نشد.' } : null);
@@ -102,12 +99,15 @@ export default function Premium() {
   const check = async () => { setBusy('check'); try { await refresh(); } catch {} setBusy(null); };
 
   return (
-    <SubPage title="نسخه‌ی ویژه" subtitle="بدون تمدید خودکار؛ هر وقت لازم داشتید بخرید" maxWidth={560}>
-      <Card style={{ gap: 4 }}>
-        <Perk icon="sparkles" title="تحلیل پاسخ‌ها با هوش مصنوعی" sub="برای هر سؤال توضیح می‌دهد چرا پاسخ شما درست یا نادرست بود." />
-        <Perk icon="speaker" title="خواندن سؤال‌ها با صدا" sub="سؤال و گزینه‌ها به دانمارکی یا انگلیسی خوانده می‌شوند." />
-        <Perk icon="checkCircle" title="بدون تمدید خودکار" sub="یک بار برای همان مدت می‌پردازید؛ پولی خودکار از حسابتان کم نمی‌شود." />
-      </Card>
+    <SubPage title="نسخه‌ی ویژه" maxWidth={560}>
+      {/* Short: the two things premium adds, and one line on paying. */}
+      <View style={{ gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Perk icon="sparkles" title="تحلیل پاسخ‌ها با هوش مصنوعی" />
+          <Perk icon="speaker" title="خواندن سؤال‌ها با صدا" />
+        </View>
+        <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>یک بار پرداخت، بدون تمدید خودکار</T>
+      </View>
 
       {premium ? (
         <Card style={{ gap: 8, alignItems: 'center' }}>
@@ -118,7 +118,15 @@ export default function Premium() {
       ) : until ? (
         <Card><T style={{ color: c.muted, textAlign: 'center' }}>{t('نسخه‌ی ویژه‌ی شما {0} تمام شد.', fmtDay(until))}</T></Card>
       ) : null}
-      {pay ? (
+      {guest && !premium ? (
+        // A guest buys nothing and enters no code: the pass would go with the browser's session. They make an account.
+        <Card style={{ gap: 10, alignItems: 'center', paddingVertical: 22 }}>
+          <Icon name="personAdd" size={30} color={c.text} />
+          <T style={{ fontWeight: '700', fontSize: 16, textAlign: 'center' }}>برای نسخه‌ی ویژه حساب کاربری بسازید</T>
+          <T style={{ color: c.muted, fontSize: 13, lineHeight: 22, textAlign: 'center' }}>کاربر مهمان نمی‌تواند نسخه‌ی ویژه بخرد یا کد تخفیف بزند. پیشرفت حساب مهمان به حساب تازه منتقل نمی‌شود.</T>
+          <Button big icon="personAdd" label="ساخت حساب کاربری" onPress={() => { logout().catch(() => {}); }} style={{ alignSelf: 'stretch', marginTop: 4 }} />
+        </Card>
+      ) : pay ? (
         <Card style={{ gap: 12 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>{premium ? 'تمدید' : 'انتخاب مدت'}</T>
           <View accessibilityRole="radiogroup" style={{ gap: 10 }}>
@@ -132,7 +140,7 @@ export default function Premium() {
         </Card>
       ) : null}
       {/* A trial code, until this account has used one. */}
-      {pay?.promo && !user?.premium?.promo ? (
+      {pay?.promo && !guest && !user?.premium?.promo ? (
         <Card style={{ gap: 10 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>کد تخفیف</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{t('با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).', faNum(pay.promo))}</T>

@@ -2639,5 +2639,9 @@
 "اول ایمیل خود را با لینکی که برایتان فرستادیم تأیید کنید.":["First confirm your email with the link we sent you.", "Bekræft først din e-mail med det link, vi sendte dig."],
 "برای استفاده از کد تخفیف، اول ایمیل خود را در «حساب کاربری» ثبت و تأیید کنید.":["To use a discount code, first add and confirm your email under “Account”.", "For at bruge en rabatkode skal du først tilføje og bekræfte din e-mail under »Konto«."],
 "یک دقیقه صبر کنید و دوباره امتحان کنید.":["Wait a minute and try again.", "Vent et minut, og prøv igen."],
-"امروز ایمیل زیادی فرستاده شده است؛ فردا دوباره امتحان کنید.":["Too many emails sent today; try again tomorrow.", "Der er sendt for mange e-mails i dag; prøv igen i morgen."]
+"امروز ایمیل زیادی فرستاده شده است؛ فردا دوباره امتحان کنید.":["Too many emails sent today; try again tomorrow.", "Der er sendt for mange e-mails i dag; prøv igen i morgen."],
+"یک بار پرداخت، بدون تمدید خودکار":["Pay once, no automatic renewal", "Betal én gang, ingen automatisk fornyelse"],
+"برای نسخه‌ی ویژه حساب کاربری بسازید":["Create an account for Premium", "Opret en konto for at få Premium"],
+"کاربر مهمان نمی‌تواند نسخه‌ی ویژه بخرد یا کد تخفیف بزند. پیشرفت حساب مهمان به حساب تازه منتقل نمی‌شود.":["Guests cannot buy Premium or use a discount code. Progress from the guest account is not carried over to the new account.", "Gæster kan ikke købe Premium eller bruge en rabatkode. Fremskridt fra gæstekontoen flyttes ikke over til den nye konto."],
+"برای خرید نسخه‌ی ویژه، اول حساب کاربری بسازید.":["To buy Premium, first create an account.", "For at købe Premium skal du først oprette en konto."]
 }

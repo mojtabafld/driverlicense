@@ -27,20 +27,33 @@ export const PALETTES: Spec[] = [
   { id: 'rose', name: 'گلبهی', hue: 340, nhue: 340, nsat: 0.12, accD: '#ff5c8a', accD2: '#ff8fae', onD: '#ffffff', accL: '#d6336c', pickSoftD: '#2e1420' },
   { id: 'mono', name: 'سیاه و سفید', hue: 226, nhue: 226, nsat: 0, asat: 0, accD: '#f2f2f2', accD2: '#d0d0d0', onD: '#111111', accL: '#151515', pickSoftD: '#262626' },
 ];
-const KEY = 'tp.palette';
+// KEY: the theme picked on this device (kept, whatever the default becomes). Until one is picked, the server's default
+// (DEFAULT_THEME on the server, «آسمان» unless set): on the web written into the page (window.__TP_THEME), on a phone
+// the one /api/config named last time (DEFAULT_KEY; a change there shows from the next start, with no new app build).
+const KEY = 'tp.palette', DEFAULT_KEY = 'tp.paletteDefault';
 const valid = (v: unknown): v is PaletteId => PALETTES.some(p => p.id === v);
+const web = Platform.OS === 'web';
+function read(k: string): string | null {
+  try { return web ? localStorage.getItem(k) : require('expo-secure-store').getItem(k); } catch { return null; }
+}
+function write(k: string, v: string) {
+  try { if (web) localStorage.setItem(k, v); else require('expo-secure-store').setItem(k, v); } catch {}
+}
 function initial(): PaletteId {
   if (PROVE_PICS) return 'ocean';
-  try { const v = localStorage.getItem(KEY); if (valid(v)) return v; } catch {}
-  return 'ocean';
+  const picked = read(KEY); if (valid(picked)) return picked;
+  const def = web ? (typeof window !== 'undefined' ? (window as any).__TP_THEME : null) : read(DEFAULT_KEY);
+  return valid(def) ? def : 'sky';
 }
+// The default /api/config names, kept on a phone for its next start.
+export function rememberDefault(id: unknown) { if (!web && !PROVE_PICS && valid(id)) write(DEFAULT_KEY, id); }
 export const PALETTE: PaletteId = initial();
 const SPEC = PALETTES.find(p => p.id === PALETTE)!;
 
 // Keep the theme and, when it changes, load the page again in it (web).
 export function setPalette(id: PaletteId) {
   if (PROVE_PICS || !valid(id)) return;
-  try { localStorage.setItem(KEY, id); } catch {}
+  write(KEY, id);
   if (id !== PALETTE && Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
 }
 
