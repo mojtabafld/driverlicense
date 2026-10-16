@@ -13,7 +13,7 @@ import { Avatar, AvatarSheet } from '@/ui/avatar';
 import { Confirm } from '@/ui/confirm';
 import { Field } from '@/ui/field';
 import { Icon, type IconName } from '@/ui/icon';
-import { Card, Screen, Segmented, T, physical, tap } from '@/ui/kit';
+import { Card, OkTick, Screen, Segmented, T, physical, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
@@ -33,7 +33,7 @@ function Row({ title, sub, right }: { title: string; sub?: string; right: React.
 }
 
 // A row that opens a page: its icon, title and a line under it, and an arrow.
-function LinkRow({ icon, title, sub, onPress, last }: { icon: IconName; title: string; sub: string; onPress: () => void; last?: boolean }) {
+function LinkRow({ icon, title, sub, onPress, last, ok }: { icon: IconName; title: string; sub: string; onPress: () => void; last?: boolean; ok?: boolean }) {
   const c = useColors();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={title}
@@ -43,7 +43,11 @@ function LinkRow({ icon, title, sub, onPress, last }: { icon: IconName; title: s
       </View>
       <View style={{ flex: 1 }}>
         <T style={{ fontWeight: '700' }}>{title}</T>
-        <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{sub}</T>
+        {/* `ok`: a round green tick before the line (premium is on). */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {ok ? <OkTick size={16} /> : null}
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, flexShrink: 1 }}>{sub}</T>
+        </View>
       </View>
       <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
     </Pressable>
@@ -125,7 +129,7 @@ export default function Settings() {
       {/* «نسخه‌ی ویژه»: when it can be bought (a Stripe key on the server), or the account has it. */}
       {pay || user?.premium ? (
         <Card style={{ gap: 4 }}>
-          <LinkRow icon="sparkles" title="نسخه‌ی ویژه" sub={premium && user?.premium ? fmt('فعال تا {0}', fmtDay(user.premium.until)) : premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />
+          <LinkRow icon="sparkles" title="نسخه‌ی ویژه" ok={premium} sub={premium && user?.premium ? fmt('فعال تا {0}', fmtDay(user.premium.until)) : premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />
         </Card>
       ) : null}
       {/* The app's language (main site): Persian, English or Danish, each named in its own language; a change reloads

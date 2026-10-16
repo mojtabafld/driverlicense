@@ -675,3 +675,14 @@ export function EmptyState({ icon, title, text, action }: { icon: IconName; titl
     </View>
   );
 }
+
+// A round green tick: the green tick inside a thin green ring, on the page's own surface colour (light or dark
+// theme): the premium page's perks and the settings' «فعال تا».
+export function OkTick({ size = 20 }: { size?: number }) {
+  const c = useColors();
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, borderWidth: 1.5, borderColor: c.ok, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name="check" size={Math.round(size * 0.58)} color={c.ok} weight="bold" />
+    </View>
+  );
+}
