@@ -162,13 +162,13 @@ export function IntroProgress() {
   );
 }
 
-// The page shown with no internet (ui/offline.tsx): a phone whose Wi-Fi sign is struck through, a «!» badge beside it.
+// The page shown with no internet (ui/offline.tsx): a phone whose Wi-Fi sign is struck through, a «!» badge beside it
+// (no circles behind it, Mojtaba asked).
 export function IntroOffline() {
   const cx = 152, cy = 128, k = Math.SQRT1_2;
   const arc = (r: number) => `M${cx - r * k} ${cy - r * k} A${r} ${r} 0 0 1 ${cx + r * k} ${cy - r * k}`;
   return (
     <Box>
-      <Blobs a={[200, 92, 62]} b={[90, 176, 50]} />
       <Card x={106} y={30} w={92} h={176} r={18}>
         <Bar x={140} y={38} w={24} h={4} />
         {[36, 25, 14].map(r => <Path key={r} d={arc(r)} fill="none" stroke={t.cardLine} strokeWidth={6} strokeLinecap="round" />)}
