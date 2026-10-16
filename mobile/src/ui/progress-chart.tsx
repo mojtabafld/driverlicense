@@ -1,15 +1,14 @@
 // Progress chart, «نمودار پیشرفت»: a point for the percent correct of each attempt on a smooth grey line (light grey in
 // the light theme, dark grey in the dark one) with a soft green gradient under it, ten across the width and older ones
 // by dragging (it opens at the newest); a point is green when the
-// attempt passed or reached 80%, else grey, with the 80% pass line; the line rises in when it opens. Tap a point to pick
+// attempt passed or reached 80%, else grey, with the 80% pass line; when it opens the line draws itself from left to
+// right across the view, its fill and points following it (as Cloudflare's charts do, Mojtaba asked). Tap a point to pick
 // that attempt; its details and a review button show below. With `fill` it takes the height of the space it is given,
 // at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
-// With more than ten attempts, the first time it is drawn after the app opens, it shows that older attempts are there:
-// the bars glide a little towards the older ones and back, under a small arrow that fades in and out.
 import { router } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
+import { useRef, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
+import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { RTL } from '@/lib/i18n';
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
@@ -21,40 +20,6 @@ import { ARC, useColors } from './theme';
 // The main site (ARC) draws it flat, as a cash-forecast card: no percent scale or grid, the green line edge to edge
 // over a soft green fill, the pass line dashed grey with its label, green points on passed attempts and red on failed ones, dates below.
 const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
-// The scroll hint plays once per app start.
-let hinted = false;
-function takeHint() { if (hinted) return false; hinted = true; return true; }
-
-// The hint over the bars: a round arrow towards the older attempts, fading in, swaying, fading out.
-function ScrollHint({ run, onDone }: { run: boolean; onDone: () => void }) {
-  const c = useColors();
-  const [o] = useState(() => new Animated.Value(0)), [dx] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if (!run) return;
-    const ease = Easing.inOut(Easing.cubic);
-    const sway = Animated.sequence([
-      Animated.timing(dx, { toValue: -8, duration: 420, easing: ease, useNativeDriver: true }),
-      Animated.timing(dx, { toValue: 0, duration: 420, easing: ease, useNativeDriver: true }),
-    ]);
-    const anim = Animated.sequence([
-      Animated.timing(o, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      sway, sway,
-      Animated.delay(500),
-      Animated.timing(o, { toValue: 0, duration: 480, easing: Easing.in(Easing.cubic), useNativeDriver: true }),
-    ]);
-    anim.start(({ finished }) => { if (finished) onDone(); });
-    return () => anim.stop();
-  }, [run, o, dx, onDone]);
-  if (!run) return null;
-  return (
-    <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', opacity: o }}>
-      <Animated.View style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 22,
-        backgroundColor: c.strong, transform: [{ translateX: dx }], shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 3 } as any}>
-        <Icon name="arrowLeft" size={18} color={c.strongFg} weight="semibold" />
-      </Animated.View>
-    </Animated.View>
-  );
-}
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی');
 
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
@@ -70,22 +35,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const [selIn, setSelIn] = useState<number | null>(null);
   const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
-  const grow = useCountUp(1, 900);
-  const [hint, setHint] = useState(false);
-  const hideHint = useCallback(() => setHint(false), []);
-  const n = Math.min(attempts.length, 200), many = attempts.length > 10;
-  // Once the bars have grown in: glide towards the older attempts and back, with the hint over them.
-  // Keyed by being ready only, so a later change of width does not cut the hint short.
-  const ready = many && W > 0;
-  useEffect(() => {
-    if (!ready || !takeHint()) return;
-    const vw = Math.max(0, W - L - R), sl = vw / Math.min(10, n), end = Math.max(0, sl * n - vw);
-    const t1 = setTimeout(() => setHint(true), 1000);
-    const t2 = setTimeout(() => scroller.current?.scrollTo({ x: Math.max(0, end - sl * 2.5), animated: true }), 1350);
-    const t3 = setTimeout(() => scroller.current?.scrollToEnd({ animated: true }), 2300);
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready]);
+  // How far the line has drawn itself across the view, 0 to 1.
+  const draw = useCountUp(W > 0 ? 1 : 0, 1400);
   if (attempts.length < 2 && ARC && fill) {
     // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
     return (
@@ -120,7 +71,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // ARC: the scale starts a little under the lowest score (in tens, at most 60%), so the line uses the card's height.
   const lo = ARC ? Math.max(0, Math.min(60, Math.floor((Math.min(...data.map(a => pctOf(a) * 100)) - 15) / 10) * 10)) : 0;
   const y = (v: number) => TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B);
-  const tops = data.map(a => y(lo + (pctOf(a) * 100 - lo) * grow));
+  const tops = data.map(a => y(pctOf(a) * 100));
+  // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge.
+  const edge = Math.max(0, CW - VW) + (VW + DOT * 2 + 2) * draw;
   const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
   // The line through the points, smooth: each step a curve leaving and reaching its points level, so it never swings
   // above or below them; the area under it down to 0%.
@@ -145,7 +98,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
               ))}
             </Svg>}
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
-              onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })} onScrollBeginDrag={() => setHint(false)}>
+              onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })}>
               {/* ARC: clipped, so the edge points' tap areas do not widen the scroll past the line's end. */}
               <View style={{ width: CW, height: H, overflow: ARC ? 'hidden' : 'visible' }}>
                 {/* A tap between the bars clears the pick. */}
@@ -157,20 +110,25 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                       <Stop offset="0" stopColor={c.forest} stopOpacity={0.32} />
                       <Stop offset="1" stopColor={c.forest} stopOpacity={0} />
                     </LinearGradient>
+                    {/* The part drawn so far: the line and its fill show up to `edge`. */}
+                    <ClipPath id="pcDraw"><Rect x={0} y={0} width={edge} height={H} /></ClipPath>
                   </Defs>
-                  {ARC ? <>
-                    <Path d={area} fill={c.forest} fillOpacity={0.13} />
-                    <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.faint} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" />
-                    <Path d={line} fill="none" stroke={c.cta} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.6} />
-                  </> : <>
-                    <Path d={area} fill="url(#pcArea)" />
-                    <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
-                  </>}
+                  {ARC ? <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.faint} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" /> : null}
+                  <G clipPath="url(#pcDraw)">
+                    {ARC ? <>
+                      <Path d={area} fill={c.forest} fillOpacity={0.13} />
+                      <Path d={line} fill="none" stroke={c.cta} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.6} />
+                    </> : <>
+                      <Path d={area} fill="url(#pcArea)" />
+                      <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
+                    </>}
+                  </G>
+                  {/* Each point shows once the line has reached it. */}
                   {/* ARC: a green point on each passed attempt (or 80% and over), a red one on the others. */}
-                  {ARC ? data.map((d, i) => (
+                  {ARC ? data.map((d, i) => x(i) > edge ? null : (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.ok : c.bad} stroke={c.surface} strokeWidth={2} />))
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
-                  : data.map((d, i) => (
+                  : data.map((d, i) => x(i) > edge ? null : (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
                       stroke={c.surface} strokeWidth={2} fillOpacity={sel == null || sel === i ? 1 : 0.4} />
                   ))}
@@ -195,7 +153,6 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
               </View>
             </ScrollView>
             {/* Main site: no «حد قبولی ۸۰٪» under the dashed line (the legend names it), Mojtaba asked. */}
-            <ScrollHint run={hint} onDone={hideHint} />
           </View>
         ) : null}
       </View>
