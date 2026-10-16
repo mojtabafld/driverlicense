@@ -2,6 +2,7 @@
 // short plain Persian (the signs and right of way have their own pages and data, guide-data.ts). Each part names the bank's topics (codes as in
 // bank.topics) whose questions practise it, so a part can end in a practice exam of exactly those questions.
 // Kept short on purpose: what the test asks and what is easy to get wrong, not the whole law (Færdselsloven).
+import { PROVE_PICS } from '@/lib/config';
 import type { IconName } from '@/ui/icon-names';
 import type { SignKind } from '@/ui/road-signs';
 
@@ -215,7 +216,9 @@ export const HELP: GuidePart[] = [
   {
     title: 'آموزش',
     points: [
-      'آموزش درس‌به‌درس: درس‌های رسمی به ترتیب، یا تمرین بر اساس دسته‌بندی رسمی.',
+      // Main site: the app's own step-by-step course; /app: prove.dk's lessons.
+      PROVE_PICS ? 'آموزش درس‌به‌درس: درس‌های رسمی به ترتیب، یا تمرین بر اساس دسته‌بندی رسمی.'
+        : 'آموزش گام‌به‌گام: فصل به فصل، هر درس با توضیح، تصویر و سؤال‌هایی به شکل آزمون واقعی، و در پایان هر فصل یک آزمون فصل.',
       'قوانین، علائم رانندگی و آموزش حق تقدم: خلاصه‌ی نکته‌های مهم، هر بخش با تمرین سؤال‌های مربوط به آن.',
     ],
   },

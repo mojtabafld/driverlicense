@@ -2666,5 +2666,8 @@
 "برنامه را به صفحه‌ی اصلی گوشی اضافه کنید":["Add the app to your Home Screen", "Føj appen til din hjemmeskærm"],
 "برنامه را به Dock اضافه کنید":["Add the app to the Dock", "Føj appen til Dock"],
 "با یک لمس و تمام‌صفحه باز می‌شود، مثل یک برنامه‌ی واقعی.":["It opens with one tap, full screen, like a real app.", "Den åbner med ét tryk i fuld skærm, som en rigtig app."],
-"متوجه شدم":["Got it", "Forstået"]
+"متوجه شدم":["Got it", "Forstået"],
+"چه اتفاقی افتاد و در کدام صفحه؟ اگر به سؤال یا درس خاصی مربوط است، نام درس آموزش گام‌به‌گام یا آزمون و شماره‌ی سؤال را هم بنویسید.":["What happened, and on which page? If it is about a particular question or lesson, also write the name of the step-by-step course lesson or the test and the question's number.", "Hvad skete der, og på hvilken side? Hvis det handler om et bestemt spørgsmål eller en lektion, så skriv også navnet på lektionen i trin-for-trin-kurset eller testen og spørgsmålets nummer."],
+"مثلاً: در درس «کمربند و صندلی کودک»، تصویر سؤال ۲ نمایش داده نمی‌شود.":["For example: in the lesson «Seat belt and child seat», question 2's picture does not show.", "For eksempel: i lektionen «Sele og autostol» vises billedet til spørgsmål 2 ikke."],
+"آموزش گام‌به‌گام: فصل به فصل، هر درس با توضیح، تصویر و سؤال‌هایی به شکل آزمون واقعی، و در پایان هر فصل یک آزمون فصل.":["Step-by-step course: chapter by chapter, each lesson with explanations, pictures and questions like the real test, and a chapter test at the end of each chapter.", "Trin-for-trin-kursus: kapitel for kapitel, hver lektion med forklaringer, billeder og spørgsmål som til den rigtige prøve, og en kapiteltest i slutningen af hvert kapitel."]
 }
