@@ -121,8 +121,8 @@ jobs:
           cd android
           sed -i '/^org.gradle.jvmargs=/d' gradle.properties
           echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8' >> gradle.properties
-          printf '\nallprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }\n' >> build.gradle
-          ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+          printf '\nandroid { lint { checkReleaseBuilds false } }\n' >> app/build.gradle
+          ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
 
       - name: Collect
         run: |
