@@ -13,19 +13,16 @@ import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp, type Plan } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Button, Card, T, tap } from '@/ui/kit';
+import { Button, Card, OkTick, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
-// One thing premium adds: a round green tick (the light or dark theme's green), then a line.
+// One thing premium adds: a round green tick (OkTick), then a line.
 function Perk({ title }: { title: string }) {
-  const c = useColors();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
-        <Icon name="check" size={13} color={c.surface} weight="bold" />
-      </View>
-      <T style={{ flex: 1, fontWeight: '500', fontSize: 13 }}>{title}</T>
+      <OkTick size={20} />
+      <T style={{ flex: 1, fontWeight: '500', fontSize: 12 }}>{title}</T>
     </View>
   );
 }
