@@ -21,6 +21,11 @@ const write = (v: string) => { try { if (web) localStorage.setItem(KEY, v); else
 
 function initial(): UiLang {
   if (PROVE_PICS) return 'fa';
+  // Back from the email's confirmation link (the server's /api/verify): ?ui= names the account's language.
+  if (web && typeof window !== 'undefined') {
+    const u = new URLSearchParams(window.location.search).get('ui');
+    if (valid(u)) { write(u); return u; }
+  }
   const v = read(); if (valid(v)) return v;
   return 'fa';
 }
