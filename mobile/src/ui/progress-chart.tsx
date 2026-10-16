@@ -2,11 +2,11 @@
 // the light theme, dark grey in the dark one) with a soft green gradient under it, ten across the width and older ones
 // by dragging (it opens at the newest); a point is green when the
 // attempt passed or reached 80%, else grey, with the 80% pass line; when it opens the line draws itself from left to
-// right across the view, its fill and points following it (as Cloudflare's charts do, Mojtaba asked). Tap a point to pick
+// right across the view, its fill and points following it (as Cloudflare's charts do, Mojtaba asked), once per app start. Tap a point to pick
 // that attempt; its details and a review button show below. With `fill` it takes the height of the space it is given,
 // at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
@@ -20,6 +20,8 @@ import { ARC, useColors } from './theme';
 // The main site (ARC) draws it flat, as a cash-forecast card: no percent scale or grid, the green line edge to edge
 // over a soft green fill, the pass line dashed grey with its label, green points on passed attempts and red on failed ones, dates below.
 const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
+// The line drew itself in already since the app started.
+let drawnOnce = false;
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : 'آزمون تصادفی');
 
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
@@ -35,8 +37,11 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const [selIn, setSelIn] = useState<number | null>(null);
   const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
-  // How far the line has drawn itself across the view, 0 to 1.
-  const draw = useCountUp(W > 0 ? 1 : 0, 1400);
+  // How far the line has drawn itself across the view, 0 to 1: drawn in once per app start (after signing in), and
+  // whole at once when the chart is shown again (moving between pages), Mojtaba asked.
+  const [instant] = useState(() => drawnOnce);
+  const anim = useCountUp(W > 0 && !instant ? 1 : 0, 1400), draw = instant ? 1 : anim;
+  useEffect(() => { if (W > 0) drawnOnce = true; }, [W]);
   if (attempts.length < 2 && ARC && fill) {
     // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
     return (

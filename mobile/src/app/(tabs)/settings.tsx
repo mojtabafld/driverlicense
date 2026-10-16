@@ -54,6 +54,8 @@ export default function Settings() {
   const c = useColors();
   const { user, settings, setSettings, logout, deleteAccount, tts, pay, premium } = useApp();
   const { mode, setMode } = useTheme();
+  // A guest account cannot be edited or deleted: no account page, no delete line.
+  const guest = !!user?.guest;
   // Sign-out asks first, in the app's own dialog.
   const [askOut, setAskOut] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
@@ -87,7 +89,7 @@ export default function Settings() {
       <Card style={{ gap: 6 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         {/* The name opens the account page (name and password); sign-out stays at the end. */}
-        <Pressable onPress={() => { tap(); router.push('/account'); }} accessibilityRole="button" accessibilityLabel="حساب کاربری"
+        <Pressable onPress={() => { if (guest) return; tap(); router.push('/account'); }} disabled={guest} accessibilityRole="button" accessibilityLabel="حساب کاربری"
           style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14, opacity: pressed ? 0.7 : 1 })}>
           {/* The profile picture (or the first letter, in the theme's colours): a tap opens the pictures to choose from. */}
           <Pressable onPress={() => { tap(); setAvatarOpen(true); }} hitSlop={4} accessibilityRole="button" accessibilityLabel="عکس پروفایل">
@@ -102,9 +104,9 @@ export default function Settings() {
             {user?.created ? <T style={{ color: c.muted, fontSize: 13 }} numberOfLines={1}>عضو از {fmtDay(user.created)}</T> : null}
           </View>
           {/* Edit: the name opens the account page (name and password). */}
-          <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
+          {guest ? null : <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.nav }}>
             <Icon name="edit" size={19} color={c.navFg} weight="semibold" />
-          </View>
+          </View>}
         </Pressable>
         <Pressable onPress={() => { tap(); confirmLogout(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="خروج از حساب"
           style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
@@ -112,7 +114,7 @@ export default function Settings() {
         </Pressable>
       </View>
         {/* Delete the account: a quiet red line under the user, it asks first (main site only). */}
-        {!PROVE_PICS ? (
+        {!PROVE_PICS && !guest ? (
           <Pressable onPress={() => { tap(); setAskDel(true); }} accessibilityRole="button" accessibilityLabel="حذف حساب کاربری"
             style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: c.line, opacity: pressed ? 0.6 : 1 })}>
             <Icon name="trash" size={16} color={c.bad} />
