@@ -8,7 +8,7 @@ import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, Vi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-import { RTL, tr, tryTr } from '@/lib/i18n';
+import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
 import { useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
@@ -372,6 +372,18 @@ export function T({ style, raw, ...p }: TextProps & { style?: StyleProp<TextStyl
   const side = Platform.OS === 'web' ? null
     : ltr ? { direction: 'ltr' as const } : { direction: 'rtl' as const, textAlign: physicalAlign(flat.textAlign ?? 'right') };
   return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font, side]} />;
+}
+// A question's translation (lib/i18n.ts transText), in its own direction and font whatever the app's language:
+// Persian right to left in Vazirmatn, English or Danish left to right; never looked up in the app's own texts.
+export function TransT({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
+  const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS;
+  if (RTL && getTransLang() === 'fa') return <T raw {...p} style={style} />;
+  const flat = StyleSheet.flatten(style) ?? {};
+  const fa = getTransLang() === 'fa';
+  const kids = fa && en ? enKids(p.children) : p.children;
+  const font = fa ? faFamily(flat.fontWeight) : Platform.OS === 'web' ? `${daFamily(flat.fontWeight).family}, sans-serif` : daFamily(flat.fontWeight).family;
+  return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24 }, style,
+    { fontFamily: font, fontWeight: 'normal', writingDirection: fa ? 'rtl' : 'ltr', textAlign: fa ? 'right' : 'left', ...(Platform.OS === 'web' ? null : { direction: fa ? 'rtl' as const : 'ltr' as const }) }]}>{kids}</Text>;
 }
 // A label kept on one line in every language (Mojtaba, 2026-10-15): measured once at `size` in a hidden, very wide
 // box, then set just small enough to fit the width it has (never below `min`).

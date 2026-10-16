@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_PICS } from './config';
-import { UI_CHOSEN, UI_LANG, setUiLang } from './i18n';
+import { EXAM_FOR, UI_CHOSEN, UI_LANG, setTransLang, setUiLang } from './i18n';
 import { loadToken, saveToken } from './token';
 
 export type Saved = { id: number; a?: number[]; at: number };
@@ -75,13 +75,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const gen = useRef(0);
   const load = useCallback(async () => {
     const g = gen.current;
-    const d = await api<Me>('GET', 'me');
+    let d = await api<Me>('GET', 'me');
     if (g !== gen.current) return;
     // The app's language: the account's, unless one was chosen in this browser (then the account takes that one).
     if (!PROVE_PICS) {
       const ui = d.settings?.ui;
       if (ui && !UI_CHOSEN && ui !== UI_LANG) { if (setUiLang(ui)) return; }
       else if ((UI_CHOSEN || UI_LANG !== 'fa') && ui !== UI_LANG) api('PUT', 'settings', { ...DEFAULTS, ...d.settings, ui: UI_LANG }).catch(() => {});
+    }
+    // Main site: the questions' language follows the app's language chosen at the start (Mojtaba, 2026-10-16), so it
+    // is not asked separately; it can still be changed in the settings.
+    if (!PROVE_PICS && !d.settings?.langChosen) {
+      const settings = { ...DEFAULTS, ...d.settings, lang: EXAM_FOR[UI_LANG], langChosen: true };
+      d = { ...d, settings };
+      api('PUT', 'settings', settings).catch(() => {});
     }
     setMe(d);
     api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); }).catch(() => {});
@@ -107,6 +114,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const signedIn = async (t: string) => { setApiToken(t); setToken(t); await saveToken(t); await load(); };
   const premium = (me?.user.premium?.until ?? 0) > Date.now() || !!me?.user.admin, locked = !!pay?.gate && !premium;
+  // The translation's language, read by transText while the screens draw (kept in step with the account's settings).
+  setTransLang(me?.settings?.trans === 'auto' ? undefined : me?.settings?.trans);
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },

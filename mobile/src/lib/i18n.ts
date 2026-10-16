@@ -95,12 +95,24 @@ function parts(s: string): string | null {
   return null;
 }
 
-// The translation under a question (in the app's language), when the app is not in the exam's language: from a text's
-// Persian, English and Danish forms.
+// The language of the translation under a question (Mojtaba, 2026-10-16): by default Persian in a Persian or English
+// app, English in a Danish one; the user can pick another in the settings (settings.trans, set by the store through
+// setTransLang). The questions' own language follows the app's when it is first chosen (EXAM_FOR).
+export type TransLang = 'fa' | 'en' | 'da';
+export const TRANS_DEFAULT: TransLang = UI_LANG === 'da' ? 'en' : 'fa';
+let transLang: TransLang = TRANS_DEFAULT;
+export const getTransLang = () => transLang;
+export function setTransLang(l?: TransLang) { transLang = !PROVE_PICS && l ? l : TRANS_DEFAULT; }
+export const EXAM_FOR: Record<UiLang, 'da' | 'en'> = { fa: 'en', en: 'en', da: 'da' };
+// The translation under a question, when it is not in the exam's own language: from a text's Persian, English and
+// Danish forms.
 export function transText(exam: 'da' | 'en', v: { fa?: string; en?: string; da?: string }): string | null {
-  if (UI_LANG === exam) return null;
-  return (UI_LANG === 'fa' ? v.fa : UI_LANG === 'en' ? v.en : v.da) || null;
+  if (transLang === exam) return null;
+  return (transLang === 'fa' ? v.fa : transLang === 'en' ? v.en : v.da) || null;
 }
+// «Yes.» / «No.» and «Explanation:» in the translation's language.
+const WORDS = { fa: { yes: 'بله.', no: 'خیر.', expl: 'توضیح:' }, en: { yes: 'Yes.', no: 'No.', expl: 'Explanation:' }, da: { yes: 'Ja.', no: 'Nej.', expl: 'Forklaring:' } };
+export const transWord = (w: 'yes' | 'no' | 'expl') => WORDS[transLang][w];
 
 // A text with parts put in: t('درس بعدی: {0}', title) (the parts are translated too when they are Persian).
 export function t(key: string, ...args: (string | number)[]): string {

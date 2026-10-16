@@ -24,7 +24,7 @@ import { OptionBox, OptionGroup } from '@/ui/option-box';
 import { learnRtl, Pager } from '@/ui/swipe';
 import { useWebBackGuard } from '@/ui/web-back';
 import { Icon } from '@/ui/icon';
-import { Backdrop, Enter, L, T, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
+import { Backdrop, Enter, L, T, TransT, ThemeButton, TranslateButton, physical, tap, usePageMotion } from '@/ui/kit';
 import { uiText } from '@/ui/review';
 import { radius, useColors, useIsDark } from '@/ui/theme';
 
@@ -174,7 +174,7 @@ export default function Run() {
         </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
-          {showFa && transText(lang, { fa: q.sfa, en: q.sen, da: q.sda }) ? <T style={{ color: c.muted }}>{transText(lang, { fa: q.sfa, en: q.sen, da: q.sda })}</T> : null}
+          {showFa && transText(lang, { fa: q.sfa, en: q.sen, da: q.sda }) ? <TransT style={{ color: c.muted }}>{transText(lang, { fa: q.sfa, en: q.sen, da: q.sda })}</TransT> : null}
         </View>
         <OptionGroup key={`g-${i}`}>
         {q.st.map((s, k) => {
@@ -184,7 +184,7 @@ export default function Run() {
             <Enter key={`${i}-${k}`}>
               <OptionBox on={on} n={k} onPress={() => toggle(k)}>
                 <L style={{ fontSize: 15.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
-                {showFa && transText(lang, s) ? <T style={{ color: c.muted, fontSize: 14 }}>{transText(lang, s)}</T> : null}
+                {showFa && transText(lang, s) ? <TransT style={{ color: c.muted, fontSize: 14 }}>{transText(lang, s)}</TransT> : null}
               </OptionBox>
             </Enter>
           );

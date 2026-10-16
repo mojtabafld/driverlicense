@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 
-import { UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
+import { EXAM_FOR, TRANS_DEFAULT, getTransLang, UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
@@ -131,7 +131,7 @@ export default function Settings() {
       {!PROVE_PICS ? (
         <Card style={{ gap: 10 }}>
           <Row title="زبان برنامه" sub="متن‌ها، درس‌ها و منوهای اپ به این زبان نمایش داده می‌شوند." right={null} />
-          <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui }).catch(() => {}).finally(() => setUiLang(ui)); }}
+          <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui, lang: EXAM_FOR[ui] }).catch(() => {}).finally(() => setUiLang(ui)); }}
             options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
         </Card>
       ) : null}
@@ -146,6 +146,15 @@ export default function Settings() {
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
+        {/* Main site: the translation's language; left alone it follows the app's language (Persian, or English in a
+            Danish app). The exam's own language shows no translation. */}
+        {!PROVE_PICS ? (
+          <>
+            <Row title="زبان ترجمه" sub="ترجمه‌ی زیر سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شود." right={null} />
+            <Segmented value={getTransLang()} onChange={(trans: 'fa' | 'en' | 'da') => setSettings({ trans: trans === TRANS_DEFAULT ? 'auto' : trans })}
+              options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'انگلیسی' }, { value: 'da', label: 'دانمارکی' }]} />
+          </>
+        ) : null}
         {/* The read-aloud voice, when the server can read aloud: each option plays a sample in this language. */}
         {tts ? (
           <View style={{ gap: 10, paddingBottom: 4 }}>
@@ -153,7 +162,7 @@ export default function Settings() {
             <VoiceChoice />
           </View>
         ) : null}
-        {UI_LANG === (settings.lang ?? 'da') ? null : <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />}
+        {getTransLang() === (settings.lang ?? 'da') ? null : <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />}
         <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
       {/* «راهنما»: how to use the app, reporting a problem, and the version. */}
