@@ -65,6 +65,12 @@ async function createCheckout(username, plan, origin, lang) {
   return s.url;
 }
 const getSession = id => stripe('GET', `checkout/sessions/${encodeURIComponent(id)}`);
+// The newest finished Checkout sessions (up to 100) that bought premium and are paid: the server counts any it missed
+// (a webhook that did not arrive, or a buyer who did not come back to the site).
+async function recentPaid() {
+  const d = await stripe('GET', 'checkout/sessions?limit=100&status=complete');
+  return (d.data || []).filter(s => s.payment_status === 'paid' && (s.metadata || {}).product === 'premium');
+}
 
 // user.premium: { until (ms), plan, buys: [{ session, pi, plan, days, amount, currency, at, test }] } (the newest 50).
 const active = u => !!(u.premium && u.premium.until > Date.now());
@@ -115,4 +121,4 @@ function verifyEvent(raw, header, secret = process.env.STRIPE_WEBHOOK_SECRET || 
   try { return JSON.parse(raw.toString('utf8')); } catch { return null; }
 }
 
-module.exports = { available, testMode, gated, plans, createCheckout, getSession, active, hasSession, grant, refund, verifyEvent, promoCodes, promoDays, grantPromo };
+module.exports = { available, testMode, gated, plans, createCheckout, getSession, recentPaid, active, hasSession, grant, refund, verifyEvent, promoCodes, promoDays, grantPromo };

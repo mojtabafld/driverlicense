@@ -247,7 +247,9 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const [typing, setTyping] = useState(false); // fetched just now: typed out
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [err, setErr] = useState('');
-  const { locked } = useApp();
+  const { locked, user } = useApp();
+  // The analysis opens with the user's shown name (not for guests).
+  const who = user && !user.guest ? user.name : '';
   const load = () => {
     setState('loading');
     api<{ text: string }>('POST', 'lesson', { qid: q.id, a, lang, at })
@@ -275,7 +277,10 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
         <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
-            : text ? <Rich text={text} typing={typing} onGrow={follow} /> : null}
+            : text ? <>
+              {who ? <T style={{ fontWeight: '700', fontSize: 15, marginBottom: 6 }}>{fmt('{0}، این تحلیل پاسخ شماست:', who)}</T> : null}
+              <Rich text={text} typing={typing} onGrow={follow} />
+            </> : null}
         </View>
         </View></Animated.View>
       ) : null}

@@ -23,6 +23,8 @@ type Ctx = {
   pay: Pay | null; premium: boolean; locked: boolean;
   // After coming back from Stripe: the server checks the Checkout session; true once premium is on the account.
   confirmPremium: (sessionId: string) => Promise<boolean>;
+  // Asks the server to count a payment it missed (Stripe's newest paid sessions), then has the account as it is now.
+  syncPremium: () => Promise<void>;
   // A free trial code (the server refuses a wrong one, or a second trial on this account).
   redeemPromo: (code: string) => Promise<void>;
   // The intro's pictures that the server has made: slide number → version, and → the picture's background colour.
@@ -139,6 +141,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const d = await api<{ user: User; pending?: boolean }>('POST', 'checkoutdone', { id });
       setMe(m => (m ? { ...m, user: d.user } : m));
       return (d.user.premium?.until ?? 0) > Date.now();
+    },
+    syncPremium: async () => {
+      const d = await api<{ user: User }>('POST', 'paysync');
+      setMe(m => (m ? { ...m, user: d.user } : m));
     },
     saved: me?.saved ?? [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, loginArt, guideArt,
     toggleSaved: async (id, a) => {

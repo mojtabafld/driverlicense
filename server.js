@@ -132,6 +132,27 @@ const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه اس
 // so nobody else meets a test checkout or a lock while it is tried out; with a live key they are for everyone.
 const TESTERS = new Set((process.env.PREMIUM_TESTERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
 const payFor = u => payments.available() && (!payments.testMode() || !!(u && (isAdmin(u) || TESTERS.has(u.username))));
+// Stripe's newest paid premium sessions that no account has counted yet are added to their buyer's pass: the account
+// named in the session (client_reference_id, else metadata.username), else the one with the buyer's email. So a payment
+// still counts when its webhook did not arrive and the buyer did not come back to the site. At start, every 10 minutes
+// and from the premium page, at most every 30 seconds.
+let lastPaySync = 0;
+async function syncPayments() {
+  if (!payments.available() || Date.now() - lastPaySync < 30e3) return;
+  lastPaySync = Date.now();
+  try {
+    for (const s of await payments.recentPaid()) {
+      const name = String(s.client_reference_id || (s.metadata || {}).username || '');
+      const email = mail.normal((s.customer_details || {}).email || '');
+      const u = store.users[name] || (email && Object.values(store.users).find(x => x.email && x.emailOk && mail.normal(x.email) === email));
+      if (u && payments.grant(u, s)) {
+        await store.saveUser(u);
+        console.log('premium bought (sync)', u.username, s.metadata && s.metadata.plan, s.amount_total, s.currency, s.livemode ? 'live' : 'test');
+      }
+    }
+  } catch (e) { console.error('pay sync', e.message); }
+}
+setInterval(() => { syncPayments(); }, 10 * 60e3).unref();
 const needsPremium = u => payments.gated() && payFor(u) && !hasPremium(u);
 
 // ---------- usage tracking & admin stats ----------
@@ -615,6 +636,11 @@ async function api(req, res, route) {
   // Premium: POST checkout { plan: week | month | quarter, lang } → { url } of a Stripe Checkout page for this account;
   // POST checkoutdone { id } (the session Stripe sent the user back with) checks it with Stripe at once, so the pass is
   // there even before the webhook.
+  // POST paysync: the premium page asks the server to look at Stripe's newest paid sessions (at most every 30 seconds).
+  if (req.method === 'POST' && route === 'paysync') {
+    if (payFor(user)) await syncPayments();
+    return send(res, 200, { user: publicUser(user) });
+  }
   if (req.method === 'POST' && route === 'checkout') {
     if (!payFor(user)) return send(res, 404, { error: 'پرداخت فعال نیست.' });
     // Guests buy nothing (the pass would be lost with the browser's session): they make an account first.
@@ -661,6 +687,8 @@ async function api(req, res, route) {
   // The account: { name } changes the shown name; { current, password } the password, only with the current one
   // (failed tries count like failed sign-ins); the username never changes. A new password signs out the user's
   // other sessions.
+  // A guest account can be neither changed nor deleted (it has no password anyone knows); it signs out instead.
+  if ((req.method === 'PUT' || req.method === 'DELETE') && route === 'account' && user.guest) return send(res, 403, { error: 'حساب مهمان قابل ویرایش یا حذف نیست.' });
   if (req.method === 'PUT' && route === 'account') {
     const b = await readBody(req);
     if (b.name !== undefined) {
@@ -1150,6 +1178,7 @@ async function main() {
     console.log(`TeoriPrøve ${VERSION} running:\n  http://localhost:${PORT}`);
     nets.forEach(n => console.log(`  http://${n.address}:${PORT}   (other devices on your Wi-Fi)`));
     if (INVITE_CODE) console.log('  Sign-up requires the invite code (INVITE_CODE).');
+    syncPayments();
   }).on('error', err => {
     if (err.code !== 'EADDRINUSE') throw err;
     console.error(`Port ${PORT} is already in use — TeoriPrøve is probably already running in another terminal tab.\n` +

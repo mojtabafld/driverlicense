@@ -12,20 +12,20 @@ import { t, UI_LANG } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp, type Plan } from '@/lib/store';
-import { Icon, type IconName } from '@/ui/icon';
+import { Icon } from '@/ui/icon';
 import { Button, Card, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
-// One thing premium adds: a round icon in the theme's accent colour, then a line.
-function Perk({ icon, title }: { icon: IconName; title: string }) {
+// One thing premium adds: a round green tick (the light or dark theme's green), then a line.
+function Perk({ title }: { title: string }) {
   const c = useColors();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-      <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent }}>
-        <Icon name={icon} size={17} color={c.accentText} />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View style={{ width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
+        <Icon name="check" size={13} color={c.surface} weight="bold" />
       </View>
-      <T style={{ flex: 1, fontWeight: '600', fontSize: 14.5 }}>{title}</T>
+      <T style={{ flex: 1, fontWeight: '500', fontSize: 13 }}>{title}</T>
     </View>
   );
 }
@@ -54,7 +54,7 @@ function PlanOption({ plan, on, best, onPress }: { plan: Plan; on: boolean; best
 
 export default function Premium() {
   const c = useColors();
-  const { user, pay, premium, confirmPremium, redeemPromo, refresh, logout } = useApp();
+  const { user, pay, premium, confirmPremium, syncPremium, redeemPromo, refresh, logout } = useApp();
   const guest = !!user?.guest;
   const { paid, canceled } = useLocalSearchParams<{ paid?: string; canceled?: string }>();
   const [busy, setBusy] = useState<'buy' | 'check' | null>(paid ? 'check' : null);
@@ -63,6 +63,9 @@ export default function Premium() {
   const [plan, setPlan] = useState<Plan['id']>('month');
   const [code, setCode] = useState(''), [redeeming, setRedeeming] = useState(false);
   const until = user?.premium?.until ?? 0;
+
+  // On opening: a payment the server has not counted yet (its webhook lost, or the buyer never came back here) counts now.
+  useEffect(() => { if (pay && user && !guest && !paid) syncPremium().catch(() => {}); }, [!!pay, !!user]);
 
   // Back from Stripe: the server checks the session (it may still be on its way: a second try a little later).
   useEffect(() => {
@@ -98,16 +101,16 @@ export default function Premium() {
     catch (e) { setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'کد تخفیف ثبت نشد؛ دوباره امتحان کنید.' }); }
     setRedeeming(false);
   };
-  const check = async () => { setBusy('check'); try { await refresh(); } catch {} setBusy(null); };
+  const check = async () => { setBusy('check'); try { await syncPremium(); } catch { try { await refresh(); } catch {} } setBusy(null); };
 
   return (
     <SubPage title="نسخه‌ی ویژه" maxWidth={560}>
       {/* What premium adds, one under the other, and one line on paying. */}
       <View style={{ gap: 12, paddingHorizontal: 4 }}>
-        <Perk icon="sparkles" title="توضیح هر پاسخ با هوش مصنوعی" />
-        <Perk icon="list" title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
-        <Perk icon="speaker" title="خواندن سؤال‌ها و گزینه‌ها با صدا" />
-        <Perk icon="translate" title="شنیدن توضیح‌ها به فارسی" />
+        <Perk title="توضیح هر پاسخ با هوش مصنوعی" />
+        <Perk title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
+        <Perk title="خواندن سؤال‌ها و گزینه‌ها با صدا" />
+        <Perk title="شنیدن توضیح‌ها به فارسی" />
         <T style={{ color: c.muted, fontSize: 12.5, marginTop: 2 }}>یک بار پرداخت، بدون تمدید خودکار</T>
       </View>
 
