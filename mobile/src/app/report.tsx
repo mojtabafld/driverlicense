@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import { useState } from 'react';
 import { Platform, TextInput, View } from 'react-native';
 
+import { PROVE_PICS } from '@/lib/config';
 import { RTL, tr } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import { Icon } from '@/ui/icon';
@@ -36,10 +37,10 @@ export default function Report() {
       <Card style={{ gap: 12 }}>
         <Segmented value={kind} onChange={setKind} options={[{ value: 'bug', label: 'مشکل' }, { value: 'idea', label: 'پیشنهاد' }]} />
         <T style={{ color: c.muted, fontSize: 13, lineHeight: 21 }}>
-          {kind === 'bug' ? 'چه اتفاقی افتاد و در کدام صفحه؟ اگر به سؤال خاصی مربوط است، شماره‌ی درس و سؤال را هم بنویسید.' : 'چه چیزی را دوست دارید اضافه یا بهتر شود؟'}
+          {kind === 'bug' ? (PROVE_PICS ? 'چه اتفاقی افتاد و در کدام صفحه؟ اگر به سؤال خاصی مربوط است، شماره‌ی درس و سؤال را هم بنویسید.' : 'چه اتفاقی افتاد و در کدام صفحه؟ اگر به سؤال یا درس خاصی مربوط است، نام درس آموزش گام‌به‌گام یا آزمون و شماره‌ی سؤال را هم بنویسید.') : 'چه چیزی را دوست دارید اضافه یا بهتر شود؟'}
         </T>
         <TextInput value={text} onChangeText={v => { setText(v.slice(0, MAX)); setMsg(null); }} multiline textAlignVertical="top"
-          placeholder={tr(kind === 'bug' ? 'مثلاً: در درس ۳، سؤال ۵ تصویر نمایش داده نمی‌شود.' : 'پیشنهاد شما…')} placeholderTextColor={c.faint}
+          placeholder={tr(kind === 'bug' ? (PROVE_PICS ? 'مثلاً: در درس ۳، سؤال ۵ تصویر نمایش داده نمی‌شود.' : 'مثلاً: در درس «کمربند و صندلی کودک»، تصویر سؤال ۲ نمایش داده نمی‌شود.') : 'پیشنهاد شما…')} placeholderTextColor={c.faint}
           style={{ minHeight: 150, padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: c.line, color: c.text, fontSize: 15, lineHeight: 24,
             fontFamily: RTL ? 'Vazirmatn-400' : 'Inter-400', textAlign: RTL ? 'right' : 'left', writingDirection: RTL ? 'rtl' : 'ltr', backgroundColor: dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)' }} />
         <T style={{ color: c.faint, fontSize: 11.5, textAlign: 'left', writingDirection: 'ltr' }}>{`${text.length} / ${MAX}`}</T>
