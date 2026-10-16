@@ -1130,7 +1130,10 @@ async function api(req, res, route) {
     const ui = ['fa', 'en', 'da'].includes(b.ui) ? b.ui : (user.settings || {}).ui;
     // trans: the language of the translation under the questions, when the user picked one ('auto' goes back to the default).
     const trans = b.trans === 'auto' ? undefined : ['fa', 'en', 'da'].includes(b.trans) ? b.trans : (user.settings || {}).trans;
-    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}), ...(ui ? { ui } : {}), ...(trans ? { trans } : {}) };
+    // mode (automatic, light or dark) and palette (the colour theme): the look, so it comes back on signing in again.
+    const mode = ['system', 'light', 'dark'].includes(b.mode) ? b.mode : (user.settings || {}).mode;
+    const palette = THEMES.includes(b.palette) ? b.palette : (user.settings || {}).palette;
+    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}), ...(ui ? { ui } : {}), ...(trans ? { trans } : {}), ...(mode ? { mode } : {}), ...(palette ? { palette } : {}) };
     await store.saveUser(user);
     return send(res, 200, { settings: user.settings });
   }

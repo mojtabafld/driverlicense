@@ -4,20 +4,24 @@
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { T, tap } from './kit';
-import { PALETTE, PALETTES, setPalette, swatch } from './palette';
+import { PALETTE, PALETTES, setPalette, swatch, type PaletteId } from './palette';
 import { Sheet } from './sheet';
 import { useColors, useIsDark } from './theme';
 
 function PalettePick() {
   const c = useColors(), dark = useIsDark();
+  const { user, setSettings } = useApp();
+  // Kept on the account too (it comes back on signing in again), before the page reloads in it.
+  const pick = (id: PaletteId) => { tap(); (user ? setSettings({ palette: id }).catch(() => {}) : Promise.resolve()).finally(() => setPalette(id)); };
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 14, paddingTop: 2 }}>
       {PALETTES.map(p => {
         const on = p.id === PALETTE, s = swatch(p);
         return (
-          <Pressable key={p.id} onPress={() => { tap(); setPalette(p.id); }} accessibilityRole="radio" accessibilityState={{ selected: on }}
+          <Pressable key={p.id} onPress={() => pick(p.id)} accessibilityRole="radio" accessibilityState={{ selected: on }}
             accessibilityLabel={p.name} style={{ width: '20%', alignItems: 'center', gap: 6 }}>
             <View style={{ width: 48, height: 48, borderRadius: 24, padding: 3, borderWidth: 2, borderColor: on ? c.text : 'transparent' }}>
               <View style={{ flex: 1, borderRadius: 20, backgroundColor: dark ? s.bg : '#ffffff', alignItems: 'center', justifyContent: 'center',

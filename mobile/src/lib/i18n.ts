@@ -36,12 +36,19 @@ export function setUiLang(l: UiLang): boolean {
   write(l);
   if (l === UI_LANG) return false;
   if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
-  else {
-    // The Android app cannot load itself again: it says so in the new language and closes, to be opened again in it.
-    const [title, msg, ok] = RESTART[l];
-    Alert.alert(title, msg, [{ text: ok, onPress: () => BackHandler.exitApp() }], { cancelable: false });
-  }
+  else askRestart(l);
   return true;
+}
+// The Android app cannot load itself again: it says so (in the language it will open in) and closes, to be opened again.
+export function askRestart(l: UiLang) {
+  const [title, msg, ok] = RESTART[l];
+  Alert.alert(title, msg, [{ text: ok, onPress: () => BackHandler.exitApp() }], { cancelable: false });
+}
+// Keeps the language for the next start without reloading; whether it differs from the one in use.
+export function keepUiLang(l: UiLang): boolean {
+  if (PROVE_PICS || !valid(l)) return false;
+  write(l);
+  return l !== UI_LANG;
 }
 const RESTART: Record<UiLang, [string, string, string]> = {
   fa: ['زبان برنامه', 'برنامه بسته می‌شود؛ دوباره بازش کنید تا به فارسی باز شود.', 'باشه'],

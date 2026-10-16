@@ -57,6 +57,21 @@ export function setPalette(id: PaletteId) {
   if (id !== PALETTE && Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
 }
 
+// Keeps the theme for the next start without reloading (an account's own theme, on signing in); whether it differs
+// from the one in use.
+export function keepPalette(id: unknown): boolean {
+  if (PROVE_PICS || !valid(id)) return false;
+  write(KEY, id);
+  return id !== PALETTE;
+}
+// Signing out: the device goes back to the server's default theme (DEFAULT_THEME); whether that differs from the one in use.
+export function forgetPalette(): boolean {
+  if (PROVE_PICS) return false;
+  try { if (web) localStorage.removeItem(KEY); else require('expo-secure-store').deleteItemAsync(KEY).catch(() => {}); } catch {}
+  const def = web ? (typeof window !== 'undefined' ? (window as any).__TP_THEME : null) : read(DEFAULT_KEY);
+  return (valid(def) ? def : 'sky') !== PALETTE;
+}
+
 // Colour arithmetic (HSL), as Python's colorsys.
 type RGB = [number, number, number];
 const parse = (hex: string): RGB => {
