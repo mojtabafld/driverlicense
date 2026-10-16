@@ -4,6 +4,7 @@
 // key with each number as «#» («درس #» → «Lesson #»), and a quoted part «…» as «@» (that part translated on its own).
 // The language is kept in the browser (and in the account's settings, so it follows the user to a new device); a
 // change reloads the page, so lists built when the app starts are in the new language too. /app stays Persian.
+import { reloadApp } from './reload';
 import { Alert, BackHandler, Platform } from 'react-native';
 
 import { PROVE_PICS } from './config';
@@ -35,11 +36,10 @@ export function setUiLang(l: UiLang): boolean {
   if (PROVE_PICS || !valid(l)) return false;
   write(l);
   if (l === UI_LANG) return false;
-  if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
-  else askRestart(l);
+  reloadApp(() => askRestart(l));
   return true;
 }
-// The Android app cannot load itself again: it says so (in the language it will open in) and closes, to be opened again.
+// When the app cannot reload itself (reloadApp failed): it says so (in the language it will open in) and closes.
 export function askRestart(l: UiLang) {
   const [title, msg, ok] = RESTART[l];
   Alert.alert(title, msg, [{ text: ok, onPress: () => BackHandler.exitApp() }], { cancelable: false });
