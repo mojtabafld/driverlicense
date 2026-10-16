@@ -2645,5 +2645,9 @@
 "کاربر مهمان نمی‌تواند نسخه‌ی ویژه بخرد یا کد تخفیف بزند. پیشرفت حساب مهمان به حساب تازه منتقل نمی‌شود.":["Guests cannot buy Premium or use a discount code. Progress from the guest account is not carried over to the new account.", "Gæster kan ikke købe Premium eller bruge en rabatkode. Fremskridt fra gæstekontoen flyttes ikke over til den nye konto."],
 "برای خرید نسخه‌ی ویژه، اول حساب کاربری بسازید.":["To buy Premium, first create an account.", "For at købe Premium skal du først oprette en konto."],
 "ایمیل یا نام کاربری":["Email or username", "E-mail eller brugernavn"],
-"ایمیل (یا نام کاربری) یا رمز عبور اشتباه است.":["Wrong email (or username) or password.", "Forkert e-mail (eller brugernavn) eller adgangskode."]
+"ایمیل (یا نام کاربری) یا رمز عبور اشتباه است.":["Wrong email (or username) or password.", "Forkert e-mail (eller brugernavn) eller adgangskode."],
+"توضیح هر پاسخ با هوش مصنوعی":["AI explanation of every answer", "AI-forklaring af hvert svar"],
+"جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی":["AI summary of each test's mistakes", "AI-opsummering af fejlene i hver prøve"],
+"خواندن سؤال‌ها و گزینه‌ها با صدا":["Questions and options read aloud", "Spørgsmål og svar læst højt"],
+"شنیدن توضیح‌ها به فارسی":["Explanations read aloud", "Forklaringer læst højt"]
 }
