@@ -107,7 +107,7 @@ function sessionUser(req) {
 const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined,
   premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined } : undefined,
   // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
-  email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined });
+  guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined });
 // Email confirmation (mail.js, RESEND_API_KEY): accounts made while it is on give an address and can use the app once its
 // link is opened (mustVerify, until the first confirmation; a later new address does not hold the app up); accounts from before, and guests, are not held up, and may add an address later in
 // «حساب کاربری» (needed for the trial code). A link works for 24 hours.
@@ -315,8 +315,13 @@ const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 // built (`npm run build:web` builds the root only; `npm run build:web-app` builds the copy again), and its question
 // bank and the questions' pictures are fixed too (frozen/app/, FROZEN in config.ts).
 const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
+// DEFAULT_THEME: the main site's colour theme for everyone who has not picked one (mobile/src/ui/palette.ts; default
+// sky). Written into the root page, so the web version starts in it; phones read it from /api/config.
+const THEMES = ['ocean', 'violet', 'lime', 'coral', 'amber', 'emerald', 'forest', 'rose', 'sky', 'mono'];
+const defaultTheme = () => { const t = String(process.env.DEFAULT_THEME || '').trim().toLowerCase(); return THEMES.includes(t) ? t : 'sky'; };
 const WEBS = {
-  root: { dir: path.join(__dirname, 'app-web') },
+  root: { dir: path.join(__dirname, 'app-web'),
+    page: b => Buffer.from(b.toString('utf8').replace('<head>', `<head><script>window.__TP_THEME=${JSON.stringify(defaultTheme())}</script>`)) },
   // Its page links the manifest and the icon of /app (its own start page), and its manifest is that of the root's
   // with /app/ as start and scope.
   app: { dir: path.join(__dirname, 'app-web-app'), base: '/app',
@@ -447,7 +452,7 @@ async function api(req, res, route) {
   const ip = clientIp(req);
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, theme: defaultTheme(), version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
         promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
@@ -606,6 +611,8 @@ async function api(req, res, route) {
   // there even before the webhook.
   if (req.method === 'POST' && route === 'checkout') {
     if (!payFor(user)) return send(res, 404, { error: 'پرداخت فعال نیست.' });
+    // Guests buy nothing (the pass would be lost with the browser's session): they make an account first.
+    if (user.guest) return send(res, 403, { error: 'برای خرید نسخه‌ی ویژه، اول حساب کاربری بسازید.' });
     const b = await readBody(req);
     try { return send(res, 200, { url: await payments.createCheckout(user.username, String(b.plan || ''), originOf(req), b.lang) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
