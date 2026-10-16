@@ -12,8 +12,9 @@ import { useColors } from './theme';
 
 const SPEED = 32, PAUSE = 1600, FADE = 18; // px per second, ms at each end, width of the faded edges
 
-// `bg`: the colour behind it, for the faded edges (the page colour by default; a card's inside a card).
-export function Marquee({ text, style, height, bg }: { text: string; style?: StyleProp<TextStyle>; height: number; bg?: string }) {
+// `bg`: the colour behind it, for the faded edges (the page colour by default; a card's inside a card). `mask`: on a
+// see-through background (a tinted chip) the edges fade the text itself instead (web).
+export function Marquee({ text, style, height, bg, mask }: { text: string; style?: StyleProp<TextStyle>; height: number; bg?: string; mask?: boolean }) {
   const c = useColors(), edge = bg ?? c.bg;
   const [room, setRoom] = useState(0), [full, setFull] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
@@ -33,7 +34,8 @@ export function Marquee({ text, style, height, bg }: { text: string; style?: Sty
     return () => { live = false; loop?.stop(); };
   }, [over, x, text]);
   return (
-    <View style={{ flex: 1, height, overflow: 'hidden', direction: 'ltr' } as any} onLayout={e => setRoom(e.nativeEvent.layout.width)} accessible accessibilityRole="header" accessibilityLabel={text}>
+    <View style={{ flex: 1, height, overflow: 'hidden', direction: 'ltr',
+      ...(mask && over && Platform.OS === 'web' ? { maskImage: `linear-gradient(to right, transparent, #000 ${FADE}px, #000 calc(100% - ${FADE}px), transparent)` } : null) } as any} onLayout={e => setRoom(e.nativeEvent.layout.width)} accessible accessibilityRole="header" accessibilityLabel={text}>
       {/* The title at its natural width, measured in a very wide hidden box. */}
       <View pointerEvents="none" style={{ position: 'absolute', top: 0, ...(RTL ? { right: 0 } : { left: 0 }), width: 4000, flexDirection: 'row', justifyContent: RTL ? 'flex-end' : 'flex-start', opacity: 0 }}>
         <T style={[style, { flexShrink: 0 }]} onLayout={e => setFull(e.nativeEvent.layout.width)}>{text}</T>
@@ -43,7 +45,7 @@ export function Marquee({ text, style, height, bg }: { text: string; style?: Sty
       <Animated.View style={{ position: 'absolute', top: 0, ...(RTL ? { right: over ? FADE : 0 } : { left: over ? FADE : 0 }), width: wide, flexDirection: 'row', justifyContent: RTL ? 'flex-end' : 'flex-start', transform: [{ translateX: x }] }}>
         <T style={[style, { flexShrink: 0, width: wide }]} numberOfLines={1}>{text}</T>
       </Animated.View>
-      {over ? (
+      {over && !mask ? (
         <>
           <LinearGradient pointerEvents="none" colors={[edge, `${edge}00`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: FADE }} />
           <LinearGradient pointerEvents="none" colors={[`${edge}00`, edge]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: FADE }} />

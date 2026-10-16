@@ -16,6 +16,7 @@ import { Icon, type IconName } from './icon';
 import { Enter, L, SegPill, T, TranslateButton, physical, tap, useArcSeg } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
+import { Marquee } from './marquee';
 import { OptionBox, OptionGroup } from './option-box';
 import { ARC, DA_FONT, radius, useColors, useIsDark } from './theme';
 
@@ -330,7 +331,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
             <Icon name="bookmark" size={17} filled={isSaved} color={dark ? (isSaved ? c.link : '#fff') : c.accent} />
           </Pressable>
         </View>
-        {/* One line: a long category name is cut with «…» so the translation switch stays beside it. */}
+        {/* One line: a long category name glides (main site) or is cut with «…» (/app) so the translation switch stays beside it. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {badge ? (
             <View style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
@@ -340,7 +341,14 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           {/* The question's category (official section) */}
           {bank && sectionFa(bank, q.c) ? (
             <View style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
-              <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
+              {/* Main site: a name too long for its room glides like the page title instead of being cut; the hidden
+                  copy still gives the chip its natural width, held to the room the row leaves. */}
+              <T style={[{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }, ARC && { opacity: 0 }]} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
+              {ARC ? (
+                <View style={{ position: 'absolute', top: 2, bottom: 2, left: 10, right: 10, flexDirection: 'row' }}>
+                  <Marquee text={sectionFa(bank, q.c) ?? ''} height={20} mask style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} />
+                </View>
+              ) : null}
             </View>
           ) : null}
           <View style={{ flex: 1, minWidth: 4 }} />
