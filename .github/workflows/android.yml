@@ -120,7 +120,8 @@ jobs:
         run: |
           cd android
           sed -i '/^org.gradle.jvmargs=/d' gradle.properties
-          echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8' >> gradle.properties
+          # A new line first: the file ends without one, and the setting would run into its last line.
+          printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8\n' >> gradle.properties
           printf '\nandroid { lint { checkReleaseBuilds false } }\n' >> app/build.gradle
           ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
 
