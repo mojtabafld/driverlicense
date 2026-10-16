@@ -1,7 +1,7 @@
 # TeoriPrøve — iOS, Android and web app
 
 One Expo (React Native) code base for iOS, Android and the web. It uses the same server and accounts as
-https://kore.mintcloud.info. Design: the same look as the web site (colours, background, cards, buttons and fonts from
+https://teori.bitlane.app. Design: the same look as the web site (colours, background, cards, buttons and fonts from
 `site/style.css`, copied into `src/ui/theme.ts`). Two parts use Apple's **Liquid Glass** in the site's colours
 (`src/ui/liquid.tsx`: real glass via `expo-glass-effect` on iOS 26, a frosted look elsewhere): the answer options in
 exams and lessons, and the tab bar at the bottom. On iOS the tab bar is Apple's own (`expo-router/unstable-native-tabs`),
@@ -39,13 +39,13 @@ cd mobile
 npm install
 npx expo start            # scan the QR code with Expo Go (iOS/Android), or press w for the web
 ```
-- The app talks to `https://kore.mintcloud.info`. For a local server: `EXPO_PUBLIC_API_URL=http://<your-ip>:3000 npx expo start`.
+- The app talks to `https://teori.bitlane.app`. For a local server: `EXPO_PUBLIC_API_URL=http://<your-ip>:3000 npx expo start`.
 - Right-to-left layout is forced with the `expo-localization` plugin (`forcesRTL`). This applies in development builds and
   store builds; Expo Go may show left-to-right. For the real look build a development build:
   `npx eas-cli@latest build --profile development --platform ios`.
 
 ## Web version on the site
-The web build is served by the main server at **https://kore.mintcloud.info/app** (the site itself is unchanged).
+The web build is served by the main server at **https://teori.bitlane.app/app** (the site itself is unchanged).
 After changing the app, rebuild it and commit `app-web/`:
 ```bash
 cd mobile && npm run build:web     # writes ../app-web (base URL /app)

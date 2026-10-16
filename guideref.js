@@ -12,7 +12,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const png = require('./png');
 
-const UA = 'TeoriProve/1.0 (https://kore.mintcloud.info; driving-theory study app)';
+const UA = 'TeoriProve/1.0 (https://teori.bitlane.app; driving-theory study app)';
 const read = f => JSON.parse(fs.readFileSync(path.join(__dirname, f), 'utf8'));
 let store = null, imagegen = null, MAP = {}, DATA = { signs: [], priority: [] };
 

@@ -32,7 +32,7 @@ const PROMPT_MODEL = (process.env.IMAGE_PROMPT_MODEL || '').trim() || 'claude-op
 const models = () => ({ prompt: PROMPT_MODEL, image: IMAGE_MODEL });
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
 const CLAUDE = process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
-const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://kore.mintcloud.info').replace(/\/$/, '');
+const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://teori.bitlane.app').replace(/\/$/, '');
 
 const DESCRIBE = `You write prompts for a text-to-image model that draws NEW pictures for a Danish driving-theory practice site (category B).
 You get one theory-test question (Danish), its statements with the correct answers and the official explanations, and the current picture as a reference for the situation only.
