@@ -58,14 +58,15 @@ export default function Account() {
 
   return (
     <SubPage title="حساب کاربری" maxWidth={560} guard={dirty ? { title: 'خروج بدون ذخیره؟', text: 'تغییراتی که ذخیره نکرده‌اید از بین می‌روند.' } : null}>
-          <Card style={{ gap: 6 }}>
+          {/* An account made with its email has that as its username: the email card below shows it. */}
+          {user?.username.includes('@') ? null : <Card style={{ gap: 6 }}>
             <T style={{ fontWeight: '700' }}>نام کاربری</T>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 50, borderRadius: 14, backgroundColor: c.surface2 }}>
               <Icon name="lock" size={18} color={c.faint} />
               <L style={{ flex: 1, color: c.muted, textAlign: 'right' }}>@{user?.username}</L>
             </View>
             <T style={{ fontSize: 12.5, color: c.muted }}>نام کاربری قابل تغییر نیست.</T>
-          </Card>
+          </Card>}
 
           <Card style={{ gap: 10 }}>
             <T style={{ fontWeight: '700' }}>نام</T>
