@@ -1,10 +1,11 @@
 // «نسخه‌ی ویژه», from the settings or a locked AI button: what premium adds, its three passes (a week, a month, three
 // months; one payment each, no automatic renewal) and the way to buy one with Stripe Checkout. Stripe sends the user back here with ?paid=<session> (the server checks the
-// session and turns premium on) or ?canceled=1.
+// session and turns premium on) or ?canceled=1. With a trial code (PROMO_CODE on the server) an account gets premium free
+// for a few days, once.
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Platform, Pressable, TextInput, View } from 'react-native';
 
 import { api } from '@/lib/api';
 import { t, UI_LANG } from '@/lib/i18n';
@@ -55,12 +56,13 @@ function PlanOption({ plan, on, best, onPress }: { plan: Plan; on: boolean; best
 
 export default function Premium() {
   const c = useColors();
-  const { user, pay, premium, confirmPremium, refresh } = useApp();
+  const { user, pay, premium, confirmPremium, redeemPromo, refresh } = useApp();
   const { paid, canceled } = useLocalSearchParams<{ paid?: string; canceled?: string }>();
   const [busy, setBusy] = useState<'buy' | 'check' | null>(paid ? 'check' : null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(canceled ? { ok: false, text: 'پرداخت لغو شد؛ پولی از حساب شما کم نشد.' } : null);
   const checked = useRef(false);
   const [plan, setPlan] = useState<Plan['id']>('month');
+  const [code, setCode] = useState(''), [redeeming, setRedeeming] = useState(false);
   const until = user?.premium?.until ?? 0;
 
   // Back from Stripe: the server checks the session (it may still be on its way: a second try a little later).
@@ -89,6 +91,13 @@ export default function Premium() {
       setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'پرداخت الان در دسترس نیست؛ کمی بعد دوباره امتحان کنید.' });
     }
     setBusy(null);
+  };
+  const redeem = async () => {
+    if (!code.trim()) return;
+    setRedeeming(true); setMsg(null);
+    try { await redeemPromo(code.trim()); setCode(''); setMsg({ ok: true, text: t('کد تخفیف ثبت شد و نسخه‌ی ویژه {0} روز رایگان برای شما فعال است.', faNum(pay?.promo ?? 3)) }); }
+    catch (e) { setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'کد تخفیف ثبت نشد؛ دوباره امتحان کنید.' }); }
+    setRedeeming(false);
   };
   const check = async () => { setBusy('check'); try { await refresh(); } catch {} setBusy(null); };
 
@@ -121,7 +130,21 @@ export default function Premium() {
           {pay.test ? <T style={{ color: c.bad, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>حالت آزمایشی: با کارت 4242 4242 4242 4242 پرداخت کنید؛ پولی کم نمی‌شود.</T> : null}
           {Platform.OS !== 'web' ? <Button kind="glass" icon="refresh" label="پرداخت کردم؛ بررسی دوباره" onPress={check} disabled={!!busy} /> : null}
         </Card>
-      ) : !pay && !premium ? (
+      ) : null}
+      {/* A trial code, until this account has used one. */}
+      {pay?.promo && !user?.premium?.promo ? (
+        <Card style={{ gap: 10 }}>
+          <T style={{ fontWeight: '700', fontSize: 16 }}>کد تخفیف</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{t('با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).', faNum(pay.promo))}</T>
+          <View style={{ gap: 10 }}>
+            <TextInput value={code} onChangeText={setCode} onSubmitEditing={redeem} autoCapitalize="characters" autoCorrect={false} maxLength={64}
+              placeholder={t('کد تخفیف')} placeholderTextColor={c.faint} accessibilityLabel={t('کد تخفیف')}
+              style={{ height: 48, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface, color: c.text, fontSize: 16, fontFamily: 'Inter-600', letterSpacing: 1, textAlign: 'center' }} />
+            <Button label={redeeming ? 'در حال ثبت…' : 'ثبت کد'} onPress={redeem} disabled={redeeming || !code.trim()} />
+          </View>
+        </Card>
+      ) : null}
+      {!pay && !premium ? (
         <Card><T style={{ color: c.muted, textAlign: 'center' }}>خرید نسخه‌ی ویژه الان فعال نیست.</T></Card>
       ) : null}
 

@@ -2604,4 +2604,15 @@
 "✗ مردود":["✗ Failed","✗ Ikke bestået"],
 "🇩🇰 آزمون تئوری گواهینامه‌ی دانمارک":["🇩🇰 Danish driving theory test","🇩🇰 Teoriprøve til dansk kørekort"],
 "🎉 قبول شدید!":["🎉 You passed!","🎉 Du bestod!"],
-"📘 آموزش کوتاه:":["📘 Quick lesson:","📘 Kort lektion:"]}
+"📘 آموزش کوتاه:":["📘 Quick lesson:","📘 Kort lektion:"],
+"کد تخفیف ثبت شد و نسخه‌ی ویژه {0} روز رایگان برای شما فعال است.":["Code accepted: Premium is now yours free for {0} days.", "Koden er godkendt: Premium er nu gratis for dig i {0} dage."],
+"کد تخفیف ثبت نشد؛ دوباره امتحان کنید.":["The code could not be used; please try again.", "Koden kunne ikke bruges; prøv igen."],
+"کد تخفیف":["Discount code", "Rabatkode"],
+"با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).":["With a discount code you get Premium free for {0} days (once per account).", "Med en rabatkode får du Premium gratis i {0} dage (én gang pr. konto)."],
+"در حال ثبت…":["Applying…", "Indløser…"],
+"ثبت کد":["Apply", "Indløs"],
+"کد تخفیف فعال نیست.":["Discount codes are not available.", "Rabatkoder er ikke tilgængelige."],
+"کد تخفیف درست نیست.":["That discount code is not valid.", "Rabatkoden er ikke gyldig."],
+"برای استفاده از کد تخفیف، اول با نام کاربری خودتان حساب بسازید.":["To use a discount code, first create an account with your own username.", "For at bruge en rabatkode skal du først oprette en konto med dit eget brugernavn."],
+"شما قبلاً از کد تخفیف استفاده کرده‌اید.":["You have already used a discount code.", "Du har allerede brugt en rabatkode."]
+}

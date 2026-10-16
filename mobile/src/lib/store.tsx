@@ -22,6 +22,8 @@ type Ctx = {
   pay: Pay | null; premium: boolean; locked: boolean;
   // After coming back from Stripe: the server checks the Checkout session; true once premium is on the account.
   confirmPremium: (sessionId: string) => Promise<boolean>;
+  // A free trial code (the server refuses a wrong one, or a second trial on this account).
+  redeemPromo: (code: string) => Promise<void>;
   // The intro's pictures that the server has made: slide number → version, and → the picture's background colour.
   intro: Record<string, string>; introBg: Record<string, string>;
   // The «آموزش» cards' pictures that the server has made: card number → version.
@@ -49,7 +51,8 @@ type Ctx = {
   setSettings: (s: Partial<Settings>) => Promise<void>;
 };
 export type Plan = { id: 'week' | 'month' | 'quarter'; days: number; price: number };
-export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean };
+// promo: the free trial's days when a trial code can be entered.
+export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean; promo?: number };
 const AppCtx = createContext<Ctx | null>(null);
 const DEFAULTS: Settings = { showFa: true, timer: true, lang: 'da' };
 
@@ -120,6 +123,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
     pay: PROVE_PICS ? null : pay, premium, locked,
+    redeemPromo: async code => {
+      const d = await api<{ user: User }>('POST', 'promo', { code });
+      setMe(m => (m ? { ...m, user: d.user } : m));
+    },
     confirmPremium: async id => {
       const d = await api<{ user: User; pending?: boolean }>('POST', 'checkoutdone', { id });
       setMe(m => (m ? { ...m, user: d.user } : m));
