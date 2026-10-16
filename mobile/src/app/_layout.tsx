@@ -11,7 +11,6 @@ import { initialOnboarded, loadLangAsked, loadOnboarded, saveLangAsked, saveOnbo
 import { AppProvider, useApp } from '@/lib/store';
 import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
 import { Backdrop, PageSkeleton, setWebTop } from '@/ui/kit';
-import { InstallHint } from '@/ui/install-hint';
 import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
 import { Onboarding, useIntroBg } from '@/ui/onboarding';
@@ -119,5 +118,5 @@ function Root() {
 }
 
 export default function RootLayout() {
-  return <ThemeModeProvider><AppProvider><Root /><VerifiedPopup /><InstallHint /></AppProvider></ThemeModeProvider>;
+  return <ThemeModeProvider><AppProvider><Root /><VerifiedPopup /></AppProvider></ThemeModeProvider>;
 }
