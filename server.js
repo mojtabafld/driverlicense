@@ -23,6 +23,7 @@ const consoleprompts = require('./consoleprompts');
 const tts = require('./tts');
 const webpic = require('./webpic');
 const payments = require('./payments');
+const mail = require('./mail');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
@@ -63,6 +64,7 @@ async function checkPw(pw, user) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 const isHttps = req => (req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https';
+const originOf = req => `${isHttps(req) ? 'https' : 'http'}://${String(req.headers.host || 'localhost').replace(/[^a-zA-Z0-9.:-]/g, '')}`;
 const cookie = (req, value, maxAge) =>
   `tp_session=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${isHttps(req) ? '; Secure' : ''}`;
 
@@ -103,7 +105,26 @@ function sessionUser(req) {
 // avatar: { preset: n } (one of the made pictures) or { photo: version } (their own, at GET /api/avatar), or none.
 // premium: a pass bought with Stripe (payments.js), until when (also once it has run out); admins have its features too.
 const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined,
-  premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined } : undefined });
+  premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined } : undefined,
+  // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
+  email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined });
+// Email confirmation (mail.js, RESEND_API_KEY): accounts made while it is on give an address and can use the app once its
+// link is opened (mustVerify, until the first confirmation; a later new address does not hold the app up); accounts from before, and guests, are not held up, and may add an address later in
+// «حساب کاربری» (needed for the trial code). A link works for 24 hours.
+const needsVerify = u => mail.available() && !!u.mustVerify && !!u.email && !u.emailOk;
+const emailTaken = (e, u) => Object.values(store.users).some(x => x !== u && x.email === e);
+const tokenHash = t => crypto.createHash('sha256').update(String(t)).digest('hex');
+// A new link for the user's address (the old one stops working), at most one a minute and 6 a day.
+async function sendVerifyMail(req, u, lang) {
+  const now = Date.now(), v = u.verify || {};
+  if (v.sent && now - v.sent < 60e3) throw Object.assign(new Error('یک دقیقه صبر کنید و دوباره امتحان کنید.'), { status: 429 });
+  const day = (v.day && now - v.day < 864e5) ? v.day : now, n = day === v.day ? (v.n || 0) : 0;
+  if (n >= 6) throw Object.assign(new Error('امروز ایمیل زیادی فرستاده شده است؛ فردا دوباره امتحان کنید.'), { status: 429 });
+  const token = crypto.randomBytes(32).toString('hex');
+  u.verify = { h: tokenHash(token), exp: now + 864e5, sent: now, day, n: n + 1 };
+  await store.saveUser(u);
+  await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
+}
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
 const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه است.';
@@ -426,7 +447,7 @@ async function api(req, res, route) {
   const ip = clientIp(req);
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
         promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
@@ -435,7 +456,7 @@ async function api(req, res, route) {
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
-    const { username, password, name, invite } = await readBody(req);
+    const { username, password, name, invite, email, lang } = await readBody(req);
     if (INVITE_CODE && !safeEqual(String(invite || '').trim(), INVITE_CODE)) {
       addFail(ip);
       return send(res, 403, { error: 'کد دعوت نادرست است.' });
@@ -446,11 +467,20 @@ async function api(req, res, route) {
     // Any password is accepted (no length or character rules); only an empty one is refused.
     if (typeof password !== 'string' || !password.length) return send(res, 400, { error: 'رمز عبور را وارد کنید.' });
     if (store.users[u]) return send(res, 409, { error: 'این نام کاربری قبلاً ثبت شده است.' });
+    // The main site's sign-up always sends an address; older clients (the /app copy, older phone apps) send none, and
+    // those accounts are not held up (only the trial code needs a confirmed address).
+    const e = mail.normal(email);
+    if (mail.available() && e) {
+      if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
+      if (emailTaken(e)) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است.' });
+    }
     const salt = crypto.randomBytes(16).toString('hex');
     const user = { username: u, name: String(name || u).trim().slice(0, 40) || u, salt, hash: await hashPw(password, salt),
-      created: Date.now(), attempts: [], settings: {} };
+      created: Date.now(), attempts: [], settings: {}, ...(mail.available() && e ? { email: e, mustVerify: true } : {}) };
     store.users[u] = user;
     await store.saveUser(user);
+    // The link goes out now; when it cannot, the app's «send again» button tries again.
+    if (user.email) await sendVerifyMail(req, user, lang).catch(err => console.error('verify mail', u, err.message));
     const token = await newSession(req, res, u);
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
@@ -529,10 +559,40 @@ async function api(req, res, route) {
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
 
+  // The link in the confirmation email: confirms that account's address and opens the app.
+  if (req.method === 'GET' && route === 'verify') {
+    const h = tokenHash(new URL(req.url, 'http://x').searchParams.get('t') || '');
+    const u = Object.values(store.users).find(x => x.verify && x.verify.h && safeEqual(x.verify.h, h));
+    let ok = false;
+    if (u && u.verify.exp > Date.now()) { u.emailOk = Date.now(); delete u.verify; delete u.mustVerify; await store.saveUser(u); ok = true; console.log('email confirmed', u.username); }
+    res.writeHead(302, { Location: `/?verified=${ok ? 1 : 0}` });
+    return res.end();
+  }
+
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
   const user = s.user;
   await touch(user);
+  // POST verifysend { email?, lang }: the confirmation link again, or to a new address (which then needs confirming).
+  if (req.method === 'POST' && route === 'verifysend') {
+    if (!mail.available()) return send(res, 404, { error: 'ایمیل فعال نیست.' });
+    if (user.guest) return send(res, 403, { error: 'برای ثبت ایمیل، اول با نام کاربری خودتان حساب بسازید.' });
+    const b = await readBody(req);
+    if (b.email !== undefined) {
+      const e = mail.normal(b.email);
+      if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
+      if (emailTaken(e, user)) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است.' });
+      if (e !== user.email) { user.email = e; delete user.emailOk; }
+    }
+    if (!user.email) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
+    if (user.emailOk) return send(res, 200, { user: publicUser(user) });
+    try { await sendVerifyMail(req, user, b.lang); } catch (e) { if (e.status) return send(res, e.status, { error: e.message, user: publicUser(user) }); throw e; }
+    return send(res, 200, { user: publicUser(user) });
+  }
+  // An account waiting for its link can only read itself, ask for the link again and sign out.
+  if (needsVerify(user) && !(route === 'me' || route === 'logout' || (route === 'settings' && req.method === 'PUT'))) {
+    return send(res, 403, { error: 'اول ایمیل خود را با لینکی که برایتان فرستادیم تأیید کنید.', verify: true });
+  }
 
   if (req.method === 'POST' && route === 'logout') {
     // The session used, and the cookie's one too when it differs: signing out leaves neither behind.
@@ -547,8 +607,7 @@ async function api(req, res, route) {
   if (req.method === 'POST' && route === 'checkout') {
     if (!payFor(user)) return send(res, 404, { error: 'پرداخت فعال نیست.' });
     const b = await readBody(req);
-    const origin = `${isHttps(req) ? 'https' : 'http'}://${String(req.headers.host || 'localhost').replace(/[^a-zA-Z0-9.:-]/g, '')}`;
-    try { return send(res, 200, { url: await payments.createCheckout(user.username, String(b.plan || ''), origin, b.lang) }); }
+    try { return send(res, 200, { url: await payments.createCheckout(user.username, String(b.plan || ''), originOf(req), b.lang) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   if (req.method === 'POST' && route === 'checkoutdone') {
@@ -576,7 +635,12 @@ async function api(req, res, route) {
     const match = payments.promoCodes().find(c => safeEqual(code, c));
     if (!match) { addFail(ip); return send(res, 400, { error: 'کد تخفیف درست نیست.' }); }
     if (user.guest) return send(res, 403, { error: 'برای استفاده از کد تخفیف، اول با نام کاربری خودتان حساب بسازید.' });
-    if (!payments.grantPromo(user, match)) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
+    // With email on: only for a confirmed address, and one trial per address (whichever account had it).
+    if (mail.available()) {
+      if (!user.email || !user.emailOk) return send(res, 403, { error: 'برای استفاده از کد تخفیف، اول ایمیل خود را در «حساب کاربری» ثبت و تأیید کنید.' });
+      if (Object.values(store.users).some(x => x !== user && x.premium && x.premium.promo && x.premium.promo.email === user.email)) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
+    }
+    if (!payments.grantPromo(user, match, user.emailOk ? user.email : undefined)) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
     await store.saveUser(user);
     console.log('premium trial', user.username, match);
     return send(res, 200, { user: publicUser(user) });

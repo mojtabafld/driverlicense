@@ -1,5 +1,5 @@
 // The account, opened from the user card in the settings (an inner page: fixed head, a drag back): the username (fixed), the shown name, and a new password
-// (only with the current one).
+// (only with the current one); with email on, the address (to add, change or confirm; the trial code needs a confirmed one).
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -20,12 +20,13 @@ const errText = (e: unknown) => (e instanceof Error && e.message ? e.message : '
 
 export default function Account() {
   const c = useColors();
-  const { user, updateAccount } = useApp();
+  const { user, updateAccount, mail, sendVerify } = useApp();
+  const [email, setEmail] = useState(user?.email ?? ''), [mailMsg, setMailMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [name, setName] = useState(user?.name ?? '');
   const [nameMsg, setNameMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [cur, setCur] = useState(''), [pw, setPw] = useState(''), [pw2, setPw2] = useState('');
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const [busy, setBusy] = useState<'name' | 'pw' | null>(null);
+  const [busy, setBusy] = useState<'name' | 'pw' | 'mail' | null>(null);
   // Unsaved changes: a new name not saved yet, or anything typed in the password fields.
   const dirty = name.trim() !== (user?.name ?? '') || !!(cur || pw || pw2);
 
@@ -35,6 +36,14 @@ export default function Account() {
     setBusy('name'); setNameMsg(null);
     try { await updateAccount({ name: n }); setNameMsg({ ok: true, text: 'نام ذخیره شد.' }); }
     catch (e) { setNameMsg({ ok: false, text: errText(e) }); }
+    setBusy(null);
+  };
+  const saveMail = async () => {
+    const e = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(e)) return setMailMsg({ ok: false, text: 'یک ایمیل درست وارد کنید.' });
+    setBusy('mail'); setMailMsg(null);
+    try { await sendVerify(e); setMailMsg({ ok: true, text: 'لینک تأیید فرستاده شد؛ روی لینک داخل ایمیل بزنید.' }); }
+    catch (err) { setMailMsg({ ok: false, text: errText(err) }); }
     setBusy(null);
   };
   const savePw = async () => {
@@ -64,6 +73,19 @@ export default function Account() {
             <Note msg={nameMsg} />
             <Button label={busy === 'name' ? 'در حال ذخیره…' : 'ذخیره‌ی نام'} onPress={saveName} disabled={!!busy || name.trim() === (user?.name ?? '')} icon="check" />
           </Card>
+
+          {mail && !user?.username.startsWith('guest-') ? (
+            <Card style={{ gap: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <T style={{ fontWeight: '700', flex: 1 }}>ایمیل</T>
+                {user?.email ? <T style={{ fontSize: 12.5, fontWeight: '700', color: user.emailOk ? c.ok : c.bad }}>{user.emailOk ? 'تأیید شده' : 'تأیید نشده'}</T> : null}
+              </View>
+              <Field icon="send" label="ایمیل" value={email} onChange={v => { setEmail(v.replace(/\s/g, '')); setMailMsg(null); }} ltr onSubmit={saveMail} />
+              <Note msg={mailMsg} />
+              {user?.emailOk && email.trim().toLowerCase() === user.email ? null
+                : <Button label={busy === 'mail' ? 'در حال فرستادن…' : 'فرستادن لینک تأیید'} onPress={saveMail} disabled={!!busy || !email.trim()} icon="send" />}
+            </Card>
+          ) : null}
 
           <Card style={{ gap: 10 }}>
             <T style={{ fontWeight: '700' }}>تغییر رمز عبور</T>
