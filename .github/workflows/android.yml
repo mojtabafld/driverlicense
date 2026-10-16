@@ -123,7 +123,9 @@ jobs:
           cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/out/teoriprove.apk"
           ls -la "$RUNNER_TEMP/out"
 
+      # A copy for the run page only; the release below is what counts, so a full artifact storage quota does not stop it.
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: teoriprove-apk
           path: ${{ runner.temp }}/out/teoriprove.apk
