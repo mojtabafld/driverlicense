@@ -15,6 +15,7 @@ import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
 import { Onboarding, useIntroBg } from '@/ui/onboarding';
 import { useTapTopToScroll } from '@/ui/tap-top';
+import { VerifyEmail } from '@/ui/verify-email';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { ThemeModeProvider } from '@/ui/theme-mode';
 
@@ -67,6 +68,8 @@ function Root() {
     setWebTop(c.bgGradient[0], cover);   // (a page's picture header, in view, puts its own green there: ui/kit.tsx)
   }, [dark, c.bgGradient, cover]);
   if (blocked) return <Offline onRetry={check} />;
+  // A new account waiting for its email link: only that page (the app loads once the link is opened).
+  if (ready && fonts && onboarded && user?.verify) return <ThemeProvider value={dark ? DarkTheme : DefaultTheme}><StatusBar style={dark ? 'light' : 'dark'} /><VerifyEmail /></ThemeProvider>;
   // arc: Arc's skeleton of a page while it loads; /app keeps the spinner.
   if (!ready || !fonts || onboarded === null || (user && !bank)) return ARC ? <PageSkeleton /> : <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (

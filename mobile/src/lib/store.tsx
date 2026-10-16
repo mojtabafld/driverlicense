@@ -37,7 +37,11 @@ type Ctx = {
   setAvatar: (b: { preset: number } | { image: string } | { remove: true }) => Promise<void>;
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
-  register: (name: string, username: string, password: string) => Promise<void>;
+  register: (name: string, username: string, password: string, email?: string) => Promise<void>;
+  // Email confirmation is on (the server can send mail): signing up asks for an address, and a new account waits for its link.
+  mail: boolean;
+  // The confirmation link again, or to a new address (which then needs confirming).
+  sendVerify: (email?: string) => Promise<void>;
   guest: (name: string) => Promise<void>;
   logout: () => Promise<void>;
   // Change the shown name and / or the password (with the current one); the username stays.
@@ -64,6 +68,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [aiLessons, setAiLessons] = useState(false);
   const [tts, setTts] = useState(false); // questions read aloud (the server has an ElevenLabs key)
   const [pay, setPay] = useState<Pay | null>(null);
+  const [mail, setMail] = useState(false);
   const [intro, setIntro] = useState<Record<string, string>>({});
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
   const [learnArt, setLearnArt] = useState<Record<string, string>>({});
@@ -95,11 +100,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setMe(d);
     api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); }).catch(() => {});
+    // An account still waiting for its email link reads only itself, so nothing else (the questions) is loaded yet.
+    if (d.user.verify) return;
     if (!bank) setBank(await fetchBank<Bank>());
   }, [bank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string> }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setAvatarArt(x.avatarArt || {}); setHeroArt(x.heroArt || {}); setLoginArt(x.loginArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
+  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; mail?: boolean }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setMail(!!x.mail && !PROVE_PICS); setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setAvatarArt(x.avatarArt || {}); setHeroArt(x.heroArt || {}); setLoginArt(x.loginArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
@@ -142,7 +149,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     Q: new Map((bank?.questions || []).map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
-    register: async (name, username, password) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password }); await signedIn(d.token); },
+    register: async (name, username, password, email) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password, email, lang: UI_LANG }); await signedIn(d.token); },
+    mail,
+    sendVerify: async email => {
+      try { const d = await api<{ user: User }>('POST', 'verifysend', { email, lang: UI_LANG }); setMe(m => (m ? { ...m, user: d.user } : m)); }
+      catch (e) { load().catch(() => {}); throw e; }
+    },
     guest: async name => { const d = await api<{ token: string }>('POST', 'guest', { name }); await signedIn(d.token); },
     // Signed out on the device at once; the server is told in the background (with the old token), so a slow or
     // missing connection never keeps the user signed in.
@@ -171,7 +183,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons, tts, pay, premium, locked, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, loginArt, guideArt]);
+  }), [ready, token, me, bank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, loginArt, guideArt]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

@@ -85,10 +85,10 @@ const promoCodes = () => (process.env.PROMO_CODE || '').split(',').map(c => c.tr
 const promoDays = () => { const n = Math.round(+process.env.PROMO_DAYS); return Number.isFinite(n) && n >= 1 && n <= 90 ? n : 3; };
 // A trial with `code`: its days added after the current pass (or from now), once per account. Returns false when the
 // account has had its trial already.
-function grantPromo(u, code) {
+function grantPromo(u, code, email) {
   if (u.premium && u.premium.promo) return false;
   const now = Date.now(), days = promoDays(), from = Math.max(now, (u.premium && u.premium.until) || 0);
-  u.premium = { ...(u.premium || {}), until: from + days * 864e5, plan: (u.premium && u.premium.plan) || 'trial', promo: { code, days, at: now } };
+  u.premium = { ...(u.premium || {}), until: from + days * 864e5, plan: (u.premium && u.premium.plan) || 'trial', promo: { code, days, at: now, email } };
   return true;
 }
 // A fully refunded payment: its days taken off the pass. Returns false when the payment is not this user's.
