@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Animated, Easing, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
 import { router } from 'expo-router';
 
-import { t as fmt, tr, transText } from '@/lib/i18n';
+import { t as fmt, tr, transText, transWord } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import type { Item, Question } from '@/lib/bank';
 import { imgSource } from '@/lib/img-source';
@@ -13,7 +13,7 @@ import { faNum } from '@/lib/logic';
 import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Icon, type IconName } from './icon';
-import { Enter, L, SegPill, T, TranslateButton, physical, tap, useArcSeg } from './kit';
+import { Enter, L, SegPill, T, TransT, TranslateButton, physical, tap, useArcSeg } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
 import { Marquee } from './marquee';
@@ -361,7 +361,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           {fa && transText(lang, { fa: q.sfa, en: q.sen, da: q.sda }) ? (
             // The Persian translation on the theme's soft grey (on the card colour in the step-by-step review, whose page is grey), no side line.
             <View style={{ paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: flat ? c.surface : c.surface2 }}>
-              <T style={{ fontSize: 14.5, lineHeight: 25 }}>{transText(lang, { fa: q.sfa, en: q.sen, da: q.sda })}</T>
+              <TransT style={{ fontSize: 14.5, lineHeight: 25 }}>{transText(lang, { fa: q.sfa, en: q.sen, da: q.sda })}</TransT>
             </View>
           ) : null}
         </View>
@@ -394,19 +394,19 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               const mark = view === 'mine' && it.a && (me ? !s.ok : !!s.ok); // a wrong tick or a missing one
               const checked = view === 'mine' ? me : !!s.ok;
               const eda = (lang === 'en' ? s.een || s.eda : s.eda || '').trim() || (s.ok ? ui.yes : ui.no);
-              const efa = (transText(lang, { fa: s.efa, en: s.een, da: s.eda }) || '').trim() || tr(s.ok ? 'بله.' : 'خیر.');
+              const efa = (transText(lang, { fa: s.efa, en: s.een, da: s.eda }) || '').trim() || transWord(s.ok ? 'yes' : 'no');
               const sfa = transText(lang, s);
               const expl = view === 'right' ? (
                 <View>
                   <L style={{ marginTop: ARC ? 0 : 6, fontSize: 14.5, lineHeight: 23 }}>{ui.expl} <L style={{ fontStyle: 'italic', fontSize: 14.5, lineHeight: 23 }}>{eda}</L></L>
-                  {fa && sfa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>{fmt('توضیح: {0}', efa)}</T> : null}
+                  {fa && sfa ? <TransT style={{ marginTop: 4, fontSize: 14, color: c.muted }}>{`${transWord('expl')} ${efa}`}</TransT> : null}
                 </View>
               ) : null;
               return (
                 flat ? (
                   <Enter key={k}><OptionBox on={checked} mark={!!mark} review n={k} extra={ARC ? expl : undefined}>
                     <L style={{ fontSize: 15, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
-                    {fa && sfa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{sfa}</T> : null}
+                    {fa && sfa ? <TransT style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{sfa}</TransT> : null}
                     {ARC ? null : expl}
                   </OptionBox></Enter>
                 ) : (
@@ -418,13 +418,13 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                     </View>
                     <View style={{ flex: 1, gap: 4 }}>
                       <L style={{ fontSize: 14.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
-                      {fa && sfa ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{sfa}</T> : null}
+                      {fa && sfa ? <TransT style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{sfa}</TransT> : null}
                     </View>
                   </View>
                   {view === 'right' ? (
                     <View style={physical({ paddingLeft: 32 })}>
                       <L style={{ marginTop: 10, fontSize: 15, lineHeight: 24 }}>{ui.expl} <L style={{ fontStyle: 'italic', fontSize: 15, lineHeight: 24 }}>{eda}</L></L>
-                      {fa && sfa ? <T style={{ marginTop: 4, fontSize: 14, color: c.muted }}>{fmt('توضیح: {0}', efa)}</T> : null}
+                      {fa && sfa ? <TransT style={{ marginTop: 4, fontSize: 14, color: c.muted }}>{`${transWord('expl')} ${efa}`}</TransT> : null}
                     </View>
                   ) : null}
                 </Statement></Enter>

@@ -24,7 +24,7 @@ import { learnRtl } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
 import { OptionBox, OptionGroup } from '@/ui/option-box';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
-import { Button, Card, Enter, T, TranslateButton, tap } from '@/ui/kit';
+import { Button, Card, Enter, T, TransT, TranslateButton, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { DA_FONT, useColors } from '@/ui/theme';
 
@@ -54,7 +54,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
       </View>
       <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(step.da, lang)}</T>
-        {fa && transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da }) ? <T style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da })}</T> : null}
+        {fa && transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da }) ? <TransT style={{ fontSize: 14, lineHeight: 23, color: c.muted }}>{transText(lang, { fa: step.fa, en: courseText(step.da, 'en'), da: step.da })}</TransT> : null}
       </View>
       <OptionGroup>
       {step.statements.map((s, i) => {
@@ -67,7 +67,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
               </T>
             ) : null}>
                 <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
-                {fa && transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da }) ? <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da })}</T> : null}
+                {fa && transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da }) ? <TransT style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da })}</TransT> : null}
               </OptionBox>
         );
       })}
