@@ -2655,5 +2655,16 @@
 "ایمیل تأییدشده قابل تغییر نیست.":["A confirmed email cannot be changed.", "En bekræftet e-mail kan ikke ændres."],
 "در نسخه‌ی رایگان {0} آزمون تصادفی دارید؛ {1} آزمون مانده است.":["The free version includes {0} random exams; {1} left.", "Den gratis version har {0} tilfældige prøver; {1} tilbage."],
 "{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.":["You have used your {0} free exams. Activate Premium for more exams.", "Du har brugt dine {0} gratis prøver. Aktivér Premium for flere prøver."],
-"فعال کردن نسخه‌ی ویژه":["Activate Premium", "Aktivér Premium"]
+"فعال کردن نسخه‌ی ویژه":["Activate Premium", "Aktivér Premium"],
+"حساب شما فعال شد":["Your account is active", "Din konto er aktiv"],
+"ایمیل شما تأیید شد و حساب شما آماده است.":["Your email is confirmed and your account is ready.", "Din e-mail er bekræftet, og din konto er klar."],
+"در نوار مرورگر روی دکمه‌ی اشتراک‌گذاری بزنید (اگر آن را نمی‌بینید، اول روی ••• بزنید).":["Tap the Share button in the browser bar (if you don't see it, tap ••• first).", "Tryk på Del-knappen i browserens bjælke (kan du ikke se den, så tryk først på •••)."],
+"گزینه‌ی «Add to Home Screen» (افزودن به صفحه‌ی اصلی) را انتخاب کنید.":["Choose «Add to Home Screen».", "Vælg «Føj til hjemmeskærm» (Add to Home Screen)."],
+"بالای صفحه روی «Add» بزنید؛ نماد برنامه روی صفحه‌ی اصلی می‌آید.":["Tap «Add» at the top; the app's icon appears on your Home Screen.", "Tryk på «Tilføj» (Add) øverst; appens ikon kommer på hjemmeskærmen."],
+"در منوی File روی «Add to Dock» بزنید.":["In the File menu, choose «Add to Dock».", "Vælg «Føj til Dock» (Add to Dock) i menuen Arkiv (File)."],
+"روی «Add» بزنید؛ برنامه در Dock می‌آید و مثل یک برنامه باز می‌شود.":["Click «Add»; the app appears in the Dock and opens like an app.", "Klik på «Tilføj» (Add); appen kommer i Dock og åbner som en app."],
+"برنامه را به صفحه‌ی اصلی گوشی اضافه کنید":["Add the app to your Home Screen", "Føj appen til din hjemmeskærm"],
+"برنامه را به Dock اضافه کنید":["Add the app to the Dock", "Føj appen til Dock"],
+"با یک لمس و تمام‌صفحه باز می‌شود، مثل یک برنامه‌ی واقعی.":["It opens with one tap, full screen, like a real app.", "Den åbner med ét tryk i fuld skærm, som en rigtig app."],
+"متوجه شدم":["Got it", "Forstået"]
 }
