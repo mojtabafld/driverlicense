@@ -81,10 +81,12 @@ export default function Account() {
                 <T style={{ fontWeight: '700', flex: 1 }}>ایمیل</T>
                 {user?.email ? <T style={{ fontSize: 12.5, fontWeight: '700', color: user.emailOk ? c.ok : c.bad }}>{user.emailOk ? 'تأیید شده' : 'تأیید نشده'}</T> : null}
               </View>
-              <Field icon="send" label="ایمیل" value={email} onChange={v => { setEmail(v.replace(/\s/g, '')); setMailMsg(null); }} ltr onSubmit={saveMail} />
-              <Note msg={mailMsg} />
-              {user?.emailOk && email.trim().toLowerCase() === user.email ? null
-                : <Button label={busy === 'mail' ? 'در حال فرستادن…' : 'فرستادن لینک تأیید'} onPress={saveMail} disabled={!!busy || !email.trim()} icon="send" />}
+              {/* A confirmed address is fixed (Mojtaba asked): shown, not editable. */}
+              {user?.emailOk ? <T raw style={{ color: c.muted, fontSize: 14, writingDirection: 'ltr', textAlign: 'left' }}>{user.email}</T> : <>
+                <Field icon="send" label="ایمیل" value={email} onChange={v => { setEmail(v.replace(/\s/g, '')); setMailMsg(null); }} ltr onSubmit={saveMail} />
+                <Note msg={mailMsg} />
+                <Button label={busy === 'mail' ? 'در حال فرستادن…' : 'فرستادن لینک تأیید'} onPress={saveMail} disabled={!!busy || !email.trim()} icon="send" />
+              </>}
             </Card>
           ) : null}
 

@@ -2651,5 +2651,6 @@
 "خواندن سؤال‌ها و گزینه‌ها با صدا":["Questions and options read aloud", "Spørgsmål og svar læst højt"],
 "شنیدن توضیح‌ها به فارسی":["Explanations read aloud", "Forklaringer læst højt"],
 "{0}، این تحلیل پاسخ شماست:":["{0}, here is the analysis of your answer:", "{0}, her er analysen af dit svar:"],
-"حساب مهمان قابل ویرایش یا حذف نیست.":["A guest account cannot be edited or deleted.", "En gæstekonto kan ikke redigeres eller slettes."]
+"حساب مهمان قابل ویرایش یا حذف نیست.":["A guest account cannot be edited or deleted.", "En gæstekonto kan ikke redigeres eller slettes."],
+"ایمیل تأییدشده قابل تغییر نیست.":["A confirmed email cannot be changed.", "En bekræftet e-mail kan ikke ændres."]
 }

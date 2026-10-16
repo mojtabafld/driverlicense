@@ -618,6 +618,8 @@ async function api(req, res, route) {
       const e = mail.normal(b.email);
       if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
       if (emailTaken(e, user)) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است.' });
+      // A confirmed address cannot be changed (Mojtaba asked).
+      if (e !== user.email && user.emailOk) return send(res, 403, { error: 'ایمیل تأییدشده قابل تغییر نیست.' });
       if (e !== user.email) { user.email = e; delete user.emailOk; }
     }
     if (!user.email) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
