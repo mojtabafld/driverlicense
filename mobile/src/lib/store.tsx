@@ -5,9 +5,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_PICS } from './config';
-import { EXAM_FOR, UI_CHOSEN, UI_LANG, setTransLang, setUiLang } from './i18n';
+import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n';
 import { loadToken, saveToken } from './token';
-import { rememberDefault } from '@/ui/palette';
+import { PALETTE, forgetPalette, keepPalette, rememberDefault } from '@/ui/palette';
+import { useTheme } from '@/ui/theme';
 
 export type Saved = { id: number; a?: number[]; at: number };
 type Me = { user: User; attempts: Attempt[]; settings: Partial<Settings>; saved?: Saved[]; imgv?: Record<string, string> };
@@ -83,25 +84,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [loginArt, setLoginArt] = useState<Record<string, string>>({});
   const [guideArt, setGuideArt] = useState<Record<string, string>>({});
 
+  // Light / dark mode (ui/theme-mode.tsx): read when the account loads, and a change is kept on the account.
+  const { mode, setMode } = useTheme();
+  const modeRef = useRef(mode); modeRef.current = mode;
+  useEffect(() => {
+    if (PROVE_PICS || !me || !me.settings?.mode || me.settings.mode === mode) return;
+    const settings = { ...DEFAULTS, ...me.settings, mode };
+    setMe(m => (m ? { ...m, settings } : m));
+    api('PUT', 'settings', settings).catch(() => {});
+  }, [mode, me]);
+  // Signed out: the look of someone not signed in, the phone's light / dark mode and the server's colour theme.
+  const lookOut = () => {
+    if (PROVE_PICS) return;
+    setMode('system');
+    if (forgetPalette() && Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
+  };
+
   // Bumped on sign-out: an account read that was still on its way then is dropped, so it cannot sign the user back in.
   const gen = useRef(0);
   const load = useCallback(async () => {
     const g = gen.current;
     let d = await api<Me>('GET', 'me');
     if (g !== gen.current) return;
-    // The app's language: the account's, unless one was chosen in this browser (then the account takes that one).
+    // Main site: the account's app language, light / dark mode and colour theme come back on signing in (Mojtaba,
+    // 2026-10-16); those it has none of yet take this device's. A new language or theme needs the app to start again:
+    // the web page reloads; the Android app keeps them, says so and closes (stopping here left it on the sign-in page).
     if (!PROVE_PICS) {
-      const ui = d.settings?.ui;
-      // (Web only: there the page loads again in it. The Android app cannot, and stopping here left it on the sign-in page.)
-      if (ui && !UI_CHOSEN && ui !== UI_LANG && Platform.OS === 'web') { if (setUiLang(ui)) return; }
-      else if ((UI_CHOSEN || UI_LANG !== 'fa') && ui !== UI_LANG) api('PUT', 'settings', { ...DEFAULTS, ...d.settings, ui: UI_LANG }).catch(() => {});
-    }
-    // Main site: the questions' language follows the app's language chosen at the start (Mojtaba, 2026-10-16), so it
-    // is not asked separately; it can still be changed in the settings.
-    if (!PROVE_PICS && !d.settings?.langChosen) {
-      const settings = { ...DEFAULTS, ...d.settings, lang: EXAM_FOR[UI_LANG], langChosen: true };
-      d = { ...d, settings };
-      api('PUT', 'settings', settings).catch(() => {});
+      const s = d.settings || {}, add: Partial<Settings> = {};
+      const newUi = !!s.ui && keepUiLang(s.ui), newPalette = !!s.palette && keepPalette(s.palette);
+      if (s.mode) setMode(s.mode); else add.mode = modeRef.current;
+      if (!s.ui) add.ui = UI_LANG;
+      if (!s.palette) add.palette = PALETTE;
+      if (newUi || newPalette) {
+        if (Platform.OS === 'web' && typeof window !== 'undefined') { window.location.reload(); return; }
+        askRestart(newUi ? s.ui! : UI_LANG);
+      }
+      // The questions' language follows the app's language chosen at the start (2026-10-16), so it is not asked
+      // separately; it can still be changed in the settings.
+      if (!s.langChosen) Object.assign(add, { lang: EXAM_FOR[UI_LANG], langChosen: true });
+      if (Object.keys(add).length) {
+        const settings = { ...DEFAULTS, ...s, ...add };
+        d = { ...d, settings };
+        api('PUT', 'settings', settings).catch(() => {});
+      }
     }
     setMe(d);
     api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); }).catch(() => {});
@@ -173,6 +198,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setApiToken(null); setToken(null); setMe(null);
       await saveToken(null);
       if (old) api('POST', 'logout', undefined, old).catch(() => {});
+      lookOut();
     },
     // The server removes the account and its sessions, so the device only forgets its token.
     deleteAccount: async password => {
@@ -180,6 +206,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       gen.current++;
       setApiToken(null); setToken(null); setMe(null);
       await saveToken(null);
+      lookOut();
     },
     clearAttempts: async () => { await api('DELETE', 'attempts'); setMe(m => (m ? { ...m, attempts: [] } : m)); },
     setAvatar: async b => { const d = await api<{ user: User }>('POST', 'avatar', b); setMe(m => (m ? { ...m, user: d.user } : m)); },
