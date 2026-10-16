@@ -8,6 +8,8 @@ import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds } from '@/lib/log
 import { topicFa, topicName } from '@/lib/names';
 import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
+import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
+import { t } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
 import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
@@ -100,8 +102,11 @@ export default function Exam() {
   const c = useColors();
   const { bank, attempts } = useApp();
   const [size, setSize] = useState(FULL);
+  // Without premium, FREE_RANDOM random exams (lib/free.ts); then the button opens the premium page.
+  const { limited, randomLeft } = useFree();
   const start = () => {
     if (!bank) return;
+    if (!randomLeft) { tap(); toPremium(); return; }
     session.plan = { mode: 'random', ids: randomIds(bank, size), title: 'آزمون تصادفی' };
     router.push('/run');
   };
@@ -123,8 +128,18 @@ export default function Exam() {
           <Icon name={size === FULL ? 'checkCircle' : 'clock'} size={17} color={c.muted} />
           <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{sizeHint(size)}</T>
         </View>
-        {ARC ? <ArcButton label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" />
-          : <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />}
+        {limited ? (
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
+            <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
+            <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: randomLeft ? c.muted : c.text }}>{randomLeft
+              ? t('در نسخه‌ی رایگان {0} آزمون تصادفی دارید؛ {1} آزمون مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))
+              : t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>
+          </View>
+        ) : null}
+        {randomLeft ? (ARC ? <ArcButton label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" />
+          : <Button label={`شروع آزمون ${faNum(size)} سؤالی`} onPress={start} icon="play" kind="grey" />)
+          : (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" />
+            : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
       <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" />
       <MistakesCard />

@@ -16,6 +16,7 @@ import { RULES, RULE_NUMBERS, type GuidePart } from '@/lib/guide';
 import { FULL, faNum, shuffle } from '@/lib/logic';
 import { loadRulesRead, saveRulesRead } from '@/lib/prefs';
 import { session } from '@/lib/session';
+import { toPremium, useFree } from '@/lib/free';
 import { useApp } from '@/lib/store';
 import { TrapBox } from '@/ui/course-parts';
 import { RulesArt } from '@/ui/header-art';
@@ -65,6 +66,7 @@ function Task({ icon, label, title, action, onPress, main }: { icon: IconName; l
 function Overview({ read, all, next, onNext }: { read: number; all: number[]; next: number | null; onNext: () => void }) {
   const c = useColors();
   const share = RULES.length ? read / RULES.length : 0;
+  const { limited } = useFree();
   return (
     <Card style={{ gap: 16 }}>
       <View style={{ gap: 8 }}>
@@ -88,7 +90,7 @@ function Overview({ read, all, next, onNext }: { read: number; all: number[]; ne
         <>
           <View style={{ height: 1, backgroundColor: c.line }} />
           <Task icon="play" main={next === null} label={`${faNum(Math.min(all.length, FULL))} سؤال از همه‌ی بخش‌ها`} title="آزمون همه‌ی قوانین" action="شروع"
-            onPress={() => startPractice(shuffle(all).slice(0, FULL), 'آزمون همه‌ی قوانین')} />
+            onPress={() => (limited ? toPremium() : startPractice(shuffle(all).slice(0, FULL), 'آزمون همه‌ی قوانین'))} />
         </>
       ) : null}
     </Card>
@@ -116,11 +118,12 @@ function Numbers({ onOpen }: { onOpen: (i: number) => void }) {
 }
 
 // One rule: its card closed (drawing, title, size, read or not), or open with everything in it.
-function RulePart({ p, on, read, onToggle, onNext }: { p: GuidePart; on: boolean; read: boolean; onToggle: () => void; onNext: (() => void) | null }) {
+// `locked`: only with premium (lib/free.ts): faded, a lock in place of the arrow; a tap opens the premium page.
+function RulePart({ p, on, read, onToggle, onNext, locked }: { p: GuidePart; on: boolean; read: boolean; onToggle: () => void; onNext: (() => void) | null; locked?: boolean }) {
   const c = useColors();
   return (
     <Card style={{ gap: 14, paddingVertical: 12, borderColor: on ? c.text : undefined }}>
-      <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: on }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: on }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: locked ? 0.55 : 1 }}>
         <View style={{ width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? c.btn : c.surface2 }}>
           <Icon name={p.icon ?? 'rules'} size={22} color={on ? c.btnFg : c.text} />
         </View>
@@ -130,7 +133,7 @@ function RulePart({ p, on, read, onToggle, onNext }: { p: GuidePart; on: boolean
             {read ? 'خوانده‌شده، ' : ''}{faNum(p.points.length)} نکته
           </T>
         </View>
-        {read && !on ? (
+        {locked ? <Icon name="lock" size={17} color={c.muted} /> : read && !on ? (
           <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
             <Icon name="check" size={13} color="#fff" weight="bold" />
           </View>
@@ -187,6 +190,7 @@ export default function Rules() {
   const p = useLocalSearchParams<{ open?: string }>();
   const first = p.open !== undefined && Number.isInteger(+p.open) ? Math.min(Math.max(0, +p.open), RULES.length - 1) : null;
   const [open, setOpen] = useState<number | null>(first);
+  useEffect(() => { if (first) setOpen(o => (o === first && !firstOk(first) ? null : o)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [read, setRead] = useState<string[]>([]);
   // A part counts as read once the user is done with it: closing it or going on to another part (not
   // just opening it, so a tap on a number does not tick a part nobody has read).
@@ -199,12 +203,14 @@ export default function Rules() {
   // Scrolling to the part just opened: where the content starts under the header, the list in it, and each card in the list.
   const scroll = useRef<ScrollView>(null);
   const at = useRef({ body: 0, list: 0, cards: [] as number[], go: first as number | null });
+  const { firstOk } = useFree();
   const show = useCallback((i: number | null) => {
     tap();
+    if (i !== null && !firstOk(i)) { toPremium(); return; }
     if (open !== null && open !== i) markRead(open);
     setOpen(i);
     at.current.go = i;
-  }, [markRead, open]);
+  }, [markRead, open, firstOk]);
   useEffect(() => {
     const i = at.current.go;
     if (i === null) return;
@@ -238,7 +244,7 @@ export default function Rules() {
         {RULES.map((x, i) => {
           return (
             <View key={x.title} onLayout={e => { at.current.cards[i] = e.nativeEvent.layout.y; }}>
-              <RulePart p={x} on={open === i} read={read.includes(x.title)}
+              <RulePart p={x} on={open === i} read={read.includes(x.title)} locked={!firstOk(i)}
                 onToggle={() => show(open === i ? null : i)}
                 onNext={i < RULES.length - 1 ? () => show(i + 1) : null} />
             </View>

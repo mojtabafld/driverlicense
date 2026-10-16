@@ -16,6 +16,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { transText } from '@/lib/i18n';
 import { COURSE, EXAM, lessonById, type CourseStep } from '@/lib/course';
 import { courseText } from '@/lib/course-en';
+import { useFree } from '@/lib/free';
 import { useExamLang } from '@/lib/store';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
@@ -227,6 +228,9 @@ export default function CourseLesson() {
 function Lesson({ id }: { id: string }) {
   const c = useColors();
   const found = lessonById(id);
+  // Without premium only the first lesson opens (lib/free.ts): another one goes to the premium page instead.
+  const allowed = useFree().lessonOk(id);
+  useEffect(() => { if (!allowed) router.replace('/premium'); }, [allowed]);
   const { done, finish } = useCourseProgress();
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
@@ -235,7 +239,7 @@ function Lesson({ id }: { id: string }) {
   // Checking a question scrolls down to the answers' verdicts, so none stays hidden under the bar.
   const scroll = useRef<ScrollView>(null);
   useEffect(() => { if (!found) router.back(); }, [found]);
-  if (!found) return null;
+  if (!found || !allowed) return null;
   const { lesson, chapter } = found, steps = lesson.steps, step = steps[i], last = i === steps.length - 1;
   const examSteps = steps.map((s, k) => ({ s, k })).filter((x): x is { s: Extract<CourseStep, { kind: 'exam' }>; k: number } => x.s.kind === 'exam');
   const ansOf = (k: number, s: Extract<CourseStep, { kind: 'exam' }>) => answers[k] ?? s.statements.map(() => false);

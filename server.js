@@ -53,6 +53,7 @@ const VERSION = crypto.createHash('sha256')
   .digest('hex').slice(0, 8);
 // The admin's console at /console (console/index.html): only the comparison of the teaching pictures with prove.dk's.
 const CONSOLE_HTML = fs.readFileSync(path.join(__dirname, 'console', 'index.html'));
+const ADMIN_HTML = fs.readFileSync(path.join(__dirname, 'console', 'admin.html'));
 
 let store; // set in main()
 
@@ -225,7 +226,8 @@ function adminStats() {
   const perDay = Object.fromEntries(keys.map(k => [k, { day: k, tests: 0, active: 0, newUsers: 0 }]));
   const last7 = new Set(keys.slice(-7));
   const t = { users: 0, newToday: 0, new7: 0, activeToday: 0, active7: 0, testsToday: 0, tests7: 0, tests: 0, full: 0, passed: 0,
-    correct30: 0, items30: 0, words: 0, drafts: 0, lang: { da: 0, en: 0, none: 0 } };
+    correct30: 0, items30: 0, words: 0, drafts: 0, lang: { da: 0, en: 0, none: 0 },
+    premium: 0, promo: 0, guests: 0, unverified: 0, buys: 0, revenue: 0, refunded: 0, ui: { fa: 0, en: 0, da: 0 }, modes: {} };
   const users = [];
   for (const u of Object.values(store.users)) {
     t.users++;
@@ -249,9 +251,24 @@ function adminStats() {
     t.full += full; t.passed += passed; t.words += (u.words || []).length; if (u.draft) t.drafts++;
     t.lang[(u.settings || {}).lang || 'none']++;
     const lastA = u.attempts[u.attempts.length - 1];
+    // For the admin dashboard (/admin): the account's state (guest, premium, email) and what it uses.
+    const prem = u.premium || {}, pass = isAdmin(u) ? 'admin' : payments.active(u) ? (prem.promo && !(prem.buys || []).some(b => !b.refunded && !b.test) ? 'trial' : 'premium') : prem.until ? 'expired' : 'free';
+    if (pass === 'premium' || pass === 'trial') t.premium++;
+    if (prem.promo) t.promo++;
+    if (u.guest) t.guests++;
+    if (needsVerify(u)) t.unverified++;
+    let paid = 0;
+    for (const b of prem.buys || []) { if (b.test) continue; if (b.refunded) { t.refunded++; continue; } t.buys++; paid += b.amount || 0; }
+    t.revenue += paid;
+    const ui = (u.settings || {}).ui; if (t.ui[ui] !== undefined) t.ui[ui]++;
+    const modes = {};
+    for (const a of u.attempts) { modes[a.mode || 'random'] = (modes[a.mode || 'random'] || 0) + 1; t.modes[a.mode || 'random'] = (t.modes[a.mode || 'random'] || 0) + 1; }
     users.push({ username: u.username, name: u.name, created: u.created, lastActive: last, activeDays: active.size,
       tests: u.attempts.length, testsToday, tests7, full, passed, words: (u.words || []).length, lang: (u.settings || {}).lang || null,
-      lastPct: lastA ? Math.round(scoreOf(lastA) / lastA.items.length * 100) : null });
+      lastPct: lastA ? Math.round(scoreOf(lastA) / lastA.items.length * 100) : null,
+      guest: !!u.guest, email: u.email || null, emailOk: !!u.emailOk, verifyPending: needsVerify(u), ui: ui || null, pass,
+      until: prem.until || null, plan: prem.plan || null, promo: !!prem.promo, paid, saved: (u.saved || []).length, modes,
+      avgPct: u.attempts.length ? Math.round(u.attempts.reduce((x, a) => x + scoreOf(a) / a.items.length, 0) / u.attempts.length * 100) : null });
   }
   users.sort((a, b) => b.lastActive - a.lastActive);
   const vd = k => visits.days[k] || { v: 0, u: 0 };
@@ -389,6 +406,11 @@ function serveStatic(req, res) {
   if (p === '/console' || p === '/console/') {
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...PAGE_HEADERS });
     return res.end(req.method === 'HEAD' ? undefined : CONSOLE_HTML);
+  }
+  // The admin dashboard: users, exams and use of the app (its page signs in and reads /api/adminstats itself).
+  if (p === '/admin' || p === '/admin/') {
+    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Robots-Tag': 'noindex', ...PAGE_HEADERS });
+    return res.end(req.method === 'HEAD' ? undefined : ADMIN_HTML);
   }
   // The app's fixed copy with prove.dk's pictures at /app/.
   if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
