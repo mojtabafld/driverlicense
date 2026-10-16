@@ -136,20 +136,23 @@ const payFor = u => payments.available() && (!payments.testMode() || !!(u && (is
 // named in the session (client_reference_id, else metadata.username), else the one with the buyer's email. So a payment
 // still counts when its webhook did not arrive and the buyer did not come back to the site. At start, every 10 minutes
 // and from the premium page, at most every 30 seconds.
-let lastPaySync = 0;
+let lastPaySync = 0, syncReported = false;
 async function syncPayments() {
   if (!payments.available() || Date.now() - lastPaySync < 30e3) return;
   lastPaySync = Date.now();
   try {
-    for (const s of await payments.recentPaid()) {
+    const paid = await payments.recentPaid(), missing = [];
+    for (const s of paid) {
       const name = String(s.client_reference_id || (s.metadata || {}).username || '');
       const email = mail.normal((s.customer_details || {}).email || '');
       const u = store.users[name] || (email && Object.values(store.users).find(x => x.email && x.emailOk && mail.normal(x.email) === email));
       if (u && payments.grant(u, s)) {
         await store.saveUser(u);
         console.log('premium bought (sync)', u.username, s.metadata && s.metadata.plan, s.amount_total, s.currency, s.livemode ? 'live' : 'test');
-      }
+      } else if (!u) missing.push(s.id + ' ' + name);
     }
+    // Once per start: how many paid sessions Stripe has, and those with no account here.
+    if (!syncReported) { syncReported = true; console.log('pay sync:', paid.length, 'paid sessions', missing.length ? 'no account for: ' + missing.join(', ') : ''); }
   } catch (e) { console.error('pay sync', e.message); }
 }
 setInterval(() => { syncPayments(); }, 10 * 60e3).unref();
