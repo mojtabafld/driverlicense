@@ -1,4 +1,5 @@
 // App state: the signed-in user, their exams and settings, and the question bank.
+import { Platform } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
@@ -91,7 +92,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // The app's language: the account's, unless one was chosen in this browser (then the account takes that one).
     if (!PROVE_PICS) {
       const ui = d.settings?.ui;
-      if (ui && !UI_CHOSEN && ui !== UI_LANG) { if (setUiLang(ui)) return; }
+      // (Web only: there the page loads again in it. The Android app cannot, and stopping here left it on the sign-in page.)
+      if (ui && !UI_CHOSEN && ui !== UI_LANG && Platform.OS === 'web') { if (setUiLang(ui)) return; }
       else if ((UI_CHOSEN || UI_LANG !== 'fa') && ui !== UI_LANG) api('PUT', 'settings', { ...DEFAULTS, ...d.settings, ui: UI_LANG }).catch(() => {});
     }
     // Main site: the questions' language follows the app's language chosen at the start (Mojtaba, 2026-10-16), so it
