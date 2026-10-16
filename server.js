@@ -6,7 +6,7 @@
 // LESSON_AI_MODEL (Claude model for those lessons, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
 // ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
-// and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js).
+// PROMO_CODE / PROMO_DAYS (a free trial code) and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js).
 // See README.md for all variables.
 'use strict';
 process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
@@ -103,7 +103,7 @@ function sessionUser(req) {
 // avatar: { preset: n } (one of the made pictures) or { photo: version } (their own, at GET /api/avatar), or none.
 // premium: a pass bought with Stripe (payments.js), until when (also once it has run out); admins have its features too.
 const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined,
-  premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan } : undefined });
+  premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined } : undefined });
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
 const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه است.';
@@ -428,7 +428,8 @@ async function api(req, res, route) {
   if (req.method === 'GET' && route === 'config') {
     return send(res, 200, { inviteRequired: !!INVITE_CODE, version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
-      pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined } : undefined,
+      pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
+        promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
       guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions() });
   }
@@ -564,6 +565,20 @@ async function api(req, res, route) {
         console.log('premium bought', user.username, s.metadata && s.metadata.plan, s.amount_total, s.currency, s.livemode ? 'live' : 'test');
       }
     }
+    return send(res, 200, { user: publicUser(user) });
+  }
+  // POST promo { code }: a free trial of PROMO_DAYS days with one of the PROMO_CODE codes, once per account (not for guest
+  // accounts, which anyone can make again). Wrong codes count like failed sign-ins.
+  if (req.method === 'POST' && route === 'promo') {
+    if (!payFor(user) || !payments.promoCodes().length) return send(res, 404, { error: 'کد تخفیف فعال نیست.' });
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const code = String((await readBody(req)).code || '').trim().toUpperCase().slice(0, 64);
+    const match = payments.promoCodes().find(c => safeEqual(code, c));
+    if (!match) { addFail(ip); return send(res, 400, { error: 'کد تخفیف درست نیست.' }); }
+    if (user.guest) return send(res, 403, { error: 'برای استفاده از کد تخفیف، اول با نام کاربری خودتان حساب بسازید.' });
+    if (!payments.grantPromo(user, match)) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
+    await store.saveUser(user);
+    console.log('premium trial', user.username, match);
     return send(res, 200, { user: publicUser(user) });
   }
   // The account: { name } changes the shown name; { current, password } the password, only with the current one

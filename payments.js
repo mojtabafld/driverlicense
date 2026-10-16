@@ -2,7 +2,8 @@
 // automatic renewal); buying again adds its days to the end of the current pass.
 // Env: STRIPE_SECRET_KEY (sk_/rk_ test_… or live_…; without it there is nothing to buy and nothing is locked),
 // STRIPE_WEBHOOK_SECRET (whsec_…, the webhook's signing secret), PREMIUM_PRICE_WEEK / _MONTH / _QUARTER (kroner, defaults
-// 49 / 79 / 149) and PREMIUM_GATE (0: everyone keeps the AI analysis and the read-aloud; otherwise they are only for
+// 49 / 79 / 149), PROMO_CODE (codes, comma-separated, that give a free trial of PROMO_DAYS days, default 3; each account
+// can take a trial only once, whichever code) and PREMIUM_GATE (0: everyone keeps the AI analysis and the read-aloud; otherwise they are only for
 // accounts with a pass, and admins).
 // Stripe is called over its REST API with fetch (no SDK). STRIPE_API_BASE only points the calls elsewhere for tests.
 'use strict';
@@ -79,6 +80,17 @@ function grant(u, s) {
   u.premium = { until: from + PLANS[plan].days * 864e5, plan, buys: [...((u.premium && u.premium.buys) || []), buy].slice(-50) };
   return true;
 }
+// The free trial codes (upper case) and its length in days.
+const promoCodes = () => (process.env.PROMO_CODE || '').split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
+const promoDays = () => { const n = Math.round(+process.env.PROMO_DAYS); return Number.isFinite(n) && n >= 1 && n <= 90 ? n : 3; };
+// A trial with `code`: its days added after the current pass (or from now), once per account. Returns false when the
+// account has had its trial already.
+function grantPromo(u, code) {
+  if (u.premium && u.premium.promo) return false;
+  const now = Date.now(), days = promoDays(), from = Math.max(now, (u.premium && u.premium.until) || 0);
+  u.premium = { ...(u.premium || {}), until: from + days * 864e5, plan: (u.premium && u.premium.plan) || 'trial', promo: { code, days, at: now } };
+  return true;
+}
 // A fully refunded payment: its days taken off the pass. Returns false when the payment is not this user's.
 function refund(u, pi) {
   const buys = (u.premium && u.premium.buys) || [], b = buys.find(x => x.pi === pi && !x.refunded);
@@ -103,4 +115,4 @@ function verifyEvent(raw, header, secret = process.env.STRIPE_WEBHOOK_SECRET || 
   try { return JSON.parse(raw.toString('utf8')); } catch { return null; }
 }
 
-module.exports = { available, testMode, gated, plans, createCheckout, getSession, active, hasSession, grant, refund, verifyEvent };
+module.exports = { available, testMode, gated, plans, createCheckout, getSession, active, hasSession, grant, refund, verifyEvent, promoCodes, promoDays, grantPromo };
