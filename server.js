@@ -623,7 +623,13 @@ async function api(req, res, route) {
     const u = Object.values(store.users).find(x => x.verify && x.verify.h && safeEqual(x.verify.h, h));
     let ok = false;
     if (u && u.verify.exp > Date.now()) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; await store.saveUser(u); ok = true; console.log('email confirmed', u.username); }
-    res.writeHead(302, { Location: `/?verified=${ok ? 1 : 0}` });
+    // On an Android phone the link opens the app when it is installed (an intent link: Chrome and Gmail's browser
+    // start the app, else they go on to the web page); elsewhere the web page, which says the account is active.
+    const web = `/?verified=${ok ? 1 : 0}`, ua = String(req.headers['user-agent'] || '');
+    const app = /Android/i.test(ua) && !/; wv\)/.test(ua)
+      ? `intent://verified?ok=${ok ? 1 : 0}#Intent;scheme=teoriprove;package=info.mintcloud.teoriprove;S.browser_fallback_url=${encodeURIComponent(originOf(req) + web)};end`
+      : null;
+    res.writeHead(302, { Location: app || web, 'Cache-Control': 'no-store' });
     return res.end();
   }
 
