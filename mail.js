@@ -1,12 +1,12 @@
 // Email: the link that confirms a new account's address, sent with Resend (resend.com) over its REST API with fetch.
 // Env: RESEND_API_KEY (without it there is no email: signing up asks for no address and nothing waits on one) and
-// MAIL_FROM (default «TeoriPrøve <no-reply@bitlane.app>»; its domain must be verified in Resend). RESEND_API_BASE only
+// MAIL_FROM (default «TeoriPrøve <no-reply@teori.bitlane.app>»; its domain must be verified in Resend). RESEND_API_BASE only
 // points the calls elsewhere for tests.
 'use strict';
 
 const key = () => (process.env.RESEND_API_KEY || '').trim();
 const available = () => /^re_[A-Za-z0-9_]{8,}$/.test(key());
-const from = () => (process.env.MAIL_FROM || 'TeoriPrøve <no-reply@bitlane.app>').trim();
+const from = () => (process.env.MAIL_FROM || 'TeoriPrøve <no-reply@teori.bitlane.app>').trim();
 const EMAIL_RE = /^[^\s@<>"',;]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 const normal = e => String(e || '').trim().toLowerCase().slice(0, 254);
 
