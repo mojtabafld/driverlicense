@@ -109,9 +109,10 @@ const publicUser = u => ({ username: u.username, name: u.name, created: u.create
   // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
   guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined });
 // Email confirmation (mail.js, RESEND_API_KEY): accounts made while it is on give an address and can use the app once its
-// link is opened (mustVerify, until the first confirmation; a later new address does not hold the app up); accounts from before, and guests, are not held up, and may add an address later in
+// link is opened (mustVerify, or a username that is an email, until the first confirmation, okOnce; a later new address
+// does not hold the app up; the app waits even when the email could not be sent, Mojtaba asked); accounts from before, and guests, are not held up, and may add an address later in
 // «حساب کاربری» (needed for the trial code). A link works for 24 hours.
-const needsVerify = u => mail.available() && !!u.mustVerify && !!u.email && !u.emailOk;
+const needsVerify = u => mail.available() && !!u.email && !u.emailOk && (!!u.mustVerify || (String(u.username).includes('@') && !u.okOnce));
 const emailTaken = (e, u) => Object.values(store.users).some(x => x !== u && x.email === e);
 const tokenHash = t => crypto.createHash('sha256').update(String(t)).digest('hex');
 // A new link for the user's address (the old one stops working), at most one a minute and 6 a day.
@@ -123,13 +124,7 @@ async function sendVerifyMail(req, u, lang) {
   const token = crypto.randomBytes(32).toString('hex');
   u.verify = { h: tokenHash(token), exp: now + 864e5, sent: now, day, n: n + 1 };
   await store.saveUser(u);
-  try { await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui); }
-  catch (e) {
-    // The email could not go out (Resend refused it): the account is not held up waiting for a link that never comes;
-    // it can still confirm its address later from the account page.
-    if (u.mustVerify) { delete u.mustVerify; await store.saveUser(u); }
-    throw e;
-  }
+  await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
 }
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
@@ -605,7 +600,7 @@ async function api(req, res, route) {
     const h = tokenHash(new URL(req.url, 'http://x').searchParams.get('t') || '');
     const u = Object.values(store.users).find(x => x.verify && x.verify.h && safeEqual(x.verify.h, h));
     let ok = false;
-    if (u && u.verify.exp > Date.now()) { u.emailOk = Date.now(); delete u.verify; delete u.mustVerify; await store.saveUser(u); ok = true; console.log('email confirmed', u.username); }
+    if (u && u.verify.exp > Date.now()) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; await store.saveUser(u); ok = true; console.log('email confirmed', u.username); }
     res.writeHead(302, { Location: `/?verified=${ok ? 1 : 0}` });
     return res.end();
   }
