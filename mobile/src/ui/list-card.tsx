@@ -10,11 +10,12 @@ import { useColors } from './theme';
 
 export const LIST_PIC = { width: 80, height: 60, radius: 14 };
 
-export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress }: { pic: ReactNode; title: string; sub: string; subLines?: number; note?: string; label?: string; onPress: () => void }) {
+// `locked`: only with premium (lib/free.ts): faded, with a lock in place of the ‹.
+export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress, locked }: { pic: ReactNode; title: string; sub: string; subLines?: number; note?: string; label?: string; onPress: () => void; locked?: boolean }) {
   const c = useColors();
   return (
     <Card onPress={onPress} style={{ padding: 10 }}>
-      <View accessibilityRole="button" accessibilityLabel={label ?? title} style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+      <View accessibilityRole="button" accessibilityLabel={label ?? title} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, opacity: locked ? 0.55 : 1 }}>
         <View style={{ width: LIST_PIC.width, height: LIST_PIC.height, borderRadius: LIST_PIC.radius, overflow: 'hidden' }}>{pic}</View>
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600' }} numberOfLines={2}>{title}</T>
@@ -22,7 +23,7 @@ export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress }
           {note ? <T style={{ fontSize: 11.5, lineHeight: 17, color: c.faint }} numberOfLines={1}>{note}</T> : null}
         </View>
         <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="chevronLeft" size={14} color={c.muted} weight="semibold" />
+          <Icon name={locked ? 'lock' : 'chevronLeft'} size={14} color={c.muted} weight="semibold" />
         </View>
       </View>
     </Card>

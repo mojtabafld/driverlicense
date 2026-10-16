@@ -10,6 +10,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { PRIORITY_CATS, SIGN_CATS, type GuideKind, type Scenario, type SignItem } from '@/lib/guide-data';
 import { tr, UI_LANG } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
+import { useFree } from '@/lib/free';
 import { useApp, useExamLang } from '@/lib/store';
 import { PROVE_PICS } from '@/lib/config';
 import SIGN_EN from '@/lib/guide-en.json';
@@ -39,6 +40,10 @@ export default function GuideView() {
   const cats = kind === 'signs' ? SIGN_CATS : PRIORITY_CATS;
   const cat = (cats as { id: string }[]).find(x => x.id === p.cat) as (typeof cats)[number] | undefined ?? cats[0];
   const items = cat.items as Item[];
+  // Without premium only the first group opens (lib/free.ts): another one goes to the premium page instead.
+  const { firstOk } = useFree();
+  const allowed = firstOk(Math.max(0, (cats as { id: string }[]).indexOf(cat)));
+  useEffect(() => { if (!allowed) router.replace('/premium'); }, [allowed]);
   const [i, setI] = useState(() => Math.min(Math.max(0, Number(p.i) || 0), items.length - 1));
   const [headH, setHeadH] = useState(0);
   const [intro, setIntro] = useState(false); // the group's general rules, folded

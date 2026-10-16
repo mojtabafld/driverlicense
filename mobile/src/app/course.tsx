@@ -8,6 +8,8 @@
 //   A chapter still being written is a single line «به‌زودی». The rail is green as far as the next lesson; at its end,
 //   the real test's format.
 import { router } from 'expo-router';
+
+import { toPremium, useFree } from '@/lib/free';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -23,8 +25,9 @@ import { Card, Enter, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
-const openLesson = (l: CourseLesson) => { tap(); router.push({ pathname: '/course-lesson', params: { id: l.id } }); };
-const openDrill = (lesson?: string) => { tap(); router.push({ pathname: '/drill', params: lesson ? { lesson } : {} }); };
+// `ok` false: only with premium (lib/free.ts), so the premium page opens instead.
+const openLesson = (l: CourseLesson, ok = true) => { tap(); if (!ok) return toPremium(); router.push({ pathname: '/course-lesson', params: { id: l.id } }); };
+const openDrill = (lesson?: string, ok = true) => { tap(); if (!ok) return toPremium(); router.push({ pathname: '/drill', params: lesson ? { lesson } : {} }); };
 
 // One task of today's plan: its round icon, a small label over its title, a line under it, and a pill button.
 function Task({ icon, label, title, line, action, onPress, tone }: { icon: IconName; label: string; title: string; line: string; action: string; onPress: () => void; tone: 'main' | 'soft' }) {
@@ -50,6 +53,7 @@ function Task({ icon, label, title, line, action, onPress, tone }: { icon: IconN
 function TodayCard({ next, finished, ready }: { next: { lesson: CourseLesson; chapter: CourseChapter } | null; finished: number; ready: number }) {
   const c = useColors();
   const { cards, loaded } = useDrillProgress();
+  const { limited, lessonOk } = useFree();
   const due = dueCount(cards), fresh = newCount(cards), m = mastery(cards), weak = weakLessons(cards)[0];
   const share = ready ? finished / ready : 0;
   const drillLine = !loaded ? 'در حال بارگذاری…' : due ? `${faNum(due)} سؤال منتظر مرور است` : fresh ? `${faNum(Math.min(SESSION_SIZE, fresh))} سؤال تازه، به شکل آزمون` : 'امروز چیزی برای مرور نمانده';
@@ -67,7 +71,7 @@ function TodayCard({ next, finished, ready }: { next: { lesson: CourseLesson; ch
       {next ? (
         <Task icon="play" tone="main" label={`درس بعدی، فصل ${faNum(next.chapter.n)}`} title={next.lesson.title}
           line={`${faNum(next.lesson.minutes)} دقیقه، ${faNum(next.lesson.steps.filter(s => s.kind === 'exam').length)} سؤال آزمونی`}
-          action={finished ? 'ادامه' : 'شروع'} onPress={() => openLesson(next.lesson)} />
+          action={finished ? 'ادامه' : 'شروع'} onPress={() => openLesson(next.lesson, lessonOk(next.lesson.id))} />
       ) : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Icon name="checkCircle" size={22} color={c.ok} />
@@ -76,9 +80,9 @@ function TodayCard({ next, finished, ready }: { next: { lesson: CourseLesson; ch
       )}
       <View style={{ height: 1, backgroundColor: c.line }} />
       <Task icon="refresh" tone="soft" label={`مرور هوشمند، تسلط ٪${faNum(Math.round(m * 100))} از ${faNum(ITEMS.length)} سؤال`} title="تمرین هوشمند"
-        line={drillLine} action="شروع" onPress={() => openDrill()} />
+        line={drillLine} action="شروع" onPress={() => openDrill(undefined, !limited)} />
       {weak && weak.m < 0.6 && loaded && finished ? (
-        <Pressable onPress={() => openDrill(weak.lesson.id)} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 12, backgroundColor: c.warnSoft, opacity: pressed ? 0.8 : 1 })}>
+        <Pressable onPress={() => openDrill(weak.lesson.id, lessonOk(weak.lesson.id))} style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 12, backgroundColor: c.warnSoft, opacity: pressed ? 0.8 : 1 })}>
           <Icon name="warning" size={16} color={c.warn} />
           <T style={{ flex: 1, fontSize: 13, color: c.text }}>ضعیف‌ترین درس شما: <T style={{ fontWeight: '700', fontSize: 13 }}>{weak.lesson.title}</T></T>
           <T style={{ fontSize: 12.5, fontWeight: '700', color: c.warn }}>تمرین</T>
@@ -161,6 +165,7 @@ function Rail({ marker, top, bottom, first, last, children, markerH }: { marker:
 // The course as a timeline: chapters on a rail, each with its lessons under it; the rail is green as far as the next lesson.
 function Timeline({ done, next }: { done: Record<string, unknown>; next: string | null }) {
   const c = useColors();
+  const { lessonOk } = useFree();
   const nextAt = ROWS.findIndex(r => r.kind === 'lesson' && r.lesson.id === next);
   // Rows above the next lesson's are driven (all of them when every ready lesson is done).
   const reach = nextAt >= 0 ? nextAt : ROWS.reduce((at, r, i) => (r.kind === 'lesson' ? i : at), 0);
@@ -194,7 +199,7 @@ function Timeline({ done, next }: { done: Record<string, unknown>; next: string 
           );
         }
         if (r.kind === 'lesson') {
-          const on = !!done[r.lesson.id], isNext = r.lesson.id === next;
+          const on = !!done[r.lesson.id], isNext = r.lesson.id === next, locked = !lessonOk(r.lesson.id);
           const dot = isNext ? 20 : 16;
           return (
             <Rail key={r.lesson.id} {...edges} markerH={52} marker={
@@ -205,16 +210,16 @@ function Timeline({ done, next }: { done: Record<string, unknown>; next: string 
                   {on ? <Icon name="check" size={10} color="#fff" weight="bold" /> : null}
                 </View>
               </View>}>
-              <Pressable onPress={() => openLesson(r.lesson)} accessibilityRole="button"
+              <Pressable onPress={() => openLesson(r.lesson, !locked)} accessibilityRole="button"
                 style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, marginTop: -10, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16,
-                  backgroundColor: isNext ? c.btn : c.surface, borderWidth: isNext ? 0 : 1, borderColor: c.line, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] })}>
+                  backgroundColor: isNext ? c.btn : c.surface, borderWidth: isNext ? 0 : 1, borderColor: c.line, opacity: pressed ? 0.85 : locked ? 0.55 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] })}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <T style={{ fontWeight: '700', fontSize: 15, color: isNext ? c.btnFg : c.text }}>{r.lesson.title}</T>
                   <T style={{ fontSize: 12, color: isNext ? c.btnFg : on ? c.ok : c.muted, opacity: isNext ? 0.8 : 1, fontWeight: on ? '700' : '400' }}>
                     {on ? 'انجام شد، دوباره ببینید' : `${faNum(r.lesson.minutes)} دقیقه، ${faNum(r.lesson.steps.filter(s => s.kind === 'exam').length)} سؤال آزمونی`}
                   </T>
                 </View>
-                {isNext ? (
+                {locked ? <Icon name="lock" size={15} color={isNext ? c.btnFg : c.muted} /> : isNext ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: c.btnFg, borderRadius: 99, paddingHorizontal: 12, height: 32 }}>
                     <Icon name="play" size={13} color={c.btn} weight="bold" />
                     <T style={{ color: c.btn, fontWeight: '700', fontSize: 13 }}>{Object.keys(done).length ? 'ادامه' : 'شروع'}</T>

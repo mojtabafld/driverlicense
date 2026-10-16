@@ -9,6 +9,7 @@ import { API_URL, PROVE_PICS } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
 import type { GuideKind } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
+import { toPremium, useFree } from '@/lib/free';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { Card, L, T, tap } from './kit';
@@ -22,7 +23,8 @@ export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same
 // they are rows one under the other like «آموزش»'s (ui/list-card.tsx); at /app two to a row with the picture on top. A card opens the group page by page (/guide-view).
 export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[] }) {
   const c = useColors();
-  const open = (g: { id: string }) => { tap(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
+  const { firstOk } = useFree();
+  const open = (g: { id: string }, i: number) => { tap(); if (!firstOk(i)) return toPremium(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
   const count = (g: { items: unknown[] }) => (
     <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
       <T style={{ fontSize: 11.5, fontWeight: '600', color: c.muted }}>{faNum(g.items.length)} مورد</T>
@@ -30,16 +32,16 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
   );
   if (!PROVE_PICS) return (
     <View style={{ gap: 10 }}>
-      {cats.map(g => (
-        <ListCard key={g.id} onPress={() => open(g)} title={g.title} sub={g.blurb} subLines={2} note={`${faNum(g.items.length)} مورد`}
+      {cats.map((g, i) => (
+        <ListCard key={g.id} onPress={() => open(g, i)} locked={!firstOk(i)} title={g.title} sub={g.blurb} subLines={2} note={`${faNum(g.items.length)} مورد`}
           label={`${g.title}، ${faNum(g.items.length)} مورد`} pic={<GuideImage k={g.thumb} aspect={LIST_PIC.width / LIST_PIC.height} radius={0} size="m" />} />
       ))}
     </View>
   );
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-      {cats.map(g => (
-        <Pressable key={g.id} onPress={() => open(g)}
+      {cats.map((g, i) => (
+        <Pressable key={g.id} onPress={() => open(g, i)}
           accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`}
           style={({ pressed }) => ({ width: '48.4%', opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <Card style={{ padding: 0, overflow: 'hidden', flex: 1 }}>

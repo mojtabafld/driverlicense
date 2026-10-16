@@ -18,6 +18,7 @@ import { useCourseProgress } from '@/lib/course-progress';
 import { buildSession, lessonItems, mastery, realTestMistakes, review, statementOrder, type DrillItem } from '@/lib/drill';
 import { useDrillProgress } from '@/lib/drill-progress';
 import { SECONDS_PER_Q, faNum } from '@/lib/logic';
+import { FIRST_LESSON, useFree } from '@/lib/free';
 import { useApp, useExamLang } from '@/lib/store';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
 import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
@@ -180,6 +181,9 @@ export default function Drill() {
   const c = useColors();
   const p = useLocalSearchParams<{ lesson?: string }>();
   const only = p.lesson ? String(p.lesson) : undefined;
+  // Without premium only the first lesson's practice opens (lib/free.ts); the rest goes to the premium page.
+  const free = useFree(), allowed = !free.limited || only === FIRST_LESSON;
+  useEffect(() => { if (!allowed) router.replace('/premium'); }, [allowed]);
   const { settings } = useApp();
   const { done } = useCourseProgress();
   const { cards, loaded, save } = useDrillProgress();
