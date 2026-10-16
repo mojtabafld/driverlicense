@@ -17,13 +17,15 @@ import { Button, Card, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
-// What premium adds, short: an icon and a few words, side by side.
+// One thing premium adds: a round icon in the theme's accent colour, then a line.
 function Perk({ icon, title }: { icon: IconName; title: string }) {
   const c = useColors();
   return (
-    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
-      <Icon name={icon} size={18} color={c.text} />
-      <T style={{ flex: 1, fontWeight: '700', fontSize: 13.5 }} numberOfLines={2}>{title}</T>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent }}>
+        <Icon name={icon} size={17} color={c.accentText} />
+      </View>
+      <T style={{ flex: 1, fontWeight: '600', fontSize: 14.5 }}>{title}</T>
     </View>
   );
 }
@@ -100,13 +102,13 @@ export default function Premium() {
 
   return (
     <SubPage title="نسخه‌ی ویژه" maxWidth={560}>
-      {/* Short: the two things premium adds, and one line on paying. */}
-      <View style={{ gap: 8 }}>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Perk icon="sparkles" title="تحلیل پاسخ‌ها با هوش مصنوعی" />
-          <Perk icon="speaker" title="خواندن سؤال‌ها با صدا" />
-        </View>
-        <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>یک بار پرداخت، بدون تمدید خودکار</T>
+      {/* What premium adds, one under the other, and one line on paying. */}
+      <View style={{ gap: 12, paddingHorizontal: 4 }}>
+        <Perk icon="sparkles" title="توضیح هر پاسخ با هوش مصنوعی" />
+        <Perk icon="list" title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
+        <Perk icon="speaker" title="خواندن سؤال‌ها و گزینه‌ها با صدا" />
+        <Perk icon="translate" title="شنیدن توضیح‌ها به فارسی" />
+        <T style={{ color: c.muted, fontSize: 12.5, marginTop: 2 }}>یک بار پرداخت، بدون تمدید خودکار</T>
       </View>
 
       {premium ? (
