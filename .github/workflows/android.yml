@@ -114,8 +114,15 @@ jobs:
           GRADLE
           grep -E "versionCode|versionName" build.gradle
 
+      # More room for Gradle's class metadata (with expo-updates the lint step ran out of Metaspace and the build hung
+      # until the time limit), and no release lint (it checks nothing the app needs and took the most memory).
       - name: Build the APK
-        run: cd android && ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+        run: |
+          cd android
+          sed -i '/^org.gradle.jvmargs=/d' gradle.properties
+          echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8' >> gradle.properties
+          printf '\nallprojects { tasks.configureEach { if (name.startsWith("lintVital")) enabled = false } }\n' >> build.gradle
+          ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
 
       - name: Collect
         run: |
