@@ -116,9 +116,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!s.ui) add.ui = UI_LANG;
       if (!s.palette) add.palette = PALETTE;
       if (newUi || newPalette) { reloadApp(() => askRestart(newUi ? s.ui! : UI_LANG)); return; }
-      // The questions' language follows the app's language chosen at the start (2026-10-16), so it is not asked
-      // separately; it can still be changed in the settings.
-      if (!s.langChosen) Object.assign(add, { lang: EXAM_FOR[UI_LANG], langChosen: true });
+      // An account that has never chosen the questions' language is new: it is asked once, with the look, on whatever
+      // device it first signs in on (app/_layout.tsx, ui/lang-pick.tsx), the app's language picked in advance
+      // (2026-10-16). An account that has chosen is never asked again, on any device; it takes its saved settings.
+      if (!s.langChosen) add.lang = EXAM_FOR[UI_LANG];
       if (Object.keys(add).length) {
         const settings = { ...DEFAULTS, ...s, ...add };
         d = { ...d, settings };

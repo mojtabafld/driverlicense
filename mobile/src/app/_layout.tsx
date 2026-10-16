@@ -7,7 +7,7 @@ import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
 import { RTL, UI_LANG, syncNativeDir } from '@/lib/i18n';
 import { useOnline } from '@/lib/online';
-import { initialOnboarded, loadLangAsked, loadOnboarded, saveLangAsked, saveOnboarded } from '@/lib/prefs';
+import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
 import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
 import { Backdrop, PageSkeleton, setWebTop } from '@/ui/kit';
@@ -55,16 +55,15 @@ function Root() {
   // The intro, once per device (also on devices that ran a version without it): over everything until it is closed.
   const [onboarded, setOnboarded] = useState<boolean | null>(initialOnboarded);
   useEffect(() => { if (onboarded === null) loadOnboarded().then(setOnboarded); }, [onboarded]);
-  // The questions' language: asked once per account, and on a phone once per device too.
-  const [langAsked, setLangAsked] = useState<boolean | null>(null);
-  useEffect(() => { if (langAsked === null) loadLangAsked().then(setLangAsked); }, [langAsked]);
-  const askLang = !!user && (!settings.langChosen || langAsked === false);
+  // The questions' language and the look: asked once per account, on its first sign-in (Mojtaba, 2026-10-16); an
+  // account that already has its settings, from any device, is not asked again.
+  const askLang = !!user && !settings.langChosen;
   useEffect(() => { if (ready && fonts && onboarded !== null) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts, onboarded]);
   // On the web the page behind the app, and the browser's own bar (theme-color), take the top colour of the
   // background gradient, so the top of the screen runs into the page; over the intro and the language screen, their
   // navy (the intro's changes with its picture).
   const [introTop, setIntroTop] = useState<string | null>(null);
-  const cover = blocked ? OFFLINE_TOP : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
+  const cover = blocked ? (ARC ? INTRO_BG[0] : OFFLINE_TOP) : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
     document.documentElement.style.colorScheme = cover || dark ? 'dark' : 'light';
@@ -77,7 +76,7 @@ function Root() {
   if (!ready || !fonts || onboarded === null || (user && !bank)) return ARC ? <PageSkeleton /> : <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
-      {Platform.OS === 'web' ? <OfflinePreload /> : null}
+      {Platform.OS === 'web' && !ARC ? <OfflinePreload /> : null}
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
       <StatusBar style={dark || !onboarded || askLang ? 'light' : 'dark'} />
       {/* While the intro is open the screens (sign-in included) are not there at all: hidden password fields behind it
@@ -113,7 +112,7 @@ function Root() {
       )}
       {onboarded && askLang ? (
         // After the intro and signing in: the questions' language (once per account, and once on each phone).
-        <View style={StyleSheet.absoluteFill}><LangPick onDone={() => { saveLangAsked(); setLangAsked(true); }} /></View>
+        <View style={StyleSheet.absoluteFill}><LangPick /></View>
       ) : null}
     </ThemeProvider>
   );
