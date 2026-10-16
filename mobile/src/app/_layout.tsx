@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 
-import { RTL, UI_LANG } from '@/lib/i18n';
+import { RTL, UI_LANG, syncNativeDir } from '@/lib/i18n';
 import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadLangAsked, loadOnboarded, saveLangAsked, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
@@ -33,6 +33,8 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 
 function Root() {
   useTapTopToScroll();
+  // Android: the layout's direction follows the language (right to left for Persian only).
+  useEffect(() => { syncNativeDir(); }, []);
   const { ready, user, bank, settings, refresh } = useApp();
   // No internet while the app has nothing loaded yet (at start, or before signing in): a page of its own; when the
   // connection is back the app loads again (the web page reloads, the phone app reads the account again). Losing the

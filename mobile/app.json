@@ -40,13 +40,7 @@
         }
       ],
       "expo-secure-store",
-      [
-        "expo-localization",
-        {
-          "supportsRTL": true,
-          "forcesRTL": true
-        }
-      ],
+      "expo-localization",
       "expo-font",
       [
         "expo-navigation-bar",

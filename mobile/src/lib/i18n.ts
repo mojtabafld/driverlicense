@@ -5,7 +5,7 @@
 // The language is kept in the browser (and in the account's settings, so it follows the user to a new device); a
 // change reloads the page, so lists built when the app starts are in the new language too. /app stays Persian.
 import { reloadApp } from './reload';
-import { Alert, BackHandler, Platform } from 'react-native';
+import { Alert, BackHandler, I18nManager, Platform } from 'react-native';
 
 import { PROVE_PICS } from './config';
 import STRINGS from './i18n/strings.json';
@@ -17,7 +17,16 @@ const valid = (v: unknown): v is UiLang => v === 'fa' || v === 'en' || v === 'da
 // Kept in localStorage on the web and in the secure store on Android (its synchronous calls, read when the app starts).
 const web = Platform.OS === 'web';
 const read = (): string | null => { try { return web ? localStorage.getItem(KEY) : require('expo-secure-store').getItem(KEY); } catch { return null; } };
-const write = (v: string) => { try { if (web) localStorage.setItem(KEY, v); else require('expo-secure-store').setItem(KEY, v); } catch {} };
+const write = (v: string) => {
+  try { if (web) localStorage.setItem(KEY, v); else require('expo-secure-store').setItem(KEY, v); } catch {}
+  if (!web && valid(v)) setNativeDir(v === 'fa');
+};
+// On Android the whole layout's direction is the phone's (React Native's I18nManager, kept by Android and read when the
+// app's JavaScript starts): right to left for Persian only, so English and Danish are not mirrored. It is set with
+// the language, so the reload that follows opens in the right direction.
+function setNativeDir(rtl: boolean) {
+  try { I18nManager.allowRTL(rtl); I18nManager.forceRTL(rtl); } catch {}
+}
 
 function initial(): UiLang {
   if (PROVE_PICS) return 'fa';
@@ -34,6 +43,23 @@ export const UI_LANG: UiLang = initial();
 export const UI_CHOSEN = valid(read());
 // Right to left: Persian only.
 export const RTL = UI_LANG === 'fa';
+
+// Android, when the app starts: if the layout's direction is not the language's (an app updated from a version that
+// was always right to left, or a language kept without reloading), it is set and the app reloaded once (not again for
+// the same language if that did not help, so it never reloads in a loop).
+export function syncNativeDir() {
+  if (web || PROVE_PICS) return;
+  const TRY = 'tp.dirTry';
+  const store = (() => { try { return require('expo-secure-store'); } catch { return null; } })();
+  if (!store) return;
+  if (I18nManager.isRTL === RTL) { try { if (store.getItem(TRY)) store.deleteItemAsync(TRY).catch(() => {}); } catch {} return; }
+  let tried: string | null = null;
+  try { tried = store.getItem(TRY); } catch {}
+  setNativeDir(RTL);
+  if (tried === UI_LANG) return;
+  try { store.setItem(TRY, UI_LANG); } catch {}
+  reloadApp();
+}
 
 // Keep the language and, when it changes, load the page again in it (web; the Android app takes it when it is opened
 // again, so the caller asks for that). Returns whether it changed.

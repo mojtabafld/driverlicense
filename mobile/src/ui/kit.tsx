@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -19,10 +19,11 @@ import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 import { px } from './palette';
 
-// A style given in physical left/right terms. Phones running right-to-left swap left and right in styles,
+// A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
+const nativeRtl = () => Platform.OS !== 'web' && I18nManager.isRTL;
 export function physical<S extends Record<string, any>>(style: S): S {
-  if (Platform.OS === 'web') return style;
+  if (!nativeRtl()) return style;
   const out: Record<string, any> = {};
   for (const [k, v] of Object.entries(style)) out[k.replace(/Left|Right|left|right/, w => ({ Left: 'Right', Right: 'Left', left: 'right', right: 'left' } as any)[w])] = v;
   return out as S;
@@ -31,7 +32,7 @@ export function physical<S extends Record<string, any>>(style: S): S {
 // A text alignment given as the physical edge. On phones a right-to-left layout swaps textAlign's left and right (like
 // the styles physical() fixes), so there it is given swapped; for text laid out right to left only.
 export function physicalAlign<A extends TextStyle['textAlign']>(a: A): A {
-  if (Platform.OS === 'web') return a;
+  if (!nativeRtl()) return a;
   return (a === 'left' ? 'right' : a === 'right' ? 'left' : a) as A;
 }
 
