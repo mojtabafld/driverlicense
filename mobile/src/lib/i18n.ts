@@ -4,7 +4,7 @@
 // key with each number as «#» («درس #» → «Lesson #»), and a quoted part «…» as «@» (that part translated on its own).
 // The language is kept in the browser (and in the account's settings, so it follows the user to a new device); a
 // change reloads the page, so lists built when the app starts are in the new language too. /app stays Persian.
-import { Platform } from 'react-native';
+import { Alert, BackHandler, Platform } from 'react-native';
 
 import { PROVE_PICS } from './config';
 import STRINGS from './i18n/strings.json';
@@ -13,26 +13,41 @@ export type UiLang = 'fa' | 'en' | 'da';
 export const UI_LANGS: UiLang[] = ['fa', 'en', 'da'];
 const KEY = 'tp.ui';
 const valid = (v: unknown): v is UiLang => v === 'fa' || v === 'en' || v === 'da';
+// Kept in localStorage on the web and in the secure store on Android (its synchronous calls, read when the app starts).
+const web = Platform.OS === 'web';
+const read = (): string | null => { try { return web ? localStorage.getItem(KEY) : require('expo-secure-store').getItem(KEY); } catch { return null; } };
+const write = (v: string) => { try { if (web) localStorage.setItem(KEY, v); else require('expo-secure-store').setItem(KEY, v); } catch {} };
 
 function initial(): UiLang {
   if (PROVE_PICS) return 'fa';
-  try { const v = localStorage.getItem(KEY); if (valid(v)) return v; } catch {}
+  const v = read(); if (valid(v)) return v;
   return 'fa';
 }
 export const UI_LANG: UiLang = initial();
 // Whether a language was chosen in this browser (else the account's choice is taken when signing in).
-export const UI_CHOSEN = (() => { try { return valid(localStorage.getItem(KEY)); } catch { return false; } })();
+export const UI_CHOSEN = valid(read());
 // Right to left: Persian only.
 export const RTL = UI_LANG === 'fa';
 
-// Keep the language and, when it changes, load the page again in it (web). Returns whether it changed.
+// Keep the language and, when it changes, load the page again in it (web; the Android app takes it when it is opened
+// again, so the caller asks for that). Returns whether it changed.
 export function setUiLang(l: UiLang): boolean {
   if (PROVE_PICS || !valid(l)) return false;
-  try { localStorage.setItem(KEY, l); } catch {}
+  write(l);
   if (l === UI_LANG) return false;
   if (Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
+  else {
+    // The Android app cannot load itself again: it says so in the new language and closes, to be opened again in it.
+    const [title, msg, ok] = RESTART[l];
+    Alert.alert(title, msg, [{ text: ok, onPress: () => BackHandler.exitApp() }], { cancelable: false });
+  }
   return true;
 }
+const RESTART: Record<UiLang, [string, string, string]> = {
+  fa: ['زبان برنامه', 'برنامه بسته می‌شود؛ دوباره بازش کنید تا به فارسی باز شود.', 'باشه'],
+  en: ['App language', 'The app will close; open it again to continue in English.', 'OK'],
+  da: ['Appens sprog', 'Appen lukker nu; åbn den igen for at fortsætte på dansk.', 'OK'],
+};
 
 const DICT: Record<string, string> | null = UI_LANG === 'fa' ? null
   : Object.fromEntries(Object.entries(STRINGS as unknown as Record<string, [string, string]>).map(([k, v]) => [k, v[UI_LANG === 'en' ? 0 : 1]]));
