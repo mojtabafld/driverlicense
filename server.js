@@ -123,7 +123,13 @@ async function sendVerifyMail(req, u, lang) {
   const token = crypto.randomBytes(32).toString('hex');
   u.verify = { h: tokenHash(token), exp: now + 864e5, sent: now, day, n: n + 1 };
   await store.saveUser(u);
-  await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
+  try { await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui); }
+  catch (e) {
+    // The email could not go out (Resend refused it): the account is not held up waiting for a link that never comes;
+    // it can still confirm its address later from the account page.
+    if (u.mustVerify) { delete u.mustVerify; await store.saveUser(u); }
+    throw e;
+  }
 }
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.

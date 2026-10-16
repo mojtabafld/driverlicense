@@ -39,8 +39,11 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const scroller = useRef<ScrollView>(null);
   // How far the line has drawn itself across the view, 0 to 1: drawn in once per app start (after signing in), and
   // whole at once when the chart is shown again (moving between pages), Mojtaba asked.
+  // (The page stays mounted under the tabs and its width drops to 0 while hidden, so once started it does not go back.)
   const [instant] = useState(() => drawnOnce);
-  const anim = useCountUp(W > 0 && !instant ? 1 : 0, 1400), draw = instant ? 1 : anim;
+  const started = useRef(false);
+  if (W > 0) started.current = true;
+  const anim = useCountUp(started.current && !instant ? 1 : 0, 1400), draw = instant ? 1 : anim;
   useEffect(() => { if (W > 0) drawnOnce = true; }, [W]);
   if (attempts.length < 2 && ARC && fill) {
     // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
