@@ -297,12 +297,16 @@ type CardProps = {
   // An extra badge before the category, e.g. «۳ اشتباه در ۴ آزمون» on the mistakes page.
   badge?: { text: string; fg: string; bg: string };
 };
+// The category chip: tappable on the main site (its name glides again), a plain box in /app.
+const Chip = ARC ? Pressable : View;
+
 export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, startOpen, badge }: CardProps) {
   const c = useColors(), dark = useIsDark(), seg = useArcSeg();
   const { bank, aiLessons, saved, toggleSaved } = useApp();
   const pic = useQuestionImage();
   const [open, setOpen] = useState(!!(alwaysOpen || startOpen));
   const [fa, setFa] = useState(faStart);
+  const [play, setPlay] = useState(0); // a tap on the category chip runs its long name through once more
   const [view, setView] = useState<'mine' | 'right'>(it.a ? 'mine' : 'right');
   const isSaved = saved.some(x => x.id === q.id);
   const t = bank?.topics[q.c];
@@ -340,16 +344,16 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           ) : null}
           {/* The question's category (official section) */}
           {bank && sectionFa(bank, q.c) ? (
-            <View style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
-              {/* Main site: a name too long for its room glides like the page title instead of being cut; the hidden
-                  copy still gives the chip its natural width, held to the room the row leaves. */}
+            <Chip {...(ARC ? { onPress: () => setPlay(n => n + 1), accessibilityRole: 'button' as const } : null)} style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
+              {/* Main site: a name too long for its room glides through once (again at a tap) instead of being cut; the
+                  hidden copy still gives the chip its natural width, held to the room the row leaves. */}
               <T style={[{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }, ARC && { opacity: 0 }]} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
               {ARC ? (
-                <View style={{ position: 'absolute', top: 2, bottom: 2, left: 10, right: 10, flexDirection: 'row' }}>
-                  <Marquee text={sectionFa(bank, q.c) ?? ''} height={20} mask style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} />
+                <View style={{ position: 'absolute', top: 2, bottom: 2, left: 2, right: 2, flexDirection: 'row' }}>
+                  <Marquee text={sectionFa(bank, q.c) ?? ''} height={20} mask fade={8} once play={play} style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} />
                 </View>
               ) : null}
-            </View>
+            </Chip>
           ) : null}
           <View style={{ flex: 1, minWidth: 4 }} />
           {/* Read aloud and the translation switch at the row's left end, the same round buttons as in the exam. */}
