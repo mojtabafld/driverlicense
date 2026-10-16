@@ -2,7 +2,7 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { EXAM_FOR, TRANS_DEFAULT, getTransLang, UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
@@ -144,8 +144,8 @@ export default function Settings() {
       <Card style={{ gap: 10 }}>
         <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />
         <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
-        {/* The colour theme (main site, web): ten named themes; a change reloads the page in it. */}
-        {!PROVE_PICS && Platform.OS === 'web' ? (
+        {/* The colour theme (main site and the Android app): ten named themes; a change reloads the app in it. */}
+        {!PROVE_PICS ? (
           <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}><PaletteRow /></View>
         ) : null}
       </Card>

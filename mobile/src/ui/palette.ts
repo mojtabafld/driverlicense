@@ -46,8 +46,13 @@ function initial(): PaletteId {
   const def = web ? (typeof window !== 'undefined' ? (window as any).__TP_THEME : null) : read(DEFAULT_KEY);
   return valid(def) ? def : 'sky';
 }
-// The default /api/config names, kept on a phone for its next start.
-export function rememberDefault(id: unknown) { if (!web && !PROVE_PICS && valid(id)) write(DEFAULT_KEY, id); }
+// The default /api/config names, kept on a phone. With no theme picked on the phone and a default other than the one
+// in use (a phone's first start shows «آسمان» before it has asked), the app reloads in it.
+export function rememberDefault(id: unknown) {
+  if (web || PROVE_PICS || !valid(id)) return;
+  write(DEFAULT_KEY, id);
+  if (!valid(read(KEY)) && id !== PALETTE) reloadApp();
+}
 export const PALETTE: PaletteId = initial();
 const SPEC = PALETTES.find(p => p.id === PALETTE)!;
 
