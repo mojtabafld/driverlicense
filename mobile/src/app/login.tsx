@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
+import { InstallHint } from '@/ui/install-hint';
 import { ArcButton, Backdrop, Button, Hero, SegPill, T, ThemeButton, HeroFade, tap, useArcSeg, useHeaderTop } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { LOGIN_BG, LoginArt } from '@/ui/header-art';
@@ -126,6 +127,8 @@ export default function Login() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      {/* After the intro, on the sign-in page: on an iPhone or in Safari, how to add the app to the Home Screen (once). */}
+      <InstallHint />
     </Backdrop>
   );
 }

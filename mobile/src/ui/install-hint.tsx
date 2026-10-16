@@ -1,5 +1,5 @@
-// The web app on an iPhone or iPad, or in Safari on a Mac, the first time the site opens (before signing up too, over
-// the intro; Mojtaba asked): a sheet from the
+// The web app on an iPhone or iPad, or in Safari on a Mac, the first time the sign-in page shows (after the intro,
+// before signing up; Mojtaba asked; app/login.tsx): a sheet from the
 // bottom showing how to put the app on the Home Screen (iOS: Share, then «Add to Home Screen»; a Mac: File, then
 // «Add to Dock»). Not when it already runs from the Home Screen, not in /app, and once per browser.
 import { useEffect, useRef, useState } from 'react';
