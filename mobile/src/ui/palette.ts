@@ -7,6 +7,7 @@
 import { Platform } from 'react-native';
 
 import { PROVE_PICS } from '@/lib/config';
+import { reloadApp } from '@/lib/reload';
 
 export type PaletteId = 'ocean' | 'violet' | 'lime' | 'coral' | 'amber' | 'emerald' | 'forest' | 'rose' | 'sky' | 'mono';
 type Spec = {
@@ -50,11 +51,11 @@ export function rememberDefault(id: unknown) { if (!web && !PROVE_PICS && valid(
 export const PALETTE: PaletteId = initial();
 const SPEC = PALETTES.find(p => p.id === PALETTE)!;
 
-// Keep the theme and, when it changes, load the page again in it (web).
+// Keep the theme and, when it changes, start the app again in it (lib/reload.ts).
 export function setPalette(id: PaletteId) {
   if (PROVE_PICS || !valid(id)) return;
   write(KEY, id);
-  if (id !== PALETTE && Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
+  if (id !== PALETTE) reloadApp();
 }
 
 // Keeps the theme for the next start without reloading (an account's own theme, on signing in); whether it differs

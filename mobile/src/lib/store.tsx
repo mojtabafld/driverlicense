@@ -1,11 +1,11 @@
 // App state: the signed-in user, their exams and settings, and the question bank.
-import { Platform } from 'react-native';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_PICS } from './config';
 import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n';
+import { reloadApp } from './reload';
 import { loadToken, saveToken } from './token';
 import { PALETTE, forgetPalette, keepPalette, rememberDefault } from '@/ui/palette';
 import { useTheme } from '@/ui/theme';
@@ -97,7 +97,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const lookOut = () => {
     if (PROVE_PICS) return;
     setMode('system');
-    if (forgetPalette() && Platform.OS === 'web' && typeof window !== 'undefined') window.location.reload();
+    if (forgetPalette()) reloadApp();
   };
 
   // Bumped on sign-out: an account read that was still on its way then is dropped, so it cannot sign the user back in.
@@ -107,18 +107,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let d = await api<Me>('GET', 'me');
     if (g !== gen.current) return;
     // Main site: the account's app language, light / dark mode and colour theme come back on signing in (Mojtaba,
-    // 2026-10-16); those it has none of yet take this device's. A new language or theme needs the app to start again:
-    // the web page reloads; the Android app keeps them, says so and closes (stopping here left it on the sign-in page).
+    // 2026-10-16); those it has none of yet take this device's. A new language or theme needs the app to start again
+    // (lib/reload.ts), which reads the account once more.
     if (!PROVE_PICS) {
       const s = d.settings || {}, add: Partial<Settings> = {};
       const newUi = !!s.ui && keepUiLang(s.ui), newPalette = !!s.palette && keepPalette(s.palette);
       if (s.mode) setMode(s.mode); else add.mode = modeRef.current;
       if (!s.ui) add.ui = UI_LANG;
       if (!s.palette) add.palette = PALETTE;
-      if (newUi || newPalette) {
-        if (Platform.OS === 'web' && typeof window !== 'undefined') { window.location.reload(); return; }
-        askRestart(newUi ? s.ui! : UI_LANG);
-      }
+      if (newUi || newPalette) { reloadApp(() => askRestart(newUi ? s.ui! : UI_LANG)); return; }
       // The questions' language follows the app's language chosen at the start (2026-10-16), so it is not asked
       // separately; it can still be changed in the settings.
       if (!s.langChosen) Object.assign(add, { lang: EXAM_FOR[UI_LANG], langChosen: true });
