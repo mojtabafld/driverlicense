@@ -466,12 +466,15 @@ async function api(req, res, route) {
       addFail(ip);
       return send(res, 403, { error: 'کد دعوت نادرست است.' });
     }
-    const u = String(username || '').trim().toLowerCase();
+    // The main site (email on) signs up with an email only: the address is the username too. Other clients send a
+    // username as before.
+    const byMail = mail.available() && !username && !!email;
+    const u = byMail ? mail.normal(email) : String(username || '').trim().toLowerCase();
     if (!registerAllowed(ip)) return send(res, 429, { error: 'ساخت حساب از این اتصال زیاد بوده است؛ کمی بعد دوباره امتحان کنید.' });
-    if (!USER_RE.test(u)) return send(res, 400, { error: 'نام کاربری باید ۳ تا ۳۲ کاراکتر انگلیسی، عدد، نقطه، خط تیره یا زیرخط باشد.' });
+    if (byMail ? !mail.EMAIL_RE.test(u) : !USER_RE.test(u)) return send(res, 400, byMail ? { error: 'یک ایمیل درست وارد کنید.' } : { error: 'نام کاربری باید ۳ تا ۳۲ کاراکتر انگلیسی، عدد، نقطه، خط تیره یا زیرخط باشد.' });
     // Any password is accepted (no length or character rules); only an empty one is refused.
     if (typeof password !== 'string' || !password.length) return send(res, 400, { error: 'رمز عبور را وارد کنید.' });
-    if (store.users[u]) return send(res, 409, { error: 'این نام کاربری قبلاً ثبت شده است.' });
+    if (store.users[u]) return send(res, 409, { error: byMail ? 'با این ایمیل قبلاً حساب ساخته شده است.' : 'این نام کاربری قبلاً ثبت شده است.' });
     // The main site's sign-up always sends an address; older clients (the /app copy, older phone apps) send none, and
     // those accounts are not held up (only the trial code needs a confirmed address).
     const e = mail.normal(email);
@@ -480,7 +483,8 @@ async function api(req, res, route) {
       if (emailTaken(e)) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است.' });
     }
     const salt = crypto.randomBytes(16).toString('hex');
-    const user = { username: u, name: String(name || u).trim().slice(0, 40) || u, salt, hash: await hashPw(password, salt),
+    const shown = String(name || (byMail ? u.split('@')[0] : u)).trim().slice(0, 40) || u;
+    const user = { username: u, name: shown, salt, hash: await hashPw(password, salt),
       created: Date.now(), attempts: [], settings: {}, ...(mail.available() && e ? { email: e, mustVerify: true } : {}) };
     store.users[u] = user;
     await store.saveUser(user);
@@ -506,11 +510,13 @@ async function api(req, res, route) {
   }
   if (req.method === 'POST' && route === 'login') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    // By username (accounts from before) or by email (the username of accounts made with one, or an address added later).
     const { username, password } = await readBody(req);
-    const user = store.users[String(username || '').trim().toLowerCase()];
+    const id = String(username || '').trim().toLowerCase();
+    const user = store.users[id] || (id.includes('@') ? Object.values(store.users).find(x => x.email === id) : undefined);
     if (!user || typeof password !== 'string' || !(await checkPw(password, user))) {
       addFail(ip);
-      return send(res, 401, { error: 'نام کاربری یا رمز عبور اشتباه است.' });
+      return send(res, 401, { error: 'ایمیل (یا نام کاربری) یا رمز عبور اشتباه است.' });
     }
     fails.delete(ip);
     const token = await newSession(req, res, user.username);

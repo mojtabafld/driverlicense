@@ -1,6 +1,7 @@
 // Sign in / sign up: a tall picture header (as on the tab pages; on the main site a flat landscape) with the greeting, then on the page (no card) a mode
 // switch, fields with icons and one wide button, then the site's three short facts. With email on (the server's
-// RESEND_API_KEY) signing up asks for an address too, and the new account waits for the link sent there.
+// RESEND_API_KEY) signing up asks only for an email and a password (the email is the username), the new account waits
+// for the link sent there, and signing in takes the email or, for accounts from before, the username.
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -67,11 +68,12 @@ export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState(''), [user, setUser] = useState(''), [pw, setPw] = useState(''), [email, setEmail] = useState('');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
-  const ready = !busy && !!user && !!pw && (mode === 'login' || !mail || /^\S+@\S+\.\S+$/.test(email.trim()));
+  const byMail = mode === 'register' && mail;
+  const ready = !busy && !!pw && (byMail ? /^\S+@\S+\.\S+$/.test(email.trim()) : !!user);
   const submit = async () => {
     if (!ready) return;
     setErr(''); setBusy(true);
-    try { if (mode === 'login') await login(user.trim(), pw); else await register(name.trim(), user.trim(), pw, mail ? email.trim() : undefined); }
+    try { if (mode === 'login') await login(user.trim(), pw); else if (byMail) await register('', '', pw, email.trim()); else await register(name.trim(), user.trim(), pw); }
     catch (e: any) { setErr(e.message); setBusy(false); }
   };
   const asGuest = async () => {
@@ -89,9 +91,12 @@ export default function Login() {
             : <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={title} subtitle={subtitle} />}
           <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: ARC ? 0 : 6 }}>
             <ModeSwitch mode={mode} onChange={m => { setMode(m); setErr(''); }} />
-            {mode === 'register' ? <Field icon="person" label="نام نمایشی (مثلاً سارا)" value={name} onChange={setName} /> : null}
-            <Field icon={mode === 'register' ? 'clipboard' : 'person'} label="نام کاربری" value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr />
-            {mode === 'register' && mail ? <Field icon="send" label="ایمیل (برای فعال کردن حساب)" value={email} onChange={v => setEmail(v.replace(/\s/g, ''))} ltr /> : null}
+            {byMail ? <Field icon="send" label="ایمیل" value={email} onChange={v => setEmail(v.replace(/\s/g, ''))} ltr /> : <>
+              {mode === 'register' ? <Field icon="person" label="نام نمایشی (مثلاً سارا)" value={name} onChange={setName} /> : null}
+              {/* With email on, signing in takes the email too (accounts from before keep their username). */}
+              <Field icon={mode === 'register' ? 'clipboard' : 'person'} label={mail ? 'ایمیل یا نام کاربری' : 'نام کاربری'} value={user}
+                onChange={v => setUser(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr />
+            </>}
             <Field icon="lock" label="رمز عبور" value={pw} onChange={setPw} secure ltr onSubmit={submit} />
             {err ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.badSoft }}>

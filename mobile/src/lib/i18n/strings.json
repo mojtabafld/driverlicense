@@ -2643,5 +2643,7 @@
 "یک بار پرداخت، بدون تمدید خودکار":["Pay once, no automatic renewal", "Betal én gang, ingen automatisk fornyelse"],
 "برای نسخه‌ی ویژه حساب کاربری بسازید":["Create an account for Premium", "Opret en konto for at få Premium"],
 "کاربر مهمان نمی‌تواند نسخه‌ی ویژه بخرد یا کد تخفیف بزند. پیشرفت حساب مهمان به حساب تازه منتقل نمی‌شود.":["Guests cannot buy Premium or use a discount code. Progress from the guest account is not carried over to the new account.", "Gæster kan ikke købe Premium eller bruge en rabatkode. Fremskridt fra gæstekontoen flyttes ikke over til den nye konto."],
-"برای خرید نسخه‌ی ویژه، اول حساب کاربری بسازید.":["To buy Premium, first create an account.", "For at købe Premium skal du først oprette en konto."]
+"برای خرید نسخه‌ی ویژه، اول حساب کاربری بسازید.":["To buy Premium, first create an account.", "For at købe Premium skal du først oprette en konto."],
+"ایمیل یا نام کاربری":["Email or username", "E-mail eller brugernavn"],
+"ایمیل (یا نام کاربری) یا رمز عبور اشتباه است.":["Wrong email (or username) or password.", "Forkert e-mail (eller brugernavn) eller adgangskode."]
 }
