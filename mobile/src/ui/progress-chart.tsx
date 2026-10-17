@@ -45,11 +45,19 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   if (W > 0) started.current = true;
   const anim = useCountUp(started.current && !instant ? 1 : 0, 1400), draw = instant ? 1 : anim;
   useEffect(() => { if (W > 0) drawnOnce = true; }, [W]);
+  // The box's size. A zero width (the page hidden under another) is ignored. The empty chart measures too, so the
+  // chart that replaces it after a test handed in elsewhere has its size at once: its own first layout comes while
+  // home is hidden, and the browser gives no new one when home shows again (Mojtaba 2026-10-17: it stayed blank).
+  const measure = (e: { nativeEvent: { layout: { width: number; height: number } } }) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (width <= 0) return;
+    setW(width); if (fill) setFillH(height);
+  };
   if (attempts.length < 2 && ARC && fill) {
     // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
     return (
       <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
-        <View pointerEvents="none" style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
+        <View pointerEvents="none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
           <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
         </View>
         {/* Where the dates go once there are attempts. */}
@@ -93,7 +101,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const a = sel != null ? data[sel] : null;
   return (
     <View style={fill ? { flex: 1, gap: 8 } : { gap: 10 }}>
-      <View onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setFillH(e.nativeEvent.layout.height); }}
+      <View onLayout={measure}
         style={[fill ? { flex: 1, minHeight: minH } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
         accessibilityRole="image" accessibilityLabel="نمودار نمره‌ی آزمون‌ها">
         {W > 0 ? (
