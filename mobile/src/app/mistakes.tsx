@@ -11,6 +11,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Attempt, Question } from '@/lib/bank';
+import { PROVE_PICS } from '@/lib/config';
 import { RTL } from '@/lib/i18n';
 import { faNum, mistakeStats, shuffle, type MistakeStat } from '@/lib/logic';
 import { topicFa, topicName } from '@/lib/names';
@@ -208,7 +209,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                       {t.lesson.map((l, i) => <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 3 }}><T style={{ fontSize: 14 }}>•</T><T style={{ flex: 1, fontSize: 14 }}>{l}</T></View>)}
                     </View>
                   ) : null}
-                  <ReviewCard key={`${typeof view === 'object' ? view.topic : view}-${st.id}`} q={Q.get(st.id)!} it={{ ok: st.lastOk, a: st.lastA }} lang={lang} fa={settings.showFa} alwaysOpen
+                  {/* The main site opens each question without its translation; the translate button shows it (Mojtaba 2026-10-17). */}
+                  <ReviewCard key={`${typeof view === 'object' ? view.topic : view}-${st.id}`} q={Q.get(st.id)!} it={{ ok: st.lastOk, a: st.lastA }} lang={lang} fa={PROVE_PICS && settings.showFa} alwaysOpen
                     badge={{ text: `${faNum(st.wrong)} اشتباه در ${faNum(st.seen)} آزمون`, fg: st.lastOk ? c.ok : c.warn, bg: st.lastOk ? c.okSoft : c.warnSoft }} />
                 </View>
               );
