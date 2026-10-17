@@ -1,4 +1,13 @@
 {
+"بازیابی رمز عبور":["Reset password", "Nulstil adgangskode"],
+"یک رمز عبور جدید برای حساب خود انتخاب کنید":["Choose a new password for your account", "Vælg en ny adgangskode til din konto"],
+"ایمیل حساب خود را وارد کنید تا لینک تعیین رمز جدید برایتان فرستاده شود":["Enter your account's email and we'll send you a link to set a new password", "Skriv din kontos e-mail, så sender vi dig et link til at vælge en ny adgangskode"],
+"ارسال لینک":["Send link", "Send link"],
+"بازگشت به ورود":["Back to sign in", "Tilbage til log ind"],
+"اگر حسابی با این ایمیل وجود داشته باشد، لینک تعیین رمز جدید به آن فرستاده شد. اگر ایمیل را نمی‌بینید، پوشه‌ی هرزنامه (Spam) را هم نگاه کنید.":["If an account uses this email, a link to set a new password has been sent to it. If you don't see the email, check your spam folder too.", "Hvis en konto bruger denne e-mail, er der sendt et link til at vælge en ny adgangskode. Hvis du ikke kan se e-mailen, så tjek også din spam-mappe."],
+"ذخیره و ورود":["Save and sign in", "Gem og log ind"],
+"رمز عبور را فراموش کرده‌اید؟":["Forgot your password?", "Glemt din adgangskode?"],
+"این لینک دیگر معتبر نیست؛ دوباره درخواست لینک کنید.":["This link is no longer valid; ask for a new link.", "Dette link er ikke længere gyldigt; bed om et nyt link."],
 "# #، #":["# #, #","# #, #"],
 "# از #":["# of #","# af #"],
 "# از # بخش خوانده‌شده":["# of # sections read","# af # afsnit læst"],

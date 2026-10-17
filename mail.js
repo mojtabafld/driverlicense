@@ -1,4 +1,4 @@
-// Email: the link that confirms a new account's address, sent with Resend (resend.com) over its REST API with fetch.
+// Email: the link that confirms a new account's address, and the link that sets a new password (forgotten password), sent with Resend (resend.com) over its REST API with fetch.
 // Env: RESEND_API_KEY (without it there is no email: signing up asks for no address and nothing waits on one) and
 // MAIL_FROM (default «TeoriPrøve <no-reply@teori.bitlane.app>»; its domain must be verified in Resend). RESEND_API_BASE only
 // points the calls elsewhere for tests.
@@ -17,8 +17,17 @@ const TEXT = {
 };
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-async function sendVerify(to, name, link, lang) {
-  const t = TEXT[lang] || TEXT.fa;
+// The forgotten-password email: a link to set a new password, working for an hour.
+const RESET = {
+  fa: { subject: 'تعیین رمز عبور جدید TeoriPrøve', hi: n => `سلام ${n}،`, body: 'برای تعیین رمز عبور جدید حساب‌تان روی دکمه‌ی زیر بزنید. این لینک تا یک ساعت اعتبار دارد.', button: 'تعیین رمز جدید', ignore: 'اگر شما درخواست تغییر رمز نداده‌اید، این ایمیل را نادیده بگیرید؛ رمز فعلی‌تان تغییری نمی‌کند.', dir: 'rtl' },
+  en: { subject: 'Set a new TeoriPrøve password', hi: n => `Hi ${n},`, body: 'Tap the button below to set a new password for your account. The link works for one hour.', button: 'Set new password', ignore: 'If you did not ask to change your password, you can ignore this email; your password stays the same.', dir: 'ltr' },
+  da: { subject: 'Vælg en ny adgangskode til TeoriPrøve', hi: n => `Hej ${n},`, body: 'Tryk på knappen nedenfor for at vælge en ny adgangskode til din konto. Linket virker i en time.', button: 'Vælg ny adgangskode', ignore: 'Hvis du ikke har bedt om at ændre din adgangskode, kan du se bort fra denne e-mail; din adgangskode forbliver den samme.', dir: 'ltr' },
+};
+
+const sendVerify = (to, name, link, lang) => send(TEXT[lang] || TEXT.fa, to, name, link);
+const sendReset = (to, name, link, lang) => send(RESET[lang] || RESET.fa, to, name, link);
+
+async function send(t, to, name, link) {
   const html = `<div dir="${t.dir}" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:480px">
 <p>${esc(t.hi(name))}</p><p>${esc(t.body)}</p>
 <p><a href="${esc(link)}" style="display:inline-block;background:#14532d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold">${esc(t.button)}</a></p>
@@ -37,4 +46,4 @@ async function sendVerify(to, name, link, lang) {
   }
 }
 
-module.exports = { available, sendVerify, EMAIL_RE, normal };
+module.exports = { available, sendVerify, sendReset, EMAIL_RE, normal };

@@ -48,6 +48,9 @@ type Ctx = {
   // The confirmation link again, or to a new address (which then needs confirming).
   sendVerify: (email?: string) => Promise<void>;
   guest: (name: string) => Promise<void>;
+  // Forgotten password: the new-password link to an address; then the link's token and the new password (signs in).
+  forgot: (email: string) => Promise<void>;
+  resetPassword: (t: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   // Change the shown name and / or the password (with the current one); the username stays.
   updateAccount: (b: { name?: string; current?: string; password?: string }) => Promise<void>;
@@ -188,6 +191,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       catch (e) { load().catch(() => {}); throw e; }
     },
     guest: async name => { const d = await api<{ token: string }>('POST', 'guest', { name }); await signedIn(d.token); },
+    forgot: async email => { await api('POST', 'forgot', { email, lang: UI_LANG }); },
+    resetPassword: async (t, password) => { const d = await api<{ token: string }>('POST', 'reset', { t, password }); await signedIn(d.token); },
     // Signed out on the device at once; the server is told in the background (with the old token), so a slow or
     // missing connection never keeps the user signed in.
     logout: async () => {
