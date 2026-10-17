@@ -141,7 +141,8 @@ export default function Exam() {
           : (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" />
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
-      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" />
+      {/* «همه ›» in its head opens every exam on its own page (/history), like the mistakes card's «همه». */}
+      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" />
       <MistakesCard />
     </Screen>
   );

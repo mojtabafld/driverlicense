@@ -92,6 +92,7 @@ function Root() {
           <Stack.Screen name="result" options={{ presentation: 'modal' }} />
           <Stack.Screen name="mistakes" />
           <Stack.Screen name="mistakes-view" />
+          <Stack.Screen name="history" />
           <Stack.Screen name="account" />
           <Stack.Screen name="learn-lessons" />
           <Stack.Screen name="rules" />
