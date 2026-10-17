@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import type { Attempt, Item } from '@/lib/bank';
+import { RTL } from '@/lib/i18n';
 import { faNum, fmtDate, isFull, passMin, scoreOf, shuffle } from '@/lib/logic';
 import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
@@ -38,6 +39,9 @@ function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: 
   const c = useColors(), dark = useIsDark(), seg = useArcSeg();
   const w = useWindowDimensions().width;
   const fs = w < 360 ? 12 : w < 410 ? 13 : 14, px = w < 360 ? 7 : w < 410 ? 10 : 14;
+  // Every tab as wide as the widest one (Mojtaba 2026-10-17: «اشتباهات» and «همه» the same size).
+  const [ws, setWs] = useState<Record<string, number>>({});
+  const widest = Math.max(0, ...Object.values(ws));
   const opts: { v: Filter; label: string }[] = [
     { v: 'wrong', label: `اشتباهات (${faNum(wrong)})` },
     ...(savedN ? [{ v: 'saved' as Filter, label: `${w < 430 ? 'ذخیره' : 'ذخیره‌شده‌ها'} (${faNum(savedN)})` }] : []),
@@ -48,7 +52,8 @@ function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: 
       {opts.map(o => {
         const on = o.v === value;
         return (
-          <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flexShrink: 1 }}>
+          <Pressable key={o.v} onPress={() => { tap(); onChange(o.v); }} accessibilityRole="tab" accessibilityState={{ selected: on }} style={{ flexShrink: 1, minWidth: widest || undefined }}
+            onLayout={e => { const v = Math.ceil(e.nativeEvent.layout.width); if (!ws[o.v] || (v > ws[o.v] && v !== widest)) setWs(m => ({ ...m, [o.v]: v })); }}>
             <View style={[{ paddingVertical: 7, paddingHorizontal: px, borderRadius: 8, backgroundColor: on ? c.strong : 'transparent' }, ARC && seg.pill(on)]}>
               {ARC ? <SegPill on={on} /> : null}
               <T numberOfLines={1} style={[{ fontSize: fs, fontWeight: '600', color: on ? c.strongFg : c.muted, textAlign: 'center' }, ARC && seg.label(on)]}>{o.label}</T>
@@ -214,9 +219,10 @@ export default function Result() {
       <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 24, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
         {/* «خلاصه‌ی آزمون»: the only thing shown after handing in. */}
         <Card style={{ alignItems: 'center', gap: 14, padding: 20, paddingTop: 22, borderRadius: 24 }}>
-          {/* Back to the exam (or lessons) page: an icon in the top right corner. */}
+          {/* Back to the exam (or lessons) page: an icon in the top corner where the app's language starts (right in
+              Persian, left in English and Danish). */}
           <Pressable onPress={() => { tap(); goTo(isLesson ? '/learn' : '/exam'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={isLesson ? 'بازگشت به درس‌ها' : 'بازگشت به صفحه‌ی آزمون'}
-            style={({ pressed }) => ({ position: 'absolute', top: 14, ...physical({ right: 14 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', zIndex: 2,
+            style={({ pressed }) => ({ position: 'absolute', top: 14, ...physical(RTL ? { right: 14 } : { left: 14 }), width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', zIndex: 2,
               backgroundColor: pressed ? c.surface2 : c.surface2 })}>
             <Icon name="arrowRight" size={20} color={c.text} />
           </Pressable>
