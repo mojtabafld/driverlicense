@@ -138,7 +138,7 @@ async function sendResetMail(req, u, lang) {
   const token = crypto.randomBytes(32).toString('hex');
   u.reset = { h: tokenHash(token), exp: now + 3600e3, sent: now, day, n: n + 1 };
   await store.saveUser(u);
-  await mail.sendReset(u.email, u.name || u.username, `${originOf(req)}/?reset=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
+  await mail.sendReset(u.email || u.username, u.name || u.username, `${originOf(req)}/?reset=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
   console.log('reset mail sent', u.username);
 }
 const hasPremium = u => payments.active(u) || isAdmin(u);
@@ -593,11 +593,18 @@ async function api(req, res, route) {
     const e = mail.normal(email);
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
     addFail(ip);
-    const u = Object.values(store.users).find(x => !x.guest && x.email === e) || (store.users[e] && !store.users[e].guest && store.users[e].email ? store.users[e] : undefined);
+    // By the account's address, or by a username that is this address (accounts that keep it only as their username).
+    const same = v => !!v && mail.normal(v) === e;
+    const u = Object.values(store.users).find(x => !x.guest && same(x.email)) || Object.values(store.users).find(x => !x.guest && same(x.username));
     // Logged with the address half hidden, so a missing email can be traced.
     const shown = e.replace(/^(.{2}).*@/, '$1…@');
     if (u) await sendResetMail(req, u, lang).catch(err => console.error('reset mail', u.username, err.message));
-    else console.log('reset mail: no account for', shown);
+    else {
+      // Where the address appears at all (which account and field), to trace an account it should have matched.
+      const near = Object.values(store.users).filter(x => JSON.stringify(x).toLowerCase().includes(e))
+        .map(x => `${x.username}:${Object.keys(x).filter(k => JSON.stringify(x[k] ?? '').toLowerCase().includes(e)).join('/')}${x.guest ? ':guest' : ''}`);
+      console.log('reset mail: no account for', shown, near.length ? 'seen in ' + near.join(', ') : '');
+    }
     return send(res, 200, { ok: true });
   }
   // POST reset { t, password }: the link's token and the new password; signs in with it.
