@@ -18,6 +18,7 @@ import { COURSE, EXAM, type CourseChapter, type CourseLesson } from '@/lib/cours
 import { useCourseProgress } from '@/lib/course-progress';
 import { ITEMS, SESSION_SIZE, dueCount, mastery, newCount, weakLessons } from '@/lib/drill';
 import { useDrillProgress } from '@/lib/drill-progress';
+import { tr } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { CourseArt } from '@/ui/header-art';
 import { Icon, type IconName } from '@/ui/icon';
@@ -44,6 +45,23 @@ function Task({ icon, label, title, line, action, onPress, tone }: { icon: IconN
       </View>
       <View style={{ paddingHorizontal: 14, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: tone === 'main' ? c.btn : c.surface2 }}>
         <T style={{ fontWeight: '700', fontSize: 13.5, color: tone === 'main' ? c.btnFg : c.text }}>{action}</T>
+      </View>
+    </Pressable>
+  );
+}
+
+// The search box at the top: a tap opens «جستجو در آموزش» (app/course-search.tsx), where the user types.
+function SearchBox() {
+  const c = useColors();
+  return (
+    <Pressable onPress={() => { tap(); router.push('/course-search'); }} accessibilityRole="search" accessibilityLabel={tr('جستجو در آموزش')}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 52, paddingStart: 16, paddingEnd: 8, borderRadius: 16,
+        backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, opacity: pressed ? 0.85 : 1 })}>
+      <Icon name="search" size={19} color={c.faint} />
+      <T style={{ flex: 1, color: c.muted, fontSize: 14.5 }} numberOfLines={1}>هر چه می‌خواهید یاد بگیرید، بپرسید…</T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 34, paddingHorizontal: 10, borderRadius: 11, backgroundColor: c.accentSoft }}>
+        <Icon name="sparkles" size={14} color={c.link} />
+        <T style={{ fontSize: 12, fontWeight: '700', color: c.link }}>هوشمند</T>
       </View>
     </Pressable>
   );
@@ -262,6 +280,7 @@ export default function Course() {
   const next = ready.find(x => !done[x.lesson.id]) ?? null;
   return (
     <SubPage title="آموزش گام‌به‌گام" subtitle="فصل به فصل، تا گواهینامه" hero={{ pic: 9, light: 10, icon: 'learn', art: CourseArt }}>
+      <Enter><SearchBox /></Enter>
       <Enter><TodayCard next={next} finished={finished} ready={ready.length} /></Enter>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
         <T style={{ flex: 1, fontWeight: '800', fontSize: 18 }}>مسیر شما تا گواهینامه</T>

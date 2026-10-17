@@ -1,4 +1,4 @@
-// One lesson of «آموزش گام‌به‌گام» (?id=), one step per page, aimed at the theory test, in three parts named over the
+// One lesson of «آموزش گام‌به‌گام» (?id=[&step=: the step to open at]), one step per page, aimed at the theory test, in three parts named over the
 // step bar (یادگیری / آزمون / جمع‌بندی): what the lesson teaches (what the exam asks about the topic folded away under it),
 // one rule per step (its picture, the rule in a box with its law, and «تله‌ی آزمون»: how the exam tries to catch you,
 // hidden until tapped so the user first thinks of it),
@@ -220,19 +220,23 @@ function Finished({ title, result, next, onDrill }: { title: string; result: Res
 const PHASE: Record<CourseStep['kind'], string> = { intro: 'یادگیری', teach: 'یادگیری', exam: 'آزمون درس', result: 'آزمون درس', summary: 'جمع‌بندی' };
 
 export default function CourseLesson() {
-  const p = useLocalSearchParams<{ id?: string }>();
+  const p = useLocalSearchParams<{ id?: string; step?: string }>();
   const id = String(p.id || '');
-  return <Lesson key={id} id={id} />;
+  return <Lesson key={`${id}:${p.step ?? ''}`} id={id} start={Number(p.step) || 0} />;
 }
 
-function Lesson({ id }: { id: string }) {
+// `start`: the step to open at (a search result, app/course-search.tsx); only a teaching step, never into the test.
+function Lesson({ id, start }: { id: string; start: number }) {
   const c = useColors();
   const found = lessonById(id);
   // Without premium only the first lesson opens (lib/free.ts): another one goes to the premium page instead.
   const allowed = useFree().lessonOk(id);
   useEffect(() => { if (!allowed) router.replace('/premium'); }, [allowed]);
   const { done, finish } = useCourseProgress();
-  const [i, setI] = useState(0);
+  const [i, setI] = useState(() => {
+    const k = found?.lesson.steps[start]?.kind;
+    return k === 'intro' || k === 'teach' ? start : 0;
+  });
   const [answers, setAnswers] = useState<Answers>({});
   const [checked, setChecked] = useState<Record<number, boolean>>({});
   const [complete, setComplete] = useState(false);

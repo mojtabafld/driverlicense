@@ -1,0 +1,79 @@
+// «جستجو در آموزش» (app/course-search.tsx): everything the learning pages teach as one list of short entries, so a
+// search finds the right page whatever the user types: the course's teaching steps, the rule parts, the road signs
+// and the right-of-way situations. `localSearch` ranks them by the words typed (instantly, also offline and without
+// premium); the server's AI search (/api/coursesearch) gets the same list and picks the entries that answer the
+// question, with a short answer of its own. Each entry knows the page that opens it.
+import type { Href } from 'expo-router';
+
+import { COURSE } from './course';
+import { PRIORITY_CATS, SIGN_CATS } from './guide-data';
+import { RULES } from './guide';
+import { faNum } from './logic';
+
+export type SearchKind = 'lesson' | 'rule' | 'sign' | 'priority';
+export type SearchItem = { id: string; kind: SearchKind; title: string; text: string; where: string; href: Href; free?: 'lesson' | number; lesson?: string };
+
+const clean = (s: string) => s.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
+const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+
+function build(): SearchItem[] {
+  const out: SearchItem[] = [];
+  for (const ch of COURSE) {
+    for (const l of ch.lessons) {
+      l.steps.forEach((s, k) => {
+        if (s.kind !== 'intro' && s.kind !== 'teach') return;
+        const body = s.kind === 'teach' ? [s.text, s.rule, ...(s.points ?? []), s.trap, s.law] : [s.text, ...s.goals];
+        out.push({ id: `c:${l.id}:${k}`, kind: 'lesson', title: clean(s.title), text: clean(body.filter(Boolean).join(' | ')),
+          where: `${l.title} | فصل ${faNum(ch.n)}`, href: { pathname: '/course-lesson', params: { id: l.id, step: String(k) } }, free: 'lesson', lesson: l.id });
+      });
+    }
+  }
+  RULES.forEach((r, i) => out.push({ id: `r:${i}`, kind: 'rule', title: clean(r.title), text: clean([r.intro, ...r.points, r.tip].filter(Boolean).join(' | ')),
+    where: 'قوانین', href: { pathname: '/rules', params: { open: String(i) } }, free: i }));
+  SIGN_CATS.forEach((g, gi) => g.items.forEach((s, i) => out.push({ id: `s:${g.id}:${i}`, kind: 'sign', title: `${s.code.replace(/^([A-Z]+)(\d)/, '$1 $2')}: ${clean(s.fa)}`,
+    text: clean(`${s.da} | ${s.text}`), where: g.title, href: { pathname: '/guide-view', params: { kind: 'signs', cat: g.id, i: String(i) } }, free: gi })));
+  PRIORITY_CATS.forEach((g, gi) => g.items.forEach((p, i) => out.push({ id: `p:${g.id}:${i}`, kind: 'priority', title: clean(p.title),
+    text: clean(`${p.text} | ${p.first} | ${p.law}`), where: `حق تقدم | ${g.title}`, href: { pathname: '/guide-view', params: { kind: 'priority', cat: g.id, i: String(i) } }, free: gi })));
+  return out;
+}
+
+export const SEARCH_ITEMS = build();
+const BY_ID = new Map(SEARCH_ITEMS.map(x => [x.id, x]));
+export const searchItem = (id: string) => BY_ID.get(id);
+
+// What the AI gets: id, title and the start of the text, one entry per line (the same for every search, so the
+// server's prompt cache holds it).
+export const AI_CATALOG = SEARCH_ITEMS.map(x => `${x.id}\t${x.title}\t${cut(x.text, x.kind === 'sign' ? 90 : 160)}`).join('\n');
+
+// Persian / Arabic letters written alike, zero-width joiners, diacritics and Persian / Arabic digits made one form,
+// and letters folded to lower case without accents (ø, å and æ kept as Danish writes them), so «تابلو ایست»,
+// «تابلوي ايست» and «B13» / «b 13» all match.
+export function norm(s: string) {
+  return s.toLowerCase()
+    .replace(/[ً-ٰٟ]/g, '').replace(/[‌‍‏‎]/g, ' ')
+    .replace(/ي/g, 'ی').replace(/ى/g, 'ی').replace(/ك/g, 'ک').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ؤ/g, 'و')
+    .replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    .replace(/([a-z])\s+(\d)/g, '$1$2')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+const INDEX = SEARCH_ITEMS.map(x => ({ x, title: ` ${norm(x.title)} `, text: ` ${norm(x.text)} ${norm(x.where)} ` }));
+
+// The entries holding the words typed, best first: a whole word in the title counts most, then the start of a word,
+// then anywhere; every word must be found somewhere (in Persian «ها» / «ی» endings are left to the part match).
+export function localSearch(q: string, max = 30): SearchItem[] {
+  const words = norm(q).split(' ').filter(w => w.length > 1 || /\d/.test(w));
+  if (!words.length) return [];
+  const scored: { x: SearchItem; s: number }[] = [];
+  for (const e of INDEX) {
+    let s = 0, all = true;
+    for (const w of words) {
+      const t = e.title.includes(` ${w} `) ? 12 : e.title.includes(` ${w}`) ? 8 : e.title.includes(w) ? 5
+        : e.text.includes(` ${w} `) ? 3 : e.text.includes(` ${w}`) ? 2 : e.text.includes(w) ? 1 : 0;
+      if (!t) { all = false; break; }
+      s += t;
+    }
+    if (all) scored.push({ x: e.x, s: s + (e.x.kind === 'lesson' ? 1 : 0) });
+  }
+  return scored.sort((a, b) => b.s - a.s).slice(0, max).map(r => r.x);
+}
