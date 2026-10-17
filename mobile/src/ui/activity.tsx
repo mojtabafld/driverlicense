@@ -12,6 +12,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Confirm } from './confirm';
 import { Icon } from './icon';
+import { MoreButton } from './more-button';
 import { Card, Enter, T, tap } from './kit';
 import { useColors, type Colors } from './theme';
 
@@ -66,7 +67,7 @@ function Head({ title, c }: { title: string; c: Colors }) {
   );
 }
 
-// `allHref`: «همه ›» in the card's head opens this page of all of them (as the mistakes card's «همه» does), in place of
+// `allHref`: the arrow button in the card's head (ui/more-button.tsx) opens this page of all of them (as the mistakes card's «همه» does), in place of
 // «نمایش همه» under the list. `clearable`: the bin that deletes the whole history (only on that page, /history).
 export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref, clearable }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string; clearable?: boolean }) {
   const c = useColors();
@@ -90,10 +91,7 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, paddingBottom: 6 }}>
         <Head title={title} c={c} />
         {allHref ? (
-          <Pressable onPress={() => { tap(); router.push(allHref as any); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={`همه‌ی ${faNum(rows.length)} آزمون`}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>همه</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
-          </Pressable>
+          <MoreButton onPress={() => router.push(allHref as any)} label={`همه‌ی ${faNum(rows.length)} آزمون`} />
         ) : null}
         {/* Delete the whole history, after a question (the history page only). */}
         {clearable ? <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
