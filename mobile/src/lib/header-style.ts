@@ -1,6 +1,7 @@
 // «هدر ساده» (settings, «ظاهر»): the pages' headers without their pictures and drawings: the tabs and the inner pages
-// that have a picture header (the course, rules, signs, right of way) show the plain title instead, as the settings
-// page does. Kept on this device (like the colour theme), and it applies at once, with no reload.
+// that have a picture header (the course, rules, signs, right of way) keep the header's colour, its fade into the page
+// and the title (Hero in ui/kit.tsx), only the picture goes. Kept on this device (like the colour theme), and it
+// applies at once, with no reload.
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 

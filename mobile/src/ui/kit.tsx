@@ -252,6 +252,9 @@ export function useHeaderTop(color: string) {
 // edge, where a tab's are, set a little lower so they start under the button.
 export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean }) {
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
+  // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
+  // page, only the picture or drawing goes, and the title may take the whole width.
+  const plain = usePlainHeader() && !tall;
   const lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
   useHeaderTop(bg);
@@ -274,7 +277,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
   const under = !!back && !tall;
   return (
     <View style={{ ...(under ? { minHeight: H } : { height: H }), backgroundColor: bg, overflow: 'hidden' }}>
-      {look.art ? (
+      {plain ? null : look.art ? (
         // (left to right in its own row, so the drawing stays on the left on every platform)
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { flexDirection: 'row', direction: 'ltr', justifyContent: RTL ? 'flex-start' : 'flex-end', paddingTop: ins.top } as any]}>
           <look.art light={light} height={H - ins.top} />
@@ -294,7 +297,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
             {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        {below ? null : <View style={{ gap: 2, maxWidth: '58%' }}>
+        {below ? null : <View style={{ gap: 2, maxWidth: plain ? '100%' : '58%' }}>
           <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
           {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
           {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
@@ -316,8 +319,6 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
-  // «هدر ساده» in the settings: the plain title (and the name under it on the home page) instead of the picture header.
-  if (usePlainHeader()) hero = undefined;
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} /> : null;
   const head = hero ? null : (
