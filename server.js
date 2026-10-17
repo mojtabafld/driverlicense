@@ -16,6 +16,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
 const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
+const { search: aiSearch } = require('./search');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
@@ -878,6 +879,18 @@ async function api(req, res, route) {
       return send(res, 200, { text: lesson.text });
     } catch (e) {
       if (e instanceof Anthropic.APIError) { console.error('lesson API error', e.status, e.message); return send(res, 502, { error: 'آموزش هوش مصنوعی الان در دسترس نیست.' }); }
+      if (e.status) return send(res, e.status, { error: e.message });
+      throw e;
+    }
+  }
+  // AI search of the learning pages (search.js): { q, ui, v } or, the first time / when the server asks (409), { q, ui, catalog }.
+  if (req.method === 'POST' && route === 'coursesearch') {
+    if (needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
+    const b = await readBody(req, 700e3);
+    try {
+      return send(res, 200, await aiSearch({ username: user.username, q: b.q, v: b.v, catalog: b.catalog, ui: b.ui }));
+    } catch (e) {
+      if (e instanceof Anthropic.APIError) { console.error('search API error', e.status, e.message); return send(res, 502, { error: 'جستجوی هوشمند الان در دسترس نیست.' }); }
       if (e.status) return send(res, e.status, { error: e.message });
       throw e;
     }
