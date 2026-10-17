@@ -204,6 +204,38 @@ async function touch(user) {
   user.days = [...(user.days || []).filter(x => x !== d).slice(-399), d];
   await store.saveUser(user);
 }
+// ---------- study days, streak and the daily reminder ----------
+// A study day is one on which the user handed in an exam, finished a course lesson or practised (drill, sign cards);
+// the streak is the run of study days up to today (or up to yesterday, while today is still open).
+function studied(user) {
+  const d = dayKey(Date.now());
+  if ((user.study || []).includes(d)) return;
+  user.study = [...(user.study || []).slice(-399), d];
+}
+function streakOf(user) {
+  const days = new Set(user.study || []);
+  let t = Date.now(), n = 0;
+  if (!days.has(dayKey(t))) t -= 864e5;
+  while (days.has(dayKey(t))) { n++; t -= 864e5; }
+  return n;
+}
+// Every 10 minutes: an email to each user with the reminder on whose hour (Copenhagen) has come, who has not studied
+// today and was not reminded today; only to a confirmed address.
+const hourOf = t => +new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Copenhagen', hour: '2-digit', hourCycle: 'h23' }).format(new Date(t));
+async function sendReminders() {
+  if (!mail.available()) return;
+  const now = Date.now(), today = dayKey(now), hour = hourOf(now);
+  for (const u of Object.values(store.users)) {
+    const r = u.reminder;
+    if (!r || !r.on || !u.email || !u.emailOk || r.sent === today || hour < r.hour || (u.study || []).includes(today)) continue;
+    r.sent = today;
+    try {
+      await mail.sendReminder(u.email, u.name || u.username, streakOf(u), `${r.origin || 'https://teori.bitlane.app'}/course`, (u.settings || {}).ui);
+    } catch (e) { console.error('reminder', u.username, e.message); }
+    await store.saveUser(u);
+  }
+}
+setInterval(() => { sendReminders().catch(e => console.error('reminders', e.message)); }, 10 * 60e3).unref();
 // ---------- site visits (admin panel) ----------
 // A visit is a load of the page itself (not API calls, pictures or health checks), bots excluded. Unique
 // visitors are counted with a salted hash of IP + browser that changes every day; no IP is stored.
@@ -958,6 +990,7 @@ async function api(req, res, route) {
       if (!/^[a-z0-9-]{2,40}$/.test(id)) return send(res, 400, { error: 'bad lesson' });
       user.course = { ...(user.course || {}), [id]: Date.now() };
       if (Object.keys(user.course).length > 500) return send(res, 400, { error: 'too many' });
+      studied(user);
       await store.saveUser(user);
     }
     return send(res, 200, { done: user.course || {} });
@@ -976,9 +1009,42 @@ async function api(req, res, route) {
       }
       if (Object.keys(cards).length > 1000) return send(res, 400, { error: 'too many' });
       user.drill = cards;
+      studied(user);
       await store.saveUser(user);
     }
     return send(res, 200, { cards: user.drill || {} });
+  }
+  // The streak and the daily reminder: GET → { streak, today, week: the last 7 days studied (oldest first), reminder,
+  // mail: email on, email: the account's confirmed address }; POST { on, hour } sets the reminder (on needs a
+  // confirmed address).
+  if (route === 'streak' && (req.method === 'GET' || req.method === 'POST')) {
+    if (req.method === 'POST') {
+      const b = await readBody(req), hour = Number.isInteger(+b.hour) && +b.hour >= 5 && +b.hour <= 22 ? +b.hour : 18;
+      if (b.on && !(mail.available() && user.email && user.emailOk)) return send(res, 400, { error: 'برای یادآوری ایمیلی، اول یک ایمیل تأییدشده در «حساب کاربری» ثبت کنید.' });
+      user.reminder = { ...(user.reminder || {}), on: !!b.on, hour, origin: originOf(req) };
+      await store.saveUser(user);
+    }
+    const days = new Set(user.study || []), now = Date.now();
+    return send(res, 200, { streak: streakOf(user), today: days.has(dayKey(now)), week: [6, 5, 4, 3, 2, 1, 0].map(k => days.has(dayKey(now - k * 864e5))),
+      reminder: { on: !!(user.reminder && user.reminder.on), hour: (user.reminder && user.reminder.hour) || 18 },
+      mail: mail.available() || undefined, email: user.email && user.emailOk ? user.email : undefined });
+  }
+  // «تمرین سریع تابلوها»: the user's sign cards (sign key → [box, due]). GET → { cards }; POST { cards } keeps the given ones.
+  if (route === 'signcards' && (req.method === 'GET' || req.method === 'POST')) {
+    if (req.method === 'POST') {
+      const b = await readBody(req), cards = { ...(user.signCards || {}) };
+      for (const [k, c] of Object.entries(b.cards && typeof b.cards === 'object' ? b.cards : {})) {
+        if (!/^[a-z0-9-]{2,40}$/.test(k) || !Array.isArray(c) || c.length !== 2) return send(res, 400, { error: 'bad card' });
+        const [box, due] = c.map(Number);
+        if (!Number.isInteger(box) || box < 0 || box > 5 || !Number.isFinite(due) || due < 0 || due > 9e15) return send(res, 400, { error: 'bad card' });
+        cards[k] = [box, Math.floor(due)];
+      }
+      if (Object.keys(cards).length > 1000) return send(res, 400, { error: 'too many' });
+      user.signCards = cards;
+      studied(user);
+      await store.saveUser(user);
+    }
+    return send(res, 200, { cards: user.signCards || {} });
   }
   // An AI analysis or summary read aloud in Persian: { text } (the text exactly as the server wrote it) → { id }.
   if (req.method === 'POST' && route === 'ttsai') {
@@ -1099,6 +1165,7 @@ async function api(req, res, route) {
     // the exam (or that lesson) is handed in, so it is no longer unfinished
     if (at.mode === 'lesson') { if (user.lessonDrafts) delete user.lessonDrafts[at.lesson]; } else delete user.draft;
     if (user.attempts.length > MAX_ATTEMPTS) user.attempts.splice(0, user.attempts.length - MAX_ATTEMPTS);
+    studied(user);
     await store.saveUser(user);
     return send(res, 200, { attempt: at });
   }

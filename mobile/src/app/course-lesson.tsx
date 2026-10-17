@@ -16,6 +16,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { transText } from '@/lib/i18n';
 import { COURSE, EXAM, lessonById, type CourseStep } from '@/lib/course';
 import { courseText } from '@/lib/course-en';
+import { termsIn } from '@/lib/glossary';
 import { useFree } from '@/lib/free';
 import { useExamLang } from '@/lib/store';
 import { useCourseProgress } from '@/lib/course-progress';
@@ -112,6 +113,25 @@ function Points({ items, mark }: { items: string[]; mark: 'dot' | 'check' }) {
   ));
 }
 
+// The Danish test words the step uses (lib/glossary.ts), as chips; a tap opens «واژه‌نامه‌ی آزمون» on that word.
+function Terms({ text }: { text: string }) {
+  const c = useColors();
+  const terms = termsIn(text);
+  if (!terms.length) return null;
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+      <Icon name="translate" size={16} color={c.muted} />
+      <T style={{ fontSize: 12.5, color: c.muted }}>واژه‌ها:</T>
+      {terms.map(t => (
+        <Pressable key={t.da} onPress={() => { tap(); router.push({ pathname: '/glossary', params: { q: t.da } }); }} accessibilityRole="button"
+          style={({ pressed }) => ({ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 99, backgroundColor: c.surface2, opacity: pressed ? 0.7 : 1 })}>
+          <T raw style={{ fontSize: 12.5, fontFamily: DA_FONT, writingDirection: 'ltr' }}>{t.da}</T>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 type Result = { mistakes: number; statements: number; perQ: number[] };
 
 function Step({ step, n, of, ticks, checked, onToggle, result, onRetry }: { step: CourseStep; n: number; of: number; ticks: boolean[]; checked: boolean;
@@ -149,6 +169,7 @@ function Step({ step, n, of, ticks, checked, onToggle, result, onRetry }: { step
         </Card>
         {step.rule ? <RuleBox text={step.rule} law={step.law} /> : null}
         {step.trap ? <TrapReveal text={step.trap} /> : null}
+        <Terms text={[step.title, step.text, ...(step.points ?? []), step.rule, step.trap].filter(Boolean).join(' ')} />
       </View>
     );
   }

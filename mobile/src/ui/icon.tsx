@@ -104,6 +104,9 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'stop':
       body = <Path d="M7.5 6.5h9a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z" {...line} />;
       break;
+    case 'flame':
+      body = <Path d="M12 21c-3.9 0-6.5-2.6-6.5-6.2 0-3.4 2.4-5.6 3.9-8.3.3 1.9 1.2 3.2 2.5 3.9.2-2.9 1.4-5.4 3.4-7.4.3 3.5 3.2 5.9 3.2 10.4C18.5 18.6 15.9 21 12 21z" {...line} />;
+      break;
     case 'search':
       body = <G><Circle cx={10.5} cy={10.5} r={6.5} {...line} /><Path d="M15.3 15.3 20.5 20.5" {...line} /></G>;
       break;

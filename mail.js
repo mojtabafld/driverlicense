@@ -1,4 +1,5 @@
-// Email: the link that confirms a new account's address, and the code that lets a forgotten password be set anew, sent with Resend (resend.com) over its REST API with fetch.
+// Email: the link that confirms a new account's address, the code that lets a forgotten password be set anew, and the
+// daily study reminder, sent with Resend (resend.com) over its REST API with fetch.
 // Env: RESEND_API_KEY (without it there is no email: signing up asks for no address and nothing waits on one) and
 // MAIL_FROM (default «TeoriPrøve <no-reply@teori.bitlane.app>»; its domain must be verified in Resend). RESEND_API_BASE only
 // points the calls elsewhere for tests.
@@ -44,6 +45,27 @@ function sendReset(to, name, code, lang) {
   return send(to, t.subject(code), html, `${t.hi(name)}\n\n${t.body} ${code}\n\n${t.note}\n\n${t.ignore}`);
 }
 
+// The daily study reminder (asked for in «یادآوری روزانه»): the streak so far and a button to the app; `off` turns it off.
+const REMIND = {
+  fa: { subject: n => (n ? `${n} روز پیاپی؛ امروز هم تمرین کنید` : 'وقت تمرین امروز است'), hi: n => `سلام ${n}،`,
+    body: n => (n ? `${n} روز پشت سر هم تمرین کرده‌اید. امروز هنوز تمرین نکرده‌اید؛ چند دقیقه کافی است تا رشته‌ی روزهایتان قطع نشود.` : 'امروز هنوز تمرین نکرده‌اید. چند دقیقه تمرین هر روز، شما را برای آزمون تئوری آماده می‌کند.'),
+    button: 'شروع تمرین', off: 'برای خاموش کردن یادآوری، در برنامه به «آموزش گام‌به‌گام» بروید.', dir: 'rtl' },
+  en: { subject: n => (n ? `${n} days in a row: practise today too` : 'Time for today\'s practice'), hi: n => `Hi ${n},`,
+    body: n => (n ? `You have practised ${n} days in a row. You have not practised today yet; a few minutes keep your streak going.` : 'You have not practised today yet. A few minutes every day get you ready for the theory test.'),
+    button: 'Start practising', off: 'To turn the reminder off, open the step-by-step course in the app.', dir: 'ltr' },
+  da: { subject: n => (n ? `${n} dage i træk: øv dig også i dag` : 'Tid til dagens træning'), hi: n => `Hej ${n},`,
+    body: n => (n ? `Du har øvet dig ${n} dage i træk. Du har ikke øvet dig i dag endnu; et par minutter holder din stime i gang.` : 'Du har ikke øvet dig i dag endnu. Et par minutter hver dag gør dig klar til teoriprøven.'),
+    button: 'Begynd at øve', off: 'Du kan slå påmindelsen fra i trin-for-trin-kurset i appen.', dir: 'ltr' },
+};
+function sendReminder(to, name, streak, link, lang) {
+  const t = REMIND[lang] || REMIND.fa;
+  const html = `<div dir="${t.dir}" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:480px">
+<p>${esc(t.hi(name))}</p><p>${esc(t.body(streak))}</p>
+<p><a href="${esc(link)}" style="display:inline-block;background:#2f55d4;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold">${esc(t.button)}</a></p>
+<p style="font-size:13px;color:#6b7280">${esc(t.off)}</p></div>`;
+  return send(to, t.subject(streak), html, `${t.hi(name)}\n\n${t.body(streak)}\n\n${link}\n\n${t.off}`);
+}
+
 async function send(to, subject, html, text) {
   const res = await fetch(`${(process.env.RESEND_API_BASE || 'https://api.resend.com').replace(/\/$/, '')}/emails`, {
     method: 'POST',
@@ -58,4 +80,4 @@ async function send(to, subject, html, text) {
   }
 }
 
-module.exports = { available, sendVerify, sendReset, EMAIL_RE, normal };
+module.exports = { available, sendVerify, sendReset, sendReminder, EMAIL_RE, normal };
