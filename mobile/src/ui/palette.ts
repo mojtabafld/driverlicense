@@ -1,4 +1,5 @@
-// The main site's colour themes (2026-10-15, Mojtaba: ten named themes to pick from under «ظاهر» in the settings).
+// The main site's colour themes (2026-10-15, Mojtaba: ten named themes to pick from under «ظاهر» in the settings; five
+// more on 2026-10-18, fifteen in all: three full rows of the picker).
 // «اقیانوس» is the hand-tuned blue of theme.ts (arcLight / arcDark); every other theme is made from a few numbers:
 // the hue of its accent, the hue and amount of tint in its greys, and its accent colours for the dark and light
 // theme. The header and intro drawings were drawn in the ocean blues; px() moves each of their blue colours to the
@@ -9,7 +10,8 @@ import { Platform } from 'react-native';
 import { PROVE_PICS } from '@/lib/config';
 import { reloadApp } from '@/lib/reload';
 
-export type PaletteId = 'ocean' | 'violet' | 'lime' | 'coral' | 'amber' | 'emerald' | 'forest' | 'rose' | 'sky' | 'mono';
+export type PaletteId = 'ocean' | 'violet' | 'lime' | 'coral' | 'amber' | 'emerald' | 'forest' | 'rose' | 'sky' | 'mono'
+  | 'teal' | 'indigo' | 'orchid' | 'gold' | 'slate';
 type Spec = {
   id: PaletteId; name: string;
   hue: number; nhue: number; nsat: number; asat?: number;
@@ -26,6 +28,11 @@ export const PALETTES: Spec[] = [
   { id: 'amber', name: 'کهربا', hue: 36, nhue: 30, nsat: 0.12, accD: '#f5a524', accD2: '#f7bd5e', onD: '#1a1206', accL: '#b8650a', pickSoftD: '#2c210e' },
   { id: 'coral', name: 'مرجان', hue: 12, nhue: 20, nsat: 0.05, accD: '#ff6b4d', accD2: '#ff9a85', onD: '#ffffff', accL: '#e5502f', pickSoftD: '#2e1712' },
   { id: 'rose', name: 'گلبهی', hue: 340, nhue: 340, nsat: 0.12, accD: '#ff5c8a', accD2: '#ff8fae', onD: '#ffffff', accL: '#d6336c', pickSoftD: '#2e1420' },
+  { id: 'teal', name: 'فیروزه‌ای', hue: 176, nhue: 180, nsat: 0.14, accD: '#2dd4bf', accD2: '#5eead4', onD: '#042f2a', accL: '#0f766e', pickSoftD: '#0f2b28' },
+  { id: 'indigo', name: 'نیلی', hue: 239, nhue: 236, nsat: 0.45, accD: '#818cf8', accD2: '#a5b4fc', onD: '#0d1033', accL: '#4338ca', pickSoftD: '#1b1d40' },
+  { id: 'orchid', name: 'بنفش یاسی', hue: 284, nhue: 280, nsat: 0.3, accD: '#c084fc', accD2: '#d8b4fe', onD: '#1e0b2e', accL: '#9333ea', pickSoftD: '#2a1838' },
+  { id: 'gold', name: 'طلایی', hue: 46, nhue: 42, nsat: 0.12, accD: '#facc15', accD2: '#fde047', onD: '#1a1500', accL: '#a16207', pickSoftD: '#2b250c' },
+  { id: 'slate', name: 'سنگی', hue: 215, nhue: 215, nsat: 0.3, asat: 0.35, accD: '#a3b3c8', accD2: '#cbd5e1', onD: '#0f172a', accL: '#475569', pickSoftD: '#1e2632' },
   { id: 'mono', name: 'سیاه و سفید', hue: 226, nhue: 226, nsat: 0, asat: 0, accD: '#f2f2f2', accD2: '#d0d0d0', onD: '#111111', accL: '#151515', pickSoftD: '#262626' },
 ];
 // KEY: the theme picked on this device (kept, whatever the default becomes). Until one is picked, the server's default

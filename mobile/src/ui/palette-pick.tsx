@@ -1,5 +1,5 @@
 // The colour themes (main site): under «ظاهر» in the settings a row «رنگ برنامه» with the chosen theme opens a sheet
-// of ten round swatches in two rows, each the theme's page with its accent inside and its name under it; the chosen
+// of fifteen round swatches in three rows, each the theme's page with its accent inside and its name under it; the chosen
 // one has a ring and a ✓. A tap keeps it and reloads the page in it. Without premium (while payments are on) the row
 // shows a lock and «مخصوص نسخه‌ی ویژه», and a tap opens the premium page instead (Mojtaba 2026-10-17).
 import { useState } from 'react';
@@ -29,7 +29,7 @@ function PalettePick() {
               <View style={{ flex: 1, borderRadius: 20, backgroundColor: dark ? s.bg : '#ffffff', alignItems: 'center', justifyContent: 'center',
                 borderWidth: dark ? 0 : 1, borderColor: c.line }}>
                 <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: dark ? s.accent : s.accentL, alignItems: 'center', justifyContent: 'center' }}>
-                  {on ? <Icon name="check" size={12} color={dark ? (p.id === 'mono' || p.id === 'lime' || p.id === 'sky' || p.id === 'emerald' || p.id === 'amber' ? '#111' : '#fff') : '#fff'} weight="bold" /> : null}
+                  {on ? <Icon name="check" size={12} color={dark ? p.onD : (p.onL ?? '#fff')} weight="bold" /> : null}
                 </View>
               </View>
             </View>
