@@ -111,7 +111,7 @@ export default function Login() {
     setErr(''); setBusy(true);
     try { await resetPassword(email.trim(), code, pw); } catch (e: any) { setErr(e.message); setBusy(false); }
   };
-  const backToLogin = () => { tap(); setLost(''); setErr(''); setPw(''); setPw2(''); setCode(''); setMode('login'); };
+  const backToLogin = () => { tap(); setLost(''); setErr(''); setUser(''); setEmail(''); setPw(''); setPw2(''); setCode(''); setMode('login'); };
   const title = lost === 'set' ? 'رمز عبور جدید' : lost ? 'بازیابی رمز عبور' : mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری';
   const subtitle = lost === 'set' ? 'یک رمز عبور جدید برای حساب خود انتخاب کنید'
     : lost === 'code' ? 'کد ۶ رقمی‌ای را که به ایمیل‌تان فرستادیم وارد کنید'
