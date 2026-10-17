@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Animated, Easing, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
 import { router } from 'expo-router';
 
-import { t as fmt, tr, transText, transWord } from '@/lib/i18n';
+import { UI_LANG, t as fmt, tr, transText, transWord } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import type { Item, Question } from '@/lib/bank';
 import { imgSource } from '@/lib/img-source';
@@ -56,12 +56,12 @@ function useTyped(text: string, on: boolean) {
   return `${part.slice(0, t)}${TAIL}${part.slice(t)}${(part.match(/\*\*/g) ?? []).length % 2 ? '**' : ''}`;
 }
 
-// The icon of an AI lesson's heading (lesson.js writes these parts), or none.
+// The icon of an AI lesson's heading (lesson.js writes these parts, in the app's language), or none.
 function headIcon(head: string, c: ReturnType<typeof useColors>): { name: IconName; color: string } | null {
-  if (/درباره/.test(head)) return { name: 'help', color: c.info };
-  if (/درست بود/.test(head)) return { name: 'checkCircle', color: c.ok };
-  if (/^اشتباه شما/.test(head)) return { name: 'xCircle', color: c.bad };
-  if (/نکته برای دفعه/.test(head)) return { name: 'bulbCircle', color: c.warn };
+  if (/درباره|^What this question|^Hvad spørgsmålet/i.test(head)) return { name: 'help', color: c.info };
+  if (/درست بود|^Your answer was right|^Dit svar var rigtigt/i.test(head)) return { name: 'checkCircle', color: c.ok };
+  if (/^اشتباه شما|^Your mistake|^Din fejl/i.test(head)) return { name: 'xCircle', color: c.bad };
+  if (/نکته برای دفعه|^Tip for next|^Tip til næste/i.test(head)) return { name: 'bulbCircle', color: c.warn };
   return null;
 }
 
@@ -73,20 +73,20 @@ function Rich({ text: full, onQuestion, typing = false, onGrow }: { text: string
   let faded = false;
   // `line`: the line's own weight (a heading's), repeated on the inner spans, which would otherwise reset it.
   const piece = (seg: string, k: string, st?: TextStyle, line?: TextStyle) => {
-    if (!faded && !seg.includes(TAIL)) return st ? <T key={k} style={st}>{seg}</T> : seg;
+    if (!faded && !seg.includes(TAIL)) return st ? <T raw key={k} style={st}>{seg}</T> : seg;
     const [a, b] = faded ? ['', seg] : seg.split(TAIL);
     faded = true;
-    return <T key={k} style={st ?? line}>{a}<T style={[line, st, { opacity: 0.3 }]}>{b}</T></T>;
+    return <T raw key={k} style={st ?? line}>{a}<T raw style={[line, st, { opacity: 0.3 }]}>{b}</T></T>;
   };
   const inline = (s: string, key: string, line?: TextStyle) => s.split(/(\*\*.+?\*\*)/g).flatMap((part, i) => {
     const bold = /^\*\*.+\*\*$/.test(part), body = bold ? part.slice(2, -2) : part;
-    // «سؤال ۳» in the summary opens that question.
-    return body.split(/(سؤال\s*[0-9۰-۹]+)/g).map((seg, j) => {
-      const m = seg.match(/^سؤال\s*([0-9۰-۹]+)$/);
+    // «سؤال ۳» (Question 3, Spørgsmål 3) in the summary opens that question.
+    return body.split(/((?:سؤال|Question|Spørgsmål)\s*[0-9۰-۹]+)/g).map((seg, j) => {
+      const m = seg.match(/^(?:سؤال|Question|Spørgsmål)\s*([0-9۰-۹]+)$/);
       const k = `${key}-${i}-${j}`;
       if (m && onQuestion && !faded) {
         const n = +m[1].replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
-        return <T key={k} onPress={() => onQuestion(n)} style={{ color: c.text, fontWeight: '700' }}>{seg}</T>;
+        return <T raw key={k} onPress={() => onQuestion(n)} style={{ color: c.text, fontWeight: '700' }}>{seg}</T>;
       }
       return piece(seg, k, bold ? { fontWeight: '700' } : undefined, line);
     });
@@ -98,16 +98,16 @@ function Rich({ text: full, onQuestion, typing = false, onGrow }: { text: string
     if (line.startsWith('#')) {
       // The lesson's parts get their icon, in the style of the round check: what it is about, the mistake, the tip.
       const head = line.replace(/^#+\s*/, ''), mark = headIcon(head, c);
-      const title = <T style={{ flex: mark ? 1 : undefined, fontSize: 14.5, fontWeight: '800', color: c.text }}>{inline(head, `h${i}`, { fontWeight: '800' })}</T>;
+      const title = <T raw style={{ flex: mark ? 1 : undefined, fontSize: 14.5, fontWeight: '800', color: c.text }}>{inline(head, `h${i}`, { fontWeight: '800' })}</T>;
       out.push(mark ? <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 4 }}><Icon name={mark.name} size={20} color={mark.color} />{title}</View>
         : <View key={i} style={{ marginTop: 10, marginBottom: 2 }}>{title}</View>);
     }
     else if (/^[-•*]\s+/.test(line)) out.push(
       <View key={i} style={{ flexDirection: 'row', gap: 8, marginVertical: 1 }}>
-        <T style={{ fontSize: 14, lineHeight: 25 }}>•</T>
-        <T style={{ flex: 1, fontSize: 14, lineHeight: 25 }}>{inline(line.replace(/^[-•*]\s+/, ''), `l${i}`)}</T>
+        <T raw style={{ fontSize: 14, lineHeight: 25 }}>•</T>
+        <T raw style={{ flex: 1, fontSize: 14, lineHeight: 25 }}>{inline(line.replace(/^[-•*]\s+/, ''), `l${i}`)}</T>
       </View>);
-    else out.push(<T key={i} style={{ fontSize: 14, lineHeight: 25, marginVertical: 2 }}>{inline(line, `p${i}`)}</T>);
+    else out.push(<T raw key={i} style={{ fontSize: 14, lineHeight: 25, marginVertical: 2 }}>{inline(line, `p${i}`)}</T>);
   });
   return <View>{out}</View>;
 }
@@ -241,7 +241,7 @@ const lessonCache = new Map<string, string>();
 
 function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; lang: 'da' | 'en' }) {
   const c = useColors();
-  const key = `${q.id}:${a ? a.join('') : ''}:${lang}`;
+  const key = `${q.id}:${a ? a.join('') : ''}:${lang}:${UI_LANG}`;
   const [shown, setShown] = useState(false);
   const [text, setText] = useState<string | null>(() => lessonCache.get(key) ?? null);
   const [typing, setTyping] = useState(false); // fetched just now: typed out
@@ -252,7 +252,8 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const who = user && !user.guest ? user.name : '';
   const load = () => {
     setState('loading');
-    api<{ text: string }>('POST', 'lesson', { qid: q.id, a, lang, at })
+    // Written in the app's language (Persian, English or Danish).
+    api<{ text: string }>('POST', 'lesson', { qid: q.id, a, lang, at, ui: UI_LANG })
       .then(d => { lessonCache.set(key, d.text); setTyping(true); setText(d.text); setState('idle'); })
       .catch((e: any) => { setErr(e.status === 429 ? e.message : 'نکات الان آماده نشد؛ دوباره امتحان کنید.'); setState('error'); });
   };

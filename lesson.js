@@ -1,9 +1,9 @@
-// AI lessons written in Persian by Claude:
+// AI lessons written by Claude in the app's language (Persian, or English / Danish on the main site):
 // - per question in the answer review ("آموزش این سؤال"): what the question is about and, from the user's
 //   ticks, why each wrong statement was wrong;
 // - per exam or lesson ("جمع‌بندی اشتباهات"): one short lesson over all the questions answered wrongly.
 // Claude gets each question's picture too and describes only what it clearly shows.
-// Lessons are cached in store.meta by question + mistake pattern + exam language, so each combination is
+// Lessons are cached in store.meta by question + mistake pattern + exam language (+ app language when not Persian), so each combination is
 // generated once and later views are free. Needs ANTHROPIC_API_KEY; without it the endpoint says "unavailable"
 // and the page keeps showing the topic's fixed lesson.
 'use strict';
@@ -93,6 +93,93 @@ ${IMAGE_RULES}
 - ساده و روان، بدون مقدمه و بدون جمع‌بندی اضافه؛ حداکثر حدود ۶۰ کلمه برای بخش اول، یک خط برای هر سؤال، و ۱۲۰ کلمه برای بخش آخر.
 - اصطلاح‌های دانمارکی مهم (مثل ubetinget vigepligt) را در صورت لزوم داخل پرانتز بیاورید.`;
 
+// The same lessons written in English or Danish (the app's language on the main site): the instructions in English,
+// with the headings, the wording of the user's answer and the «question n» lines in the app's language, so the page
+// can find them (review.tsx headIcon and the question links).
+const OUT = {
+  en: { name: 'English', about: 'What this question is about', mistake: 'Your mistake', tip: 'Tip for next time', ok: 'Your answer was right',
+    allOk: 'You answered every statement correctly.', did: 'you selected', didNot: 'you did not select', glance: 'Your mistakes at a glance',
+    byQ: 'Question by question', q: 'Question', review: 'Key points to review' },
+  da: { name: 'Danish', about: 'Hvad spørgsmålet handler om', mistake: 'Din fejl', tip: 'Tip til næste gang', ok: 'Dit svar var rigtigt',
+    allOk: 'Du svarede rigtigt på alle udsagn.', did: 'du valgte', didNot: 'du valgte ikke', glance: 'Dine fejl kort fortalt',
+    byQ: 'Spørgsmål for spørgsmål', q: 'Spørgsmål', review: 'Vigtigste punkter at repetere' },
+};
+const LAW_RULES_X = `- Every explanation must follow Denmark's current traffic rules exactly: Færdselsloven, the rules for signs and road markings (bekendtgørelse om vejafmærkning) and the official curriculum for the B licence (Undervisningsplan). Never put the rules or habits of other countries, or general "common sense", in place of Danish law.
+- The correct answer of each statement and the given "official explanation" are the most reliable source; write reasons that agree with them and never contradict them.
+- Before writing each sentence, check it is right under Danish law; if you are not sure of a number (speed, distance, time, alcohol…), a sign code or a detail, leave it out and say only what is certain. Never invent a rule, number or sign code.
+- Give sign codes and names in their official Danish form (e.g. B 11, C 61) and use the official terms correctly (ubetinget vigepligt, højreregel, vigepligt…).
+- State rules precisely with their conditions, not vaguely.`;
+const IMAGE_RULES_X = `- Describe the situation only with what the picture clearly shows and what matters for the question; leave out unrelated details (colours of buildings, the sky…).
+- Do not write anything that is only in the "official explanation" as if it were in the picture; if it is needed, say "according to the official explanation…".
+- Write simply and plainly, like a teacher explaining in person; short, clear sentences.`;
+const DATA_NOTE = `The question data is labelled in English: "Correct answer: yes" means the statement should be selected, "no" that it should not; "User's answer: … → wrong" marks a statement the user answered wrongly.`;
+const systemX = (o, kind) => {
+  const lang = o.name;
+  const common = `- The correct answer of each statement is the one in the data; do not change it or contradict it.
+${LAW_RULES_X}
+${IMAGE_RULES_X}
+- Write the whole answer in ${lang} only (no Persian). Keep important Danish terms (like ubetinget vigepligt) in brackets where useful.
+- Mark the key points (the main rule, a key number or condition, why something is right or wrong) in **double asterisks**; at most one or two short phrases per line, not whole sentences.`;
+  if (kind === 'summary') return `You are a teacher for the Danish driving theory test (B licence).
+The user has finished a lesson or an exam. You are given the questions they answered wrongly, with their own answers.
+Write a short teaching summary in ${lang}, based exactly on these mistakes.
+Each question's picture is given after its heading; it is the picture the user saw.
+${DATA_NOTE}
+
+The answer has exactly these parts (with these headings, each on its own line):
+## ${o.glance}
+One or two sentences: which topics most of the mistakes were in.
+## ${o.byQ}
+For each question one line starting exactly with "- ${o.q} n: " (n the number given, in digits), then the question's topic in a few words from what its picture clearly shows, which statement the user wrongly selected or did not select ("${o.did}" / "${o.didNot}"), and the correct rule in one sentence.
+## ${o.review}
+Three to five lines starting with "- ": practical, memorable rules that fix these mistakes. Put questions on the same topic in one point.
+
+Rules:
+${common}
+- Plain and simple, no introduction and no extra conclusion; at most about 60 words for the first part, one line per question, and 120 words for the last part.`;
+  if (kind === 'ok') return `You are a teacher for the Danish driving theory test (B licence).
+The user answered every statement of a picture question correctly. Analyse their answer briefly and precisely in ${lang}.
+The question's picture is given too; it is the picture the user sees.
+${DATA_NOTE}
+
+The answer has exactly these two parts (with these headings, each on its own line):
+## ${o.about}
+One or two simple sentences: what the picture clearly shows that matters for the question, and the traffic rule the question tests.
+## ${o.ok}
+First line exactly: "- ${o.allOk}"
+Then one line per statement starting with "- ": the statement in short in quotes, whether "${o.did}" or "${o.didNot}" it, and in one sentence why that answer is right.
+
+Rules:
+- Do not write a "${o.mistake}" or "${o.tip}" part; the user made no mistake.
+${common}
+- At most about 100 words, no introduction and no extra conclusion.`;
+  return `You are a teacher for the Danish driving theory test (B licence).
+For one picture question of the exam, write a short, precise lesson in ${lang} about this question and this user's mistakes only.
+The question's picture is given too; it is the picture the user sees.
+${DATA_NOTE}
+
+The answer has exactly these three parts (with these headings, each on its own line):
+## ${o.about}
+One or two simple sentences: what the picture clearly shows that matters for the question (signs, markings, lights, important vehicles and people, the road) and the traffic rule the question tests.
+## ${o.mistake}
+Only for the statements marked "→ wrong" in the data, one line each starting with "- ": the statement in short in quotes, whether "${o.did}" or "${o.didNot}" it, its correct answer and why.
+Do not include statements marked "→ right" here.
+## ${o.tip}
+One or two lines starting with "- ": a practical, memorable rule for similar questions.
+
+Rules:
+${common}
+- At most about 120 words, plain and simple, no introduction and no extra conclusion.`;
+};
+// The app's language the lesson is written in: 'fa' (as before, also /app), 'en' or 'da'.
+const uiOf = ui => (ui === 'en' || ui === 'da' ? ui : 'fa');
+// The app's language a cached lesson / summary (its store.meta key) was written in.
+function refUi(ref) {
+  const p = String(ref).split(':');
+  if (p[0] === 'lesson') return uiOf(p[5]);
+  return uiOf((p[2] || '').split('-')[1]);
+}
+
 let client = null, BANK = null, Q = null;
 const inflight = new Map(), usage = new Map();
 
@@ -129,7 +216,8 @@ async function imageOf(q) {
 // A question written new (`rev` in the bank) gets its own cache keys, so no lesson made for its old text is shown.
 const qkey = q => `${q.id}${q.rev ? `r${q.rev}` : ''}`;
 
-function promptFor(q, ticks, lang) {
+function promptFor(q, ticks, lang, ui = 'fa') {
+  if (ui !== 'fa') return promptForX(q, ticks, lang);
   const topic = BANK.topics[q.c];
   const known = Array.isArray(ticks);
   const lines = q.st.map((s, k) => {
@@ -154,21 +242,45 @@ function promptFor(q, ticks, lang) {
   ].filter(Boolean).join('\n');
 }
 
+// The same data with English labels and without the Persian translations, for a lesson in English or Danish.
+function promptForX(q, ticks, lang) {
+  const topic = BANK.topics[q.c];
+  const known = Array.isArray(ticks);
+  const lines = q.st.map((s, k) => {
+    const ticked = known ? !!ticks[k] : null;
+    const wrong = known && ticked !== !!s.ok;
+    return [
+      `Statement ${k + 1}: ${lang === 'en' && s.en ? s.en : s.da}`,
+      `  Correct answer: ${s.ok ? 'yes (should be selected)' : 'no (should not be selected)'}`,
+      `  Official explanation: ${(lang === 'en' && s.een) || s.eda || ''}`,
+      known ? `  User's answer: ${ticked ? 'selected' : 'not selected'} → ${wrong ? 'wrong' : 'right'}` : '',
+    ].filter(Boolean).join('\n');
+  });
+  return [
+    topic ? `Topic: ${topic.da}` : '',
+    `Question: ${lang === 'en' && q.sen ? q.sen : q.sda}`,
+    '',
+    lines.join('\n\n'),
+    known ? '' : '\n(The user\'s answers were not recorded for this exam; fill the mistakes part with the statements that are commonly answered wrongly.)',
+  ].filter(Boolean).join('\n');
+}
+
 // Returns { text, key } (key: where the lesson is cached in store.meta) or throws an Error with .status.
-async function getLesson({ store, siteDir, username, qid, ticks, lang }) {
+async function getLesson({ store, siteDir, username, qid, ticks, lang, ui }) {
   loadBank(siteDir);
   const q = Q.get(+qid);
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   lang = lang === 'en' ? 'en' : 'da';
+  ui = uiOf(ui);
   const known = Array.isArray(ticks);
   const mask = known ? q.st.map((s, k) => ((!!ticks[k]) !== !!s.ok ? 1 : 0)).join('') : 'x';
   const allRight = known && !mask.includes('1');
-  const key = `lesson:v7:${qkey(q)}:${mask}:${lang}`; // v7: written strictly by Denmark's traffic rules (LAW_RULES)
+  const key = `lesson:v7:${qkey(q)}:${mask}:${lang}${ui === 'fa' ? '' : `:${ui}`}`; // v7: written strictly by Denmark's traffic rules (LAW_RULES)
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
 
-  return { ...(await generate({ store, key, system: allRight ? SYSTEM_OK : SYSTEM, prompt: [await imageOf(q), { type: 'text', text: promptFor(q, known ? ticks : null, lang) }].filter(Boolean), maxTokens: 4000 })), key };
+  return { ...(await generate({ store, key, system: ui !== 'fa' ? systemX(OUT[ui], allRight ? 'ok' : 'lesson') : allRight ? SYSTEM_OK : SYSTEM, prompt: [await imageOf(q), { type: 'text', text: promptFor(q, known ? ticks : null, lang, ui) }].filter(Boolean), maxTokens: 4000 })), key };
 }
 
 // Calls Claude once per cache key (concurrent requests for the same key share the call) and caches the text.
@@ -200,19 +312,20 @@ async function generate({ store, key, system, prompt, maxTokens }) {
 // items: [{ id, a, n }] — the wrongly answered questions of an exam or lesson, with the user's ticks and the
 // question's number in that exam (the summary refers to «سؤال n», which the page turns into a link).
 // Cached by the questions + numbers + mistake patterns + exam language, so the same result gets the same summary.
-async function getSummary({ store, siteDir, username, items, lang }) {
+async function getSummary({ store, siteDir, username, items, lang, ui }) {
   loadBank(siteDir);
   lang = lang === 'en' ? 'en' : 'da';
+  ui = uiOf(ui);
   const list = items.map((x, k) => ({ q: Q.get(+x.id), a: x.a, n: Number.isInteger(x.n) && x.n > 0 ? x.n : k + 1 })).filter(x => x.q);
   if (!list.length) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   const mask = (q, a) => q.st.map((s, k) => ((!!a[k]) !== !!s.ok ? 1 : 0)).join('');
-  const key = `summary:v4:${lang}:${list.map(x => `${x.n}.${qkey(x.q)}.${mask(x.q, x.a)}`).sort().join(',')}`; // v4: strictly by Denmark's traffic rules
+  const key = `summary:v4:${lang}${ui === 'fa' ? '' : `-${ui}`}:${list.map(x => `${x.n}.${qkey(x.q)}.${mask(x.q, x.a)}`).sort().join(',')}`; // v4: strictly by Denmark's traffic rules
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
   const pics = await Promise.all(list.map(x => imageOf(x.q)));
-  const prompt = list.flatMap((x, i) => [{ type: 'text', text: `### سؤال ${x.n}` }, pics[i], { type: 'text', text: promptFor(x.q, x.a, lang) }].filter(Boolean));
-  return { ...(await generate({ store, key, system: SUMMARY_SYSTEM, prompt, maxTokens: 8000 })), key };
+  const prompt = list.flatMap((x, i) => [{ type: 'text', text: `### ${ui === 'fa' ? 'سؤال' : 'Question'} ${x.n}` }, pics[i], { type: 'text', text: promptFor(x.q, x.a, lang, ui) }].filter(Boolean));
+  return { ...(await generate({ store, key, system: ui !== 'fa' ? systemX(OUT[ui], 'summary') : SUMMARY_SYSTEM, prompt, maxTokens: 8000 })), key };
 }
 
 // Whether a lesson / summary linked to a past exam (attempt.ai) was made for the questions' current text: one made
@@ -227,4 +340,4 @@ function isCurrentSummary(siteDir, items, ref) {
   return items.every(x => { const q = Q.get(+x.id); return !q || !q.rev || String(ref).includes(`.${qkey(q)}.`); });
 }
 
-module.exports = { getLesson, getSummary, lessonsAvailable: available, isCurrentLesson, isCurrentSummary };
+module.exports = { getLesson, getSummary, lessonsAvailable: available, isCurrentLesson, isCurrentSummary, refUi, uiOf };

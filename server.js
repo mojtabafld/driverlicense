@@ -15,7 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
-const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary } = require('./lesson');
+const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
@@ -791,7 +791,7 @@ async function api(req, res, route) {
       return send(res, 200, { user: publicUser(user) });
     }
   }
-  // AI lesson for one reviewed question: { qid, a: ticks per statement (optional), lang }.
+  // AI lesson for one reviewed question: { qid, a: ticks per statement (optional), lang, ui: the app's language it is written in }.
   // AI lessons and summaries made while reviewing a past exam (`at`) are also linked to that exam
   // (attempt.ai: cache keys, not the texts), so reviewing it again shows them without a new AI call,
   // even after the exam language or the cache version changes.
@@ -807,9 +807,9 @@ async function api(req, res, route) {
     const b = await readBody(req);
     const qid = +b.qid, att = attemptAt(b.at);
     const ref = att && att.ai && att.ai.q && att.ai.q[qid];
-    if (ref && store.meta[ref] && isCurrentLesson(SITE, qid, ref)) return send(res, 200, { text: store.meta[ref].text });
+    if (ref && store.meta[ref] && isCurrentLesson(SITE, qid, ref) && refUi(ref) === uiOf(b.ui)) return send(res, 200, { text: store.meta[ref].text });
     try {
-      const lesson = await getLesson({ store, siteDir: SITE, username: user.username, qid, ticks: Array.isArray(b.a) ? b.a.slice(0, 4) : null, lang: b.lang });
+      const lesson = await getLesson({ store, siteDir: SITE, username: user.username, qid, ticks: Array.isArray(b.a) ? b.a.slice(0, 4) : null, lang: b.lang, ui: b.ui });
       if (att && att.items.some(it => it.id === qid)) await linkAi(att, qid, lesson.key);
       return send(res, 200, { text: lesson.text });
     } catch (e) {
@@ -824,9 +824,9 @@ async function api(req, res, route) {
     const items = Array.isArray(b.items) ? b.items.slice(0, 25).filter(x => x && Array.isArray(x.a)).map(x => ({ id: +x.id, a: x.a.slice(0, 4), n: +x.n || undefined })) : [];
     if (!items.length) return send(res, 400, { error: 'no mistakes' });
     const att = attemptAt(b.at), ref = att && att.ai && att.ai.s;
-    if (ref && store.meta[ref] && isCurrentSummary(SITE, items, ref)) return send(res, 200, { text: store.meta[ref].text });
+    if (ref && store.meta[ref] && isCurrentSummary(SITE, items, ref) && refUi(ref) === uiOf(b.ui)) return send(res, 200, { text: store.meta[ref].text });
     try {
-      const summary = await getSummary({ store, siteDir: SITE, username: user.username, items, lang: b.lang });
+      const summary = await getSummary({ store, siteDir: SITE, username: user.username, items, lang: b.lang, ui: b.ui });
       if (att) await linkAi(att, 's', summary.key);
       return send(res, 200, { text: summary.text });
     } catch (e) {
