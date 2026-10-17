@@ -128,8 +128,7 @@ async function sendVerifyMail(req, u, lang) {
   await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
 }
 // Forgotten password: a random 6-digit code to the account's address, working for 15 minutes and for at most 5 wrong
-// tries; a new code at most once a minute and 6 times a day per account. Asking reveals nothing about which addresses
-// have an account. Setting the new password ends the account's other sessions and confirms the address (the code
+// tries; a new code at most once a minute and 6 times a day per account. Setting the new password ends the account's other sessions and confirms the address (the code
 // proved it).
 const RESET_TRIES = 5;
 async function sendResetMail(u, lang) {
@@ -601,8 +600,8 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
 
-  // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (the answer is the same
-  // either way). Counted as a failed try, so one address cannot ask again and again.
+  // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (else 404). Counted as a
+  // failed try, so one address cannot ask again and again (nor test many addresses).
   if (req.method === 'POST' && route === 'forgot') {
     if (!mail.available()) return send(res, 404, { error: 'ایمیل فعال نیست.' });
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -611,8 +610,9 @@ async function api(req, res, route) {
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
     addFail(ip);
     const u = resetUser(e);
-    if (u) await sendResetMail(u, lang).catch(err => console.error('reset mail', u.username, err.message));
-    else console.log('reset mail: no account for', e.replace(/^(.{2}).*@/, '$1…@'));
+    // No account with this address: said at once (Mojtaba, 2026-10-17), so the user is not left waiting for a code.
+    if (!u) { console.log('reset mail: no account for', e.replace(/^(.{2}).*@/, '$1…@')); return send(res, 404, { error: 'حسابی با این ایمیل ثبت نشده است.' }); }
+    await sendResetMail(u, lang).catch(err => console.error('reset mail', u.username, err.message));
     return send(res, 200, { ok: true });
   }
   // POST resetcheck { email, code }: whether the code is right (before the new password is asked for).
