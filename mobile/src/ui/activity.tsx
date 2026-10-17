@@ -66,9 +66,9 @@ function Head({ title, c }: { title: string; c: Colors }) {
   );
 }
 
-// `allHref`: with more than `limit` attempts, «همه ›» in the card's head opens this page of all of them (as the mistakes
-// card's «همه» does), in place of «نمایش همه» under the list.
-export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string }) {
+// `allHref`: «همه ›» in the card's head opens this page of all of them (as the mistakes card's «همه» does), in place of
+// «نمایش همه» under the list. `clearable`: the bin that deletes the whole history (only on that page, /history).
+export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref, clearable }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string; clearable?: boolean }) {
   const c = useColors();
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
@@ -89,17 +89,17 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
     <Card style={{ paddingVertical: 6 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, paddingBottom: 6 }}>
         <Head title={title} c={c} />
-        {allHref && rows.length > limit ? (
+        {allHref ? (
           <Pressable onPress={() => { tap(); router.push(allHref as any); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={`همه‌ی ${faNum(rows.length)} آزمون`}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
             <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>همه</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
           </Pressable>
         ) : null}
-        {/* Delete the whole history, after a question. */}
-        <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
+        {/* Delete the whole history, after a question (the history page only). */}
+        {clearable ? <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
           style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
           <Icon name="trash" size={18} color={c.bad} />
-        </Pressable>
+        </Pressable> : null}
       </View>
       <Confirm open={ask} icon="trash" title="حذف تاریخچه؟" text={`همه‌ی ${faNum(rows.length)} آزمون و درس انجام‌شده و نتیجه‌هایشان پاک می‌شوند. این کار برگشت‌پذیر نیست.`}
         cancel="انصراف" ok={busy ? 'در حال حذف…' : 'حذف همه'} okIcon="trash" danger onCancel={() => setAsk(false)}
