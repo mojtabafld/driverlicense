@@ -15,6 +15,7 @@ import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
 import { SizeSlider } from '@/ui/size-slider';
 import { Icon } from '@/ui/icon';
+import { MoreButton } from '@/ui/more-button';
 import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 import { ExamWheelArt } from '@/ui/header-art';
@@ -31,7 +32,7 @@ function sizeHint(n: number) {
 function practice(ids: number[], title: string) { session.plan = { mode: 'mistakes', ids, title }; router.push('/run'); }
 
 // «آزمون بر اساس اشتباهات»: an exam of one topic's mistakes, from its chip in the row that scrolls sideways (weakest
-// first); «همه» opens the mistakes page. Before the first exam,
+// first); the arrow button in its head opens the mistakes page. Before the first exam,
 // or with no mistakes, it says what it is for and how it fills up.
 function MistakesCard() {
   const c = useColors();
@@ -44,7 +45,7 @@ function MistakesCard() {
     ? 'هنوز آزمونی نداده‌اید. بعد از اولین آزمون، سؤال‌هایی که اشتباه جواب بدهید اینجا جمع می‌شوند تا با آن‌ها آزمون بدهید و نقطه‌ضعف‌هایتان را برطرف کنید.'
     : !topics.length
       ? 'تا اینجا هیچ اشتباهی نداشته‌اید؛ عالی! هر سؤالی که در آزمون‌ها اشتباه جواب بدهید اینجا اضافه می‌شود تا دوباره تمرینش کنید.'
-      : !open ? 'همه‌ی اشتباهات را اصلاح کرده‌اید؛ یعنی آخرین بار درست جوابشان داده‌اید. برای مرور دوباره «همه» را بزنید.' : null;
+      : !open ? 'همه‌ی اشتباهات را اصلاح کرده‌اید؛ یعنی آخرین بار درست جوابشان داده‌اید. برای مرور دوباره، دکمه‌ی فلش بالا را بزنید.' : null;
   return (
     <Card style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -60,9 +61,7 @@ function MistakesCard() {
           </T>
         </View>
         {topics.length ? (
-          <Pressable onPress={() => { tap(); router.push('/mistakes'); }} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>همه</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
-          </Pressable>
+          <MoreButton onPress={() => router.push('/mistakes')} label="همه‌ی اشتباهات" />
         ) : null}
       </View>
       {note ? (
@@ -141,7 +140,7 @@ export default function Exam() {
           : (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" />
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
-      {/* «همه ›» in its head opens every exam on its own page (/history), like the mistakes card's «همه». */}
+      {/* The arrow button in its head opens every exam on its own page (/history), like the mistakes card's. */}
       <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" />
       <MistakesCard />
     </Screen>
