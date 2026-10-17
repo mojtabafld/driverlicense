@@ -2,9 +2,10 @@
 // switch, fields with icons and one wide button, then the site's three short facts. With email on (the server's
 // RESEND_API_KEY) signing up asks for a shown name, an email and a password (the email is the username), the new account waits
 // for the link sent there, and signing in takes the email or, for accounts from before, the username. With email on, a
-// «forgotten password» link under the password asks for the address and sends a link there; the link opens the site
-// with ?reset=<token>, which shows a field for the new password (the server's /api/forgot and /api/reset).
-import { useState } from 'react';
+// «forgotten password» link under the password asks for the address and sends a 6-digit code there; the code, typed in
+// six boxes (or taken from the keyboard's suggestion), opens the fields for the new password (the server's
+// /api/forgot, /api/resetcheck and /api/reset).
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,10 +13,11 @@ import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
 import { InstallHint } from '@/ui/install-hint';
-import { ArcButton, Backdrop, Button, Hero, SegPill, T, ThemeButton, HeroFade, tap, useArcSeg, useHeaderTop } from '@/ui/kit';
+import { ArcButton, Backdrop, Button, Hero, L, SegPill, T, ThemeButton, HeroFade, tap, useArcSeg, useHeaderTop } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { LOGIN_BG, LoginArt } from '@/ui/header-art';
-import { RTL, tr } from '@/lib/i18n';
+import { RTL, t as fmt, tr } from '@/lib/i18n';
+import { CodeBoxes } from '@/ui/code-boxes';
 
 // Sign in / sign up switch: a soft track with the chosen side raised. (Main site, light: the track a step darker than
 // the page, as the app's switches look on their white cards, «پاسخ شما / پاسخ صحیح» for one.)
@@ -65,15 +67,16 @@ function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
-// The new-password link's token, when the page was opened from it (web).
-const resetToken = Platform.OS === 'web' && typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('reset') || '' : '';
-
 export default function Login() {
   const c = useColors(), dark = useIsDark();
-  const { login, register, guest, mail, forgot, resetPassword } = useApp();
+  const { login, register, guest, mail, forgot, checkResetCode, resetPassword } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  // 'ask': the forgotten-password form; 'sent': its link went out; 'set': the new password, from the link.
-  const [lost, setLost] = useState<'' | 'ask' | 'sent' | 'set'>(resetToken ? 'set' : '');
+  // 'ask': the forgotten-password form; 'code': its code went out and is typed in; 'set': the new password.
+  const [lost, setLost] = useState<'' | 'ask' | 'code' | 'set'>('');
+  const [code, setCode] = useState(''), [sentAt, setSentAt] = useState(0), [now, setNow] = useState(Date.now());
+  // The «send again» link waits a minute after each code (as the server does).
+  useEffect(() => { if (lost !== 'code') return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [lost]);
+  const wait = Math.max(0, 60 - Math.floor((now - sentAt) / 1000));
   const [name, setName] = useState(''), [user, setUser] = useState(''), [pw, setPw] = useState(''), [email, setEmail] = useState(''), [pw2, setPw2] = useState('');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   const byMail = mode === 'register' && mail;
@@ -90,25 +93,29 @@ export default function Login() {
     try { await guest(tr('مهمان')); } catch (e: any) { setErr(e.message); setBusy(false); }
   };
   const okMail = /^\S+@\S+\.\S+$/.test(email.trim());
-  const sendLink = async () => {
+  const sendCode = async () => {
     if (busy || !okMail) return;
     setErr(''); setBusy(true);
-    try { await forgot(email.trim()); setLost('sent'); } catch (e: any) { setErr(e.message); }
+    try { await forgot(email.trim()); setCode(''); setSentAt(Date.now()); setNow(Date.now()); setLost('code'); } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+  const checkCode = async (v = code) => {
+    if (busy || v.length !== 6) return;
+    setErr(''); setBusy(true);
+    try { await checkResetCode(email.trim(), v); setPw(''); setPw2(''); setLost('set'); } catch (e: any) { setErr(e.message); setCode(''); }
     setBusy(false);
   };
   const setNew = async () => {
     if (busy || !pw || !pw2) return;
     if (pw !== pw2) { setErr('تکرار رمز جدید با خود آن یکی نیست.'); return; }
     setErr(''); setBusy(true);
-    try {
-      await resetPassword(resetToken, pw);
-      if (Platform.OS === 'web') window.history.replaceState(null, '', window.location.pathname);
-    } catch (e: any) { setErr(e.message); setBusy(false); }
+    try { await resetPassword(email.trim(), code, pw); } catch (e: any) { setErr(e.message); setBusy(false); }
   };
-  const backToLogin = () => { tap(); setLost(''); setErr(''); setPw(''); setMode('login'); if (resetToken && Platform.OS === 'web') window.history.replaceState(null, '', window.location.pathname); };
+  const backToLogin = () => { tap(); setLost(''); setErr(''); setPw(''); setPw2(''); setCode(''); setMode('login'); };
   const title = lost === 'set' ? 'رمز عبور جدید' : lost ? 'بازیابی رمز عبور' : mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری';
   const subtitle = lost === 'set' ? 'یک رمز عبور جدید برای حساب خود انتخاب کنید'
-    : lost ? 'ایمیل حساب خود را وارد کنید تا لینک تعیین رمز جدید برایتان فرستاده شود'
+    : lost === 'code' ? 'کد ۶ رقمی‌ای را که به ایمیل‌تان فرستادیم وارد کنید'
+    : lost ? 'ایمیل حساب خود را وارد کنید تا کد بازیابی رمز برایتان فرستاده شود'
     : mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید';
   const errBox = err ? (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.badSoft }}>
@@ -123,15 +130,18 @@ export default function Login() {
   );
   // The forgotten-password steps, in place of the sign-in form.
   const lostForm = lost === 'ask' ? <>
-    <Field icon="send" label="ایمیل" value={email} onChange={v => setEmail(v.replace(/\s/g, ''))} ltr onSubmit={sendLink} />
+    <Field icon="send" label="ایمیل" value={email} onChange={v => setEmail(v.replace(/\s/g, ''))} ltr onSubmit={sendCode} />
     {errBox}
-    <ArcButton big label={busy ? '…' : 'ارسال لینک'} onPress={sendLink} disabled={busy || !okMail} style={{ marginTop: 4 }} />
+    <ArcButton big label={busy ? '…' : 'ارسال کد'} onPress={sendCode} disabled={busy || !okMail} style={{ marginTop: 4 }} />
     {link('بازگشت به ورود', backToLogin)}
-  </> : lost === 'sent' ? <>
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: c.okSoft }}>
-      <Icon name="checkCircle" size={20} color={c.ok} />
-      <T style={{ flex: 1, color: c.text, fontSize: 14, lineHeight: 23 }}>اگر حسابی با این ایمیل وجود داشته باشد، لینک تعیین رمز جدید به آن فرستاده شد. اگر ایمیل را نمی‌بینید، پوشه‌ی هرزنامه (Spam) را هم نگاه کنید.</T>
-    </View>
+  </> : lost === 'code' ? <>
+    <L style={{ alignSelf: 'center', fontSize: 15, color: c.muted, marginTop: -6 }}>{email.trim()}</L>
+    <CodeBoxes value={code} onChange={v => { setCode(v); if (err) setErr(''); }} onDone={checkCode} bad={!!err} />
+    {errBox}
+    <ArcButton big label={busy ? '…' : 'ادامه'} onPress={() => checkCode()} disabled={busy || code.length !== 6} style={{ marginTop: 4 }} />
+    <T style={{ alignSelf: 'center', textAlign: 'center', color: c.muted, fontSize: 13, lineHeight: 21 }}>اگر ایمیل را نمی‌بینید، پوشه‌ی هرزنامه (Spam) را هم نگاه کنید.</T>
+    {wait ? <T style={{ alignSelf: 'center', color: c.faint, fontSize: 14, paddingVertical: 6 }}>{fmt('ارسال دوباره‌ی کد تا {0} ثانیه‌ی دیگر', wait)}</T>
+      : link('ارسال دوباره‌ی کد', () => { tap(); sendCode(); })}
     {link('بازگشت به ورود', backToLogin)}
   </> : <>
     <Field icon="lock" label="رمز عبور جدید" value={pw} onChange={setPw} secure ltr />
