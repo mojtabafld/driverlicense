@@ -1,6 +1,7 @@
 // Asked once per user, after the intro and the first sign-in (and once for users from before it existed): which
 // language the questions are in, Danish (as in the real test) or English. Saved in the user's settings with
-// `langChosen`, so it is not asked again on any device; it can be changed later in the settings. Under it «ظاهر»:
+// `langChosen`, so it is not asked again on any device; it can be changed later in the settings. Under it, on the main
+// site a tip that the translation's language can be changed in the settings (Mojtaba, 2026-10-17); in /app «ظاهر»:
 // light or dark, the device's current one shown chosen (left as it is, the app keeps following the device); a tap
 // applies the other at once.
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +10,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 
+import { PROVE_PICS } from '@/lib/config';
 import { RTL } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
@@ -94,7 +96,13 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
               );
             })}
           </View>
-          {/* The look: light or dark, the one in use chosen. */}
+          {/* Main site: a tip where the look was; /app: the look, light or dark, the one in use chosen. */}
+          {!PROVE_PICS ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)' }}>
+              <Icon name="bulbCircle" size={28} color="#fff" />
+              <T style={{ flex: 1, color: 'rgba(255,255,255,0.9)', fontSize: 14, lineHeight: 24 }}>در تنظیمات می‌توانید زبان ترجمه‌ی سؤال‌ها و گزینه‌ها را تغییر دهید.</T>
+            </View>
+          ) : (
           <View style={{ gap: 10 }}>
             <T style={{ color: '#fff', fontSize: 17, lineHeight: 26, fontWeight: '700' }}>ظاهر</T>
             <View style={{ flexDirection: 'row', gap: 8, padding: 4, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.10)' }} accessibilityRole="radiogroup">
@@ -111,6 +119,7 @@ export function LangPick({ onDone }: { onDone?: () => void }) {
               })}
             </View>
           </View>
+          )}
         </ScrollView>
         <Pressable disabled={busy} onPress={save} accessibilityRole="button"
           style={({ pressed }) => ({ opacity: busy ? 0.6 : pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 54, borderRadius: 12, backgroundColor: BUTTON })}>
