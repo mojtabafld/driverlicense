@@ -74,6 +74,9 @@ export default function Settings() {
     try { await deleteAccount(delPw); }
     catch (e) { setDelErr(e instanceof Error && e.message ? e.message : 'حذف نشد؛ دوباره امتحان کنید.'); setDelBusy(false); }
   };
+  // «نسخه‌ی ویژه»: when it can be bought (a Stripe key on the server), or the account has it.
+  const showPrem = !!(pay || user?.premium);
+  const premRow = <LinkRow icon="sparkles" title="نسخه‌ی ویژه" ok={premium} sub={premium && user?.premium ? fmt('فعال تا {0}', fmtDay(user.premium.until)) : premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />;
   // Switches in the app's teal.
   return (
     <Screen title="تنظیمات">
@@ -117,6 +120,10 @@ export default function Settings() {
           <Icon name="exit" size={20} color={c.bad} weight="semibold" />
         </Pressable>
       </View>
+        {/* Main site: «نسخه‌ی ویژه» is a line of the user's card, under the name. */}
+        {!PROVE_PICS && showPrem ? (
+          <View style={{ marginTop: 6, borderTopWidth: 1, borderTopColor: c.line }}>{premRow}</View>
+        ) : null}
         {/* Delete the account: a quiet red line under the user, it asks first (main site only). */}
         {!PROVE_PICS && !guest ? (
           <Pressable onPress={() => { tap(); setAskDel(true); }} accessibilityRole="button" accessibilityLabel="حذف حساب کاربری"
@@ -126,22 +133,20 @@ export default function Settings() {
           </Pressable>
         ) : null}
       </Card>
-      {/* «نسخه‌ی ویژه»: when it can be bought (a Stripe key on the server), or the account has it. */}
-      {pay || user?.premium ? (
-        <Card style={{ gap: 4 }}>
-          <LinkRow icon="sparkles" title="نسخه‌ی ویژه" ok={premium} sub={premium && user?.premium ? fmt('فعال تا {0}', fmtDay(user.premium.until)) : premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />
-        </Card>
-      ) : null}
+      {/* /app: «نسخه‌ی ویژه» stays a card of its own. */}
+      {PROVE_PICS && showPrem ? <Card style={{ gap: 4 }}>{premRow}</Card> : null}
       {/* The app's language (main site): Persian, English or Danish, each named in its own language; a change reloads
           the page in it and is kept in the account too. */}
+      {/* One card: the app's language (main site) and the look. */}
+      <Card style={{ gap: 10 }}>
       {!PROVE_PICS ? (
-        <Card style={{ gap: 10 }}>
+        <>
           <Row title="زبان برنامه" sub="متن‌ها، درس‌ها و منوهای اپ به این زبان نمایش داده می‌شوند." right={null} />
           <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui, lang: EXAM_FOR[ui] }).catch(() => {}).finally(() => setUiLang(ui)); }}
             options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
-        </Card>
+          <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line }} />
+        </>
       ) : null}
-      <Card style={{ gap: 10 }}>
         <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />
         <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
         {/* The colour theme (main site and the Android app): ten named themes; a change reloads the app in it. */}
