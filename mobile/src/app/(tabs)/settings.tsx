@@ -18,6 +18,7 @@ import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
 import { PaletteRow } from '@/ui/palette-pick';
+import { setPlainHeader, usePlainHeader } from '@/lib/header-style';
 
 function Row({ title, sub, right }: { title: string; sub?: string; right: React.ReactNode }) {
   const c = useColors();
@@ -56,6 +57,7 @@ function LinkRow({ icon, title, sub, onPress, last, ok }: { icon: IconName; titl
 
 export default function Settings() {
   const c = useColors();
+  const plainHeader = usePlainHeader();
   const { user, settings, setSettings, logout, deleteAccount, tts, pay, premium } = useApp();
   const { mode, setMode } = useTheme();
   // A guest account cannot be edited or deleted: no account page, no delete line.
@@ -153,6 +155,10 @@ export default function Settings() {
         {!PROVE_PICS ? (
           <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}><PaletteRow /></View>
         ) : null}
+        {/* The pages' headers without their pictures (lib/header-style.ts); it applies at once. */}
+        <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}>
+          <Row title="هدر ساده" sub="بالای صفحه‌ها فقط عنوان، بدون تصویر." right={<Toggle label="هدر ساده" value={plainHeader} onChange={v => { tap(); setPlainHeader(v); }} />} />
+        </View>
       </Card>
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
