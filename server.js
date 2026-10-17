@@ -422,7 +422,7 @@ const isProtected = p => p === '/data.js' || p.startsWith('/img/');
 const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
 // DEFAULT_THEME: the main site's colour theme for everyone who has not picked one (mobile/src/ui/palette.ts; default
 // sky). Written into the root page, so the web version starts in it; phones read it from /api/config.
-const THEMES = ['ocean', 'violet', 'lime', 'coral', 'amber', 'emerald', 'forest', 'rose', 'sky', 'mono'];
+const THEMES = ['ocean', 'violet', 'lime', 'coral', 'amber', 'emerald', 'forest', 'rose', 'sky', 'mono', 'teal', 'indigo', 'orchid', 'gold', 'slate'];
 const defaultTheme = () => { const t = String(process.env.DEFAULT_THEME || '').trim().toLowerCase(); return THEMES.includes(t) ? t : 'sky'; };
 const WEBS = {
   root: { dir: path.join(__dirname, 'app-web'),
