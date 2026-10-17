@@ -74,7 +74,7 @@ export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   // 'ask': the forgotten-password form; 'sent': its link went out; 'set': the new password, from the link.
   const [lost, setLost] = useState<'' | 'ask' | 'sent' | 'set'>(resetToken ? 'set' : '');
-  const [name, setName] = useState(''), [user, setUser] = useState(''), [pw, setPw] = useState(''), [email, setEmail] = useState('');
+  const [name, setName] = useState(''), [user, setUser] = useState(''), [pw, setPw] = useState(''), [email, setEmail] = useState(''), [pw2, setPw2] = useState('');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   const byMail = mode === 'register' && mail;
   const ready = !busy && !!pw && (byMail ? /^\S+@\S+\.\S+$/.test(email.trim()) && !!name.trim() : !!user);
@@ -97,7 +97,8 @@ export default function Login() {
     setBusy(false);
   };
   const setNew = async () => {
-    if (busy || !pw) return;
+    if (busy || !pw || !pw2) return;
+    if (pw !== pw2) { setErr('تکرار رمز جدید با خود آن یکی نیست.'); return; }
     setErr(''); setBusy(true);
     try {
       await resetPassword(resetToken, pw);
@@ -133,9 +134,10 @@ export default function Login() {
     </View>
     {link('بازگشت به ورود', backToLogin)}
   </> : <>
-    <Field icon="lock" label="رمز عبور جدید" value={pw} onChange={setPw} secure ltr onSubmit={setNew} />
+    <Field icon="lock" label="رمز عبور جدید" value={pw} onChange={setPw} secure ltr />
+    <Field icon="lock" label="تکرار رمز عبور جدید" value={pw2} onChange={setPw2} secure ltr onSubmit={setNew} />
     {errBox}
-    <ArcButton big label={busy ? '…' : 'ذخیره و ورود'} onPress={setNew} disabled={busy || !pw} style={{ marginTop: 4 }} />
+    <ArcButton big label={busy ? '…' : 'ذخیره و ورود'} onPress={setNew} disabled={busy || !pw || !pw2} style={{ marginTop: 4 }} />
     {link('بازگشت به ورود', backToLogin)}
   </>;
   return (
