@@ -127,6 +127,19 @@ async function sendVerifyMail(req, u, lang) {
   await store.saveUser(u);
   await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
 }
+// Forgotten password: a link to /?reset=<token> on the account's address, working for an hour; at most one a minute and
+// 6 a day per account (the same limits as the confirmation link). Asking reveals nothing about which addresses have an
+// account. Setting the new password ends the account's other sessions and confirms the address (the link proved it).
+async function sendResetMail(req, u, lang) {
+  const now = Date.now(), v = u.reset || {};
+  if (v.sent && now - v.sent < 60e3) return;
+  const day = (v.day && now - v.day < 864e5) ? v.day : now, n = day === v.day ? (v.n || 0) : 0;
+  if (n >= 6) return;
+  const token = crypto.randomBytes(32).toString('hex');
+  u.reset = { h: tokenHash(token), exp: now + 3600e3, sent: now, day, n: n + 1 };
+  await store.saveUser(u);
+  await mail.sendReset(u.email, u.name || u.username, `${originOf(req)}/?reset=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
+}
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
 const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه است.';
@@ -568,6 +581,37 @@ async function api(req, res, route) {
     fails.delete(ip);
     const token = await newSession(req, res, user.username);
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
+  }
+
+  // POST forgot { email, lang }: the new-password link to that address, when an account has it (the answer is the same
+  // either way). Counted as a failed try, so one address cannot ask again and again.
+  if (req.method === 'POST' && route === 'forgot') {
+    if (!mail.available()) return send(res, 404, { error: 'ایمیل فعال نیست.' });
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const { email, lang } = await readBody(req);
+    const e = mail.normal(email);
+    if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
+    addFail(ip);
+    const u = Object.values(store.users).find(x => !x.guest && x.email === e) || (store.users[e] && !store.users[e].guest && store.users[e].email ? store.users[e] : undefined);
+    if (u) await sendResetMail(req, u, lang).catch(err => console.error('reset mail', u.username, err.message));
+    return send(res, 200, { ok: true });
+  }
+  // POST reset { t, password }: the link's token and the new password; signs in with it.
+  if (req.method === 'POST' && route === 'reset') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const { t, password } = await readBody(req);
+    const h = tokenHash(String(t || ''));
+    const u = Object.values(store.users).find(x => x.reset && x.reset.h && safeEqual(x.reset.h, h));
+    if (!u || !(u.reset.exp > Date.now())) { addFail(ip); return send(res, 400, { error: 'این لینک دیگر معتبر نیست؛ دوباره درخواست لینک کنید.' }); }
+    if (typeof password !== 'string' || !password.length) return send(res, 400, { error: 'رمز عبور را وارد کنید.' });
+    u.salt = crypto.randomBytes(16).toString('hex'); u.hash = await hashPw(password, u.salt);
+    delete u.reset;
+    if (!u.emailOk) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
+    await store.saveUser(u);
+    for (const [k, x] of Object.entries(store.sessions)) if (x.username === u.username) { delete store.sessions[k]; await store.deleteSession(k); }
+    console.log('password reset', u.username);
+    const token = await newSession(req, res, u.username);
+    return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
   }
 
   // kie.ai calls this when a picture is ready; the body is not trusted, it only makes the server check its jobs now.

@@ -1,7 +1,9 @@
 // Sign in / sign up: a tall picture header (as on the tab pages; on the main site a flat landscape) with the greeting, then on the page (no card) a mode
 // switch, fields with icons and one wide button, then the site's three short facts. With email on (the server's
 // RESEND_API_KEY) signing up asks for a shown name, an email and a password (the email is the username), the new account waits
-// for the link sent there, and signing in takes the email or, for accounts from before, the username.
+// for the link sent there, and signing in takes the email or, for accounts from before, the username. With email on, a
+// «forgotten password» link under the password asks for the address and sends a link there; the link opens the site
+// with ?reset=<token>, which shows a field for the new password (the server's /api/forgot and /api/reset).
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -63,10 +65,15 @@ function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
   );
 }
 
+// The new-password link's token, when the page was opened from it (web).
+const resetToken = Platform.OS === 'web' && typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('reset') || '' : '';
+
 export default function Login() {
   const c = useColors(), dark = useIsDark();
-  const { login, register, guest, mail } = useApp();
+  const { login, register, guest, mail, forgot, resetPassword } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  // 'ask': the forgotten-password form; 'sent': its link went out; 'set': the new password, from the link.
+  const [lost, setLost] = useState<'' | 'ask' | 'sent' | 'set'>(resetToken ? 'set' : '');
   const [name, setName] = useState(''), [user, setUser] = useState(''), [pw, setPw] = useState(''), [email, setEmail] = useState('');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   const byMail = mode === 'register' && mail;
@@ -82,8 +89,55 @@ export default function Login() {
     setErr(''); setBusy(true);
     try { await guest(tr('مهمان')); } catch (e: any) { setErr(e.message); setBusy(false); }
   };
-  const title = mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری';
-  const subtitle = mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید';
+  const okMail = /^\S+@\S+\.\S+$/.test(email.trim());
+  const sendLink = async () => {
+    if (busy || !okMail) return;
+    setErr(''); setBusy(true);
+    try { await forgot(email.trim()); setLost('sent'); } catch (e: any) { setErr(e.message); }
+    setBusy(false);
+  };
+  const setNew = async () => {
+    if (busy || !pw) return;
+    setErr(''); setBusy(true);
+    try {
+      await resetPassword(resetToken, pw);
+      if (Platform.OS === 'web') window.history.replaceState(null, '', window.location.pathname);
+    } catch (e: any) { setErr(e.message); setBusy(false); }
+  };
+  const backToLogin = () => { tap(); setLost(''); setErr(''); setPw(''); setMode('login'); if (resetToken && Platform.OS === 'web') window.history.replaceState(null, '', window.location.pathname); };
+  const title = lost === 'set' ? 'رمز عبور جدید' : lost ? 'بازیابی رمز عبور' : mode === 'login' ? 'خوش آمدید' : 'ساخت حساب کاربری';
+  const subtitle = lost === 'set' ? 'یک رمز عبور جدید برای حساب خود انتخاب کنید'
+    : lost ? 'ایمیل حساب خود را وارد کنید تا لینک تعیین رمز جدید برایتان فرستاده شود'
+    : mode === 'login' ? 'برای ادامه‌ی تمرین وارد حساب خود شوید' : 'برای ذخیره‌ی پیشرفت و اشتباهات‌تان یک حساب بسازید';
+  const errBox = err ? (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.badSoft }}>
+      <Icon name="warning" size={17} color={c.bad} />
+      <T style={{ flex: 1, color: c.bad, fontSize: 13.5 }}>{err}</T>
+    </View>
+  ) : null;
+  const link = (label: string, onPress: () => void) => (
+    <Pressable onPress={onPress} disabled={busy} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6, marginTop: 2 }}>
+      {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ color: dark ? c.link : c.cta, fontSize: 15.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>{label}</T>}
+    </Pressable>
+  );
+  // The forgotten-password steps, in place of the sign-in form.
+  const lostForm = lost === 'ask' ? <>
+    <Field icon="send" label="ایمیل" value={email} onChange={v => setEmail(v.replace(/\s/g, ''))} ltr onSubmit={sendLink} />
+    {errBox}
+    <ArcButton big label={busy ? '…' : 'ارسال لینک'} onPress={sendLink} disabled={busy || !okMail} style={{ marginTop: 4 }} />
+    {link('بازگشت به ورود', backToLogin)}
+  </> : lost === 'sent' ? <>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14, backgroundColor: c.okSoft }}>
+      <Icon name="checkCircle" size={20} color={c.ok} />
+      <T style={{ flex: 1, color: c.text, fontSize: 14, lineHeight: 23 }}>اگر حسابی با این ایمیل وجود داشته باشد، لینک تعیین رمز جدید به آن فرستاده شد. اگر ایمیل را نمی‌بینید، پوشه‌ی هرزنامه (Spam) را هم نگاه کنید.</T>
+    </View>
+    {link('بازگشت به ورود', backToLogin)}
+  </> : <>
+    <Field icon="lock" label="رمز عبور جدید" value={pw} onChange={setPw} secure ltr onSubmit={setNew} />
+    {errBox}
+    <ArcButton big label={busy ? '…' : 'ذخیره و ورود'} onPress={setNew} disabled={busy || !pw} style={{ marginTop: 4 }} />
+    {link('بازگشت به ورود', backToLogin)}
+  </>;
   return (
     <Backdrop>
       <KeyboardAvoidingView behavior={Platform.OS === 'web' ? undefined : 'padding'} style={{ flex: 1 }}>
@@ -91,6 +145,7 @@ export default function Login() {
           {ARC ? <SceneHead title={title} subtitle={subtitle} />
             : <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={title} subtitle={subtitle} />}
           <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: ARC ? 0 : 6 }}>
+            {lost ? lostForm : <>
             <ModeSwitch mode={mode} onChange={m => { setMode(m); setErr(''); }} />
             {byMail ? <>
               {/* The shown name: home's greeting and the AI's analyses call the user by it. */}
@@ -103,21 +158,20 @@ export default function Login() {
                 onChange={v => setUser(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr />
             </>}
             <Field icon="lock" label="رمز عبور" value={pw} onChange={setPw} secure ltr onSubmit={submit} />
-            {err ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.badSoft }}>
-                <Icon name="warning" size={17} color={c.bad} />
-                <T style={{ flex: 1, color: c.bad, fontSize: 13.5 }}>{err}</T>
-              </View>
+            {/* With email on (main site): the forgotten-password link, at the end of the line under the password. */}
+            {ARC && mail && mode === 'login' ? (
+              <Pressable onPress={() => { tap(); setLost('ask'); setErr(''); if (user.includes('@')) setEmail(user.trim()); }} accessibilityRole="link" hitSlop={8}
+                style={{ alignSelf: 'flex-end', marginTop: -6 }}>
+                {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ color: dark ? c.link : c.cta, fontSize: 13.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>رمز عبور را فراموش کرده‌اید؟</T>}
+              </Pressable>
             ) : null}
+            {errBox}
             {/* Main site: a plain solid deep green button (the hills' green), its label alone, faded while it can't be used. */}
             {ARC ? <ArcButton big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} style={{ marginTop: 4 }} />
               : <Button big label={busy ? '…' : mode === 'login' ? 'ورود' : 'ساخت حساب'} onPress={submit} disabled={!ready} kind="grey" style={{ marginTop: 2 }} icon={mode === 'login' ? 'person' : 'personAdd'} />}
             {/* Main site: a plain link under the button, to use the site without an account (a guest account, server's /api/guest). */}
-            {ARC ? (
-              <Pressable onPress={() => { tap(); asGuest(); }} disabled={busy} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6, marginTop: 2 }}>
-                {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ color: dark ? c.link : c.cta, fontSize: 15.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>ورود به عنوان کاربر مهمان</T>}
-              </Pressable>
-            ) : null}
+            {ARC ? link('ورود به عنوان کاربر مهمان', () => { tap(); asGuest(); }) : null}
+            </>}
             {/* The site's three facts (/app) */}
             {ARC ? null : <View style={{ alignItems: 'center', gap: 4, marginTop: 10 }}>
               {['🇩🇰 آزمون تئوری گواهینامه‌ی دانمارک', 'بیش از ۱۰۰۰ سؤال در ۴۴ آزمون', 'ترجمه‌ی فارسی و آموزش'].map(f => (
