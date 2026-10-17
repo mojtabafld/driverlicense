@@ -91,16 +91,20 @@ export const GLOSSARY: Term[] = [
 const lower = (s: string) => s.toLowerCase();
 const SORTED = [...GLOSSARY].sort((a, b) => b.da.length - a.da.length);
 
-// The terms a text uses (a longer one first, and a shorter one inside it not again), at most `max`.
+// The terms a text uses, by their Danish word or by the start of their Persian meaning (when that is long enough not to
+// be a common word, e.g. «دندان‌کوسه» but not «تقاطع»); a longer one first, and a shorter one inside it not again; at
+// most `max`.
+const faCore = (term: Term) => term.fa.split(' (')[0].replace(/^خط‌کشی /, '');
 export function termsIn(text: string, max = 6): Term[] {
   let t = lower(text);
   const out: Term[] = [];
   for (const term of SORTED) {
-    const w = lower(term.da);
-    const at = t.search(new RegExp(`(^|[^\\p{L}])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'u'));
-    if (at < 0) continue;
+    const w = lower(term.da), fa = faCore(term);
+    const byDa = new RegExp(`(^|[^\\p{L}])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'u').test(t);
+    const byFa = !byDa && fa.length >= 7 && t.includes(fa);
+    if (!byDa && !byFa) continue;
     out.push(term);
-    t = t.split(w).join(' ');
+    t = t.split(byDa ? w : fa).join(' ');
     if (out.length >= max) break;
   }
   return out;
