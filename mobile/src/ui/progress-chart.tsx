@@ -3,7 +3,7 @@
 // by dragging (it opens at the newest); a point is green when the
 // attempt passed or reached 80%, else grey, with the 80% pass line; when it opens the line draws itself from left to
 // right across the view, its fill and points following it (as Cloudflare's charts do, Mojtaba asked), once per app start. Tap a point to pick
-// that attempt; its details and a review button show below. With `fill` it takes the height of the space it is given,
+// that attempt (the newest is picked until another is); its details and a review button show below. With `fill` it takes the height of the space it is given,
 // at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -35,7 +35,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const abs = !!fill && ARC;
   const H = fill ? Math.max(fillH, minH) : 210;
   const [selIn, setSelIn] = useState<number | null>(null);
-  const sel = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
+  const chosen = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
   // How far the line has drawn itself across the view, 0 to 1: drawn in once per app start (after signing in), and
   // whole at once when the chart is shown again (moving between pages), Mojtaba asked.
@@ -77,6 +77,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     );
   }
   const data = attempts.slice(-200), offset = attempts.length - data.length;
+  // The picked attempt: the newest one unless another is picked (Mojtaba 2026-10-18), so the chart always shows one; a
+  // tap that clears the pick goes back to the newest.
+  const sel = chosen != null && chosen < data.length ? chosen : data.length ? data.length - 1 : null;
   // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
   const VIEW = 10, VW = Math.max(0, W - L - R);
   // ARC: the first and last points sit on the edges, so the line runs the full width.
