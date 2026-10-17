@@ -25,6 +25,7 @@ import { faNum } from '@/lib/logic';
 import { CourseArt } from '@/ui/header-art';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Enter, T, tap } from '@/ui/kit';
+import { SearchBox } from '@/ui/search-box';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
@@ -47,23 +48,6 @@ function Task({ icon, label, title, line, action, onPress, tone }: { icon: IconN
       </View>
       <View style={{ paddingHorizontal: 14, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: tone === 'main' ? c.btn : c.surface2 }}>
         <T style={{ fontWeight: '700', fontSize: 13.5, color: tone === 'main' ? c.btnFg : c.text }}>{action}</T>
-      </View>
-    </Pressable>
-  );
-}
-
-// The search box at the top: a tap opens «جستجو در آموزش» (app/course-search.tsx), where the user types.
-function SearchBox() {
-  const c = useColors();
-  return (
-    <Pressable onPress={() => { tap(); router.push('/course-search'); }} accessibilityRole="search" accessibilityLabel={tr('جستجو در آموزش')}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 52, paddingStart: 16, paddingEnd: 8, borderRadius: 16,
-        backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, opacity: pressed ? 0.85 : 1 })}>
-      <Icon name="search" size={19} color={c.faint} />
-      <T style={{ flex: 1, color: c.muted, fontSize: 14.5 }} numberOfLines={1}>هر چه می‌خواهید یاد بگیرید، بپرسید…</T>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 34, paddingHorizontal: 10, borderRadius: 11, backgroundColor: c.accentSoft }}>
-        <Icon name="sparkles" size={14} color={c.link} />
-        <T style={{ fontSize: 12, fontWeight: '700', color: c.link }}>هوشمند</T>
       </View>
     </Pressable>
   );

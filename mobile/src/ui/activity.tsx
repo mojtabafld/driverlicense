@@ -66,7 +66,9 @@ function Head({ title, c }: { title: string; c: Colors }) {
   );
 }
 
-export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها' }: { attempts: Attempt[]; limit?: number; title?: string }) {
+// `allHref`: with more than `limit` attempts, «همه ›» in the card's head opens this page of all of them (as the mistakes
+// card's «همه» does), in place of «نمایش همه» under the list.
+export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string }) {
   const c = useColors();
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
@@ -87,6 +89,12 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
     <Card style={{ paddingVertical: 6 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, paddingBottom: 6 }}>
         <Head title={title} c={c} />
+        {allHref && rows.length > limit ? (
+          <Pressable onPress={() => { tap(); router.push(allHref as any); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={`همه‌ی ${faNum(rows.length)} آزمون`}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+            <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>همه</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
+          </Pressable>
+        ) : null}
         {/* Delete the whole history, after a question. */}
         <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
           style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
@@ -97,7 +105,7 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
         cancel="انصراف" ok={busy ? 'در حال حذف…' : 'حذف همه'} okIcon="trash" danger onCancel={() => setAsk(false)}
         onOk={() => { if (busy) return; setBusy(true); clearAttempts().then(() => setAsk(false)).catch(() => {}).finally(() => setBusy(false)); }} />
       {shown.map((a, i) => <Enter key={a.at}><ActivityRow a={a} bank={bank} c={c} last={i === shown.length - 1} /></Enter>)}
-      {rows.length > limit ? (
+      {!allHref && rows.length > limit ? (
         <Pressable onPress={() => { tap(); setAll(!all); }} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
           <T style={{ color: c.text, fontWeight: '700', fontSize: 13.5 }}>{all ? 'نمایش کمتر' : `نمایش همه (${faNum(rows.length)})`}</T>
           <View style={{ transform: [{ rotate: all ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={16} color={c.text} weight="semibold" /></View>

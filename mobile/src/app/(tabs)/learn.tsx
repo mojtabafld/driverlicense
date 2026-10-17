@@ -16,6 +16,7 @@ import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Screen, T } from '@/ui/kit';
 import { ListCard } from '@/ui/list-card';
+import { SearchBox } from '@/ui/search-box';
 import { ARC, useColors } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 
@@ -86,6 +87,9 @@ export default function Learn() {
         </View>
       ) : (
         <View style={{ gap: 10 }}>
+          {/* Search the learning pages (the course, rules, signs, right of way) by their words and, with «جستجو», by the
+              AI; the results open on their own page (app/course-search.tsx). */}
+          <SearchBox />
           <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
             text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
             note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
