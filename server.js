@@ -132,13 +132,14 @@ async function sendVerifyMail(req, u, lang) {
 // account. Setting the new password ends the account's other sessions and confirms the address (the link proved it).
 async function sendResetMail(req, u, lang) {
   const now = Date.now(), v = u.reset || {};
-  if (v.sent && now - v.sent < 60e3) return;
+  if (v.sent && now - v.sent < 60e3) return console.log('reset mail: wait a minute', u.username);
   const day = (v.day && now - v.day < 864e5) ? v.day : now, n = day === v.day ? (v.n || 0) : 0;
-  if (n >= 6) return;
+  if (n >= 6) return console.log('reset mail: 6 today', u.username);
   const token = crypto.randomBytes(32).toString('hex');
   u.reset = { h: tokenHash(token), exp: now + 3600e3, sent: now, day, n: n + 1 };
   await store.saveUser(u);
   await mail.sendReset(u.email, u.name || u.username, `${originOf(req)}/?reset=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
+  console.log('reset mail sent', u.username);
 }
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
@@ -593,7 +594,10 @@ async function api(req, res, route) {
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
     addFail(ip);
     const u = Object.values(store.users).find(x => !x.guest && x.email === e) || (store.users[e] && !store.users[e].guest && store.users[e].email ? store.users[e] : undefined);
+    // Logged with the address half hidden, so a missing email can be traced.
+    const shown = e.replace(/^(.{2}).*@/, '$1…@');
     if (u) await sendResetMail(req, u, lang).catch(err => console.error('reset mail', u.username, err.message));
+    else console.log('reset mail: no account for', shown);
     return send(res, 200, { ok: true });
   }
   // POST reset { t, password }: the link's token and the new password; signs in with it.
