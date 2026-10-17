@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import type { Attempt, Item } from '@/lib/bank';
+import { PROVE_PICS } from '@/lib/config';
 import { RTL } from '@/lib/i18n';
 import { faNum, fmtDate, isFull, passMin, scoreOf, shuffle } from '@/lib/logic';
 import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
@@ -42,10 +43,12 @@ function Tabs({ value, onChange, n, wrong, savedN }: { value: Filter; onChange: 
   // Every tab as wide as the widest one (Mojtaba 2026-10-17: «اشتباهات» and «همه» the same size).
   const [ws, setWs] = useState<Record<string, number>>({});
   const widest = Math.max(0, ...Object.values(ws));
+  const wrongTab = { v: 'wrong' as Filter, label: `اشتباهات (${faNum(wrong)})` }, allTab = { v: 'all' as Filter, label: `همه (${faNum(n)})` };
+  // Main site: «همه» first, «اشتباهات» last (Mojtaba 2026-10-17); /app keeps «اشتباهات» first.
   const opts: { v: Filter; label: string }[] = [
-    { v: 'wrong', label: `اشتباهات (${faNum(wrong)})` },
+    PROVE_PICS ? wrongTab : allTab,
     ...(savedN ? [{ v: 'saved' as Filter, label: `${w < 430 ? 'ذخیره' : 'ذخیره‌شده‌ها'} (${faNum(savedN)})` }] : []),
-    { v: 'all', label: `همه (${faNum(n)})` },
+    PROVE_PICS ? allTab : wrongTab,
   ];
   return (
     <View style={[{ flexDirection: 'row', flexShrink: 1, padding: 3, gap: 3, borderRadius: 10, backgroundColor: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }, ARC && seg.track]}>
