@@ -157,8 +157,8 @@ export default function Settings() {
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
-        {/* Main site: the translation's language; left alone it follows the app's language (Persian, or English in a
-            Danish app). The exam's own language shows no translation. */}
+        {/* Main site: the translation's language; left alone it follows the app's language (picked on first signing in).
+            The exam's own language shows no translation. */}
         {!PROVE_PICS ? (
           <>
             <Row title="زبان ترجمه" sub="ترجمه‌ی زیر سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شود." right={null} />

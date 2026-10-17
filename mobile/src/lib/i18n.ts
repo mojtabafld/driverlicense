@@ -148,11 +148,12 @@ function parts(s: string): string | null {
   return null;
 }
 
-// The language of the translation under a question (Mojtaba, 2026-10-16): by default Persian in a Persian or English
-// app, English in a Danish one; the user can pick another in the settings (settings.trans, set by the store through
-// setTransLang). The questions' own language follows the app's when it is first chosen (EXAM_FOR).
+// The language of the translation under a question: by default the app's language, the one picked on first signing in
+// (Mojtaba, 2026-10-17), so an English app with English questions shows no translation; the user can pick another in
+// the settings (settings.trans, set by the store through setTransLang). The questions' own language follows the app's
+// when it is first chosen (EXAM_FOR).
 export type TransLang = 'fa' | 'en' | 'da';
-export const TRANS_DEFAULT: TransLang = UI_LANG === 'da' ? 'en' : 'fa';
+export const TRANS_DEFAULT: TransLang = UI_LANG;
 let transLang: TransLang = TRANS_DEFAULT;
 export const getTransLang = () => transLang;
 export function setTransLang(l?: TransLang) { transLang = !PROVE_PICS && l ? l : TRANS_DEFAULT; }

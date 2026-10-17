@@ -364,7 +364,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           <View style={{ flex: 1, minWidth: 4 }} />
           {/* Read aloud and the translation switch at the row's left end, the same round buttons as in the exam. */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
-          <TranslateButton on={fa} onPress={() => setFa(!fa)} />
+          <TranslateButton on={fa} onPress={() => setFa(!fa)} lang={lang} />
         </View>
         <View style={{ gap: 8 }}>
           <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
