@@ -8,6 +8,7 @@ import { Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSh
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
 import { useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
@@ -315,12 +316,15 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
+  // «هدر ساده» in the settings: the plain title (and the name under it on the home page) instead of the picture header.
+  if (usePlainHeader()) hero = undefined;
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
         <FitLine size={26} min={16} style={{ lineHeight: 34, fontWeight: '700', color: c.text }}>{title}</FitLine>
+        {name ? <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: c.text }} numberOfLines={1}>{name}</T> : null}
         {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
       </View>
       {right}

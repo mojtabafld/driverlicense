@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react';
 import { Animated, BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { usePlainHeader } from '@/lib/header-style';
+
 import { Confirm } from './confirm';
 import { Icon } from './icon';
 import { Backdrop, Hero, T, ThemeButton, tap, usePageMotion, useTopOnFocus, type HeroLook } from './kit';
@@ -31,6 +33,8 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
   onBodyY?: (y: number) => void; close?: boolean; pager?: { i: number; n: number; go: (k: number) => void; rtl?: boolean };
   /** The light / dark switch in the head, as on the signs' and right of way's pages (the course's lessons). */ theme?: boolean }) {
   const c = useColors(), ins = useSafeAreaInsets();
+  // «هدر ساده» in the settings: the glass head with the title instead of the picture header.
+  if (usePlainHeader()) hero = undefined;
   const motion = usePageMotion('push');
   const ref = useTopOnFocus(scrollRef);
   useEffect(() => { if (scrollKey !== undefined) ref.current?.scrollTo({ y: 0, animated: false }); }, [scrollKey, ref]);

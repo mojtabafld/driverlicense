@@ -2758,5 +2758,7 @@
 "نیلی":["Indigo", "Indigo"],
 "بنفش یاسی":["Orchid", "Orkidé"],
 "طلایی":["Gold", "Guld"],
-"سنگی":["Slate", "Skifer"]
+"سنگی":["Slate", "Skifer"],
+"هدر ساده":["Plain header", "Enkel overskrift"],
+"بالای صفحه‌ها فقط عنوان، بدون تصویر.":["Only the title at the top of pages, without pictures.", "Kun titlen øverst på siderne, uden billeder."]
 }
