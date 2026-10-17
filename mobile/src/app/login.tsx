@@ -158,10 +158,10 @@ export default function Login() {
                 onChange={v => setUser(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, ''))} ltr />
             </>}
             <Field icon="lock" label="رمز عبور" value={pw} onChange={setPw} secure ltr onSubmit={submit} />
-            {/* With email on (main site): the forgotten-password link, at the end of the line under the password. */}
+            {/* With email on (main site): the forgotten-password link, centred under the password. */}
             {ARC && mail && mode === 'login' ? (
               <Pressable onPress={() => { tap(); setLost('ask'); setErr(''); if (user.includes('@')) setEmail(user.trim()); }} accessibilityRole="link" hitSlop={8}
-                style={{ alignSelf: 'flex-end', marginTop: -6 }}>
+                style={{ alignSelf: 'center', marginTop: -4 }}>
                 {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ color: dark ? c.link : c.cta, fontSize: 13.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>رمز عبور را فراموش کرده‌اید؟</T>}
               </Pressable>
             ) : null}
