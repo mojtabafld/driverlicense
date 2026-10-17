@@ -51,7 +51,7 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
       </View>
       {step.art ? <Art k={step.art} /> : null}
       <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', marginBottom: -4 } as any}>
-        <TranslateButton on={fa} onPress={() => setPick(!fa)} />
+        <TranslateButton on={fa} onPress={() => setPick(!fa)} lang={lang} />
       </View>
       <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(step.da, lang)}</T>

@@ -62,7 +62,7 @@ function Question({ turn, ticks, answer, onToggle }: { turn: Turn; ticks: boolea
     <View style={{ gap: 12 }}>
       {q.art ? <Art k={q.art} /> : null}
       <View style={{ flexDirection: 'row', direction: 'ltr', justifyContent: 'flex-start', marginBottom: -4 } as any}>
-        <TranslateButton on={fa} onPress={() => setPick(!fa)} />
+        <TranslateButton on={fa} onPress={() => setPick(!fa)} lang={lang} />
       </View>
       <View style={{ gap: 4 }}>
         <T style={{ fontFamily: DA_FONT, fontSize: 17, fontWeight: '700', lineHeight: 26, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(q.da, lang)}</T>

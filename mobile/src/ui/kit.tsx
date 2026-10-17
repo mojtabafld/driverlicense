@@ -419,8 +419,10 @@ export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> })
 
 // The translation switch under a question's picture, the same in the exam and in the review: a round button with the
 // translate icon, grey while off and filled while the Persian translation shows.
-export function TranslateButton({ on, onPress }: { on: boolean; onPress: () => void }) {
+// Not shown when the translation is in the questions' own language (lang), as there is nothing to translate then.
+export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: () => void; lang: 'da' | 'en' }) {
   const c = useColors();
+  if (getTransLang() === lang) return null;
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
       accessibilityLabel={tr(on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه')}
