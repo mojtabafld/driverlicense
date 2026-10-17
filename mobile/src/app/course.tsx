@@ -7,7 +7,7 @@
 //   the next one: a filled row with a pulsing dot and «ادامه»), and the lessons still being written in one faint line.
 //   A chapter still being written is a single line «به‌زودی». The rail is green as far as the next lesson; at its end,
 //   the real test's format.
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 
 import { toPremium, useFree } from '@/lib/free';
 import { useEffect, useState } from 'react';
@@ -18,7 +18,9 @@ import { COURSE, EXAM, type CourseChapter, type CourseLesson } from '@/lib/cours
 import { useCourseProgress } from '@/lib/course-progress';
 import { ITEMS, SESSION_SIZE, dueCount, mastery, newCount, weakLessons } from '@/lib/drill';
 import { useDrillProgress } from '@/lib/drill-progress';
-import { tr } from '@/lib/i18n';
+import { t, tr } from '@/lib/i18n';
+import { useStreak } from '@/lib/streak';
+import { Toggle } from '@/ui/toggle';
 import { faNum } from '@/lib/logic';
 import { CourseArt } from '@/ui/header-art';
 import { Icon, type IconName } from '@/ui/icon';
@@ -64,6 +66,68 @@ function SearchBox() {
         <T style={{ fontSize: 12, fontWeight: '700', color: c.link }}>هوشمند</T>
       </View>
     </Pressable>
+  );
+}
+
+// Days in a row with study (an exam, a lesson, a practice) and the last seven days as dots; under it the daily email
+// reminder (lib/streak.ts): on / off and its hour, for an account with a confirmed address.
+function StreakCard() {
+  const c = useColors();
+  const { data, error, load, setReminder } = useStreak();
+  useFocusEffect(load);
+  if (!data) return null;
+  const { streak, today, week, reminder } = data;
+  const hourText = `${faNum(reminder.hour)}:${faNum('00')}`;
+  return (
+    <Card style={{ gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: today ? c.warn : c.surface2 }}>
+          <Icon name="flame" size={22} color={today ? '#fff' : c.faint} />
+        </View>
+        <View style={{ flex: 1, gap: 1 }}>
+          <T style={{ fontWeight: '800', fontSize: 16 }}>{streak ? t('{0} روز پیاپی', faNum(streak)) : 'رشته‌ی روزهای تمرین'}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{today ? 'امروز تمرین کرده‌اید؛ فردا هم برگردید.' : streak ? 'امروز هنوز تمرین نکرده‌اید؛ رشته را قطع نکنید.' : 'هر روز یک درس یا تمرین، رشته را شروع می‌کند.'}</T>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 4, direction: 'ltr' } as any}>
+          {week.map((d, k) => <View key={k} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: d ? c.warn : c.line, opacity: k === 6 && !d ? 0.5 : 1 }} />)}
+        </View>
+      </View>
+      {data.mail ? (
+        <>
+          <View style={{ height: 1, backgroundColor: c.line, opacity: 0.6 }} />
+          {data.email ? (
+            <View style={{ gap: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ flex: 1, gap: 1 }}>
+                  <T style={{ fontWeight: '700', fontSize: 14 }}>یادآوری روزانه با ایمیل</T>
+                  <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }}>{t('هر روز ساعت {0}، اگر هنوز تمرین نکرده باشید', hourText)}</T>
+                </View>
+                <Toggle value={reminder.on} onChange={v => setReminder(v, reminder.hour)} label={tr('یادآوری روزانه با ایمیل')} />
+              </View>
+              {reminder.on ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'flex-start' }}>
+                  <Pressable disabled={reminder.hour <= 5} onPress={() => { tap(); setReminder(true, reminder.hour - 1); }} accessibilityLabel={tr('زودتر')}
+                    style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center', opacity: reminder.hour <= 5 ? 0.4 : 1 }}>
+                    <T style={{ fontSize: 18, fontWeight: '700', lineHeight: 22 }}>−</T>
+                  </Pressable>
+                  <T style={{ fontWeight: '700', fontSize: 15, minWidth: 56, textAlign: 'center', writingDirection: 'ltr' }}>{hourText}</T>
+                  <Pressable disabled={reminder.hour >= 22} onPress={() => { tap(); setReminder(true, reminder.hour + 1); }} accessibilityLabel={tr('دیرتر')}
+                    style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center', opacity: reminder.hour >= 22 ? 0.4 : 1 }}>
+                    <T style={{ fontSize: 18, fontWeight: '700', lineHeight: 22 }}>+</T>
+                  </Pressable>
+                </View>
+              ) : null}
+            </View>
+          ) : (
+            <Pressable onPress={() => { tap(); router.push('/account'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Icon name="info" size={16} color={c.muted} />
+              <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>برای یادآوری روزانه با ایمیل، اول در «حساب کاربری» یک ایمیل تأییدشده ثبت کنید.</T>
+            </Pressable>
+          )}
+          {error ? <T style={{ color: c.bad, fontSize: 12.5 }}>{error}</T> : null}
+        </>
+      ) : null}
+    </Card>
   );
 }
 
@@ -281,6 +345,7 @@ export default function Course() {
   return (
     <SubPage title="آموزش گام‌به‌گام" subtitle="فصل به فصل، تا گواهینامه" hero={{ pic: 9, light: 10, icon: 'learn', art: CourseArt }}>
       <Enter><SearchBox /></Enter>
+      <Enter><StreakCard /></Enter>
       <Enter><TodayCard next={next} finished={finished} ready={ready.length} /></Enter>
       <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
         <T style={{ flex: 1, fontWeight: '800', fontSize: 18 }}>مسیر شما تا گواهینامه</T>

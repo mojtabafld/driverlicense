@@ -95,6 +95,8 @@ export default function Learn() {
             text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
             text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
+          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary"
+            text="اصطلاح‌های دانمارکی آزمون تئوری با معنی فارسی، مثل vigepligt و højreregel." />
         </View>
       )}
     </Screen>
