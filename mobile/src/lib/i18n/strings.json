@@ -1,4 +1,12 @@
 {
+"کد ۶ رقمی‌ای را که به ایمیل‌تان فرستادیم وارد کنید":["Enter the 6-digit code we sent to your email", "Skriv den 6-cifrede kode, vi har sendt til din e-mail"],
+"ایمیل حساب خود را وارد کنید تا کد بازیابی رمز برایتان فرستاده شود":["Enter your account's email and we'll send you a code to reset your password", "Skriv din kontos e-mail, så sender vi dig en kode til at nulstille adgangskoden"],
+"ارسال کد":["Send code", "Send kode"],
+"اگر ایمیل را نمی‌بینید، پوشه‌ی هرزنامه (Spam) را هم نگاه کنید.":["If you don't see the email, check your spam folder too.", "Hvis du ikke kan se e-mailen, så tjek også din spam-mappe."],
+"ارسال دوباره‌ی کد تا {0} ثانیه‌ی دیگر":["Send the code again in {0} seconds", "Send koden igen om {0} sekunder"],
+"ارسال دوباره‌ی کد":["Send the code again", "Send koden igen"],
+"کد ۶ رقمی":["6-digit code", "6-cifret kode"],
+"کد درست نیست یا دیگر معتبر نیست.":["The code is wrong or no longer valid.", "Koden er forkert eller ikke længere gyldig."],
 "بازیابی رمز عبور":["Reset password", "Nulstil adgangskode"],
 "یک رمز عبور جدید برای حساب خود انتخاب کنید":["Choose a new password for your account", "Vælg en ny adgangskode til din konto"],
 "ایمیل حساب خود را وارد کنید تا لینک تعیین رمز جدید برایتان فرستاده شود":["Enter your account's email and we'll send you a link to set a new password", "Skriv din kontos e-mail, så sender vi dig et link til at vælge en ny adgangskode"],

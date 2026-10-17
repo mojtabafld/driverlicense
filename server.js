@@ -127,20 +127,37 @@ async function sendVerifyMail(req, u, lang) {
   await store.saveUser(u);
   await mail.sendVerify(u.email, u.name || u.username, `${originOf(req)}/api/verify?t=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
 }
-// Forgotten password: a link to /?reset=<token> on the account's address, working for an hour; at most one a minute and
-// 6 a day per account (the same limits as the confirmation link). Asking reveals nothing about which addresses have an
-// account. Setting the new password ends the account's other sessions and confirms the address (the link proved it).
-async function sendResetMail(req, u, lang) {
+// Forgotten password: a random 6-digit code to the account's address, working for 15 minutes and for at most 5 wrong
+// tries; a new code at most once a minute and 6 times a day per account. Asking reveals nothing about which addresses
+// have an account. Setting the new password ends the account's other sessions and confirms the address (the code
+// proved it).
+const RESET_TRIES = 5;
+async function sendResetMail(u, lang) {
   const now = Date.now(), v = u.reset || {};
   if (v.sent && now - v.sent < 60e3) return console.log('reset mail: wait a minute', u.username);
   const day = (v.day && now - v.day < 864e5) ? v.day : now, n = day === v.day ? (v.n || 0) : 0;
   if (n >= 6) return console.log('reset mail: 6 today', u.username);
-  const token = crypto.randomBytes(32).toString('hex');
-  u.reset = { h: tokenHash(token), exp: now + 3600e3, sent: now, day, n: n + 1 };
+  const code = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
+  u.reset = { h: tokenHash(`${u.username}:${code}`), exp: now + 15 * 60e3, sent: now, day, n: n + 1, tries: 0 };
   await store.saveUser(u);
-  await mail.sendReset(u.email || u.username, u.name || u.username, `${originOf(req)}/?reset=${token}`, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
+  await mail.sendReset(u.email || u.username, u.name || u.username, code, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
   console.log('reset mail sent', u.username);
 }
+// The account a forgotten-password address belongs to: by its address, or by a username that is this address.
+function resetUser(e) {
+  const same = v => !!v && mail.normal(v) === e;
+  return Object.values(store.users).find(x => !x.guest && same(x.email)) || Object.values(store.users).find(x => !x.guest && same(x.username));
+}
+// Whether the code is the account's current one; a wrong code counts as a try (the code is dropped after 5).
+async function resetCodeOk(u, code) {
+  const r = u && u.reset;
+  if (!r || !r.h || !(r.exp > Date.now()) || (r.tries || 0) >= RESET_TRIES) return false;
+  if (safeEqual(r.h, tokenHash(`${u.username}:${String(code || '').replace(/\D/g, '')}`))) return true;
+  r.tries = (r.tries || 0) + 1;
+  await store.saveUser(u);
+  return false;
+}
+const BAD_CODE = 'کد درست نیست یا دیگر معتبر نیست.';
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
 const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه است.';
@@ -584,7 +601,7 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
 
-  // POST forgot { email, lang }: the new-password link to that address, when an account has it (the answer is the same
+  // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (the answer is the same
   // either way). Counted as a failed try, so one address cannot ask again and again.
   if (req.method === 'POST' && route === 'forgot') {
     if (!mail.available()) return send(res, 404, { error: 'ایمیل فعال نیست.' });
@@ -593,31 +610,23 @@ async function api(req, res, route) {
     const e = mail.normal(email);
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
     addFail(ip);
-    // By the account's address, or by a username that is this address (accounts that keep it only as their username).
-    const same = v => !!v && mail.normal(v) === e;
-    const u = Object.values(store.users).find(x => !x.guest && same(x.email)) || Object.values(store.users).find(x => !x.guest && same(x.username));
-    // Logged with the address half hidden, so a missing email can be traced.
-    const shown = e.replace(/^(.{2}).*@/, '$1…@');
-    if (u) await sendResetMail(req, u, lang).catch(err => console.error('reset mail', u.username, err.message));
-    else {
-      // Where the address appears at all (which account and field), to trace an account it should have matched.
-      const near = Object.values(store.users).filter(x => JSON.stringify(x).toLowerCase().includes(e))
-        .map(x => `${x.username}:${Object.keys(x).filter(k => JSON.stringify(x[k] ?? '').toLowerCase().includes(e)).join('/')}${x.guest ? ':guest' : ''}`);
-      console.log('reset mail: no account for', shown, near.length ? 'seen in ' + near.join(', ') : '');
-    }
+    const u = resetUser(e);
+    if (u) await sendResetMail(u, lang).catch(err => console.error('reset mail', u.username, err.message));
+    else console.log('reset mail: no account for', e.replace(/^(.{2}).*@/, '$1…@'));
     return send(res, 200, { ok: true });
   }
-  // POST reset { t, password }: the link's token and the new password; signs in with it.
-  if (req.method === 'POST' && route === 'reset') {
+  // POST resetcheck { email, code }: whether the code is right (before the new password is asked for).
+  // POST reset { email, code, password }: the new password; signs in with it.
+  if (req.method === 'POST' && (route === 'resetcheck' || route === 'reset')) {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
-    const { t, password } = await readBody(req);
-    const h = tokenHash(String(t || ''));
-    const u = Object.values(store.users).find(x => x.reset && x.reset.h && safeEqual(x.reset.h, h));
-    if (!u || !(u.reset.exp > Date.now())) { addFail(ip); return send(res, 400, { error: 'این لینک دیگر معتبر نیست؛ دوباره درخواست لینک کنید.' }); }
+    const { email, code, password } = await readBody(req);
+    const u = resetUser(mail.normal(email));
+    if (!(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+    if (route === 'resetcheck') return send(res, 200, { ok: true });
     if (typeof password !== 'string' || !password.length) return send(res, 400, { error: 'رمز عبور را وارد کنید.' });
     u.salt = crypto.randomBytes(16).toString('hex'); u.hash = await hashPw(password, u.salt);
     delete u.reset;
-    if (!u.emailOk) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
+    if (!u.emailOk && u.email) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
     await store.saveUser(u);
     for (const [k, x] of Object.entries(store.sessions)) if (x.username === u.username) { delete store.sessions[k]; await store.deleteSession(k); }
     console.log('password reset', u.username);
