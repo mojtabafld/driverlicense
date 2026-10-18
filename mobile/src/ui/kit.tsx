@@ -340,13 +340,18 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             {plain && name ? (
               // «هدر ساده»: the name on the greeting's line, a little smaller than a title: the greeting in the regular cut, the
               // name in bold, cut short with … if it does not fit (Mojtaba 2026-10-18).
-              // The drawing of the time of day before it, on its line, and the line under it from the start edge, as on
-              // the learn and exam tabs (Mojtaba 2026-10-18).
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              // The drawing of the time of day stands beside both lines, centred between the greeting and the line under
+              // it, and that line starts where the greeting does (Mojtaba 2026-10-18).
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 {lead}
-                <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
-                <View style={{ flexShrink: 1 }}>
-                  <T style={[{ fontSize: 20, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                <View style={{ flex: 1, gap: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
+                    <View style={{ flexShrink: 1 }}>
+                      <T style={[{ fontSize: 20, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                    </View>
+                  </View>
+                  {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
                 </View>
               </View>
             ) : <>
@@ -358,9 +363,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             ) : <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>}
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
             </>}
-            {/* (With the time-of-day drawing before the greeting, the line under it starts where the greeting's text does:
-                the drawing's 22 and the row's gap of 8; Mojtaba 2026-10-18.) */}
-            {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, plain && name && lead ? (Platform.OS !== 'web' ? { marginStart: 30 } : RTL ? { marginRight: 30 } : { marginLeft: 30 }) : null, shade]}>{subtitle}</T> : null}
+            {subtitle && !(plain && name) ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
           </View>
           {plain && act && 'node' in act ? (
             <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
