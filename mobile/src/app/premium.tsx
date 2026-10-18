@@ -5,7 +5,8 @@
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, TextInput, View } from 'react-native';
+import { Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '@/lib/api';
 import { t, UI_LANG } from '@/lib/i18n';
@@ -18,10 +19,10 @@ import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
 // One thing premium adds: a round green tick (OkTick), then a line.
-function Perk({ title }: { title: string }) {
+function Perk({ title, half }: { title: string; half?: boolean }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <OkTick size={20} />
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: half ? 6 : 10, width: half ? '48%' : undefined }}>
+      <OkTick size={half ? 18 : 20} />
       <T style={{ flex: 1, fontWeight: '500', fontSize: 12 }}>{title}</T>
     </View>
   );
@@ -31,11 +32,11 @@ const PLAN_NAME: Record<Plan['id'], string> = { week: 'یک هفته', month: '�
 
 // One pass to choose: its length and price, outlined in the text colour while chosen; the three months one is marked
 // as the best value.
-function PlanOption({ plan, on, best, onPress }: { plan: Plan; on: boolean; best?: boolean; onPress: () => void }) {
+function PlanOption({ plan, on, best, onPress, pad = 14 }: { plan: Plan; on: boolean; best?: boolean; onPress: () => void; pad?: number }) {
   const c = useColors();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="radio" accessibilityState={{ selected: on }}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 14,
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: pad, paddingHorizontal: 16, borderRadius: 14,
         borderWidth: on ? 2 : 1.5, borderColor: on ? c.text : c.line, backgroundColor: c.surface, opacity: pressed ? 0.85 : 1 })}>
       <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: on ? c.text : c.faint, alignItems: 'center', justifyContent: 'center' }}>
         {on ? <View style={{ width: 11, height: 11, borderRadius: 6, backgroundColor: c.text }} /> : null}
@@ -60,6 +61,20 @@ export default function Premium() {
   const [plan, setPlan] = useState<Plan['id']>('month');
   const [code, setCode] = useState(''), [redeeming, setRedeeming] = useState(false);
   const until = user?.premium?.until ?? 0;
+  const showCode = !!pay?.promo && !guest && !user?.premium?.promo && !user?.promoUsed;
+  // Fitted to the screen (Mojtaba 2026-10-18): while the page is taller than the room under its header, it steps to a
+  // denser layout (1: less space, lower plan rows; 2: the four perks two by two, a smaller buy button; 3: the active
+  // pass on one line, without the line on how a renewal adds up), so it needs no
+  // scrolling; with the trial-code card still there it may scroll. A new screen height starts over.
+  const { height: winH } = useWindowDimensions(), ins = useSafeAreaInsets();
+  const [level, setLevel] = useState(0);
+  useEffect(() => setLevel(0), [winH, showCode]);
+  const box = useRef<View>(null);
+  const fit = () => {
+    if (showCode || level >= 3) return;
+    box.current?.measureInWindow((_x, top, _w, h) => { if (top > 0 && top + h > winH - ins.bottom - 12) setLevel(l => Math.min(3, l + 1)); });
+  };
+  const gap = level ? 10 : 14, planPad = level >= 2 ? 8 : level ? 10 : 14;
 
   // On opening: a payment the server has not counted yet (its webhook lost, or the buyer never came back here) counts now.
   useEffect(() => { if (pay && user && !guest && !paid) syncPremium().catch(() => {}); }, [!!pay, !!user]);
@@ -101,17 +116,26 @@ export default function Premium() {
   const check = async () => { setBusy('check'); try { await syncPremium(); } catch { try { await refresh(); } catch {} } setBusy(null); };
 
   return (
-    <SubPage title="نسخه‌ی ویژه" maxWidth={560}>
-      {/* What premium adds, one under the other, and one line on paying. */}
-      <View style={{ gap: 12, paddingHorizontal: 4 }}>
-        <Perk title="توضیح هر پاسخ با هوش مصنوعی" />
-        <Perk title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
-        <Perk title="خواندن سؤال‌ها و گزینه‌ها با صدا" />
-        <Perk title="شنیدن توضیح‌ها به فارسی" />
-        <T style={{ color: c.muted, fontSize: 12.5, marginTop: 2 }}>یک بار پرداخت، بدون تمدید خودکار</T>
+    <SubPage title="نسخه‌ی ویژه" maxWidth={560} gap={0}>
+      <View ref={box} onLayout={() => setTimeout(fit, 0)} style={{ gap }}>
+      {/* What premium adds, one under the other (two by two when the screen is short), and one line on paying. */}
+      <View style={{ gap: level >= 2 ? 8 : level ? 9 : 12, paddingHorizontal: 4, ...(level >= 2 ? { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' } : null) }}>
+        <Perk half={level >= 2} title="توضیح هر پاسخ با هوش مصنوعی" />
+        <Perk half={level >= 2} title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
+        <Perk half={level >= 2} title="خواندن سؤال‌ها و گزینه‌ها با صدا" />
+        <Perk half={level >= 2} title="شنیدن توضیح‌ها به فارسی" />
+        <T style={{ color: c.muted, fontSize: 12.5, marginTop: 2, width: '100%' }}>یک بار پرداخت، بدون تمدید خودکار</T>
       </View>
 
-      {premium ? (
+      {premium && level >= 3 ? (
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 }}>
+          <Icon name="checkCircle" size={24} color={c.ok} />
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '700', fontSize: 14.5 }}>نسخه‌ی ویژه برای حساب شما فعال است</T>
+            {until > Date.now() ? <T style={{ color: c.muted, fontSize: 12.5 }}>{t('فعال تا {0}', fmtDay(until))}</T> : null}
+          </View>
+        </Card>
+      ) : premium ? (
         <Card style={{ gap: 8, alignItems: 'center' }}>
           <Icon name="checkCircle" size={36} color={c.ok} />
           <T style={{ fontWeight: '700', fontSize: 17, textAlign: 'center' }}>نسخه‌ی ویژه برای حساب شما فعال است</T>
@@ -129,23 +153,23 @@ export default function Premium() {
           <Button big icon="personAdd" label="ساخت حساب کاربری" onPress={() => { logout().catch(() => {}); }} style={{ alignSelf: 'stretch', marginTop: 4 }} />
         </Card>
       ) : pay ? (
-        <Card style={{ gap: 12 }}>
+        <Card style={{ gap: level ? 9 : 12, ...(level ? { paddingVertical: 12 } : null) }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>{premium ? 'تمدید' : 'انتخاب مدت'}</T>
-          <View accessibilityRole="radiogroup" style={{ gap: 10 }}>
-            {pay.plans.map(p => <PlanOption key={p.id} plan={p} on={plan === p.id} best={p.id === 'quarter'} onPress={() => setPlan(p.id)} />)}
+          <View accessibilityRole="radiogroup" style={{ gap: level ? 8 : 10 }}>
+            {pay.plans.map(p => <PlanOption key={p.id} pad={planPad} plan={p} on={plan === p.id} best={p.id === 'quarter'} onPress={() => setPlan(p.id)} />)}
           </View>
-          {premium ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>روزهای خرید تازه به آخر نسخه‌ی ویژه‌ی فعلی شما اضافه می‌شود.</T> : null}
-          <Button big icon="lock" label={busy === 'buy' ? 'در حال باز کردن صفحه‌ی پرداخت…' : busy === 'check' ? 'در حال تأیید پرداخت…' : premium ? 'تمدید نسخه‌ی ویژه' : 'خرید نسخه‌ی ویژه'} onPress={buy} disabled={!!busy} />
+          {premium && level < 3 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>روزهای خرید تازه به آخر نسخه‌ی ویژه‌ی فعلی شما اضافه می‌شود.</T> : null}
+          <Button big={level < 2} icon="lock" label={busy === 'buy' ? 'در حال باز کردن صفحه‌ی پرداخت…' : busy === 'check' ? 'در حال تأیید پرداخت…' : premium ? 'تمدید نسخه‌ی ویژه' : 'خرید نسخه‌ی ویژه'} onPress={buy} disabled={!!busy} />
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>پرداخت امن با Stripe: کارت بانکی، Apple Pay یا Google Pay.</T>
           {pay.test ? <T style={{ color: c.bad, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>حالت آزمایشی: با کارت 4242 4242 4242 4242 پرداخت کنید؛ پولی کم نمی‌شود.</T> : null}
           {Platform.OS !== 'web' ? <Button kind="glass" icon="refresh" label="پرداخت کردم؛ بررسی دوباره" onPress={check} disabled={!!busy} /> : null}
         </Card>
       ) : null}
       {/* A trial code, until this account has used one. */}
-      {pay?.promo && !guest && !user?.premium?.promo && !user?.promoUsed ? (
+      {showCode && pay ? (
         <Card style={{ gap: 10 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>کد تخفیف</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{t('با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).', faNum(pay.promo))}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{t('با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).', faNum(pay.promo ?? 3))}</T>
           <View style={{ gap: 10 }}>
             <TextInput value={code} onChangeText={setCode} onSubmitEditing={redeem} autoCapitalize="characters" autoCorrect={false} maxLength={64}
               placeholder={t('کد تخفیف')} placeholderTextColor={c.faint} accessibilityLabel={t('کد تخفیف')}
@@ -164,6 +188,7 @@ export default function Premium() {
           <T style={{ flex: 1, fontSize: 13.5, color: msg.ok ? c.ok : c.bad }}>{msg.text}</T>
         </View>
       ) : null}
+      </View>
     </SubPage>
   );
 }
