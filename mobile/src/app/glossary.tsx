@@ -24,7 +24,7 @@ export default function Glossary() {
         <Icon name="search" size={18} color={c.faint} />
         <TextInput value={q} onChangeText={v => setQ(v.slice(0, 60))} placeholder={tr('یک کلمه بنویسید، دانمارکی یا فارسی')} placeholderTextColor={c.muted}
           accessibilityLabel={tr('جستجو در واژه‌نامه')} autoCapitalize="none" autoCorrect={false}
-          style={{ flex: 1, height: 46, fontSize: 15, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
+          style={{ flex: 1, height: 46, fontSize: 16, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
             writingDirection: RTL ? 'rtl' : 'ltr', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {q ? <Pressable onPress={() => { tap(); setQ(''); }} hitSlop={8} accessibilityLabel={tr('پاک کردن')}><Icon name="xmark" size={16} color={c.faint} /></Pressable> : null}
       </View>
