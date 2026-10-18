@@ -101,6 +101,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const tops = data.map(a => y(pctOf(a) * 100));
   // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge.
   const edge = Math.max(0, CW - VW) + (VW + DOT * 2 + 2) * draw;
+  // On Android a clip path whose rectangle changes is not drawn again (react-native-svg), so the line stayed hidden
+  // while its points came in (Mojtaba 2026-10-18); the phones get a new clip, by its id, at each step instead.
+  const clipId = Platform.OS === 'web' ? 'pcDraw' : `pcDraw${Math.round(edge)}`;
   const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
   // The line through the points, smooth: each step a curve leaving and reaching its points level, so it never swings
   // above or below them; the area under it down to 0%.
@@ -140,10 +143,10 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                       <Stop offset="1" stopColor={c.forest} stopOpacity={0} />
                     </LinearGradient>
                     {/* The part drawn so far: the line and its fill show up to `edge`. */}
-                    <ClipPath id="pcDraw"><Rect x={0} y={0} width={edge} height={H} /></ClipPath>
+                    <ClipPath id={clipId} key={clipId}><Rect x={0} y={0} width={edge} height={H} /></ClipPath>
                   </Defs>
                   {ARC ? <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.faint} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" /> : null}
-                  <G clipPath="url(#pcDraw)">
+                  <G key={clipId} clipPath={`url(#${clipId})`}>
                     {ARC ? <>
                       <Path d={area} fill={c.forest} fillOpacity={0.13} />
                       <Path d={line} fill="none" stroke={c.cta} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.6} />
