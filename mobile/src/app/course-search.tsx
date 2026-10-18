@@ -73,7 +73,7 @@ export default function CourseSearch() {
         <TextInput value={q} onChangeText={v => setQ(v.slice(0, 200))} autoFocus={!p.q} returnKeyType="search"
           placeholder={tr('مثلاً: حق تقدم در میدان')} placeholderTextColor={c.muted} accessibilityLabel={tr('جستجو در آموزش')}
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
-          style={{ flex: 1, height: 52, fontSize: 15.5, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
+          style={{ flex: 1, height: 52, fontSize: 16, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
             writingDirection: RTL ? 'rtl' : 'ltr', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {q ? (
           <Pressable onPress={() => { tap(); setQ(''); }} hitSlop={8} accessibilityLabel={tr('پاک کردن')} style={{ padding: 6 }}>
