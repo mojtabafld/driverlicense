@@ -8,7 +8,6 @@ import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n'
 import { reloadApp } from './reload';
 import { loadToken, saveToken } from './token';
 import { PALETTE, forgetPalette, keepPalette, rememberDefault } from '@/ui/palette';
-import { getPlainHeader, setPlainHeader } from '@/lib/header-style';
 import { useTheme } from '@/ui/theme';
 
 export type Saved = { id: number; a?: number[]; at: number };
@@ -102,7 +101,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const lookOut = () => {
     if (PROVE_PICS) return;
     setMode('system');
-    setPlainHeader(true, false);
     if (forgetPalette()) reloadApp();
   };
 
@@ -121,8 +119,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (s.mode) setMode(s.mode); else add.mode = modeRef.current;
       if (!s.ui) add.ui = UI_LANG;
       if (!s.palette) add.palette = PALETTE;
-      // «هدر ساده» follows the account too: its own choice, or this device's for an account that has none yet.
-      if (s.header) setPlainHeader(s.header === 'plain'); else add.header = getPlainHeader() ? 'plain' : 'pictures';
       if (newUi || newPalette) { reloadApp(() => askRestart(newUi ? s.ui! : UI_LANG)); return; }
       // An account that has never chosen the questions' language is new: it is asked once, with the look, on whatever
       // device it first signs in on (app/_layout.tsx, ui/lang-pick.tsx), the app's language picked in advance

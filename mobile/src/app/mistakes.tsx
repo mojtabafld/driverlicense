@@ -27,7 +27,7 @@ import { Sheet, SheetScroll } from '@/ui/sheet';
 import { ActionButton, Backdrop, Button, Card, EmptyState, Enter, T, tap, usePageMotion, useTopOnFocus } from '@/ui/kit';
 import { Marquee } from '@/ui/marquee';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
-import { ARC, DA_FONT, radius, useColors, useIsDark } from '@/ui/theme';
+import { ARC, DA_FONT, useColors, useIsDark } from '@/ui/theme';
 
 const TOPICS_SHOWN = 7; // topics listed on the overview; «نمایش همه» opens the topics page with all of them
 
@@ -121,17 +121,21 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                 <T style={{ fontSize: 12.5, color: c.muted }}>روی هر بخش بزنید تا سؤال‌هایش نمایش داده شود</T>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                {([['topics', faNum(sorted.length), 'مبحث', c.text, 'list'], ['fixed', faNum(fixed), 'سؤال اصلاح‌شده', c.ok, 'checkCircle'], ['open', faNum(open), 'سؤال اصلاح‌نشده', c.bad, 'xCircle']] as const).map(([v, n, l, col, icon]) => (
-                  <Pressable key={v} onPress={() => choose(v)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1 })} accessibilityRole="button">
-                    {/* (all three as tall as the tallest, each icon and number on one line across the three, its label under it: Mojtaba, 2026-10-15) */}
-                    <View style={[{ flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingVertical: 8, paddingHorizontal: 3, borderRadius: 8, backgroundColor: c.surface2 },
-                      ARC && { paddingVertical: 10, borderRadius: radius.sm, borderWidth: 1, borderColor: c.cardBorder }]}>
-                      {/* the number with its icon beside it (Mojtaba, 2026-10-15) */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                        <Icon name={icon} size={17} color={col} weight="semibold" />
-                        <T style={{ fontSize: 18, fontWeight: '800', color: col, textAlign: 'center' }}>{n}</T>
+                {/* Each panel: its sign in a tinted round, a › that it opens, the count large and a one-word label under
+                    it; the three the same height, the text from their start edge (redesigned, Mojtaba 2026-10-18). */}
+                {([['topics', sorted.length, 'مباحث', c.link, c.accentSoft, 'list'], ['fixed', fixed, 'اصلاح‌شده', c.ok, c.okSoft, 'checkCircle'], ['open', open, 'اصلاح‌نشده', c.bad, c.badSoft, 'xCircle']] as const).map(([v, n, l, col, soft, icon]) => (
+                  <Pressable key={v} onPress={() => choose(v)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })} accessibilityRole="button" accessibilityLabel={`${faNum(n)} ${l}`}>
+                    <View style={[{ flex: 1, gap: 10, padding: 12, borderRadius: 16, backgroundColor: c.surface2 }, ARC && { borderWidth: 1, borderColor: c.cardBorder }]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
+                          <Icon name={icon} size={16} color={col} weight="semibold" />
+                        </View>
+                        <Icon name="chevronLeft" size={12} color={c.faint} weight="semibold" />
                       </View>
-                      <T numberOfLines={2} style={{ fontSize: 11, lineHeight: 16, color: c.muted, textAlign: 'center' }}>{l}</T>
+                      <View>
+                        <T style={{ fontSize: 24, lineHeight: 30, fontWeight: '800', color: c.text }}>{faNum(n)}</T>
+                        <T numberOfLines={1} style={{ fontSize: 12, lineHeight: 17, color: c.muted }}>{l}</T>
+                      </View>
                     </View>
                   </Pressable>
                 ))}
