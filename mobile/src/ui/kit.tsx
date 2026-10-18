@@ -346,7 +346,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
                 {lead}
                 <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
                 <View style={{ flexShrink: 1 }}>
-                  <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                  <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                 </View>
               </View>
             ) : <>
