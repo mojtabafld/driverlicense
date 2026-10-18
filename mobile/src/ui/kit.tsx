@@ -223,6 +223,9 @@ const BAR_ROOM = 64 + 30;
 // `light`: the light theme's picture (pic + 3 unless given).
 // `art`: a drawing made in the app (vector) in place of the server's picture, laid in the header's left part with the
 // header's height; it gets the theme (light) to colour itself.
+// The plain header («هدر ساده») keeps the picture header's colour band and its fade into the page when this is on; off
+// (Mojtaba 2026-10-18, to try it on the site) it is flat, in the page's own colour. Flip it back to bring the band back.
+const PLAIN_GRADIENT = false;
 export type HeroLook = { pic: number; light?: number; icon: IconName; art?: React.ComponentType<{ light: boolean; height: number }> };
 
 // On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
@@ -283,7 +286,10 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const act = action === 'theme'
     ? { icon: (theme === 'dark' ? 'sun' : 'moon') as IconName, label: 'تغییر تم', onPress: () => setMode(theme === 'dark' ? 'light' : 'dark') }
     : action;
-  const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
+  // «هدر ساده» without the colour band (flat: the page's own colour, no fade; the title in the text colour) unless
+  // PLAIN_GRADIENT is on (then the band and its fade stay, as before).
+  const flat = plain && !PLAIN_GRADIENT, page = useColors();
+  const pic = light ? lightPic : look.pic, bg = flat ? page.bgGradient[0] : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
   useHeaderTop(bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
@@ -299,7 +305,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const titleSize = Math.max(20, Math.min(30, Math.round(width * 0.075), Math.floor((room - 46) / 1.35)));
   // The title (and name) in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts).
   const bold = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
-  const shade = light ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
+  const shade = light || flat ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   // An inner page (`back`): the title and its line under the way back (Mojtaba, 2026-10-15), where a tab's title sits,
   // the header growing when a long line needs the room.
   const under = !!back && !tall;
@@ -314,7 +320,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
-      <HeroFade />
+      {flat ? null : <HeroFade />}
       <View style={{ flex: 1, paddingTop: under ? topPad + 48 : topPad, paddingBottom: plain ? 30 : name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall || under ? 'flex-start' : 'flex-end' }}>
         {tall ? (
           <>
