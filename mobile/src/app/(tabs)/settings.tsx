@@ -157,7 +157,7 @@ export default function Settings() {
         ) : null}
         {/* The pages' headers without their pictures (lib/header-style.ts); it applies at once. */}
         <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}>
-          <Row title="هدر ساده" sub="بالای صفحه‌ها فقط عنوان، بدون تصویر." right={<Toggle label="هدر ساده" value={plainHeader} onChange={v => { tap(); setPlainHeader(v); }} />} />
+          <Row title="هدر ساده" sub="بالای صفحه‌ها فقط عنوان، بدون تصویر." right={<Toggle label="هدر ساده" value={plainHeader} onChange={v => { tap(); setPlainHeader(v); setSettings({ header: v ? 'plain' : 'pictures' }).catch(() => {}); }} />} />
         </View>
       </Card>
       <Card style={{ gap: 10 }}>
