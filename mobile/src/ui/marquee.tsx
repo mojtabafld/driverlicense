@@ -16,13 +16,17 @@ const SPEED = 32, PAUSE = 1600, FADE = 18; // px per second, ms at each end, wid
 // see-through background (a tinted chip) the edges fade the text itself instead (web). `once`: it glides through
 // once and then rests at its start; each change of `play` runs it once more (a tap on the chip). `fade`: the width of
 // the faded edges. `rich`: what is shown in place of the plain `text` (parts in bold or in colour); `text` still names it
-// for screen readers and runs it again when it changes.
-export function Marquee({ text, rich, style, height, bg, mask, once, play = 0, fade = FADE }: { text: string; rich?: React.ReactNode; style?: StyleProp<TextStyle>; height: number; bg?: string; mask?: boolean; once?: boolean; play?: number; fade?: number }) {
+// for screen readers and runs it again when it changes. `flush`: no faded edges and no inset; at rest the line sits
+// against its box's start edge (right in Persian, left in English and Danish), as a line that fits does (the home
+// chart's picked-attempt line, Mojtaba 2026-10-18).
+export function Marquee({ text, rich, style, height, bg, mask, once, play = 0, fade = FADE, flush }: { flush?: boolean; text: string; rich?: React.ReactNode; style?: StyleProp<TextStyle>; height: number; bg?: string; mask?: boolean; once?: boolean; play?: number; fade?: number }) {
   const c = useColors(), edge = bg ?? c.bg;
   const [room, setRoom] = useState(0), [full, setFull] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
   // Too long: it travels so that both its ends come out from under the faded edges.
-  const over = full > room - (mask ? fade * 2 : 0) + 0.5 ? Math.ceil(full - room + fade * 2) : 0;
+  const over = flush ? (full > room + 0.5 ? Math.ceil(full - room) : 0)
+    : full > room - (mask ? fade * 2 : 0) + 0.5 ? Math.ceil(full - room + fade * 2) : 0;
+  const inset = flush ? 0 : over || mask ? fade : 0;
   const wide = full ? Math.ceil(full) + 4 : undefined;
   useEffect(() => {
     x.setValue(0);
@@ -46,14 +50,18 @@ export function Marquee({ text, rich, style, height, bg, mask, once, play = 0, f
       </View>
       {/* Given its full measured width (and a little slack for rounding): left to itself on Android and iOS, a box
           placed by its right edge only is held to its parent's width, which cut the text off with «…». */}
-      <Animated.View style={{ position: 'absolute', top: 0, ...(RTL ? { right: over || mask ? fade : 0 } : { left: over || mask ? fade : 0 }), width: wide, flexDirection: 'row', justifyContent: RTL ? 'flex-end' : 'flex-start', transform: [{ translateX: x }] }}>
+      <Animated.View style={{ position: 'absolute', top: 0, ...(RTL ? { right: inset } : { left: inset }), width: wide, flexDirection: 'row', justifyContent: RTL ? 'flex-end' : 'flex-start', transform: [{ translateX: x }] }}>
         <T style={[style, { flexShrink: 0, width: wide }]} numberOfLines={1}>{rich ?? text}</T>
       </Animated.View>
-      {over && !mask ? (
+      {over && !mask && !flush ? (
         <>
           <LinearGradient pointerEvents="none" colors={[edge, `${edge}00`]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: fade }} />
           <LinearGradient pointerEvents="none" colors={[`${edge}00`, edge]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: fade }} />
         </>
+      ) : over && flush ? (
+        // `flush`: a soft fade only on the end side, where the line is cut.
+        <LinearGradient pointerEvents="none" colors={RTL ? [edge, `${edge}00`] : [`${edge}00`, edge]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+          style={{ position: 'absolute', ...(RTL ? { left: 0 } : { right: 0 }), top: 0, bottom: 0, width: fade }} />
       ) : null}
     </View>
   );

@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
-import { RTL } from '@/lib/i18n';
+import { RTL, tr } from '@/lib/i18n';
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
@@ -186,8 +186,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
                 {/* Too long for a small phone: the line glides once to show its end, then rests at its start
                     (ui/marquee.tsx; Mojtaba 2026-10-18). */}
-                <Marquee once height={20} bg={c.surface2} style={{ fontSize: 13, lineHeight: 20 }}
-                  text={`${pickName}، ${isFull(a) ? `${faNum(scoreOf(a))}/${faNum(a.items.length)} ${isPass(a) ? 'قبول' : 'مردود'}` : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`}، ${fmtDate(a.at)}`}
+                <Marquee once flush height={20} bg={c.surface2} style={{ fontSize: 13, lineHeight: 20 }}
+                  text={[tr(pickName), isFull(a) ? `${tr(`${faNum(scoreOf(a))}/${faNum(a.items.length)}`)} ${tr(isPass(a) ? 'قبول' : 'مردود')}` : tr(`${faNum(Math.round(pctOf(a) * 100))}٪ درست`), fmtDate(a.at)].join(tr('،') + ' ')}
                   rich={<>
                     <T style={{ fontSize: 13, fontWeight: '700' }}>{pickName}</T>
                     {'، '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`}، {fmtDate(a.at)}

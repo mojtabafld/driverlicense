@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, cloneElement, isValidElement, useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -340,18 +340,13 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             {plain && name ? (
               // «هدر ساده»: the name on the greeting's line, a little smaller than a title: the greeting in the regular cut, the
               // name in bold, cut short with … if it does not fit (Mojtaba 2026-10-18).
-              // The drawing before it (the time of day) stands beside both lines, centred between them, and the line under
-              // the greeting starts where the greeting does (Mojtaba 2026-10-18).
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              // The drawing of the time of day before it, on its line, and the line under it from the start edge, as on
+              // the learn and exam tabs (Mojtaba 2026-10-18).
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {lead}
-                <View style={{ flex: 1, gap: 2 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
-                    <View style={{ flexShrink: 1 }}>
-                      <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
-                    </View>
-                  </View>
-                  {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+                <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
+                <View style={{ flexShrink: 1 }}>
+                  <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                 </View>
               </View>
             ) : <>
@@ -363,7 +358,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             ) : <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>}
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
             </>}
-            {subtitle && !(plain && name) ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+            {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
           </View>
           {plain && act && 'node' in act ? (
             <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
@@ -431,8 +426,10 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
 // On the main site, with the exam in English, the Danish terms in a Persian text are given in English (lib/en-terms.ts).
 const enKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ? enTerms(k) : Array.isArray(k) ? k.map(enKids) : k);
 // In English or Danish, the text in that language (lib/i18n.ts): a text given in parts (JSX «درس {n}») as one.
+// (Into a fragment's children too: a line handed over whole as <>…</>, ui/marquee.tsx's `rich`.)
 const trKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ? tr(k)
-  : Array.isArray(k) ? (k.every(x => typeof x === 'string' || typeof x === 'number') ? tryTr(k.join('')) ?? k.map(trKids) : k.map(trKids)) : k);
+  : Array.isArray(k) ? (k.every(x => typeof x === 'string' || typeof x === 'number') ? tryTr(k.join('')) ?? k.map(trKids) : k.map(trKids))
+  : isValidElement<{ children?: React.ReactNode }>(k) && k.type === Fragment ? cloneElement(k, undefined, trKids(k.props.children)) : k);
 const swapAlign = (a: TextStyle['textAlign']) => (a === 'left' ? 'right' : a === 'right' ? 'left' : a);
 export function T({ style, raw, ...p }: TextProps & { style?: StyleProp<TextStyle>; raw?: boolean }) {
   const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS;
