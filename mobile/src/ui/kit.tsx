@@ -337,11 +337,10 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
         {below ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ gap: 2, maxWidth: plain ? undefined : '58%', flex: plain ? 1 : undefined }}>
             {plain && name ? (
-              // «هدر ساده»: the name on the greeting's line, slanted (a skew, as the Persian font has no italic cut),
-              // cut short with … if it does not fit (Mojtaba 2026-10-18).
+              // «هدر ساده»: the name on the greeting's line, upright, cut short with … if it does not fit (Mojtaba 2026-10-18).
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
                 <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink, flexShrink: 0 }, bold, shade]} numberOfLines={1}>{title}</T>
-                <View style={{ flexShrink: 1, transform: [{ skewX: '-12deg' }] }}>
+                <View style={{ flexShrink: 1 }}>
                   <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                 </View>
               </View>
