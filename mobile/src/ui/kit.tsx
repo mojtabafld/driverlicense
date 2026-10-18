@@ -332,7 +332,15 @@ function SwapText({ text, style }: { text: string; style: StyleProp<TextStyle> }
 // `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
 // `subtitleAfter`: the line under the title once the drawing has gone (SwapText).
 export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string }) {
+  // The home header's opening (with a `lead`): first the greeting alone beside the drawing; the drawing goes and the
+  // text glides to the edge; then the line under the greeting opens (the greeting moves up for it) and comes in; a
+  // while later it changes to `subtitleAfter` (Mojtaba 2026-10-18). Once per app start, later the end state at once.
   const [after, setAfter] = useState(leadGone);
+  const [sub] = useState(() => new Animated.Value(leadGone || !lead ? 1 : 0));
+  const openSub = () => {
+    Animated.sequence([Animated.delay(250), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
+      .start(({ finished }) => { if (finished) setTimeout(() => setAfter(true), 2200); });
+  };
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
   // page, only the picture or drawing goes, and the title may take the whole width.
@@ -395,8 +403,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
               // The drawing of the time of day stands beside both lines, centred between the greeting and the line under
               // it, and that line starts where the greeting does (Mojtaba 2026-10-18); then it goes (FadingLead).
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {/* (The line changes a second after the text has come to rest; Mojtaba 2026-10-18.) */}
-                {lead ? <FadingLead onDone={() => setTimeout(() => setAfter(true), 1000)}>{lead}</FadingLead> : null}
+                {lead ? <FadingLead onDone={openSub}>{lead}</FadingLead> : null}
                 <View style={{ flex: 1, gap: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
@@ -404,7 +411,12 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
                       <T style={[{ fontSize: 20, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                     </View>
                   </View>
-                  {subtitle ? <SwapText text={after && subtitleAfter ? subtitleAfter : subtitle} style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]} /> : null}
+                  {subtitle ? (
+                    <Animated.View style={{ height: sub.interpolate({ inputRange: [0, 1], outputRange: [0, 22] }), overflow: 'hidden',
+                      opacity: sub.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0, 1] }), transform: [{ translateY: sub.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
+                      <SwapText text={after && subtitleAfter ? subtitleAfter : subtitle} style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]} />
+                    </Animated.View>
+                  ) : null}
                 </View>
               </View>
             ) : <>
