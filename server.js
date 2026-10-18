@@ -1328,6 +1328,18 @@ async function main() {
     for (const u of Object.values(store.users)) if ((u.settings || {}).header !== 'plain') { u.settings = { ...(u.settings || {}), header: 'plain' }; await store.saveUser(u); }
     await store.saveMeta('plainHeaderAll', 1);
   }
+  // One-time (2026-10-18): the daily email reminder became a notification (the course page, push.js); an email
+  // reminder that was on is the notification reminder at the same hour now (it reaches a device once notifications
+  // are allowed there), and no reminder emails go out any more.
+  if (!store.meta.remindToPush) {
+    for (const u of Object.values(store.users)) {
+      if (!u.reminder || !u.reminder.on) continue;
+      u.notify = { ...(u.notify || {}), remind: true, time: `${String(u.reminder.hour || 18).padStart(2, '0')}:00` };
+      u.reminder.on = false;
+      await store.saveUser(u);
+    }
+    await store.saveMeta('remindToPush', 1);
+  }
   // Web push (push.js): its keys, then once a minute the reminders and the day's messages that are due.
   await push.init(store);
   setInterval(() => {

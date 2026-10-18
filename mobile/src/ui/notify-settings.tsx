@@ -2,10 +2,12 @@
 // them on: a reminder each day at the hour the user picks, to do an exam or the next lesson, and (on unless turned
 // off) one message a day at a time of its own between 10:00 and 20:00 about the course and the exams. Where they cannot
 // work, a line says why (an iPhone outside the Home Screen app, notifications blocked, a browser without them).
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { api } from '@/lib/api';
+import { t as fmt } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { disablePush, enablePush, pushState, type Notify, type PushState } from '@/lib/push';
 import { Icon, type IconName } from './icon';
@@ -48,27 +50,44 @@ const WHY: Partial<Record<PushState, string>> = {
   unsupported: 'این مرورگر اعلان را پشتیبانی نمی‌کند.',
 };
 
-export function NotifySettings() {
-  const c = useColors();
+// This device's notifications and the account's choices, read again whenever the page comes into view (a change on
+// the other page then shows): `change` keeps a choice, `turn` turns this device on or off (resolves to its state).
+function useNotify() {
   const [state, setState] = useState<PushState | null>(null);
   const [n, setN] = useState<Notify | null>(null), [key, setKey] = useState('');
   const [busy, setBusy] = useState(false), [note, setNote] = useState<string | null>(null);
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     pushState().then(setState).catch(() => setState('unsupported'));
     api<{ key: string; notify: Notify }>('GET', 'notify').then(d => { setKey(d.key); setN(d.notify); }).catch(() => {});
-  }, []);
+  }, []));
   // A change is shown at once and kept on the account.
   const change = (p: Partial<Notify>) => {
-    if (!n) return;
-    setN({ ...n, ...p });
+    setN(cur => (cur ? { ...cur, ...p } : cur));
     api<{ notify: Notify }>('POST', 'notify', p).then(d => setN(d.notify)).catch(() => {});
   };
-  const turn = async (on: boolean) => {
+  const turn = async (on: boolean): Promise<PushState | null> => {
     tap(); setNote(null); setBusy(true);
-    try { setState(on ? await enablePush(key) : await disablePush()); }
-    catch { setNote('روشن کردن اعلان‌ها ممکن نشد. دوباره امتحان کنید.'); }
+    try { const st = on ? await enablePush(key) : await disablePush(); setState(st); return st; }
+    catch { setNote('روشن کردن اعلان‌ها ممکن نشد. دوباره امتحان کنید.'); return null; }
     finally { setBusy(false); }
   };
+  return { state, n, busy, note, setNote, change, turn };
+}
+
+// The reminder's time: earlier and later by a quarter of an hour.
+function TimeStepper({ time, onChange, size = 26 }: { time: string; onChange: (t: string) => void; size?: number }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+      <Step icon="minus" label="زودتر" onPress={() => onChange(shift(time, -STEP))} />
+      <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontWeight: '800', minWidth: 96, textAlign: 'center', writingDirection: 'ltr' }}>{faNum(time)}</T>
+      <Step icon="plus" label="دیرتر" onPress={() => onChange(shift(time, STEP))} />
+    </View>
+  );
+}
+
+export function NotifySettings() {
+  const c = useColors();
+  const { state, n, busy, note, setNote, change, turn } = useNotify();
   const test = () => {
     tap(); setNote(null);
     api<{ sent: number }>('POST', 'pushtest').then(d => setNote(d.sent ? 'یک اعلان آزمایشی فرستاده شد.' : 'اعلان فرستاده نشد. دوباره امتحان کنید.'))
@@ -94,11 +113,7 @@ export function NotifySettings() {
           <Line title="یادآوری روزانه" sub="هر روز در ساعتی که انتخاب می‌کنید." right={<Toggle label="یادآوری روزانه" value={n.remind} onChange={v => change({ remind: v })} />} />
           {n.remind ? (
             <View style={{ gap: 10, paddingBottom: 6 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
-                <Step icon="minus" label="زودتر" onPress={() => change({ time: shift(n.time, -STEP) })} />
-                <T style={{ fontSize: 26, lineHeight: 34, fontWeight: '800', minWidth: 96, textAlign: 'center', writingDirection: 'ltr' }}>{faNum(n.time)}</T>
-                <Step icon="plus" label="دیرتر" onPress={() => change({ time: shift(n.time, STEP) })} />
-              </View>
+              <TimeStepper time={n.time} onChange={time => change({ time })} />
               <Segmented value={n.what} onChange={what => change({ what })} options={[{ value: 'lesson', label: 'درس بعدی' }, { value: 'exam', label: 'آزمون' }]} />
             </View>
           ) : null}
@@ -113,5 +128,44 @@ export function NotifySettings() {
       ) : null}
       {note ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{note}</T> : null}
     </Card>
+  );
+}
+
+// «آموزش گام‌به‌گام» (app/course.tsx, under the streak): the daily reminder by notification, in place of the email one
+// (Mojtaba 2026-10-18). Turning it on here also turns this device's notifications on; where they cannot work, the
+// reason, and a tap opens the settings.
+export function CourseReminder() {
+  const c = useColors();
+  const { state, n, busy, note, change, turn } = useNotify();
+  if (!state || !n) return null;
+  const why = WHY[state], on = state === 'on' && n.remind;
+  const flip = async (v: boolean) => {
+    if (busy) return;
+    if (!v) { tap(); change({ remind: false }); return; }
+    if (state !== 'on' && (await turn(true)) !== 'on') return;
+    change({ remind: true });
+  };
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ height: 1, backgroundColor: c.line, opacity: 0.6 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+          <Icon name="bell" size={16} color={c.link} weight="semibold" />
+        </View>
+        <View style={{ flex: 1, gap: 1 }}>
+          <T style={{ fontWeight: '700', fontSize: 14 }}>یادآوری روزانه با اعلان</T>
+          <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }}>{on ? fmt('هر روز ساعت {0}', faNum(n.time)) : 'هر روز در ساعتی که انتخاب می‌کنید.'}</T>
+        </View>
+        {why ? null : <Toggle value={on} onChange={flip} label="یادآوری روزانه با اعلان" />}
+      </View>
+      {why ? (
+        <Pressable onPress={() => { tap(); router.push('/settings'); }} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+          <Icon name="info" size={16} color={c.muted} />
+          <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{why}</T>
+        </Pressable>
+      ) : null}
+      {on ? <TimeStepper time={n.time} size={20} onChange={time => change({ time })} /> : null}
+      {note ? <T style={{ color: c.bad, fontSize: 12.5 }}>{note}</T> : null}
+    </View>
   );
 }

@@ -2777,5 +2777,7 @@
 "هر روز در ساعتی که انتخاب می‌کنید.":["Every day at the time you choose.", "Hver dag på det tidspunkt, du vælger."],
 "پیام‌های روزانه":["Daily messages", "Daglige beskeder"],
 "روزی یک بار، بین # صبح تا # شب، درباره‌ی آموزش و آزمون.":["Once a day, between # am and # pm, about lessons and exams.", "Én gang om dagen, mellem kl. # om formiddagen og # om aftenen, om lektioner og prøver."],
-"ارسال اعلان آزمایشی":["Send a test notification", "Send en testnotifikation"]
+"ارسال اعلان آزمایشی":["Send a test notification", "Send en testnotifikation"],
+"یادآوری روزانه با اعلان":["Daily reminder by notification", "Daglig påmindelse som notifikation"],
+"هر روز ساعت {0}":["Every day at {0}", "Hver dag kl. {0}"]
 }

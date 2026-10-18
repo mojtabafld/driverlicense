@@ -216,6 +216,9 @@ export default function Result() {
   };
   // From the summary into the question-by-question review (all questions, from `at`).
   const review = (at = 0) => { tap(); setFilter('all'); setK(Math.max(0, at)); setFresh(false); };
+  // «بازبینی آزمون»: opens on the «اشتباهات» tab when there were any (Mojtaba 2026-10-18); a question's number opens
+  // that question among all of them (review above).
+  const reviewWrong = () => { tap(); setFilter(wrongN ? 'wrong' : 'all'); setK(0); setFresh(false); };
   const marked = a.items.filter(it => it.m).length;
   return (
     <Backdrop anim={motion.style}>
@@ -266,7 +269,7 @@ export default function Result() {
             ))}
           </View>
           <View style={{ width: '100%', gap: 10, marginTop: 4 }}>
-            <Button label="بازبینی آزمون" icon="eye" onPress={() => review(0)} />
+            <Button label="بازبینی آزمون" icon="eye" onPress={reviewWrong} />
             {wrongN ? <Button kind="glass" label="تمرین اشتباهات" icon="refresh" onPress={retry} /> : null}
             {isLesson && nextLesson ? <Button kind="glass" label="درس بعدی" icon="arrowLeft" onPress={startNext} /> : null}
           </View>
