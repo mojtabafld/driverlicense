@@ -11,20 +11,21 @@ import { router, useFocusEffect } from 'expo-router';
 
 import { toPremium, useFree } from '@/lib/free';
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Pressable, View } from 'react-native';
+import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
+import { PROVE_PICS } from '@/lib/config';
 import { COURSE, EXAM, type CourseChapter, type CourseLesson } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ITEMS, SESSION_SIZE, dueCount, mastery, newCount, weakLessons } from '@/lib/drill';
 import { useDrillProgress } from '@/lib/drill-progress';
-import { t, tr } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { useStreak } from '@/lib/streak';
-import { Toggle } from '@/ui/toggle';
 import { faNum } from '@/lib/logic';
 import { CourseArt } from '@/ui/header-art';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Enter, T, tap } from '@/ui/kit';
+import { CourseReminder } from '@/ui/notify-settings';
 import { SearchBox } from '@/ui/search-box';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
@@ -53,15 +54,14 @@ function Task({ icon, label, title, line, action, onPress, tone }: { icon: IconN
   );
 }
 
-// Days in a row with study (an exam, a lesson, a practice) and the last seven days as dots; under it the daily email
-// reminder (lib/streak.ts): on / off and its hour, for an account with a confirmed address.
+// Days in a row with study (an exam, a lesson, a practice) and the last seven days as dots; under it the daily
+// reminder by notification (ui/notify-settings.tsx; it was an email until 2026-10-18).
 function StreakCard() {
   const c = useColors();
-  const { data, error, load, setReminder } = useStreak();
+  const { data, load } = useStreak();
   useFocusEffect(load);
   if (!data) return null;
-  const { streak, today, week, reminder } = data;
-  const hourText = `${faNum(reminder.hour)}:${faNum('00')}`;
+  const { streak, today, week } = data;
   return (
     <Card style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -76,41 +76,8 @@ function StreakCard() {
           {week.map((d, k) => <View key={k} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: d ? c.warn : c.line, opacity: k === 6 && !d ? 0.5 : 1 }} />)}
         </View>
       </View>
-      {data.mail ? (
-        <>
-          <View style={{ height: 1, backgroundColor: c.line, opacity: 0.6 }} />
-          {data.email ? (
-            <View style={{ gap: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={{ flex: 1, gap: 1 }}>
-                  <T style={{ fontWeight: '700', fontSize: 14 }}>یادآوری روزانه با ایمیل</T>
-                  <T style={{ color: c.muted, fontSize: 12, lineHeight: 18 }}>{t('هر روز ساعت {0}، اگر هنوز تمرین نکرده باشید', hourText)}</T>
-                </View>
-                <Toggle value={reminder.on} onChange={v => setReminder(v, reminder.hour)} label={tr('یادآوری روزانه با ایمیل')} />
-              </View>
-              {reminder.on ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, alignSelf: 'flex-start' }}>
-                  <Pressable disabled={reminder.hour <= 5} onPress={() => { tap(); setReminder(true, reminder.hour - 1); }} accessibilityLabel={tr('زودتر')}
-                    style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center', opacity: reminder.hour <= 5 ? 0.4 : 1 }}>
-                    <T style={{ fontSize: 18, fontWeight: '700', lineHeight: 22 }}>−</T>
-                  </Pressable>
-                  <T style={{ fontWeight: '700', fontSize: 15, minWidth: 56, textAlign: 'center', writingDirection: 'ltr' }}>{hourText}</T>
-                  <Pressable disabled={reminder.hour >= 22} onPress={() => { tap(); setReminder(true, reminder.hour + 1); }} accessibilityLabel={tr('دیرتر')}
-                    style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center', opacity: reminder.hour >= 22 ? 0.4 : 1 }}>
-                    <T style={{ fontSize: 18, fontWeight: '700', lineHeight: 22 }}>+</T>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
-          ) : (
-            <Pressable onPress={() => { tap(); router.push('/account'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Icon name="info" size={16} color={c.muted} />
-              <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>برای یادآوری روزانه با ایمیل، اول در «حساب کاربری» یک ایمیل تأییدشده ثبت کنید.</T>
-            </Pressable>
-          )}
-          {error ? <T style={{ color: c.bad, fontSize: 12.5 }}>{error}</T> : null}
-        </>
-      ) : null}
+      {/* The daily reminder, by notification (main site on the web; ui/notify-settings.tsx). */}
+      {!PROVE_PICS && Platform.OS === 'web' ? <CourseReminder /> : null}
     </Card>
   );
 }
