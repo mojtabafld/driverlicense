@@ -102,7 +102,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const lookOut = () => {
     if (PROVE_PICS) return;
     setMode('system');
-    setPlainHeader(false, false);
+    setPlainHeader(true, false);
     if (forgetPalette()) reloadApp();
   };
 
