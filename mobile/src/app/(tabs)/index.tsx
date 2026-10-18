@@ -128,7 +128,7 @@ export default function Home() {
   // «هدر ساده»: the header is lower (Hero in ui/kit.tsx); the height it leaves is shared out evenly between the three
   // cards (the pass card, the counts, the chart) instead of all going to the chart (Mojtaba 2026-10-18).
   const plain = usePlainHeader();
-  const share = plain ? Math.max(0, Math.round((Math.min(Math.round(width * 0.34), 190) + 70 - 150) / 3)) : 0;
+  const share = plain ? Math.max(0, Math.round((Math.min(Math.round(width * 0.34), 190) + 70 - 128) / 3)) : 0;
   // Main site: the page is fitted to the screen it is on. It starts from the height's level and, while the chart's card
   // has less room than it needs, steps to a denser one (3: the pass card's line and the lessons bar go, tighter padding,
   // the chart may be lower; the averages row stays, Mojtaba asked), so the chart's card ends just above the tab bar
