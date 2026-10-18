@@ -147,6 +147,25 @@ export function Logo({ size = 28 }: { size?: number }) {
 }
 
 // Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
+// A round button in the theme's colours: its accent on the accent's soft tint, over the card's colour, like the default
+// profile picture (ui/avatar.tsx): the plain headers' buttons and the settings page's light / dark switch.
+export function RoundIcon({ icon, label, onPress, size = 44 }: { icon: IconName; label: string; onPress: () => void; size?: number }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={label}
+      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: pressed ? 0.75 : 1 })}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+        <Icon name={icon} size={Math.round(size * 0.48)} color={c.link} weight="semibold" />
+      </View>
+    </Pressable>
+  );
+}
+// The light / dark switch as a RoundIcon.
+export function ThemeRound({ size }: { size?: number }) {
+  const { theme, setMode } = useTheme(), dark = theme === 'dark';
+  return <RoundIcon icon={dark ? 'sun' : 'moon'} label="تغییر تم" onPress={() => setMode(dark ? 'light' : 'dark')} size={size} />;
+}
+
 export function ThemeButton() {
   const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark';
   return (
@@ -318,11 +337,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
               {act.node}
             </Pressable>
           ) : plain && act && 'icon' in act ? (
-            <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
-              style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
-                backgroundColor: light ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.14)', opacity: pressed ? 0.7 : 1 })}>
-              <Icon name={act.icon} size={21} color={ink} weight="semibold" />
-            </Pressable>
+            <RoundIcon icon={act.icon} label={act.label} onPress={act.onPress} />
           ) : null}
         </View>}
       </View>
@@ -352,7 +367,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
         {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
       </View>
       {right}
-      <ThemeButton />
+      <ThemeRound />
     </View>
   );
   return (
