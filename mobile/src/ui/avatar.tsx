@@ -3,6 +3,7 @@
 // to choose from, «انتخاب از گالری» (then the photo is cropped to a circle in AvatarCrop: drag to move, pinch or the
 // buttons to zoom) and removing the picture.
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
@@ -16,7 +17,8 @@ import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { ActionButton, T, tap } from './kit';
 import { Sheet, SheetScroll } from './sheet';
-import { useColors } from './theme';
+import { useColors, useIsDark } from './theme';
+import { WASH_DARK, WASH_LIGHT } from './wash';
 
 const COUNT = 10, OUT = 400; // made pictures to choose from; the saved photo's size in pixels
 
@@ -37,13 +39,17 @@ export function Avatar({ size }: { size: number }) {
 // No picture chosen: a plain outline of a person in the theme's accent on its soft tint (over the card's colour, so it
 // reads the same on a header), Mojtaba 2026-10-18.
 function DefaultFace({ size }: { size: number }) {
-  const c = useColors(), w = Math.max(1.4, size / 26);
+  const c = useColors(), dark = useIsDark(), w = Math.max(1.4, size / 26);
   return (
-    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      {/* On the blush-to-lavender wash (ui/wash.ts), as the AI answer's panel; Mojtaba 2026-10-18. */}
+      <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+<View>
       <Svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24">
         <Circle cx={12} cy={9} r={3.8} fill="none" stroke={c.link} strokeWidth={w * 24 / (size * 0.6)} />
         <Path d="M5 20c1.3-3.4 4-5.2 7-5.2s5.7 1.8 7 5.2" fill="none" stroke={c.link} strokeWidth={w * 24 / (size * 0.6)} strokeLinecap="round" />
       </Svg>
+      </View>
     </View>
   );
 }
