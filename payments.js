@@ -94,9 +94,12 @@ const promoDays = () => { const n = Math.round(+process.env.PROMO_DAYS); return 
 // A trial with `code`: its days added after the current pass (or from now), once per account. Returns false when the
 // account has had its trial already.
 function grantPromo(u, code, email) {
-  if (u.premium && u.premium.promo) return false;
+  // Once per account, for good: kept outside the pass too (u.promoUsed), so nothing that rewrites the pass can open it again.
+  if (u.promoUsed || (u.premium && u.premium.promo)) return false;
   const now = Date.now(), days = promoDays(), from = Math.max(now, (u.premium && u.premium.until) || 0);
   u.premium = { ...(u.premium || {}), until: from + days * 864e5, plan: (u.premium && u.premium.plan) || 'trial', promo: { code, days, at: now, email } };
+  u.promoUsed = now;
+  if (email) u.promoEmail = email;
   return true;
 }
 // A fully refunded payment: its days taken off the pass. Returns false when the payment is not this user's.

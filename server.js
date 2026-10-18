@@ -112,7 +112,7 @@ const publicUser = u => ({ username: u.username, name: u.name, created: u.create
   // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
   guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined,
   // promoUsed: this account, or another with its confirmed address, has had the trial code (the premium page hides the code box).
-  promoUsed: !!(u.premium && u.premium.promo) || !!(u.email && u.emailOk && Object.values(store.users).some(x => x !== u && x.premium && x.premium.promo && x.premium.promo.email === u.email)) || undefined });
+  promoUsed: !!u.promoUsed || !!(u.premium && u.premium.promo) || !!(u.email && u.emailOk && Object.values(store.users).some(x => x !== u && x.premium && x.premium.promo && x.premium.promo.email === u.email)) || undefined });
 // Email confirmation (mail.js, RESEND_API_KEY): accounts made while it is on give an address and can use the app once its
 // link is opened (mustVerify, or a username that is an email, until the first confirmation, okOnce; a later new address
 // does not hold the app up; the app waits even when the email could not be sent, Mojtaba asked); accounts from before, and guests, are not held up, and may add an address later in
@@ -814,7 +814,7 @@ async function api(req, res, route) {
     // With email on: only for a confirmed address, and one trial per address (whichever account had it).
     if (mail.available()) {
       if (!user.email || !user.emailOk) return send(res, 403, { error: 'برای استفاده از کد تخفیف، اول ایمیل خود را در «حساب کاربری» ثبت و تأیید کنید.' });
-      if (Object.values(store.users).some(x => x !== user && x.premium && x.premium.promo && x.premium.promo.email === user.email)) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
+      if (Object.values(store.users).some(x => x !== user && ((x.premium && x.premium.promo && x.premium.promo.email === user.email) || (x.promoEmail && x.promoEmail === user.email)))) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
     }
     if (!payments.grantPromo(user, match, user.emailOk ? user.email : undefined)) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
     await store.saveUser(user);
@@ -1329,6 +1329,18 @@ async function main() {
   if (!store.meta.plainHeaderAll) {
     for (const u of Object.values(store.users)) if ((u.settings || {}).header !== 'plain') { u.settings = { ...(u.settings || {}), header: 'plain' }; await store.saveUser(u); }
     await store.saveMeta('plainHeaderAll', 1);
+  }
+  // One-time (2026-10-18): the trial code's use kept on the account itself (payments.grantPromo), for the accounts that
+  // have had it.
+  if (!store.meta.promoUsedMark) {
+    for (const u of Object.values(store.users)) {
+      const p = u.premium && u.premium.promo;
+      if (!p || u.promoUsed) continue;
+      u.promoUsed = p.at || Date.now();
+      if (p.email) u.promoEmail = p.email;
+      await store.saveUser(u);
+    }
+    await store.saveMeta('promoUsedMark', 1);
   }
   // One-time (2026-10-18): the daily email reminder became a notification (the course page, push.js); an email
   // reminder that was on is the notification reminder at the same hour now (it reaches a device once notifications
