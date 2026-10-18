@@ -279,6 +279,30 @@ export function useHeaderTop(color: string) {
 // the learning tab's search, the exam tab's start); 'theme' is the switch.
 export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () => void } | { node: React.ReactNode; label: string; onPress: () => void };
 // `node`: something of the page's own in place of an icon (the home page's profile picture), shown as it is.
+// The home header's time-of-day drawing (Hero's `lead` beside the greeting): shown when the app opens, then, a moment
+// later, it fades and shrinks away and the greeting and the line under it glide over to the header's edge (Mojtaba
+// 2026-10-18). Once per app start: after that the header shows the text alone.
+let leadGone = false;
+const LEAD_W = 38; // the drawing (28) and the space after it (10)
+function FadingLead({ children }: { children: React.ReactNode }) {
+  const [gone, setGone] = useState(leadGone);
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (gone) return;
+    const a = Animated.sequence([Animated.delay(1800), Animated.timing(v, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })]);
+    a.start(({ finished }) => { if (finished) { leadGone = true; setGone(true); } });
+    return () => a.stop();
+  }, [gone, v]);
+  if (gone) return null;
+  return (
+    <Animated.View style={{ width: v.interpolate({ inputRange: [0, 1], outputRange: [LEAD_W, 0] }), overflow: 'hidden', alignItems: 'flex-start' }}>
+      <Animated.View style={{ opacity: v.interpolate({ inputRange: [0, 0.45, 1], outputRange: [1, 0, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 0.55] }) }] }}>
+        {children}
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
 // `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
 export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode }) {
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
@@ -341,9 +365,9 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
               // «هدر ساده»: the name on the greeting's line, a little smaller than a title: the greeting in the regular cut, the
               // name in bold, cut short with … if it does not fit (Mojtaba 2026-10-18).
               // The drawing of the time of day stands beside both lines, centred between the greeting and the line under
-              // it, and that line starts where the greeting does (Mojtaba 2026-10-18).
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                {lead}
+              // it, and that line starts where the greeting does (Mojtaba 2026-10-18); then it goes (FadingLead).
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {lead ? <FadingLead>{lead}</FadingLead> : null}
                 <View style={{ flex: 1, gap: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
