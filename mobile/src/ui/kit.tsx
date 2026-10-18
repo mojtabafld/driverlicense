@@ -340,11 +340,18 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             {plain && name ? (
               // «هدر ساده»: the name on the greeting's line, a little smaller than a title: the greeting in the regular cut, the
               // name in bold, cut short with … if it does not fit (Mojtaba 2026-10-18).
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              // The drawing before it (the time of day) stands beside both lines, centred between them, and the line under
+              // the greeting starts where the greeting does (Mojtaba 2026-10-18).
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 {lead}
-                <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
-                <View style={{ flexShrink: 1 }}>
-                  <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
+                    <View style={{ flexShrink: 1 }}>
+                      <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                    </View>
+                  </View>
+                  {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
                 </View>
               </View>
             ) : <>
@@ -356,7 +363,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             ) : <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>}
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
             </>}
-            {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+            {subtitle && !(plain && name) ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
           </View>
           {plain && act && 'node' in act ? (
             <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
