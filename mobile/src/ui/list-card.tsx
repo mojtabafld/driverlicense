@@ -11,12 +11,14 @@ import { useColors } from './theme';
 export const LIST_PIC = { width: 80, height: 60, radius: 14 };
 
 // `locked`: only with premium (lib/free.ts): faded, with a lock in place of the ‹.
-export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress, locked }: { pic: ReactNode; title: string; sub: string; subLines?: number; note?: string; label?: string; onPress: () => void; locked?: boolean }) {
+// `small`: a lower picture tile (short screens).
+// `grow`: the card takes its share of the height its list is given (its content centred in it), never less than its own.
+export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress, locked, grow, small }: { pic: ReactNode; title: string; sub: string; subLines?: number; note?: string; label?: string; onPress: () => void; locked?: boolean; grow?: boolean; small?: boolean }) {
   const c = useColors();
   return (
-    <Card onPress={onPress} style={{ padding: 10 }}>
+    <Card onPress={onPress} style={grow ? { padding: 10, flex: 1, justifyContent: 'center' } : { padding: 10 }}>
       <View accessibilityRole="button" accessibilityLabel={label ?? title} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, opacity: locked ? 0.55 : 1 }}>
-        <View style={{ width: LIST_PIC.width, height: LIST_PIC.height, borderRadius: LIST_PIC.radius, overflow: 'hidden' }}>{pic}</View>
+        <View style={{ width: small ? 64 : LIST_PIC.width, height: small ? 48 : LIST_PIC.height, borderRadius: small ? 12 : LIST_PIC.radius, overflow: 'hidden' }}>{pic}</View>
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600' }} numberOfLines={2}>{title}</T>
           <T style={{ fontSize: 12.5, lineHeight: 19, color: c.muted }} numberOfLines={subLines}>{sub}</T>

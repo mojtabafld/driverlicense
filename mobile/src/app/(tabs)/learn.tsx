@@ -24,6 +24,8 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const v = learnArt[n];
+  // Short phones: one line under the title and a lower picture, so all five cards fit above the tab bar.
+  const short = useWindowDimensions().height < 760;
   // The picture, whole, on its tile in the picture's own background colour; the icon until the picture is made.
   const pic = (
     <View style={{ flex: 1, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
@@ -31,7 +33,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
     </View>
   );
-  return <ListCard onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={2} note={note} />;
+  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={short ? 1 : 2} note={note} />;
 }
 
 // /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
@@ -66,9 +68,12 @@ export default function Learn() {
   const { done } = useCourseProgress();
   const { bank, attempts } = useApp();
   const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
+  const short = useWindowDimensions().height < 760;
   const tried = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, all = bank?.tests.length ?? 44;
   return (
-    <Screen title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
+    // Main site: the five cards share the screen's height between the search box and the tab bar (taller on tall
+    // phones, never shorter than their content; Mojtaba 2026-10-18).
+    <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 8} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
       heroAction={{ icon: 'search', label: 'جستجو در آموزش', onPress: () => router.push('/course-search') }}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>
@@ -87,7 +92,7 @@ export default function Learn() {
           </View>
         </View>
       ) : (
-        <View style={{ gap: 10 }}>
+        <View style={{ gap: short ? 8 : 10, flex: 1 }}>
           {/* Search the learning pages (the course, rules, signs, right of way) by their words and, with «جستجو», by the
               AI; the results open on their own page (app/course-search.tsx). */}
           <SearchBox />
