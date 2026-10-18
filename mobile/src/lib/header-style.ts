@@ -5,17 +5,22 @@
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 
+import { PROVE_PICS } from '@/lib/config';
+
 const KEY = 'tp.plainHeader';
 const web = Platform.OS === 'web';
+// The plain header is the default (Mojtaba 2026-10-18): only a device that turned the pictures on ('0') shows them.
+// /app (prove.dk's copy) has no such setting and keeps its pictures.
 function read(): boolean {
-  try { return (web ? localStorage.getItem(KEY) : require('expo-secure-store').getItem(KEY)) === '1'; } catch { return false; }
+  if (PROVE_PICS) return false;
+  try { return (web ? localStorage.getItem(KEY) : require('expo-secure-store').getItem(KEY)) !== '0'; } catch { return true; }
 }
 let plain = read();
 const subs = new Set<() => void>();
 
 export const getPlainHeader = () => plain;
 // `keep`: written on this device too (the start before the account is read shows it); false on signing out, which
-// goes back to the pictures and clears the device's choice.
+// goes back to the default (plain) and clears the device's choice.
 export function setPlainHeader(v: boolean, keep = true) {
   plain = v;
   if (!keep) { try { if (web) localStorage.removeItem(KEY); else require('expo-secure-store').deleteItemAsync(KEY).catch(() => {}); } catch {} subs.forEach(f => f()); return; }

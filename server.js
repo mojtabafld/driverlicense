@@ -595,7 +595,7 @@ async function api(req, res, route) {
     const salt = crypto.randomBytes(16).toString('hex');
     const shown = String(name || (byMail ? u.split('@')[0] : u)).trim().slice(0, 40) || u;
     const user = { username: u, name: shown, salt, hash: await hashPw(password, salt),
-      created: Date.now(), attempts: [], settings: {}, ...(mail.available() && e ? { email: e, mustVerify: true } : {}) };
+      created: Date.now(), attempts: [], settings: { header: 'plain' }, ...(mail.available() && e ? { email: e, mustVerify: true } : {}) };
     store.users[u] = user;
     await store.saveUser(user);
     // The link goes out now; when it cannot, the app's «send again» button tries again.
@@ -612,7 +612,7 @@ async function api(req, res, route) {
     let u; do u = `guest-${crypto.randomBytes(4).toString('hex')}`; while (store.users[u]);
     const salt = crypto.randomBytes(16).toString('hex');
     const user = { username: u, name: String(name || '').trim().slice(0, 40) || 'مهمان', salt, hash: await hashPw(crypto.randomBytes(24).toString('hex'), salt),
-      created: Date.now(), attempts: [], settings: {}, guest: true };
+      created: Date.now(), attempts: [], settings: { header: 'plain' }, guest: true };
     store.users[u] = user;
     await store.saveUser(user);
     const token = await newSession(req, res, u);
@@ -1295,6 +1295,11 @@ async function main() {
   if (store.meta.langAskReset !== 2) {
     for (const u of Object.values(store.users)) if (u.settings && u.settings.langChosen) { delete u.settings.langChosen; await store.saveUser(u); }
     await store.saveMeta('langAskReset', 2);
+  }
+  // One-time (2026-10-18): «هدر ساده» becomes everyone's header; each can turn the pictures back on in settings.
+  if (!store.meta.plainHeaderAll) {
+    for (const u of Object.values(store.users)) if ((u.settings || {}).header !== 'plain') { u.settings = { ...(u.settings || {}), header: 'plain' }; await store.saveUser(u); }
+    await store.saveMeta('plainHeaderAll', 1);
   }
   // One-time, asked by the owner: remove user negin's 22nd and 23rd attempts (as numbered on the progress chart,
   // oldest first). A copy is kept in meta (`removed:negin:22-23`) so they can be restored.
