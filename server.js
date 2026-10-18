@@ -1279,7 +1279,9 @@ async function api(req, res, route) {
     // mode (automatic, light or dark) and palette (the colour theme): the look, so it comes back on signing in again.
     const mode = ['system', 'light', 'dark'].includes(b.mode) ? b.mode : (user.settings || {}).mode;
     const palette = THEMES.includes(b.palette) ? b.palette : (user.settings || {}).palette;
-    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}), ...(ui ? { ui } : {}), ...(trans ? { trans } : {}), ...(mode ? { mode } : {}), ...(palette ? { palette } : {}) };
+    // header: «هدر ساده» on or off (the pages' headers without their pictures), like the look, per account.
+    const header = ['plain', 'pictures'].includes(b.header) ? b.header : (user.settings || {}).header;
+    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}), ...(ui ? { ui } : {}), ...(trans ? { trans } : {}), ...(mode ? { mode } : {}), ...(palette ? { palette } : {}), ...(header ? { header } : {}) };
     await store.saveUser(user);
     return send(res, 200, { settings: user.settings });
   }

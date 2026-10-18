@@ -1,7 +1,7 @@
 // «هدر ساده» (settings, «ظاهر»): the pages' headers without their pictures and drawings: the tabs and the inner pages
 // that have a picture header (the course, rules, signs, right of way) keep the header's colour, its fade into the page
-// and the title (Hero in ui/kit.tsx), only the picture goes. Kept on this device (like the colour theme), and it
-// applies at once, with no reload.
+// and the title (Hero in ui/kit.tsx), only the picture goes. Kept on this device and with the account (settings.header,
+// like the colour theme: it comes back on signing in; lib/store.tsx), and it applies at once, with no reload.
 import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 
@@ -13,8 +13,12 @@ function read(): boolean {
 let plain = read();
 const subs = new Set<() => void>();
 
-export function setPlainHeader(v: boolean) {
+export const getPlainHeader = () => plain;
+// `keep`: written on this device too (the start before the account is read shows it); false on signing out, which
+// goes back to the pictures and clears the device's choice.
+export function setPlainHeader(v: boolean, keep = true) {
   plain = v;
+  if (!keep) { try { if (web) localStorage.removeItem(KEY); else require('expo-secure-store').deleteItemAsync(KEY).catch(() => {}); } catch {} subs.forEach(f => f()); return; }
   try { if (web) localStorage.setItem(KEY, v ? '1' : '0'); else require('expo-secure-store').setItem(KEY, v ? '1' : '0'); } catch {}
   subs.forEach(f => f());
 }
