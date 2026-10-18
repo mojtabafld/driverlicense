@@ -226,6 +226,9 @@ const BAR_ROOM = 64 + 30;
 // The plain header («هدر ساده») keeps the picture header's colour band and its fade into the page when this is on; off
 // (Mojtaba 2026-10-18, to try it on the site) it is flat, in the page's own colour. Flip it back to bring the band back.
 const PLAIN_GRADIENT = true;
+// The headers' title in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts): the picture headers and the
+// plain one (Hero), and the settings page's title (Screen without a picture), so they all match.
+const HEAD_BOLD = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
 export type HeroLook = { pic: number; light?: number; icon: IconName; art?: React.ComponentType<{ light: boolean; height: number }> };
 
 // On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
@@ -294,7 +297,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
   // (plain: lower, with no picture to make room for; Mojtaba 2026-10-18)
-  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : plain ? (name ? 150 : 128) : Math.min(Math.round(width * 0.34), 190) + 70);
+  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : plain ? 128 : Math.min(Math.round(width * 0.34), 190) + 70);
   const topPad = ins.top + (Platform.OS === 'web' ? 14 : 8);
   // The sign-in picture (square, laid in from its left edge, its height or width filling the header, the other cut evenly)
   // has its objects across most of its width, down to about 68% of its height, with calm ground under them. On a narrow
@@ -304,7 +307,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const below = !!tall && room >= 70 && width < H * 1.3;
   const titleSize = Math.max(20, Math.min(30, Math.round(width * 0.075), Math.floor((room - 46) / 1.35)));
   // The title (and name) in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts).
-  const bold = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
+  const bold = HEAD_BOLD;
   const shade = light || flat ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
   // An inner page (`back`): the title and its line under the way back (Mojtaba, 2026-10-15), where a tab's title sits,
   // the header growing when a long line needs the room.
@@ -333,8 +336,19 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
         ) : null}
         {below ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ gap: 2, maxWidth: plain ? undefined : '58%', flex: plain ? 1 : undefined }}>
+            {plain && name ? (
+              // «هدر ساده»: the name on the greeting's line, slanted (a skew, as the Persian font has no italic cut),
+              // cut short with … if it does not fit (Mojtaba 2026-10-18).
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+                <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink, flexShrink: 0 }, bold, shade]} numberOfLines={1}>{title}</T>
+                <View style={{ flexShrink: 1, transform: [{ skewX: '-12deg' }] }}>
+                  <T style={[{ fontSize: 26, lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                </View>
+              </View>
+            ) : <>
             <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
+            </>}
             {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
           </View>
           {plain && act && 'node' in act ? (
@@ -368,7 +382,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
-        <FitLine size={26} min={16} style={{ lineHeight: 34, fontWeight: '700', color: c.text }}>{title}</FitLine>
+        <FitLine size={26} min={16} style={[{ lineHeight: 34, fontWeight: '700', color: c.text }, HEAD_BOLD]}>{title}</FitLine>
         {name ? <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: c.text }} numberOfLines={1}>{name}</T> : null}
         {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
       </View>
