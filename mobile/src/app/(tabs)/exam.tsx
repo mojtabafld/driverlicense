@@ -15,6 +15,7 @@ import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
 import { SizeSlider } from '@/ui/size-slider';
 import { Icon } from '@/ui/icon';
+import { PageIcon } from '@/ui/page-icon';
 import { MoreButton } from '@/ui/more-button';
 import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
@@ -110,7 +111,7 @@ export default function Exam() {
     router.push('/run');
   };
   return (
-    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+    <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: randomLeft ? 'play' : 'lock', label: randomLeft ? `شروع آزمون ${faNum(size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: start }}>
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}

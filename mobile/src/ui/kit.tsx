@@ -389,7 +389,12 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
-        <FitLine size={26} min={16} style={[{ lineHeight: 34, fontWeight: '700', color: c.text }, HEAD_BOLD]}>{title}</FitLine>
+        {lead ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {lead}
+            <View style={{ flex: 1 }}><FitLine size={26} min={16} style={[{ lineHeight: 34, fontWeight: '700', color: c.text }, HEAD_BOLD]}>{title}</FitLine></View>
+          </View>
+        ) : <FitLine size={26} min={16} style={[{ lineHeight: 34, fontWeight: '700', color: c.text }, HEAD_BOLD]}>{title}</FitLine>}
         {name ? <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: c.text }} numberOfLines={1}>{name}</T> : null}
         {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
       </View>

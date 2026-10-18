@@ -15,8 +15,9 @@ const SPEED = 32, PAUSE = 1600, FADE = 18; // px per second, ms at each end, wid
 // `bg`: the colour behind it, for the faded edges (the page colour by default; a card's inside a card). `mask`: on a
 // see-through background (a tinted chip) the edges fade the text itself instead (web). `once`: it glides through
 // once and then rests at its start; each change of `play` runs it once more (a tap on the chip). `fade`: the width of
-// the faded edges.
-export function Marquee({ text, style, height, bg, mask, once, play = 0, fade = FADE }: { text: string; style?: StyleProp<TextStyle>; height: number; bg?: string; mask?: boolean; once?: boolean; play?: number; fade?: number }) {
+// the faded edges. `rich`: what is shown in place of the plain `text` (parts in bold or in colour); `text` still names it
+// for screen readers and runs it again when it changes.
+export function Marquee({ text, rich, style, height, bg, mask, once, play = 0, fade = FADE }: { text: string; rich?: React.ReactNode; style?: StyleProp<TextStyle>; height: number; bg?: string; mask?: boolean; once?: boolean; play?: number; fade?: number }) {
   const c = useColors(), edge = bg ?? c.bg;
   const [room, setRoom] = useState(0), [full, setFull] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
@@ -41,12 +42,12 @@ export function Marquee({ text, style, height, bg, mask, once, play = 0, fade = 
       ...(mask && over && Platform.OS === 'web' ? { maskImage: `linear-gradient(to right, transparent, #000 ${fade}px, #000 calc(100% - ${fade}px), transparent)` } : null) } as any} onLayout={e => setRoom(e.nativeEvent.layout.width)} accessible accessibilityRole="header" accessibilityLabel={text}>
       {/* The title at its natural width, measured in a very wide hidden box. */}
       <View pointerEvents="none" style={{ position: 'absolute', top: 0, ...(RTL ? { right: 0 } : { left: 0 }), width: 4000, flexDirection: 'row', justifyContent: RTL ? 'flex-end' : 'flex-start', opacity: 0 }}>
-        <T style={[style, { flexShrink: 0 }]} onLayout={e => setFull(e.nativeEvent.layout.width)}>{text}</T>
+        <T style={[style, { flexShrink: 0 }]} onLayout={e => setFull(e.nativeEvent.layout.width)}>{rich ?? text}</T>
       </View>
       {/* Given its full measured width (and a little slack for rounding): left to itself on Android and iOS, a box
           placed by its right edge only is held to its parent's width, which cut the text off with «…». */}
       <Animated.View style={{ position: 'absolute', top: 0, ...(RTL ? { right: over || mask ? fade : 0 } : { left: over || mask ? fade : 0 }), width: wide, flexDirection: 'row', justifyContent: RTL ? 'flex-end' : 'flex-start', transform: [{ translateX: x }] }}>
-        <T style={[style, { flexShrink: 0, width: wide }]} numberOfLines={1}>{text}</T>
+        <T style={[style, { flexShrink: 0, width: wide }]} numberOfLines={1}>{rich ?? text}</T>
       </Animated.View>
       {over && !mask ? (
         <>

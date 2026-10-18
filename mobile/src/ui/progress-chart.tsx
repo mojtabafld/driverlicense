@@ -14,6 +14,7 @@ import { RTL } from '@/lib/i18n';
 import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
+import { Marquee } from './marquee';
 import { ArcButton, Button, T, tap, useCountUp } from './kit';
 import { ARC, useColors } from './theme';
 
@@ -183,10 +184,14 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           {a ? (
             <Pressable onPress={() => onOpen(a)} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
-                <T style={{ flex: 1, fontSize: 13 }} numberOfLines={1}>
-                  <T style={{ fontSize: 13, fontWeight: '700' }}>{pickName}</T>
-                  {'، '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`}، {fmtDate(a.at)}
-                </T>
+                {/* Too long for a small phone: the line glides once to show its end, then rests at its start
+                    (ui/marquee.tsx; Mojtaba 2026-10-18). */}
+                <Marquee once height={20} bg={c.surface2} style={{ fontSize: 13, lineHeight: 20 }}
+                  text={`${pickName}، ${isFull(a) ? `${faNum(scoreOf(a))}/${faNum(a.items.length)} ${isPass(a) ? 'قبول' : 'مردود'}` : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`}، ${fmtDate(a.at)}`}
+                  rich={<>
+                    <T style={{ fontSize: 13, fontWeight: '700' }}>{pickName}</T>
+                    {'، '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`}، {fmtDate(a.at)}
+                  </>} />
                 <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>مرور</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
               </View>
             </Pressable>
