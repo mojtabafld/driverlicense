@@ -7,7 +7,7 @@
 // at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { RTL, tr } from '@/lib/i18n';
@@ -41,11 +41,18 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // How far the line has drawn itself across the view, 0 to 1: drawn in once per app start (after signing in), and
   // whole at once when the chart is shown again (moving between pages), Mojtaba asked.
   // (The page stays mounted under the tabs and its width drops to 0 while hidden, so once started it does not go back.)
+  // It starts only once the line itself is there (two attempts or more) and measured, a moment after: on Android the
+  // attempts can come in after the page (and the splash) first shows, and it had drawn itself under the empty chart
+  // already (Mojtaba 2026-10-18: no animation in the Android app).
   const [instant] = useState(() => drawnOnce);
-  const started = useRef(false);
-  if (W > 0) started.current = true;
-  const anim = useCountUp(started.current && !instant ? 1 : 0, 1400), draw = instant ? 1 : anim;
-  useEffect(() => { if (W > 0) drawnOnce = true; }, [W]);
+  const [go, setGo] = useState(false);
+  const shown = W > 0 && attempts.length >= 2;
+  useEffect(() => {
+    if (!shown || go) return;
+    const t = setTimeout(() => { setGo(true); drawnOnce = true; }, Platform.OS === 'web' ? 0 : 350);
+    return () => clearTimeout(t);
+  }, [shown, go]);
+  const anim = useCountUp(go && !instant ? 1 : 0, 1400), draw = instant ? 1 : anim;
   // The box's size. A zero width (the page hidden under another) is ignored. The empty chart measures too, so the
   // chart that replaces it after a test handed in elsewhere has its size at once: its own first layout comes while
   // home is hidden, and the browser gives no new one when home shows again (Mojtaba 2026-10-17: it stayed blank).
