@@ -62,8 +62,13 @@ async function openStore({ dbFile }) {
         [token, s.username, s.exp]),
       deleteSession: token => pool.query('DELETE FROM tp_sessions WHERE token = $1', [token]),
       deleteUser: async username => { await pool.query('DELETE FROM tp_sessions WHERE username = $1', [username]); await pool.query('DELETE FROM tp_users WHERE username = $1', [username]); },
-      saveMeta: (key, data) => pool.query(
-        'INSERT INTO tp_meta (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data', [key, data]),
+      // Sent as JSON text: given a JavaScript array (the app's reports, the received emails) pg writes a PostgreSQL
+      // array literal, which a JSONB column refuses, so such a save always failed. Kept in memory too, as the file
+      // store does.
+      saveMeta: (key, data) => {
+        mem.meta[key] = data;
+        return pool.query('INSERT INTO tp_meta (key, data) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET data = EXCLUDED.data', [key, JSON.stringify(data)]);
+      },
       saveBlob: (key, mime, buf) => pool.query(
         'INSERT INTO tp_blobs (key, mime, data) VALUES ($1, $2, $3) ON CONFLICT (key) DO UPDATE SET mime = EXCLUDED.mime, data = EXCLUDED.data', [key, mime, buf]),
       deleteBlob: key => pool.query('DELETE FROM tp_blobs WHERE key = $1', [key]),
