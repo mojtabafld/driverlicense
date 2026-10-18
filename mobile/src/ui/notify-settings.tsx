@@ -9,7 +9,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { api } from '@/lib/api';
 import { t as fmt } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
-import { applyNotify, disablePush, enablePush, openSystemSettings, pushState, testPush, type Notify, type PushState } from '@/lib/push';
+import { applyNotify, disablePush, enablePush, openSystemSettings, pushState, type Notify, type PushState } from '@/lib/push';
 import { Icon, type IconName } from './icon';
 import { Card, Segmented, T, tap } from './kit';
 import { useColors } from './theme';
@@ -89,12 +89,7 @@ function TimeStepper({ time, onChange, size = 26 }: { time: string; onChange: (t
 
 export function NotifySettings() {
   const c = useColors();
-  const { state, n, busy, note, setNote, change, turn } = useNotify();
-  const test = () => {
-    tap(); setNote(null);
-    testPush().then(sent => setNote(sent ? 'یک اعلان آزمایشی فرستاده شد.' : 'اعلان فرستاده نشد. دوباره امتحان کنید.'))
-      .catch(() => setNote('اعلان فرستاده نشد. دوباره امتحان کنید.'));
-  };
+  const { state, n, busy, note, change, turn } = useNotify();
   if (!state) return null;
   const on = state === 'on', why = WHY[state];
   return (
@@ -126,10 +121,6 @@ export function NotifySettings() {
           <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 2 }}>
             <Line title="پیام‌های روزانه" sub="روزی یک بار، بین ۱۰ صبح تا ۸ شب، درباره‌ی آموزش و آزمون." right={<Toggle label="پیام‌های روزانه" value={n.daily} onChange={v => change({ daily: v })} />} />
           </View>
-          <Pressable onPress={test} accessibilityRole="button" style={({ pressed }) => ({ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, opacity: pressed ? 0.6 : 1 })}>
-            <Icon name="send" size={15} color={c.link} weight="semibold" />
-            <T style={{ color: c.link, fontWeight: '700', fontSize: 14 }}>ارسال اعلان آزمایشی</T>
-          </Pressable>
         </View>
       ) : null}
       {note ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{note}</T> : null}
