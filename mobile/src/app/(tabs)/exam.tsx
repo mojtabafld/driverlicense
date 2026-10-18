@@ -110,7 +110,8 @@ export default function Exam() {
     router.push('/run');
   };
   return (
-    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}>
+    <Screen title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+      heroAction={{ icon: randomLeft ? 'play' : 'lock', label: randomLeft ? `شروع آزمون ${faNum(size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: start }}>
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>

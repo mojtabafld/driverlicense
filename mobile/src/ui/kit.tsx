@@ -250,12 +250,19 @@ export function useHeaderTop(color: string) {
 // page's greeting).
 // `back`: an inner page's back button floats over the header's top right; the title and its line stay at the right
 // edge, where a tab's are, set a little lower so they start under the button.
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean }) {
+// `action`: with «هدر ساده» on, a round button on the other side of the title (the home page's light / dark switch,
+// the learning tab's search, the exam tab's start); 'theme' is the switch.
+export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () => void };
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction }) {
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
   // page, only the picture or drawing goes, and the title may take the whole width.
   const plain = usePlainHeader() && !tall;
-  const lightPic = look.light ?? look.pic + 3, light = useTheme().theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
+  const { theme, setMode } = useTheme();
+  const lightPic = look.light ?? look.pic + 3, light = theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
+  const act = action === 'theme'
+    ? { icon: (theme === 'dark' ? 'sun' : 'moon') as IconName, label: 'تغییر تم', onPress: () => setMode(theme === 'dark' ? 'light' : 'dark') }
+    : action;
   const pic = light ? lightPic : look.pic, bg = light ? HERO_BG_LIGHT : HERO_BG, ink = light ? HERO_INK_LIGHT : '#ffffff';
   useHeaderTop(bg);
   const v = heroArt[String(pic)];
@@ -297,10 +304,19 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
             {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
           </>
         ) : null}
-        {below ? null : <View style={{ gap: 2, maxWidth: plain ? '100%' : '58%' }}>
-          <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
-          {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
-          {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+        {below ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ gap: 2, maxWidth: plain ? undefined : '58%', flex: plain ? 1 : undefined }}>
+            <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
+            {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
+            {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+          </View>
+          {plain && act ? (
+            <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
+              style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+                backgroundColor: light ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.14)', opacity: pressed ? 0.7 : 1 })}>
+              <Icon name={act.icon} size={21} color={ink} weight="semibold" />
+            </Pressable>
+          ) : null}
         </View>}
       </View>
       {below ? (
@@ -315,12 +331,12 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back }: { l
 
 // `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
 // page's chart ends just above the bar).
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, barGap }: { title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
-  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook }) {
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap }: { title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook; heroAction?: HeroAction }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
