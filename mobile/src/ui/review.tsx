@@ -2,7 +2,7 @@
 // badge and the «ترجمه» switch, the question, «پاسخ شما» / «پاسخ صحیح» with every statement (and its explanation),
 // «تحلیل پاسخ شما» from the AI (or the topic's short lesson), and the AI summary of all mistakes.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import { Animated, Easing, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
+import { Animated, Easing, Platform, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
 import { router } from 'expo-router';
 
 import { UI_LANG, t as fmt, tr, transText, transWord } from '@/lib/i18n';
@@ -12,7 +12,10 @@ import { imgSource } from '@/lib/img-source';
 import { faNum } from '@/lib/logic';
 import { sectionFa, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
+import { LinearGradient } from 'expo-linear-gradient';
+
 import { Icon, type IconName } from './icon';
+import { WASH_DARK, WASH_LIGHT } from './wash';
 import { Enter, L, SegPill, T, TransT, TranslateButton, physical, tap, useArcSeg } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
@@ -240,7 +243,7 @@ function useFold() {
 const lessonCache = new Map<string, string>();
 
 function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; lang: 'da' | 'en' }) {
-  const c = useColors();
+  const c = useColors(), dark = useIsDark();
   const key = `${q.id}:${a ? a.join('') : ''}:${lang}:${UI_LANG}`;
   const [shown, setShown] = useState(false);
   const [text, setText] = useState<string | null>(() => lessonCache.get(key) ?? null);
@@ -275,7 +278,9 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
       <AiButton title="تحلیل پاسخ شما" sub={locked && !text ? 'مخصوص نسخه‌ی ویژه' : 'با استفاده از هوش مصنوعی'} shown={shown} onPress={press} />
       {shown ? (
         <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
-        <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, backgroundColor: c.note }}>
+        <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(31,42,68,0.07)' }}>
+          {/* A soft wash from blush to lavender (Mojtaba 2026-10-18), and its deep counterpart in the dark theme. */}
+          <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
           {state === 'loading' ? <AiLoading text="در حال آماده‌سازی نکات این سؤال بر اساس پاسخ شما" />
             : state === 'error' ? <T style={{ color: c.muted, fontSize: 14 }}>{err}</T>
             : text ? <>
