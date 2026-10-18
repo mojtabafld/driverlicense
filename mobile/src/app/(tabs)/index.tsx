@@ -18,6 +18,7 @@ import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
 import { Avatar } from '@/ui/avatar';
+import { usePlainHeader } from '@/lib/header-style';
 import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { HomeLicenceArt } from '@/ui/header-art';
@@ -26,7 +27,8 @@ import { HomeLicenceArt } from '@/ui/header-art';
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
 // `progress` (every lesson done) turns the icon, the number and the bar green.
 // `bare`: no card of its own, a pressable cell in the shared card (main site).
-function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, bare }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number; bare?: boolean }) {
+// `grow`: this much taller (the room the plain header leaves, shared out on the home page), split above and below.
+function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, bare, grow = 0 }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number; bare?: boolean; grow?: number }) {
   const c = useColors();
   const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
   if (progress != null && progress >= 1) tone = 'ok';
@@ -53,7 +55,7 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
   </>);
-  const pad = { gap: 4, paddingVertical: 10, paddingHorizontal: narrow ? 8 : 10 };
+  const pad = { gap: 4, paddingVertical: 10 + grow / 2, paddingHorizontal: narrow ? 8 : 10 };
   return bare ? (
     <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ flex: 1 }, pad, pressed && { opacity: 0.7 }]}>{body}</Pressable>
   ) : <Card onPress={onPress} style={{ flex: 1, ...pad }}>{body}</Card>;
@@ -122,7 +124,11 @@ export default function Home() {
   const c = useColors();
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
+  // «هدر ساده»: the header is lower (Hero in ui/kit.tsx); the height it leaves is shared out evenly between the three
+  // cards (the pass card, the counts, the chart) instead of all going to the chart (Mojtaba 2026-10-18).
+  const plain = usePlainHeader();
+  const share = plain ? Math.max(0, Math.round((Math.min(Math.round(width * 0.34), 190) + 70 - 150) / 3)) : 0;
   // Main site: the page is fitted to the screen it is on. It starts from the height's level and, while the chart's card
   // has less room than it needs, steps to a denser one (3: the pass card's line and the lessons bar go, tighter padding,
   // the chart may be lower; the averages row stays, Mojtaba asked), so the chart's card ends just above the tab bar
@@ -177,7 +183,7 @@ export default function Home() {
       hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
-      <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>
+      <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
         {/* Main site: the ring and its words close together, the pair in the middle of the card, Mojtaba asked. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 12 : 16, justifyContent: ARC ? 'center' : undefined }}>
           <View>
@@ -211,17 +217,17 @@ export default function Home() {
       {/* Main site: the three counts share one card, split by thin vertical lines, Mojtaba asked. */}
       {ARC ? (
         <Card style={{ flexDirection: 'row', padding: 0 }}>
-          <Stat bare onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
+          <Stat bare grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          <Stat bare onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
+          <Stat bare grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          <Stat bare onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
+          <Stat bare grow={share} onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
         </Card>
       ) : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Stat onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
-        <Stat onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
-        <Stat onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
+        <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="clipboard" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
+        <Stat grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
+        <Stat grow={share} onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
       </View>
       )}
       </View>
