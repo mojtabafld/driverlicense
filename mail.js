@@ -1,15 +1,24 @@
-// Email: the link that confirms a new account's address, the code that lets a forgotten password be set anew, and the
-// daily study reminder, sent with Resend (resend.com) over its REST API with fetch.
-// Env: RESEND_API_KEY (without it there is no email: signing up asks for no address and nothing waits on one) and
-// MAIL_FROM (default «TeoriPrøve <no-reply@teori.bitlane.app>»; its domain must be verified in Resend). RESEND_API_BASE only
-// points the calls elsewhere for tests.
+// Email: the link that confirms a new account's address, the code that lets a forgotten password be set anew, the
+// daily study reminder and the reports of «گزارش خطا» to the admins, sent with Resend (resend.com) over its REST API
+// with fetch; and the mail Resend receives for the domain (its MX), from Resend's receiving webhook.
+// Env: RESEND_API_KEY (without it there is no email: signing up asks for no address and nothing waits on one; reading a
+// received email needs a key with full access), MAIL_FROM (default «TeoriPrøve <no-reply@teori.bitlane.app>»; its domain
+// must be verified in Resend), REPORT_TO (where reports go, comma-separated; default support@ that domain, so they land
+// in Resend's Emails → Receiving), RESEND_WEBHOOK_SECRET (the receiving webhook's signing secret, whsec_…; without it
+// the webhook is refused) and FORWARD_TO (an address elsewhere that received emails are forwarded to; optional).
+// RESEND_API_BASE only points the calls elsewhere for tests.
 'use strict';
+
+const crypto = require('crypto');
 
 const key = () => (process.env.RESEND_API_KEY || '').trim();
 const available = () => /^re_[A-Za-z0-9_]{8,}$/.test(key());
 const from = () => (process.env.MAIL_FROM || 'TeoriPrøve <no-reply@teori.bitlane.app>').trim();
 const EMAIL_RE = /^[^\s@<>"',;]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 const normal = e => String(e || '').trim().toLowerCase().slice(0, 254);
+const base = () => (process.env.RESEND_API_BASE || 'https://api.resend.com').replace(/\/$/, '');
+// The sending domain (MAIL_FROM's), whose mail Resend also receives.
+const domain = () => (/@([^>\s]+)/.exec(from()) || [])[1] || 'teori.bitlane.app';
 
 const TEXT = {
   fa: { subject: 'تأیید ایمیل حساب TeoriPrøve', hi: n => `سلام ${n}،`, body: 'برای فعال شدن حساب کاربری‌تان روی دکمه‌ی زیر بزنید. این لینک تا ۲۴ ساعت اعتبار دارد.', button: 'فعال کردن حساب', ignore: 'اگر شما این حساب را نساخته‌اید، این ایمیل را نادیده بگیرید.', dir: 'rtl' },
@@ -66,11 +75,80 @@ function sendReminder(to, name, streak, link, lang) {
   return send(to, t.subject(streak), html, `${t.hi(name)}\n\n${t.body(streak)}\n\n${link}\n\n${t.off}`);
 }
 
-async function send(to, subject, html, text) {
-  const res = await fetch(`${(process.env.RESEND_API_BASE || 'https://api.resend.com').replace(/\/$/, '')}/emails`, {
+// «گزارش خطا» from the app (server.js /api/report) to REPORT_TO, its details first and then its text; Reply-To the
+// account's confirmed address, so answering the email writes to the user.
+const reportTo = () => (process.env.REPORT_TO || `support@${domain()}`).split(',').map(normal).filter(e => EMAIL_RE.test(e));
+function sendReport(r) {
+  const to = reportTo();
+  if (!to.length) return Promise.resolve();
+  const kind = r.kind === 'idea' ? 'پیشنهاد' : 'خطا';
+  const rows = [['نوع', kind], ['کاربر', `${r.name || ''} (${r.username})`], ['ایمیل', r.email || '–'],
+    ['دستگاه', `${r.platform || '–'} ${r.version || ''}`.trim()], ['زبان برنامه', r.ui || '–'],
+    ['زمان', new Date(r.at).toLocaleString('fa-IR', { timeZone: 'Europe/Copenhagen' })]];
+  const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:560px">
+<table style="border-collapse:collapse;font-size:14px;margin-bottom:12px">${rows.map(([k, v]) => `<tr><td style="color:#6b7280;padding:2px 0 2px 16px;white-space:nowrap">${esc(k)}</td><td style="padding:2px 0">${esc(v)}</td></tr>`).join('')}</table>
+<div style="white-space:pre-wrap;background:#f3f4f8;border-radius:12px;padding:14px 16px">${esc(r.text)}</div></div>`;
+  const text = `${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\n${r.text}`;
+  const first = r.text.split('\n')[0].trim();
+  return send(to, `گزارش ${kind}: ${first.length > 70 ? `${first.slice(0, 70)}…` : first}`, html, text, { replyTo: r.email });
+}
+
+// Resend's receiving webhook (Webhooks → the event email.received), signed as Svix does: the headers svix-id,
+// svix-timestamp and svix-signature («v1,<base64>», several apart by spaces) carry the HMAC-SHA256 of
+// «<id>.<timestamp>.<raw body>» with the key in RESEND_WEBHOOK_SECRET (whsec_<base64>), at most 5 minutes old.
+// Returns the event, or null.
+function verifyWebhook(raw, headers, secret = process.env.RESEND_WEBHOOK_SECRET || '', now = Date.now()) {
+  const id = headers['svix-id'], ts = headers['svix-timestamp'], sig = headers['svix-signature'];
+  if (!secret || !id || !ts || !sig) return null;
+  const t = Number(ts);
+  if (!Number.isFinite(t) || Math.abs(now / 1000 - t) > 300) return null;
+  const want = crypto.createHmac('sha256', Buffer.from(String(secret).replace(/^whsec_/, ''), 'base64')).update(`${id}.${ts}.`).update(raw).digest();
+  const ok = String(sig).split(' ').some(p => {
+    const [v, b64] = p.split(',');
+    const b = v === 'v1' && b64 ? Buffer.from(b64, 'base64') : null;
+    return !!b && b.length === want.length && crypto.timingSafeEqual(b, want);
+  });
+  if (!ok) return null;
+  try { return JSON.parse(raw.toString('utf8')); } catch { return null; }
+}
+// A received email in full (the webhook carries only who sent it, to whom and the subject): GET /emails/receiving/{id}.
+// A key that may only send gets 401 / 403: then null.
+async function getReceived(id) {
+  const res = await fetch(`${base()}/emails/receiving/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${key()}` }, signal: AbortSignal.timeout(15e3) });
+  if (!res.ok) { console.error('resend receiving', res.status); return null; }
+  return res.json();
+}
+// A received email's text: its text part, else its HTML (markup, or a data: URI of it) as plain text.
+function bodyText(e) {
+  if (e && typeof e.text === 'string' && e.text.trim()) return e.text.trim();
+  let h = e && typeof e.html === 'string' ? e.html : '';
+  const m = /^data:[^,]*?(;base64)?,([\s\S]*)$/.exec(h);
+  if (m) { try { h = m[1] ? Buffer.from(m[2], 'base64').toString('utf8') : decodeURIComponent(m[2]); } catch { h = ''; } }
+  return h.replace(/<(style|script|head)[\s\S]*?<\/\1>/gi, '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|div|tr|li|h\d|blockquote)>/gi, '\n')
+    .replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+// FORWARD_TO, when set: a received email goes on there too, Reply-To its sender (or where it asked answers to go, e.g. a
+// report's user); never to an address of the receiving domain (it would come in again, and again).
+function forward(e, text) {
+  const to = normal(process.env.FORWARD_TO || '');
+  if (!EMAIL_RE.test(to)) return Promise.resolve(false);
+  const dom = to.split('@')[1];
+  if (dom === domain() || [...(e.to || []), ...(e.received_for || [])].some(a => normal(a).endsWith(`@${dom}`))) return Promise.resolve(false);
+  const replyTo = (Array.isArray(e.reply_to) && e.reply_to[0]) || e.from;
+  const head = `از: ${e.from}\nبه: ${(e.to || []).join('، ')}\nموضوع: ${e.subject || ''}`;
+  const html = `<div dir="auto" style="font-family:Tahoma,Arial,sans-serif;font-size:14px;line-height:1.7;color:#1f2937;max-width:600px">
+<p style="color:#6b7280;font-size:13px;white-space:pre-wrap;margin:0 0 12px">${esc(head)}</p><div style="white-space:pre-wrap">${esc(text)}</div></div>`;
+  return send([to], `Fwd: ${e.subject || ''}`.trim(), html, `${head}\n\n${text}`, { replyTo }).then(() => true);
+}
+
+async function send(to, subject, html, text, { replyTo } = {}) {
+  const body = { from: from(), to: Array.isArray(to) ? to : [to], subject, html, text };
+  if (replyTo) body.reply_to = replyTo;
+  const res = await fetch(`${base()}/emails`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${key()}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from: from(), to: [to], subject, html, text }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(15e3),
   });
   if (!res.ok) {
@@ -80,4 +158,4 @@ async function send(to, subject, html, text) {
   }
 }
 
-module.exports = { available, sendVerify, sendReset, sendReminder, EMAIL_RE, normal };
+module.exports = { available, sendVerify, sendReset, sendReminder, sendReport, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };

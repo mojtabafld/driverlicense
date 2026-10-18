@@ -1,5 +1,5 @@
 // «گزارش خطا», from the settings: a short form whose text goes to the server with the account, the platform and the
-// app's version; the admins read the reports in the admin panel.
+// app's version; the admins get it by email (Resend, Reply-To the account's confirmed address) and in the admin panel.
 import Constants from 'expo-constants';
 import { useState } from 'react';
 import { Platform, TextInput, View } from 'react-native';
@@ -52,7 +52,7 @@ export default function Report() {
         ) : null}
         <Button kind="grey" icon="send" label={busy ? 'در حال فرستادن…' : 'فرستادن گزارش'} onPress={send} disabled={busy || !text.trim()} />
       </Card>
-      <T style={{ color: c.faint, fontSize: 12, lineHeight: 20, textAlign: 'center' }}>همراه گزارش، نام کاربری، نوع دستگاه و نسخه‌ی اپ هم فرستاده می‌شود تا مشکل راحت‌تر پیدا شود.</T>
+      <T style={{ color: c.faint, fontSize: 12, lineHeight: 20, textAlign: 'center' }}>همراه گزارش، نام کاربری، ایمیل حساب، نوع دستگاه و نسخه‌ی اپ هم فرستاده می‌شود تا مشکل راحت‌تر پیدا شود و بتوانیم جوابتان را بدهیم.</T>
     </SubPage>
   );
 }

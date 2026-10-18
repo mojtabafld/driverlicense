@@ -6,7 +6,8 @@
 // LESSON_AI_MODEL (Claude model for those lessons, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
 // ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
-// PROMO_CODE / PROMO_DAYS (a free trial code) and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js).
+// PROMO_CODE / PROMO_DAYS (a free trial code) and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js),
+// RESEND_API_KEY, MAIL_FROM, REPORT_TO, RESEND_WEBHOOK_SECRET and FORWARD_TO (email, mail.js).
 // See README.md for all variables.
 'use strict';
 process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
@@ -284,6 +285,7 @@ function recordVisit(req) {
 }
 
 const REPORTS_KEPT = 500, REPORTS_PER_HOUR = 10, reportTimes = new Map(); // bug reports from the app
+const INBOX_KEPT = 200; // emails Resend received for the domain (mail.js), for the admin panel
 const FULL = 25, PASS_MIN = 20;
 const scoreOf = a => a.items.filter(x => x.ok).length;
 function adminStats() {
@@ -701,6 +703,28 @@ async function api(req, res, route) {
     return send(res, 200, { received: true });
   }
 
+  // Resend's receiving webhook (Webhooks → event email.received, signed; mail.js): an email Resend received for the
+  // domain (support@…: a report's copy, a user's answer) is kept, newest INBOX_KEPT, for the admin panel's
+  // «ایمیل‌های دریافتی», and forwarded to FORWARD_TO when set. Sent again by Resend, an email is kept once.
+  if (req.method === 'POST' && route === 'inbound') {
+    const ev = mail.verifyWebhook(await readRaw(req), req.headers);
+    if (!ev) return send(res, 400, { error: 'bad signature' });
+    const d = ev.data || {};
+    if (ev.type === 'email.received' && d.email_id && !(store.meta.inbox || []).some(x => x.id === d.email_id)) {
+      const full = await mail.getReceived(d.email_id).catch(e => { console.error('resend receiving', e.message); return null; });
+      const e = { ...d, ...(full || {}) }, text = full ? mail.bodyText(full) : '';
+      const cut = (v, n) => String(v || '').slice(0, n), list = (x, n) => (Array.isArray(x) ? x : []).slice(0, n);
+      const item = { at: Date.parse(d.created_at) || Date.now(), id: cut(d.email_id, 80), from: cut(e.from, 200), to: list(e.to, 10).map(x => cut(x, 200)),
+        replyTo: list(e.reply_to, 3).map(x => cut(x, 200)), subject: cut(e.subject, 300), text: text.slice(0, 8000), full: !!full,
+        attachments: list(e.attachments, 20).map(a => ({ name: cut(a && a.filename, 120), size: (a && a.size) || 0 })) };
+      store.meta.inbox = (store.meta.inbox || []).concat(item).slice(-INBOX_KEPT);
+      await store.saveMeta('inbox', store.meta.inbox);
+      console.log('email received', item.id, full ? '' : '(no full access to read it)');
+      if (full) mail.forward(e, text).then(sent => { if (sent) console.log('email forwarded', item.id); }).catch(err => console.error('forward', err.message));
+    }
+    return send(res, 200, { received: true });
+  }
+
   // Claude Code reads and edits a console item's saved prompt for the admin (consoleprompts.js), with the
   // X-Claude-Code-Key header matching the CLAUDE_CODE_KEY secret (nothing here without it):
   // GET ?id=q:<qid>|g:<key> → the prompt and what the item is about; POST { id, prompt, note } saves the new prompt,
@@ -844,7 +868,8 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user) });
   }
   // Delete the account, asked from the settings with the user's password (failed tries count like failed sign-ins):
-  // the user, all their sessions, their own profile picture and their error reports are removed, and the cookie cleared.
+  // the user, all their sessions, their own profile picture, their error reports and the emails received from their
+  // address are removed, and the cookie cleared.
   if (req.method === 'DELETE' && route === 'account') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const b = await readBody(req);
@@ -857,6 +882,12 @@ async function api(req, res, route) {
     if ((store.meta.reports || []).some(r => r.username === u)) {
       store.meta.reports = store.meta.reports.filter(r => r.username !== u);
       await store.saveMeta('reports', store.meta.reports);
+    }
+    // (and the emails received from the account's address, or about its reports)
+    const addr = mail.normal(user.email), mine = x => !!addr && (mail.normal(x.from).includes(addr) || (x.replyTo || []).some(a => mail.normal(a).includes(addr)));
+    if (addr && (store.meta.inbox || []).some(mine)) {
+      store.meta.inbox = store.meta.inbox.filter(x => !mine(x));
+      await store.saveMeta('inbox', store.meta.inbox);
     }
     reportTimes.delete(u);
     res.setHeader('Set-Cookie', cookie(req, '', 0));
@@ -1157,10 +1188,12 @@ async function api(req, res, route) {
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse() });
+    return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse(), inbox: (store.meta.inbox || []).slice().reverse(),
+      mail: { on: mail.available(), reportTo: mail.reportTo(), inbound: !!process.env.RESEND_WEBHOOK_SECRET, forward: !!process.env.FORWARD_TO } });
   }
   // «گزارش خطا» from the app: { kind: 'bug' | 'idea', text, platform, version }, kept (newest REPORTS_KEPT) in
-  // store.meta.reports for the admin panel; at most REPORTS_PER_HOUR from one user.
+  // store.meta.reports for the admin panel and emailed to the admins (mail.js: REPORT_TO, Reply-To the account's
+  // confirmed address); at most REPORTS_PER_HOUR from one user. An email that could not go does not fail the report.
   if (req.method === 'POST' && route === 'report') {
     const b = await readBody(req);
     const text = String(b.text || '').trim().slice(0, 2000);
@@ -1169,9 +1202,11 @@ async function api(req, res, route) {
     if (recent.length >= REPORTS_PER_HOUR) return send(res, 429, { error: 'گزارش‌های زیادی فرستاده‌اید؛ کمی بعد دوباره امتحان کنید.' });
     recent.push(now); reportTimes.set(user.username, recent);
     const clip = (v, n) => String(v || '').slice(0, n);
-    const list = (store.meta.reports || []).concat({ at: now, username: user.username, name: user.name, kind: b.kind === 'idea' ? 'idea' : 'bug',
-      text, platform: clip(b.platform, 20), version: clip(b.version, 20) }).slice(-REPORTS_KEPT);
+    const r = { at: now, username: user.username, name: user.name, kind: b.kind === 'idea' ? 'idea' : 'bug', text, platform: clip(b.platform, 20),
+      version: clip(b.version, 20), email: user.email && user.emailOk ? user.email : undefined, ui: clip((user.settings || {}).ui, 4) || undefined };
+    const list = (store.meta.reports || []).concat(r).slice(-REPORTS_KEPT);
     await store.saveMeta('reports', list);
+    if (mail.available()) mail.sendReport(r).then(() => console.log('report emailed', user.username)).catch(e => console.error('report email', e.message));
     return send(res, 200, { ok: true });
   }
   if (req.method === 'GET' && route === 'me') {
