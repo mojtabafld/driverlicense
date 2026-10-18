@@ -2,7 +2,7 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
 import { EXAM_FOR, TRANS_DEFAULT, getTransLang, UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
@@ -19,6 +19,7 @@ import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
 import { PaletteRow } from '@/ui/palette-pick';
+import { NotifySettings } from '@/ui/notify-settings';
 
 function Row({ title, sub, right }: { title: string; sub?: string; right: React.ReactNode }) {
   const c = useColors();
@@ -155,6 +156,8 @@ export default function Settings() {
           <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}><PaletteRow /></View>
         ) : null}
       </Card>
+      {/* Notifications (main site on the web): reminders and a daily message (ui/notify-settings.tsx). */}
+      {!PROVE_PICS && Platform.OS === 'web' ? <NotifySettings /> : null}
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />

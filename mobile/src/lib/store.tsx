@@ -6,6 +6,7 @@ import type { Attempt, Bank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_PICS } from './config';
 import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n';
 import { reloadApp } from './reload';
+import { forgetPush, syncPush } from './push';
 import { loadToken, saveToken } from './token';
 import { PALETTE, forgetPalette, keepPalette, rememberDefault } from '@/ui/palette';
 import { useTheme } from '@/ui/theme';
@@ -131,6 +132,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
     setMe(d);
+    // Notifications allowed on this device before: it is this account's device now (lib/push.ts).
+    if (!PROVE_PICS && !d.user.verify) syncPush().catch(() => {});
     api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); }).catch(() => {});
     // An account still waiting for its email link reads only itself, so nothing else (the questions) is loaded yet.
     if (d.user.verify) return;
@@ -202,7 +205,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       gen.current++;
       setApiToken(null); setToken(null); setMe(null);
       await saveToken(null);
-      if (old) api('POST', 'logout', undefined, old).catch(() => {});
+      // (The account first forgets this device's notifications, lib/push.ts, while its token still works.)
+      if (old) forgetPush(old).catch(() => {}).then(() => api('POST', 'logout', undefined, old)).catch(() => {});
       lookOut();
     },
     // The server removes the account and its sessions, so the device only forgets its token.

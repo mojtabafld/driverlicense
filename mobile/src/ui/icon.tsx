@@ -32,6 +32,15 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'checkCircle':
       body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M8.2 12.3l2.6 2.6 5-5.2" {...line} /></G>;
       break;
+    case 'bell':
+      body = <G><Path d="M6 16.6V11a6 6 0 0 1 12 0v5.6l1.6 2.1H4.4z" {...line} /><Path d="M9.9 20.6a2.3 2.3 0 0 0 4.2 0" {...line} /></G>;
+      break;
+    case 'plus':
+      body = <Path d="M12 5.5v13M5.5 12h13" {...line} />;
+      break;
+    case 'minus':
+      body = <Path d="M5.5 12h13" {...line} />;
+      break;
     case 'xCircle':
       body = <G><Circle cx={12} cy={12} r={8.8} {...line} /><Path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6" {...line} /></G>;
       break;

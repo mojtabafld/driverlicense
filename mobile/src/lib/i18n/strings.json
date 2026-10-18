@@ -2764,5 +2764,18 @@
 "هدر ساده":["Plain header", "Enkel overskrift"],
 "بالای صفحه‌ها فقط عنوان، بدون تصویر.":["Only the title at the top of pages, without pictures.", "Kun titlen øverst på siderne, uden billeder."],
 "حساب کاربری و تنظیمات":["Account and settings", "Konto og indstillinger"],
-"آخرین آزمون":["Latest exam", "Seneste prøve"]
+"آخرین آزمون":["Latest exam", "Seneste prøve"],
+"اعلان‌ها":["Notifications", "Notifikationer"],
+"یادآوری آزمون و آموزش روی همین دستگاه":["Exam and lesson reminders on this device", "Påmindelser om prøver og lektioner på denne enhed"],
+"در آیفون اعلان‌ها فقط در اپی کار می‌کنند که به صفحه‌ی اصلی اضافه شده باشد: در Safari دکمه‌ی اشتراک‌گذاری و بعد «Add to Home Screen» را بزنید و اپ را از صفحه‌ی اصلی باز کنید.":["On iPhone, notifications only work in the app added to the Home Screen: in Safari tap Share, then “Add to Home Screen”, and open the app from the Home Screen.", "På iPhone virker notifikationer kun i appen, når den er føjet til hjemmeskærmen: tryk på Del i Safari, derefter “Føj til hjemmeskærm”, og åbn appen derfra."],
+"اجازه‌ی اعلان برای این سایت بسته است. آن را از تنظیمات مرورگر یا گوشی باز کنید.":["Notifications are blocked for this site. Allow them in your browser or phone settings.", "Notifikationer er blokeret for dette websted. Tillad dem i browserens eller telefonens indstillinger."],
+"این مرورگر اعلان را پشتیبانی نمی‌کند.":["This browser does not support notifications.", "Denne browser understøtter ikke notifikationer."],
+"روشن کردن اعلان‌ها ممکن نشد. دوباره امتحان کنید.":["Notifications could not be turned on. Please try again.", "Notifikationer kunne ikke slås til. Prøv igen."],
+"یک اعلان آزمایشی فرستاده شد.":["A test notification was sent.", "En testnotifikation er sendt."],
+"اعلان فرستاده نشد. دوباره امتحان کنید.":["The notification was not sent. Please try again.", "Notifikationen blev ikke sendt. Prøv igen."],
+"یادآوری روزانه":["Daily reminder", "Daglig påmindelse"],
+"هر روز در ساعتی که انتخاب می‌کنید.":["Every day at the time you choose.", "Hver dag på det tidspunkt, du vælger."],
+"پیام‌های روزانه":["Daily messages", "Daglige beskeder"],
+"روزی یک بار، بین # صبح تا # شب، درباره‌ی آموزش و آزمون.":["Once a day, between # am and # pm, about lessons and exams.", "Én gang om dagen, mellem kl. # om formiddagen og # om aftenen, om lektioner og prøver."],
+"ارسال اعلان آزمایشی":["Send a test notification", "Send en testnotifikation"]
 }

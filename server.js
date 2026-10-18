@@ -24,6 +24,7 @@ const consoleprompts = require('./consoleprompts');
 const tts = require('./tts');
 const webpic = require('./webpic');
 const payments = require('./payments');
+const push = require('./push');
 const mail = require('./mail');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -454,7 +455,8 @@ function serveAppWeb(req, res, p, web = WEBS.root) {
       if (isIndex && web.page) buf = web.page(buf);
       res.writeHead(200, {
         'Content-Type': APP_MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
-        'Cache-Control': isIndex ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
+        // (The service worker, sw.js, is looked for again on every start, so a new one reaches the devices at once.)
+        'Cache-Control': isIndex ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : p === '/sw.js' ? 'no-cache' : 'public, max-age=86400',
         'X-Content-Type-Options': 'nosniff', ...(isIndex ? PAGE_HEADERS : {}),
       });
       res.end(req.method === 'HEAD' ? undefined : buf);
@@ -755,7 +757,7 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user) });
   }
   // An account waiting for its link can only read itself, ask for the link again and sign out.
-  if (needsVerify(user) && !(route === 'me' || route === 'logout' || (route === 'settings' && req.method === 'PUT'))) {
+  if (needsVerify(user) && !(route === 'me' || route === 'logout' || route === 'pushunsub' || (route === 'settings' && req.method === 'PUT'))) {
     return send(res, 403, { error: 'اول ایمیل خود را با لینکی که برایتان فرستادیم تأیید کنید.', verify: true });
   }
 
@@ -1017,6 +1019,31 @@ async function api(req, res, route) {
   // The streak and the daily reminder: GET → { streak, today, week: the last 7 days studied (oldest first), reminder,
   // mail: email on, email: the account's confirmed address }; POST { on, hour } sets the reminder (on needs a
   // confirmed address).
+  // «اعلان‌ها» (push.js): GET → { key: the public key to subscribe with, notify: the account's choices, devices };
+  // POST { remind, time, what, daily } changes them. pushsub { sub, tz } adds this device, pushunsub
+  // { endpoint } removes it (signing out), pushtest sends a message to the account's devices now.
+  if (route === 'notify' && (req.method === 'GET' || req.method === 'POST')) {
+    if (req.method === 'POST') { push.setSettings(user, await readBody(req)); await store.saveUser(user); }
+    return send(res, 200, { key: push.key(), notify: push.settingsOf(user), devices: (user.push || []).length });
+  }
+  if (req.method === 'POST' && route === 'pushsub') {
+    const b = await readBody(req), moved = push.subscribe(Object.values(store.users), user, b.sub, b.tz);
+    if (!moved) return send(res, 400, { error: 'bad subscription' });
+    for (const u of moved) await store.saveUser(u);
+    await store.saveUser(user);
+    return send(res, 200, { ok: true, devices: user.push.length });
+  }
+  if (req.method === 'POST' && route === 'pushunsub') {
+    const b = await readBody(req);
+    if (push.unsubscribe(user, String(b.endpoint || ''))) await store.saveUser(user);
+    return send(res, 200, { ok: true });
+  }
+  if (req.method === 'POST' && route === 'pushtest') {
+    if (!(user.push || []).length) return send(res, 400, { error: 'no device' });
+    const r = await push.sendTo(user, push.testMessage(user));
+    if (r.changed) await store.saveUser(user);
+    return send(res, 200, { sent: r.sent });
+  }
   if (route === 'streak' && (req.method === 'GET' || req.method === 'POST')) {
     if (req.method === 'POST') {
       const b = await readBody(req), hour = Number.isInteger(+b.hour) && +b.hour >= 5 && +b.hour <= 22 ? +b.hour : 18;
@@ -1301,6 +1328,11 @@ async function main() {
     for (const u of Object.values(store.users)) if ((u.settings || {}).header !== 'plain') { u.settings = { ...(u.settings || {}), header: 'plain' }; await store.saveUser(u); }
     await store.saveMeta('plainHeaderAll', 1);
   }
+  // Web push (push.js): its keys, then once a minute the reminders and the day's messages that are due.
+  await push.init(store);
+  setInterval(() => {
+    push.tick(store, u => ({ streak: streakOf(u), studiedToday: (u.study || []).includes(dayKey(Date.now())) })).catch(e => console.error('push tick', e.message));
+  }, 60e3).unref();
   // One-time, asked by the owner: remove user negin's 22nd and 23rd attempts (as numbered on the progress chart,
   // oldest first). A copy is kept in meta (`removed:negin:22-23`) so they can be restored.
   if (store.meta.removeNegin2223 !== 1) {
