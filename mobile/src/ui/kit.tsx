@@ -279,7 +279,8 @@ export function useHeaderTop(color: string) {
 // the learning tab's search, the exam tab's start); 'theme' is the switch.
 export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () => void } | { node: React.ReactNode; label: string; onPress: () => void };
 // `node`: something of the page's own in place of an icon (the home page's profile picture), shown as it is.
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction }) {
+// `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode }) {
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
   // page, only the picture or drawing goes, and the title may take the whole width.
@@ -339,14 +340,20 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             {plain && name ? (
               // «هدر ساده»: the name on the greeting's line, a little smaller than a title: the greeting in the regular cut, the
               // name in bold, cut short with … if it does not fit (Mojtaba 2026-10-18).
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {lead}
                 <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
                 <View style={{ flexShrink: 1 }}>
                   <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                 </View>
               </View>
             ) : <>
-            <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
+            {lead ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {lead}
+                <View style={{ flex: 1 }}><FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine></View>
+              </View>
+            ) : <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>}
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
             </>}
             {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
@@ -373,12 +380,12 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
 
 // `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
 // page's chart ends just above the bar).
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap }: { title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap, lead }: { lead?: React.ReactNode; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook; heroAction?: HeroAction }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
