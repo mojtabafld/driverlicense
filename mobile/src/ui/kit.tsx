@@ -268,7 +268,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   useHeaderTop(bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
-  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : Math.min(Math.round(width * 0.34), 190) + 70);
+  // (plain: lower, with no picture to make room for; Mojtaba 2026-10-18)
+  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : plain ? (name ? 150 : 128) : Math.min(Math.round(width * 0.34), 190) + 70);
   const topPad = ins.top + (Platform.OS === 'web' ? 14 : 8);
   // The sign-in picture (square, laid in from its left edge, its height or width filling the header, the other cut evenly)
   // has its objects across most of its width, down to about 68% of its height, with calm ground under them. On a narrow
@@ -295,7 +296,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
       <HeroFade />
-      <View style={{ flex: 1, paddingTop: under ? topPad + 48 : topPad, paddingBottom: name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall || under ? 'flex-start' : 'flex-end' }}>
+      <View style={{ flex: 1, paddingTop: under ? topPad + 48 : topPad, paddingBottom: plain ? 30 : name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall || under ? 'flex-start' : 'flex-end' }}>
         {tall ? (
           <>
             <View style={{ alignSelf: 'flex-end', borderRadius: 19, backgroundColor: light ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)' }}>
