@@ -130,7 +130,7 @@ function StartCard({ compact }: { compact: boolean }) {
   );
 }
 
-// The line under the greeting, once the opening is over: these take turns every 3 seconds (Mojtaba 2026-10-18).
+// The line under the greeting, once the opening is over: these take turns every 10 seconds (Mojtaba 2026-10-18).
 const TURNS = ['تمرین امروز را شروع کنید.', 'یک آزمون تصادفی بدهید.', 'پیشرفت خودتان را بررسی کنید.'];
 
 export default function Home() {
