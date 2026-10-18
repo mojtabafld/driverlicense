@@ -225,7 +225,7 @@ const BAR_ROOM = 64 + 30;
 // header's height; it gets the theme (light) to colour itself.
 // The plain header («هدر ساده») keeps the picture header's colour band and its fade into the page when this is on; off
 // (Mojtaba 2026-10-18, to try it on the site) it is flat, in the page's own colour. Flip it back to bring the band back.
-const PLAIN_GRADIENT = false;
+const PLAIN_GRADIENT = true;
 export type HeroLook = { pic: number; light?: number; icon: IconName; art?: React.ComponentType<{ light: boolean; height: number }> };
 
 // On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
