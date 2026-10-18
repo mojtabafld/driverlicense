@@ -1204,8 +1204,8 @@ async function api(req, res, route) {
     const clip = (v, n) => String(v || '').slice(0, n);
     const r = { at: now, username: user.username, name: user.name, kind: b.kind === 'idea' ? 'idea' : 'bug', text, platform: clip(b.platform, 20),
       version: clip(b.version, 20), email: user.email && user.emailOk ? user.email : undefined, ui: clip((user.settings || {}).ui, 4) || undefined };
-    const list = (store.meta.reports || []).concat(r).slice(-REPORTS_KEPT);
-    await store.saveMeta('reports', list);
+    store.meta.reports = (store.meta.reports || []).concat(r).slice(-REPORTS_KEPT);
+    await store.saveMeta('reports', store.meta.reports);
     if (mail.available()) mail.sendReport(r).then(() => console.log('report emailed', user.username)).catch(e => console.error('report email', e.message));
     return send(res, 200, { ok: true });
   }
