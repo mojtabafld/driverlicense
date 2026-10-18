@@ -1385,6 +1385,22 @@ async function main() {
       console.log('reset user test', Object.keys(u));
     } else console.log('reset user test: no such user');
   }
+  // One-time, asked by the owner (2026-10-18): the premium pass of alirezakoohpeima5@gmail.com ends today, at the end of
+  // 18 October in Copenhagen. Its earlier end is kept in meta (`premium:<username>:until`) so it can be put back.
+  if (store.meta.endPremiumAlireza !== 1) {
+    const email = 'alirezakoohpeima5@gmail.com', end = Date.parse('2026-10-18T23:59:59+02:00');
+    const found = Object.values(store.users).filter(x => [x.email, x.username].some(v => String(v || '').trim().toLowerCase() === email));
+    for (const u of found) {
+      if (u.premium && u.premium.until > end) {
+        await store.saveMeta(`premium:${u.username}:until`, { until: u.premium.until });
+        u.premium.until = end;
+        await store.saveUser(u);
+      }
+      console.log('premium of', u.username, 'ends', new Date((u.premium || {}).until || 0).toISOString());
+    }
+    if (found.length) await store.saveMeta('endPremiumAlireza', 1);
+    else console.log('end premium: no account with', email);
+  }
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
