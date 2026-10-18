@@ -395,7 +395,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
               // The drawing of the time of day stands beside both lines, centred between the greeting and the line under
               // it, and that line starts where the greeting does (Mojtaba 2026-10-18); then it goes (FadingLead).
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {lead ? <FadingLead onDone={() => setAfter(true)}>{lead}</FadingLead> : null}
+                {/* (The line changes a second after the text has come to rest; Mojtaba 2026-10-18.) */}
+                {lead ? <FadingLead onDone={() => setTimeout(() => setAfter(true), 1000)}>{lead}</FadingLead> : null}
                 <View style={{ flex: 1, gap: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
