@@ -95,7 +95,7 @@ const arcLight: typeof tealLight = {
   text: '#0b0d18', muted: '#565c73', faint: '#7a8098',
   accent: '#2f55d4', accentText: '#ffffff', accentSoft: 'rgba(47,85,212,0.12)', link: '#2f55d4',
   forest: '#2f55d4', ok: '#0f8a68', okSoft: '#e3f4ee', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
-  note: '#f0f2f8', submit: '#121a3a', checked: 'rgba(47,85,212,0.12)', cardBorder: '#e5e8f0', hairline: '#eef0f6',
+  note: '#e9eefc', submit: '#121a3a', checked: 'rgba(47,85,212,0.12)', cardBorder: '#e5e8f0', hairline: '#eef0f6',
   glass: '#ffffff', glassStrong: '#ffffff', glassBorder: '#e5e8f0',
   pick: '#3e6bf0', pickSoft: '#edf1fe',
   nav: '#eef0f6', navFg: '#0b0d18', navOff: '#f5f6fa', navNum: '#565c73',
