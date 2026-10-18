@@ -19,11 +19,12 @@ import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
 // One thing premium adds: a round green tick (OkTick), then a line.
-function Perk({ title, half }: { title: string; half?: boolean }) {
+// `small`: a short screen (the premium page's denser steps): a smaller tick and line, still one under the other.
+function Perk({ title, small }: { title: string; small?: boolean }) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: half ? 6 : 10, width: half ? '48%' : undefined }}>
-      <OkTick size={half ? 18 : 20} />
-      <T style={{ flex: 1, fontWeight: '500', fontSize: 12 }}>{title}</T>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: small ? 8 : 10 }}>
+      <OkTick size={small ? 16 : 20} />
+      <T style={{ flex: 1, fontWeight: '500', fontSize: small ? 11 : 12, lineHeight: small ? 16 : undefined }}>{title}</T>
     </View>
   );
 }
@@ -63,7 +64,7 @@ export default function Premium() {
   const until = user?.premium?.until ?? 0;
   const showCode = !!pay?.promo && !guest && !user?.premium?.promo && !user?.promoUsed;
   // Fitted to the screen (Mojtaba 2026-10-18): while the page is taller than the room under its header, it steps to a
-  // denser layout (1: less space, lower plan rows; 2: the four perks two by two, a smaller buy button; 3: the active
+  // denser layout (1: less space, lower plan rows; 2: the four perks smaller, a smaller buy button; 3: the active
   // pass on one line, without the line on how a renewal adds up), so it needs no
   // scrolling; with the trial-code card still there it may scroll. A new screen height starts over.
   const { height: winH } = useWindowDimensions(), ins = useSafeAreaInsets();
@@ -118,13 +119,13 @@ export default function Premium() {
   return (
     <SubPage title="نسخه‌ی ویژه" maxWidth={560} gap={0}>
       <View ref={box} onLayout={() => setTimeout(fit, 0)} style={{ gap }}>
-      {/* What premium adds, one under the other (two by two when the screen is short), and one line on paying. */}
-      <View style={{ gap: level >= 2 ? 8 : level ? 9 : 12, paddingHorizontal: 4, ...(level >= 2 ? { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' } : null) }}>
-        <Perk half={level >= 2} title="توضیح هر پاسخ با هوش مصنوعی" />
-        <Perk half={level >= 2} title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
-        <Perk half={level >= 2} title="خواندن سؤال‌ها و گزینه‌ها با صدا" />
-        <Perk half={level >= 2} title="شنیدن توضیح‌ها به فارسی" />
-        <T style={{ color: c.muted, fontSize: 12.5, marginTop: 2, width: '100%' }}>یک بار پرداخت، بدون تمدید خودکار</T>
+      {/* What premium adds, one under the other (smaller when the screen is short), and one line on paying. */}
+      <View style={{ gap: level >= 2 ? 6 : level ? 9 : 12, paddingHorizontal: 4 }}>
+        <Perk small={level >= 2} title="توضیح هر پاسخ با هوش مصنوعی" />
+        <Perk small={level >= 2} title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
+        <Perk small={level >= 2} title="خواندن سؤال‌ها و گزینه‌ها با صدا" />
+        <Perk small={level >= 2} title="شنیدن توضیح‌ها به فارسی" />
+        <T style={{ color: c.muted, fontSize: level >= 2 ? 11.5 : 12.5, marginTop: 2 }}>یک بار پرداخت، بدون تمدید خودکار</T>
       </View>
 
       {premium && level >= 3 ? (

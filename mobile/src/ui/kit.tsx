@@ -344,9 +344,9 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
               // the learn and exam tabs (Mojtaba 2026-10-18).
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {lead}
-                <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
+                <T style={[{ fontSize: 20, lineHeight: 30, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
                 <View style={{ flexShrink: 1 }}>
-                  <T style={[{ fontSize: 22, lineHeight: 32, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                  <T style={[{ fontSize: 20, lineHeight: 30, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                 </View>
               </View>
             ) : <>

@@ -1,9 +1,9 @@
 // Home: progress at a glance (chance of passing, counts, progress chart), fitted to the screen without scrolling:
 // the chart takes the height left, and on shorter screens the cards get more compact.
-import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { AppState, Pressable, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_PICS } from '@/lib/config';
@@ -74,12 +74,20 @@ function dayPart(d = new Date()): DayPart {
 const GREET: Record<DayPart, string> = { morning: 'صبح به‌خیر', noon: 'ظهر به‌خیر', evening: 'عصر به‌خیر', night: 'شب به‌خیر' };
 
 // The part of the day, kept up to date while the app stays open (the greeting and its drawing follow it).
+// Looked at again every 20 seconds, and at once when the app comes back to the front (its timers stand still in the
+// background, so a greeting from the morning stayed on into the afternoon; Mojtaba 2026-10-18) or the tab is shown.
 function useDayPart() {
   const [g, setG] = useState(() => dayPart());
   useEffect(() => {
-    const t = setInterval(() => setG(dayPart()), 60e3);
-    return () => clearInterval(t);
+    const now = () => setG(dayPart());
+    const t = setInterval(now, 20e3);
+    const app = AppState.addEventListener('change', st => { if (st === 'active') now(); });
+    const web = typeof document !== 'undefined' && typeof document.addEventListener === 'function';
+    const vis = () => { if (document.visibilityState === 'visible') now(); };
+    if (web) { document.addEventListener('visibilitychange', vis); window.addEventListener('focus', now); }
+    return () => { clearInterval(t); app.remove(); if (web) { document.removeEventListener('visibilitychange', vis); window.removeEventListener('focus', now); } };
   }, []);
+  useFocusEffect(useCallback(() => { setG(dayPart()); }, []));
   return g;
 }
 
