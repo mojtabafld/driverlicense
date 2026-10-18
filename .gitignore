@@ -8,3 +8,6 @@ data/blobs/
 # The web build (app-web) keeps bundled assets such as fonts under assets/node_modules; publish them.
 !app-web/assets/node_modules/
 !app-web-app/assets/node_modules/
+
+# Python bytecode (data/course-src)
+__pycache__/

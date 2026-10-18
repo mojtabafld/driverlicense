@@ -134,8 +134,9 @@ function Terms({ text }: { text: string }) {
 
 type Result = { mistakes: number; statements: number; perQ: number[] };
 
-function Step({ step, n, of, ticks, checked, onToggle, result, onRetry }: { step: CourseStep; n: number; of: number; ticks: boolean[]; checked: boolean;
-  onToggle: (i: number) => void; result: Result; onRetry: () => void }) {
+// `full`: a simulated exam of chapter 9 (a test, not a lesson's).
+function Step({ step, n, of, ticks, checked, onToggle, result, onRetry, full }: { step: CourseStep; n: number; of: number; ticks: boolean[]; checked: boolean;
+  onToggle: (i: number) => void; result: Result; onRetry: () => void; full?: boolean }) {
   const c = useColors();
   const [examOpen, setExamOpen] = useState(false);
   if (step.kind === 'intro') {
@@ -194,7 +195,7 @@ function Step({ step, n, of, ticks, checked, onToggle, result, onRetry }: { step
             در آزمون واقعی {faNum(EXAM.questions)} سؤال تصویری جواب می‌دهید و با حداکثر {faNum(EXAM.maxMistakes)} اشتباه قبول می‌شوید؛ این‌جا هم مثل آزمون واقعی، هر گزینه‌ی غلط یک اشتباه است.
           </T>
         </Card>
-        {!pass ? <Button kind="grey" icon="refresh" label="تکرار آزمون این درس" onPress={onRetry} /> : null}
+        {!pass ? <Button kind="grey" icon="refresh" label={full ? 'تکرار آزمون' : 'تکرار آزمون این درس'} onPress={onRetry} /> : null}
       </View>
     );
   }
@@ -217,8 +218,9 @@ function Step({ step, n, of, ticks, checked, onToggle, result, onRetry }: { step
   );
 }
 
-// The finish of a lesson: what is next, one tap away.
-function Finished({ title, result, next, onDrill }: { title: string; result: Result; next: { id: string; title: string } | null; onDrill: () => void }) {
+// The finish of a lesson: what is next, one tap away. `full`: a simulated exam (its questions are other lessons', so
+// the practice offered is the whole «تمرین هوشمند»).
+function Finished({ title, result, next, onDrill, full }: { title: string; result: Result; next: { id: string; title: string } | null; onDrill: () => void; full?: boolean }) {
   const c = useColors();
   return (
     <View style={{ gap: 12 }}>
@@ -226,12 +228,13 @@ function Finished({ title, result, next, onDrill }: { title: string; result: Res
         <View style={{ width: 76, height: 76, borderRadius: 38, alignItems: 'center', justifyContent: 'center', backgroundColor: c.ok }}>
           <Icon name="check" size={38} color="#fff" weight="bold" />
         </View>
-        <T style={{ fontSize: 22, fontWeight: '800', marginTop: 6 }}>درس تمام شد!</T>
+        <T style={{ fontSize: 22, fontWeight: '800', marginTop: 6 }}>{full ? 'آزمون تمام شد!' : 'درس تمام شد!'}</T>
         <T style={{ fontSize: 14.5, color: c.muted, textAlign: 'center' }}>«{title}» در نقشه‌ی راه شما کامل شد.</T>
-        <T style={{ fontSize: 13.5, color: c.muted, textAlign: 'center' }}>آزمون درس: {faNum(result.mistakes)} اشتباه از {faNum(result.statements)} گزینه</T>
+        <T style={{ fontSize: 13.5, color: c.muted, textAlign: 'center' }}>{full ? `آزمون: ${faNum(result.mistakes)} اشتباه از ${faNum(result.statements)} گزینه`
+          : `آزمون درس: ${faNum(result.mistakes)} اشتباه از ${faNum(result.statements)} گزینه`}</T>
       </Card>
       {next ? <Button icon="play" label={`درس بعدی: ${next.title}`} onPress={() => router.replace({ pathname: '/course-lesson', params: { id: next.id } })} /> : null}
-      <Button kind="glass" icon="refresh" label="تمرین سؤال‌های این درس در تمرین هوشمند" onPress={onDrill} />
+      <Button kind="glass" icon="refresh" label={full ? 'تمرین هوشمند' : 'تمرین سؤال‌های این درس در تمرین هوشمند'} onPress={onDrill} />
       <Button kind="glass" icon="arrowRight" label="بازگشت به نقشه‌ی راه" onPress={() => router.back()} />
     </View>
   );
@@ -281,14 +284,17 @@ function Lesson({ id, start }: { id: string; start: number }) {
   const ready = COURSE.flatMap(ch => ch.lessons), at = ready.findIndex(l => l.id === lesson.id);
   const next = [...ready.slice(at + 1), ...ready.slice(0, at)].find(l => !done[l.id]) ?? null;
   const end = () => { finish(lesson.id); setComplete(true); };
-  const phase = PHASE[step.kind];
+  // A simulated exam (chapter 9): its test is the whole of it, named as a test, not a lesson's.
+  const full = chapter.id === 'final';
+  const phase = full && (step.kind === 'exam' || step.kind === 'result') ? 'آزمون' : PHASE[step.kind];
   return (
     <View style={{ flex: 1 }}>
       <SubPage theme title={lesson.title} gap={12} scrollKey={complete ? -1 : i} scrollRef={scroll} close={!complete}
         pager={complete ? undefined : { i, n: toCheck || last ? i + 1 : steps.length, go: setI, rtl: learnRtl }}
-        guard={!complete && Object.keys(checked).length ? { title: 'خروج از درس؟', text: 'جواب‌های آزمون این درس ذخیره نمی‌شوند.' } : null}>
+        guard={!complete && Object.keys(checked).length ? (full ? { title: 'خروج از آزمون؟', text: 'جواب‌های این آزمون ذخیره نمی‌شوند.' }
+          : { title: 'خروج از درس؟', text: 'جواب‌های آزمون این درس ذخیره نمی‌شوند.' }) : null}>
         {complete ? (
-          <Enter><Finished title={lesson.title} result={result} next={next} onDrill={() => router.replace({ pathname: '/drill', params: { lesson: lesson.id } })} /></Enter>
+          <Enter><Finished title={lesson.title} result={result} next={next} full={full} onDrill={() => router.replace({ pathname: '/drill', params: full ? {} : { lesson: lesson.id } })} /></Enter>
         ) : (
           <>
             <View style={{ gap: 6 }}>
@@ -303,7 +309,7 @@ function Lesson({ id, start }: { id: string; start: number }) {
                 {steps.map((s, k) => <View key={k} style={{ flex: 1, height: 5, borderRadius: 3, backgroundColor: k <= i ? (s.kind === 'exam' || s.kind === 'result' ? c.strong : c.link) : c.surface2 }} />)}
               </View>
             </View>
-            <Enter key={i}><Step step={step} n={n} of={examSteps.length} ticks={ans} checked={!!checked[i]} onToggle={toggle} result={result} onRetry={retry} /></Enter>
+            <Enter key={i}><Step step={step} n={n} of={examSteps.length} ticks={ans} checked={!!checked[i]} onToggle={toggle} result={result} onRetry={retry} full={full} /></Enter>
             <View style={{ height: 90 }} />
           </>
         )}
@@ -313,7 +319,7 @@ function Lesson({ id, start }: { id: string; start: number }) {
           start={<FootBtn label="قبلی" icon={navIcons(learnRtl).prev} disabled={!i} onPress={() => setI(i - 1)} />}
           middle={<BarCount n={i + 1} of={steps.length} label="قدم" />}
           end={toCheck ? <FootBtn label="بررسی" icon="check" submit onPress={check} />
-            : last ? <FootBtn label="پایان درس" icon="check" submit onPress={end} />
+            : last ? <FootBtn label={full ? 'پایان آزمون' : 'پایان درس'} icon="check" submit onPress={end} />
               : <FootBtn label="بعدی" icon={navIcons(learnRtl).next} onPress={() => setI(i + 1)} />} />
       )}
     </View>

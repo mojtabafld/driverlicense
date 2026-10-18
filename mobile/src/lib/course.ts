@@ -13,6 +13,8 @@
 // indicators and lights. Pictures are clear illustrations, not realistic scenes, from exact prompts: what must be
 // clearly visible, where, in its official Danish design, and what must not appear.
 
+import { FULL, MORE } from './course-more';
+
 // The real test, as the app's exam simulates it.
 export const EXAM = { questions: 25, maxMistakes: 5 };
 
@@ -277,7 +279,7 @@ const OVERTAKING: CourseLesson = {
         'می‌توانید بدون مزاحمت برای خودرویی که از آن سبقت گرفته‌اید به خط خودتان برگردید',
       ],
       rule: 'سبقت از چپ؛ راهنما بزنید، آینه و نقطه‌ی کور را ببینید و فقط وقتی راه کاملاً آزاد است.',
-      law: 'Færdselsloven، فصل سبقت (overhaling)',
+      law: 'Færdselsloven § 21، بند ۱ و ۳',
       trap: 'حد سرعت هنگام سبقت هم معتبر است. گزینه‌ی «برای سبقت می‌توانم کمی از حد مجاز تندتر بروم» غلط است.',
     },
     {
@@ -287,11 +289,11 @@ const OVERTAKING: CourseLesson = {
       points: [
         'بعد از تابلوی «سبقت ممنوع» (C 51) تا تابلوی پایانش (C 53)؛ ولی سبقت از دوچرخه، موپد و موتورسیکلت دوچرخ مجاز است',
         'وقتی برای سبقت باید از خط ممتد (Q 44) رد شوید',
-        'درست پیش از گذرگاه عابر پیاده و روی آن',
         'جایی که دید کافی ندارید: سر پیچ، بالای سربالایی و نزدیک تقاطع',
+        'از خودرویی که دیدتان را به گذرگاه عابر پیاده بسته است، سبقت نگیرید و از کنارش رد نشوید',
       ],
-      rule: 'خط ممتد، تابلوی C 51، گذرگاه عابر و جاهای کم‌دید: سبقت نگیرید.',
-      law: 'Færdselsloven، فصل سبقت | C 51 | C 53 | Q 44',
+      rule: 'خط ممتد، تابلوی C 51، جاهای کم‌دید و خودرویی که دید گذرگاه عابر را بسته: سبقت نگیرید.',
+      law: 'Færdselsloven § 23 | § 25 | C 51 | C 53 | Q 44',
       trap: 'تابلوی C 51 سبقت از دوچرخه را ممنوع نمی‌کند. گزینه‌ی «از دوچرخه‌سوار هم نمی‌توانم سبقت بگیرم» غلط است.',
     },
     {
@@ -300,7 +302,7 @@ const OVERTAKING: CourseLesson = {
       art: 'overtake-right',
       text: 'از سمت راست فقط در این حالت‌ها می‌شود سبقت گرفت: وقتی خودروی جلو راهنمای چپ زده و برای گردش به چپ کنار وسط جاده آمده، یا در ترافیک چندخطه که خودروها در خط‌های خودشان می‌روند. در تصویر، خودروی خاکستری منتظر گردش به چپ است و خودروی آبی از سمت راستش رد می‌شود.',
       rule: 'از راست فقط وقتی سبقت بگیرید که جلویی برای گردش به چپ کنار کشیده، یا در ترافیک چندخطه.',
-      law: 'Færdselsloven، فصل سبقت',
+      law: 'Færdselsloven § 21، بند ۱',
       trap: 'گزینه‌ی «اگر خودروی جلو کند است، از راست سبقت می‌گیرم» غلط است.',
     },
     {
@@ -312,7 +314,7 @@ const OVERTAKING: CourseLesson = {
         'هنگام سبقت از دوچرخه‌سوار، فاصله‌ی جانبی کافی بگذارید؛ اگر نمی‌شود، پشت سرش بمانید.',
       ],
       rule: 'از شما سبقت می‌گیرند؟ سرعت را زیاد نکنید و به راست بروید.',
-      law: 'Færdselsloven، فصل سبقت',
+      law: 'Færdselsloven § 21، بند ۴ | § 22، بند ۱',
       trap: 'گزینه‌ی «سرعتم را زیاد می‌کنم تا سبقت زودتر تمام شود» غلط است.',
     },
     {
@@ -331,7 +333,7 @@ const OVERTAKING: CourseLesson = {
       da: 'Bilen foran dig sætter farten ned foran et fodgængerfelt. Hvordan forholder du dig?',
       fa: 'خودروی جلوی شما پیش از گذرگاه عابر پیاده سرعتش را کم می‌کند. چه می‌کنید؟',
       statements: [
-        { da: 'Jeg overhaler bilen, fordi den kører langsomt.', fa: 'از خودرو سبقت می‌گیرم، چون آهسته می‌رود.', ok: false, why: 'درست پیش از گذرگاه عابر و روی آن سبقت ممنوع است.' },
+        { da: 'Jeg overhaler bilen, fordi den kører langsomt.', fa: 'از خودرو سبقت می‌گیرم، چون آهسته می‌رود.', ok: false, why: 'خودرویی که جلوی گذرگاه عابر آهسته می‌کند دیدتان را می‌بندد؛ از آن سبقت نگیرید و از کنارش رد نشوید.' },
         { da: 'Jeg sætter også farten ned og er klar til at standse.', fa: 'من هم سرعتم را کم می‌کنم و آماده‌ی ایستادن هستم.', ok: true, why: 'ممکن است عابری از جلوی آن خودرو رد شود.' },
       ],
     },
@@ -352,7 +354,7 @@ const OVERTAKING: CourseLesson = {
       kind: 'summary',
       points: [
         'سبقت از چپ؛ پیش از آن آینه، نقطه‌ی کور، راهنما و آزاد بودن کامل راه.',
-        'خط ممتد، تابلوی C 51، گذرگاه عابر و جاهای کم‌دید: سبقت ممنوع.',
+        'خط ممتد، تابلوی C 51، جاهای کم‌دید و خودرویی که دید گذرگاه عابر را بسته: سبقت ممنوع.',
         'تابلوی C 51 سبقت از دوچرخه، موپد و موتورسیکلت دوچرخ را ممنوع نمی‌کند.',
         'از راست فقط وقتی جلویی برای گردش به چپ کنار کشیده، یا در ترافیک چندخطه.',
         'وقتی از شما سبقت می‌گیرند، سرعت را زیاد نکنید و به راست بروید.',
@@ -511,11 +513,11 @@ const WARN_PRIORITY: CourseLesson = {
     },
     {
       kind: 'teach',
-      title: 'A 11 و A 12: هشدار تقاطع، ولی شما حق تقدم دارید',
+      title: 'A 11: هشدار تقاطع، ولی شما حق تقدم دارید',
       art: 'warn-a11',
-      text: 'A 11 مثلث هشداری است با نماد یک خط پهن عمودی (جاده‌ی شما) و یک خط باریک افقی (جاده‌ی متقاطع). یعنی تقاطعی با دید کم در پیش است و ترافیک جاده‌ی متقاطع باید بی‌قید و شرط به شما راه بدهد. A 12.1 همین معنا را برای فرعی‌ای دارد که فقط از راست وصل می‌شود.',
+      text: 'A 11 مثلث هشداری است با نماد یک خط پهن عمودی (جاده‌ی شما) و یک خط باریک افقی (جاده‌ی متقاطع). یعنی تقاطع خطرناکی در پیش است و ترافیک جاده‌ی متقاطع باید بی‌قید و شرط به شما راه بدهد. نماد می‌تواند شکل تقاطع را هم نشان دهد، مثلاً فرعی‌ای که فقط از یک طرف وصل می‌شود.',
       rule: 'خط پهن = جاده‌ی شما با حق تقدم؛ خط باریک = جاده‌ای که باید راه بدهد.',
-      law: 'Bekendtgørelse om vejafmærkning | A 11 | A 12',
+      law: 'Bekendtgørelse om vejafmærkning | A 11',
       trap: 'A 11 مثلث هشدار است، نه تابلوی «راه بدهید». گزینه‌ی «باید به خودروی فرعی راه بدهم» غلط است؛ ولی با احتیاط نزدیک شوید.',
     },
     {
@@ -594,7 +596,7 @@ const WARN_PRIORITY: CourseLesson = {
       kind: 'summary',
       points: [
         'مثلث با رأس بالا و حاشیه‌ی قرمز: هشدار؛ بیرون شهر ۱۵۰ تا ۲۵۰ متر پیش از خطر.',
-        'A 11 و A 12: خط پهن جاده‌ی شماست؛ ترافیک متقاطع راه می‌دهد.',
+        'A 11: خط پهن جاده‌ی شماست؛ ترافیک متقاطع راه می‌دهد.',
         'B 11 با دندان‌کوسه: راه بدهید. B 13 با خط ایست: توقف کامل، حتی اگر جاده خالی است.',
         'B 16 لوزی زرد: جاده‌ی اصلی؛ B 17 با خط مورب: پایانش.',
         'B 18: شما به روبه‌رو راه می‌دهید. B 19: روبه‌رو به شما.',
@@ -800,12 +802,12 @@ const CAR_CHECK: CourseLesson = {
       text: 'هر خودرو در دانمارک باید مثلث خطر (advarselstrekant) داشته باشد. اگر خودرو جایی خراب شد که برای دیگران خطر دارد، این کارها را بکنید:',
       points: [
         'چراغ خطر (چهارراهنما) را روشن کنید',
-        'مثلث خطر را دورتر پشت خودرو بگذارید تا دیگران به‌موقع ببینند: در جاده‌ی معمولی حدود ۵۰ تا ۱۰۰ متر، در بزرگراه دورتر',
+        'مثلث خطر را دورتر پشت خودرو بگذارید تا دیگران به‌موقع ببینند: در جاده‌ی معمولی دست‌کم ۵۰ متر و در بزرگراه دست‌کم ۱۰۰ متر',
         'خودروی سواری نو اولین بار بعد از ۴ سال و بعد هر ۲ سال باید به معاینه‌ی فنی (syn) برود',
         'بار و وسایل را محکم کنید؛ در ترمز ناگهانی هر چیز شل به جلو پرتاب می‌شود',
       ],
       rule: 'مثلث خطر همراه داشته باشید و آن را دورتر پشت خودرو بگذارید، نه درست پشت آن.',
-      law: 'Detailforskrifter for køretøjer | Færdselsloven، توقف در جای خطرناک',
+      law: 'Detailforskrifter for køretøjer | Færdselsloven § 31، بند ۲',
       trap: 'گزینه‌ی «مثلث را درست پشت خودرو می‌گذارم تا خوب دیده شود» غلط است؛ رانندگان پشت سر باید زودتر ببینند.',
     },
     {
@@ -1166,27 +1168,45 @@ const READY_TEST: CourseLesson = {
   ],
 };
 
-// The chapters, in the curriculum's order; `planned`: the lessons still to be written (each chapter ends with its test,
-// and the course with a full simulated exam).
-export const COURSE: CourseChapter[] = [
+// The chapters, in the curriculum's order: each one's lessons here and after them its newer ones (course-more.ts, written
+// with their pictures in data/course-src); `planned`: the lessons still to be written (each chapter ends with its test,
+// and the course with three simulated exams).
+const more = (id: string) => MORE[id] ?? [];
+const still = (id: string, titles: string[]) => titles.filter(t => !more(id).some(l => l.title === t));
+const CHAPTERS: CourseChapter[] = [
   { id: 'ready', n: 1, title: 'آماده شدن برای رانندگی', sub: 'خودرو و تجهیزاتش، راننده: خستگی، الکل و دارو',
     lessons: [CAR_CHECK, BELTS, ALCOHOL, READY_TEST], planned: [] },
-  { id: 'road', n: 2, title: 'جایگاه در جاده و سرعت', sub: 'جای خودرو در خیابان، سرعت مجاز، فاصله و مسافت توقف', lessons: [],
-    planned: ['جایگاه در مسیر', 'سرعت مجاز و تنظیم سرعت', 'فاصله و مسافت توقف', 'آزمون فصل'] },
-  { id: 'priority', n: 3, title: 'حق تقدم', sub: 'قاعده‌ی دست راست، راه دادن مطلق، تقاطع‌ها و میدان', lessons: [RIGHT_RULE, TURNS],
-    planned: ['تقاطع‌های چراغ‌دار', 'میدان', 'آزمون فصل'] },
-  { id: 'signs', n: 4, title: 'تابلوها، خط‌کشی‌ها و چراغ‌ها', sub: 'گروه‌های تابلو، خط‌کشی‌های جاده و چراغ راهنمایی', lessons: [WARN_PRIORITY, BANS],
-    planned: ['خط‌کشی‌ها', 'چراغ راهنمایی', 'آزمون فصل'] },
-  { id: 'manoeuvres', n: 5, title: 'مانورها', sub: 'سبقت، تغییر خط، گردش، توقف و پارک', lessons: [OVERTAKING, LANES],
-    planned: ['توقف و پارک', 'آزمون فصل'] },
-  { id: 'people', n: 6, title: 'عابران، دوچرخه‌ها و کاربران آسیب‌پذیر', sub: 'گذرگاه عابر، مسیر دوچرخه، کودکان و سالمندان', lessons: [],
-    planned: ['گذرگاه عابر پیاده', 'دوچرخه و موپد', 'کودکان، سالمندان و حیوانات', 'آزمون فصل'] },
-  { id: 'special', n: 7, title: 'جاده‌های ویژه و شرایط سخت', sub: 'بزرگراه، رانندگی در شب و هوای بد', lessons: [],
-    planned: ['بزرگراه', 'رانندگی در تاریکی', 'باران، برف و یخ', 'آزمون فصل'] },
-  { id: 'incidents', n: 8, title: 'موقعیت‌های خاص', sub: 'خودروهای امدادی، تصادف و خرابی خودرو', lessons: [],
-    planned: ['خودروهای امدادی', 'تصادف و کمک‌های اولیه', 'خرابی خودرو در جاده', 'آزمون فصل'] },
-  { id: 'final', n: 9, title: 'آزمون شبیه‌سازی‌شده', sub: `مثل آزمون واقعی: ${EXAM.questions} سؤال تصویری، حداکثر ${EXAM.maxMistakes} اشتباه برای قبولی`, lessons: [],
-    planned: ['آزمون کامل ۱', 'آزمون کامل ۲', 'آزمون کامل ۳'] },
+  { id: 'road', n: 2, title: 'جایگاه در جاده و سرعت', sub: 'جای خودرو در خیابان، سرعت مجاز، فاصله و مسافت توقف', lessons: more('road'),
+    planned: still('road', ['جایگاه در مسیر', 'سرعت مجاز و تنظیم سرعت', 'فاصله و مسافت توقف', 'آزمون فصل']) },
+  { id: 'priority', n: 3, title: 'حق تقدم', sub: 'قاعده‌ی دست راست، راه دادن مطلق، تقاطع‌ها و میدان', lessons: [RIGHT_RULE, TURNS, ...more('priority')],
+    planned: still('priority', ['تقاطع‌های چراغ‌دار', 'میدان', 'آزمون فصل']) },
+  { id: 'signs', n: 4, title: 'تابلوها، خط‌کشی‌ها و چراغ‌ها', sub: 'گروه‌های تابلو، خط‌کشی‌های جاده و چراغ راهنمایی', lessons: [WARN_PRIORITY, BANS, ...more('signs')],
+    planned: still('signs', ['خط‌کشی‌ها', 'چراغ راهنمایی', 'آزمون فصل']) },
+  { id: 'manoeuvres', n: 5, title: 'مانورها', sub: 'سبقت، تغییر خط، گردش، توقف و پارک', lessons: [OVERTAKING, LANES, ...more('manoeuvres')],
+    planned: still('manoeuvres', ['توقف و پارک', 'آزمون فصل']) },
+  { id: 'people', n: 6, title: 'عابران، دوچرخه‌ها و کاربران آسیب‌پذیر', sub: 'گذرگاه عابر، مسیر دوچرخه، کودکان و سالمندان', lessons: more('people'),
+    planned: still('people', ['گذرگاه عابر پیاده', 'دوچرخه و موپد', 'کودکان، سالمندان و حیوانات', 'آزمون فصل']) },
+  { id: 'special', n: 7, title: 'جاده‌های ویژه و شرایط سخت', sub: 'بزرگراه، رانندگی در شب و هوای بد', lessons: more('special'),
+    planned: still('special', ['بزرگراه', 'رانندگی در تاریکی', 'باران، برف و یخ', 'آزمون فصل']) },
+  { id: 'incidents', n: 8, title: 'موقعیت‌های خاص', sub: 'خودروهای امدادی، تصادف و خرابی خودرو', lessons: more('incidents'),
+    planned: still('incidents', ['خودروهای امدادی', 'تصادف و کمک‌های اولیه', 'خرابی خودرو در جاده', 'آزمون فصل']) },
+];
+
+// The simulated exams (chapter 9), as the real test: 25 of the course's test questions each, from every chapter (FULL in
+// course-more.ts names them by lesson and number), at most 5 mistakes. A question is the lesson's own (the same picture
+// and statements); «تمرین هوشمند» counts it there only.
+type ExamStep = Extract<CourseStep, { kind: 'exam' }>;
+const question = (id: string, k: number): ExamStep | undefined =>
+  CHAPTERS.flatMap(ch => ch.lessons).find(l => l.id === id)?.steps.filter((s): s is ExamStep => s.kind === 'exam')[k - 1];
+const FULL_EXAMS: CourseLesson[] = FULL.map(e => ({
+  id: e.id, title: e.title, minutes: 25,
+  steps: [e.intro, ...e.picks.map(([id, k]) => question(id, k)).filter((s): s is ExamStep => !!s), { kind: 'result' as const, max: EXAM.maxMistakes }, e.summary],
+}));
+
+export const COURSE: CourseChapter[] = [
+  ...CHAPTERS,
+  { id: 'final', n: 9, title: 'آزمون شبیه‌سازی‌شده', sub: `مثل آزمون واقعی: ${EXAM.questions} سؤال تصویری، حداکثر ${EXAM.maxMistakes} اشتباه برای قبولی`, lessons: FULL_EXAMS,
+    planned: ['آزمون کامل ۱', 'آزمون کامل ۲', 'آزمون کامل ۳'].filter(t => !FULL_EXAMS.some(l => l.title === t)) },
 ];
 
 export const lessonById = (id: string) => {
