@@ -110,7 +110,9 @@ function sessionUser(req) {
 const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined,
   premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined } : undefined,
   // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
-  guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined });
+  guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined,
+  // promoUsed: this account, or another with its confirmed address, has had the trial code (the premium page hides the code box).
+  promoUsed: !!(u.premium && u.premium.promo) || !!(u.email && u.emailOk && Object.values(store.users).some(x => x !== u && x.premium && x.premium.promo && x.premium.promo.email === u.email)) || undefined });
 // Email confirmation (mail.js, RESEND_API_KEY): accounts made while it is on give an address and can use the app once its
 // link is opened (mustVerify, or a username that is an email, until the first confirmation, okOnce; a later new address
 // does not hold the app up; the app waits even when the email could not be sent, Mojtaba asked); accounts from before, and guests, are not held up, and may add an address later in

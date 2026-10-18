@@ -142,7 +142,7 @@ export default function Premium() {
         </Card>
       ) : null}
       {/* A trial code, until this account has used one. */}
-      {pay?.promo && !guest && !user?.premium?.promo ? (
+      {pay?.promo && !guest && !user?.premium?.promo && !user?.promoUsed ? (
         <Card style={{ gap: 10 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>کد تخفیف</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{t('با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).', faNum(pay.promo))}</T>
