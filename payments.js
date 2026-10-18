@@ -83,7 +83,9 @@ function grant(u, s) {
   const now = Date.now(), from = Math.max(now, (u.premium && u.premium.until) || 0);
   const buy = { session: s.id, pi: typeof s.payment_intent === 'string' ? s.payment_intent : undefined, plan, days: PLANS[plan].days,
     amount: s.amount_total, currency: s.currency, at: now, test: !s.livemode || undefined };
-  u.premium = { until: from + PLANS[plan].days * 864e5, plan, buys: [...((u.premium && u.premium.buys) || []), buy].slice(-50) };
+  // (A trial had before stays on record, so the code cannot be used a second time after a purchase.)
+  u.premium = { until: from + PLANS[plan].days * 864e5, plan, buys: [...((u.premium && u.premium.buys) || []), buy].slice(-50),
+    ...(u.premium && u.premium.promo ? { promo: u.premium.promo } : {}) };
   return true;
 }
 // The free trial codes (upper case) and its length in days.
