@@ -70,6 +70,7 @@ function setSettings(user, b) {
 // ---------- the messages ----------
 const TEXT = {
   fa: {
+    titles: { remind: 'یادآوری روزانه', daily: 'تمرین امروز', test: 'اعلان آزمایشی' },
     remindLesson: 'وقت یادگیری است! درس بعدی آموزش گام‌به‌گام منتظر شماست.',
     remindExam: 'وقت آزمون است! یک آزمون بدهید و ببینید چقدر آماده‌اید.',
     streak: n => `${String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d])} روز پشت سر هم تمرین کرده‌اید؛ امروز را هم از دست ندهید.`,
@@ -86,6 +87,7 @@ const TEXT = {
     test: 'اعلان‌ها روشن است. یادآوری‌ها همین‌طور به شما می‌رسند.',
   },
   en: {
+    titles: { remind: 'Daily reminder', daily: "Today's practice", test: 'Test notification' },
     remindLesson: 'Time to learn! Your next step-by-step lesson is waiting.',
     remindExam: 'Time for an exam! Take one and see how ready you are.',
     streak: n => `You have practised ${n} days in a row. Keep it going today.`,
@@ -102,6 +104,7 @@ const TEXT = {
     test: 'Notifications are on. Your reminders will arrive like this.',
   },
   da: {
+    titles: { remind: 'Daglig påmindelse', daily: 'Dagens øvelse', test: 'Testnotifikation' },
     remindLesson: 'Tid til at lære! Din næste lektion trin for trin venter.',
     remindExam: 'Tid til en prøve! Tag en og se, hvor klar du er.',
     streak: n => `Du har øvet dig ${n} dage i træk. Hold den kørende i dag.`,
@@ -143,7 +146,9 @@ function dailyMessage(user, h) {
 // number of devices reached and whether the account changed.
 async function sendTo(user, msg) {
   const l = langOf(user);
-  const payload = JSON.stringify({ title: 'TeoriPrøve', body: msg.body, url: msg.url || '/', tag: msg.tag || 'tp', lang: l, dir: dirOf(l) });
+  // The title says what the message is (not the app's name, which the phone shows by itself; Mojtaba 2026-10-18).
+  const kind = msg.tag === 'tp-remind' ? 'remind' : msg.tag === 'tp-test' ? 'test' : 'daily';
+  const payload = JSON.stringify({ title: TEXT[l].titles[kind], body: msg.body, url: msg.url || '/', tag: msg.tag || 'tp', lang: l, dir: dirOf(l) });
   let sent = 0, changed = false;
   for (const sub of [...(user.push || [])]) {
     try {
