@@ -13,6 +13,7 @@
 // Besides each lesson's own test (`exam` steps), EXTRA holds more questions on the same pictures, asking about the
 // situation from another side, as the real test often does.
 import { COURSE, EXAM, type CourseChapter, type CourseLesson, type CourseStep, type ExamStatement } from './course';
+import { MORE_RULES } from './course-more';
 
 type ExamStep = Extract<CourseStep, { kind: 'exam' }>;
 type TeachStep = Extract<CourseStep, { kind: 'teach' }>;
@@ -22,6 +23,7 @@ export type DrillItem = { id: string; chapter: CourseChapter; lesson: CourseLess
 
 // The rule each lesson's own test question asks about, by the order of the `exam` steps (index among teach steps).
 const LESSON_RULES: Record<string, number[]> = {
+  ...MORE_RULES,
   'car-check': [2, 1, 0],
   belts: [2, 1, 0],
   alcohol: [0, 1, 2],
@@ -160,8 +162,9 @@ const EXTRA: Record<string, Extra[]> = {
   ],
 };
 
-// Every practice question, in the course's order: each lesson's own test, then its extra questions.
-export const ITEMS: DrillItem[] = COURSE.flatMap(chapter => chapter.lessons.flatMap(lesson => {
+// Every practice question, in the course's order: each lesson's own test, then its extra questions (the simulated exams'
+// questions are the lessons' own, so they are not counted again).
+export const ITEMS: DrillItem[] = COURSE.flatMap(chapter => chapter.lessons.filter(l => !l.id.startsWith('full-')).flatMap(lesson => {
   const teach = lesson.steps.filter((s): s is TeachStep => s.kind === 'teach');
   const own = lesson.steps.filter((s): s is ExamStep => s.kind === 'exam')
     .map((q, k) => ({ id: `${lesson.id}-${k + 1}`, chapter, lesson, q, teach: teach[LESSON_RULES[lesson.id]?.[k] ?? -1] }));

@@ -11,7 +11,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { transText } from '@/lib/i18n';
+import { tr, transText } from '@/lib/i18n';
 import { EXAM } from '@/lib/course';
 import { courseText } from '@/lib/course-en';
 import { useCourseProgress } from '@/lib/course-progress';
@@ -241,7 +241,8 @@ export default function Drill() {
     setI(n); setLeft(SECONDS_PER_Q); setTicks(turns[n] ? turns[n].order.map(() => false) : []);
   };
   const finished = !!turns && i >= turns.length;
-  const title = only ? `تمرین: ${lessonItems(only)[0]?.lesson.title ?? ''}` : 'تمرین هوشمند';
+  // (a lesson's practice: «تمرین:» and the lesson's title each in the app's language, as the whole has no translation)
+  const title = only ? `${tr('تمرین:')} ${tr(lessonItems(only)[0]?.lesson.title ?? '')}` : 'تمرین هوشمند';
 
   return (
     <View style={{ flex: 1 }}>

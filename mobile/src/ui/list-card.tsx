@@ -12,11 +12,13 @@ export const LIST_PIC = { width: 80, height: 60, radius: 14 };
 
 // `locked`: only with premium (lib/free.ts): faded, with a lock in place of the ‹.
 // `small`: a lower picture tile (short screens).
-// `grow`: the card takes its share of the height its list is given (its content centred in it), never less than its own.
+// `grow`: the card takes its share of the height its list is given (its content centred in it), never less than its own:
+// its own height and an even part of the room left (flexGrow, not flex: 1, which let a taller card, «آموزش گام‌به‌گام»
+// with its progress note, run over the gap under it; Mojtaba 2026-10-18).
 export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress, locked, grow, small }: { pic: ReactNode; title: string; sub: string; subLines?: number; note?: string; label?: string; onPress: () => void; locked?: boolean; grow?: boolean; small?: boolean }) {
   const c = useColors();
   return (
-    <Card onPress={onPress} style={grow ? { padding: 10, flex: 1, justifyContent: 'center' } : { padding: 10 }}>
+    <Card onPress={onPress} style={grow ? { padding: 10, flexGrow: 1, flexShrink: 0, justifyContent: 'center' } : { padding: 10 }}>
       <View accessibilityRole="button" accessibilityLabel={label ?? title} style={{ flexDirection: 'row', alignItems: 'center', gap: 14, opacity: locked ? 0.55 : 1 }}>
         <View style={{ width: small ? 64 : LIST_PIC.width, height: small ? 48 : LIST_PIC.height, borderRadius: small ? 12 : LIST_PIC.radius, overflow: 'hidden' }}>{pic}</View>
         <View style={{ flex: 1, gap: 2 }}>

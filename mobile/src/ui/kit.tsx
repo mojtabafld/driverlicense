@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
 import { Fragment, cloneElement, isValidElement, useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -306,7 +306,7 @@ function FadingLead({ children, onDone }: { children: React.ReactNode; onDone?: 
 
 // A line whose text changes with a soft swap: the old text fades and lifts away, the new one fades in from just
 // below (the home header's line once its drawing has gone; Mojtaba 2026-10-18).
-function SwapText({ text, style }: { text: string; style: StyleProp<TextStyle> }) {
+function SwapText({ text, style, numberOfLines }: { text: string; style: StyleProp<TextStyle>; numberOfLines?: number }) {
   const [shown, setShown] = useState(text);
   const [v] = useState(() => new Animated.Value(1));
   useEffect(() => {
@@ -326,16 +326,31 @@ function SwapText({ text, style }: { text: string; style: StyleProp<TextStyle> }
   // v: 1 shown; 0 gone (lifted); -1 about to come in (below).
   const opacity = v.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] });
   const translateY = v.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] });
-  return <Animated.View style={{ opacity, transform: [{ translateY }] }}><T style={style}>{shown}</T></Animated.View>;
+  return <Animated.View style={{ opacity, transform: [{ translateY }] }}><T style={style} numberOfLines={numberOfLines}>{shown}</T></Animated.View>;
 }
 
+const TURN_MS = 3000; // how long each of several `subtitleAfter` lines stays before the next
+
 // `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
-// `subtitleAfter`: the line under the title once the drawing has gone (SwapText).
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string }) {
+// `subtitleAfter`: the line under the title once the drawing has gone (SwapText); several lines take turns, each for
+// 3 seconds, with the same swap (the home page's: today's practice, a random test, the progress; Mojtaba 2026-10-18).
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[] }) {
   // The home header's opening (with a `lead`): first the greeting alone beside the drawing; the drawing goes and the
   // text glides to the edge; then the line under the greeting opens (the greeting moves up for it) and comes in; a
   // while later it changes to `subtitleAfter` (Mojtaba 2026-10-18). Once per app start, later the end state at once.
   const [after, setAfter] = useState(leadGone);
+  const afters = subtitleAfter == null ? [] : Array.isArray(subtitleAfter) ? subtitleAfter : [subtitleAfter];
+  const [turn, setTurn] = useState(0);
+  // The turns run while the page is in view, and not at all with reduced motion (the first line stays).
+  useFocusEffect(useCallback(() => {
+    if (!after || afters.length < 2) return;
+    let timer: ReturnType<typeof setInterval> | null = null, live = true;
+    AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then(reduce => {
+      if (live && !reduce) timer = setInterval(() => setTurn(k => (k + 1) % afters.length), TURN_MS);
+    });
+    return () => { live = false; if (timer) clearInterval(timer); };
+  }, [after, afters.length]));
+  const line = after && afters.length ? afters[turn % afters.length] : subtitle;
   const [sub] = useState(() => new Animated.Value(leadGone || !lead ? 1 : 0));
   const openSub = () => {
     Animated.sequence([Animated.delay(250), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
@@ -414,7 +429,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
                   {subtitle ? (
                     <Animated.View style={{ height: sub.interpolate({ inputRange: [0, 1], outputRange: [0, 22] }), overflow: 'hidden',
                       opacity: sub.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0, 1] }), transform: [{ translateY: sub.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
-                      <SwapText text={after && subtitleAfter ? subtitleAfter : subtitle} style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]} />
+                      <SwapText text={line ?? ''} style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]} numberOfLines={1} />
                     </Animated.View>
                   ) : null}
                 </View>
@@ -452,7 +467,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
 
 // `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
 // page's chart ends just above the bar).
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap, lead, subtitleAfter }: { lead?: React.ReactNode; subtitleAfter?: string; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap, lead, subtitleAfter }: { lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook; heroAction?: HeroAction }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);

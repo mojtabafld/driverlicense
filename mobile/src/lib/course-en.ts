@@ -1,5 +1,7 @@
 // The course's test questions in English, for users who take the exam in English (settings.lang 'en'), keyed by
-// their Danish text in course.ts. A Danish text that is really on a sign stays Danish, in quotes, with its meaning.
+// their Danish text in course.ts (the newer lessons' in course-more.ts, MORE_EN). A Danish text that is really on a sign stays Danish, in quotes, with its meaning.
+import { MORE_EN } from './course-more';
+
 export const COURSE_EN: Record<string, string> = {
   'Du kører ind i et vejkryds, hvor der ikke er nogen færdselstavler eller afmærkning. En cyklist kommer fra højre. Hvordan forholder du dig?':
     'You drive into an intersection with no road signs or markings. A cyclist is coming from the right. What do you do?',
@@ -141,4 +143,4 @@ export const COURSE_EN: Record<string, string> = {
 };
 
 // A course question's text in the user's exam language.
-export const courseText = (da: string, lang: string) => (lang === 'en' && COURSE_EN[da]) || da;
+export const courseText = (da: string, lang: string) => (lang === 'en' && (COURSE_EN[da] ?? MORE_EN[da])) || da;

@@ -12,7 +12,6 @@ import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
-import { Marquee } from '@/ui/marquee';
 import { SlideToConfirm } from '@/ui/slide-confirm';
 import { SpeakButton } from '@/ui/speak';
 import { ZoomableImage } from '@/ui/zoom';
@@ -119,8 +118,8 @@ export default function Run() {
 
   return (
     <Backdrop anim={motion.style}>
-      {/* Top: exit (icon) with the exam's name beside it, the timer (Persian digits) in the middle of the screen, and
-          the theme switch. SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
+      {/* Top: exit (icon), the timer (Persian digits) in the middle of the screen, and the theme switch (no title beside
+          the exit: it moved, Mojtaba 2026-10-18). SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
           stale), and the web gets extra room at the top. */}
       {/* Fixed over the page on Liquid Glass: the question scrolls under it, blurred. */}
       <GlassTop onHeight={setHeadH}>
@@ -142,10 +141,6 @@ export default function Run() {
             {/* ✕, as on every page with a bar of previous / next (the lessons, the practice, the review). */}
             <Icon name="xmark" size={20} color={c.text} />
           </Pressable>
-          {/* Kept clear of the counter in the middle; a long name (e.g. a topic's) glides to show all of it. */}
-          <View style={{ width: settings.timer ? '24%' : '62%', height: 24 }}>
-            <Marquee text={plan.title} height={24} style={{ fontWeight: '700', fontSize: 15, lineHeight: 24 }} />
-          </View>
           <View style={{ flex: 1 }} />
           <ThemeButton />
         </View>
