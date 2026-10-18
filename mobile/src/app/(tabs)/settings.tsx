@@ -2,7 +2,7 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { EXAM_FOR, TRANS_DEFAULT, getTransLang, UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
@@ -179,7 +179,7 @@ export default function Settings() {
         <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
       {/* Notifications, under the exam's settings (Mojtaba 2026-10-18; main site on the web): reminders and a daily message (ui/notify-settings.tsx). */}
-      {!PROVE_PICS && Platform.OS === 'web' ? <NotifySettings /> : null}
+      {!PROVE_PICS ? <NotifySettings /> : null}
       {/* «راهنما»: how to use the app, reporting a problem, and the version. */}
       <Card style={{ gap: 4 }}>
         <T style={{ fontWeight: '700', fontSize: 16, marginBottom: 4 }}>راهنما</T>

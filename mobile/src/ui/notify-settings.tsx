@@ -4,12 +4,12 @@
 // work, a line says why (an iPhone outside the Home Screen app, notifications blocked, a browser without them).
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
 import { api } from '@/lib/api';
 import { t as fmt } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
-import { disablePush, enablePush, pushState, type Notify, type PushState } from '@/lib/push';
+import { applyNotify, disablePush, enablePush, openSystemSettings, pushState, testPush, type Notify, type PushState } from '@/lib/push';
 import { Icon, type IconName } from './icon';
 import { Card, Segmented, T, tap } from './kit';
 import { useColors } from './theme';
@@ -44,7 +44,9 @@ function Step({ icon, label, onPress }: { icon: IconName; label: string; onPress
   );
 }
 
-const WHY: Partial<Record<PushState, string>> = {
+// (In the phone apps, notifications turned off in the phone's settings: a tap opens them.)
+const native = Platform.OS !== 'web';
+const WHY: Partial<Record<PushState, string>> = native ? { denied: 'اجازه‌ی اعلان برای این اپ بسته است. برای باز کردن آن در تنظیمات گوشی اینجا بزنید.' } : {
   install: 'در آیفون اعلان‌ها فقط در اپی کار می‌کنند که به صفحه‌ی اصلی اضافه شده باشد: در Safari دکمه‌ی اشتراک‌گذاری و بعد «Add to Home Screen» را بزنید و اپ را از صفحه‌ی اصلی باز کنید.',
   denied: 'اجازه‌ی اعلان برای این سایت بسته است. آن را از تنظیمات مرورگر یا گوشی باز کنید.',
   unsupported: 'این مرورگر اعلان را پشتیبانی نمی‌کند.',
@@ -63,7 +65,7 @@ function useNotify() {
   // A change is shown at once and kept on the account.
   const change = (p: Partial<Notify>) => {
     setN(cur => (cur ? { ...cur, ...p } : cur));
-    api<{ notify: Notify }>('POST', 'notify', p).then(d => setN(d.notify)).catch(() => {});
+    api<{ notify: Notify }>('POST', 'notify', p).then(d => { setN(d.notify); return applyNotify(d.notify); }).catch(() => {});
   };
   const turn = async (on: boolean): Promise<PushState | null> => {
     tap(); setNote(null); setBusy(true);
@@ -90,7 +92,7 @@ export function NotifySettings() {
   const { state, n, busy, note, setNote, change, turn } = useNotify();
   const test = () => {
     tap(); setNote(null);
-    api<{ sent: number }>('POST', 'pushtest').then(d => setNote(d.sent ? 'یک اعلان آزمایشی فرستاده شد.' : 'اعلان فرستاده نشد. دوباره امتحان کنید.'))
+    testPush().then(sent => setNote(sent ? 'یک اعلان آزمایشی فرستاده شد.' : 'اعلان فرستاده نشد. دوباره امتحان کنید.'))
       .catch(() => setNote('اعلان فرستاده نشد. دوباره امتحان کنید.'));
   };
   if (!state) return null;
@@ -107,7 +109,11 @@ export function NotifySettings() {
         </View>
         {why ? null : <Toggle label="اعلان‌ها" value={on} onChange={v => { if (!busy) turn(v); }} />}
       </View>
-      {why ? <T style={{ color: c.muted, fontSize: 13, lineHeight: 21 }}>{why}</T> : null}
+      {why ? (
+        <Pressable disabled={!native} onPress={() => { tap(); openSystemSettings(); }}>
+          <T style={{ color: native ? c.link : c.muted, fontSize: 13, lineHeight: 21 }}>{why}</T>
+        </Pressable>
+      ) : null}
       {on && n ? (
         <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6, gap: 4 }}>
           <Line title="یادآوری روزانه" sub="هر روز در ساعتی که انتخاب می‌کنید." right={<Toggle label="یادآوری روزانه" value={n.remind} onChange={v => change({ remind: v })} />} />
@@ -159,7 +165,7 @@ export function CourseReminder() {
         {why ? null : <Toggle value={on} onChange={flip} label="یادآوری روزانه با اعلان" />}
       </View>
       {why ? (
-        <Pressable onPress={() => { tap(); router.push('/settings'); }} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+        <Pressable onPress={() => { tap(); if (native) openSystemSettings(); else router.push('/settings'); }} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
           <Icon name="info" size={16} color={c.muted} />
           <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{why}</T>
         </Pressable>

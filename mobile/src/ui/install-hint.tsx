@@ -85,7 +85,7 @@ export function InstallHint() {
           transform: [{ translateY: up.interpolate({ inputRange: [0, 1], outputRange: [360, 0] }) }] }}>
           <View style={{ alignSelf: 'center', width: 38, height: 5, borderRadius: 3, backgroundColor: c.line, marginTop: -8 }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <Image source={{ uri: '/apple-touch-icon.png' }} style={{ width: 54, height: 54, borderRadius: 13 }} />
+            <Image source={{ uri: '/apple-touch-icon.png?v=2' }} style={{ width: 54, height: 54, borderRadius: 13 }} />
             <View style={{ flex: 1, gap: 2 }}>
               <T style={{ fontSize: 17, fontWeight: '800' }}>{kind === 'ios' ? 'برنامه را به صفحه‌ی اصلی گوشی اضافه کنید' : 'برنامه را به Dock اضافه کنید'}</T>
               <T style={{ fontSize: 13, lineHeight: 21, color: c.muted }}>با یک لمس و تمام‌صفحه باز می‌شود، مثل یک برنامه‌ی واقعی.</T>

@@ -2779,5 +2779,19 @@
 "روزی یک بار، بین # صبح تا # شب، درباره‌ی آموزش و آزمون.":["Once a day, between # am and # pm, about lessons and exams.", "Én gang om dagen, mellem kl. # om formiddagen og # om aftenen, om lektioner og prøver."],
 "ارسال اعلان آزمایشی":["Send a test notification", "Send en testnotifikation"],
 "یادآوری روزانه با اعلان":["Daily reminder by notification", "Daglig påmindelse som notifikation"],
-"هر روز ساعت {0}":["Every day at {0}", "Hver dag kl. {0}"]
+"هر روز ساعت {0}":["Every day at {0}", "Hver dag kl. {0}"],
+"تمرین امروز":["Today's practice", "Dagens øvelse"],
+"اعلان آزمایشی":["Test notification", "Testnotifikation"],
+"یادآوری‌ها":["Reminders", "Påmindelser"],
+"وقت یادگیری است! درس بعدی آموزش گام‌به‌گام منتظر شماست.":["Time to learn! Your next step-by-step lesson is waiting.", "Tid til at lære! Din næste lektion trin for trin venter."],
+"وقت آزمون است! یک آزمون بدهید و ببینید چقدر آماده‌اید.":["Time for an exam! Take one and see how ready you are.", "Tid til en prøve! Tag en og se, hvor klar du er."],
+"درس بعدی آموزش گام‌به‌گام منتظر شماست؛ فقط چند دقیقه وقت می‌گیرد.":["Your next step-by-step lesson is waiting. It only takes a few minutes.", "Din næste lektion trin for trin venter. Den tager kun et par minutter."],
+"پنج دقیقه مرور تابلوها: کوتاه، ولی در آزمون حسابی به کار می‌آید.":["Five minutes on road signs: short, but it pays off in the test.", "Fem minutter med færdselstavler: kort, men det betaler sig til prøven."],
+"آماده‌ی آزمون هستید؟ یک آزمون # سؤالی بدهید و ببینید کجا هستید.":["Ready for the test? Take a #-question exam and see where you stand.", "Klar til prøven? Tag en prøve med # spørgsmål og se, hvor du står."],
+"سؤال‌هایی را که اشتباه جواب داده‌اید دوباره تمرین کنید.":["Practise the questions you got wrong once more.", "Øv de spørgsmål, du svarede forkert på, en gang til."],
+"قاعده‌ی دست راست را چقدر خوب بلدید؟ بخش حق تقدم را مرور کنید.":["How well do you know the right-hand rule? Review right of way.", "Hvor godt kender du højre vigepligt? Gennemgå vigepligt."],
+"امروز چند اصطلاح دانمارکی آزمون را یاد بگیرید.":["Learn a few Danish test terms today.", "Lær et par danske udtryk fra prøven i dag."],
+"قوانین سرعت و پارک را یک بار دیگر مرور کنید.":["Go over the speed and parking rules once more.", "Gennemgå reglerne for fart og parkering en gang til."],
+"اعلان‌ها روشن است. یادآوری‌ها همین‌طور به شما می‌رسند.":["Notifications are on. Your reminders will arrive like this.", "Notifikationer er slået til. Dine påmindelser kommer sådan her."],
+"اجازه‌ی اعلان برای این اپ بسته است. برای باز کردن آن در تنظیمات گوشی اینجا بزنید.":["Notifications are turned off for this app. Tap here to allow them in your phone's settings.", "Notifikationer er slået fra for denne app. Tryk her for at tillade dem i telefonens indstillinger."]
 }

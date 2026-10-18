@@ -133,7 +133,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setMe(d);
     // Notifications allowed on this device before: it is this account's device now (lib/push.ts).
-    if (!PROVE_PICS && !d.user.verify) syncPush().catch(() => {});
+    if (!PROVE_PICS && !d.user.verify) syncPush(d.user.username).catch(() => {});
     api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); }).catch(() => {});
     // An account still waiting for its email link reads only itself, so nothing else (the questions) is loaded yet.
     if (d.user.verify) return;

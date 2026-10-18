@@ -18,6 +18,8 @@ const jobs = [
   ['android-icon-background.png', 512, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${BG}</svg>`],
   ['android-icon-monochrome.png', 432, svg(inner, { scale: 0.62, mono: true })],
   ['favicon.png', 48, svg(inner, { bg: true, scale: 0.92 })],
+  // The Android notification's small icon: the symbol alone, all white on clear (expo-notifications in app.json).
+  ['notification-icon.png', 96, svg(inner, { scale: 0.96, mono: true })],
   // Home-screen icons for the web app (iOS «Add to Home Screen», Android / the manifest): the full square icon.
   [path.join(pub, 'apple-touch-icon.png'), 180, svg(inner, { bg: true, scale: 0.86 })],
   [path.join(pub, 'icon-192.png'), 192, svg(inner, { bg: true, scale: 0.86 })],
