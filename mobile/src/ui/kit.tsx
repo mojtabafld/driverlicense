@@ -252,7 +252,8 @@ export function useHeaderTop(color: string) {
 // edge, where a tab's are, set a little lower so they start under the button.
 // `action`: with «هدر ساده» on, a round button on the other side of the title (the home page's light / dark switch,
 // the learning tab's search, the exam tab's start); 'theme' is the switch.
-export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () => void };
+export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () => void } | { node: React.ReactNode; label: string; onPress: () => void };
+// `node`: something of the page's own in place of an icon (the home page's profile picture), shown as it is.
 export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction }) {
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
@@ -310,7 +311,12 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
             {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
           </View>
-          {plain && act ? (
+          {plain && act && 'node' in act ? (
+            <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
+              style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+              {act.node}
+            </Pressable>
+          ) : plain && act && 'icon' in act ? (
             <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
               style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
                 backgroundColor: light ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.14)', opacity: pressed ? 0.7 : 1 })}>

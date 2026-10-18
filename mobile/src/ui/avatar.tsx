@@ -1,5 +1,5 @@
-// The profile picture: one of the ten made by the server's image model, the user's own photo, or (with neither) the
-// name's first letter on the theme's strong colour. A tap on it in the settings opens AvatarSheet: the ten pictures
+// The profile picture: one of the ten made by the server's image model, the user's own photo, or (with neither) a
+// plain outline of a person in the theme's colours (DefaultFace). A tap on it in the settings opens AvatarSheet: the ten pictures
 // to choose from, «انتخاب از گالری» (then the photo is cropped to a circle in AvatarCrop: drag to move, pinch or the
 // buttons to zoom) and removing the picture.
 import { Image } from 'expo-image';
@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, PanResponder, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 import { API_URL } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
@@ -26,9 +27,23 @@ export function Avatar({ size }: { size: number }) {
   const src = a?.photo ? imgSource({ uri: `${API_URL}/api/avatar`, v: `v=${a.photo}`, token })
     : a?.preset && avatarArt[a.preset] ? { uri: `${API_URL}/avatar-art/${a.preset}.png?v=${avatarArt[a.preset]}` } : null;
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: c.strong }}>
+    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: src ? c.strong : c.surface }}>
       {src ? <Image source={src} style={{ width: size, height: size }} contentFit="cover" transition={150} />
-        : <T style={{ color: c.strongFg, fontSize: size * 0.42, fontWeight: '700', textAlign: 'center' }}>{(user?.name || '?').slice(0, 1).toUpperCase()}</T>}
+        : <DefaultFace size={size} />}
+    </View>
+  );
+}
+
+// No picture chosen: a plain outline of a person in the theme's accent on its soft tint (over the card's colour, so it
+// reads the same on a header), Mojtaba 2026-10-18.
+function DefaultFace({ size }: { size: number }) {
+  const c = useColors(), w = Math.max(1.4, size / 26);
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+      <Svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24">
+        <Circle cx={12} cy={9} r={3.8} fill="none" stroke={c.link} strokeWidth={w * 24 / (size * 0.6)} />
+        <Path d="M5 20c1.3-3.4 4-5.2 7-5.2s5.7 1.8 7 5.2" fill="none" stroke={c.link} strokeWidth={w * 24 / (size * 0.6)} strokeLinecap="round" />
+      </Svg>
     </View>
   );
 }

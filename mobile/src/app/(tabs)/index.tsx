@@ -17,6 +17,7 @@ import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { Pill, openAttempt, pctText } from '@/ui/activity';
+import { Avatar } from '@/ui/avatar';
 import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { HomeLicenceArt } from '@/ui/header-art';
@@ -173,7 +174,7 @@ export default function Home() {
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
-      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction="theme" barGap={ARC ? 8 : undefined}>
+      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16 }}>
