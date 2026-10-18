@@ -8,7 +8,7 @@ self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data ? e.data.text() : '' }; }
   e.waitUntil(self.registration.showNotification(d.title || '', {
-    body: d.body || '', icon: '/icon-192.png', badge: '/icon-192.png', tag: d.tag || 'tp', renotify: true,
+    body: d.body || '', icon: '/icon-192.png?v=2', badge: '/icon-192.png?v=2', tag: d.tag || 'tp', renotify: true,
     lang: d.lang || 'fa', dir: d.dir || 'auto', data: { url: d.url || '/' },
   }));
 });

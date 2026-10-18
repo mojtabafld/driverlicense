@@ -11,7 +11,7 @@ import { router, useFocusEffect } from 'expo-router';
 
 import { toPremium, useFree } from '@/lib/free';
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, View } from 'react-native';
+import { Animated, Easing, Pressable, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { PROVE_PICS } from '@/lib/config';
@@ -76,8 +76,8 @@ function StreakCard() {
           {week.map((d, k) => <View key={k} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: d ? c.warn : c.line, opacity: k === 6 && !d ? 0.5 : 1 }} />)}
         </View>
       </View>
-      {/* The daily reminder, by notification (main site on the web; ui/notify-settings.tsx). */}
-      {!PROVE_PICS && Platform.OS === 'web' ? <CourseReminder /> : null}
+      {/* The daily reminder, by notification (main site; ui/notify-settings.tsx). */}
+      {!PROVE_PICS ? <CourseReminder /> : null}
     </Card>
   );
 }

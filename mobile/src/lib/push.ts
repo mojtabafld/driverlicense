@@ -1,6 +1,7 @@
 // Notifications on the web (the server's push.js; settings, «اعلان‌ها»): this device's push subscription, given to the
-// signed-in account. On an iPhone or iPad they only work in the app added to the Home Screen (Safari's rule), so there
-// the settings ask for that first. The phone apps (iOS / Android builds) have none yet.
+// signed-in account; the server sends them, in the account's app language. On an iPhone or iPad they only work in the
+// app added to the Home Screen (Safari's rule), so there the settings ask for that first. The phone apps (iOS /
+// Android builds) use lib/push.native.ts, the same functions, with the notifications made on the phone.
 import { Platform } from 'react-native';
 
 import { api } from '@/lib/api';
@@ -48,7 +49,7 @@ export async function enablePush(key: string): Promise<PushState> {
 
 // Allowed earlier on this device: gives the signed-in account this device again (after signing in, or a new
 // subscription from the browser). Quiet when there is nothing to do.
-export async function syncPush(): Promise<void> {
+export async function syncPush(_user?: string): Promise<void> {
   if (!capable() || Notification.permission !== 'granted') return;
   const sub = await current().catch(() => null);
   if (sub) await api('POST', 'pushsub', { sub: sub.toJSON(), tz: tz() }).catch(() => {});
@@ -71,3 +72,14 @@ export async function disablePush(): Promise<PushState> {
   }
   return pushState();
 }
+
+// A choice changed: the server reads it when it sends (nothing to do here; the phone apps schedule again).
+export async function applyNotify(_n: Notify): Promise<void> {}
+// «ارسال اعلان آزمایشی»: the server sends one to the account's devices now; resolves to how many it reached.
+export async function testPush(): Promise<number> {
+  return (await api<{ sent: number }>('POST', 'pushtest')).sent;
+}
+// The phone apps open their notification settings; on the web there is nothing to open.
+export function openSystemSettings() {}
+// The phone apps open a tapped notification's page; on the web the service worker does (public/sw.js).
+export function useNotificationTaps() {}
