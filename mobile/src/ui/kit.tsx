@@ -284,14 +284,15 @@ export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () 
 // 2026-10-18). Once per app start: after that the header shows the text alone.
 let leadGone = false;
 const LEAD_W = 38; // the drawing (28) and the space after it (10)
-function FadingLead({ children }: { children: React.ReactNode }) {
+function FadingLead({ children, onDone }: { children: React.ReactNode; onDone?: () => void }) {
   const [gone, setGone] = useState(leadGone);
   const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (gone) return;
     const a = Animated.sequence([Animated.delay(1800), Animated.timing(v, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })]);
-    a.start(({ finished }) => { if (finished) { leadGone = true; setGone(true); } });
+    a.start(({ finished }) => { if (finished) { leadGone = true; setGone(true); onDone?.(); } });
     return () => a.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gone, v]);
   if (gone) return null;
   return (
@@ -303,8 +304,35 @@ function FadingLead({ children }: { children: React.ReactNode }) {
   );
 }
 
+// A line whose text changes with a soft swap: the old text fades and lifts away, the new one fades in from just
+// below (the home header's line once its drawing has gone; Mojtaba 2026-10-18).
+function SwapText({ text, style }: { text: string; style: StyleProp<TextStyle> }) {
+  const [shown, setShown] = useState(text);
+  const [v] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (text === shown) return;
+    const out = Animated.timing(v, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: Platform.OS !== 'web' });
+    let done = false;
+    out.start(({ finished }) => {
+      if (!finished) return;
+      done = true;
+      setShown(text);
+      v.setValue(-1);
+      Animated.timing(v, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+    });
+    // (Stopping the finished fade would stop the value's next run too, the coming in.)
+    return () => { if (!done) out.stop(); };
+  }, [text, shown, v]);
+  // v: 1 shown; 0 gone (lifted); -1 about to come in (below).
+  const opacity = v.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] });
+  const translateY = v.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] });
+  return <Animated.View style={{ opacity, transform: [{ translateY }] }}><T style={style}>{shown}</T></Animated.View>;
+}
+
 // `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode }) {
+// `subtitleAfter`: the line under the title once the drawing has gone (SwapText).
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string }) {
+  const [after, setAfter] = useState(leadGone);
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
   // page, only the picture or drawing goes, and the title may take the whole width.
@@ -367,7 +395,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
               // The drawing of the time of day stands beside both lines, centred between the greeting and the line under
               // it, and that line starts where the greeting does (Mojtaba 2026-10-18); then it goes (FadingLead).
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {lead ? <FadingLead>{lead}</FadingLead> : null}
+                {lead ? <FadingLead onDone={() => setAfter(true)}>{lead}</FadingLead> : null}
                 <View style={{ flex: 1, gap: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
@@ -375,7 +403,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
                       <T style={[{ fontSize: 20, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                     </View>
                   </View>
-                  {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+                  {subtitle ? <SwapText text={after && subtitleAfter ? subtitleAfter : subtitle} style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]} /> : null}
                 </View>
               </View>
             ) : <>
@@ -411,12 +439,12 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
 
 // `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
 // page's chart ends just above the bar).
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap, lead }: { lead?: React.ReactNode; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap, lead, subtitleAfter }: { lead?: React.ReactNode; subtitleAfter?: string; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook; heroAction?: HeroAction }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
