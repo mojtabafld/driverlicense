@@ -1,13 +1,13 @@
-// Renders the app's icons from symbol.svg (run: NODE_PATH=<playwright> node make-icons.js). Teal background as the
-// app's theme (#3a9a9d → #2a7679), the white symbol on top.
+// Renders the app's icons from symbol.svg (run: NODE_PATH=<playwright> node make-icons.js). An orange background
+// (#D97757, Claude's orange, Mojtaba 2026-10-18; a faint fade #DE7F5F → #D16C4B), the white symbol on top.
 const fs = require('fs'), path = require('path');
 const { chromium } = require('playwright');
 const sym = fs.readFileSync(path.join(__dirname, 'symbol.svg'), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
 const inner = sym.replace(/^[\s\S]*?<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
-const BG = '<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#43a6a8"/><stop offset="1" stop-color="#25696c"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#bg)"/>';
+const BG = '<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#de7f5f"/><stop offset="1" stop-color="#d16c4b"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#bg)"/>';
 const svg = (body, { bg = false, scale = 1, mono = false } = {}) => {
   const t = (1 - scale) * 512;
-  let b = body; if (mono) b = b.replace(/#ff9d7e|#2e8285/g, '#ffffff');
+  let b = body; if (mono) b = b.replace(/#d97757/g, '#ffffff');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">${bg ? BG : ''}<g transform="translate(${t} ${t}) scale(${scale})">${b}</g></svg>`;
 };
 const out = path.join(__dirname, '..', 'images');

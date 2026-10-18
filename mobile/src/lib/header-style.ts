@@ -1,33 +1,11 @@
-// «هدر ساده» (settings, «ظاهر»): the pages' headers without their pictures and drawings: the tabs and the inner pages
-// that have a picture header (the course, rules, signs, right of way) keep the header's colour, its fade into the page
-// and the title (Hero in ui/kit.tsx), only the picture goes. Kept on this device and with the account (settings.header,
-// like the colour theme: it comes back on signing in; lib/store.tsx), and it applies at once, with no reload.
-import { useSyncExternalStore } from 'react';
-import { Platform } from 'react-native';
-
+// «هدر ساده»: the pages' headers without their pictures and drawings. The tabs and the inner pages that had a picture
+// header (the course, rules, signs, right of way) keep the header's colour, its fade into the page and the title (Hero
+// in ui/kit.tsx); only the picture goes. Since 2026-10-18 it is the only header on the main site (Mojtaba: the choice
+// in settings is gone); /app (prove.dk's copy) keeps its pictures. The accounts' old `settings.header` is left unused.
 import { PROVE_PICS } from '@/lib/config';
 
-const KEY = 'tp.plainHeader';
-const web = Platform.OS === 'web';
-// The plain header is the default (Mojtaba 2026-10-18): only a device that turned the pictures on ('0') shows them.
-// /app (prove.dk's copy) has no such setting and keeps its pictures.
-function read(): boolean {
-  if (PROVE_PICS) return false;
-  try { return (web ? localStorage.getItem(KEY) : require('expo-secure-store').getItem(KEY)) !== '0'; } catch { return true; }
-}
-let plain = read();
-const subs = new Set<() => void>();
-
-export const getPlainHeader = () => plain;
-// `keep`: written on this device too (the start before the account is read shows it); false on signing out, which
-// goes back to the default (plain) and clears the device's choice.
-export function setPlainHeader(v: boolean, keep = true) {
-  plain = v;
-  if (!keep) { try { if (web) localStorage.removeItem(KEY); else require('expo-secure-store').deleteItemAsync(KEY).catch(() => {}); } catch {} subs.forEach(f => f()); return; }
-  try { if (web) localStorage.setItem(KEY, v ? '1' : '0'); else require('expo-secure-store').setItem(KEY, v ? '1' : '0'); } catch {}
-  subs.forEach(f => f());
-}
-// Whether the pages' headers are plain (no picture), following a change at once.
+const PLAIN = !PROVE_PICS;
+// Whether the pages' headers are plain (no picture).
 export function usePlainHeader(): boolean {
-  return useSyncExternalStore(f => { subs.add(f); return () => { subs.delete(f); }; }, () => plain, () => plain);
+  return PLAIN;
 }
