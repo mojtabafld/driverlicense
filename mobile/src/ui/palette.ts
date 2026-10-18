@@ -142,9 +142,9 @@ export function paletteColors() {
     bg: nl(0.955), surface: '#ffffff', surface2: nl(0.972), line: nl(0.905), text: n(0.05), muted: n(0.38, 0.1 * Math.min(1, NS * 4)), faint: n(0.52, 0.08 * Math.min(1, NS * 4)),
     accent: aL, accentText: S.onL ?? '#ffffff', accentSoft: rgba(aL, 0.12), link: aL, forest: aL,
     ok: '#0f8a68', okSoft: '#e3f4ee', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
-    // (The AI text's panel: a soft tint of the theme's own hue, as the dark theme's panel stands out from its card;
-    // Mojtaba 2026-10-18. The grey theme keeps a light grey.)
-    note: S.asat === 0 ? '#eeeeee' : fromHls(S.hue, 0.945, 0.55), submit: n(0.1), checked: rgba(aL, 0.12), cardBorder: nl(0.905), hairline: nl(0.935),
+    // (The AI text's panel: a light cool grey, set apart from the white card as the dark theme's panel is; Mojtaba
+    // 2026-10-18.)
+    note: '#e6e9ed', submit: n(0.1), checked: rgba(aL, 0.12), cardBorder: nl(0.905), hairline: nl(0.935),
     glass: '#ffffff', glassStrong: '#ffffff', glassBorder: nl(0.905),
     pick: aL, pickSoft: S.asat === 0 ? '#efefef' : fromHls(S.hue, 0.955, 0.6),
     nav: nl(0.935), navFg: n(0.05), navOff: nl(0.972), navNum: n(0.38, 0.1),
