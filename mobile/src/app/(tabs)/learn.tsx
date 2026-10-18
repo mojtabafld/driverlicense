@@ -14,6 +14,7 @@ import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
+import { PageIcon } from '@/ui/page-icon';
 import { Card, Screen, T } from '@/ui/kit';
 import { ListCard } from '@/ui/list-card';
 import { SearchBox } from '@/ui/search-box';
@@ -73,7 +74,7 @@ export default function Learn() {
   return (
     // Main site: the five cards share the screen's height between the search box and the tab bar (taller on tall
     // phones, never shorter than their content; Mojtaba 2026-10-18).
-    <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 8} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
+    <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 8} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
       heroAction={{ icon: 'search', label: 'جستجو در آموزش', onPress: () => router.push('/course-search') }}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>

@@ -13,6 +13,7 @@ import { Avatar, AvatarSheet } from '@/ui/avatar';
 import { Confirm } from '@/ui/confirm';
 import { Field } from '@/ui/field';
 import { Icon, type IconName } from '@/ui/icon';
+import { PageIcon } from '@/ui/page-icon';
 import { Card, OkTick, Screen, Segmented, T, physical, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
@@ -81,7 +82,7 @@ export default function Settings() {
   const premRow = <LinkRow icon="sparkles" title="نسخه‌ی ویژه" ok={premium} sub={premium && user?.premium ? fmt('فعال تا {0}', fmtDay(user.premium.until)) : premium ? 'برای حساب شما فعال است' : 'تحلیل هوش مصنوعی و خواندن سؤال‌ها با صدا'} onPress={() => router.push('/premium')} last />;
   // Switches in the app's teal.
   return (
-    <Screen title="تنظیمات">
+    <Screen lead={<PageIcon name="settings" always />} title="تنظیمات">
       <AvatarSheet open={avatarOpen} onClose={() => setAvatarOpen(false)} />
       <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
         cancel="ماندن" ok="خروج" okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
