@@ -171,6 +171,9 @@ const ROWS: Row[] = [
   { kind: 'finish' },
 ];
 const RAIL = 44, LINE = 3;
+// Folded, the timeline stops after its third lesson; «نمایش همه» under it opens the rest.
+const FOLD_AT = ROWS.reduce((at, r, i, a) => (at < 0 && r.kind === 'lesson' && a.slice(0, i + 1).filter(x => x.kind === 'lesson').length === 3 ? i : at), -1);
+const FOLDS = FOLD_AT >= 0 && FOLD_AT < ROWS.length - 1;
 
 // The next lesson's dot: a soft ring growing and fading around it, over and over.
 function Pulse({ size, color }: { size: number; color: string }) {
@@ -229,15 +232,17 @@ function Rail({ marker, top, bottom, first, last, children, markerH }: { marker:
 }
 
 // The course as a timeline: chapters on a rail, each with its lessons under it; the rail is green as far as the next lesson.
-function Timeline({ done, next }: { done: Record<string, unknown>; next: string | null }) {
+function Timeline({ done, next, all }: { done: Record<string, unknown>; next: string | null; all: boolean }) {
   const c = useColors();
+  const rows = all || !FOLDS ? ROWS : ROWS.slice(0, FOLD_AT + 1);
   const { lessonOk } = useFree();
   const nextAt = ROWS.findIndex(r => r.kind === 'lesson' && r.lesson.id === next);
   // Rows above the next lesson's are driven (all of them when every ready lesson is done).
   const reach = nextAt >= 0 ? nextAt : ROWS.reduce((at, r, i) => (r.kind === 'lesson' ? i : at), 0);
   return (
     <View>
-      {ROWS.map((r, i) => {
+      {rows.map((r, i) => {
+        // Folded, the rail runs on a little past the last row shown.
         const edges = { top: i <= reach, bottom: i < reach, first: i === 0, last: i === ROWS.length - 1 };
         if (r.kind === 'chapter') {
           const { ch } = r, open = ch.lessons.length > 0, all = ch.lessons.length + ch.planned.length, finished = ch.lessons.filter(l => done[l.id]).length;
@@ -326,6 +331,7 @@ export default function Course() {
   const ready = COURSE.flatMap(ch => ch.lessons.map(lesson => ({ lesson, chapter: ch })));
   const finished = ready.filter(x => done[x.lesson.id]).length;
   const next = ready.find(x => !done[x.lesson.id]) ?? null;
+  const [all, setAll] = useState(false);
   return (
     <SubPage title="آموزش گام‌به‌گام" subtitle="فصل به فصل، تا گواهینامه" hero={{ pic: 9, light: 10, icon: 'learn', art: CourseArt }}>
       <Enter><SearchBox /></Enter>
@@ -335,7 +341,15 @@ export default function Course() {
         <T style={{ flex: 1, fontWeight: '800', fontSize: 18 }}>مسیر شما تا گواهینامه</T>
         <T style={{ color: c.muted, fontSize: 12 }}>{faNum(COURSE.length)} فصل</T>
       </View>
-      <Enter><Timeline done={done} next={next?.lesson.id ?? null} /></Enter>
+      <Enter><Timeline done={done} next={next?.lesson.id ?? null} all={all} /></Enter>
+      {FOLDS ? (
+        <Pressable onPress={() => { tap(); setAll(v => !v); }} accessibilityRole="button"
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 46, borderRadius: 14,
+            backgroundColor: c.accentSoft, opacity: pressed ? 0.75 : 1 })}>
+          <T style={{ color: c.link, fontWeight: '700', fontSize: 14 }}>{all ? 'نمایش کمتر' : 'نمایش همه'}</T>
+          <Icon name={all ? 'chevronUp' : 'chevronDown'} size={15} color={c.link} weight="semibold" />
+        </Pressable>
+      ) : null}
     </SubPage>
   );
 }
