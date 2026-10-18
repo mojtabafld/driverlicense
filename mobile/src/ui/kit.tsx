@@ -329,11 +329,11 @@ function SwapText({ text, style, numberOfLines }: { text: string; style: StylePr
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}><T style={style} numberOfLines={numberOfLines}>{shown}</T></Animated.View>;
 }
 
-const TURN_MS = 3000; // how long each of several `subtitleAfter` lines stays before the next
+const TURN_MS = 10000; // how long each of several `subtitleAfter` lines stays before the next (Mojtaba 2026-10-18)
 
 // `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
 // `subtitleAfter`: the line under the title once the drawing has gone (SwapText); several lines take turns, each for
-// 3 seconds, with the same swap (the home page's: today's practice, a random test, the progress; Mojtaba 2026-10-18).
+// 10 seconds, with the same swap (the home page's: today's practice, a random test, the progress; Mojtaba 2026-10-18).
 export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[] }) {
   // The home header's opening (with a `lead`): first the greeting alone beside the drawing; the drawing goes and the
   // text glides to the edge; then the line under the greeting opens (the greeting moves up for it) and comes in; a
