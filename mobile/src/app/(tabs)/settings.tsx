@@ -156,8 +156,6 @@ export default function Settings() {
           <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}><PaletteRow /></View>
         ) : null}
       </Card>
-      {/* Notifications (main site on the web): reminders and a daily message (ui/notify-settings.tsx). */}
-      {!PROVE_PICS && Platform.OS === 'web' ? <NotifySettings /> : null}
       <Card style={{ gap: 10 }}>
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
@@ -180,6 +178,8 @@ export default function Settings() {
         {getTransLang() === (settings.lang ?? 'da') ? null : <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />}
         <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
+      {/* Notifications, under the exam's settings (Mojtaba 2026-10-18; main site on the web): reminders and a daily message (ui/notify-settings.tsx). */}
+      {!PROVE_PICS && Platform.OS === 'web' ? <NotifySettings /> : null}
       {/* «راهنما»: how to use the app, reporting a problem, and the version. */}
       <Card style={{ gap: 4 }}>
         <T style={{ fontWeight: '700', fontSize: 16, marginBottom: 4 }}>راهنما</T>
