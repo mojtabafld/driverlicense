@@ -189,7 +189,7 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
-    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'}
+    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter="تمرین امروز را شروع کنید."
       hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts. */}
       <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
