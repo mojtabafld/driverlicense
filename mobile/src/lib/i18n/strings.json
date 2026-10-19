@@ -3981,5 +3981,9 @@
 "# سؤال جواب داده‌اید":["# questions answered","# spørgsmål besvaret"],
 "# ساعت و # دقیقه تمرین":["# h # min of practice","# t. og # min. træning"],
 "# ساعت تمرین":["# h of practice","# t. træning"],
-"# دقیقه تمرین":["# min of practice","# min. træning"]
+"# دقیقه تمرین":["# min of practice","# min. træning"],
+"اشتباهات اصلاح‌نشده":["Uncorrected mistakes", "Ikke-rettede fejl"],
+"# از # اشتباه هنوز اصلاح نشده":["# of # mistakes not corrected yet", "# af # fejl endnu ikke rettet"],
+"همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.":["You have corrected all the mistakes in this test.", "Du har rettet alle fejlene i denne test."],
+"آزمون اشتباهات":["Mistakes test", "Test med fejl"]
 }
