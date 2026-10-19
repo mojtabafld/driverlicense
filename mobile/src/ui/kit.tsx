@@ -19,6 +19,7 @@ import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 import { px } from './palette';
+import { WASH_DARK, WASH_LIGHT } from './wash';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -147,15 +148,18 @@ export function Logo({ size = 28 }: { size?: number }) {
 }
 
 // Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
-// A round button in the theme's colours: its accent on the accent's soft tint, over the card's colour, like the default
-// profile picture (ui/avatar.tsx): the plain headers' buttons and the settings page's light / dark switch.
+// A round button in the look of the home page's (the default profile picture, ui/avatar.tsx, and the chart button,
+// ui/chart-view.tsx): the theme's link colour on the blush-to-lavender wash (Mojtaba 2026-10-19: every page's header
+// buttons as the home page's). The plain headers' buttons, the inner pages' way back and light / dark switch, and the
+// settings page's light / dark switch.
 export function RoundIcon({ icon, label, onPress, size = 44 }: { icon: IconName; label: string; onPress: () => void; size?: number }) {
-  const c = useColors();
+  const c = useColors(), dark = useTheme().theme === 'dark';
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: pressed ? 0.75 : 1 })}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-        <Icon name={icon} size={Math.round(size * 0.48)} color={c.link} weight="semibold" />
+    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr(label)}
+      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
+      <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={icon} size={Math.round(size * 0.52)} color={c.link} weight="semibold" />
       </View>
     </Pressable>
   );
