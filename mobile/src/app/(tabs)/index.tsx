@@ -330,7 +330,7 @@ export default function Home() {
           style={{ gap, opacity: t.interpolate({ inputRange: [0.25, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }] }}>
           <TestStats attempts={exams} />
-          <ActivityList attempts={exams} limit={10} title="آخرین آزمون‌ها" allHref="/history" />
+          <ActivityList attempts={exams} limit={3} title="آخرین آزمون‌ها" allHref="/history" />
         </Animated.View>
       ) : null}
     </Screen>
