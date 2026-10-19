@@ -139,13 +139,14 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
   );
 }
 
-// Under the progress, once a question of this test was answered wrong (Mojtaba 2026-10-19): the mistakes not yet put
-// right (wrong the last time) as a share of all this test's questions ever answered wrong, so the bar empties as they
-// are fixed; in the same look as the progress bar above, in a paler shade of the theme's colour. «آزمون اشتباهات»
-// starts a test of them (at most a real test's 25, in random order).
+// Under the progress, once a question of this test was answered wrong (Mojtaba 2026-10-19): the mistakes put right
+// (right the last time) as a share of all this test's questions ever answered wrong, so the bar fills as they are fixed
+// (it emptied as they were fixed until Mojtaba asked for it the other way); its title counts those still wrong. In the
+// same look as the progress bar above, in a paler shade of the theme's colour. «آزمون اشتباهات» starts a test of them
+// (at most a real test's 25, in random order).
 function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
   const c = useColors();
-  const share = open.length / missed;
+  const fixed = missed - open.length, share = fixed / missed;
   const bar = useCountUp(share, 1100);
   const start = () => {
     tap();
@@ -158,14 +159,14 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
         <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }}>اشتباهات اصلاح‌نشده</T>
         <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: open.length ? c.accent : c.muted, opacity: open.length ? 0.7 : 1 }}>{faNum(open.length)}</T>
       </View>
-      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: missed, now: open.length }}
+      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: missed, now: fixed }}
         style={{ height: 10, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
         <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: c.accentSoft, opacity: 0.55 }} />
-        <View style={{ width: `${open.length ? bar * 100 : 0}%`, minWidth: open.length ? 10 : 0, borderRadius: radius.pill, backgroundColor: c.accent, opacity: 0.45 }} />
+        <View style={{ width: `${fixed ? bar * 100 : 0}%`, minWidth: fixed ? 10 : 0, borderRadius: radius.pill, backgroundColor: c.accent, opacity: 0.45 }} />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
         <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-          {open.length ? `${faNum(open.length)} از ${faNum(missed)} اشتباه هنوز اصلاح نشده` : 'همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.'}
+          {open.length ? `${faNum(fixed)} از ${faNum(missed)} اشتباه اصلاح شده` : 'همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.'}
         </T>
         {open.length ? (
           <Pressable onPress={start} hitSlop={8} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, flexDirection: 'row', alignItems: 'center', gap: 4 })}>
