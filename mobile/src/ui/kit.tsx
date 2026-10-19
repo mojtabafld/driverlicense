@@ -332,9 +332,11 @@ function SwapText({ text, style, numberOfLines }: { text: string; style: StylePr
 const TURN_MS = 10000; // how long each of several `subtitleAfter` lines stays before the next (Mojtaba 2026-10-18)
 
 // `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
+// `extra`: something of the page's own beside the action, on its inner side (the home page's chart button, beside the
+// profile picture; Mojtaba 2026-10-19), plain headers only, as the action.
 // `subtitleAfter`: the line under the title once the drawing has gone (SwapText); several lines take turns, each for
 // 10 seconds, with the same swap (the home page's: today's practice, a random test, the progress; Mojtaba 2026-10-18).
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[] }) {
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter, extra }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[]; extra?: React.ReactNode }) {
   // The home header's opening (with a `lead`): first the greeting alone beside the drawing; the drawing goes and the
   // text glides to the edge; then the line under the greeting opens (the greeting moves up for it) and comes in; a
   // while later it changes to `subtitleAfter` (Mojtaba 2026-10-18). Once per app start, later the end state at once.
@@ -445,6 +447,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             </>}
             {subtitle && !(plain && name) ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
           </View>
+          {plain && extra ? extra : null}
           {plain && act && 'node' in act ? (
             <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
               style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
@@ -467,12 +470,12 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
 
 // `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
 // page's chart ends just above the bar).
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, barGap, lead, subtitleAfter }: { lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
-  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook; heroAction?: HeroAction }) {
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter }: { lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
