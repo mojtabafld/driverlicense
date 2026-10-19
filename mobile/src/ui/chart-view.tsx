@@ -1,10 +1,10 @@
 // The home page's chart view (Mojtaba 2026-10-19): a round button beside the profile picture, in its look (the theme's
-// link colour on the blush-to-lavender wash) with a small drawing of the progress chart; pressed, the cards above the
-// chart fold away and the chart glides to the top of the page, and the user's test statistics come in under it, then
-// the latest tests, each opening its own page (its result and review). Pressed again, all goes back.
+// link colour on the blush-to-lavender wash) with the plain chart icon of the statistics card (Mojtaba: minimal, as
+// that one); pressed, the cards above the chart fold away and the chart glides to the top of the page, and the user's
+// test statistics come in under it, then the latest tests, each opening its own page (its result and review). Pressed
+// again, all goes back.
 import { LinearGradient } from 'expo-linear-gradient';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
-import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 import type { Attempt } from '@/lib/bank';
 import { tr } from '@/lib/i18n';
@@ -15,34 +15,20 @@ import { Card, FitLine, T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 import { WASH_DARK, WASH_LIGHT } from './wash';
 
-// The drawing: the chart's smooth line rising over its soft fill to a point, and its dashed pass line, in 24 units.
-const LINE = 'M3.5 16.5 C5.8 16.5 5.8 12.4 8.1 12.4 C10.3 12.4 10.3 14.6 12.5 14.6 C14.8 14.6 14.8 9.2 17.1 9.2 C18.8 9.2 18.8 6.8 20.5 6.8';
-const AREA = `${LINE} L20.5 20.2 L3.5 20.2 Z`;
-function Glyph({ size, color, w }: { size: number; color: string; w: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24">
-      <Line x1={3.5} x2={20.5} y1={10.6} y2={10.6} stroke={color} strokeOpacity={0.45} strokeWidth={w * 0.6} strokeDasharray="1.5 1.9" strokeLinecap="round" />
-      <Path d={AREA} fill={color} fillOpacity={0.16} />
-      <Path d={LINE} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
-      <Circle cx={20.5} cy={6.8} r={w * 1.25} fill={color} />
-    </Svg>
-  );
-}
-
 // `t`: how far the chart view is open (0 to 1); the button fills with the accent as it opens.
 export function ChartButton({ size = 44, on, t, onPress }: { size?: number; on: boolean; t: Animated.Value; onPress: () => void }) {
   const c = useColors(), dark = useIsDark();
-  const g = Math.round(size * 0.62), w = Math.max(1.5, size / 24) * 24 / g; // the profile picture's line, a little bolder
+  const g = Math.round(size * 0.52); // the icon, about as large as the profile picture's outline beside it
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('نمودار و آمار آزمون‌ها')}
       accessibilityState={{ expanded: on }}
       style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
       <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
-        <Glyph size={g} color={c.link} w={w} />
+        <Icon name="chart" size={g} color={c.link} />
       </View>
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent, opacity: t }]}>
-        <Glyph size={g} color={c.accentText} w={w} />
+        <Icon name="chart" size={g} color={c.accentText} />
       </Animated.View>
     </Pressable>
   );
