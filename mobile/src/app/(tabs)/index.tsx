@@ -1,9 +1,11 @@
 // Home: progress at a glance (chance of passing, counts, progress chart), fitted to the screen without scrolling:
 // the chart takes the height left, and on shorter screens the cards get more compact.
+// Main site: the chart button beside the profile picture opens the chart view (ui/chart-view.tsx): the chart glides to
+// the top and the test statistics and latest tests come in under it (then the page scrolls).
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppState, Pressable, View, useWindowDimensions } from 'react-native';
+import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_PICS } from '@/lib/config';
@@ -16,7 +18,8 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
-import { Pill, openAttempt, pctText } from '@/ui/activity';
+import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
+import { ChartButton, TestStats } from '@/ui/chart-view';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
 import { ARC, useColors } from '@/ui/theme';
@@ -150,6 +153,26 @@ export default function Home() {
   useEffect(() => setMore(0), [height]);
   const level = Math.min(3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? more : 0));
   const compact = level >= 1, tight = level >= 2, tighter = level >= 3;
+  const gap = tighter ? 8 : compact ? 10 : 14; // between the page's cards
+  // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
+  // chart card's height from and to while it is shown or moving (null when closed: the card takes the height left).
+  // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
+  // screen growing to a comfortable one), and the statistics and the latest tests come in under it; closing, the page
+  // goes back to its top and all of it moves back.
+  const [view, setView] = useState(false), [grow, setGrow] = useState<[number, number] | null>(null);
+  const [t] = useState(() => new Animated.Value(0));
+  const topH = useRef(0), chartH = useRef(0), scroll = useRef<ScrollView>(null);
+  const toggle = () => {
+    const open = !view;
+    if (open) {
+      const from = Math.max(1, chartH.current);
+      setGrow([from, Math.max(from, Math.min(320, Math.round(height * 0.38)))]);
+    } else scroll.current?.scrollTo({ y: 0, animated: true });
+    setView(open);
+    t.stopAnimation();
+    Animated.timing(t, { toValue: open ? 1 : 0, duration: open ? 480 : 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })
+      .start(({ finished }) => { if (finished && !open) setGrow(null); });
+  };
   const chartMin = tighter ? (ARC ? 64 : 84) : 120;
   // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
   const noHint = ARC && tighter;
@@ -158,7 +181,7 @@ export default function Home() {
   // page would scroll instead).
   const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
   const fit = () => {
-    if (!ARC || level >= 3) return;
+    if (!ARC || level >= 3 || grow) return;
     chartBox.current?.measureInWindow((_x, top) => {
       const room = height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) - top;
       if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
@@ -192,10 +215,20 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
-    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={tighter ? 8 : compact ? 10 : 14} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
-      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}>
-      {/* The four cards at the top: the chance of passing and the three counts. */}
-      <View style={{ gap: tighter ? 8 : compact ? 10 : 14 }}>
+    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
+      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}
+      heroExtra={ARC ? <ChartButton on={view} t={t} onPress={toggle} /> : undefined}>
+      {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
+      <Animated.View pointerEvents={view ? 'none' : 'auto'} aria-hidden={view || undefined}
+        onLayout={e => { if (!grow) topH.current = e.nativeEvent.layout.height; }}
+        style={grow ? {
+          overflow: 'hidden',
+          height: t.interpolate({ inputRange: [0, 1], outputRange: [topH.current, 0] }),
+          marginBottom: t.interpolate({ inputRange: [0, 1], outputRange: [0, -gap] }),
+          opacity: t.interpolate({ inputRange: [0, 0.55], outputRange: [1, 0], extrapolate: 'clamp' }),
+          transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
+        } : undefined}>
+      <View style={{ gap }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
         {/* Main site: the ring and its words close together, the pair in the middle of the card, Mojtaba asked. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 12 : 16, justifyContent: ARC ? 'center' : undefined }}>
@@ -244,9 +277,12 @@ export default function Home() {
       </View>
       )}
       </View>
+      </Animated.View>
       {/* A tap anywhere in the chart's card, off the bars, clears the picked attempt. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
       {exams.length || ARC ? (
+      <Animated.View style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1 }}
+        onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={() => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
@@ -269,7 +305,16 @@ export default function Home() {
       </Card>
       </Pressable>
       </View>
+      </Animated.View>
       ) : <StartCard compact={compact} />}
+      {/* The chart view: the statistics and the latest tests, coming in under the chart; a row opens its test. */}
+      {grow ? (
+        <Animated.View style={{ gap, opacity: t.interpolate({ inputRange: [0.25, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
+          transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }] }}>
+          <TestStats attempts={exams} />
+          <ActivityList attempts={exams} limit={10} title="آخرین آزمون‌ها" allHref="/history" />
+        </Animated.View>
+      ) : null}
     </Screen>
   );
 }

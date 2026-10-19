@@ -3972,5 +3972,14 @@
 "پارک ممنوع تا گذرگاه راه‌آهن":["No parking near a level crossing", "Parkering forbudt ved overkørsel"],
 "در ۳۰ متری گذرگاه راه‌آهن پارک ممنوع است و روی خود گذرگاه، توقف هم ممنوع است.":["Parking is prohibited within 30 metres of a level crossing, and stopping on the crossing itself is prohibited too.", "Parkering er forbudt nærmere end 30 meter fra en jernbaneoverkørsel, og på selve overkørslen er standsning også forbudt."],
 "۰٫۲":["0.2", "0,2"],
-"۳۰":["30", "30"]
+"۳۰":["30", "30"],
+"نمودار و آمار آزمون‌ها":["Chart and test statistics","Graf og prøvestatistik"],
+"آمار آزمون‌ها":["Test statistics","Prøvestatistik"],
+"میانگین":["Average","Gennemsnit"],
+"بهترین":["Best","Bedste"],
+"آخرین آزمون‌ها":["Latest tests","Seneste prøver"],
+"# سؤال جواب داده‌اید":["# questions answered","# spørgsmål besvaret"],
+"# ساعت و # دقیقه تمرین":["# h # min of practice","# t. og # min. træning"],
+"# ساعت تمرین":["# h of practice","# t. træning"],
+"# دقیقه تمرین":["# min of practice","# min. træning"]
 }
