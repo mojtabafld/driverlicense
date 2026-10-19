@@ -62,7 +62,7 @@ export const GLOSSARY: Term[] = [
   { da: 'autostol', fa: 'صندلی کودک خودرو', en: 'child car seat' },
   { da: 'selepude', fa: 'بالشتک صندلی کودک (بوستر)', en: 'booster cushion' },
   { da: 'airbag', fa: 'کیسه‌ی هوا', en: 'airbag', note: 'صندلی رو به عقب کودک را جلوی کیسه‌ی هوای روشن نگذارید.' },
-  { da: 'promille', fa: 'میزان الکل خون (در هزار)', en: 'blood alcohol (per mille)', note: 'حد مجاز ۰٫۵ در هزار.' },
+  { da: 'promille', fa: 'میزان الکل خون (در هزار)', en: 'blood alcohol (per mille)', note: 'حد مجاز ۰٫۵ در هزار؛ در ۳ سال اول پس از نخستین گواهینامه‌ی B، ۰٫۲.' },
   { da: 'spirituskørsel', fa: 'رانندگی در حالت مستی', en: 'drink-driving' },
   { da: 'reaktionstid', fa: 'زمان واکنش', en: 'reaction time' },
   { da: 'reaktionslængde', fa: 'مسافت واکنش', en: 'reaction distance' },
