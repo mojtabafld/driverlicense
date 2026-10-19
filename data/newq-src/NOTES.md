@@ -99,3 +99,42 @@ is new.
   0.50 / 0.25; FDM: the same penalties, and above 1.2 the licence is lost unconditionally); § 56 stk. 3 from 17 a
   licence on condition of a companion in the front seat between 20 and 5 until 18; § 43 registered tractors 40 km/h;
   § 67 stk. 3 no obviously unsuitable tyres. (Question 5089 and the course's alcohol lesson were corrected to the 0.2.)
+- Færdselsloven (LBK nr 118 af 12/01/2026), checked for batch 3: § 2 nr. 12 lygtetændingstid: sunset to sunrise, and
+  whenever darkness, fog, mist, rain or the like make the lights necessary to be seen or to see; nr. 18 parkering: any
+  leaving of a vehicle, but stops under 3 minutes and for people or goods getting on or off are not parking (a
+  broken-down vehicle counts as parked after 18 hours); § 15 stk. 4 keep right of islands and the like, left only where
+  marked or on a one-way carriageway; § 21 stk. 3 the four conditions before overtaking, stk. 4 enough side distance,
+  stk. 5 a road-works vehicle may be overtaken with care in the most suitable way; § 23 stk. 1 no overtaking just
+  before or in a junction (unless lanes for the same direction, past a left-turner, signals or police, or the crossing
+  road has ubetinget vigepligt), just before or on a level crossing, with a limited view at hills and bends (unless two
+  lanes without oncoming traffic), stk. 2 none of this for two-wheeled bicycles and small mopeds; § 24 in dense traffic
+  in several lanes passing in another lane is not overtaking, and lanes are changed only when needed (before a junction,
+  to stop or park); § 25 no overtaking or passing before a pedestrian crossing a vehicle that hides it; § 26 stk. 3 also
+  every exit from a road over a pavement, cycle path or verge raised above the carriageway, stk. 5 show the duty to give
+  way in good time, stk. 6 left / right turns and two-way cycle paths, also outside junctions, stk. 7 not into a
+  junction that cannot be left; § 27 stk. 6 at a regulated crossing give way to pedestrians on it even on green, stk. 7
+  an unregulated crossing: adjust the speed for those on it or about to step onto it, stop if needed; § 29 stk. 1 nr. 1
+  also opposite a cycle-path exit, 5 m before an exit from a cycle path along the road and 5 m on each side of a crossing
+  one, nr. 4 not covering a sign or signal, nr. 7 where the carriageway before a junction is divided into lanes by
+  barrier lines, and 5 m before that, stk. 3 nr. 3 no parking on a main road's carriageway outside built-up areas, nr. 4
+  no double parking (except beside two-wheelers); § 32 stk. 2 no signal duty for reversing, stk. 5 the signal stops when
+  the manoeuvre is done; § 33 stk. 1–7 (lights in lighting-up time; high beam not near trains along the road, not behind
+  another vehicle); § 41 stk. 2 nr. 9 a bus standing for passengers (either side), nr. 11 horses and cattle, nr. 12 road
+  works, nr. 13 an accident site; § 42 50 / 80 / 130, motortrafikvej 80, raised at most to 100 there; § 47 a vehicle
+  forced to stop on the motorway: off the carriageway where possible, removed as soon as possible, others warned,
+  repairs only to get it away; § 80 stk. 2 no seat-belt duty when reversing or in a car park, petrol station or workshop.
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 3: A 18 oncoming traffic (also at the start of the
+  stretch), A 35 dangerous verge (cause on a plate, e.g. «Blød rabat»), A 36 speed humps, A 41 bends with UA 41 the speed
+  a bend can normally be taken at, A 43 narrowing with UA 43 the free width, A 46 steep descent / ascent (the largest
+  gradient), A 72 level crossing without barriers with UA 72 «Se efter tog» (crossings secured only by signs), A 73 with
+  barriers, A 74 cross markers right before the crossing (A 74,2 several tracks); B 16 main road: the side roads have
+  ubetinget vigepligt, and no parking on its carriageway outside built-up areas; C 51 not for overtaking two-wheeled
+  bicycles and small mopeds, or vehicles turning off the road; C 52 no overtaking by lorries, until C 54 or a distance;
+  E 18 dead end (a thin white line: it goes on as a path); E 23 under E 33: only for vehicles with a § 88 a permit,
+  stopping too; E 34 emergency lay-by; E 37 a lane that slower vehicles must use; E 39 the road is not suitable for a
+  higher speed, until E 40 or a distance; E 68 zone sign: the symbols' rules in the whole area until E 69 or another
+  zone sign (local signs may differ); Q 45 hatched area: no driving, stopping or parking; Q 46 unbroken edge line: crossed
+  only to stop, park or drive on or off the road; R 11 arrows before a junction must be followed from that lane; V 42
+  BUS: only regular buses (taxis, zero-emission cars where their symbols are added), cyclists and small mopeds must use a
+  bus lane on the right.
+- FDM: Tempo 100: an approved car and trailer may drive 100 km/h on the motorway only (otherwise 80).
