@@ -29,9 +29,10 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
 // `minH`: with `fill`, the chart's least height (FILL_MIN unless given).
 // `noHint`: with `fill`, the line under the chart shows only for a picked attempt (no «tap the chart» hint), for small screens.
+// `noNote`: the empty chart without its line under it (home's chart view on a very short screen, Mojtaba 2026-10-19).
 // `onBlank`: a tap on the chart off its points does this instead of clearing the pick (home: it opens or closes its chart
 // view, and the picked test stays picked; Mojtaba 2026-10-19).
-export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; onBlank?: () => void }) {
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; onBlank?: () => void }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
@@ -74,8 +75,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
         <View pointerEvents="none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
           <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
         </View>
-        {/* Where the dates go once there are attempts. */}
-        <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>بعد از حداقل دو آزمون، نمودار پیشرفت به‌روز می‌شود.</T>
+        {/* Where the dates go once there are attempts (not with `noNote`). */}
+        {noNote ? null : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>بعد از حداقل دو آزمون، نمودار پیشرفت به‌روز می‌شود.</T>}
       </View>
     );
   }

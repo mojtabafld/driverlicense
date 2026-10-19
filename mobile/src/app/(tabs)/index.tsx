@@ -166,11 +166,15 @@ export default function Home() {
   // latest tests would otherwise run under the tab bar, so that card ends just above it (small screens; Mojtaba
   // 2026-10-19). `openTop`: where the chart's card will start once the cards above it have folded; `underH`: the
   // height of what comes under it. Both are measured as the view opens, and the lower height is set once both are known.
+  // `low`: too little room for the line under the empty chart (iPhone SE), so it goes in the view and the plot keeps
+  // some height; the latest tests card says there are none.
   const openTop = useRef<number | null>(null), underH = useRef<number | null>(null);
+  const [low, setLow] = useState(false);
   const fitEmpty = () => {
     if (exams.length || openTop.current == null || underH.current == null) return;
-    const room = height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) - openTop.current - gap - underH.current;
-    setGrow(g => (g && room < g[1] ? [g[0], Math.max(140, Math.floor(room))] : g));
+    const room = Math.floor(height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) - openTop.current - gap - underH.current);
+    setGrow(g => (g && room < g[1] ? [g[0], Math.max(96, room)] : g));
+    setLow(room < 140);
   };
   const toggle = () => {
     const open = !view;
@@ -183,7 +187,7 @@ export default function Home() {
     setView(open);
     t.stopAnimation();
     Animated.timing(t, { toValue: open ? 1 : 0, duration: open ? 480 : 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })
-      .start(({ finished }) => { if (finished && !open) setGrow(null); });
+      .start(({ finished }) => { if (finished && !open) { setGrow(null); setLow(false); } });
   };
   const chartMin = tighter ? (ARC ? 64 : 84) : 120;
   // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
@@ -314,7 +318,7 @@ export default function Home() {
             </>}
           </View>
         </View>
-        <ProgressChart fill minH={chartMin} noHint={noHint} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? toggle : undefined} />
+        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? toggle : undefined} />
       </Card>
       </Pressable>
       </View>
