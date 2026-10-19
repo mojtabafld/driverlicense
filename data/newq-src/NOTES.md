@@ -53,6 +53,43 @@ is new.
   (50 m, on the motorway 100 m); pigdæk 1 November – 15 April; since 1 July 2025 tyres obviously unsuitable for the
   conditions (summer tyres in snow, slush) are illegal; Vejdirektoratet via FDM on 2-minus-1 roads: drive in the middle,
   out into the edge lane only for oncoming cars, stop for cyclists and pedestrians there.
+- Færdselsloven, checked for batch 2: § 10 pedestrians on the carriageway walk at the far left, pushing a bicycle at the
+  far right; § 16 stk. 1 lane before a junction (right lane to turn right, left lane to turn left, straight on the most
+  suitable), stk. 2 turning without danger to those behind, stk. 3 small right turn, left turn near the middle (left
+  edge on one-way roads), stk. 4 into a road with several lanes the most suitable way, stk. 5 opposing left-turners may
+  pass each other on the left; § 19 stk. 1 in built-up areas slow down and if necessary stop for a bus signalling to
+  pull out (the bus driver still takes care), stk. 2 særlig agtpågivenhed at a stopped school bus; § 20 stk. 1 meeting:
+  keep right with enough side distance and care for road users at the right edge, a partly blocked road: the one on
+  whose side it is stops if necessary; § 21 stk. 1 overtake on the left, on the right of a left-turner, cyclists and
+  small mopeds may overtake on the right, stk. 4 back to the right as soon as possible unless at once overtaking
+  another; § 22 being overtaken: keep right, do not speed up, slow vehicles help; § 27 stk. 1–8 (pedestrians, crossing
+  pavements, turning, regulated and unregulated crossings, avoid stopping on a crossing); § 28 stk. 2 right side, left
+  side on less busy and one-way roads, lengthwise at the edge, stk. 3 not on cycle path, footpath, pavement or islands
+  (outside built-up areas a vehicle up to 3,500 kg may stand partly on the pavement or verge strip), stk. 4 secure the
+  vehicle, stk. 5 doors and loading without danger; § 29 stk. 1 nr. 1 crossing and 5 m before it, nr. 2 junction and
+  10 m from the crossing carriageway's edge, nr. 6 hilltop and blind bend, nr. 8 less than 3 m from a barrier line,
+  nr. 9 crawler lane, nr. 10 taxi stand, stk. 3 nr. 1 parking 30 m from a level crossing, nr. 2 in front of a
+  driveway, nr. 4 beside a vehicle at the kerb, nr. 5 blocking another vehicle; § 32 stk. 1 horn only to prevent or
+  avert danger, a light signal in lighting-up time unless the danger is immediate, stk. 2 signal before pulling out,
+  turning round and turning, on the motorway before lane changes, stk. 4 brake light, stk. 5 in good time; § 33 stk. 2
+  high beam when the view is otherwise too short, stk. 3 not on lit roads, meeting, trains, following, stk. 4 dipped
+  otherwise, stk. 5 fog lights only in fog and heavy precipitation, stk. 6 no dazzling; § 41 stk. 1 stop within the
+  view and before obstacles that can be expected, adjust speed before dipping, stk. 2 the 13 cases of a suitably low
+  speed, stk. 3 no needlessly low speed or sudden braking, stk. 4 no splashing; § 67 stk. 3 the driver checks steering,
+  brakes, signals and lights; § 80 seat belts (not when reversing or in car parks), the driver sees to passengers under
+  15; § 80 a children under 135 cm in approved equipment for their height and weight, no rear-facing seat at an active
+  airbag; § 82 load not hiding lights or number plate, secured, the driver's free view.
+- Bekendtgørelse om vejafmærkning, batch 2: A-signs 150–250 m before the danger outside built-up areas (another
+  distance on a plate), A 16 roundabout, A 21 cyclists, A 22 children, A 26 wild animals, A 27 livestock, A 31 slippery
+  (cause on a plate); B 15 merge (mutual consideration), B 16 main road, B 18 give way to oncoming, B 19 oncoming give
+  way; C 11 no right / left turn (left also bans turning round; only at that junction), C 12 no turning round, C 19 no
+  entry for any vehicle, C 42 height including load, C 55 local speed limit until an end sign, a distance or another
+  limit, C 59 lifts all bans except stopping and parking, C 61 no stopping and C 62 no parking on the carriageway, on
+  that side up to the next junction; D 12 direction in a roundabout, D 55 minimum speed (not cyclists and small mopeds,
+  until D 56); Q 41, Q 42 (care), Q 44, Q 45, Q 46 (slow vehicles may cross it briefly to ease overtaking), Q 47; light
+  signals: red and red-and-yellow stop, yellow stop unless stopping would be dangerous, a green arrow for its direction.
+- Motorstyrelsen: an extra (third) number plate when the rear plate is fully or partly covered, for example by a bike
+  rack.
 - Færdselsstyrelsen: medicine dangerous in traffic is often, not always, marked with a red triangle; at the recommended
   dose driving is sometimes allowed; ask the doctor.
 - Rådet for Sikker Trafik / driving-school guides: roundabouts (give way on entering, signal right before leaving, give
