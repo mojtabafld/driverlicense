@@ -354,8 +354,16 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   }, [after, afters.length]));
   const line = after && afters.length ? afters[turn % afters.length] : subtitle;
   const [sub] = useState(() => new Animated.Value(leadGone || !lead ? 1 : 0));
+  // The name beside the greeting (home): not there at first; once the drawing has gone and the greeting has settled at
+  // the edge, it slides out from behind the greeting as it fades in, and then the line under them opens (Mojtaba
+  // 2026-10-19). Clipped at its own edge only while it comes in. Later the header shows it at once, as the rest.
+  const [nameIn] = useState(() => new Animated.Value(leadGone || !lead ? 1 : 0));
+  const [nameClip, setNameClip] = useState(!(leadGone || !lead));
+  const [nameW, setNameW] = useState(0);
   const openSub = () => {
-    Animated.sequence([Animated.delay(250), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
+    Animated.timing(nameIn, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: false })
+      .start(({ finished }) => { if (finished) setNameClip(false); });
+    Animated.sequence([Animated.delay(480), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
       .start(({ finished }) => { if (finished) setTimeout(() => setAfter(true), 2200); });
   };
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
@@ -424,8 +432,11 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
                 <View style={{ flex: 1, gap: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <T style={[{ fontSize: 18, lineHeight: 28, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
-                    <View style={{ flexShrink: 1 }}>
-                      <T style={[{ fontSize: 20, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                    <View style={{ flexShrink: 1, overflow: nameClip ? 'hidden' : 'visible' }} onLayout={e => setNameW(e.nativeEvent.layout.width)}>
+                      <Animated.View style={{ opacity: nameIn.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1, 1] }),
+                        transform: [{ translateX: nameIn.interpolate({ inputRange: [0, 1], outputRange: [(RTL ? 1 : -1) * Math.min(Math.max(nameW, 24), 64), 0] }) }] }}>
+                        <T style={[{ fontSize: 20, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                      </Animated.View>
                     </View>
                   </View>
                   {subtitle ? (
