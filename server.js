@@ -51,8 +51,9 @@ const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
 // Version of what is live: a hash of the question bank and the app's web version (its index.html names its bundles);
 // /api/config reports it to check what is live.
+// (and «آزمون جدید»'s questions, so a deploy that only adds questions shows in /api/config too)
 const VERSION = crypto.createHash('sha256')
-  .update([path.join(SITE, 'data.js'), path.join(__dirname, 'app-web', 'index.html')].map(f => fs.readFileSync(f)).join('\0'))
+  .update([path.join(SITE, 'data.js'), path.join(SITE, 'newq.js'), path.join(__dirname, 'app-web', 'index.html')].filter(f => fs.existsSync(f)).map(f => fs.readFileSync(f)).join('\0'))
   .digest('hex').slice(0, 8);
 // The admin's console at /console (console/index.html): only the comparison of the teaching pictures with prove.dk's.
 const CONSOLE_HTML = fs.readFileSync(path.join(__dirname, 'console', 'index.html'));
