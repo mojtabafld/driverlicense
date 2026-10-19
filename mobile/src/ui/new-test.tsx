@@ -11,12 +11,13 @@ import { t } from '@/lib/i18n';
 import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
+import { pctText } from './activity';
 import { Icon } from './icon';
-import { ArcButton, Button, Card, T, tap } from './kit';
+import { ArcButton, Button, Card, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
-import { ARC, useColors } from './theme';
+import { ARC, radius, useColors } from './theme';
 
 export function NewTestCard() {
   const c = useColors();
@@ -39,7 +40,6 @@ export function NewTestCard() {
     session.plan = { mode: 'new', ids: shuffle(pool).slice(0, count), title: 'آزمون جدید' };
     router.push('/run');
   };
-  const pct = (n: number) => `${(n / total) * 100}%` as const;
   return (
     <Card style={{ gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -51,17 +51,7 @@ export function NewTestCard() {
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(total)} سؤال تازه، نوشته‌شده از روی قوانین رسمی دانمارک`}</T>
         </View>
       </View>
-      {/* How far through the bank: answered at least once (right / wrong the last time), the rest not yet. */}
-      <View style={{ gap: 8 }}>
-        <T style={{ fontSize: 14, fontWeight: '600' }}>{`${faNum(answered)} از ${faNum(total)} سؤال را جواب داده‌اید`}</T>
-        <View style={{ flexDirection: 'row', height: 8, borderRadius: 4, overflow: 'hidden', backgroundColor: c.surface2 }}>
-          <View style={{ width: pct(right), backgroundColor: c.ok }} />
-          <View style={{ width: pct(wrong), backgroundColor: c.bad }} />
-        </View>
-        <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-          {answered ? `${faNum(right)} درست، ${faNum(wrong)} اشتباه (آخرین جواب هر سؤال)` : 'هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.'}
-        </T>
-      </View>
+      <Progress answered={answered} total={total} right={right} wrong={wrong} />
       <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -92,5 +82,42 @@ export function NewTestCard() {
         : count ? (ARC ? <ArcButton label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
     </Card>
+  );
+}
+
+// How far through the bank, as one bar in the theme's colour (Mojtaba 2026-10-19: a minimal, modern progress bar, not a
+// line of text): the share of the questions answered at least once, filling in when the card shows, its percent beside
+// the title; under it how many of how many, and of those how many were right / wrong the last time, each with a dot in
+// its colour.
+function Progress({ answered, total, right, wrong }: { answered: number; total: number; right: number; wrong: number }) {
+  const c = useColors();
+  const share = total ? answered / total : 0;
+  const bar = useCountUp(share, 1100);
+  // A whole percent: never 0 once a question is answered, never 100 before all of them are.
+  const pct = answered >= total ? 1 : Math.min(0.99, Math.max(answered ? 0.01 : 0, share));
+  const dot = (color: string, text: string) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+      <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{text}</T>
+    </View>
+  );
+  return (
+    <View style={{ gap: 9 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }}>پیشرفت شما</T>
+        <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: answered ? c.accent : c.muted }}>{pctText(pct)}</T>
+      </View>
+      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }}
+        style={{ height: 10, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: c.accentSoft }}>
+        <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 10 : 0, borderRadius: radius.pill, backgroundColor: c.accent }} />
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 12, rowGap: 2 }}>
+        <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
+          {answered ? `${faNum(answered)} از ${faNum(total)} سؤال` : 'هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.'}
+        </T>
+        {answered ? dot(c.ok, `${faNum(right)} درست`) : null}
+        {answered ? dot(c.bad, `${faNum(wrong)} اشتباه`) : null}
+      </View>
+    </View>
   );
 }
