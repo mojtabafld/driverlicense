@@ -29,7 +29,8 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
 // `minH`: with `fill`, the chart's least height (FILL_MIN unless given).
 // `noHint`: with `fill`, the line under the chart shows only for a picked attempt (no «tap the chart» hint), for small screens.
-// `onBlank`: a tap on the chart off its points (besides clearing the pick): home opens or closes its chart view with it.
+// `onBlank`: a tap on the chart off its points does this instead of clearing the pick (home: it opens or closes its chart
+// view, and the picked test stays picked; Mojtaba 2026-10-19).
 export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; onBlank?: () => void }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
@@ -40,6 +41,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const [selIn, setSelIn] = useState<number | null>(null);
   const chosen = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
   const scroller = useRef<ScrollView>(null);
+  // The width the chart was last scrolled to the newest at: only a new width (more tests, another screen) scrolls there
+  // again, not a new height (home's chart view grows the chart; it kept jumping back to the newest test).
+  const endW = useRef(-1);
   // How far the line has drawn itself across the view, 0 to 1: drawn in once per app start (after signing in), and
   // whole at once when the chart is shown again (moving between pages), Mojtaba asked.
   // (The page stays mounted under the tabs and its width drops to 0 while hidden, so once started it does not go back.)
@@ -132,11 +136,11 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
               ))}
             </Svg>}
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
-              onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })}>
+              onContentSizeChange={w => { if (Math.abs(w - endW.current) > 1) { endW.current = w; scroller.current?.scrollToEnd({ animated: false }); } }}>
               {/* ARC: clipped, so the edge points' tap areas do not widen the scroll past the line's end. */}
               <View style={{ width: CW, height: H, overflow: ARC ? 'hidden' : 'visible' }}>
                 {/* A tap between the bars clears the pick. */}
-                <Pressable onPress={() => { setSel(null); onBlank?.(); }} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
+                <Pressable onPress={() => { if (onBlank) onBlank(); else setSel(null); }} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
                 <Svg width={CW} height={H} pointerEvents="none">
                   {ARC ? null : ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
                   <Defs>
