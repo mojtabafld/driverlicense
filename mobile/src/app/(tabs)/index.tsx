@@ -162,11 +162,23 @@ export default function Home() {
   const [view, setView] = useState(false), [grow, setGrow] = useState<[number, number] | null>(null);
   const [t] = useState(() => new Animated.Value(0));
   const topH = useRef(0), chartH = useRef(0), scroll = useRef<ScrollView>(null);
+  // Before the first exam (the chart empty), the chart view's chart is made lower when the statistics and the empty
+  // latest tests would otherwise run under the tab bar, so that card ends just above it (small screens; Mojtaba
+  // 2026-10-19). `openTop`: where the chart's card will start once the cards above it have folded; `underH`: the
+  // height of what comes under it. Both are measured as the view opens, and the lower height is set once both are known.
+  const openTop = useRef<number | null>(null), underH = useRef<number | null>(null);
+  const fitEmpty = () => {
+    if (exams.length || openTop.current == null || underH.current == null) return;
+    const room = height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) - openTop.current - gap - underH.current;
+    setGrow(g => (g && room < g[1] ? [g[0], Math.max(140, Math.floor(room))] : g));
+  };
   const toggle = () => {
     const open = !view;
     if (open) {
       const from = Math.max(1, chartH.current);
       setGrow([from, Math.max(from, Math.min(320, Math.round(height * 0.38)))]);
+      openTop.current = underH.current = null;
+      chartBox.current?.measureInWindow((_x, top) => { openTop.current = top - topH.current - gap; fitEmpty(); });
     } else scroll.current?.scrollTo({ y: 0, animated: true });
     setView(open);
     t.stopAnimation();
@@ -310,7 +322,8 @@ export default function Home() {
       ) : <StartCard compact={compact} />}
       {/* The chart view: the statistics and the latest tests, coming in under the chart; a row opens its test. */}
       {grow ? (
-        <Animated.View style={{ gap, opacity: t.interpolate({ inputRange: [0.25, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
+        <Animated.View onLayout={e => { if (view && underH.current == null) { underH.current = e.nativeEvent.layout.height; fitEmpty(); } }}
+          style={{ gap, opacity: t.interpolate({ inputRange: [0.25, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }] }}>
           <TestStats attempts={exams} />
           <ActivityList attempts={exams} limit={10} title="آخرین آزمون‌ها" allHref="/history" />
