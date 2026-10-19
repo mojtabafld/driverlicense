@@ -1,6 +1,7 @@
 # The English and Danish of texts changed in course.ts's own lessons (chapters 1, 3, 4 and 5), for i18n/strings.json:
 # the warning triangle's distance (CAR_CHECK), §§ 21-25 on overtaking and pedestrian crossings (OVERTAKING), and A 11
-# without the A 12 of the old rules (WARN_PRIORITY); C 51 exempts only bicycles and small mopeds (OVERTAKING).
+# without the A 12 of the old rules (WARN_PRIORITY); C 51 exempts only bicycles and small mopeds (OVERTAKING); the alcohol
+# limit of new drivers, 0.2 since July 2025 (ALCOHOL, with the same rule in guide.ts and build.py).
 TEXTS = [
     # CAR_CHECK
     ('مثلث خطر را دورتر پشت خودرو بگذارید تا دیگران به‌موقع ببینند: در جاده‌ی معمولی دست‌کم ۵۰ متر و در بزرگراه دست‌کم ۱۰۰ متر',
@@ -38,4 +39,50 @@ TEXTS = [
      'A 11 is a warning triangle with a symbol of a wide vertical line (your road) and a narrow horizontal line (the crossing road). It means there is a dangerous junction ahead, and traffic on the crossing road must give way to you unconditionally. The symbol can also show the shape of the junction, for example a side road that joins from one side only.',
      'A 11 er en advarselstrekant med et symbol af en bred lodret streg (din vej) og en smal vandret streg (den krydsende vej). Den betyder, at der er et farligt vejkryds forude, og at trafikken på den krydsende vej har ubetinget vigepligt over for dig. Symbolet kan også vise krydsets form, fx en sidevej, der kun munder ud fra den ene side.'),
     ('A 11: خط پهن جاده‌ی شماست؛ ترافیک متقاطع راه می‌دهد.', 'A 11: the wide line is your road; crossing traffic gives way.', 'A 11: den brede streg er din vej; den krydsende trafik har vigepligt.'),
+    # ALCOHOL (course.ts), and the same rule on the rules page (guide.ts) and in the topic lessons (build.py): since
+    # 1 July 2025 a new driver, in the first 3 years after a first category B licence, has a limit of 0.2 per mille
+    # (Færdselsloven § 53, stk. 2, lov nr. 567 af 27/05/2025; FDM), and the course had called that a mistake.
+    ('الکل: ۰٫۵ در هزار، برای تازه‌کار ۰٫۲', 'Alcohol: 0.5 per mille, 0.2 for new drivers', 'Alkohol: 0,5 promille, 0,2 for nye bilister'),
+    ('رانندگی با غلظت الکل خون بیش از ۰٫۵ در هزار (promille) ممنوع است. برای راننده‌ی تازه‌کار، یعنی در ۳ سال اول پس از گرفتن نخستین گواهینامه‌ی B، حد از ۱ ژوئیه‌ی ۲۰۲۵ پایین‌تر است: ۰٫۲ در هزار.',
+     'Driving with a blood alcohol concentration above 0.5 per mille (promille) is prohibited. For a new driver, that is in the first 3 years after getting a first category B licence, the limit has been lower since 1 July 2025: 0.2 per mille.',
+     'Det er forbudt at køre med en alkoholkoncentration i blodet over 0,5 promille. For en ny bilist, dvs. i de første 3 år efter det første kørekort til kategori B, har grænsen siden 1. juli 2025 været lavere: 0,2 promille.'),
+    ('زیر این حدها هم اگر نتوانید مطمئن رانندگی کنید، مجازات می‌شوید', 'Even below these limits, you will be penalised if you cannot drive safely',
+     'Også under grænserne bliver du straffet, hvis du ikke kan føre bilen sikkert'),
+    ('فقط زمان الکل را از خون بیرون می‌برد؛ قهوه، دوش آب سرد یا هوای تازه سرعتش را بیشتر نمی‌کند',
+     'Only time removes alcohol from the blood; coffee, a cold shower or fresh air do not speed this up',
+     'Kun tiden fjerner alkoholen fra blodet; kaffe, et koldt bad eller frisk luft gør det ikke hurtigere'),
+    ('بیش از ۰٫۵ در هزار ممنوع، برای تازه‌کار بیش از ۰٫۲؛ بهترین قاعده: اگر می‌رانید، ننوشید.',
+     'Over 0.5 per mille is prohibited, over 0.2 for a new driver; the best rule: if you drive, don\'t drink.',
+     'Over 0,5 promille er forbudt, for nye bilister over 0,2; den bedste regel: kører du, så drikker du ikke.'),
+    ('Færdselsloven § 53، بند ۱ و ۲ | § 54', 'Færdselsloven § 53, subsections 1 and 2 | § 54', 'Færdselsloven § 53, stk. 1 og 2 | § 54'),
+    ('دو اشتباه رایج: «حد ۰٫۵ برای راننده‌ی تازه‌کار هم صدق می‌کند» (در ۳ سال اول، حد او ۰٫۲ است) و «قهوه‌ی قوی الکل را زودتر از بین می‌برد». هر دو غلط‌اند.',
+     'Two common mistakes: “The 0.5 limit also applies to new drivers” (in the first 3 years their limit is 0.2) and “Strong coffee clears alcohol faster”. Both are wrong.',
+     'To almindelige fejl: »Grænsen på 0,5 gælder også nye bilister« (de første 3 år er deres grænse 0,2) og »Stærk kaffe fjerner alkoholen hurtigere«. Begge er forkerte.'),
+    ('حد الکل: ۰٫۵ در هزار، و در ۳ سال اول رانندگی ۰٫۲؛ زیر آن هم اگر مطمئن نرانید، مجازات دارد.',
+     'Alcohol limit: 0.5 per mille, and 0.2 in the first 3 years of driving; even below that, not driving safely is punishable.',
+     'Promillegrænse: 0,5, og 0,2 de første 3 år som bilist; også under den er det strafbart, hvis du ikke kører sikkert.'),
+    ('این حد عمومی در دانمارک است؛ برای راننده‌ی تازه‌کار حد پایین‌تر و ۰٫۲ است.',
+     'This is the general limit in Denmark; for a new driver the limit is lower, 0.2.',
+     'Det er den almindelige grænse i Danmark; for nye bilister er grænsen lavere, 0,2.'),
+    ('از ۱ ژوئیه‌ی ۲۰۲۵، در ۳ سال اول پس از نخستین گواهینامه‌ی B حد ۰٫۲ در هزار است.',
+     'Since 1 July 2025 the limit is 0.2 per mille in the first 3 years after a first category B licence.',
+     'Siden 1. juli 2025 er grænsen 0,2 promille de første 3 år efter det første kørekort til kategori B.'),
+    ('راننده: الکل حداکثر ۰٫۵ در هزار (تازه‌کار ۰٫۲)؛ خسته‌اید، بایستید و استراحت کنید.',
+     'The driver: alcohol at most 0.5 per mille (new drivers 0.2); if you\'re tired, stop and rest.',
+     'Føreren: højst 0,5 promille (nye bilister 0,2); er du træt, så hold ind og hvil dig.'),
+    # (guide.ts)
+    ('حد مجاز الکل خون در دانمارک ۰٫۵ در هزار است و برای راننده‌ی تازه‌کار، در ۳ سال اول پس از نخستین گواهینامه‌ی B، ۰٫۲ در هزار؛ ولی هر مقدار الکل توانایی رانندگی را کم می‌کند.',
+     'The legal blood alcohol limit in Denmark is 0.5 per mille, and 0.2 per mille for a new driver in the first 3 years after a first category B licence, but any amount of alcohol reduces your ability to drive.',
+     'Promillegrænsen i Danmark er 0,5, og for nye bilister de første 3 år efter det første kørekort til kategori B 0,2, men enhver mængde alkohol nedsætter din evne til at køre bil.'),
+    ('حد الکل راننده‌ی تازه‌کار', "New drivers' limit", 'Grænse for nye bilister'),
+    # (guide.ts: a tile for the 30 m before a level crossing, so the numbers' grid stays even, and its line)
+    ('پارک ممنوع تا گذرگاه راه‌آهن', 'No parking near a level crossing', 'Parkering forbudt ved overkørsel'),
+    ('۰٫۲', '0.2', '0,2'), ('۳۰', '30', '30'),
+    ('در ۳۰ متری گذرگاه راه‌آهن پارک ممنوع است و روی خود گذرگاه، توقف هم ممنوع است.',
+     'Parking is prohibited within 30 metres of a level crossing, and stopping on the crossing itself is prohibited too.',
+     'Parkering er forbudt nærmere end 30 meter fra en jernbaneoverkørsel, og på selve overkørslen er standsning også forbudt.'),
+    # (build.py, the topic lesson of 4.4)
+    ('حد مجاز الکل ۰٫۵ پرومیل است و برای راننده‌ی تازه‌کار، در ۳ سال اول پس از نخستین گواهینامه‌ی B، ۰٫۲ پرومیل؛ اما اگر ناایمن برانید، حتی زیر این حد هم مجازات می‌شوید.',
+     'The legal alcohol limit is 0.5 per mille, and 0.2 per mille for a new driver in the first 3 years after a first category B licence; but if you drive unsafely, you can be punished even below this limit.',
+     'Promillegrænsen er 0,5, og for nye bilister de første 3 år efter det første kørekort til kategori B 0,2; men hvis du kører uforsvarligt, kan du straffes selv under denne grænse.'),
 ]

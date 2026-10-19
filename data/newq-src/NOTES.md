@@ -94,3 +94,8 @@ is new.
   dose driving is sometimes allowed; ask the doctor.
 - Rådet for Sikker Trafik / driving-school guides: roundabouts (give way on entering, signal right before leaving, give
   way to cyclists going on round when leaving); two-second rule.
+- Lov nr. 567 af 27/05/2025 (in force 1 July 2025; checked for batch 3): § 53 stk. 2 a new driver, in the first 3 years
+  after first getting category B, may not drive above 0.20 promille in the blood or 0.10 mg per litre of breath (else
+  0.50 / 0.25; FDM: the same penalties, and above 1.2 the licence is lost unconditionally); § 56 stk. 3 from 17 a
+  licence on condition of a companion in the front seat between 20 and 5 until 18; § 43 registered tractors 40 km/h;
+  § 67 stk. 3 no obviously unsuitable tyres. (Question 5089 and the course's alcohol lesson were corrected to the 0.2.)
