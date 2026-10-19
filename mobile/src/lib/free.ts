@@ -16,7 +16,8 @@ export const toPremium = () => router.push('/premium');
 export function useFree() {
   const { locked, attempts } = useApp();
   const limited = locked && !PROVE_PICS;
-  const randomUsed = attempts.filter(a => a.mode === 'random').length;
+  // (with «آزمون جدید»'s, the same kind of exam)
+  const randomUsed = attempts.filter(a => a.mode === 'random' || a.mode === 'new').length;
   return {
     limited,
     randomLeft: limited ? Math.max(0, FREE_RANDOM - randomUsed) : Infinity,

@@ -12,6 +12,8 @@ export const scoreOf = (a: Attempt) => a.items.filter(x => x.ok).length;
 export const isFull = (a: Attempt) => a.items.length >= FULL;
 export const isPass = (a: Attempt) => isFull(a) && scoreOf(a) >= passMin(a.items.length);
 export const pctOf = (a: Attempt) => scoreOf(a) / Math.max(1, a.items.length);
+// An exam like the real one (the random exam and «آزمون جدید»), not a lesson or a practice.
+export const isExamMode = (mode: string) => mode === 'random' || mode === 'new';
 
 export function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
@@ -72,7 +74,7 @@ export function passEstimate(attempts: Attempt[]) {
   const seen = new Set<number>(), random: any[] = [], any: any[] = [];
   attempts.forEach((att, e) => att.items.forEach(it => {
     const x = { ok: it.ok, repeat: seen.has(it.id), exam: e };
-    any.push(x); if (att.mode === 'random') random.push(x);
+    any.push(x); if (isExamMode(att.mode)) random.push(x);
     seen.add(it.id);
   }));
   const recent = (random.length ? random : any).slice(-PASS_MAX_ANSWERS);

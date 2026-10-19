@@ -79,6 +79,7 @@ function init(s, siteDir) {
     .then(() => GUIDE.start()).catch(e => console.error('guide pictures', e.message))
     .then(() => LEARN.start()).catch(e => console.error('learn pictures', e.message))
     .then(() => COURSE.start()).catch(e => console.error('course pictures', e.message))
+    .then(() => NEWQ.start()).catch(e => console.error('new test pictures', e.message))
     .then(() => adoptHomeTrial()).catch(e => console.error('home trial', e.message))
     .then(() => HERO.start()).catch(e => console.error('header pictures', e.message))
     .then(() => HERO_TRY.start()).catch(e => console.error('trial pictures', e.message))
@@ -197,6 +198,7 @@ async function poll() {
   if (await pollIntro().catch(() => true)) pending = true;
   if (await pollLearn().catch(() => true)) pending = true;
   if (await COURSE.poll().catch(() => true)) pending = true;
+  if (await NEWQ.poll().catch(() => true)) pending = true;
   if (await AVATAR.poll().catch(() => true)) pending = true;
   if (await HERO.poll().catch(() => true)) pending = true;
   if (await HERO_TRY.poll().catch(() => true)) pending = true;
@@ -974,6 +976,14 @@ const COURSE = artSet({ metaKey: 'courseArt', set: 'v1', prompts: COURSE_ART, as
   allow: new Set(Object.keys(COURSE_ART).filter(k => COURSE_ART[k].order !== false)) });
 const courseVersions = COURSE.versions, courseBlob = COURSE.blob;
 
+// ---------- «آزمون جدید»'s question pictures (data/newq-art.json, keyed by the question's number) ----------
+// Written by data/newq-src/build.py; one with "order": false is not made until the admin orders it (the image model's
+// credit); at most 10 are made at a time.
+const NEWQ_ART = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'newq-art.json'), 'utf8')); } catch { return {}; } })();
+const NEWQ = artSet({ metaKey: 'newqArt', set: 'v1', prompts: NEWQ_ART, aspect: '4:3', prefix: 'newq', limit: 10,
+  allow: new Set(Object.keys(NEWQ_ART).filter(k => NEWQ_ART[k].order !== false)) });
+const newqVersions = NEWQ.versions, newqBlob = NEWQ.blob;
+
 // ---------- profile pictures to choose from in the settings ----------
 // Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
 // centred with room around it so it sits well in a circle. Served at /avatar-art/<n>.png.
@@ -1201,6 +1211,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };

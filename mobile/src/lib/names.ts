@@ -9,7 +9,7 @@ export function modeName(a: Pick<Attempt, 'mode' | 'lesson'>, bank: Bank | null)
     const i = bank ? bank.tests.findIndex(t => t.id === a.lesson) : -1;
     return i >= 0 ? `درس ${faNum(lessonNumber(bank!.tests[i].title, i))}` : 'درس';
   }
-  return ({ mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات', sections: 'آموزش بر اساس دسته‌بندی' } as Record<string, string>)[a.mode] || 'آزمون تصادفی';
+  return ({ mistakes: 'تمرین اشتباهات', top: 'پراشتباه‌ترین سؤالات', sections: 'آموزش بر اساس دسته‌بندی', new: 'آزمون جدید' } as Record<string, string>)[a.mode] || 'آزمون تصادفی';
 }
 
 // The official section (the category of the learn page) a question belongs to, e.g. «قواعد پایه‌ی ترافیک»; its
