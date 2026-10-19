@@ -278,14 +278,14 @@ export default function Home() {
       )}
       </View>
       </Animated.View>
-      {/* A tap anywhere in the chart's card, off its points, clears the picked attempt and, on the main site, opens or
-          closes the chart view as the header's chart button does (Mojtaba 2026-10-19). */}
+      {/* A tap anywhere in the chart's card, off its points: on the main site it opens or closes the chart view as the
+          header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
       {exams.length || ARC ? (
       <Animated.View style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1 }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
-      <Pressable onPress={() => { setPicked(null); if (ARC) toggle(); }} style={{ flex: 1 }} accessible={false}>
+      <Pressable onPress={() => { if (ARC) toggle(); else setPicked(null); }} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
