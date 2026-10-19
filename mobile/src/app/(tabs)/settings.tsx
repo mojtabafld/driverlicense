@@ -83,8 +83,10 @@ export default function Settings() {
   return (
     <Screen lead={<PageIcon name="settings" always />} title="تنظیمات">
       <AvatarSheet open={avatarOpen} onClose={() => setAvatarOpen(false)} />
+      {/* «خروج» alone is «Exit» in English and Danish (leaving an exam or a page); here it is signing out, so those take
+          «خروج از حساب»'s «Log out» / «Log ud» while Persian keeps the one word (Mojtaba 2026-10-19). */}
       <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
-        cancel="ماندن" ok="خروج" okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
+        cancel="ماندن" ok={UI_LANG === 'fa' ? 'خروج' : fmt('خروج از حساب')} okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
       {!PROVE_PICS ? (
         <Confirm open={askDel} icon="trash" danger title="حذف حساب کاربری؟"
           text="حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، رمز عبور خود را وارد کنید."
