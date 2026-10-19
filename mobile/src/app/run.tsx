@@ -197,7 +197,7 @@ export default function Run() {
         middle={<ListButton n={i + 1} of={qs.length} exam={isExamMode(plan.mode)} onPress={handIn} />}
         end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon={arrow.next} onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
-        cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
+        cancel="ادامه" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
       <Sheet open={dialog === 'handin'} onClose={() => setDialog(null)} maxHeight="88%">
         {/* The title, with a ✕ at the top right that returns to the exam. */}
         <View style={{ minHeight: 40, justifyContent: 'center' }}>
