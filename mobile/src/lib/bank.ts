@@ -5,6 +5,8 @@ export type Test = { id: number; title: string; qs: number[]; thumb?: number };
 export type Topic = { fa: string; da: string; lesson: string[] };
 export type Section = { n: number; fa: string; da: string };
 export type Bank = { questions: Question[]; tests: Test[]; topics: Record<string, Topic>; sections: Section[] };
+// «آزمون جدید»'s own questions (site/newq.js, written by data/newq-src/build.py): the bank's topics, their own pictures.
+export type NewBank = { questions: Question[] };
 
 export type Item = { id: number; ok: boolean; w: number; a?: number[]; m?: 1 };
 export type Attempt = { at: number; secs: number; mode: string; lesson?: number; items: Item[] };

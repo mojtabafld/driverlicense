@@ -19,6 +19,7 @@ import { WASH_DARK, WASH_LIGHT } from './wash';
 import { Enter, L, SegPill, T, TransT, TranslateButton, physical, tap, useArcSeg } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
+import { PicPending } from './pic-pending';
 import { Marquee } from './marquee';
 import { OptionBox, OptionGroup } from './option-box';
 import { ARC, DA_FONT, radius, useColors, useIsDark } from './theme';
@@ -333,7 +334,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
       {/* Head: picture, badges, question */}
       <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: flat ? 0 : 12, gap: flat ? 12 : 10 }}>
         <View style={flat ? { borderRadius: radius.btn, overflow: 'hidden' } : null}>
-          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.btn : 6, backgroundColor: c.surface2 }} />
+          {(() => { const src = pic(q); return src ? <ZoomableImage source={imgSource(src)} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: flat ? radius.btn : 6, backgroundColor: c.surface2 }} />
+            : <PicPending style={{ borderRadius: flat ? radius.btn : 6 }} />; })()}
           {index != null ? (
             <View style={{ position: 'absolute', top: 8, ...physical({ right: 8 }), backgroundColor: 'rgba(0,0,0,0.7)', borderRadius: 99, paddingHorizontal: 9, paddingVertical: 1 }}>
               <T style={{ color: '#fff', fontSize: 12, lineHeight: 20, fontWeight: '600' }}>سؤال {faNum(index + 1)}</T>

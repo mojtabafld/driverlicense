@@ -52,7 +52,7 @@ export default function LearnLessons() {
                 <Enter key={t.id} style={{ width: '47.5%' }}>
                 <Pressable onPress={() => { tap(); session.plan = { mode: 'lesson', ids: t.qs.filter(id => Q.has(id)), lesson: t.id, title: `درس ${faNum(lessonNumber(t.title, i))}` }; router.push('/run'); }}>
                   <Glass r={radius.lg} style={{ padding: 8, gap: 6, borderColor: state, borderWidth: r.length ? 1.5 : undefined }}>
-                    {q ? <UnderBar><Image source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="cover" /></UnderBar> : null}
+                    {q && pic(q) ? <UnderBar><Image source={imgSource(pic(q)!)} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.md }} contentFit="cover" /></UnderBar> : null}
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
                       <T style={{ fontWeight: '700' }}>درس {faNum(lessonNumber(t.title, i))}</T>
                       <View style={{ flexDirection: 'row', gap: 4 }}>

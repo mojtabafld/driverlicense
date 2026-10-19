@@ -116,6 +116,18 @@ and the findings show in the admin panel's job list. More lessons can be added a
 prove.dk's original text of these questions is kept in `data/raw.json` and `data/backup/lesson1-prove-original.json`,
 and the original pictures stay in `site/img` (shown with `?orig=1`, as the app's copy at `/app/` does).
 
+### «آزمون جدید» (the new test)
+
+A bank of its own, not taken from prove.dk or any other site: questions in the real test's format (a picture, a
+question, two to four statements each answered yes or no), written from Færdselsloven, its bekendtgørelser and the
+official curriculum, in Danish, English and Persian, every statement with why it is right or wrong. The questions are
+in `data/newq-src/b01a.py` … (25 per file, numbers 5001–6100); `python3 -B data/newq-src/build.py` checks them and
+writes `site/newq.js` (served to signed-in users only, like `site/data.js`) and `data/newq-art.json`, each question's
+picture prompt. A new prompt gets `"order": false`: the server makes no picture for it (the question shows a
+placeholder) until that is removed or set to `true` and the server is deployed; then it makes them with the image
+model, 10 at a time, served at `/newq-art/<number>.png`. The statements are shown in a fixed order of their own (a
+shuffle seeded by the question's number), so the right ones are not always the first.
+
 ## Mobile app
 
 `mobile/` holds the iOS / Android / web app (Expo, same look as the site; Liquid Glass tab bar and answer options) on the same server and accounts; see `mobile/README.md`. Its web build (`app-web/`, made with `cd mobile && npm run build:web`) is the site at the root (`/`). The same app is built a second time with the base path `/app` (`app-web-app/`, by the same script) and served at `/app/`: that copy shows prove.dk's own pictures (the questions' originals, and prove.dk's for the signs and right of way). `/console` (`console/index.html`) is the admin's sign-in page for comparing the teaching pictures with prove.dk's, and nothing else. Every prompt the console writes for a new picture ends with the details paragraph (exact signs, markings and lights) and the style line of its part from `data/art-style.json`: realistic for the lessons' questions, the road-sign pictures' flat vector illustration for the signs, right of way and rules. `site/` now only holds the question bank (`data.js`) and its pictures.

@@ -32,6 +32,8 @@ function loadBank(siteDir) {
   if (Q) return;
   const js = fs.readFileSync(path.join(siteDir, 'data.js'), 'utf8');
   Q = new Map(JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, '')).questions.map(q => [q.id, q]));
+  // and «آزمون جدید»'s own questions (site/newq.js, the same shape), when there are any
+  try { const n = fs.readFileSync(path.join(siteDir, 'newq.js'), 'utf8'); for (const q of JSON.parse(n.slice(n.indexOf('=') + 1).trim().replace(/;$/, '')).questions) Q.set(q.id, q); } catch {}
 }
 // Each user's hourly allowance, and ALL_PER_HOUR for everyone together ('*' is no username), so many accounts at once
 // cannot run up the bill either.

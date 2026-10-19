@@ -11,7 +11,7 @@ import Svg, { Circle } from 'react-native-svg';
 import type { Attempt, Item } from '@/lib/bank';
 import { PROVE_PICS } from '@/lib/config';
 import { RTL } from '@/lib/i18n';
-import { faNum, fmtDate, isFull, passMin, scoreOf, shuffle } from '@/lib/logic';
+import { faNum, fmtDate, isExamMode, isFull, passMin, scoreOf, shuffle } from '@/lib/logic';
 import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
@@ -115,7 +115,7 @@ export default function Result() {
   const full = isFull(a), pass = right >= passMin(n), pct = right / Math.max(n, 1), pctN = Math.round(pct * 100);
   const isLesson = a.mode === 'lesson';
   // The review of a lesson or a practice (not of an exam) turns right to left, as Persian reads.
-  const rtl = learnRtl && a.mode !== 'random', arrow = navIcons(rtl);
+  const rtl = learnRtl && !isExamMode(a.mode), arrow = navIcons(rtl);
   const fa = false; // the review opens without the Persian translation; «ترجمه» on each question shows it
   const rows: Row[] = a.items.map((it, i) => ({ it, i })).filter(r => Q.has(r.it.id));
   const list = rows.filter(r => filter === 'all' || (filter === 'saved' ? r.it.m : !r.it.ok));
@@ -136,7 +136,7 @@ export default function Result() {
     const nav = (
       <GlassBar rtl={rtl}
         start={<FootBtn label={ui.prev} icon={arrow.prev} disabled={!k} onPress={() => step(k - 1)} />}
-        middle={<ListButton n={k + 1} of={total} exam={a.mode === 'random'} onPress={() => setListOpen(true)} />}
+        middle={<ListButton n={k + 1} of={total} exam={isExamMode(a.mode)} onPress={() => setListOpen(true)} />}
         end={k >= total - 1 ? <FootBtn label={ui.done} icon="check" submit onPress={finish} />
           : <FootBtn label={ui.next} icon={arrow.next} onPress={() => step(k + 1)} />} />
     );

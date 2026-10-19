@@ -1,5 +1,5 @@
-// Exams: a random exam like the real one, an exam of your mistakes, and the latest exams and lessons (the card stays,
-// with a note, before the first one).
+// Exams: a random exam like the real one, «آزمون جدید» (the app's own questions, ui/new-test.tsx), an exam of your
+// mistakes, and the latest exams and lessons (the card stays, with a note, before the first one).
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -10,6 +10,7 @@ import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { t } from '@/lib/i18n';
+import { PROVE_PICS } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
@@ -20,6 +21,7 @@ import { MoreButton } from '@/ui/more-button';
 import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 import { ExamWheelArt } from '@/ui/header-art';
+import { NewTestCard } from '@/ui/new-test';
 
 // What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
 function sizeHint(n: number) {
@@ -142,6 +144,8 @@ export default function Exam() {
           : (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" />
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
+      {/* Main site only: the /app copy keeps prove.dk's questions alone. */}
+      {PROVE_PICS ? null : <NewTestCard />}
       {/* The arrow button in its head opens every exam on its own page (/history), like the mistakes card's. */}
       <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" />
       <MistakesCard />

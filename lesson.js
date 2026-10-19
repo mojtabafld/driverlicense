@@ -189,6 +189,8 @@ function loadBank(siteDir) {
   BANK = JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, ''));
   SITE = siteDir;
   Q = new Map(BANK.questions.map(q => [q.id, q]));
+  // and «آزمون جدید»'s own questions (site/newq.js, the same shape), when there are any
+  try { const n = fs.readFileSync(path.join(siteDir, 'newq.js'), 'utf8'); for (const q of JSON.parse(n.slice(n.indexOf('=') + 1).trim().replace(/;$/, '')).questions) Q.set(q.id, q); } catch {}
 }
 
 const available = () => !!process.env.ANTHROPIC_API_KEY;

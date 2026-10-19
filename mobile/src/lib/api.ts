@@ -26,9 +26,10 @@ export async function api<T = any>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', ro
   return data as T;
 }
 
-// The question bank (site/data.js, "window.BANK={...};"), only served to signed-in users.
-export async function fetchBank<T>(): Promise<T> {
-  const res = await fetch(`${API_URL}/data.js${FROZEN ? `?frozen=${FROZEN}` : ''}`, { credentials: 'omit', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+// The question bank (site/data.js, "window.BANK={...};"), only served to signed-in users; `file`: «آزمون جدید»'s own
+// questions (site/newq.js, "window.NEWQ={...};"), in the same shape.
+export async function fetchBank<T>(file = 'data.js'): Promise<T> {
+  const res = await fetch(`${API_URL}/${file}${FROZEN ? `?frozen=${FROZEN}` : ''}`, { credentials: 'omit', headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (!res.ok) throw new ApiError('بارگذاری سؤال‌ها ناموفق بود.', res.status);
   const js = await res.text();
   return JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;\s*$/, '')) as T;

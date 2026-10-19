@@ -39,7 +39,7 @@ const INVITE_PAUSED = true;
 const INVITE_CODE = INVITE_PAUSED ? '' : (process.env.INVITE_CODE || '').trim();
 const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
-const MODES = ['random', 'mistakes', 'top', 'lesson', 'sections']; // lesson: one of prove.dk's 44 tests, in its order; sections: random questions from chosen official sections
+const MODES = ['random', 'mistakes', 'top', 'lesson', 'sections', 'new']; // lesson: one of prove.dk's 44 tests, in its order; sections: random questions from chosen official sections; new: «آزمون جدید», the app's own questions (site/newq.js)
 const lessonOf = b => (b.mode === 'lesson' && Number.isInteger(+b.lesson) && +b.lesson > 0 ? { lesson: +b.lesson } : {});
 const MAX_WORDS = 3000;
 const MAX_SAVED = 1000; // bookmarked questions per user
@@ -415,8 +415,8 @@ function readBody(req, limit = 256e3) {
 }
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json' };
-// The question bank and pictures are only served to signed-in users.
-const isProtected = p => p === '/data.js' || p.startsWith('/img/');
+// The question bank and pictures are only served to signed-in users (and «آزمون جدید»'s questions, site/newq.js).
+const isProtected = p => p === '/data.js' || p === '/newq.js' || p.startsWith('/img/');
 
 // The app's web version (mobile/, built into app-web/ with `npm run build:web`) is the site at the root: a
 // single-page app, so a path that is no file of it (and nothing else of the server's) gets its index.html; its hashed
@@ -485,17 +485,17 @@ function serveStatic(req, res) {
   if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
   if (p.startsWith('/app/')) return serveAppWeb(req, res, p.slice(4), WEBS.app);
   // The app at the root (everything that is not the API's or a shared file).
-  if (!p.startsWith('/img/') && p !== '/data.js' && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/course-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/hero-art/') && !p.startsWith('/hero-try/') && !p.startsWith('/login-art/') && !p.startsWith('/store-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
+  if (!p.startsWith('/img/') && p !== '/data.js' && p !== '/newq.js' && !p.startsWith('/newq-art/') && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/course-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/hero-art/') && !p.startsWith('/hero-try/') && !p.startsWith('/login-art/') && !p.startsWith('/store-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
   // And the profile pictures to choose from, and the pictures at the top of the «آموزش» and «آزمون» pages.
   const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-4])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-9]|10)\.png$/.exec(p), tm = /^\/hero-try\/([1-2])\.png$/.exec(p), lg = /^\/login-art\/([1-2])\.png$/.exec(p), sm = /^\/store-art\/([1-7])\.png$/.exec(p),
-    gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p);
-  if (im || lm || am || hm || tm || lg || sm || gm2 || cm) {
-    const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : lg ? imagegen.loginBlob(lg[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : guideref.webBlob(gm2[1], new URL(req.url, 'http://x').searchParams.get('s') || 'l'));
+    gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p), nm = /^\/newq-art\/(\d{4,5})\.png$/.exec(p);
+  if (im || lm || am || hm || tm || lg || sm || gm2 || cm || nm) {
+    const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : lg ? imagegen.loginBlob(lg[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : nm ? imagegen.newqBlob(nm[1]) : guideref.webBlob(gm2[1], new URL(req.url, 'http://x').searchParams.get('s') || 'l'));
     // Sent smaller and kept in memory (webpic.js) when the picture's version is known; the others as they are.
     const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]] : lg ? imagegen.loginVersions()[lg[1]]
-      : cm ? imagegen.courseVersions()[cm[1]] : undefined;   // (/guide-art has its own sizes and store: guideref.webBlob)
+      : cm ? imagegen.courseVersions()[cm[1]] : nm ? imagegen.newqVersions()[nm[1]] : undefined;   // (/guide-art has its own sizes and store: guideref.webBlob)
     return (ver ? webpic.get(`${p}:${ver}`, load, im ? 1280 : undefined) : load()).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       // (A sign chosen from prove.dk can be SVG: shown as a picture only, nothing in it runs.)
@@ -568,7 +568,7 @@ async function api(req, res, route) {
   const ip = clientIp(req);
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, theme: defaultTheme(), version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, theme: defaultTheme(), version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
         promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
@@ -1444,6 +1444,7 @@ async function main() {
   webpic.init(store);
   // The course's pictures ready in memory soon after a start (webpic.js).
   webpic.warm(() => Object.entries(imagegen.courseVersions()).map(([k, v]) => [`/course-art/${k}.png:${v}`, () => imagegen.courseBlob(k)]));
+  webpic.warm(() => Object.entries(imagegen.newqVersions()).map(([k, v]) => [`/newq-art/${k}.png:${v}`, () => imagegen.newqBlob(k)]));
   loadVisits();
   // Save the visit counts before App Platform stops the old instance on a redeploy.
   process.on('SIGTERM', async () => { await saveVisits(true); process.exit(0); });

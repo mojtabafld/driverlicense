@@ -1,6 +1,6 @@
 # The English and Danish of texts changed in course.ts's own lessons (chapters 1, 3, 4 and 5), for i18n/strings.json:
 # the warning triangle's distance (CAR_CHECK), §§ 21-25 on overtaking and pedestrian crossings (OVERTAKING), and A 11
-# without the A 12 of the old rules (WARN_PRIORITY).
+# without the A 12 of the old rules (WARN_PRIORITY); C 51 exempts only bicycles and small mopeds (OVERTAKING).
 TEXTS = [
     # CAR_CHECK
     ('مثلث خطر را دورتر پشت خودرو بگذارید تا دیگران به‌موقع ببینند: در جاده‌ی معمولی دست‌کم ۵۰ متر و در بزرگراه دست‌کم ۱۰۰ متر',
@@ -25,6 +25,13 @@ TEXTS = [
     ('خط ممتد، تابلوی C 51، جاهای کم‌دید و خودرویی که دید گذرگاه عابر را بسته: سبقت ممنوع.',
      'Solid line, sign C 51, places with poor visibility and a vehicle blocking the view of a pedestrian crossing: no overtaking.',
      'Spærrelinje, tavle C 51, uoverskuelige steder og et køretøj, der skjuler udsynet over et fodgængerfelt: overhaling forbudt.'),
+    # C 51's exception is only two-wheeled bicycles and small mopeds (Bekendtgørelse om vejafmærkning), not motorcycles.
+    ('بعد از تابلوی «سبقت ممنوع» (C 51) تا تابلوی پایانش (C 53)؛ ولی سبقت از دوچرخه و موپد کوچک دوچرخ مجاز است، نه از موتورسیکلت',
+     'After a “No overtaking” sign (C 51) until its end sign (C 53); but overtaking two-wheeled bicycles and small mopeds is allowed, not motorcycles',
+     'Efter tavlen »Overhaling forbudt« (C 51) indtil tavlen for ophør (C 53) – men overhaling af tohjulede cykler og små knallerter er tilladt, ikke af motorcykler'),
+    ('تابلوی C 51 سبقت از دوچرخه و موپد کوچک دوچرخ را ممنوع نمی‌کند؛ سبقت از موتورسیکلت ممنوع است.',
+     'Sign C 51 does not prohibit overtaking two-wheeled bicycles and small mopeds; overtaking motorcycles is prohibited.',
+     'Tavle C 51 forbyder ikke overhaling af tohjulede cykler og små knallerter; overhaling af motorcykler er forbudt.'),
     # WARN_PRIORITY
     ('A 11: هشدار تقاطع، ولی شما حق تقدم دارید', 'A 11: junction warning, but you have right of way', 'A 11: advarsel om kryds, men du har forkørselsret'),
     ('A 11 مثلث هشداری است با نماد یک خط پهن عمودی (جاده‌ی شما) و یک خط باریک افقی (جاده‌ی متقاطع). یعنی تقاطع خطرناکی در پیش است و ترافیک جاده‌ی متقاطع باید بی‌قید و شرط به شما راه بدهد. نماد می‌تواند شکل تقاطع را هم نشان دهد، مثلاً فرعی‌ای که فقط از یک طرف وصل می‌شود.',

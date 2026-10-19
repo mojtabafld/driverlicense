@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
-import type { Attempt, Bank, Question, Settings, User } from './bank';
+import type { Attempt, Bank, NewBank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_PICS } from './config';
 import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n';
 import { reloadApp } from './reload';
@@ -14,7 +14,8 @@ import { useTheme } from '@/ui/theme';
 export type Saved = { id: number; a?: number[]; at: number };
 type Me = { user: User; attempts: Attempt[]; settings: Partial<Settings>; saved?: Saved[]; imgv?: Record<string, string> };
 type Ctx = {
-  ready: boolean; user: User | null; attempts: Attempt[]; settings: Settings; bank: Bank | null; Q: Map<number, Question>;
+  // Q: every question by its number, the bank's and «آزمون جدید»'s (newBank, loaded after the bank; null at /app).
+  ready: boolean; user: User | null; attempts: Attempt[]; settings: Settings; bank: Bank | null; newBank: NewBank | null; Q: Map<number, Question>;
   imgv: Record<string, string>; token: string | null;
   // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
   saved: Saved[]; aiLessons: boolean; tts: boolean;
@@ -34,6 +35,8 @@ type Ctx = {
   intro: Record<string, string>; introBg: Record<string, string>;
   // The «آموزش» cards' pictures that the server has made: card number → version.
   learnArt: Record<string, string>; learnBg: Record<string, string>; courseArt: Record<string, string>;
+  // «آزمون جدید»'s question pictures that the server has made: question number → version.
+  newqArt: Record<string, string>;
   // The profile pictures to choose from that the server has made: number → version.
   avatarArt: Record<string, string>; heroArt: Record<string, string>; loginArt: Record<string, string>;
   // The teaching pages' pictures (signs, right of way) that the server has made: key → version. At /app (PROVE_PICS) a
@@ -75,6 +78,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [bank, setBank] = useState<Bank | null>(null);
+  const [newBank, setNewBank] = useState<NewBank | null>(null);
   const [aiLessons, setAiLessons] = useState(false);
   const [tts, setTts] = useState(false); // questions read aloud (the server has an ElevenLabs key)
   const [pay, setPay] = useState<Pay | null>(null);
@@ -84,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [learnArt, setLearnArt] = useState<Record<string, string>>({});
   const [learnBg, setLearnBg] = useState<Record<string, string>>({});
   const [courseArt, setCourseArt] = useState<Record<string, string>>({});
+  const [newqArt, setNewqArt] = useState<Record<string, string>>({});
   const [avatarArt, setAvatarArt] = useState<Record<string, string>>({});
   const [heroArt, setHeroArt] = useState<Record<string, string>>({});
   const [loginArt, setLoginArt] = useState<Record<string, string>>({});
@@ -138,10 +143,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // An account still waiting for its email link reads only itself, so nothing else (the questions) is loaded yet.
     if (d.user.verify) return;
     if (!bank) setBank(await fetchBank<Bank>());
-  }, [bank]);
+    // (the main site only; none is fine: the new test then waits)
+    if (!PROVE_PICS && !newBank) fetchBank<NewBank>('newq.js').then(setNewBank).catch(() => {});
+  }, [bank, newBank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; mail?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setMail(!!x.mail && !PROVE_PICS); rememberDefault(x.theme); setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setAvatarArt(x.avatarArt || {}); setHeroArt(x.heroArt || {}); setLoginArt(x.loginArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
+  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; newqArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; mail?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setMail(!!x.mail && !PROVE_PICS); rememberDefault(x.theme); setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setNewqArt(x.newqArt || {}); setAvatarArt(x.avatarArt || {}); setHeroArt(x.heroArt || {}); setLoginArt(x.loginArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
@@ -162,7 +169,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // The translation's language, read by transText while the screens draw (kept in step with the account's settings).
   setTransLang(me?.settings?.trans === 'auto' ? undefined : me?.settings?.trans);
   const value = useMemo<Ctx>(() => ({
-    ready, token, bank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
+    ready, token, bank, newBank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
     pay: PROVE_PICS ? null : pay, premium, locked,
     redeemPromo: async code => {
@@ -178,7 +185,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const d = await api<{ user: User }>('POST', 'paysync');
       setMe(m => (m ? { ...m, user: d.user } : m));
     },
-    saved: me?.saved ?? [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, loginArt, guideArt,
+    saved: me?.saved ?? [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt,
     toggleSaved: async (id, a) => {
       const on = !(me?.saved ?? []).some(x => x.id === id);
       const before = me?.saved ?? [];
@@ -186,7 +193,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try { if (on) await api('POST', 'saved', { id, a }); else await api('DELETE', 'saved', { id }); }
       catch (e) { setMe(m => (m ? { ...m, saved: before } : m)); throw e; }
     },
-    Q: new Map((bank?.questions || []).map(q => [q.id, q])),
+    Q: new Map([...(bank?.questions || []), ...(newBank?.questions || [])].map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
     register: async (name, username, password, email) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password, email, lang: UI_LANG }); await signedIn(d.token); },
     mail,
@@ -228,7 +235,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, avatarArt, heroArt, loginArt, guideArt]);
+  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
@@ -243,10 +250,12 @@ export function useApp() {
   return c;
 }
 
-// Image source of a question picture: the token goes in a header on iOS/Android and in ?t= on the web.
+// Image source of a question picture: the token goes in a header on iOS/Android and in ?t= on the web. A question of
+// «آزمون جدید» (its picture under newq-art/): its made picture, or null while it is not made yet (a placeholder shows).
 export function useQuestionImage() {
-  const { token, imgv } = useApp();
+  const { token, imgv, newqArt } = useApp();
   return (q: Question) => {
+    if (q.img.startsWith('newq-art/')) { const nv = newqArt[q.id]; return nv ? { uri: `${API_URL}/${q.img}`, v: `v=${encodeURIComponent(nv)}`, token } : null; }
     // At /app the question's original picture (from prove.dk), not a remade one.
     const base = `${API_URL}/${q.img}`, v = PROVE_PICS ? `orig=1${FROZEN ? `&frozen=${FROZEN}` : ''}` : imgv[q.id] ? `v=${encodeURIComponent(imgv[q.id])}` : '';
     return { uri: base, v, token };

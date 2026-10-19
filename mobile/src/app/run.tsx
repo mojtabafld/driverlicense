@@ -8,13 +8,14 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { transText } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
-import { SECONDS_PER_Q, faNum, grade } from '@/lib/logic';
+import { SECONDS_PER_Q, faNum, grade, isExamMode } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { Confirm } from '@/ui/confirm';
 import { SlideToConfirm } from '@/ui/slide-confirm';
 import { SpeakButton } from '@/ui/speak';
 import { ZoomableImage } from '@/ui/zoom';
+import { PicPending } from '@/ui/pic-pending';
 import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { ListButton } from '@/ui/question-list';
@@ -108,7 +109,7 @@ export default function Run() {
   const goTo = (k: number) => { tap(); setDialog(null); setI(k); };
   const ui = uiText(lang === 'en' ? 'en' : 'da');
   // A lesson, a part of the rules or the mistakes (not the exam itself) turns right to left, as Persian reads.
-  const rtl = learnRtl && plan.mode !== 'random', arrow = navIcons(rtl);
+  const rtl = learnRtl && !isExamMode(plan.mode), arrow = navIcons(rtl);
   const mm = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
   // The clock's colour: the theme's while more than two thirds of the time is left (on a whole minute: 16:00 of 25),
   // then warning (amber), and danger (red) under the last two minutes, when its icon also fades in and out.
@@ -153,7 +154,8 @@ export default function Run() {
             question and its statements, which are outlined boxes with a round check. */}
         {/* The picture comes in again with each question. */}
         <Enter key={`pic-${i}`} style={{ borderRadius: radius.btn, overflow: 'hidden' }}>
-          <ZoomableImage source={imgSource(pic(q))} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.btn, backgroundColor: c.surface2 }} transition={200} />
+          {(() => { const src = pic(q); return src ? <ZoomableImage source={imgSource(src)} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: radius.btn, backgroundColor: c.surface2 }} transition={200} />
+            : <PicPending style={{ borderRadius: radius.btn }} />; })()}
           {/* Mark the question to look at it again before handing in. */}
           <Pressable onPress={flag} hitSlop={6} accessibilityRole="button" accessibilityLabel="علامت برای بازبینی" accessibilityState={{ selected: flagged }}
             style={{ position: 'absolute', top: 8, ...physical({ left: 8 }), width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center',
@@ -192,7 +194,7 @@ export default function Run() {
         start={<FootBtn label={ui.prev} icon={arrow.prev} disabled={i === 0} onPress={() => setI(i - 1)} />}
         // The list opens the exam's summary: every question (a tap goes to it) and the slide to hand in, so the exam can be
         // handed in from any question, not only the last.
-        middle={<ListButton n={i + 1} of={qs.length} exam={plan.mode === 'random'} onPress={handIn} />}
+        middle={<ListButton n={i + 1} of={qs.length} exam={isExamMode(plan.mode)} onPress={handIn} />}
         end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon={arrow.next} onPress={() => setI(i + 1)} />} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه‌ی آزمون" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
