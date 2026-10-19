@@ -512,7 +512,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
       <PageIn>
       <View style={{ flex: 1 }}>
       {fill
-        ? <ScrollView ref={ref} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        ? <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
             {top}<View style={[box, { flex: 1, paddingBottom: (barGap != null ? 64 + barGap : BAR_ROOM) + Math.max(16, ins.bottom) }]}>{head}{children}</View>
           </ScrollView>
         : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>

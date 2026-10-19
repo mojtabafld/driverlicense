@@ -5,7 +5,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_PICS } from '@/lib/config';
@@ -159,6 +159,9 @@ export default function Home() {
   // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
   // screen growing to a comfortable one), and the statistics and the latest tests come in under it; closing, the page
   // goes back to its top and all of it moves back.
+  const { user, attempts, bank } = useApp();
+  const exams = attempts.filter(a => a.mode !== 'lesson');
+  const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
   const [view, setView] = useState(false), [grow, setGrow] = useState<[number, number] | null>(null);
   const [t] = useState(() => new Animated.Value(0));
   const topH = useRef(0), chartH = useRef(0), scroll = useRef<ScrollView>(null);
@@ -189,13 +192,31 @@ export default function Home() {
     Animated.timing(t, { toValue: open ? 1 : 0, duration: open ? 480 : 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })
       .start(({ finished }) => { if (finished && !open) { setGrow(null); setLow(false); } });
   };
+  // In the chart view, a swipe down from the page's top (at least 50 points, mostly vertical) closes it, back to the
+  // home page as it opens (Mojtaba 2026-10-19). Plain touch events, so the page still scrolls as before; `scrollY`: a
+  // swipe down while the page is scrolled scrolls it back up instead. `swiped`: the tap a swipe ends with on the chart's
+  // card is not a second toggle.
+  const scrollY = useRef(0), touch = useRef<{ x: number; y: number } | null>(null), swiped = useRef(0);
+  // The touch's point: on the web it is only in the event's touch lists.
+  const at = (e: GestureResponderEvent) => {
+    const n = e.nativeEvent, p = n.changedTouches?.[0] ?? n.touches?.[0];
+    return { x: p?.pageX ?? n.pageX, y: p?.pageY ?? n.pageY };
+  };
+  const swipe = view ? {
+    onTouchStart: (e: GestureResponderEvent) => { touch.current = scrollY.current <= 0 ? at(e) : null; },
+    onTouchEnd: (e: GestureResponderEvent) => {
+      const from = touch.current, to = at(e); touch.current = null;
+      if (!from || to.y == null) return;
+      const dy = to.y - from.y, dx = to.x - from.x;
+      if (dy > 50 && dy > Math.abs(dx) * 2) { swiped.current = Date.now(); toggle(); }
+    },
+  } : null;
   const chartMin = tighter ? (ARC ? 64 : 84) : 120;
   // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
   const noHint = ARC && tighter;
   const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
-  const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
   const fit = () => {
     if (!ARC || level >= 3 || grow) return;
     chartBox.current?.measureInWindow((_x, top) => {
@@ -210,11 +231,9 @@ export default function Home() {
     return () => ts.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
-  const { user, attempts, bank } = useApp();
   const part = useDayPart(), hello = GREET[part];
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
-  const exams = attempts.filter(a => a.mode !== 'lesson');
   const fullN = attempts.filter(isFull).length, passN = attempts.filter(isPass).length;
   // Main site: the step-by-step course's lessons (lib/course.ts) finished out of those written; /app: prove.dk's lessons tried.
   const { done } = useCourseProgress();
@@ -231,7 +250,7 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
-    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
+    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} onScrollY={y => { scrollY.current = y; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
       hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}
       heroExtra={ARC ? <ChartButton on={view} t={t} onPress={toggle} /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
@@ -298,10 +317,10 @@ export default function Home() {
           header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
       {exams.length || ARC ? (
-      <Animated.View style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1 }}
+      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1 }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
-      <Pressable onPress={() => { if (ARC) toggle(); else setPicked(null); }} style={{ flex: 1 }} accessible={false}>
+      <Pressable onPress={() => { if (Date.now() - swiped.current < 400) return; if (ARC) toggle(); else setPicked(null); }} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
@@ -318,7 +337,7 @@ export default function Home() {
             </>}
           </View>
         </View>
-        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? toggle : undefined} />
+        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => { if (Date.now() - swiped.current >= 400) toggle(); } : undefined} />
       </Card>
       </Pressable>
       </View>
@@ -326,7 +345,7 @@ export default function Home() {
       ) : <StartCard compact={compact} />}
       {/* The chart view: the statistics and the latest tests, coming in under the chart; a row opens its test. */}
       {grow ? (
-        <Animated.View onLayout={e => { if (view && underH.current == null) { underH.current = e.nativeEvent.layout.height; fitEmpty(); } }}
+        <Animated.View {...swipe} onLayout={e => { if (view && underH.current == null) { underH.current = e.nativeEvent.layout.height; fitEmpty(); } }}
           style={{ gap, opacity: t.interpolate({ inputRange: [0.25, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }] }}>
           <TestStats attempts={exams} />
