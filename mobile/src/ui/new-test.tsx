@@ -28,9 +28,9 @@ export function useNewTest() {
   const [size, setSize] = useState(FULL);
   const [fresh, setFresh] = useState(true);
   const ids = newBank ? newBank.questions.map(q => q.id) : [], mine = new Set(ids);
-  // Each question's latest answer.
-  const last = new Map<number, boolean>();
-  attempts.forEach(a => a.items.forEach(it => { if (mine.has(it.id)) last.set(it.id, it.ok); }));
+  // Each question's latest answer, and those answered wrong at least once.
+  const last = new Map<number, boolean>(), missed = new Set<number>();
+  attempts.forEach(a => a.items.forEach(it => { if (mine.has(it.id)) { last.set(it.id, it.ok); if (!it.ok) missed.add(it.id); } }));
   const unseen = ids.filter(id => !last.has(id));
   const pool = fresh ? unseen : ids, count = Math.min(size, pool.length);
   const start = () => {
@@ -39,14 +39,14 @@ export function useNewTest() {
     session.plan = { mode: 'new', ids: shuffle(pool).slice(0, count), title: 'آزمون تصادفی' };
     router.push('/run');
   };
-  return { ready: ids.length > 0, ids, last, unseen, size, setSize, fresh, setFresh, count, start, randomLeft };
+  return { ready: ids.length > 0, ids, last, missed, unseen, size, setSize, fresh, setFresh, count, start, randomLeft };
 }
 
 export function NewTestCard({ test }: { test: NewTest }) {
   const c = useColors();
   const { newqArt } = useApp();
   const { limited } = useFree();
-  const { ready, ids, last, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
+  const { ready, ids, last, missed, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
   if (!ready) return null;
   const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
   const pics = ids.filter(id => newqArt[id]).length;
@@ -62,6 +62,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
         </View>
       </View>
       <Progress answered={answered} total={total} right={right} wrong={wrong} />
+      {missed.size ? <MistakesBar open={[...last].filter(([, ok]) => !ok).map(([id]) => id)} missed={missed.size} /> : null}
       <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -133,6 +134,45 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
         </T>
         {answered ? dot(c.ok, `${faNum(right)} درست`) : null}
         {answered ? dot(c.bad, `${faNum(wrong)} اشتباه`, wrong ? () => router.push('/mistakes') : undefined) : null}
+      </View>
+    </View>
+  );
+}
+
+// Under the progress, once a question of this test was answered wrong (Mojtaba 2026-10-19): the mistakes not yet put
+// right (wrong the last time) as a share of all this test's questions ever answered wrong, so the bar empties as they
+// are fixed; in the same look as the progress bar above, in a paler shade of the theme's colour. «آزمون اشتباهات»
+// starts a test of them (at most a real test's 25, in random order).
+function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
+  const c = useColors();
+  const share = open.length / missed;
+  const bar = useCountUp(share, 1100);
+  const start = () => {
+    tap();
+    session.plan = { mode: 'mistakes', ids: shuffle(open).slice(0, FULL), title: 'آزمون اشتباهات' };
+    router.push('/run');
+  };
+  return (
+    <View style={{ gap: 9 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }}>اشتباهات اصلاح‌نشده</T>
+        <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: open.length ? c.accent : c.muted, opacity: open.length ? 0.7 : 1 }}>{faNum(open.length)}</T>
+      </View>
+      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: missed, now: open.length }}
+        style={{ height: 10, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: c.accentSoft, opacity: 0.55 }} />
+        <View style={{ width: `${open.length ? bar * 100 : 0}%`, minWidth: open.length ? 10 : 0, borderRadius: radius.pill, backgroundColor: c.accent, opacity: 0.45 }} />
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
+        <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
+          {open.length ? `${faNum(open.length)} از ${faNum(missed)} اشتباه هنوز اصلاح نشده` : 'همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.'}
+        </T>
+        {open.length ? (
+          <Pressable onPress={start} hitSlop={8} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, flexDirection: 'row', alignItems: 'center', gap: 4 })}>
+            <T style={{ color: c.link, fontSize: 12.5, lineHeight: 19, fontWeight: '700' }}>آزمون اشتباهات</T>
+            <Icon name="chevronLeft" size={12} color={c.link} weight="semibold" />
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
