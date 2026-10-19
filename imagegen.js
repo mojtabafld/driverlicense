@@ -757,9 +757,9 @@ const introVersions = () => Object.fromEntries(Object.entries(introNow()).filter
 const introColours = () => Object.fromEntries(Object.entries(introNow()).filter(([, j]) => j.blob && j.bg).map(([n, j]) => [n, j.bg]));
 const introBlob = async n => { const j = introNow()[n]; return j && j.blob ? blob(j.blob) : null; };
 
-// ---------- pictures for the four cards of the app's «آموزش» tab ----------
+// ---------- pictures for the five cards of the app's «آموزش» tab ----------
 // Made once like the intro's (when the server starts with KIE_API_KEY set): one minimal, modern 3D picture per card
-// (lessons, rules, road signs, right of way), 4:3 on its own soft background, as large as the card's top. Kept in
+// (lessons, rules, road signs, right of way, the test's glossary), 4:3 on its own soft background, as large as the card's top. Kept in
 // store.meta.learnArt and served at /learn-art/<n>.png; the app shows its icon tile until a picture is there.
 // Changing LEARN_SET makes new ones.
 const LEARN_SET = 'v1';
@@ -773,6 +773,8 @@ const LEARN_PROMPTS = [
   'Background: one plain soft lavender (#e3e1f5) colour, no gradient, no floor line. A small group of rounded road signs on short grey poles at slightly different heights: a white triangular warning sign with a red border, a round white sign with a red ring, a round blue sign with a white arrow, and a red octagonal stop sign (blank, no text); a short piece of grey road with a white broken line lies in front of them.',
   // 4: right of way
   'Background: one plain soft sky blue (#d8e8f6) colour, no gradient, no floor line. A small rounded crossroads seen from above at an isometric angle, grey roads with white markings and white shark-teeth triangles at one side; two small rounded cars (coral and periwinkle blue) wait at the junction while a third (mint green) drives through; a white inverted give-way triangle sign with a red border and a yellow diamond priority-road sign stand at the corners.',
+  // 5: the test's glossary (the Danish words of the theory test with their meaning; Mojtaba 2026-10-19)
+  'Background: one plain soft butter yellow (#f5ebcf) colour, no gradient, no floor line. A small rounded dictionary book standing half open in white and butter yellow, its pages blank with a few soft grey lines; two rounded speech bubbles rise from it, one coral and one periwinkle blue, each with three small white dots instead of words; a tiny rounded Danish flag on a short stick (red with a white Nordic cross) leans against the book, and a small rounded coral car stands in front of it.',
 ];
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
