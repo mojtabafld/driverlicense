@@ -6,12 +6,11 @@
 // and line on it; the back button floats over the picture.
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Animated, BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Animated, BackHandler, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Confirm } from './confirm';
-import { Icon } from './icon';
-import { Backdrop, Hero, T, ThemeButton, tap, usePageMotion, useTopOnFocus, type HeroLook } from './kit';
+import { Backdrop, Hero, RoundIcon, T, ThemeRound, usePageMotion, useTopOnFocus, type HeroLook } from './kit';
 import { GlassTop } from './liquid';
 import { Marquee } from './marquee';
 import { backLean, swipeWebStyle, usePager, useSwipeBack } from './swipe';
@@ -63,14 +62,10 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           )}
         </KeyboardAvoidingView>
         {hero ? (
-          // Over the picture: only the way back, on a soft round backing.
+          // Over the picture: only the way back, as the header buttons of the home page (RoundIcon).
           <View pointerEvents="box-none" style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 0, right: 0, paddingHorizontal: 16 }}>
             <View pointerEvents="box-none" style={{ flexDirection: 'row', width: '100%', maxWidth, alignSelf: 'center' }}>
-              <Pressable onPress={() => { tap(); back(); }} accessibilityLabel={close ? 'بستن' : 'بازگشت'} hitSlop={6}
-                style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, opacity: 0.94,
-                  shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 })}>
-                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
-              </Pressable>
+              <RoundIcon icon={close ? 'xmark' : 'arrowRight'} label={close ? 'بستن' : 'بازگشت'} onPress={back} size={40} />
             </View>
           </View>
         ) : (
@@ -78,14 +73,11 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
         <GlassTop onHeight={setHeadH}>
           <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, width: '100%', maxWidth, alignSelf: 'center' }}>
-              <Pressable onPress={() => { tap(); back(); }} accessibilityLabel={close ? 'بستن' : 'بازگشت'} hitSlop={6}
-                style={({ pressed }) => ({ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 1.5, borderColor: c.line })}>
-                <Icon name={close ? 'xmark' : 'arrowRight'} size={20} color={c.text} />
-              </Pressable>
+              <RoundIcon icon={close ? 'xmark' : 'arrowRight'} label={close ? 'بستن' : 'بازگشت'} onPress={back} size={40} />
               <View style={{ flex: 1, height: 32 }}>
                 <Marquee text={title} height={32} style={{ fontSize: 22, lineHeight: 32, fontWeight: '700' }} />
               </View>
-              {theme ? <ThemeButton /> : null}
+              {theme ? <ThemeRound size={40} /> : null}
             </View>
           </SafeAreaView>
         </GlassTop>
