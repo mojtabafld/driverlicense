@@ -1,7 +1,9 @@
-// «آزمون جدید» on the exam tab: random questions from the app's own bank (site/newq.js, written from the Danish rules,
-// not taken from any other site), 5 to 25 like the random exam, optionally only questions not answered before («بدون
-// سؤال تکراری»), and how far the user has come through the bank: how many questions answered at least once, and of
-// those how many were right the last time.
+// «آزمون تصادفی» on the exam tab (main site): random questions from the app's own bank (site/newq.js, written from the
+// Danish rules, not taken from any other site), 5 to 25 like the real test, optionally only questions not answered
+// before («بدون سؤال تکراری»), and how far the user has come through the bank: how many questions answered at least
+// once, and of those how many were right the last time. Called «آزمون جدید» until 2026-10-19, beside the random exam of
+// the old bank; then it took that card's place and name (Mojtaba). Its exams keep their own mode, 'new'.
+// useNewTest holds the card's choices and its start, so the exam tab's header button starts the same test.
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -19,35 +21,43 @@ import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
 import { ARC, radius, useColors } from './theme';
 
-export function NewTestCard() {
-  const c = useColors();
-  const { newBank, attempts, newqArt } = useApp();
-  const { limited, randomLeft } = useFree();
+export type NewTest = ReturnType<typeof useNewTest>;
+export function useNewTest() {
+  const { newBank, attempts } = useApp();
+  const { randomLeft } = useFree();
   const [size, setSize] = useState(FULL);
   const [fresh, setFresh] = useState(true);
-  if (!newBank || !newBank.questions.length) return null;
-  const ids = newBank.questions.map(q => q.id), mine = new Set(ids);
+  const ids = newBank ? newBank.questions.map(q => q.id) : [], mine = new Set(ids);
   // Each question's latest answer.
   const last = new Map<number, boolean>();
   attempts.forEach(a => a.items.forEach(it => { if (mine.has(it.id)) last.set(it.id, it.ok); }));
-  const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
   const unseen = ids.filter(id => !last.has(id));
   const pool = fresh ? unseen : ids, count = Math.min(size, pool.length);
-  const pics = ids.filter(id => newqArt[id]).length;
   const start = () => {
     if (!randomLeft) { tap(); toPremium(); return; }
     if (!count) return;
-    session.plan = { mode: 'new', ids: shuffle(pool).slice(0, count), title: 'آزمون جدید' };
+    session.plan = { mode: 'new', ids: shuffle(pool).slice(0, count), title: 'آزمون تصادفی' };
     router.push('/run');
   };
+  return { ready: ids.length > 0, ids, last, unseen, size, setSize, fresh, setFresh, count, start, randomLeft };
+}
+
+export function NewTestCard({ test }: { test: NewTest }) {
+  const c = useColors();
+  const { newqArt } = useApp();
+  const { limited } = useFree();
+  const { ready, ids, last, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
+  if (!ready) return null;
+  const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
+  const pics = ids.filter(id => newqArt[id]).length;
   return (
     <Card style={{ gap: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
-          <Icon name="sparkles" size={19} color={c.text} weight="semibold" />
+          <Icon name="shuffle" size={19} color={c.text} weight="semibold" />
         </View>
         <View style={{ flex: 1 }}>
-          <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون جدید</T>
+          <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(total)} سؤال تازه، نوشته‌شده از روی قوانین رسمی دانمارک`}</T>
         </View>
       </View>
