@@ -1,5 +1,6 @@
-// Exams: a random exam like the real one, «آزمون جدید» (the app's own questions, ui/new-test.tsx), an exam of your
-// mistakes, and the latest exams and lessons (the card stays, with a note, before the first one).
+// Exams: a random exam like the real one, an exam of your mistakes, and the latest exams and lessons (the card stays,
+// with a note, before the first one). On the main site the random exam is the app's own questions (ui/new-test.tsx,
+// Mojtaba 2026-10-19: it took the old card's place and name); the /app copy keeps the old bank's random exam.
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -21,7 +22,7 @@ import { MoreButton } from '@/ui/more-button';
 import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 import { ExamWheelArt } from '@/ui/header-art';
-import { NewTestCard } from '@/ui/new-test';
+import { NewTestCard, useNewTest } from '@/ui/new-test';
 
 // What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
 function sizeHint(n: number) {
@@ -112,9 +113,15 @@ export default function Exam() {
     session.plan = { mode: 'random', ids: randomIds(bank, size), title: 'آزمون تصادفی' };
     router.push('/run');
   };
+  // Main site: the app's own random exam, its card's choices shared with the header's start button.
+  const test = useNewTest(), own = !PROVE_PICS;
+  const head = own
+    ? { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(test.count || test.size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: test.start }
+    : { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: start };
   return (
     <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
-      heroAction={{ icon: randomLeft ? 'play' : 'lock', label: randomLeft ? `شروع آزمون ${faNum(size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: start }}>
+      heroAction={head}>
+      {own ? <NewTestCard test={test} /> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -144,8 +151,7 @@ export default function Exam() {
           : (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" />
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
-      {/* Main site only: the /app copy keeps prove.dk's questions alone. */}
-      {PROVE_PICS ? null : <NewTestCard />}
+      )}
       {/* The arrow button in its head opens every exam on its own page (/history), like the mistakes card's. */}
       <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" />
       <MistakesCard />
