@@ -169,7 +169,9 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
           {open.length ? `${faNum(fixed)} از ${faNum(missed)} اشتباه اصلاح شده` : 'همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.'}
         </T>
         {open.length ? (
-          <Pressable onPress={start} hitSlop={8} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, flexDirection: 'row', alignItems: 'center', gap: 4 })}>
+          // A small pill in the theme's soft colour, so it reads as a button; the text at the size it had (Mojtaba 2026-10-19).
+          <Pressable onPress={start} hitSlop={6} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, flexDirection: 'row', alignItems: 'center', gap: 4,
+            paddingVertical: 3, paddingLeft: 8, paddingRight: 10, borderRadius: radius.pill, backgroundColor: c.accentSoft })}>
             <T style={{ color: c.link, fontSize: 12.5, lineHeight: 19, fontWeight: '700' }}>آزمون اشتباهات</T>
             <Icon name="chevronLeft" size={12} color={c.link} weight="semibold" />
           </Pressable>
