@@ -28,7 +28,8 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
 // `minH`: with `fill`, the chart's least height (FILL_MIN unless given).
 // `noHint`: with `fill`, the line under the chart shows only for a picked attempt (no «tap the chart» hint), for small screens.
-export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean }) {
+// `onBlank`: a tap on the chart off its points (besides clearing the pick): home opens or closes its chart view with it.
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; onBlank?: () => void }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
@@ -134,7 +135,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
               {/* ARC: clipped, so the edge points' tap areas do not widen the scroll past the line's end. */}
               <View style={{ width: CW, height: H, overflow: ARC ? 'hidden' : 'visible' }}>
                 {/* A tap between the bars clears the pick. */}
-                <Pressable onPress={() => setSel(null)} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
+                <Pressable onPress={() => { setSel(null); onBlank?.(); }} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
                 <Svg width={CW} height={H} pointerEvents="none">
                   {ARC ? null : ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
                   <Defs>

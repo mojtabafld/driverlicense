@@ -4,7 +4,7 @@
 // those how many were right the last time.
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { t } from '@/lib/i18n';
@@ -88,19 +88,25 @@ export function NewTestCard() {
 // How far through the bank, as one bar in the theme's colour (Mojtaba 2026-10-19: a minimal, modern progress bar, not a
 // line of text): the share of the questions answered at least once, filling in when the card shows, its percent beside
 // the title; under it how many of how many, and of those how many were right / wrong the last time, each with a dot in
-// its colour.
+// its colour. The mistakes open the mistakes page (Mojtaba 2026-10-19), where this test's questions are among them.
 function Progress({ answered, total, right, wrong }: { answered: number; total: number; right: number; wrong: number }) {
   const c = useColors();
   const share = total ? answered / total : 0;
   const bar = useCountUp(share, 1100);
   // A whole percent: never 0 once a question is answered, never 100 before all of them are.
   const pct = answered >= total ? 1 : Math.min(0.99, Math.max(answered ? 0.01 : 0, share));
-  const dot = (color: string, text: string) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
-      <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{text}</T>
-    </View>
-  );
+  const dot = (color: string, text: string, onPress?: () => void) => {
+    const body = (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+        <T style={{ color: onPress ? c.text : c.muted, fontSize: 12.5, lineHeight: 19, fontWeight: onPress ? '600' : undefined }}>{text}</T>
+        {onPress ? <Icon name="chevronLeft" size={12} color={c.muted} weight="semibold" /> : null}
+      </View>
+    );
+    return onPress ? (
+      <Pressable onPress={() => { tap(); onPress(); }} hitSlop={8} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>{body}</Pressable>
+    ) : body;
+  };
   return (
     <View style={{ gap: 9 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -116,7 +122,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
           {answered ? `${faNum(answered)} از ${faNum(total)} سؤال` : 'هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.'}
         </T>
         {answered ? dot(c.ok, `${faNum(right)} درست`) : null}
-        {answered ? dot(c.bad, `${faNum(wrong)} اشتباه`) : null}
+        {answered ? dot(c.bad, `${faNum(wrong)} اشتباه`, wrong ? () => router.push('/mistakes') : undefined) : null}
       </View>
     </View>
   );
