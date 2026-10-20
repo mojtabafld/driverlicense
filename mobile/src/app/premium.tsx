@@ -2,10 +2,11 @@
 // months; one payment each, no automatic renewal) and the way to buy one with Stripe Checkout. Stripe sends the user back here with ?paid=<session> (the server checks the
 // session and turns premium on) or ?canceled=1. With a trial code (PROMO_CODE on the server) an account gets premium free
 // for a few days, once.
+import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '@/lib/api';
@@ -107,11 +108,21 @@ export default function Premium() {
     }
     setBusy(null);
   };
+  // A wrong code: the field turns red and gives a short shake side to side, as iOS does (Mojtaba 2026-10-20), until
+  // the code is changed.
+  const [bad, setBad] = useState(false);
+  const [shake] = useState(() => new Animated.Value(0));
+  const nudge = () => {
+    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    shake.setValue(0);
+    const step = (to: number, ms: number) => Animated.timing(shake, { toValue: to, duration: ms, easing: Easing.out(Easing.quad), useNativeDriver: Platform.OS !== 'web' });
+    Animated.sequence([step(-10, 50), step(10, 70), step(-7, 60), step(6, 55), step(-3, 50), step(0, 45)]).start();
+  };
   const redeem = async () => {
     if (!code.trim()) return;
-    setRedeeming(true); setMsg(null);
+    setRedeeming(true); setMsg(null); setBad(false);
     try { await redeemPromo(code.trim()); setCode(''); setMsg({ ok: true, text: t('کد تخفیف ثبت شد و نسخه‌ی ویژه {0} روز رایگان برای شما فعال است.', faNum(pay?.promo ?? 3)) }); }
-    catch (e) { setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'کد تخفیف ثبت نشد؛ دوباره امتحان کنید.' }); }
+    catch (e) { setBad(true); nudge(); setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'کد تخفیف ثبت نشد؛ دوباره امتحان کنید.' }); }
     setRedeeming(false);
   };
   const check = async () => { setBusy('check'); try { await syncPremium(); } catch { try { await refresh(); } catch {} } setBusy(null); };
@@ -172,9 +183,11 @@ export default function Premium() {
           <T style={{ fontWeight: '700', fontSize: 16 }}>کد تخفیف</T>
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{t('با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).', faNum(pay.promo ?? 3))}</T>
           <View style={{ gap: 10 }}>
-            <TextInput value={code} onChangeText={setCode} onSubmitEditing={redeem} autoCapitalize="characters" autoCorrect={false} maxLength={64}
-              placeholder={t('کد تخفیف')} placeholderTextColor={c.faint} accessibilityLabel={t('کد تخفیف')}
-              style={{ height: 48, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5, borderColor: c.line, backgroundColor: c.surface, color: c.text, fontSize: 16, fontFamily: 'Inter-600', letterSpacing: 1, textAlign: 'center' }} />
+            <Animated.View style={{ transform: [{ translateX: shake }] }}>
+              <TextInput value={code} onChangeText={v => { setCode(v); if (bad) { setBad(false); setMsg(null); } }} onSubmitEditing={redeem} autoCapitalize="characters" autoCorrect={false} maxLength={64}
+                placeholder={t('کد تخفیف')} placeholderTextColor={c.faint} accessibilityLabel={t('کد تخفیف')}
+                style={{ height: 48, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5, borderColor: bad ? c.bad : c.line, backgroundColor: bad ? c.badSoft : c.surface, color: bad ? c.bad : c.text, fontSize: 16, fontFamily: 'Inter-600', letterSpacing: 1, textAlign: 'center' }} />
+            </Animated.View>
             <Button label={redeeming ? 'در حال ثبت…' : 'ثبت کد'} onPress={redeem} disabled={redeeming || !code.trim()} />
           </View>
         </Card>
