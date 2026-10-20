@@ -1,8 +1,8 @@
 // Signing in and up on the main site and /app, one question per screen (Mojtaba 2026-10-20, after the Saphe app's;
 // the screen's parts in ui/step-frame.tsx). No passwords while the server has email (Mojtaba 2026-10-20): signing in
 // asks for the email and then the 6-digit code sent there (/api/code, /api/codein); signing up goes through four
-// steps, counted at the top: the name, the email, the questions' language (Danish or English, so the language screen
-// after signing in does not come) and the code, which makes the account. Accounts from before email, with a username
+// steps, counted at the top: the name, the email, the code (checked, /api/codecheck) and last the questions' language
+// (Danish or English, so the language screen after signing in does not come), whose button makes the account. Accounts from before email, with a username
 // only, still sign in with their password; without email on the server, signing up asks for a username and a password
 // instead of the code. The back button goes a step back, from the first one to the welcome screen.
 import { useEffect, useRef, useState } from 'react';
@@ -23,7 +23,7 @@ const MAIL = /^\S+@\S+\.\S+$/;
 // for a username, its password asked).
 export function SignSteps({ start, onBack, known }: { start: 'login' | 'register'; onBack: () => void; known?: string }) {
   const c = useColors();
-  const { login, register, mail, sendCode, codeIn, emailFree } = useApp();
+  const { login, register, mail, sendCode, codeIn, checkCode, emailFree } = useApp();
   const up = start === 'register';
   const knownMail = !!known && known.includes('@') && mail;
   const [step, setStep] = useState<Step>(up ? 'name' : knownMail ? 'code' : known ? 'pw' : 'id');
@@ -63,7 +63,8 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
   // The account signed out last: its code goes out as this screen opens.
   const first = useRef(true);
   useEffect(() => { if (first.current && knownMail) { first.current = false; send(); } });
-  const enter = (v = code) => { if (!busy && v.length === 6) run(async () => { try { await codeIn(email, v, up ? name.trim() : undefined, up ? exam : undefined); } catch (e) { setCode(''); throw e; } }); };
+  // The code: signs in, or (signing up) is checked and the last step comes.
+  const enter = (v = code) => { if (!busy && v.length === 6) run(async () => { try { if (up) { await checkCode(email, v); go('lang'); } else await codeIn(email, v); } catch (e) { setCode(''); throw e; } }); };
   // What each step asks, whether its answer is ready, and what its button does.
   const steps: Record<Step, { title: string; sub: string; ok: boolean; next: () => void; label?: string }> = {
     id: { title: mail ? 'ایمیل‌تان چیست؟' : 'نام کاربری‌تان چیست؟', sub: mail ? 'برای ورود به حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.' : 'نام کاربری حساب TeoriPrøve خود را وارد کنید.',
@@ -72,17 +73,17 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
       ? { title: 'یک رمز عبور انتخاب کنید', sub: 'با این رمز، از هر دستگاهی وارد حساب خود می‌شوید.', ok: !!pw, next: () => go('lang') }
       : { title: 'رمز عبورتان را وارد کنید', sub: fmt('برای ورود با {0}', id.trim()), ok: !!pw, label: 'ورود', next: () => run(() => login(id.trim(), pw)) },
     name: { title: 'اسم‌تان چیست؟', sub: 'برنامه شما را با این نام صدا می‌کند.', ok: !!name.trim(), next: () => go(mail ? 'email' : 'user') },
-    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => run(async () => { await emailFree(user.trim()); go('lang'); }) },
+    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => run(async () => { await emailFree(user.trim()); await sendCode(user.trim(), true); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code'); }) },
     user: { title: 'یک نام کاربری انتخاب کنید', sub: 'با این نام وارد حساب خود می‌شوید (حروف انگلیسی و عدد).', ok: !!user.trim(), next: () => go('pw') },
     lang: { title: 'سؤال‌ها به چه زبانی باشند؟', sub: 'ترجمه‌ی فارسی در هر دو حالت زیر سؤال‌ها نمایش داده می‌شود. بعداً هم از تنظیمات قابل تغییر است.', ok: true,
-      ...(mail ? { next: send } : { label: 'ساخت حساب', next: () => run(() => register(name.trim(), user.trim(), pw, undefined, exam)) }) },
+      label: 'ساخت حساب', next: () => run(() => (mail ? codeIn(email, code, name.trim(), exam) : register(name.trim(), user.trim(), pw, undefined, exam))) },
     code: { title: 'ایمیل‌تان را ببینید', sub: up ? fmt('یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا حساب‌تان ساخته شود.', email) : fmt('اگر حسابی با {0} باشد، یک کد تأیید برایش فرستادیم. کد را وارد کنید تا ادامه دهید.', email),
-      ok: code.length === 6, label: up ? 'ساخت حساب' : 'ورود', next: () => enter() },
+      ok: code.length === 6, label: up ? undefined : 'ورود', next: () => enter() },
   };
   const s = steps[step];
   const submit = () => { if (s.ok && !busy) { tap(); s.next(); } };
   // Sign-up's steps are counted; its button says it goes on with signing up.
-  const order: Step[] = mail ? ['name', 'email', 'lang', 'code'] : ['name', 'user', 'pw', 'lang'];
+  const order: Step[] = mail ? ['name', 'email', 'code', 'lang'] : ['name', 'user', 'pw', 'lang'];
   const at = up ? order.indexOf(step) : -1;
   const label = s.label ?? (up ? 'ادامه‌ی ثبت‌نام' : 'ادامه');
   const pill = (text: string, onPress: () => void, off?: boolean) => (

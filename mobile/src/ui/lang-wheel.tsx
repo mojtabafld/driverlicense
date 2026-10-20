@@ -1,14 +1,15 @@
 // Main site, before the intro's slides: the app's language, picked on a wheel like setting the time on an iPhone
-// (Mojtaba, 2026-10-15; kept, 2026-10-20), on the one-question screen of the sign-in pages (ui/step-frame.tsx, the
-// page's own colour). The three languages turn on a drum that settles on the one in the middle band; the title, its
-// line and the button speak the language in the middle as it turns. «ادامه» keeps it (the page reloads in it when it
-// is not Persian). The theme button sits at the top.
+// (Mojtaba, 2026-10-15), laid out as it was then but in the sign-in pages' look (Mojtaba 2026-10-20): the page's own
+// colour (black in the dark theme), its text colours and its wide button. The three languages turn on a drum that
+// settles on the one in the middle band; the title, its line and the button speak the language in the middle as it
+// turns. «ادامه» keeps it (the page reloads in it when it is not Persian). The theme button sits at the top.
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
+import { Icon } from './icon';
 import { T, ThemeButton, tap } from './kit';
-import { StepFrame } from './step-frame';
 import { useColors } from './theme';
 
 export const LANG_NAMES: Record<UiLang, string> = { fa: 'فارسی', en: 'English', da: 'Dansk' };
@@ -24,7 +25,7 @@ const GO: Record<UiLang, string> = { fa: 'ادامه', en: 'Continue', da: 'Fort
 const ROW = 54, VISIBLE = 5, PAD = ROW * ((VISIBLE - 1) / 2);
 
 export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
-  const c = useColors();
+  const c = useColors(), ins = useSafeAreaInsets();
   // English in the middle band to begin with (Mojtaba, 2026-10-15), until another is chosen.
   const start = Math.max(0, LANGS.indexOf(UI_CHOSEN ? UI_LANG : 'en'));
   const [at, setAt] = useState(start);
@@ -45,38 +46,49 @@ export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
       idle.current = setTimeout(() => { if (Math.abs(v - k * ROW) > 1) settle(k); }, 120);
     }
   };
-  const l = LANGS[at], rtl = l === 'fa';
-  const say = (text: string, size: number, weight: 500 | 700, color: string) => (
-    <T raw style={{ color, fontSize: size, lineHeight: Math.round(size * 1.45), fontFamily: LANG_FONT(l, weight), fontWeight: 'normal', writingDirection: rtl ? 'rtl' : 'ltr' }}>{text}</T>
-  );
+  const l = LANGS[at];
   return (
-    <StepFrame corner={<View style={{ borderRadius: 23, backgroundColor: c.surface2 }}><ThemeButton /></View>}
-      title={say(TITLE[l], 29, 700, c.text)} sub={say(NOTE[l], 16, 500, c.muted)}
-      button={{ label: say(GO[l], 17, 700, c.ctaFg), ready: true, onPress: () => onDone(l) }}>
-      {/* The drum: a soft band marks the middle row; rows further from it fade, shrink and tilt away. */}
-      <View style={{ width: '100%', maxWidth: 360, alignSelf: 'center', height: ROW * VISIBLE, marginTop: 12 }} accessibilityRole="adjustable" accessibilityValue={{ text: LANG_NAMES[l] }}
-        accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
-        onAccessibilityAction={e => settle(Math.max(0, Math.min(LANGS.length - 1, at + (e.nativeEvent.actionName === 'increment' ? 1 : -1))))}>
-        <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: PAD, height: ROW, borderRadius: 14, backgroundColor: c.surface2 }} />
-        <Animated.ScrollView ref={ref} showsVerticalScrollIndicator={false} snapToInterval={ROW} decelerationRate="fast"
-          contentContainerStyle={{ paddingVertical: PAD }} scrollEventThrottle={16}
-          onScroll={onScroll}
-          onMomentumScrollEnd={e => settle(near(e.nativeEvent.contentOffset.y))}
-          style={[{ flex: 1 }, Platform.OS === 'web' ? ({ scrollSnapType: 'y mandatory', overscrollBehavior: 'contain' } as object) : null]}>
-          {LANGS.map((k, n) => {
-            const d = (v: number) => y.interpolate({ inputRange: [(n - 2) * ROW, (n - 1) * ROW, n * ROW, (n + 1) * ROW, (n + 2) * ROW], outputRange: [v, (1 + v) / 2, 1, (1 + v) / 2, v], extrapolate: 'clamp' });
-            const tilt = y.interpolate({ inputRange: [(n - 2) * ROW, n * ROW, (n + 2) * ROW], outputRange: ['-50deg', '0deg', '50deg'], extrapolate: 'clamp' });
-            return (
-              <Pressable key={k} onPress={() => { if (n !== at) settle(n); }} accessibilityRole="button" accessibilityLabel={LANG_NAMES[k]}
-                style={Platform.OS === 'web' ? ({ scrollSnapAlign: 'center' } as object) : undefined}>
-                <Animated.View style={{ height: ROW, alignItems: 'center', justifyContent: 'center', opacity: d(0.3), transform: [{ perspective: 400 }, { rotateX: tilt }, { scale: d(0.82) }] }}>
-                  <T raw style={{ color: c.text, fontSize: 24, lineHeight: 34, fontFamily: LANG_FONT(k, n === at ? 700 : 500), fontWeight: 'normal', textAlign: 'center' }}>{LANG_NAMES[k]}</T>
-                </Animated.View>
-              </Pressable>
-            );
-          })}
-        </Animated.ScrollView>
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
+      <View style={{ position: 'absolute', top: ins.top + 14, left: 16, zIndex: 2, borderRadius: 23, backgroundColor: c.surface2 }}><ThemeButton /></View>
+      <View style={{ flex: 1, paddingTop: ins.top + 64, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 30 }}>
+          <View style={{ alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+              <Icon name="translate" size={32} color={c.text} />
+            </View>
+            <T raw style={{ color: c.text, fontSize: 26, lineHeight: 38, fontFamily: LANG_FONT(l, 700), fontWeight: 'normal', textAlign: 'center', writingDirection: l === 'fa' ? 'rtl' : 'ltr' }}>{TITLE[l]}</T>
+            <T raw style={{ color: c.muted, fontSize: 15, lineHeight: 24, fontFamily: LANG_FONT(l), textAlign: 'center', writingDirection: l === 'fa' ? 'rtl' : 'ltr' }}>{NOTE[l]}</T>
+          </View>
+          {/* The drum: a soft band marks the middle row; rows further from it fade, shrink and tilt away. */}
+          <View style={{ width: '100%', maxWidth: 320, height: ROW * VISIBLE }} accessibilityRole="adjustable" accessibilityValue={{ text: LANG_NAMES[l] }}
+            accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+            onAccessibilityAction={e => settle(Math.max(0, Math.min(LANGS.length - 1, at + (e.nativeEvent.actionName === 'increment' ? 1 : -1))))}>
+            <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: PAD, height: ROW, borderRadius: 14, backgroundColor: c.surface2 }} />
+            <Animated.ScrollView ref={ref} showsVerticalScrollIndicator={false} snapToInterval={ROW} decelerationRate="fast"
+              contentContainerStyle={{ paddingVertical: PAD }} scrollEventThrottle={16}
+              onScroll={onScroll}
+              onMomentumScrollEnd={e => settle(near(e.nativeEvent.contentOffset.y))}
+              style={[{ flex: 1 }, Platform.OS === 'web' ? ({ scrollSnapType: 'y mandatory', overscrollBehavior: 'contain' } as object) : null]}>
+              {LANGS.map((k, n) => {
+                const d = (v: number) => y.interpolate({ inputRange: [(n - 2) * ROW, (n - 1) * ROW, n * ROW, (n + 1) * ROW, (n + 2) * ROW], outputRange: [v, (1 + v) / 2, 1, (1 + v) / 2, v], extrapolate: 'clamp' });
+                const tilt = y.interpolate({ inputRange: [(n - 2) * ROW, n * ROW, (n + 2) * ROW], outputRange: ['-50deg', '0deg', '50deg'], extrapolate: 'clamp' });
+                return (
+                  <Pressable key={k} onPress={() => { if (n !== at) settle(n); }} accessibilityRole="button" accessibilityLabel={LANG_NAMES[k]}
+                    style={Platform.OS === 'web' ? ({ scrollSnapAlign: 'center' } as object) : undefined}>
+                    <Animated.View style={{ height: ROW, alignItems: 'center', justifyContent: 'center', opacity: d(0.3), transform: [{ perspective: 400 }, { rotateX: tilt }, { scale: d(0.82) }] }}>
+                      <T raw style={{ color: c.text, fontSize: 24, lineHeight: 34, fontFamily: LANG_FONT(k, n === at ? 700 : 500), fontWeight: 'normal', textAlign: 'center' }}>{LANG_NAMES[k]}</T>
+                    </Animated.View>
+                  </Pressable>
+                );
+              })}
+            </Animated.ScrollView>
+          </View>
+        </View>
+        <Pressable onPress={() => { tap(); onDone(l); }} accessibilityRole="button"
+          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, alignItems: 'center', justifyContent: 'center', height: 56, borderRadius: 16, backgroundColor: c.cta })}>
+          <T raw style={{ color: c.ctaFg, fontSize: 17, fontFamily: LANG_FONT(l, 700), fontWeight: 'normal', textAlign: 'center' }}>{GO[l]}</T>
+        </Pressable>
       </View>
-    </StepFrame>
+    </View>
   );
 }

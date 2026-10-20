@@ -65,6 +65,8 @@ type Ctx = {
   // Throws when an account already has the address (sign-up's email step).
   emailFree: (email: string) => Promise<void>;
   codeIn: (email: string, code: string, name?: string, exam?: 'da' | 'en') => Promise<void>;
+  // Throws when a sign-up code is wrong (before its last step).
+  checkCode: (email: string, code: string) => Promise<void>;
   // The code that deletes the account, to its address (the settings' «حذف حساب کاربری»).
   deleteCode: () => Promise<void>;
   checkResetCode: (email: string, code: string) => Promise<void>;
@@ -248,6 +250,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     emailFree: async email => { await api('POST', 'emailfree', { email }); },
     sendCode: async (email, signup) => { await api('POST', 'code', { email, signup, lang: UI_LANG }); },
     codeIn: async (email, code, name, exam) => { const d = await api<{ token: string }>('POST', 'codein', { email, code, name, exam }); await signedIn(d.token); },
+    checkCode: async (email, code) => { await api('POST', 'codecheck', { email, code }); },
     deleteCode: async () => { await api('POST', 'deletecode', { lang: UI_LANG }); },
     checkResetCode: async (email, code) => { await api('POST', 'resetcheck', { email, code }); },
     resetPassword: async (email, code, password) => { const d = await api<{ token: string }>('POST', 'reset', { email, code, password }); await signedIn(d.token); },
