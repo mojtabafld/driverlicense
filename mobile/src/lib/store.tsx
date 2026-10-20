@@ -69,6 +69,8 @@ type Ctx = {
   checkCode: (email: string, code: string) => Promise<void>;
   // The code that deletes the account, to its address (the settings' «حذف حساب کاربری»).
   deleteCode: () => Promise<void>;
+  // The account as the server sent it back (after the free answer analysis, review.tsx).
+  takeUser: (u: User) => void;
   checkResetCode: (email: string, code: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -251,6 +253,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     sendCode: async (email, signup) => { await api('POST', 'code', { email, signup, lang: UI_LANG }); },
     codeIn: async (email, code, name, exam) => { const d = await api<{ token: string }>('POST', 'codein', { email, code, name, exam, lang: UI_LANG }); await signedIn(d.token); },
     checkCode: async (email, code) => { await api('POST', 'codecheck', { email, code }); },
+    takeUser: u => setMe(m => (m ? { ...m, user: u } : m)),
     deleteCode: async () => { await api('POST', 'deletecode', { lang: UI_LANG }); },
     checkResetCode: async (email, code) => { await api('POST', 'resetcheck', { email, code }); },
     resetPassword: async (email, code, password) => { const d = await api<{ token: string }>('POST', 'reset', { email, code, password }); await signedIn(d.token); },

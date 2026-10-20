@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 
 import { UI_LANG, t as fmt, tr, transText, transWord } from '@/lib/i18n';
 import { api } from '@/lib/api';
-import type { Item, Question } from '@/lib/bank';
+import type { Item, Question, User } from '@/lib/bank';
 import { imgSource } from '@/lib/img-source';
 import { faNum } from '@/lib/logic';
 import { sectionFa, sectionIcon, topicFa } from '@/lib/names';
@@ -252,21 +252,23 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const [typing, setTyping] = useState(false); // fetched just now: typed out
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [err, setErr] = useState('');
-  const { locked, user } = useApp();
+  const { locked, user, takeUser } = useApp();
+  // Without premium: the one free analysis (lib/bank.ts User.freeAi), or the one already had for this question.
+  const free = locked && (user?.freeAi === true || user?.freeAi === q.id);
   // The analysis opens with the user's shown name (not for guests).
   const who = user && !user.guest ? user.name : '';
   const load = () => {
     setState('loading');
     // Written in the app's language (Persian, English or Danish).
-    api<{ text: string }>('POST', 'lesson', { qid: q.id, a, lang, at, ui: UI_LANG })
-      .then(d => { lessonCache.set(key, d.text); setTyping(true); setText(d.text); setState('idle'); })
+    api<{ text: string; user?: User }>('POST', 'lesson', { qid: q.id, a, lang, at, ui: UI_LANG })
+      .then(d => { lessonCache.set(key, d.text); setTyping(true); setText(d.text); setState('idle'); if (d.user) takeUser(d.user); })
       .catch((e: any) => { setErr(e.status === 429 ? e.message : 'نکات الان آماده نشد؛ دوباره امتحان کنید.'); setState('error'); });
   };
   const fold = useFold();
   const press = () => {
     if (state === 'loading') return;
     // Without premium where it is needed: the premium page instead.
-    if (locked && !text) { router.push('/premium'); return; }
+    if (locked && !text && !free) { router.push('/premium'); return; }
     if (!shown && !text) load();
     if (fold.closing) return;
     const next = !shown || (!text && state === 'error');
@@ -277,7 +279,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
   const { ref, panel, follow } = useReveal(shown);
   return (
     <View ref={ref} style={{ marginTop: 14 }}>
-      <AiButton title="تحلیل پاسخ شما" sub={locked && !text ? 'مخصوص نسخه‌ی ویژه' : 'با استفاده از هوش مصنوعی'} shown={shown} onPress={press} />
+      <AiButton title="تحلیل پاسخ شما" sub={locked && !text ? (user?.freeAi === true ? 'یک بار رایگان؛ بعد از آن مخصوص نسخه‌ی ویژه' : free ? 'با استفاده از هوش مصنوعی' : 'مخصوص نسخه‌ی ویژه') : 'با استفاده از هوش مصنوعی'} shown={shown} onPress={press} />
       {shown ? (
         <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
         <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(31,42,68,0.07)' }}>

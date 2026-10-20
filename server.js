@@ -122,6 +122,8 @@ function sessionUser(req) {
 const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined,
   premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined } : undefined,
   // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
+  // freeAi: the one free answer analysis is still to be had (true), or the question it was had for.
+  freeAi: u.guest ? undefined : u.freeAi ? u.freeAi.qid : true,
   guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined,
   // promoUsed: this account, or another with its confirmed address, has had the trial code (the premium page hides the code box).
   promoUsed: !!u.promoUsed || !!(u.premium && u.premium.promo) || !!(u.email && u.emailOk && Object.values(store.users).some(x => x !== u && x.premium && x.premium.promo && x.premium.promo.email === u.email)) || undefined });
@@ -184,7 +186,7 @@ async function sendCodeMail(u, e, lang, kind) {
 // the address signs up again while it lasts; its purchases go with it either way, so the payments' sync, which finds
 // accounts by address too, never counts them again for the new account).
 const mailKey = e => tokenHash(`mail:${mail.normal(e)}`);
-const gone = () => (store.meta.gone = store.meta.gone || { trial: {}, pass: {} });
+const gone = () => { const g = (store.meta.gone = store.meta.gone || { trial: {}, pass: {} }); g.ai = g.ai || {}; return g; };
 async function rememberGone(u) {
   const e = u.email || (String(u.username).includes('@') ? u.username : '');
   if (!e) return;
@@ -192,13 +194,15 @@ async function rememberGone(u) {
   if (u.promoUsed || (u.premium && u.premium.promo)) for (const x of keys) g.trial[x] = u.promoUsed || Date.now();
   const paid = u.premium && (u.premium.buys || []).some(b => !b.refunded);
   if (paid) g.pass[k] = { until: u.premium.until, plan: u.premium.plan, buys: u.premium.buys };
-  if (keys.some(x => g.trial[x]) || g.pass[k]) await store.saveMeta('gone', g);
+  if (u.freeAi) g.ai[k] = u.freeAi.at || Date.now();   // and that it had its free analysis
+  if (keys.some(x => g.trial[x]) || g.pass[k] || g.ai[k]) await store.saveMeta('gone', g);
 }
 // A new account at an address a deleted account had: no trial again, and its pass back while it lasts. Returns the
 // pass's end when one was given back.
 async function welcomeBack(u, e) {
   const g = gone(), k = mailKey(e);
   if (g.trial[k]) { u.promoUsed = g.trial[k]; u.promoEmail = mail.normal(e); }
+  if (g.ai[k]) u.freeAi = { at: g.ai[k], qid: -1 };
   const p = g.pass[k];
   if (!p) return 0;
   delete g.pass[k];
@@ -1088,15 +1092,20 @@ async function api(req, res, route) {
     else { att.ai.q = att.ai.q || {}; if (att.ai.q[slot] === key) return; att.ai.q[slot] = key; }
     await store.saveUser(user);
   };
-  if (['lesson', 'summary', 'ttsai', 'topic'].includes(route) && needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
+  if (['summary', 'ttsai', 'topic'].includes(route) && needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
+  // Without premium where it is needed: one analysis free per account (not guests, whom anyone can make again; Mojtaba
+  // 2026-10-20), its question kept (user.freeAi), so that analysis opens again later and no other one does.
   if (req.method === 'POST' && route === 'lesson') {
     const b = await readBody(req);
     const qid = +b.qid, att = attemptAt(b.at);
+    const paid = !needsPremium(user), free = !paid && !user.guest && (!user.freeAi || user.freeAi.qid === qid);
+    if (!paid && !free) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
     const ref = att && att.ai && att.ai.q && att.ai.q[qid];
     if (ref && store.meta[ref] && isCurrentLesson(SITE, qid, ref) && refUi(ref) === uiOf(b.ui)) return send(res, 200, { text: store.meta[ref].text });
     try {
       const lesson = await getLesson({ store, siteDir: SITE, username: user.username, qid, ticks: Array.isArray(b.a) ? b.a.slice(0, 4) : null, lang: b.lang, ui: b.ui });
       if (att && att.items.some(it => it.id === qid)) await linkAi(att, qid, lesson.key);
+      if (!paid && !user.freeAi) { user.freeAi = { at: Date.now(), qid }; await store.saveUser(user); return send(res, 200, { text: lesson.text, user: publicUser(user) }); }
       return send(res, 200, { text: lesson.text });
     } catch (e) {
       if (e instanceof Anthropic.APIError) { console.error('lesson API error', e.status, e.message); return send(res, 502, { error: 'آموزش هوش مصنوعی الان در دسترس نیست.' }); }
