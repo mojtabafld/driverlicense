@@ -3,13 +3,15 @@
 // in the app's language. A field on top filters them by any of their words, chips by group, and «همه / نشان‌شده‌ها»
 // switches to the terms the user bookmarked (the bookmark on each card; kept on the account). ?q= fills the field (a
 // term tapped under a course step). Made more modern with groups and bookmarks (Mojtaba 2026-10-20).
-import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 import { RTL, UI_LANG, getTransLang, tr } from '@/lib/i18n';
 import { GLOSSARY, TERM_CATS, searchTerms, type Term, type TermCat } from '@/lib/glossary';
+import { toPremium, useFree } from '@/lib/free';
 import { faNum } from '@/lib/logic';
+import { localSearch, type SearchItem, type SearchKind } from '@/lib/search';
 import { useApp, useExamLang } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Card, Segmented, T, physicalAlign, tap } from '@/ui/kit';
@@ -28,13 +30,36 @@ const otherOf = (t: Term, en: boolean) => {
   const l = getTransLang(), v = l === 'fa' ? t.fa : l === 'en' ? t.en : t.da;
   return v !== mainOf(t, en) && v !== headOf(t, en) ? { v, fa: l === 'fa' } : null;
 };
+// The learning page a term is taught on (Mojtaba 2026-10-20): the learning pages' search (lib/search.ts) for its Danish
+// word, else the start of its Persian meaning, the kind of page its group suggests first (right of way, a sign, a rule
+// or a lesson of the course), else the best hit; none, and the search page opens with the word.
+const PREFER: Record<TermCat, SearchKind[]> = {
+  priority: ['priority', 'lesson', 'rule'], signs: ['sign', 'rule', 'lesson'], roads: ['lesson', 'rule', 'priority'],
+  driving: ['rule', 'lesson'], vehicle: ['rule', 'lesson'], safety: ['rule', 'lesson'], people: ['lesson', 'rule', 'priority'],
+};
+function pageOf(t: Term): SearchItem | null {
+  for (const q of [t.da, t.fa.split(' (')[0]]) {
+    const hits = localSearch(q, 30);
+    for (const k of PREFER[t.cat]) { const h = hits.find(x => x.kind === k); if (h) return h; }
+    if (hits[0]) return hits[0];
+  }
+  return null;
+}
 const CAT = Object.fromEntries(TERM_CATS.map(g => [g.id, g])) as Record<TermCat, (typeof TERM_CATS)[number]>;
 
 function TermCard({ t, on, onToggle, en }: { t: Term; on: boolean; onToggle: () => void; en: boolean }) {
   const c = useColors();
+  const { lessonOk, firstOk } = useFree();
+  const page = useMemo(() => pageOf(t), [t]);
+  // A locked page opens the premium page, as from the search.
+  const open = () => {
+    if (!page) { router.push({ pathname: '/course-search', params: { q: t.da } }); return; }
+    const ok = page.free === 'lesson' ? lessonOk(page.lesson) : typeof page.free === 'number' ? firstOk(page.free) : true;
+    if (!ok) toPremium(); else router.push(page.href);
+  };
   const g = CAT[t.cat], note = t.note ? t.note[NOTE_OF[UI_LANG]] : null, other = otherOf(t, en), main = mainOf(t, en);
   return (
-    <Card style={{ gap: 10, padding: 14 }}>
+    <Card onPress={open} style={{ gap: 10, padding: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
         <View style={{ flex: 1, gap: 3 }}>
           <T raw keepDa style={{ fontFamily: DA_FONT, fontSize: 18, lineHeight: 25, fontWeight: '700', writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{headOf(t, en)}</T>
@@ -56,7 +81,8 @@ function TermCard({ t, on, onToggle, en }: { t: Term; on: boolean; onToggle: () 
       ) : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
         <Icon name={g.icon} size={12} color={c.faint} />
-        <T style={{ fontSize: 11.5, color: c.faint }}>{g.fa}</T>
+        <T style={{ flex: 1, fontSize: 11.5, color: c.faint }}>{g.fa}</T>
+        <Icon name="chevronLeft" size={12} color={c.faint} weight="semibold" />
       </View>
     </Card>
   );
