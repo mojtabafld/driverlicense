@@ -7,20 +7,17 @@ import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 type Art = { fg: string; hole: string };
 const Box = ({ children }: { children: React.ReactNode }) => <Svg width="100%" height="100%" viewBox="0 0 120 100">{children}</Svg>;
 
-// The question bank in the pocket: a phone with a question on it (a warning sign and two answers).
+// The question bank in the pocket: a phone with one big question mark on its screen (redrawn simpler, Mojtaba
+// 2026-10-20).
 export function WelcomeBank({ fg, hole }: Art) {
   return (
     <Box>
-      <Rect x={33} y={4} width={54} height={92} rx={13} fill={fg} />
-      <Rect x={39} y={14} width={42} height={70} rx={6} fill="#fff" />
-      <Rect x={53} y={8} width={14} height={3} rx={1.5} fill={hole} />
-      <Path d="M60 22 L71 41 H49 Z" fill={fg} stroke={fg} strokeWidth={4} strokeLinejoin="round" />
-      <Path d="M60 29 L65.5 38.5 H54.5 Z" fill="#fff" />
-      <Circle cx={47} cy={55} r={3.5} fill={fg} />
-      <Rect x={54} y={52.5} width={21} height={5} rx={2.5} fill={fg} opacity={0.35} />
-      <Circle cx={47} cy={68} r={3.5} fill="none" stroke={fg} strokeWidth={2} />
-      <Rect x={54} y={65.5} width={16} height={5} rx={2.5} fill={fg} opacity={0.35} />
-      <Rect x={52} y={88} width={16} height={3} rx={1.5} fill="#fff" opacity={0.7} />
+      <Rect x={32} y={2} width={56} height={96} rx={15} fill={fg} />
+      <Rect x={38} y={12} width={44} height={76} rx={9} fill="#fff" />
+      <Rect x={52} y={6} width={16} height={3} rx={1.5} fill={hole} />
+      <Path d="M51 39 C51 31.5 56 28 60.5 28 C66 28 70 31.5 70 37 C70 42 66.5 44 63.5 46 C61.3 47.5 60.5 49 60.5 52.5" fill="none" stroke={fg} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={60.5} cy={64} r={4.6} fill={fg} />
+      <Rect x={52} y={92} width={16} height={2.6} rx={1.3} fill="#fff" opacity={0.75} />
     </Box>
   );
 }
@@ -60,16 +57,19 @@ export function WelcomeAi({ fg, hole }: Art) {
   );
 }
 
-// Seeing the progress: a card with rising bars and a tick.
+// Seeing the progress and the chance of passing.
 export function WelcomeProgress({ fg, hole }: Art) {
+  // A gauge, as a speedometer: its white arc over the top, the needle well into the passing side (redrawn, Mojtaba
+  // 2026-10-20; before, rising bars with a tick).
   return (
     <Box>
-      <Rect x={18} y={8} width={84} height={84} rx={22} fill={fg} />
-      <Rect x={32} y={56} width={12} height={22} rx={4} fill="#fff" />
-      <Rect x={50} y={44} width={12} height={34} rx={4} fill="#fff" />
-      <Rect x={68} y={30} width={12} height={48} rx={4} fill="#fff" />
-      <Circle cx={84} cy={24} r={13} fill={hole} />
-      <Path d="M78.5 24 l4 4 l7.5 -8" fill="none" stroke="#fff" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={60} cy={56} r={44} fill={fg} />
+      <Path d="M31.8 66.3 A30 30 0 1 1 88.2 66.3" fill="none" stroke="#fff" strokeWidth={7} strokeLinecap="round" opacity={0.45} />
+      <Path d="M31.8 66.3 A30 30 0 0 1 81.2 34.8" fill="none" stroke="#fff" strokeWidth={7} strokeLinecap="round" />
+      <Path d="M60 56 L77 39" stroke={hole} strokeWidth={6} strokeLinecap="round" />
+      <Circle cx={60} cy={56} r={7.5} fill={hole} />
+      <Circle cx={60} cy={56} r={3} fill="#fff" />
+      <Rect x={47} y={76} width={26} height={8} rx={4} fill="#fff" />
     </Box>
   );
 }
