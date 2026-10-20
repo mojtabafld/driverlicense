@@ -190,10 +190,11 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
         {open.length ? (
           // A small pill in the theme's soft colour, so it reads as a button; the text at the size it had (Mojtaba 2026-10-19).
           // Before the text the practice sign of «تمرین همه‌ی اشتباهات» (refresh), no arrow after it (Mojtaba 2026-10-20).
+          // In the bar's colours: there are mistakes to put right while it shows, so the warning orange (Mojtaba 2026-10-20).
           <Pressable onPress={start} hitSlop={6} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, flexDirection: 'row', alignItems: 'center', gap: 5,
-            paddingVertical: 3, paddingHorizontal: 10, borderRadius: radius.pill, backgroundColor: c.accentSoft })}>
-            <Icon name="refresh" size={13} color={c.link} weight="semibold" />
-            <T style={{ color: c.link, fontSize: 12.5, lineHeight: 19, fontWeight: '700' }}>آزمون اشتباهات</T>
+            paddingVertical: 3, paddingHorizontal: 10, borderRadius: radius.pill, backgroundColor: c.warnSoft })}>
+            <Icon name="refresh" size={13} color={tone} weight="semibold" />
+            <T style={{ color: tone, fontSize: 12.5, lineHeight: 19, fontWeight: '700' }}>آزمون اشتباهات</T>
           </Pressable>
         ) : null}
       </View>
