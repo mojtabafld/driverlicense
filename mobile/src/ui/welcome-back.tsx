@@ -79,7 +79,8 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
       <View style={[{ height: H }, !card ? { overflow: 'hidden' } : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32, backgroundColor: PHOTO_TOP,
         shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 6 }]}>
       <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }, card ? { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 } : null]}>
-        {uri ? <Image source={{ uri }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" contentPosition="center" transition={250} />
+        {/* Its top kept when the screen cuts it, so the heads show in full (Mojtaba 2026-10-20). */}
+        {uri ? <Image source={{ uri }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" contentPosition="top" transition={250} />
           : <LinearGradient colors={['#b5643a', '#5b3a2c', '#1d2433']} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />}
         {/* Its top edge melting into the strip above it (the status bar, in the same colour). */}
         <LinearGradient pointerEvents="none" colors={[top, `${top}00`]} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 28 }} />
