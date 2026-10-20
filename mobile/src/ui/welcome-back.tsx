@@ -62,8 +62,10 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const { loginArt } = useApp();
   const H = Math.round(Math.min(height * 0.52, width * 1.35, 560));
-  const v = loginArt['3'];
-  const uri = v ? `${API_URL}/login-art/3.png?v=${v}` : null;
+  // The light theme's own bright photo (4) once it is made, its foot fading into the light page as the dark one's (3)
+  // into the black page; until then the dark photo, ending as a card's foot (`card`).
+  const n = !dark && loginArt['4'] ? '4' : '3', v = loginArt[n], card = !dark && n === '3';
+  const uri = v ? `${API_URL}/login-art/${n}.png?v=${v}` : null;
   // The top of the screen (the phone's status bar on the web, the page behind the app) in the photo's own top colour,
   // so the photo runs up to the screen's edge in one piece (Mojtaba 2026-10-20).
   const read = useTopColour(uri), top = uri ? read ?? PHOTO_TOP : WASH_TOP;
@@ -71,17 +73,17 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
   const line = { color: '#fff', fontSize: 20, lineHeight: 30, fontWeight: '700' as const, textAlign: 'center' as const };
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
-      {/* Dark theme: the photo's foot fades into the black page. Light theme: a dark photo fading into the light page
-          turned muddy grey (Mojtaba 2026-10-20), so there it ends as a card's foot, rounded, with a soft shadow, its
-          foot only darkened under «Teori Prøve». */}
-      <View style={[{ height: H }, dark ? { overflow: 'hidden' } : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32, backgroundColor: PHOTO_TOP,
+      {/* The photo's foot fades into the page. A dark photo fading into the light page turned muddy grey (Mojtaba
+          2026-10-20), so in the light theme, until its own bright photo is there, it ends as a card's foot, rounded, with
+          a soft shadow, its foot only darkened under «Teori Prøve». */}
+      <View style={[{ height: H }, !card ? { overflow: 'hidden' } : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32, backgroundColor: PHOTO_TOP,
         shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 6 }]}>
-      <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }, dark ? null : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }]}>
+      <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }, card ? { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 } : null]}>
         {uri ? <Image source={{ uri }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" contentPosition="center" transition={250} />
           : <LinearGradient colors={['#b5643a', '#5b3a2c', '#1d2433']} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />}
         {/* Its top edge melting into the strip above it (the status bar, in the same colour). */}
         <LinearGradient pointerEvents="none" colors={[top, `${top}00`]} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 28 }} />
-        <LinearGradient pointerEvents="none" colors={dark ? ['transparent', c.bg] : ['transparent', 'rgba(12,10,9,0.55)']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(H * (dark ? 0.28 : 0.32)) }} />
+        <LinearGradient pointerEvents="none" colors={card ? ['transparent', 'rgba(12,10,9,0.55)'] : [`${c.bg}00`, c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(H * (card ? 0.32 : dark ? 0.28 : 0.34)) }} />
         <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, alignItems: RTL ? 'flex-start' : 'flex-end' }}>
           <View style={{ borderRadius: 22, backgroundColor: dark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)' }}><ThemeButton /></View>
         </View>
@@ -93,8 +95,9 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
           </View>
         </View>
         <View style={{ position: 'absolute', bottom: Math.round(H * 0.1), left: 0, right: 0, alignItems: 'center' }}>
-          <L style={{ fontSize: 27, lineHeight: 34, color: '#fff', textAlign: 'center' }}>
-            <L style={{ fontSize: 27, lineHeight: 34, fontStyle: 'italic', color: PEACH }}>Teori</L> Prøve
+          {/* On the bright photo's light foot: dark, its accent a deeper terracotta. */}
+          <L style={{ fontSize: 27, lineHeight: 34, color: n === '4' ? c.text : '#fff', textAlign: 'center' }}>
+            <L style={{ fontSize: 27, lineHeight: 34, fontStyle: 'italic', color: n === '4' ? '#b85c32' : PEACH }}>Teori</L> Prøve
           </L>
         </View>
       </View>
