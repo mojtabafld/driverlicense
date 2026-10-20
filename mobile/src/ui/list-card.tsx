@@ -15,7 +15,9 @@ export const LIST_PIC = { width: 80, height: 60, radius: 14 };
 // `grow`: the card takes its share of the height its list is given (its content centred in it), never less than its own:
 // its own height and an even part of the room left (flexGrow, not flex: 1, which let a taller card, «آموزش گام‌به‌گام»
 // with its progress note, run over the gap under it; Mojtaba 2026-10-18).
-export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress, locked, grow, small }: { pic: ReactNode; title: string; sub: string; subLines?: number; note?: string; label?: string; onPress: () => void; locked?: boolean; grow?: boolean; small?: boolean }) {
+// `keepDa`: the Danish words in `sub` stay Danish for users who take the exam in English (the glossary's card, whose
+// examples are Danish words).
+export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress, locked, grow, small, keepDa }: { pic: ReactNode; title: string; sub: string; subLines?: number; note?: string; label?: string; onPress: () => void; locked?: boolean; grow?: boolean; small?: boolean; keepDa?: boolean }) {
   const c = useColors();
   return (
     <Card onPress={onPress} style={grow ? { padding: 10, flexGrow: 1, flexShrink: 0, justifyContent: 'center' } : { padding: 10 }}>
@@ -23,7 +25,7 @@ export function ListCard({ pic, title, sub, subLines = 1, note, label, onPress, 
         <View style={{ width: small ? 64 : LIST_PIC.width, height: small ? 48 : LIST_PIC.height, borderRadius: small ? 12 : LIST_PIC.radius, overflow: 'hidden' }}>{pic}</View>
         <View style={{ flex: 1, gap: 2 }}>
           <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600' }} numberOfLines={2}>{title}</T>
-          <T style={{ fontSize: 12.5, lineHeight: 19, color: c.muted }} numberOfLines={subLines}>{sub}</T>
+          <T keepDa={keepDa} style={{ fontSize: 12.5, lineHeight: 19, color: c.muted }} numberOfLines={subLines}>{sub}</T>
           {note ? <T style={{ fontSize: 11.5, lineHeight: 17, color: c.faint }} numberOfLines={1}>{note}</T> : null}
         </View>
         <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>

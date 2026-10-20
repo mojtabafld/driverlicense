@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, NewBank, Question, Settings, User } from './bank';
-import { API_URL, FROZEN, PROVE_PICS } from './config';
+import { API_URL, FROZEN, PROVE_BANK, PROVE_PICS } from './config';
 import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n';
 import { reloadApp } from './reload';
 import { forgetPush, syncPush } from './push';
@@ -146,7 +146,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (d.user.verify) return;
     if (!bank) setBank(await fetchBank<Bank>());
     // (the main site only; none is fine: the new test then waits)
-    if (!PROVE_PICS && !newBank) fetchBank<NewBank>('newq.js').then(setNewBank).catch(() => {});
+    if (!PROVE_BANK && !newBank) fetchBank<NewBank>('newq.js').then(setNewBank).catch(() => {});
   }, [bank, newBank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
@@ -266,7 +266,7 @@ export function useQuestionImage() {
   return (q: Question) => {
     if (q.img.startsWith('newq-art/')) { const nv = newqArt[q.id]; return nv ? { uri: `${API_URL}/${q.img}`, v: `v=${encodeURIComponent(nv)}`, token } : null; }
     // At /app the question's original picture (from prove.dk), not a remade one.
-    const base = `${API_URL}/${q.img}`, v = PROVE_PICS ? `orig=1${FROZEN ? `&frozen=${FROZEN}` : ''}` : imgv[q.id] ? `v=${encodeURIComponent(imgv[q.id])}` : '';
+    const base = `${API_URL}/${q.img}`, v = PROVE_BANK ? `orig=1${FROZEN ? `&frozen=${FROZEN}` : ''}` : imgv[q.id] ? `v=${encodeURIComponent(imgv[q.id])}` : '';
     return { uri: base, v, token };
   };
 }

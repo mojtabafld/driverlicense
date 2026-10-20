@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
 
-import { API_URL, PROVE_PICS } from '@/lib/config';
+import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
@@ -21,7 +21,7 @@ import { SearchBox } from '@/ui/search-box';
 import { ARC, useColors } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 
-function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
+function Part({ n, icon, title, text, note, href, keepDa }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href; keepDa?: boolean }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const v = learnArt[n];
@@ -34,7 +34,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
     </View>
   );
-  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={short ? 1 : 2} note={note} />;
+  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={short ? 1 : 2} note={note} keepDa={keepDa} />;
 }
 
 // /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
@@ -97,16 +97,24 @@ export default function Learn() {
           {/* Search the learning pages (the course, rules, signs, right of way) by their words and, with «جستجو», by the
               AI; the results open on their own page (app/course-search.tsx). */}
           <SearchBox />
-          <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
-            text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
-            note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
+          {/* /app: prove.dk's 44 numbered tests in place of the app's own course (Mojtaba 2026-10-20). */}
+          {PROVE_BANK ? (
+            <Part n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
+              text="۴۴ درس رسمی، یکی‌یکی، یا تمرین بر اساس دسته‌بندی رسمی آزمون."
+              note={tried ? `${faNum(tried)} از ${faNum(all)} درس انجام شده` : undefined} />
+          ) : (
+            <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
+              text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
+              note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
+          )}
           <Part n={2} icon="rules" title="قوانین" href="/rules"
             text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
           <Part n={3} icon="sign" title="علائم رانندگی" href="/signs"
             text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
             text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
-          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary"
+          {/* keepDa: its example words stay Danish («vigepligt» was shown as «duty to give way» to English-exam users). */}
+          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" keepDa
             text="اصطلاح‌های دانمارکی آزمون تئوری با معنی فارسی، مثل vigepligt و højreregel." />
         </View>
       )}
