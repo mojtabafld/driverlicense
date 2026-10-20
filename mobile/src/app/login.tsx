@@ -1,4 +1,5 @@
-// Sign in / sign up: a tall picture header (as on the tab pages; on the main site a flat landscape) with the greeting, then on the page (no card) a mode
+// Sign in / sign up. Main site and /app: the welcome screen (ui/welcome.tsx), then one question per screen
+// (ui/sign-steps.tsx). The form below (the older design): a tall picture header with the greeting, then on the page (no card) a mode
 // switch, fields with icons and one wide button, then the site's three short facts. With email on (the server's
 // RESEND_API_KEY) signing up asks for a shown name, an email and a password (the email is the username), the new account waits
 // for the link sent there, and signing in takes the email or, for accounts from before, the username. With email on, a
@@ -6,18 +7,17 @@
 // six boxes (or taken from the keyboard's suggestion), opens the fields for the new password (the server's
 // /api/forgot, /api/resetcheck and /api/reset).
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
 import { InstallHint } from '@/ui/install-hint';
-import { ArcButton, Backdrop, Button, Hero, L, SegPill, T, ThemeButton, HeroFade, tap, useArcSeg, useHeaderTop } from '@/ui/kit';
+import { ArcButton, Backdrop, Button, Hero, L, SegPill, T, tap, useArcSeg } from '@/ui/kit';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
-import { LOGIN_BG, LoginArt } from '@/ui/header-art';
-import { RTL, t as fmt, tr } from '@/lib/i18n';
+import { t as fmt, tr } from '@/lib/i18n';
 import { CodeBoxes } from '@/ui/code-boxes';
+import { SignSteps } from '@/ui/sign-steps';
 import { Welcome } from '@/ui/welcome';
 
 // Sign in / sign up switch: a soft track with the chosen side raised. (Main site, light: the track a step darker than
@@ -40,39 +40,6 @@ function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: 
         );
       })}
     </View>
-  );
-}
-
-// Main site: a drawing like the tab pages' headers across the top (LoginArt, both themes), its foot fading into
-// the page as theirs do, the theme switch over it; the greeting and its line under it on the page, in the form's column.
-function SceneHead({ title, subtitle, onBack }: { title: string; subtitle: string; onBack?: () => void }) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
-  const sky = dark ? LOGIN_BG.dark : LOGIN_BG.light;
-  useHeaderTop(sky);
-  const wide = width >= 700, H = Math.round(Math.max(230, Math.min(height * (wide ? 0.5 : 0.36), wide ? 420 : 360)));
-  const bold = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };
-  return (
-    <>
-      <View style={{ height: H + ins.top, backgroundColor: sky, paddingTop: ins.top, overflow: 'hidden' }}>
-        <LoginArt light={!dark} width={width} height={H - 84} />{/* (above the fade, as on the tab pages) */}
-        <HeroFade />
-        {/* Back to the first screen (ui/welcome.tsx) at the start, the theme switch at the end. */}
-        <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, maxWidth: 980 - 32, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between' }}>
-          {onBack ? (
-            <Pressable onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('بازگشت')}
-              style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.7 : 1,
-                backgroundColor: dark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.55)' })}>
-              <Icon name={RTL ? 'arrowRight' : 'arrowLeft'} size={19} color={c.text} />
-            </Pressable>
-          ) : <View />}
-          <View style={{ borderRadius: 19, backgroundColor: dark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.55)' }}><ThemeButton /></View>
-        </View>
-      </View>
-      <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 26, paddingBottom: 18, gap: 6 }}>
-        <T style={[{ fontSize: 28, lineHeight: 38, color: c.text }, bold]}>{title}</T>
-        <T style={{ fontSize: 15, lineHeight: 24, color: c.muted }}>{subtitle}</T>
-      </View>
-    </>
   );
 }
 
@@ -161,10 +128,12 @@ export default function Login() {
     <ArcButton big label={busy ? '…' : 'ذخیره و ورود'} onPress={setNew} disabled={busy || !pw || !pw2} style={{ marginTop: 4 }} />
     {link('بازگشت به ورود', backToLogin)}
   </>;
-  if (welcome) return (
+  // Main site and /app: the welcome screen, then the form one question at a time (ui/sign-steps.tsx).
+  if (ARC) return (
     <Backdrop>
-      <Welcome busy={busy} err={err} onGuest={asGuest}
+      {welcome ? <Welcome busy={busy} err={err} onGuest={asGuest}
         onLogin={() => { setMode('login'); setErr(''); setWelcome(false); }} onRegister={() => { setMode('register'); setErr(''); setWelcome(false); }} />
+        : <SignSteps start={mode} onBack={() => setWelcome(true)} />}
       <InstallHint />
     </Backdrop>
   );
@@ -172,8 +141,7 @@ export default function Login() {
     <Backdrop>
       <KeyboardAvoidingView behavior={Platform.OS === 'web' ? undefined : 'padding'} style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}>
-          {ARC ? <SceneHead title={title} subtitle={subtitle} onBack={() => { backToLogin(); setMode('login'); setWelcome(true); }} />
-            : <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={title} subtitle={subtitle} />}
+          <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={title} subtitle={subtitle} />
           <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: ARC ? 0 : 6 }}>
             {lost ? lostForm : <>
             <ModeSwitch mode={mode} onChange={m => { setMode(m); setErr(''); }} />
