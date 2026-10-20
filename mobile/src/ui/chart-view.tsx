@@ -114,7 +114,8 @@ export function TestStats({ attempts }: { attempts: Attempt[] }) {
         {rule}
         {cell('بهترین', best != null ? pctText(best) : '–')}
         {rule}
-        {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok ? c.ok : c.text) : undefined)}
+        {/* Every test passed (e.g. 5 of 5): green; any not: the warning colour (Mojtaba 2026-10-20). */}
+        {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined)}
       </View>
       {n ? (
         // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).
