@@ -87,6 +87,7 @@ it replaces the whole variable list and would delete the secrets that were added
 | `ELEVENLABS_VOICE_ID_FA_MAN` / `ELEVENLABS_VOICE_ID_FA` / `ELEVENLABS_MODEL_FA` | Dashboard (optional) | The AI analysis and summary read aloud in Persian («گوش دادن» in their panels): voice `_FA_MAN`, else `_FA`, else `ELEVENLABS_VOICE_ID`; model default `eleven_v3` (Persian is not spoken by multilingual v2). |
 | `LATEST_APP_VERSION` | Dashboard (optional) | The newest Android app's version, as the settings show it («نسخه‌ی نرم‌افزار»: `version` in `mobile/app.json`), in the form x.x (e.g. `1.0`). Raise the version in `app.json` for a new APK and set this to it after publishing: an Android app with an older version asks its user once per start to install the new one. |
 | `APP_DOWNLOAD_URL` | Dashboard (optional) | Where that message's install button goes; default the latest GitHub release's page. |
+| `APP_DOWNLOAD_URL_PROVE` | Dashboard (optional) | The same for the app of `/app` («TeoriPrøve Prove», built by the «Android APK» workflow with `copy: prove`, released as «Android /app build N»); default the repository's releases page. |
 | `INVITE_CODE` | Dashboard, encrypted (optional) | When set, sign-up requires this code. |
 | `ADMIN_USERS` | Dashboard (optional) | Comma-separated usernames that see «پنل مدیریت» (admin panel with usage stats) in the settings. |
 | `PORT` | App Platform (8080) | Port to listen on (3000 locally). |
