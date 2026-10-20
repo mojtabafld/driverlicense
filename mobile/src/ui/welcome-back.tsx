@@ -71,15 +71,19 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
   const line = { color: '#fff', fontSize: 20, lineHeight: 30, fontWeight: '700' as const, textAlign: 'center' as const };
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
-      <View style={{ height: H, overflow: 'hidden' }}>
+      {/* Dark theme: the photo's foot fades into the black page. Light theme: a dark photo fading into the light page
+          turned muddy grey (Mojtaba 2026-10-20), so there it ends as a card's foot, rounded, with a soft shadow, its
+          foot only darkened under «Teori Prøve». */}
+      <View style={[{ height: H }, dark ? { overflow: 'hidden' } : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32, backgroundColor: PHOTO_TOP,
+        shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 6 }]}>
+      <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }, dark ? null : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }]}>
         {uri ? <Image source={{ uri }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" contentPosition="center" transition={250} />
           : <LinearGradient colors={['#b5643a', '#5b3a2c', '#1d2433']} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />}
         {/* Its top edge melting into the strip above it (the status bar, in the same colour). */}
         <LinearGradient pointerEvents="none" colors={[top, `${top}00`]} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 28 }} />
-        {/* The foot of the photo fading into the page. */}
-        <LinearGradient pointerEvents="none" colors={['transparent', c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(H * 0.28) }} />
+        <LinearGradient pointerEvents="none" colors={dark ? ['transparent', c.bg] : ['transparent', 'rgba(12,10,9,0.55)']} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(H * (dark ? 0.28 : 0.32)) }} />
         <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, alignItems: RTL ? 'flex-start' : 'flex-end' }}>
-          <View style={{ borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.3)' }}><ThemeButton /></View>
+          <View style={{ borderRadius: 22, backgroundColor: dark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)' }}><ThemeButton /></View>
         </View>
         {/* The app's two lines on a soft dark glass in the middle, its accent word in peach. */}
         <View style={{ position: 'absolute', top: H * 0.38, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 24 }}>
@@ -93,6 +97,7 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
             <L style={{ fontSize: 27, lineHeight: 34, fontStyle: 'italic', color: PEACH }}>Teori</L> Prøve
           </L>
         </View>
+      </View>
       </View>
       <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24, paddingTop: 22, gap: 22 }}>
         <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '800', textAlign: 'center' }}>خوش برگشتید</T>

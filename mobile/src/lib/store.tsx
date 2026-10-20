@@ -249,7 +249,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     forgot: async email => { await api('POST', 'forgot', { email, lang: UI_LANG }); },
     emailFree: async email => { await api('POST', 'emailfree', { email }); },
     sendCode: async (email, signup) => { await api('POST', 'code', { email, signup, lang: UI_LANG }); },
-    codeIn: async (email, code, name, exam) => { const d = await api<{ token: string }>('POST', 'codein', { email, code, name, exam }); await signedIn(d.token); },
+    codeIn: async (email, code, name, exam) => { const d = await api<{ token: string }>('POST', 'codein', { email, code, name, exam, lang: UI_LANG }); await signedIn(d.token); },
     checkCode: async (email, code) => { await api('POST', 'codecheck', { email, code }); },
     deleteCode: async () => { await api('POST', 'deletecode', { lang: UI_LANG }); },
     checkResetCode: async (email, code) => { await api('POST', 'resetcheck', { email, code }); },

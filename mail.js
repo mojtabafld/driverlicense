@@ -61,6 +61,65 @@ function sendCode(to, name, code, lang, kind) {
   return send(to, t.subject(code), html, `${t.hi(name)}\n\n${t.body[k]} ${code}\n\n${t.note[k]}\n\n${t.ignore}`);
 }
 
+// After signing up (a confirmed address, server.js /api/codein) and after buying the premium pass (the Stripe webhook,
+// the checkout's return, the payments' sync): a welcome with what the app does, and a confirmation of the pass with its
+// end and what it opens (Mojtaba 2026-10-20). A pass kept from a deleted account and given back on signing up again
+// is said in the welcome (`restored`: its end).
+const FEATURES = {
+  fa: ['بیش از ۱۰۰۰ سؤال آزمون تئوری با تصویر، به دانمارکی یا انگلیسی و با ترجمه‌ی فارسی', '۴۴ درس آزمون و آزمون ۲۵ سؤالی با زمان‌سنج، درست مثل روز امتحان',
+    'آموزش گام‌به‌گام، قوانین، علائم رانندگی و حق تقدم', 'مرور اشتباهات و تمرین همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید', 'نمودار پیشرفت و احتمال قبولی'],
+  en: ['More than 1,000 theory test questions with pictures, in Danish or English with translations', '44 lesson tests and a 25-question test with a timer, just like on the day',
+    'A step-by-step course, the rules, road signs and right of way', 'Review your mistakes and practise the topics you get wrong most', 'Your progress chart and chance of passing'],
+  da: ['Over 1.000 teoriprøvespørgsmål med billeder, på dansk eller engelsk med oversættelse', '44 lektionsprøver og en prøve med 25 spørgsmål og ur, præcis som på dagen',
+    'Et trin-for-trin-kursus, reglerne, færdselstavler og vigepligt', 'Gennemgå dine fejl, og øv de emner, du oftest svarer forkert på', 'Dine fremskridt og din chance for at bestå'],
+};
+const PREMIUM_FEATURES = {
+  fa: ['تحلیل هر پاسخ با هوش مصنوعی: چرا درست یا اشتباه بود', 'جمع‌بندی اشتباهات هر آزمون و درس با هوش مصنوعی', 'آموزش هر مبحث برای همان سؤال، با هوش مصنوعی',
+    'خواندن سؤال‌ها و گزینه‌ها با صدا', 'جستجوی هوشمند در آموزش‌ها', 'همه‌ی درس‌ها و آزمون‌ها، بدون محدودیت'],
+  en: ['An AI analysis of every answer: why it was right or wrong', 'An AI summary of the mistakes of every test and lesson', 'An AI lesson on each topic, for that very question',
+    'The questions and statements read aloud', 'Smart search in the lessons', 'Every lesson and test, without limits'],
+  da: ['En AI-analyse af hvert svar: hvorfor det var rigtigt eller forkert', 'Et AI-resumé af fejlene i hver prøve og lektion', 'En AI-gennemgang af hvert emne til netop det spørgsmål',
+    'Spørgsmål og udsagn læst højt', 'Smart søgning i lektionerne', 'Alle lektioner og prøver, uden begrænsning'],
+};
+const WELCOME = {
+  fa: { subject: 'به TeoriPrøve خوش آمدید', hi: n => `سلام ${n}،`, body: 'حساب TeoriPrøve شما ساخته شد. با این برنامه برای آزمون تئوری گواهینامه‌ی دانمارک آماده می‌شوید:',
+    restored: d => `اشتراک ویژه‌ی قبلی شما برگردانده شد و تا ${d} فعال است.`, button: 'شروع تمرین', end: 'موفق باشید!', dir: 'rtl' },
+  en: { subject: 'Welcome to TeoriPrøve', hi: n => `Hi ${n},`, body: 'Your TeoriPrøve account is ready. With it you get ready for the Danish driving theory test:',
+    restored: d => `Your earlier premium pass has been restored and is active until ${d}.`, button: 'Start practising', end: 'Good luck!', dir: 'ltr' },
+  da: { subject: 'Velkommen til TeoriPrøve', hi: n => `Hej ${n},`, body: 'Din TeoriPrøve-konto er klar. Med den gør du dig klar til teoriprøven:',
+    restored: d => `Dit tidligere premiumabonnement er gendannet og er aktivt til ${d}.`, button: 'Begynd at øve', end: 'Held og lykke!', dir: 'ltr' },
+};
+const PREMIUM = {
+  fa: { subject: 'اشتراک ویژه‌ی TeoriPrøve شما فعال شد', hi: n => `سلام ${n}،`, body: d => `پرداخت شما انجام شد و اشتراک ویژه تا ${d} برای حساب‌تان فعال است. از این امکانات استفاده کنید:`,
+    button: 'ورود به برنامه', end: 'از خرید شما سپاسگزاریم.', dir: 'rtl' },
+  en: { subject: 'Your TeoriPrøve premium pass is active', hi: n => `Hi ${n},`, body: d => `Your payment went through and premium is active on your account until ${d}. It gives you:`,
+    button: 'Open the app', end: 'Thank you for your purchase.', dir: 'ltr' },
+  da: { subject: 'Dit TeoriPrøve-premiumabonnement er aktivt', hi: n => `Hej ${n},`, body: d => `Din betaling er gennemført, og premium er aktivt på din konto til ${d}. Det giver dig:`,
+    button: 'Åbn appen', end: 'Tak for dit køb.', dir: 'ltr' },
+};
+const LOCALE = { fa: 'fa-IR-u-ca-gregory', en: 'en-GB', da: 'da-DK' };   // the app's own dates (lib/i18n.ts DATE_LOCALE)
+const day = (t, lang) => new Date(t).toLocaleDateString(LOCALE[lang] || LOCALE.fa, { timeZone: 'Europe/Copenhagen', year: 'numeric', month: 'long', day: 'numeric' });
+function featureMail(t, lang, name, intro, list, link) {
+  const items = list.map(x => `<li style="margin:4px 0">${esc(x)}</li>`).join('');
+  const html = `<div dir="${t.dir}" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:480px">
+<p>${esc(t.hi(name))}</p>${intro.map(p => `<p>${esc(p)}</p>`).join('')}
+<ul style="padding-${t.dir === 'rtl' ? 'right' : 'left'}:20px;margin:8px 0 16px">${items}</ul>
+<p><a href="${esc(link)}" style="display:inline-block;background:#2f55d4;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:bold">${esc(t.button)}</a></p>
+<p>${esc(t.end)}</p></div>`;
+  return { html, text: `${t.hi(name)}\n\n${intro.join('\n\n')}\n\n${list.map(x => `- ${x}`).join('\n')}\n\n${link}\n\n${t.end}` };
+}
+function sendWelcome(to, name, lang, link, restored) {
+  const l = WELCOME[lang] ? lang : 'fa', t = WELCOME[l];
+  const m = featureMail(t, l, name, [t.body], FEATURES[l], link);
+  if (restored) { m.html = m.html.replace('<ul', `<p style="font-weight:bold">${esc(t.restored(day(restored, l)))}</p><ul`); m.text += `\n\n${t.restored(day(restored, l))}`; }
+  return send(to, t.subject, m.html, m.text);
+}
+function sendPremium(to, name, lang, link, until) {
+  const l = PREMIUM[lang] ? lang : 'fa', t = PREMIUM[l];
+  const m = featureMail(t, l, name, [t.body(day(until, l))], PREMIUM_FEATURES[l], link);
+  return send(to, t.subject, m.html, m.text);
+}
+
 function sendVerify(to, name, link, lang) {
   const t = TEXT[lang] || TEXT.fa;
   const html = `<div dir="${t.dir}" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:480px">
@@ -184,4 +243,4 @@ async function send(to, subject, html, text, { replyTo } = {}) {
   }
 }
 
-module.exports = { available, sendVerify, sendReset, sendCode, sendReminder, sendReport, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
+module.exports = { available, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
