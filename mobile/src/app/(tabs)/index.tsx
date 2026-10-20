@@ -165,6 +165,8 @@ export default function Home() {
   const exams = attempts.filter(a => a.mode !== 'lesson');
   const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
   const [view, setView] = useState(false), [grow, setGrow] = useState<[number, number] | null>(null), [hint, setHint] = useState(0);
+  // The latest tests' card in the chart view, and whether the page is at its end (the hint plays once each time it gets there).
+  const listBox = useRef<View>(null), atEnd = useRef(false);
   const [t] = useState(() => new Animated.Value(0));
   const topH = useRef(0), chartH = useRef(0), scroll = useRef<ScrollView>(null);
   // Before the first exam (the chart empty), the chart view's chart is made lower when the statistics and the empty
@@ -188,14 +190,17 @@ export default function Home() {
       setGrow([from, Math.max(from, Math.min(320, Math.round(height * 0.38)))]);
       openTop.current = underH.current = null;
       chartBox.current?.measureInWindow((_x, top) => { openTop.current = top - topH.current - gap; fitEmpty(); });
-    } else scroll.current?.scrollTo({ y: 0, animated: true });
+    } else { scroll.current?.scrollTo({ y: 0, animated: true }); atEnd.current = false; }
     setView(open);
     t.stopAnimation();
     Animated.timing(t, { toValue: open ? 1 : 0, duration: open ? 480 : 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })
       .start(({ finished }) => {
         if (finished && !open) { setGrow(null); setLow(false); }
-        // Opened: the latest tests' «all» button shows «نمایش همه» for a moment, as on the exam page (Mojtaba 2026-10-20).
-        if (finished && open) setHint(h => h + 1);
+        // Opened: the latest tests' «all» button shows «نمایش همه» for a moment, as on the exam page, once the page is
+        // scrolled down to its end (Mojtaba 2026-10-20); at once when that card is already whole above the tab bar.
+        if (finished && open) listBox.current?.measureInWindow((_x, y, _w, h) => {
+          if (h && y + h <= height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) + 1 && !atEnd.current) { atEnd.current = true; setHint(n => n + 1); }
+        });
       });
   };
   // In the chart view, a swipe down from the page's top (at least 50 points, mostly vertical) closes it, back to the
@@ -258,7 +263,7 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
-    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} onScrollY={y => { scrollY.current = y; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
+    <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
       hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}
       heroExtra={ARC ? <ChartButton on={view} t={t} onPress={toggle} /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
@@ -361,7 +366,7 @@ export default function Home() {
           style={{ gap, opacity: t.interpolate({ inputRange: [0.25, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }] }}>
           <TestStats attempts={exams} />
-          <ActivityList attempts={exams} limit={3} title="آخرین آزمون‌ها" allHref="/history" hint={hint} />
+          <View ref={listBox}><ActivityList attempts={exams} limit={3} title="آخرین آزمون‌ها" allHref="/history" hint={hint} /></View>
         </Animated.View>
       ) : null}
     </Screen>

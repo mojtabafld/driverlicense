@@ -4,10 +4,11 @@
 // test statistics come in under it, then the latest tests, each opening its own page (its result and review). Pressed
 // again, all goes back.
 import { LinearGradient } from 'expo-linear-gradient';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
-import { tr } from '@/lib/i18n';
+import { RTL, tr } from '@/lib/i18n';
 import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
@@ -44,6 +45,41 @@ function spent(secs: number) {
 
 // «آمار آزمون‌ها»: how many tests, the average and the best score, how many passed, in one card split by thin lines (as
 // home's counts), and under them how many questions were answered in how much time.
+// A row of short facts (an icon and a few words each) on one line: centred when it fits, else it glides slowly to show
+// its other end and back, with pauses, its edges faded (as Marquee does for a text, ui/marquee.tsx); not with
+// «reduce motion».
+const GAP = 16, SPEED = 32, PAUSE = 1600, FADE = 14;
+function GlideRow({ height, children }: { height: number; children: React.ReactNode }) {
+  const [room, setRoom] = useState(0), [full, setFull] = useState(0);
+  const [x] = useState(() => new Animated.Value(0));
+  const over = room && full > room + 0.5 ? Math.ceil(full - room + FADE * 2) : 0;
+  useEffect(() => {
+    x.setValue(0);
+    if (!over) return;
+    let loop: Animated.CompositeAnimation | null = null, live = true;
+    AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then(reduce => {
+      if (!live || reduce) return;
+      const glide = (to: number) => Animated.timing(x, { toValue: to, duration: (over / SPEED) * 1000, easing: Easing.inOut(Easing.quad), useNativeDriver: Platform.OS !== 'web' });
+      loop = Animated.loop(Animated.sequence([Animated.delay(PAUSE), glide(RTL ? over : -over), Animated.delay(PAUSE), glide(0)]));
+      loop.start();
+    });
+    return () => { live = false; loop?.stop(); };
+  }, [over, x]);
+  const row = (measure?: boolean) => (
+    <View onLayout={measure ? e => setFull(e.nativeEvent.layout.width) : undefined} style={{ flexDirection: 'row', alignItems: 'center', columnGap: GAP, flexShrink: 0 }}>{children}</View>
+  );
+  return (
+    <View onLayout={e => setRoom(e.nativeEvent.layout.width)} style={{ height, overflow: 'hidden', justifyContent: 'center',
+      ...(over && Platform.OS === 'web' ? { maskImage: `linear-gradient(to right, transparent, #000 ${FADE}px, #000 calc(100% - ${FADE}px), transparent)` } : null) } as object}>
+      {/* The row at its natural width, measured in a very wide hidden box. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, ...(RTL ? { right: 0 } : { left: 0 }), width: 4000, flexDirection: 'row', justifyContent: RTL ? 'flex-end' : 'flex-start', opacity: 0 }}>{row(true)}</View>
+      {over ? (
+        <Animated.View style={{ position: 'absolute', top: 0, bottom: 0, ...(RTL ? { right: FADE } : { left: FADE }), justifyContent: 'center', transform: [{ translateX: x }] }}>{row()}</Animated.View>
+      ) : <View style={{ flexDirection: 'row', justifyContent: 'center' }}>{row()}</View>}
+    </View>
+  );
+}
+
 export function TestStats({ attempts }: { attempts: Attempt[] }) {
   const c = useColors();
   const n = attempts.length, pcts = attempts.map(pctOf);
@@ -81,9 +117,12 @@ export function TestStats({ attempts }: { attempts: Attempt[] }) {
         {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok ? c.ok : c.text) : undefined)}
       </View>
       {n ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 16, rowGap: 4, paddingHorizontal: 10, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
-          {fact('exam', `${faNum(qs)} سؤال جواب داده‌اید`)}
-          {secs ? fact('clock', spent(secs)) : null}
+        // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).
+        <View style={{ paddingHorizontal: 10, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
+          <GlideRow height={19}>
+            {fact('exam', `${faNum(qs)} سؤال جواب داده‌اید`)}
+            {secs ? fact('clock', spent(secs)) : null}
+          </GlideRow>
         </View>
       ) : null}
     </Card>
