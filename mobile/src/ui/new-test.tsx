@@ -171,7 +171,11 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
           {done ? <Icon name="checkCircle" size={17} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
           <T style={{ fontSize: 14, fontWeight: '700' }}>اشتباهات اصلاح‌نشده</T>
         </View>
-        <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: tone, opacity: done ? 1 : 0.7 }}>{faNum(open.length)}</T>
+        {/* The count opens the mistakes page, as the mistakes count above does (Mojtaba 2026-10-20). */}
+        <Pressable onPress={() => { tap(); router.push('/mistakes'); }} hitSlop={10} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+          <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: tone, opacity: done ? 1 : 0.7 }}>{faNum(open.length)}</T>
+        </Pressable>
       </View>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: missed, now: fixed }}
         style={{ height: 10, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
