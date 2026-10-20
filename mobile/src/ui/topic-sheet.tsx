@@ -38,10 +38,11 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
             <T style={{ fontSize: 12.5, fontWeight: '600', color: c.link }} numberOfLines={1}>{section}</T>
           </View>
         ) : null}
-        <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700' }}>{name}</T>
-        <T raw style={{ fontSize: 12.5, color: c.muted, fontFamily: DA_FONT, writingDirection: 'ltr' }}>{t.da}</T>
+        {/* The topic's name, then its official Danish name after a dash, on one line (Mojtaba 2026-10-20). */}
+        <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700' }}>{name}<T raw style={{ fontSize: 14, fontWeight: '500', color: c.muted, fontFamily: DA_FONT }}>{` - ${t.da}`}</T></T>
       </View>
-      <SheetScroll contentContainerStyle={{ gap: 10, paddingVertical: 12, paddingHorizontal: 4 }}>
+      {/* Close under the name (the sheet keeps 14 between its parts): 10 points in all (Mojtaba 2026-10-20). */}
+      <SheetScroll style={{ marginTop: -8 }} contentContainerStyle={{ gap: 10, paddingTop: 4, paddingBottom: 12, paddingHorizontal: 4 }}>
         <T style={{ fontSize: 14, fontWeight: '700', color: c.muted }}>آموزش این مبحث</T>
         {t.lesson.map((l, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
