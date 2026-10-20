@@ -68,10 +68,10 @@ export function StepCount({ n, of, what }: { n: number; of: number; what: string
 }
 
 // The step's large field: a plain box with a light border, bright while typed in, green once its answer is good
-// (`good`, e.g. a whole email address); with a name above it when `label` is given, a clear button while it has text,
+// (`good`, e.g. a whole email address) and red while its answer is refused (`bad`); with a name above it when `label` is given, a clear button while it has text,
 // and for passwords an eye.
-export function BigField({ value, onChange, placeholder, label, secure, ltr, onSubmit, auto, good, focus: first = true }: {
-  value: string; onChange: (v: string) => void; placeholder?: string; label?: string; secure?: boolean; ltr?: boolean; onSubmit: () => void; good?: boolean; focus?: boolean;
+export function BigField({ value, onChange, placeholder, label, secure, ltr, onSubmit, auto, good, bad, focus: first = true }: {
+  value: string; onChange: (v: string) => void; placeholder?: string; label?: string; secure?: boolean; ltr?: boolean; onSubmit: () => void; good?: boolean; bad?: boolean; focus?: boolean;
   auto?: Pick<TextInputProps, 'autoComplete' | 'textContentType' | 'keyboardType' | 'autoCapitalize'>;
 }) {
   const c = useColors();
@@ -81,7 +81,7 @@ export function BigField({ value, onChange, placeholder, label, secure, ltr, onS
     <View style={{ gap: 8 }}>
       {label ? <T style={{ fontSize: 15, fontWeight: '500' }}>{label}</T> : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, height: 58, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5,
-        borderColor: good ? c.ok : focus ? c.text : c.line, backgroundColor: c.surface }}>
+        borderColor: bad ? c.bad : good ? c.ok : focus ? c.text : c.line, backgroundColor: c.surface }}>
         <TextInput value={value} onChangeText={onChange} placeholder={placeholder ? tr(placeholder) : undefined} accessibilityLabel={tr(label || placeholder || '')} placeholderTextColor={c.faint}
           secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false} autoFocus={first} onSubmitEditing={onSubmit} returnKeyType="go" {...auto}
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}

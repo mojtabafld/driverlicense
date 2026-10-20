@@ -693,6 +693,16 @@ async function api(req, res, route) {
     catch (err) { if (err.status) return send(res, err.status, { error: err.message }); console.error('code mail', err.message); return send(res, 502, { error: 'ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.' }); }
     return send(res, 200, { ok: true });
   }
+  // POST emailfree { email }: whether an address can still sign up (no account has it), asked at sign-up's email step so
+  // a taken address is said there (Mojtaba 2026-10-20); else 409. Counted as a failed try, as «code».
+  if (req.method === 'POST' && route === 'emailfree') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const e = mail.normal((await readBody(req)).email);
+    if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
+    addFail(ip);
+    if (resetUser(e)) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.' });
+    return send(res, 200, { ok: true });
+  }
   // POST codein { email, code, name, exam }: the code from /api/code. For an account with this address it signs in (and
   // confirms the address); for a new one it makes the account (its shown name, the questions' language chosen while
   // signing up; a random password nobody knows) and signs in.

@@ -23,7 +23,7 @@ const MAIL = /^\S+@\S+\.\S+$/;
 // for a username, its password asked).
 export function SignSteps({ start, onBack, known }: { start: 'login' | 'register'; onBack: () => void; known?: string }) {
   const c = useColors();
-  const { login, register, mail, sendCode, codeIn } = useApp();
+  const { login, register, mail, sendCode, codeIn, emailFree } = useApp();
   const up = start === 'register';
   const knownMail = !!known && known.includes('@') && mail;
   const [step, setStep] = useState<Step>(up ? 'name' : knownMail ? 'code' : known ? 'pw' : 'id');
@@ -72,7 +72,7 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
       ? { title: 'یک رمز عبور انتخاب کنید', sub: 'با این رمز، از هر دستگاهی وارد حساب خود می‌شوید.', ok: !!pw, next: () => go('lang') }
       : { title: 'رمز عبورتان را وارد کنید', sub: fmt('برای ورود با {0}', id.trim()), ok: !!pw, label: 'ورود', next: () => run(() => login(id.trim(), pw)) },
     name: { title: 'اسم‌تان چیست؟', sub: 'برنامه شما را با این نام صدا می‌کند.', ok: !!name.trim(), next: () => go(mail ? 'email' : 'user') },
-    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => go('lang') },
+    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => run(async () => { await emailFree(user.trim()); go('lang'); }) },
     user: { title: 'یک نام کاربری انتخاب کنید', sub: 'با این نام وارد حساب خود می‌شوید (حروف انگلیسی و عدد).', ok: !!user.trim(), next: () => go('pw') },
     lang: { title: 'سؤال‌ها به چه زبانی باشند؟', sub: 'ترجمه‌ی فارسی در هر دو حالت زیر سؤال‌ها نمایش داده می‌شود. بعداً هم از تنظیمات قابل تغییر است.', ok: true,
       ...(mail ? { next: send } : { label: 'ساخت حساب', next: () => run(() => register(name.trim(), user.trim(), pw, undefined, exam)) }) },
@@ -91,10 +91,10 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
       <T style={{ fontSize: 15, fontWeight: '500', color: off ? c.muted : c.text }}>{text}</T>
     </Pressable>
   );
-  const field = step === 'id' ? <BigField value={id} onChange={v => setId(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, ''))} placeholder={mail ? 'mail@mail.com' : 'نام کاربری'} ltr onSubmit={submit} good={mail && MAIL.test(id.trim())} auto={{ autoComplete: mail ? 'email' : 'username', textContentType: mail ? 'emailAddress' : 'username', keyboardType: mail ? 'email-address' : 'default' }} />
+  const field = step === 'id' ? <BigField value={id} onChange={v => { setErr(''); setId(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, '')); }} placeholder={mail ? 'mail@mail.com' : 'نام کاربری'} ltr onSubmit={submit} good={mail && MAIL.test(id.trim())} bad={!!err} auto={{ autoComplete: mail ? 'email' : 'username', textContentType: mail ? 'emailAddress' : 'username', keyboardType: mail ? 'email-address' : 'default' }} />
     : step === 'pw' ? <BigField value={pw} onChange={setPw} placeholder="رمز عبور" secure ltr onSubmit={submit} auto={{ autoComplete: up ? 'new-password' : 'current-password', textContentType: up ? 'newPassword' : 'password' }} />
     : step === 'name' ? <BigField label="نام" value={name} onChange={setName} placeholder="مثلاً سارا" onSubmit={submit} auto={{ autoComplete: 'given-name', textContentType: 'givenName', autoCapitalize: 'words' }} />
-    : step === 'email' ? <BigField value={user} onChange={v => setUser(v.replace(/\s/g, ''))} placeholder="mail@mail.com" ltr onSubmit={submit} good={MAIL.test(user.trim())} auto={{ autoComplete: 'email', textContentType: 'emailAddress', keyboardType: 'email-address' }} />
+    : step === 'email' ? <BigField value={user} onChange={v => { setErr(''); setUser(v.replace(/\s/g, '')); }} placeholder="mail@mail.com" ltr onSubmit={submit} good={MAIL.test(user.trim())} bad={!!err} auto={{ autoComplete: 'email', textContentType: 'emailAddress', keyboardType: 'email-address' }} />
     : step === 'user' ? <BigField value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} placeholder="نام کاربری" ltr onSubmit={submit} auto={{ autoComplete: 'username-new', textContentType: 'username' }} />
     : step === 'lang' ? <ExamLangChoice value={exam} onChange={setExam} />
     : <CodeBoxes value={code} onChange={v => { setCode(v); if (err) setErr(''); }} onDone={enter} bad={!!err} />;
