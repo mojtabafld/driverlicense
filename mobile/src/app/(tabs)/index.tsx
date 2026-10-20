@@ -10,6 +10,7 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
+import { UI_LANG } from '@/lib/i18n';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -309,7 +310,9 @@ export default function Home() {
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
           <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          <Stat bare dense={tighter} grow={share} onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
+          {/* In English and Danish on narrower phones the mistakes line is one word («questions»), as «questions to
+              practise» did not fit (Mojtaba 2026-10-20); Persian keeps its whole line. */}
+          <Stat bare dense={tighter} grow={share} onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? (UI_LANG !== 'fa' && width < 420 ? 'سؤال‌های تمرینی' : 'سؤال برای تمرین') : 'بدون اشتباه'} />
         </Card>
       ) : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
