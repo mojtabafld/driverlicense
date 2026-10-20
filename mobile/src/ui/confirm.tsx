@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, View } from 'react-native';
 
+import { tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { ActionButton, T } from './kit';
 import { useColors, useIsDark } from './theme';
@@ -17,6 +18,7 @@ type Props = {
 };
 export function Confirm({ open, title, text, children, cancel, ok, danger, onCancel, onOk, cancelIcon = 'xmark', okIcon = 'check', icon }: Props) {
   const c = useColors(), dark = useIsDark();
+  const long = Math.max(tr(ok).length, tr(cancel).length) > 11;
   const [v] = useState(() => new Animated.Value(0));
   // Still shown while it fades out after `open` goes false.
   const [shown, setShown] = useState(open);
@@ -45,9 +47,12 @@ export function Confirm({ open, title, text, children, cancel, ok, danger, onCan
             {text ? <T style={{ alignSelf: 'stretch', fontSize: 14.5, lineHeight: 24, color: c.muted, textAlign: 'center' }}>{text}</T> : null}
           </View>
           {children}
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <ActionButton label={cancel} icon={cancelIcon} tone="soft" onPress={onCancel} style={{ flex: 1 }} />
-            <ActionButton label={ok} icon={okIcon} tone={danger ? 'danger' : 'main'} onPress={onOk} style={{ flex: 1 }} />
+          {/* Side by side; one above the other, the going-on one first, when a label (in the app's language) would not fit
+              in half the card (e.g. «Delete account»; Mojtaba 2026-10-20). */}
+          <View style={long ? { gap: 10 } : { flexDirection: 'row', gap: 10 }}>
+            {long ? <ActionButton label={ok} icon={okIcon} tone={danger ? 'danger' : 'main'} onPress={onOk} /> : null}
+            <ActionButton label={cancel} icon={cancelIcon} tone="soft" onPress={onCancel} style={long ? undefined : { flex: 1 }} />
+            {long ? null : <ActionButton label={ok} icon={okIcon} tone={danger ? 'danger' : 'main'} onPress={onOk} style={{ flex: 1 }} />}
           </View>
         </Pressable>
         </Animated.View>

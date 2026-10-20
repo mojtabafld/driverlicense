@@ -1,4 +1,5 @@
 {
+"در هر ساعت حداکثر ۳ کد فرستاده می‌شود؛ کمی بعد دوباره امتحان کنید.":["At most 3 codes are sent per hour; please try again a little later.", "Der sendes højst 3 koder i timen; prøv igen lidt senere."],
 "برای ورود به حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.":["Enter your email to log in to your TeoriPrøve account; we'll send a login code to it.", "Indtast din e-mail for at logge ind på din TeoriPrøve-konto; vi sender en loginkode til den."],
 "برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.":["Enter your email to create your TeoriPrøve account; we'll send a verification code to it.", "Indtast din e-mail for at oprette din TeoriPrøve-konto; vi sender en bekræftelseskode til den."],
 "یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا حساب‌تان ساخته شود.":["We've sent a 6-digit code to {0}. Enter the code to create your account.", "Vi har sendt en 6-cifret kode til {0}. Indtast koden for at oprette din konto."],
