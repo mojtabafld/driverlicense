@@ -32,19 +32,26 @@ function sheetResponder(y: Animated.Value, now: Now) {
     onPanResponderTerminationRequest: () => false,
     onPanResponderRelease: (_, g) => {
       const d = g.dy - now.from;
-      if (d > now.h / 4 || (g.vy > 0.8 && d > 20)) {
-        Animated.timing(y, { toValue: now.h + 40, duration: 180, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => now.onClose());
-      } else Animated.spring(y, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+      if (d > now.h / 4 || (g.vy > 0.8 && d > 20)) now.onClose();
+      else Animated.spring(y, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
     },
     onPanResponderTerminate: () => Animated.spring(y, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start(),
   });
 }
 
+// The close, light and short (Mojtaba 2026-10-20): the sheet moves down only its own height, slowing to a stop rather
+// than speeding off the screen, while it and the dimmed page fade out.
+function slideOut(y: Animated.Value, fade: Animated.Value, h: number, then: () => void) {
+  Animated.parallel([
+    Animated.timing(y, { toValue: h + 24, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    Animated.timing(fade, { toValue: 0, duration: 200, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+  ]).start(({ finished }) => { if (finished) then(); });
+}
+
 // Out past a quarter of the sheet's height or on a quick flick down (px per second), otherwise back.
 function settle(y: Animated.Value, now: Now, d: number, vy: number) {
-  if (d > now.h / 4 || (vy > 800 && d > 20)) {
-    Animated.timing(y, { toValue: now.h + 40, duration: 180, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => now.onClose());
-  } else Animated.spring(y, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
+  if (d > now.h / 4 || (vy > 800 && d > 20)) now.onClose();
+  else Animated.spring(y, { toValue: 0, useNativeDriver: true, bounciness: 4 }).start();
 }
 
 // The phones' drag: it starts only on a move down; the sheet follows from the moment the list is at its top (`at`:
@@ -65,6 +72,7 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
   style?: StyleProp<ViewStyle> }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { height: winH } = useWindowDimensions();
   const [y] = useState(() => new Animated.Value(winH));
+  const [fade] = useState(() => new Animated.Value(1));
   // Still shown while it slides out after `open` goes false.
   const [shown, setShown] = useState(open);
   if (open && !shown) setShown(true);
@@ -75,20 +83,21 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
     if (open) {
       Object.assign(now, { top: true });
       y.setValue(winH);
+      fade.setValue(1);
       Animated.timing(y, { toValue: 0, duration: 300, easing: Easing.bezier(0.2, 0.9, 0.3, 1), useNativeDriver: true }).start();
       return;
     }
-    Animated.timing(y, { toValue: winH, duration: 200, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(({ finished }) => { if (finished) setShown(false); });
+    slideOut(y, fade, now.h, () => setShown(false));
     // winH is read only when the sheet opens or closes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, y, now]);
+  }, [open, y, fade, now]);
   const [pan] = useState(() => sheetResponder(y, now));
   const [gesture] = useState(() => sheetPan(y, now));
-  const dim = y.interpolate({ inputRange: [0, Math.max(1, winH * 0.6)], outputRange: [1, 0], extrapolate: 'clamp' });
+  const dim = Animated.multiply(fade, y.interpolate({ inputRange: [0, Math.max(1, winH * 0.6)], outputRange: [1, 0], extrapolate: 'clamp' }));
   const sheet = (
     <Animated.View {...(WEB ? pan.panHandlers : null)} onLayout={e => { Object.assign(now, { h: e.nativeEvent.layout.height }); }}
       style={[{ maxHeight, width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 8, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
-        borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface, transform: [{ translateY: y }] },
+        borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface, opacity: fade, transform: [{ translateY: y }] },
         Platform.OS === 'web' ? ({ touchAction: 'none', overscrollBehavior: 'contain' } as any) : null, style]}>
       {/* The grab handle: a sign that the sheet can be dragged down. */}
       <View style={{ alignItems: 'center', marginBottom: -4 }}>
