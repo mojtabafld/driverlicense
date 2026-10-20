@@ -49,6 +49,7 @@ const MAX_ATTEMPTS = 500;
 const MODES = ['random', 'mistakes', 'top', 'lesson', 'sections', 'new']; // lesson: one of prove.dk's 44 tests, in its order; sections: random questions from chosen official sections; new: «آزمون جدید», the app's own questions (site/newq.js)
 const lessonOf = b => (b.mode === 'lesson' && Number.isInteger(+b.lesson) && +b.lesson > 0 ? { lesson: +b.lesson } : {});
 const MAX_WORDS = 3000;
+const MAX_TERMS = 500; // bookmarked glossary terms per user
 const MAX_SAVED = 1000; // bookmarked questions per user
 const MAX_LESSON_DRAFTS = 100; // unfinished lessons per user (there are 44)
 const ADMINS = new Set((process.env.ADMIN_USERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
@@ -1222,7 +1223,7 @@ async function api(req, res, route) {
       if (user.draft.lesson) (user.lessonDrafts = user.lessonDrafts || {})[user.draft.lesson] = user.draft;
       delete user.draft; await store.saveUser(user);
     }
-    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], draft: user.draft || null, lessonDrafts: user.lessonDrafts || {}, imgv: imagegen.versions() });
+    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], terms: user.terms || [], draft: user.draft || null, lessonDrafts: user.lessonDrafts || {}, imgv: imagegen.versions() });
   }
   if (req.method === 'POST' && route === 'attempts') {
     const b = await readBody(req);
@@ -1276,6 +1277,14 @@ async function api(req, res, route) {
     }
     await store.saveUser(user);
     return send(res, 200, { word: old || entry });
+  }
+  // Bookmarked glossary terms («واژه‌نامه‌ی آزمون»): the whole list of their Danish words, newest first.
+  if (req.method === 'PUT' && route === 'terms') {
+    const b = await readBody(req);
+    const seen = new Set();
+    user.terms = (Array.isArray(b.terms) ? b.terms : []).map(t => clip(t, 60)).filter(t => t && !seen.has(t) && seen.add(t)).slice(0, MAX_TERMS);
+    await store.saveUser(user);
+    return send(res, 200, { terms: user.terms });
   }
   if (req.method === 'DELETE' && route === 'words') {
     const b = await readBody(req);

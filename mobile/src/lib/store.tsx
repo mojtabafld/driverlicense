@@ -12,13 +12,15 @@ import { PALETTE, forgetPalette, keepPalette, rememberDefault } from '@/ui/palet
 import { useTheme } from '@/ui/theme';
 
 export type Saved = { id: number; a?: number[]; at: number };
-type Me = { user: User; attempts: Attempt[]; settings: Partial<Settings>; saved?: Saved[]; imgv?: Record<string, string> };
+type Me = { user: User; attempts: Attempt[]; settings: Partial<Settings>; saved?: Saved[]; terms?: string[]; imgv?: Record<string, string> };
 type Ctx = {
   // Q: every question by its number, the bank's and «آزمون جدید»'s (newBank, loaded after the bank; null at /app).
   ready: boolean; user: User | null; attempts: Attempt[]; settings: Settings; bank: Bank | null; newBank: NewBank | null; Q: Map<number, Question>;
   imgv: Record<string, string>; token: string | null;
   // Saved questions (the bookmark on a review card's picture, as on the site) and whether the server has AI tips.
   saved: Saved[]; aiLessons: boolean; tts: boolean;
+  // Bookmarked glossary terms (their Danish words, newest first) and their toggle, kept on the account.
+  terms: string[]; toggleTerm: (da: string) => Promise<void>;
   // Whether the server can read aloud at all (even when `locked`): the exam's read-aloud button then shows and leads to the premium page.
   ttsServer: boolean;
   // Premium (a pass bought with Stripe, app/premium.tsx): its plans when it can be bought, whether this account has it
@@ -192,6 +194,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMe(m => (m ? { ...m, saved: on ? [...(m.saved ?? []).filter(x => x.id !== id), { id, a, at: Date.now() }] : (m.saved ?? []).filter(x => x.id !== id) } : m));
       try { if (on) await api('POST', 'saved', { id, a }); else await api('DELETE', 'saved', { id }); }
       catch (e) { setMe(m => (m ? { ...m, saved: before } : m)); throw e; }
+    },
+    terms: me?.terms ?? [],
+    toggleTerm: async da => {
+      const before = me?.terms ?? [], next = before.includes(da) ? before.filter(x => x !== da) : [da, ...before];
+      setMe(m => (m ? { ...m, terms: next } : m));
+      try { await api('PUT', 'terms', { terms: next }); }
+      catch (e) { setMe(m => (m ? { ...m, terms: before } : m)); throw e; }
     },
     Q: new Map([...(bank?.questions || []), ...(newBank?.questions || [])].map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
