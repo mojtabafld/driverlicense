@@ -64,12 +64,14 @@ function Root() {
   // background gradient, so the top of the screen runs into the page; over the intro and the language screen, their
   // navy (the intro's changes with its picture).
   const [introTop, setIntroTop] = useState<string | null>(null);
-  const cover = blocked ? (ARC ? INTRO_BG[0] : OFFLINE_TOP) : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
+  // Main site: the language screens are on the page's own colour (ui/lang-wheel.tsx, ui/lang-pick.tsx), so the top runs
+  // into them in it too (Mojtaba 2026-10-20).
+  const cover = blocked ? (ARC ? INTRO_BG[0] : OFFLINE_TOP) : ARC && (onboarded === false || askLang) ? c.bg : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-    document.documentElement.style.colorScheme = cover || dark ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = (cover && cover !== c.bg) || dark ? 'dark' : 'light';
     setWebTop(c.bgGradient[0], cover);   // (a page's picture header, in view, puts its own green there: ui/kit.tsx)
-  }, [dark, c.bgGradient, cover]);
+  }, [dark, c.bgGradient, c.bg, cover]);
   if (blocked) return <Offline onRetry={check} />;
   // A new account waiting for its email link: only that page (the app loads once the link is opened).
   if (ready && fonts && onboarded && user?.verify) return <ThemeProvider value={dark ? DarkTheme : DefaultTheme}><StatusBar style={dark ? 'light' : 'dark'} /><VerifyEmail /></ThemeProvider>;
@@ -79,7 +81,7 @@ function Root() {
     <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
       {Platform.OS === 'web' && !ARC ? <OfflinePreload /> : null}
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
-      <StatusBar style={dark || !onboarded || askLang ? 'light' : 'dark'} />
+      <StatusBar style={dark || (!ARC && (!onboarded || askLang)) ? 'light' : 'dark'} />
       {/* While the intro is open the screens (sign-in included) are not there at all: hidden password fields behind it
           made iOS / Android offer saved passwords during the intro. */}
       {!onboarded ? (
