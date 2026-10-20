@@ -348,8 +348,13 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
             <Icon name="bookmark" size={17} filled={isSaved} color={dark ? (isSaved ? c.link : '#fff') : c.accent} />
           </Pressable>
         </View>
-        {/* One line: a long category name glides (main site) or is cut with «…» (/app) so the translation switch stays beside it. */}
+        {/* One line: a long category name glides (main site) or is cut with «…» (/app) so the buttons keep their room. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {/* Read aloud and the translation switch first, the same round buttons as in the exam; the result badge and the
+              category at the row's other end (swapped, Mojtaba 2026-10-20; here and in the mistakes page's review). */}
+          <SpeakButton key={q.id} qid={q.id} lang={lang} />
+          <TranslateButton on={fa} onPress={() => setFa(!fa)} lang={lang} />
+          <View style={{ flex: 1, minWidth: 4 }} />
           {badge ? (
             <View style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
               <T style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '700', color: badge.fg }}>{badge.text}</T>
@@ -373,10 +378,6 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               </View>
             </Chip>
           ) : null}
-          <View style={{ flex: 1, minWidth: 4 }} />
-          {/* Read aloud and the translation switch at the row's left end, the same round buttons as in the exam. */}
-          <SpeakButton key={q.id} qid={q.id} lang={lang} />
-          <TranslateButton on={fa} onPress={() => setFa(!fa)} lang={lang} />
         </View>
         <View style={{ gap: 8 }}>
           <L style={flat ? { fontSize: 18, lineHeight: 25, fontWeight: '600' } : { fontSize: 16, lineHeight: 24, fontWeight: '600' }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
