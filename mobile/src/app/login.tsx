@@ -19,6 +19,7 @@ import { t as fmt, tr } from '@/lib/i18n';
 import { CodeBoxes } from '@/ui/code-boxes';
 import { SignSteps } from '@/ui/sign-steps';
 import { Welcome } from '@/ui/welcome';
+import { WelcomeBack } from '@/ui/welcome-back';
 
 // Sign in / sign up switch: a soft track with the chosen side raised. (Main site, light: the track a step darker than
 // the page, as the app's switches look on their white cards, «پاسخ شما / پاسخ صحیح» for one.)
@@ -49,6 +50,11 @@ export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   // Main site and /app: first the welcome screen, whose two buttons open the form in their mode (Mojtaba 2026-10-20).
   const [welcome, setWelcome] = useState(ARC);
+  // The account signed out last on this device (undefined while it is read); each sign-out shows the first screen
+  // again (the page stays loaded while signed in).
+  const { lastUser: last, forgetLastUser } = useApp();
+  const [seen, setSeen] = useState(last);
+  if (seen !== last) { setSeen(last); setWelcome(true); setMode('login'); }
   // 'ask': the forgotten-password form; 'code': its code went out and is typed in; 'set': the new password.
   const [lost, setLost] = useState<'' | 'ask' | 'code' | 'set'>('');
   const [code, setCode] = useState(''), [sentAt, setSentAt] = useState(0), [now, setNow] = useState(Date.now());
@@ -128,12 +134,15 @@ export default function Login() {
     <ArcButton big label={busy ? '…' : 'ذخیره و ورود'} onPress={setNew} disabled={busy || !pw || !pw2} style={{ marginTop: 4 }} />
     {link('بازگشت به ورود', backToLogin)}
   </>;
-  // Main site and /app: the welcome screen, then the form one question at a time (ui/sign-steps.tsx).
+  // Main site and /app: «خوش برگشتید» with the account signed out last on this device, else the welcome screen; then
+  // the form one question at a time (ui/sign-steps.tsx; for that account, only its password).
   if (ARC) return (
     <Backdrop>
-      {welcome ? <Welcome busy={busy} err={err} onGuest={asGuest}
-        onLogin={() => { setMode('login'); setErr(''); setWelcome(false); }} onRegister={() => { setMode('register'); setErr(''); setWelcome(false); }} />
-        : <SignSteps start={mode} onBack={() => setWelcome(true)} />}
+      {last === undefined ? null
+        : welcome && last ? <WelcomeBack last={last} onPick={() => { setMode('login'); setErr(''); setWelcome(false); }} onNotYou={forgetLastUser} />
+        : welcome ? <Welcome busy={busy} err={err} onGuest={asGuest}
+          onLogin={() => { setMode('login'); setErr(''); setWelcome(false); }} onRegister={() => { setMode('register'); setErr(''); setWelcome(false); }} />
+        : <SignSteps start={mode} known={mode === 'login' && last ? last.id : undefined} onBack={() => setWelcome(true)} />}
       <InstallHint />
     </Backdrop>
   );
