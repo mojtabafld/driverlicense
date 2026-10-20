@@ -703,6 +703,14 @@ async function api(req, res, route) {
     if (resetUser(e)) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.' });
     return send(res, 200, { ok: true });
   }
+  // POST codecheck { email, code }: whether a sign-up code is right, before its last step (the questions' language)
+  // makes the account with codein. A wrong code counts as a try.
+  if (req.method === 'POST' && route === 'codecheck') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const { email, code } = await readBody(req);
+    if (!signupCodeOk(mail.normal(email), code)) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+    return send(res, 200, { ok: true });
+  }
   // POST codein { email, code, name, exam }: the code from /api/code. For an account with this address it signs in (and
   // confirms the address); for a new one it makes the account (its shown name, the questions' language chosen while
   // signing up; a random password nobody knows) and signs in.
