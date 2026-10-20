@@ -163,7 +163,7 @@ export default function Home() {
   const { user, attempts, bank } = useApp();
   const exams = attempts.filter(a => a.mode !== 'lesson');
   const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
-  const [view, setView] = useState(false), [grow, setGrow] = useState<[number, number] | null>(null);
+  const [view, setView] = useState(false), [grow, setGrow] = useState<[number, number] | null>(null), [hint, setHint] = useState(0);
   const [t] = useState(() => new Animated.Value(0));
   const topH = useRef(0), chartH = useRef(0), scroll = useRef<ScrollView>(null);
   // Before the first exam (the chart empty), the chart view's chart is made lower when the statistics and the empty
@@ -191,7 +191,11 @@ export default function Home() {
     setView(open);
     t.stopAnimation();
     Animated.timing(t, { toValue: open ? 1 : 0, duration: open ? 480 : 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })
-      .start(({ finished }) => { if (finished && !open) { setGrow(null); setLow(false); } });
+      .start(({ finished }) => {
+        if (finished && !open) { setGrow(null); setLow(false); }
+        // Opened: the latest tests' «all» button shows «نمایش همه» for a moment, as on the exam page (Mojtaba 2026-10-20).
+        if (finished && open) setHint(h => h + 1);
+      });
   };
   // In the chart view, a swipe down from the page's top (at least 50 points, mostly vertical) closes it, back to the
   // home page as it opens (Mojtaba 2026-10-19). Plain touch events, so the page still scrolls as before; `scrollY`: a
@@ -352,7 +356,7 @@ export default function Home() {
           style={{ gap, opacity: t.interpolate({ inputRange: [0.25, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }] }}>
           <TestStats attempts={exams} />
-          <ActivityList attempts={exams} limit={3} title="آخرین آزمون‌ها" allHref="/history" />
+          <ActivityList attempts={exams} limit={3} title="آخرین آزمون‌ها" allHref="/history" hint={hint} />
         </Animated.View>
       ) : null}
     </Screen>
