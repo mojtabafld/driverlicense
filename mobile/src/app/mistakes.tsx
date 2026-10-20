@@ -147,8 +147,8 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
             {/* The topics, weakest first: the first 5 on the overview, all of them on the topics page */}
             {!view || view === 'topics' ? (
               <Card style={{ gap: 4 }}>
-                {/* Weakest first, one row each: name, a bar of the share answered right, the percent (Mojtaba, 2026-10-15,
-                    after a "where your next points are" card). */}
+                {/* Weakest first, one row each: name, a bar of the share answered right, its count of mistakes, the percent
+                    (Mojtaba, 2026-10-15, after a "where your next points are" card; the count 2026-10-20). */}
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
                   <T style={{ fontSize: 16, fontWeight: '700' }}>ضعیف‌ترین مباحث</T>
                   <T style={{ fontSize: 13, color: c.muted }}>پاسخ درست</T>
@@ -166,6 +166,12 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
                           <View style={{ width: '30%', height: 16, borderRadius: 8, backgroundColor: dark ? 'rgba(255,255,255,0.1)' : '#ececec', overflow: 'hidden', flexDirection: 'row' }}>
                             {/* (none right: a dot, the bar's own height) */}
                             <View style={{ width: `${pct}%`, minWidth: 16, borderRadius: 8, backgroundColor: tone(p) }} />
+                          </View>
+                          {/* How many of its questions were answered wrong, in a small round after the bar: red while some are
+                              not put right yet, green once all are (Mojtaba 2026-10-20). */}
+                          <View accessibilityLabel={`${faNum(g.list.length)} اشتباه`}
+                            style={{ minWidth: 24, height: 24, paddingHorizontal: 6, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: g.open ? c.badSoft : c.okSoft }}>
+                            <T style={{ fontSize: 12, lineHeight: 18, fontWeight: '700', color: g.open ? c.bad : c.ok }}>{faNum(g.list.length)}</T>
                           </View>
                           <View style={{ width: 46, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'baseline' }}>
                             {RTL
