@@ -309,11 +309,12 @@ export default function Home() {
         </View>
       </Card>
       {/* Main site: the three counts share one card, split by thin vertical lines, Mojtaba asked. */}
+      {/* The tests' count opens «همه‌ی آزمون‌ها» (/history), or the exam tab before the first test (Mojtaba 2026-10-20). */}
       {/* Main site: each count keeps its line under it (the lessons their bar) on every screen, Mojtaba asked (2026-10-20);
           the page fits itself around them (`fit`). */}
       {ARC ? (
         <Card style={{ flexDirection: 'row', padding: 0 }}>
-          <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/exam')} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
+          <Stat bare dense={tighter} grow={share} onPress={() => (exams.length ? router.push('/history') : router.navigate('/exam'))} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
           <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
