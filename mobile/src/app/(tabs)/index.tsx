@@ -32,7 +32,8 @@ import { HomeLicenceArt } from '@/ui/header-art';
 // `progress` (every lesson done) turns the icon, the number and the bar green.
 // `bare`: no card of its own, a pressable cell in the shared card (main site).
 // `grow`: this much taller (the room the plain header leaves, shared out on the home page), split above and below.
-function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, bare, grow = 0 }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number; bare?: boolean; grow?: number }) {
+// `dense`: the densest home page (main site): a little less padding, every line kept.
+function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, bare, grow = 0, dense }: { icon: IconName; label: string; value: string; extra?: string; sub?: string; tone?: 'bad' | 'ok'; onPress: () => void; short?: boolean; progress?: number; bare?: boolean; grow?: number; dense?: boolean }) {
   const c = useColors();
   const narrow = useWindowDimensions().width < 380; // three cards in a row: smaller icon and label on narrow phones
   if (progress != null && progress >= 1) tone = 'ok';
@@ -59,7 +60,7 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
   </>);
-  const pad = { gap: 4, paddingVertical: 10 + grow / 2, paddingHorizontal: narrow ? 8 : 10 };
+  const pad = { gap: dense ? 2 : 4, paddingVertical: (dense ? 6 : 10) + grow / 2, paddingHorizontal: narrow ? 8 : 10 };
   return bare ? (
     <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ flex: 1 }, pad, pressed && { opacity: 0.7 }]}>{body}</Pressable>
   ) : <Card onPress={onPress} style={{ flex: 1, ...pad }}>{body}</Card>;
@@ -211,7 +212,7 @@ export default function Home() {
       if (dy > 50 && dy > Math.abs(dx) * 2) { swiped.current = Date.now(); toggle(); }
     },
   } : null;
-  const chartMin = tighter ? (ARC ? 64 : 84) : 120;
+  const chartMin = tighter ? (ARC ? 52 : 84) : 120;
   // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
   const noHint = ARC && tighter;
   const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
@@ -296,13 +297,15 @@ export default function Home() {
         </View>
       </Card>
       {/* Main site: the three counts share one card, split by thin vertical lines, Mojtaba asked. */}
+      {/* Main site: each count keeps its line under it (the lessons their bar) on every screen, Mojtaba asked (2026-10-20);
+          the page fits itself around them (`fit`). */}
       {ARC ? (
         <Card style={{ flexDirection: 'row', padding: 0 }}>
-          <Stat bare grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
+          <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/exam')} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          <Stat bare grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
+          <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          <Stat bare grow={share} onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
+          <Stat bare dense={tighter} grow={share} onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
         </Card>
       ) : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
