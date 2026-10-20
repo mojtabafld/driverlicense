@@ -3984,5 +3984,9 @@
 "اشتباهات اصلاح‌نشده":["Uncorrected mistakes", "Ikke-rettede fejl"],
 "# از # اشتباه اصلاح شده":["# of # mistakes corrected", "# af # fejl rettet"],
 "همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.":["You have corrected all the mistakes in this test.", "Du har rettet alle fejlene i denne test."],
-"آزمون اشتباهات":["Mistakes test", "Test med fejl"]
+"آزمون اشتباهات":["Mistakes test", "Test med fejl"],
+"نسخه‌ی جدید اپ":["New version of the app", "Ny version af appen"],
+"نسخه‌ی تازه‌ای از اپ منتشر شده است. برای استفاده از آخرین امکانات و اصلاحات، آن را نصب کنید.":["A new version of the app is out. Install it to get the latest features and fixes.", "En ny version af appen er udkommet. Installer den for at få de nyeste funktioner og rettelser."],
+"نصب نسخه‌ی جدید":["Install new version", "Installer ny version"],
+"بعداً":["Later", "Senere"]
 }

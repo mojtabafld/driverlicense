@@ -15,6 +15,7 @@ import { LangPick } from '@/ui/lang-pick';
 import { OFFLINE_TOP, Offline, OfflinePreload } from '@/ui/offline';
 import { Onboarding, useIntroBg } from '@/ui/onboarding';
 import { useTapTopToScroll } from '@/ui/tap-top';
+import { UpdatePrompt } from '@/ui/update-prompt';
 import { VerifiedPopup } from '@/ui/verified-popup';
 import { VerifyEmail } from '@/ui/verify-email';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
@@ -118,6 +119,8 @@ function Root() {
         // After the intro and signing in: the questions' language (once per account, and once on each phone).
         <View style={StyleSheet.absoluteFill}><LangPick /></View>
       ) : null}
+      {/* A newer Android app is out: asks once per start to install it (after the intro and the language screen). */}
+      {onboarded && user && !askLang ? <UpdatePrompt /> : null}
     </ThemeProvider>
   );
 }

@@ -101,13 +101,19 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const slot = ARC ? VW / Math.max(1, Math.min(VIEW, data.length) - 1) : VW / Math.min(VIEW, data.length);
   const CW = ARC ? slot * (data.length - 1) : slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
   const DOT = ARC ? 4 : 5;   // the points' radius (10 across), with a ring in the card's colour
-  const x = (i: number) => (ARC ? slot * i : slot * (i + 0.5));
+  const x0 = (i: number) => (ARC ? slot * i : slot * (i + 0.5));
+  // Main site in Persian: the chart runs right to left, the oldest at the right and the newest at the left edge, where it
+  // opens (Mojtaba 2026-10-19); English and Danish, and /app, left to right.
+  const FLIP = ARC && RTL;
+  const x = (i: number) => (FLIP ? CW - x0(i) : x0(i));
   // ARC: the scale starts a little under the lowest score (in tens, at most 60%), so the line uses the card's height.
   const lo = ARC ? Math.max(0, Math.min(60, Math.floor((Math.min(...data.map(a => pctOf(a) * 100)) - 15) / 10) * 10)) : 0;
   const y = (v: number) => TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B);
   const tops = data.map(a => y(pctOf(a) * 100));
-  // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge.
+  // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge
+  // (mirrored right to left with FLIP: the part drawn runs from the right end, `ahead` is a point not reached yet).
   const edge = Math.max(0, CW - VW) + (VW + DOT * 2 + 2) * draw;
+  const ahead = (i: number) => (FLIP ? x(i) < CW - edge : x(i) > edge);
   // On Android a clip path whose rectangle changes is not drawn again (react-native-svg), so the line stayed hidden
   // while its points came in (Mojtaba 2026-10-18); the phones get a new clip, by its id, at each step instead.
   const clipId = Platform.OS === 'web' ? 'pcDraw' : `pcDraw${Math.round(edge)}`;
@@ -137,7 +143,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
               ))}
             </Svg>}
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
-              onContentSizeChange={w => { if (Math.abs(w - endW.current) > 1) { endW.current = w; scroller.current?.scrollToEnd({ animated: false }); } }}>
+              onContentSizeChange={w => { if (Math.abs(w - endW.current) > 1) { endW.current = w; if (FLIP) scroller.current?.scrollTo({ x: 0, animated: false }); else scroller.current?.scrollToEnd({ animated: false }); } }}>
               {/* ARC: clipped, so the edge points' tap areas do not widen the scroll past the line's end. */}
               <View style={{ width: CW, height: H, overflow: ARC ? 'hidden' : 'visible' }}>
                 {/* A tap between the bars clears the pick. */}
@@ -150,7 +156,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                       <Stop offset="1" stopColor={c.forest} stopOpacity={0} />
                     </LinearGradient>
                     {/* The part drawn so far: the line and its fill show up to `edge`. */}
-                    <ClipPath id={clipId} key={clipId}><Rect x={0} y={0} width={edge} height={H} /></ClipPath>
+                    <ClipPath id={clipId} key={clipId}><Rect x={FLIP ? CW - edge : 0} y={0} width={edge} height={H} /></ClipPath>
                   </Defs>
                   {ARC ? <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.faint} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" /> : null}
                   <G key={clipId} clipPath={`url(#${clipId})`}>
@@ -164,22 +170,22 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   </G>
                   {/* Each point shows once the line has reached it. */}
                   {/* ARC: a green point on each passed attempt (or 80% and over), a red one on the others. */}
-                  {ARC ? data.map((d, i) => x(i) > edge ? null : (
+                  {ARC ? data.map((d, i) => ahead(i) ? null : (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.ok : c.bad} stroke={c.surface} strokeWidth={2} />))
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
-                  : data.map((d, i) => x(i) > edge ? null : (
+                  : data.map((d, i) => ahead(i) ? null : (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
                       stroke={c.surface} strokeWidth={2} fillOpacity={sel == null || sel === i ? 1 : 0.4} />
                   ))}
-                  {/* The picked point's percent above it. */}
+                  {/* The picked point's percent above it, kept inside the chart at its ends. */}
                   {sel != null && data[sel] ? (
-                    <SvgText x={x(sel)} y={Math.max(11, tops[sel] - DOT - 8)} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
+                    <SvgText x={Math.min(CW - 16, Math.max(16, x(sel)))} y={Math.max(11, tops[sel] - DOT - 8)} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
                       {`${faNum(Math.round(pctOf(data[sel]) * 100))}${RTL ? '٪' : '%'}`}
                     </SvgText>
                   ) : null}
                   {ARC ? null : <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />}
-                  {/* ARC: dates under the line, the newest at the right edge and the oldest in view at the left. */}
-                  {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && Math.abs(x(i) - (CW - VW)) < 36)
+                  {/* ARC: dates under the line, the newest at the right edge and the oldest in view at the left (mirrored with FLIP). */}
+                  {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && Math.abs(x(i) - (FLIP ? VW : CW - VW)) < 36)
                     ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font}
                         textAnchor="middle">{ARC ? fmtDate(d.at) : faNum(i + 1 + offset)}</SvgText>
                     : null))}
