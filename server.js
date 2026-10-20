@@ -160,16 +160,20 @@ async function sendResetMail(u, lang) {
 }
 // Signing in, up and deleting the account with a code instead of a password (Mojtaba 2026-10-20): a random 6-digit
 // code to the address, kept as the forgotten password's is (u.reset; the same 15 minutes, 5 tries, one a minute and 6 a
-// day). For an address with no account yet (signing up) the code waits in memory with the same limits (a restart
-// only means asking for a new one). Unlike sendResetMail, waiting a minute is said to the app, as it shows a timer.
+// day; signing in and up at most 3 an hour per account or address, Mojtaba 2026-10-20). For an address with no account
+// yet (signing up) the code waits in memory with the same limits (a restart only means asking for a new one). Unlike
+// sendResetMail, waiting is said to the app, as it shows a timer.
 const signupCodes = new Map();   // address → { h, exp, sent, day, n, tries }
 async function sendCodeMail(u, e, lang, kind) {
   const now = Date.now(), v = (u ? u.reset : signupCodes.get(e)) || {};
   if (v.sent && now - v.sent < 60e3) throw Object.assign(new Error('یک دقیقه صبر کنید و دوباره امتحان کنید.'), { status: 429 });
   const day = (v.day && now - v.day < 864e5) ? v.day : now, n = day === v.day ? (v.n || 0) : 0;
   if (n >= 6) throw Object.assign(new Error('امروز ایمیل زیادی فرستاده شده است؛ فردا دوباره امتحان کنید.'), { status: 429 });
+  // The codes sent in the last hour (to this account or address), for the hourly limit of signing in and up.
+  const hour = (Array.isArray(v.hour) ? v.hour : []).filter(t => now - t < 3600e3);
+  if (kind !== 'delete' && hour.length >= 3) throw Object.assign(new Error('در هر ساعت حداکثر ۳ کد فرستاده می‌شود؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
   const code = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
-  const rec = { h: tokenHash(`${u ? u.username : e}:${code}`), exp: now + 15 * 60e3, sent: now, day, n: n + 1, tries: 0 };
+  const rec = { h: tokenHash(`${u ? u.username : e}:${code}`), exp: now + 15 * 60e3, sent: now, day, n: n + 1, tries: 0, hour: [...hour, now] };
   if (u) { u.reset = rec; await store.saveUser(u); } else signupCodes.set(e, rec);
   const ui = ['fa', 'en', 'da'].includes(lang) ? lang : u ? (u.settings || {}).ui : 'fa';
   await mail.sendCode(u ? u.email || u.username : e, u ? u.name || '' : '', code, ui, kind);

@@ -3,7 +3,7 @@
 // the dark theme): a round back button at the top and, at the other end, where the user is («مرحله‌ی ۱ از ۴»); the
 // question as a big title with a line under it; the step's fields or choices; and its button kept at the foot of the
 // screen (over the keyboard) under a hairline, faded until the step's answer is there.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View, type TextInputProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
@@ -17,8 +17,23 @@ type FrameProps = {
   onBack?: () => void; corner?: React.ReactNode; title: React.ReactNode; sub?: React.ReactNode; children?: React.ReactNode;
   button: { label: React.ReactNode; ready: boolean; busy?: boolean; onPress: () => void }; fade?: Animated.Value;
 };
+// On the web, how much of the screen's foot the phone's keyboard (with the bar over it, «AutoFill Contact») covers: the
+// page keeps its height under it, so the step's button is lifted by this much and stays in view above the keyboard, as
+// in the Saphe app (Mojtaba 2026-10-20). On phones KeyboardAvoidingView does this.
+function useWebKeyboard() {
+  const [kb, setKb] = useState(0);
+  useEffect(() => {
+    const vv = Platform.OS === 'web' && typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return;
+    const f = () => setKb(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    vv.addEventListener('resize', f); vv.addEventListener('scroll', f); f();
+    return () => { vv.removeEventListener('resize', f); vv.removeEventListener('scroll', f); };
+  }, []);
+  return kb;
+}
+
 export function StepFrame({ onBack, corner, title, sub, children, button, fade }: FrameProps) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
+  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), kb = useWebKeyboard();
   const ready = button.ready && !button.busy;
   const grey = dark ? c.surface2 : c.line;
   const rise = fade ? { opacity: fade, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] } : null;
@@ -41,7 +56,7 @@ export function StepFrame({ onBack, corner, title, sub, children, button, fade }
           <View style={{ marginTop: 16, gap: 12 }}>{children}</View>
         </Animated.View>
       </ScrollView>
-      <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12, paddingBottom: ins.bottom + 14, paddingHorizontal: 24, backgroundColor: c.bg }}>
+      <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12, paddingBottom: kb ? 12 : ins.bottom + 14, marginBottom: kb, paddingHorizontal: 24, backgroundColor: c.bg }}>
         <Pressable onPress={() => { if (ready) { tap(); button.onPress(); } }} disabled={!ready} accessibilityRole="button" accessibilityState={{ disabled: !ready }}
           style={({ pressed }) => ({ width: '100%', maxWidth: 432, alignSelf: 'center', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
             backgroundColor: ready ? c.cta : grey, opacity: pressed ? 0.85 : 1 })}>
