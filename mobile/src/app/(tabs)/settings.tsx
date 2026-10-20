@@ -1,7 +1,7 @@
 // Settings and account.
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { EXAM_FOR, TRANS_DEFAULT, getTransLang, UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
@@ -10,6 +10,7 @@ import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp } from '@/lib/store';
 import { Avatar, AvatarSheet } from '@/ui/avatar';
+import { CodeBoxes } from '@/ui/code-boxes';
 import { Confirm } from '@/ui/confirm';
 import { Field } from '@/ui/field';
 import { Icon, type IconName } from '@/ui/icon';
@@ -58,7 +59,7 @@ function LinkRow({ icon, title, sub, onPress, last, ok }: { icon: IconName; titl
 
 export default function Settings() {
   const c = useColors();
-  const { user, settings, setSettings, logout, deleteAccount, tts, pay, premium } = useApp();
+  const { user, settings, setSettings, logout, deleteAccount, deleteCode, mail, tts, pay, premium } = useApp();
   const { mode, setMode } = useTheme();
   // A guest account cannot be edited or deleted: no account page, no delete line.
   const guest = !!user?.guest;
@@ -66,15 +67,27 @@ export default function Settings() {
   const [askOut, setAskOut] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const confirmLogout = () => setAskOut(true);
-  // Deleting the account (main site only, not /app) asks first, with the password, in the same dialog.
+  // Deleting the account (main site only, not /app) asks first, in the same dialog: with email on, a 6-digit code sent
+  // to the account's address as the dialog opens (Mojtaba 2026-10-20; «ارسال دوباره‌ی کد» after a minute); accounts
+  // without an address, with the password.
+  const byCode = mail && !!user?.email;
   const [askDel, setAskDel] = useState(false), [delPw, setDelPw] = useState(''), [delErr, setDelErr] = useState(''), [delBusy, setDelBusy] = useState(false);
+  const [delSent, setDelSent] = useState(0), [delNow, setDelNow] = useState(0);
+  useEffect(() => { if (!askDel || !delSent) return; const t = setInterval(() => setDelNow(Date.now()), 1000); return () => clearInterval(t); }, [askDel, delSent]);
+  const delWait = delSent ? Math.max(0, 60 - Math.floor((delNow - delSent) / 1000)) : 0;
+  const sendDel = () => {
+    const at = Date.now();
+    setDelSent(at); setDelNow(at); setDelErr('');
+    deleteCode().catch(e => setDelErr(e instanceof Error && e.message ? e.message : 'ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.'));
+  };
+  const openDel = () => { setAskDel(true); if (byCode) sendDel(); };
   const closeDel = () => { if (delBusy) return; setAskDel(false); setDelPw(''); setDelErr(''); };
-  const doDelete = async () => {
+  const doDelete = async (v = delPw) => {
     if (delBusy) return;
-    if (!delPw) return setDelErr('رمز عبور را وارد کنید.');
+    if (byCode ? v.length !== 6 : !v) return setDelErr(byCode ? 'کد ۶ رقمی را وارد کنید.' : 'رمز عبور را وارد کنید.');
     setDelBusy(true); setDelErr('');
-    try { await deleteAccount(delPw); }
-    catch (e) { setDelErr(e instanceof Error && e.message ? e.message : 'حذف نشد؛ دوباره امتحان کنید.'); setDelBusy(false); }
+    try { await deleteAccount(byCode ? { code: v } : { password: v }); }
+    catch (e) { setDelErr(e instanceof Error && e.message ? e.message : 'حذف نشد؛ دوباره امتحان کنید.'); setDelBusy(false); if (byCode) setDelPw(''); }
   };
   // «نسخه‌ی ویژه»: when it can be bought (a Stripe key on the server), or the account has it.
   const showPrem = !!(pay || user?.premium);
@@ -89,10 +102,17 @@ export default function Settings() {
         cancel="ماندن" ok={UI_LANG === 'fa' ? 'خروج' : fmt('خروج از حساب')} okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
       {!PROVE_PICS ? (
         <Confirm open={askDel} icon="trash" danger title="حذف حساب کاربری؟"
-          text="حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، رمز عبور خود را وارد کنید."
-          cancel="انصراف" ok={delBusy ? 'در حال حذف…' : 'حذف حساب'} okIcon="trash" onCancel={closeDel} onOk={doDelete}>
+          text={byCode ? fmt('حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، کد ۶ رقمی‌ای را که به {0} فرستادیم وارد کنید.', user?.email ?? '')
+            : 'حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، رمز عبور خود را وارد کنید.'}
+          cancel="انصراف" ok={delBusy ? 'در حال حذف…' : 'حذف حساب'} okIcon="trash" onCancel={closeDel} onOk={() => doDelete()}>
           <View style={{ gap: 8 }}>
-            <Field icon="lock" label="رمز عبور" value={delPw} onChange={v => { setDelPw(v); setDelErr(''); }} secure ltr onSubmit={doDelete} />
+            {byCode ? <>
+              <CodeBoxes value={delPw} onChange={v => { setDelPw(v); setDelErr(''); }} bad={!!delErr} />
+              {delWait ? <T style={{ fontSize: 13, color: c.faint, textAlign: 'center' }}>{fmt('ارسال دوباره‌ی کد تا {0} ثانیه‌ی دیگر', delWait)}</T>
+                : <Pressable onPress={() => { tap(); sendDel(); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center' }}>
+                  <T style={{ fontSize: 14, fontWeight: '600', color: c.link }}>ارسال دوباره‌ی کد</T>
+                </Pressable>}
+            </> : <Field icon="lock" label="رمز عبور" value={delPw} onChange={v => { setDelPw(v); setDelErr(''); }} secure ltr onSubmit={doDelete} />}
             {delErr ? <T style={{ fontSize: 13.5, color: c.bad, textAlign: 'center' }}>{delErr}</T> : null}
           </View>
         </Confirm>
@@ -130,7 +150,7 @@ export default function Settings() {
         ) : null}
         {/* Delete the account: a quiet red line under the user, it asks first (main site only). */}
         {!PROVE_PICS && !guest ? (
-          <Pressable onPress={() => { tap(); setAskDel(true); }} accessibilityRole="button" accessibilityLabel="حذف حساب کاربری"
+          <Pressable onPress={() => { tap(); openDel(); }} accessibilityRole="button" accessibilityLabel="حذف حساب کاربری"
             style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingTop: 12, borderTopWidth: 1, borderTopColor: c.line, opacity: pressed ? 0.6 : 1 })}>
             <Icon name="trash" size={16} color={c.bad} />
             <T style={{ flex: 1, color: c.bad, fontWeight: '700', fontSize: 14 }}>حذف حساب کاربری</T>

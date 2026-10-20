@@ -1,11 +1,11 @@
 // Signing in and up on the main site and /app, one question per screen (Mojtaba 2026-10-20, after the Saphe app's;
-// the screen's parts in ui/step-frame.tsx). Signing in asks for the email (or the username of accounts from before
-// email) and then the password. Signing up goes through four steps, counted at the top: the first and last name (the
-// shown name), the email (or a username when the server has no email), a password, and the questions' language
-// (Danish or English, as the language screen after signing in, which then does not come). The forgotten password asks
-// for the email, the 6-digit code sent there (in six boxes) and the new password (the server's /api/forgot,
-// /api/resetcheck and /api/reset). The back button goes a step back, from the first one to the welcome screen.
-import { useEffect, useState } from 'react';
+// the screen's parts in ui/step-frame.tsx). No passwords while the server has email (Mojtaba 2026-10-20): signing in
+// asks for the email and then the 6-digit code sent there (/api/code, /api/codein); signing up goes through four
+// steps, counted at the top: the name, the email, the questions' language (Danish or English, so the language screen
+// after signing in does not come) and the code, which makes the account. Accounts from before email, with a username
+// only, still sign in with their password; without email on the server, signing up asks for a username and a password
+// instead of the code. The back button goes a step back, from the first one to the welcome screen.
+import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import { t as fmt } from '@/lib/i18n';
@@ -16,20 +16,23 @@ import { T, tap } from './kit';
 import { BigField, ExamLangChoice, StepCount, StepFrame } from './step-frame';
 import { useColors } from './theme';
 
-type Step = 'id' | 'name' | 'email' | 'user' | 'pw' | 'lang' | 'ask' | 'code' | 'set';
+type Step = 'id' | 'name' | 'email' | 'user' | 'pw' | 'lang' | 'code';
 const MAIL = /^\S+@\S+\.\S+$/;
-const SIGN_UP: Step[] = ['name', 'email', 'pw', 'lang'];
 
-// `known`: the email or username of the account signed out last (ui/welcome-back.tsx): only its password is asked.
+// `known`: the email or username of the account signed out last (ui/welcome-back.tsx): its code is sent at once (or,
+// for a username, its password asked).
 export function SignSteps({ start, onBack, known }: { start: 'login' | 'register'; onBack: () => void; known?: string }) {
   const c = useColors();
-  const { login, register, mail, forgot, checkResetCode, resetPassword } = useApp();
+  const { login, register, mail, sendCode, codeIn } = useApp();
   const up = start === 'register';
-  const [step, setStep] = useState<Step>(up ? 'name' : known ? 'pw' : 'id');
+  const knownMail = !!known && known.includes('@') && mail;
+  const [step, setStep] = useState<Step>(up ? 'name' : knownMail ? 'code' : known ? 'pw' : 'id');
   const [trail, setTrail] = useState<Step[]>([]);
-  const [id, setId] = useState(known ?? ''), [first, setFirst] = useState(''), [last, setLast] = useState(''), [email, setEmail] = useState(''), [user, setUser] = useState('');
-  const [pw, setPw] = useState(''), [pw2, setPw2] = useState(''), [code, setCode] = useState(''), [exam, setExam] = useState<'da' | 'en'>('da');
+  const [id, setId] = useState(known ?? ''), [name, setName] = useState(''), [user, setUser] = useState('');
+  const [pw, setPw] = useState(''), [code, setCode] = useState(''), [exam, setExam] = useState<'da' | 'en'>('da');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
+  // The address the code goes to: the one typed in (signing up) or signed in with.
+  const email = (up ? user : id).trim();
   // The «send again» link waits a minute after each code (as the server does).
   const [sentAt, setSentAt] = useState(0), [now, setNow] = useState(0);
   useEffect(() => { if (step !== 'code') return; const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, [step]);
@@ -51,30 +54,36 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
     try { await f(); } catch (e: any) { setErr(e.message); }
     setBusy(false);
   };
-  const sendCode = () => run(async () => { await forgot(email.trim()); setCode(''); setSentAt(Date.now()); setNow(Date.now()); if (step !== 'code') go('code'); });
-  const checkCode = (v = code) => { if (!busy && v.length === 6) run(async () => { try { await checkResetCode(email.trim(), v); } catch (e) { setCode(''); throw e; } setPw(''); setPw2(''); go('set'); }); };
-  const name = `${first.trim()} ${last.trim()}`.trim();
-  const create = () => run(() => (mail ? register(name, '', pw, email.trim(), exam) : register(name, user.trim(), pw, undefined, exam)));
+  // The code to the address; the code step comes once it is on its way.
+  const send = () => run(async () => {
+    await sendCode(email, up);
+    const at = Date.now(); setSentAt(at); setNow(at); setCode('');
+    if (step !== 'code') go('code');
+  });
+  // The account signed out last: its code goes out as this screen opens.
+  const first = useRef(true);
+  useEffect(() => { if (first.current && knownMail) { first.current = false; send(); } });
+  const enter = (v = code) => { if (!busy && v.length === 6) run(async () => { try { await codeIn(email, v, up ? name.trim() : undefined, up ? exam : undefined); } catch (e) { setCode(''); throw e; } }); };
   // What each step asks, whether its answer is ready, and what its button does.
   const steps: Record<Step, { title: string; sub: string; ok: boolean; next: () => void; label?: string }> = {
-    id: { title: mail ? 'ایمیل‌تان چیست؟' : 'نام کاربری‌تان چیست؟', sub: mail ? 'ایمیل (یا نام کاربری) حساب TeoriPrøve خود را وارد کنید.' : 'نام کاربری حساب TeoriPrøve خود را وارد کنید.',
-      ok: !!id.trim(), next: () => go('pw') },
+    id: { title: mail ? 'ایمیل‌تان چیست؟' : 'نام کاربری‌تان چیست؟', sub: mail ? 'برای ورود به حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.' : 'نام کاربری حساب TeoriPrøve خود را وارد کنید.',
+      ok: !!id.trim(), next: () => (mail && id.includes('@') ? send() : go('pw')) },
     pw: up
       ? { title: 'یک رمز عبور انتخاب کنید', sub: 'با این رمز، از هر دستگاهی وارد حساب خود می‌شوید.', ok: !!pw, next: () => go('lang') }
       : { title: 'رمز عبورتان را وارد کنید', sub: fmt('برای ورود با {0}', id.trim()), ok: !!pw, label: 'ورود', next: () => run(() => login(id.trim(), pw)) },
-    name: { title: 'اسم‌تان چیست؟', sub: 'نام و نام خانوادگی خود را بنویسید تا ساخت حساب TeoriPrøve را ادامه دهید.', ok: !!first.trim(), next: () => go(mail ? 'email' : 'user') },
-    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک لینک تأیید به آن فرستاده می‌شود.', ok: MAIL.test(email.trim()), next: () => go('pw') },
+    name: { title: 'اسم‌تان چیست؟', sub: 'برنامه شما را با این نام صدا می‌کند.', ok: !!name.trim(), next: () => go(mail ? 'email' : 'user') },
+    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => go('lang') },
     user: { title: 'یک نام کاربری انتخاب کنید', sub: 'با این نام وارد حساب خود می‌شوید (حروف انگلیسی و عدد).', ok: !!user.trim(), next: () => go('pw') },
-    lang: { title: 'سؤال‌ها به چه زبانی باشند؟', sub: 'ترجمه‌ی فارسی در هر دو حالت زیر سؤال‌ها نمایش داده می‌شود. بعداً هم از تنظیمات قابل تغییر است.', ok: true, label: 'ساخت حساب', next: create },
-    ask: { title: 'بازیابی رمز عبور', sub: 'ایمیل حساب خود را وارد کنید تا کد بازیابی رمز برایتان فرستاده شود.', ok: MAIL.test(email.trim()), label: 'ارسال کد', next: sendCode },
-    code: { title: 'ایمیل‌تان را ببینید', sub: fmt('اگر حسابی با {0} باشد، یک کد تأیید برایش فرستادیم. کد را وارد کنید تا ادامه دهید.', email.trim()), ok: code.length === 6, label: 'تأیید کد', next: () => checkCode() },
-    set: { title: 'رمز عبور جدید', sub: 'یک رمز عبور جدید برای حساب خود انتخاب کنید.', ok: !!pw && !!pw2, label: 'ذخیره و ورود',
-      next: () => { if (pw !== pw2) { setErr('تکرار رمز جدید با خود آن یکی نیست.'); return; } run(() => resetPassword(email.trim(), code, pw)); } },
+    lang: { title: 'سؤال‌ها به چه زبانی باشند؟', sub: 'ترجمه‌ی فارسی در هر دو حالت زیر سؤال‌ها نمایش داده می‌شود. بعداً هم از تنظیمات قابل تغییر است.', ok: true,
+      ...(mail ? { next: send } : { label: 'ساخت حساب', next: () => run(() => register(name.trim(), user.trim(), pw, undefined, exam)) }) },
+    code: { title: 'ایمیل‌تان را ببینید', sub: up ? fmt('یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا حساب‌تان ساخته شود.', email) : fmt('اگر حسابی با {0} باشد، یک کد تأیید برایش فرستادیم. کد را وارد کنید تا ادامه دهید.', email),
+      ok: code.length === 6, label: up ? 'ساخت حساب' : 'ورود', next: () => enter() },
   };
   const s = steps[step];
   const submit = () => { if (s.ok && !busy) { tap(); s.next(); } };
-  // Sign-up's steps are counted (the username takes the email's place); its button says it goes on with signing up.
-  const at = up ? SIGN_UP.indexOf(step === 'user' ? 'email' : step) : -1;
+  // Sign-up's steps are counted; its button says it goes on with signing up.
+  const order: Step[] = mail ? ['name', 'email', 'lang', 'code'] : ['name', 'user', 'pw', 'lang'];
+  const at = up ? order.indexOf(step) : -1;
   const label = s.label ?? (up ? 'ادامه‌ی ثبت‌نام' : 'ادامه');
   const pill = (text: string, onPress: () => void, off?: boolean) => (
     <Pressable onPress={() => { if (!off && !busy) { tap(); onPress(); } }} accessibilityRole="button" accessibilityState={{ disabled: !!off }}
@@ -82,23 +91,16 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
       <T style={{ fontSize: 15, fontWeight: '500', color: off ? c.muted : c.text }}>{text}</T>
     </Pressable>
   );
-  const field = step === 'id' ? <BigField value={id} onChange={v => setId(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, ''))} placeholder={mail ? 'mail@mail.com' : 'نام کاربری'} ltr onSubmit={submit} auto={{ autoComplete: 'username', textContentType: 'username', keyboardType: mail ? 'email-address' : 'default' }} />
+  const field = step === 'id' ? <BigField value={id} onChange={v => setId(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, ''))} placeholder={mail ? 'mail@mail.com' : 'نام کاربری'} ltr onSubmit={submit} good={mail && MAIL.test(id.trim())} auto={{ autoComplete: mail ? 'email' : 'username', textContentType: mail ? 'emailAddress' : 'username', keyboardType: mail ? 'email-address' : 'default' }} />
     : step === 'pw' ? <BigField value={pw} onChange={setPw} placeholder="رمز عبور" secure ltr onSubmit={submit} auto={{ autoComplete: up ? 'new-password' : 'current-password', textContentType: up ? 'newPassword' : 'password' }} />
-    : step === 'name' ? <>
-      <BigField label="نام کوچک" value={first} onChange={setFirst} onSubmit={submit} auto={{ autoComplete: 'given-name', textContentType: 'givenName', autoCapitalize: 'words' }} />
-      <BigField label="نام خانوادگی" value={last} onChange={setLast} onSubmit={submit} focus={false} auto={{ autoComplete: 'family-name', textContentType: 'familyName', autoCapitalize: 'words' }} />
-    </>
-    : step === 'email' || step === 'ask' ? <BigField value={email} onChange={v => setEmail(v.replace(/\s/g, ''))} placeholder="mail@mail.com" ltr onSubmit={submit} good={MAIL.test(email.trim())} auto={{ autoComplete: 'email', textContentType: 'emailAddress', keyboardType: 'email-address' }} />
+    : step === 'name' ? <BigField label="نام" value={name} onChange={setName} placeholder="مثلاً سارا" onSubmit={submit} auto={{ autoComplete: 'given-name', textContentType: 'givenName', autoCapitalize: 'words' }} />
+    : step === 'email' ? <BigField value={user} onChange={v => setUser(v.replace(/\s/g, ''))} placeholder="mail@mail.com" ltr onSubmit={submit} good={MAIL.test(user.trim())} auto={{ autoComplete: 'email', textContentType: 'emailAddress', keyboardType: 'email-address' }} />
     : step === 'user' ? <BigField value={user} onChange={v => setUser(v.replace(/[^A-Za-z0-9_.-]/g, ''))} placeholder="نام کاربری" ltr onSubmit={submit} auto={{ autoComplete: 'username-new', textContentType: 'username' }} />
     : step === 'lang' ? <ExamLangChoice value={exam} onChange={setExam} />
-    : step === 'code' ? <CodeBoxes value={code} onChange={v => { setCode(v); if (err) setErr(''); }} onDone={checkCode} bad={!!err} />
-    : <>
-      <BigField value={pw} onChange={setPw} placeholder="رمز عبور جدید" secure ltr onSubmit={submit} auto={{ autoComplete: 'new-password', textContentType: 'newPassword' }} />
-      <BigField value={pw2} onChange={setPw2} placeholder="تکرار رمز عبور جدید" secure ltr onSubmit={submit} focus={false} auto={{ autoComplete: 'new-password', textContentType: 'newPassword' }} />
-    </>;
+    : <CodeBoxes value={code} onChange={v => { setCode(v); if (err) setErr(''); }} onDone={enter} bad={!!err} />;
   return (
     <StepFrame onBack={back} fade={fade} title={s.title} sub={s.sub} button={{ label, ready: s.ok, busy, onPress: s.next }}
-      corner={at >= 0 ? <StepCount n={at + 1} of={SIGN_UP.length} what="ساخت حساب کاربری" /> : null}>
+      corner={at >= 0 ? <StepCount n={at + 1} of={order.length} what="ساخت حساب کاربری" /> : null}>
       {/* New fields for each step, so the first takes the cursor (autoFocus) and password managers see each one. */}
       <View key={step} style={{ gap: 18 }}>{field}</View>
       {err ? (
@@ -106,10 +108,6 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
           <Icon name="warning" size={17} color={c.bad} />
           <T style={{ flex: 1, color: c.bad, fontSize: 13.5 }}>{err}</T>
         </View>
-      ) : null}
-      {/* With email: the forgotten password, under the password field. */}
-      {step === 'pw' && !up && mail ? (
-        <View style={{ marginTop: 6 }}>{pill('رمز عبور را فراموش کرده‌اید؟', () => { if (id.includes('@')) setEmail(id.trim()); go('ask'); })}</View>
       ) : null}
       {step === 'lang' ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: c.surface2 }}>
@@ -120,7 +118,7 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
       {step === 'code' ? (
         <View style={{ alignItems: 'center', gap: 10, marginTop: 18 }}>
           <T style={{ fontSize: 16, fontWeight: '500' }}>کد را دریافت نکرده‌اید؟</T>
-          {pill(wait ? fmt('ارسال دوباره‌ی کد تا {0} ثانیه‌ی دیگر', wait) : 'ارسال دوباره‌ی کد', sendCode, !!wait)}
+          {pill(wait ? fmt('ارسال دوباره‌ی کد تا {0} ثانیه‌ی دیگر', wait) : 'ارسال دوباره‌ی کد', send, !!wait)}
           <T style={{ textAlign: 'center', color: c.muted, fontSize: 13, lineHeight: 21 }}>اگر ایمیل را نمی‌بینید، پوشه‌ی هرزنامه (Spam) را هم نگاه کنید.</T>
         </View>
       ) : null}

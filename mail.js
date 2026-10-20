@@ -35,6 +35,32 @@ const RESET = {
   da: { subject: c => `${c} er din TeoriPrøve-kode`, hi: n => `Hej ${n},`, body: 'Din kode til at nulstille adgangskoden:', note: 'Skriv koden i appen for at vælge en ny adgangskode. Koden virker i 15 minutter.', ignore: 'Hvis du ikke har bedt om at ændre din adgangskode, kan du se bort fra denne e-mail; din adgangskode forbliver den samme.', dir: 'ltr' },
 };
 
+// The code that signs in, makes a new account or deletes one (server.js /api/code, /api/codein, /api/deletecode;
+// Mojtaba 2026-10-20: no passwords on the main site): 6 digits, first in the subject, working for 15 minutes.
+const CODE = {
+  fa: { subject: c => `${c} کد ورود به TeoriPrøve`, hi: n => (n ? `سلام ${n}،` : 'سلام،'), dir: 'rtl',
+    body: { login: 'کد ورود به حساب TeoriPrøve شما:', signup: 'کد ساخت حساب TeoriPrøve شما:', delete: 'کد حذف حساب TeoriPrøve شما:' },
+    note: { login: 'این کد را در برنامه وارد کنید تا وارد حساب‌تان شوید. کد تا ۱۵ دقیقه اعتبار دارد.', signup: 'این کد را در برنامه وارد کنید تا حساب‌تان ساخته شود. کد تا ۱۵ دقیقه اعتبار دارد.', delete: 'با وارد کردن این کد در برنامه، حساب شما و همه‌ی اطلاعاتش برای همیشه پاک می‌شود. کد تا ۱۵ دقیقه اعتبار دارد.' },
+    ignore: 'اگر این درخواست از طرف شما نبوده، این ایمیل را نادیده بگیرید.' },
+  en: { subject: c => `${c} is your TeoriPrøve code`, hi: n => (n ? `Hi ${n},` : 'Hi,'), dir: 'ltr',
+    body: { login: 'Your code to log in to TeoriPrøve:', signup: 'Your code to create your TeoriPrøve account:', delete: 'Your code to delete your TeoriPrøve account:' },
+    note: { login: 'Enter this code in the app to log in. The code works for 15 minutes.', signup: 'Enter this code in the app to create your account. The code works for 15 minutes.', delete: 'Entering this code in the app deletes your account and all its data for good. The code works for 15 minutes.' },
+    ignore: 'If you did not ask for this, you can ignore this email.' },
+  da: { subject: c => `${c} er din TeoriPrøve-kode`, hi: n => (n ? `Hej ${n},` : 'Hej,'), dir: 'ltr',
+    body: { login: 'Din kode til at logge ind på TeoriPrøve:', signup: 'Din kode til at oprette din TeoriPrøve-konto:', delete: 'Din kode til at slette din TeoriPrøve-konto:' },
+    note: { login: 'Skriv koden i appen for at logge ind. Koden virker i 15 minutter.', signup: 'Skriv koden i appen for at oprette din konto. Koden virker i 15 minutter.', delete: 'Når du skriver koden i appen, slettes din konto og alle dens data for altid. Koden virker i 15 minutter.' },
+    ignore: 'Hvis du ikke har bedt om dette, kan du se bort fra denne e-mail.' },
+};
+function sendCode(to, name, code, lang, kind) {
+  const t = CODE[lang] || CODE.fa, k = t.body[kind] ? kind : 'login';
+  const html = `<div dir="${t.dir}" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:480px">
+<p>${esc(t.hi(name))}</p><p>${esc(t.body[k])}</p>
+<p style="font-family:Menlo,Consolas,monospace;font-size:32px;font-weight:bold;letter-spacing:8px;direction:ltr;text-align:center;background:#f3f4f8;border-radius:12px;padding:14px 0;margin:16px 0">${esc(code)}</p>
+<p>${esc(t.note[k])}</p>
+<p style="font-size:13px;color:#6b7280">${esc(t.ignore)}</p></div>`;
+  return send(to, t.subject(code), html, `${t.hi(name)}\n\n${t.body[k]} ${code}\n\n${t.note[k]}\n\n${t.ignore}`);
+}
+
 function sendVerify(to, name, link, lang) {
   const t = TEXT[lang] || TEXT.fa;
   const html = `<div dir="${t.dir}" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:480px">
@@ -158,4 +184,4 @@ async function send(to, subject, html, text, { replyTo } = {}) {
   }
 }
 
-module.exports = { available, sendVerify, sendReset, sendReminder, sendReport, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
+module.exports = { available, sendVerify, sendReset, sendCode, sendReminder, sendReport, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };

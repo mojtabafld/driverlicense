@@ -59,6 +59,12 @@ type Ctx = {
   guest: (name: string) => Promise<void>;
   // Forgotten password: a 6-digit code to an address; whether a code is right; then the new password (signs in).
   forgot: (email: string) => Promise<void>;
+  // Without passwords (email on): a 6-digit code to the address, to sign in or (signup) to make a new account; then the
+  // code signs in or makes the account with its shown name and the questions' language (ui/sign-steps.tsx).
+  sendCode: (email: string, signup: boolean) => Promise<void>;
+  codeIn: (email: string, code: string, name?: string, exam?: 'da' | 'en') => Promise<void>;
+  // The code that deletes the account, to its address (the settings' «حذف حساب کاربری»).
+  deleteCode: () => Promise<void>;
   checkResetCode: (email: string, code: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -67,7 +73,8 @@ type Ctx = {
   // Change the shown name and / or the password (with the current one); the username stays.
   updateAccount: (b: { name?: string; current?: string; password?: string }) => Promise<void>;
   // Delete the account and all its data on the server (with the password), then sign out on the device.
-  deleteAccount: (password: string) => Promise<void>;
+  // With the code from deleteCode ({ code }) or, for accounts without an address, the password.
+  deleteAccount: (proof: { password: string } | { code: string }) => Promise<void>;
   // Delete every past exam and lesson of the user.
   clearAttempts: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -236,6 +243,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     guest: async name => { const d = await api<{ token: string }>('POST', 'guest', { name }); await signedIn(d.token); },
     forgot: async email => { await api('POST', 'forgot', { email, lang: UI_LANG }); },
+    sendCode: async (email, signup) => { await api('POST', 'code', { email, signup, lang: UI_LANG }); },
+    codeIn: async (email, code, name, exam) => { const d = await api<{ token: string }>('POST', 'codein', { email, code, name, exam }); await signedIn(d.token); },
+    deleteCode: async () => { await api('POST', 'deletecode', { lang: UI_LANG }); },
     checkResetCode: async (email, code) => { await api('POST', 'resetcheck', { email, code }); },
     resetPassword: async (email, code, password) => { const d = await api<{ token: string }>('POST', 'reset', { email, code, password }); await signedIn(d.token); },
     // Signed out on the device at once; the server is told in the background (with the old token), so a slow or
@@ -253,8 +263,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     lastUser, forgetLastUser: () => { saveLastUser(null); setLastUser(null); },
     // The server removes the account and its sessions, so the device only forgets its token.
-    deleteAccount: async password => {
-      await api('DELETE', 'account', { password });
+    deleteAccount: async proof => {
+      await api('DELETE', 'account', proof);
       gen.current++;
       setApiToken(null); setToken(null); setMe(null);
       await saveToken(null);
