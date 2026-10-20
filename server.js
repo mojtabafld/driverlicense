@@ -566,7 +566,7 @@ function serveStatic(req, res) {
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
   // And the profile pictures to choose from, and the pictures at the top of the «آموزش» and «آزمون» pages.
-  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-5])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-9]|10)\.png$/.exec(p), tm = /^\/hero-try\/([1-2])\.png$/.exec(p), lg = /^\/login-art\/([1-3])\.png$/.exec(p), sm = /^\/store-art\/([1-7])\.png$/.exec(p),
+  const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-5])\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-9]|10)\.png$/.exec(p), tm = /^\/hero-try\/([1-2])\.png$/.exec(p), lg = /^\/login-art\/([1-4])\.png$/.exec(p), sm = /^\/store-art\/([1-7])\.png$/.exec(p),
     gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p), nm = /^\/newq-art\/(\d{4,5})\.png$/.exec(p);
   if (im || lm || am || hm || tm || lg || sm || gm2 || cm || nm) {
     const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : lg ? imagegen.loginBlob(lg[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : nm ? imagegen.newqBlob(nm[1]) : guideref.webBlob(gm2[1], new URL(req.url, 'http://x').searchParams.get('s') || 'l'));
