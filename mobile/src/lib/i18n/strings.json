@@ -1,4 +1,9 @@
 {
+"نام کوچک":["First name","Fornavn"],
+"ادامه‌ی ثبت‌نام":["Continue sign up", "Fortsæt oprettelsen"],
+"نام خانوادگی":["Last name", "Efternavn"],
+"مرحله‌ی {0} از {1}":["Step {0} of {1}", "Trin {0} af {1}"],
+"نام و نام خانوادگی خود را بنویسید تا ساخت حساب TeoriPrøve را ادامه دهید.":["Please type your first and last name to continue setting up your TeoriPrøve account.", "Skriv dit fornavn og efternavn for at fortsætte oprettelsen af din TeoriPrøve-konto."],
 "اسم‌تان چیست؟":["What's your name?", "Hvad hedder du?"],
 "اگر حسابی با {0} باشد، یک کد تأیید برایش فرستادیم. کد را وارد کنید تا ادامه دهید.":["If an account exists for {0}, we've sent it a verification code. Enter the code to continue.", "Hvis der findes en konto til {0}, har vi sendt en bekræftelseskode. Indtast koden for at fortsætte."],
 "ایمیل (یا نام کاربری) حساب TeoriPrøve خود را وارد کنید.":["Enter the email (or username) of your TeoriPrøve account.", "Indtast e-mailen (eller brugernavnet) til din TeoriPrøve-konto."],

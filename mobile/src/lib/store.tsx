@@ -48,7 +48,8 @@ type Ctx = {
   setAvatar: (b: { preset: number } | { image: string } | { remove: true }) => Promise<void>;
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
-  register: (name: string, username: string, password: string, email?: string) => Promise<void>;
+  // `exam`: the questions' language chosen while signing up (ui/sign-steps.tsx), so the language screen does not come.
+  register: (name: string, username: string, password: string, email?: string, exam?: 'da' | 'en') => Promise<void>;
   // Email confirmation is on (the server can send mail): signing up asks for an address, and a new account waits for its link.
   mail: boolean;
   // The confirmation link again, or to a new address (which then needs confirming).
@@ -204,7 +205,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     Q: new Map([...(bank?.questions || []), ...(newBank?.questions || [])].map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
-    register: async (name, username, password, email) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password, email, lang: UI_LANG }); await signedIn(d.token); },
+    register: async (name, username, password, email, exam) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password, email, lang: UI_LANG, exam }); await signedIn(d.token); },
     mail,
     sendVerify: async email => {
       try { const d = await api<{ user: User }>('POST', 'verifysend', { email, lang: UI_LANG }); setMe(m => (m ? { ...m, user: d.user } : m)); }

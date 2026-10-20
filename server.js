@@ -588,7 +588,8 @@ async function api(req, res, route) {
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
-    const { username, password, name, invite, email, lang } = await readBody(req);
+    // `exam`: the questions' language when it was chosen while signing up (the app then does not ask it again).
+    const { username, password, name, invite, email, lang, exam } = await readBody(req);
     if (INVITE_CODE && !safeEqual(String(invite || '').trim(), INVITE_CODE)) {
       addFail(ip);
       return send(res, 403, { error: 'کد دعوت نادرست است.' });
@@ -612,7 +613,7 @@ async function api(req, res, route) {
     const salt = crypto.randomBytes(16).toString('hex');
     const shown = String(name || (byMail ? u.split('@')[0] : u)).trim().slice(0, 40) || u;
     const user = { username: u, name: shown, salt, hash: await hashPw(password, salt),
-      created: Date.now(), attempts: [], settings: { header: 'plain' }, ...(mail.available() && e ? { email: e, mustVerify: true } : {}) };
+      created: Date.now(), attempts: [], settings: { header: 'plain', ...(exam === 'da' || exam === 'en' ? { lang: exam, langChosen: true } : {}) }, ...(mail.available() && e ? { email: e, mustVerify: true } : {}) };
     store.users[u] = user;
     await store.saveUser(user);
     // The link goes out now; when it cannot, the app's «send again» button tries again.
