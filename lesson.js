@@ -330,6 +330,51 @@ async function getSummary({ store, siteDir, username, items, lang, ui }) {
   return { ...(await generate({ store, key, system: ui !== 'fa' ? systemX(OUT[ui], 'summary') : SUMMARY_SYSTEM, prompt, maxTokens: 8000 })), key };
 }
 
+// The topic sheet of a reviewed question (mobile/src/ui/topic-sheet.tsx; Mojtaba 2026-10-20): a few short points on
+// the question's topic written for this question (its picture, statements and official explanations), not the topic's
+// fixed lesson. Each line starts with its kind in brackets, which the sheet shows with its own coloured icon:
+// [look] what to notice in this situation, [rule] the rule it tests, [warn] the usual mistake, [tip] a way to remember.
+const TOPIC_KINDS = '[look], [rule], [warn] and [tip]';
+const topicSystem = lang => `You are a teacher for the Danish driving theory test (B licence).
+For one picture question of the exam, write a short lesson on the question's topic, as it applies to this very question:
+its picture, its statements and their official explanations. It is shown under the topic's name, so do not repeat the name.
+The question's picture is given too; it is the picture the user sees.
+
+Write 3 to 5 lines and nothing else (no headings, no introduction). Each line starts with exactly one of the kinds
+${TOPIC_KINDS} in square brackets, then a space and one or two short sentences:
+- [look] (once, first): what in this picture and question matters for the topic (signs, markings, lights, road users).
+- [rule] (one or two): the Danish rule of the topic that decides this question, precisely and with its conditions.
+- [warn] (at most one): the mistake people often make here.
+- [tip] (at most one): a short practical way to remember it for similar questions.
+
+Rules:
+- The correct answer of each statement is the one in the data; never contradict it or the official explanation.
+${LAW_RULES_X}
+${IMAGE_RULES_X}
+- Write in ${lang} only, at most about 30 words per line. Keep important Danish terms (like ubetinget vigepligt) in brackets where useful.
+- Mark one key phrase per line in **double asterisks**, not whole sentences.`;
+const TOPIC_LANG = { fa: 'Persian (natural, simple Persian for Persian speakers)', en: 'English', da: 'Danish' };
+
+// Returns { text, key } or throws an Error with .status, as getLesson.
+async function getTopic({ store, siteDir, username, qid, lang, ui }) {
+  loadBank(siteDir);
+  const q = Q.get(+qid);
+  if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
+  lang = lang === 'en' ? 'en' : 'da';
+  ui = uiOf(ui);
+  const key = `topic:v1:${qkey(q)}:${lang}:${ui}`;
+  if (store.meta[key]) return { ...store.meta[key], key };
+  if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
+  if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
+  const topic = BANK.topics[q.c];
+  const data = [
+    topic ? `Topic: ${topic.da}${topic.en ? ` (${topic.en})` : ''}` : '',
+    topic && topic.lesson ? `The topic's fixed points (Persian, for reference):\n${topic.lesson.map(l => `- ${l}`).join('\n')}` : '',
+    promptForX(q, null, lang).replace(/\n\n\(The user's answers[^)]*\)\)?$/, ''),
+  ].filter(Boolean).join('\n\n');
+  return { ...(await generate({ store, key, system: topicSystem(TOPIC_LANG[ui]), prompt: [await imageOf(q), { type: 'text', text: data }].filter(Boolean), maxTokens: 3000 })), key };
+}
+
 // Whether a lesson / summary linked to a past exam (attempt.ai) was made for the questions' current text: one made
 // before a question was written new is not shown, and a new one is made instead.
 function isCurrentLesson(siteDir, qid, ref) {
@@ -342,4 +387,4 @@ function isCurrentSummary(siteDir, items, ref) {
   return items.every(x => { const q = Q.get(+x.id); return !q || !q.rev || String(ref).includes(`.${qkey(q)}.`); });
 }
 
-module.exports = { getLesson, getSummary, lessonsAvailable: available, isCurrentLesson, isCurrentSummary, refUi, uiOf };
+module.exports = { getLesson, getSummary, getTopic, lessonsAvailable: available, isCurrentLesson, isCurrentSummary, refUi, uiOf };
