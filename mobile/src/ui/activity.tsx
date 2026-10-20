@@ -68,8 +68,8 @@ function Head({ title, c }: { title: string; c: Colors }) {
 }
 
 // `allHref`: the arrow button in the card's head (ui/more-button.tsx) opens this page of all of them (as the mistakes card's «همه» does), in place of
-// «نمایش همه» under the list. `clearable`: the bin that deletes the whole history (only on that page, /history).
-export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref, clearable }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string; clearable?: boolean }) {
+// «نمایش همه» under the list; `hint`: a new value plays its «نمایش همه» hint. `clearable`: the bin that deletes the whole history (only on that page, /history).
+export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref, clearable, hint }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string; clearable?: boolean; hint?: number }) {
   const c = useColors();
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
@@ -91,7 +91,7 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, paddingBottom: 6 }}>
         <Head title={title} c={c} />
         {allHref ? (
-          <MoreButton onPress={() => router.push(allHref as any)} label={`همه‌ی ${faNum(rows.length)} آزمون`} />
+          <MoreButton onPress={() => router.push(allHref as any)} label={`همه‌ی ${faNum(rows.length)} آزمون`} hint={hint} />
         ) : null}
         {/* Delete the whole history, after a question (the history page only). */}
         {clearable ? <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"

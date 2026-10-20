@@ -7,7 +7,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
-import { RTL, UI_LANG, tr } from '@/lib/i18n';
+import { RTL, UI_LANG, getTransLang, tr } from '@/lib/i18n';
 import { GLOSSARY, TERM_CATS, searchTerms, type Term, type TermCat } from '@/lib/glossary';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
@@ -17,21 +17,25 @@ import { SubPage } from '@/ui/sub-page';
 import { DA_FONT, radius, useColors } from '@/ui/theme';
 
 const NOTE_OF = { fa: 0, en: 1, da: 2 } as const;
-// The meaning in the app's language first; under it another (English under Persian, Persian under English and Danish).
+// The meaning in the app's language first (English in a Danish app); under it the one in the translation language of
+// the settings («زبان ترجمه»), unless that is the same meaning or Danish, the term's own language (Mojtaba 2026-10-20).
 const mainOf = (t: Term) => (UI_LANG === 'fa' ? t.fa : t.en);
-const otherOf = (t: Term) => (UI_LANG === 'fa' ? t.en : t.fa);
+const otherOf = (t: Term) => {
+  const l = getTransLang(), v = l === 'fa' ? t.fa : l === 'en' ? t.en : null;
+  return v && v !== mainOf(t) ? { v, fa: l === 'fa' } : null;
+};
 const CAT = Object.fromEntries(TERM_CATS.map(g => [g.id, g])) as Record<TermCat, (typeof TERM_CATS)[number]>;
 
 function TermCard({ t, on, onToggle }: { t: Term; on: boolean; onToggle: () => void }) {
   const c = useColors();
-  const g = CAT[t.cat], note = t.note ? t.note[NOTE_OF[UI_LANG]] : null;
+  const g = CAT[t.cat], note = t.note ? t.note[NOTE_OF[UI_LANG]] : null, other = otherOf(t);
   return (
     <Card style={{ gap: 10, padding: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
         <View style={{ flex: 1, gap: 3 }}>
           <T raw keepDa style={{ fontFamily: DA_FONT, fontSize: 18, lineHeight: 25, fontWeight: '700', writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{t.da}</T>
           <T raw keepDa style={{ fontSize: 14.5, lineHeight: 23, fontWeight: '600', color: c.link }}>{mainOf(t)}</T>
-          <T raw keepDa style={[{ fontSize: 12.5, lineHeight: 19, color: c.faint }, UI_LANG === 'fa' ? { writingDirection: 'ltr', textAlign: physicalAlign('right') } : { fontFamily: 'Vazirmatn-400' }]}>{otherOf(t)}</T>
+          {other ? <T raw keepDa style={[{ fontSize: 12.5, lineHeight: 19, color: c.faint }, RTL ? { writingDirection: 'ltr', textAlign: physicalAlign('right') } : other.fa ? { fontFamily: 'Vazirmatn-400' } : null]}>{other.v}</T> : null}
         </View>
         <Pressable onPress={() => { tap(); onToggle(); }} hitSlop={8} accessibilityRole="button" accessibilityState={{ selected: on }}
           accessibilityLabel={tr(on ? 'برداشتن نشان' : 'نشان کردن')}
