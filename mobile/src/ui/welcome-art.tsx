@@ -7,17 +7,21 @@ import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 type Art = { fg: string; hole: string };
 const Box = ({ children }: { children: React.ReactNode }) => <Svg width="100%" height="100%" viewBox="0 0 120 100">{children}</Svg>;
 
-// The question bank in the pocket: a phone with one big question mark on its screen (redrawn simpler, Mojtaba
-// 2026-10-20).
+// Every question of the test with its translation (Mojtaba 2026-10-20, a new picture): a fan of question cards, the
+// front one with a warning sign and two answers, and a round badge with arrows both ways for the translation.
 export function WelcomeBank({ fg, hole }: Art) {
   return (
     <Box>
-      <Rect x={32} y={2} width={56} height={96} rx={15} fill={fg} />
-      <Rect x={38} y={12} width={44} height={76} rx={9} fill="#fff" />
-      <Rect x={52} y={6} width={16} height={3} rx={1.5} fill={hole} />
-      <Path d="M51 39 C51 31.5 56 28 60.5 28 C66 28 70 31.5 70 37 C70 42 66.5 44 63.5 46 C61.3 47.5 60.5 49 60.5 52.5" fill="none" stroke={fg} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" />
-      <Circle cx={60.5} cy={64} r={4.6} fill={fg} />
-      <Rect x={52} y={92} width={16} height={2.6} rx={1.3} fill="#fff" opacity={0.75} />
+      <Rect x={30} y={14} width={56} height={72} rx={12} fill={fg} opacity={0.35} transform="rotate(-14 58 50)" />
+      <Rect x={34} y={12} width={56} height={72} rx={12} fill={fg} opacity={0.6} transform="rotate(-6 62 48)" />
+      <Rect x={40} y={10} width={56} height={74} rx={12} fill={fg} />
+      <Path d="M68 21 L81 43 H55 Z" fill="#fff" stroke="#fff" strokeWidth={5} strokeLinejoin="round" />
+      <Path d="M68 29 L74.5 40 H61.5 Z" fill={fg} />
+      <Rect x={50} y={54} width={36} height={6} rx={3} fill="#fff" />
+      <Rect x={50} y={66} width={26} height={6} rx={3} fill="#fff" opacity={0.7} />
+      <Circle cx={92} cy={78} r={17} fill={hole} />
+      <Path d="M84 74 H99 M95 70 L99 74 L95 78" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M100 83 H85 M89 79 L85 83 L89 87" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
     </Box>
   );
 }
