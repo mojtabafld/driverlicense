@@ -38,3 +38,13 @@ export const loadRulesRead = async (): Promise<string[]> => {
   try { const v = JSON.parse((await SecureStore.getItemAsync(RULES_READ)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
 };
 export const saveRulesRead = (titles: string[]) => SecureStore.setItemAsync(RULES_READ, JSON.stringify(titles)).catch(() => {});
+
+// The account last signed out on this device (lib/store.tsx logout), so the sign-in page can greet it again
+// (ui/welcome-back.tsx): its shown name, the email or username it signs in with and its chosen profile picture (the
+// secure store keeps small values only, so not its own photo). Null when forgotten.
+export type LastUser = { name: string; id: string; preset?: number; photo?: string };
+const LAST_USER = 'tp_last_user';
+export const loadLastUser = async (): Promise<LastUser | null> => {
+  try { const v = JSON.parse((await SecureStore.getItemAsync(LAST_USER)) || 'null'); return v && typeof v.id === 'string' && typeof v.name === 'string' ? v : null; } catch { return null; }
+};
+export const saveLastUser = (u: LastUser | null) => (u ? SecureStore.setItemAsync(LAST_USER, JSON.stringify({ ...u, photo: undefined })) : SecureStore.deleteItemAsync(LAST_USER)).catch(() => {});

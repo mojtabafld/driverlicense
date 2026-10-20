@@ -1,5 +1,6 @@
 // App state: the signed-in user, their exams and settings, and the question bank.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, NewBank, Question, Settings, User } from './bank';
@@ -8,6 +9,7 @@ import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n'
 import { reloadApp } from './reload';
 import { forgetPush, syncPush } from './push';
 import { loadToken, saveToken } from './token';
+import { loadLastUser, saveLastUser, type LastUser } from './prefs';
 import { PALETTE, forgetPalette, keepPalette, rememberDefault } from '@/ui/palette';
 import { useTheme } from '@/ui/theme';
 
@@ -60,6 +62,8 @@ type Ctx = {
   checkResetCode: (email: string, code: string) => Promise<void>;
   resetPassword: (email: string, code: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  // The account signed out last on this device (undefined while it is read), for the sign-in page's «خوش برگشتید».
+  lastUser: LastUser | null | undefined; forgetLastUser: () => void;
   // Change the shown name and / or the password (with the current one); the username stays.
   updateAccount: (b: { name?: string; current?: string; password?: string }) => Promise<void>;
   // Delete the account and all its data on the server (with the password), then sign out on the device.
@@ -76,6 +80,23 @@ export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean; promo?: numbe
 const AppCtx = createContext<Ctx | null>(null);
 const DEFAULTS: Settings = { showFa: true, timer: true, lang: 'da' };
 
+// The account signed out, kept on the device for the sign-in page's «خوش برگشتید» (ui/welcome-back.tsx; Mojtaba
+// 2026-10-20): not guests, whose password nobody knows. On the web its own photo is kept too, as a small data URL.
+async function rememberLast(u: User | undefined, token: string | null, set: (u: LastUser) => void) {
+  if (!u || u.guest) return;
+  const last: LastUser = { name: u.name, id: u.email || u.username, ...(u.avatar?.preset ? { preset: u.avatar.preset } : {}) };
+  await saveLastUser(last); set(last);
+  if (!u.avatar?.photo || !token || Platform.OS !== 'web') return;
+  try {
+    const r = await fetch(`${API_URL}/api/avatar?v=${u.avatar.photo}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) return;
+    const b = await r.blob();
+    if (b.size > 200e3) return;
+    const photo = await new Promise<string>((ok, no) => { const f = new FileReader(); f.onload = () => ok(String(f.result)); f.onerror = no; f.readAsDataURL(b); });
+    await saveLastUser({ ...last, photo }); set({ ...last, photo });
+  } catch {}
+}
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -86,6 +107,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tts, setTts] = useState(false); // questions read aloud (the server has an ElevenLabs key)
   const [pay, setPay] = useState<Pay | null>(null);
   const [mail, setMail] = useState(false);
+  const [lastUser, setLastUser] = useState<LastUser | null | undefined>(undefined);
+  useEffect(() => { loadLastUser().then(setLastUser, () => setLastUser(null)); }, []);
   const [intro, setIntro] = useState<Record<string, string>>({});
   const [introBg, setIntroBg] = useState<Record<string, string>>({});
   const [learnArt, setLearnArt] = useState<Record<string, string>>({});
@@ -222,10 +245,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       gen.current++;
       setApiToken(null); setToken(null); setMe(null);
       await saveToken(null);
-      // (The account first forgets this device's notifications, lib/push.ts, while its token still works.)
-      if (old) forgetPush(old).catch(() => {}).then(() => api('POST', 'logout', undefined, old)).catch(() => {});
+      // The account is remembered for the sign-in page's «خوش برگشتید» first (its photo is fetched while the token still
+      // works), then it forgets this device's notifications (lib/push.ts), then the server ends the session.
+      const kept = rememberLast(me?.user, old, setLastUser);
+      if (old) kept.then(() => forgetPush(old)).catch(() => {}).then(() => api('POST', 'logout', undefined, old)).catch(() => {});
       lookOut();
     },
+    lastUser, forgetLastUser: () => { saveLastUser(null); setLastUser(null); },
     // The server removes the account and its sessions, so the device only forgets its token.
     deleteAccount: async password => {
       await api('DELETE', 'account', { password });
@@ -245,7 +271,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt]);
+  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

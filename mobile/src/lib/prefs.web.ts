@@ -35,3 +35,13 @@ export const loadRulesRead = async (): Promise<string[]> => {
   try { const v = JSON.parse(localStorage.getItem(RULES_READ) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
 };
 export const saveRulesRead = async (titles: string[]) => { try { localStorage.setItem(RULES_READ, JSON.stringify(titles)); } catch {} };
+
+// The account last signed out in this browser (lib/store.tsx logout), so the sign-in page can greet it again
+// (ui/welcome-back.tsx): its shown name, the email or username it signs in with, its chosen profile picture and its
+// own photo (a small data URL; the photo needs the session, which is gone once signed out). Null when forgotten.
+export type LastUser = { name: string; id: string; preset?: number; photo?: string };
+const LAST_USER = 'tp.last.user';
+export const loadLastUser = async (): Promise<LastUser | null> => {
+  try { const v = JSON.parse(localStorage.getItem(LAST_USER) || 'null'); return v && typeof v.id === 'string' && typeof v.name === 'string' ? v : null; } catch { return null; }
+};
+export const saveLastUser = async (u: LastUser | null) => { try { if (u) localStorage.setItem(LAST_USER, JSON.stringify(u)); else localStorage.removeItem(LAST_USER); } catch {} };

@@ -20,13 +20,14 @@ type Step = 'id' | 'name' | 'email' | 'user' | 'pw' | 'lang' | 'ask' | 'code' | 
 const MAIL = /^\S+@\S+\.\S+$/;
 const SIGN_UP: Step[] = ['name', 'email', 'pw', 'lang'];
 
-export function SignSteps({ start, onBack }: { start: 'login' | 'register'; onBack: () => void }) {
+// `known`: the email or username of the account signed out last (ui/welcome-back.tsx): only its password is asked.
+export function SignSteps({ start, onBack, known }: { start: 'login' | 'register'; onBack: () => void; known?: string }) {
   const c = useColors();
   const { login, register, mail, forgot, checkResetCode, resetPassword } = useApp();
   const up = start === 'register';
-  const [step, setStep] = useState<Step>(up ? 'name' : 'id');
+  const [step, setStep] = useState<Step>(up ? 'name' : known ? 'pw' : 'id');
   const [trail, setTrail] = useState<Step[]>([]);
-  const [id, setId] = useState(''), [first, setFirst] = useState(''), [last, setLast] = useState(''), [email, setEmail] = useState(''), [user, setUser] = useState('');
+  const [id, setId] = useState(known ?? ''), [first, setFirst] = useState(''), [last, setLast] = useState(''), [email, setEmail] = useState(''), [user, setUser] = useState('');
   const [pw, setPw] = useState(''), [pw2, setPw2] = useState(''), [code, setCode] = useState(''), [exam, setExam] = useState<'da' | 'en'>('da');
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   // The «send again» link waits a minute after each code (as the server does).
