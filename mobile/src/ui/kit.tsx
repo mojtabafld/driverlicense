@@ -691,13 +691,16 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
 // resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
 // `big`: taller, with a larger label (the sign-in page's one wide button).
 export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big }: {
-  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
+  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary' | 'accent'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
 }) {
   const c = useColors();
   const [scale] = useState(() => new Animated.Value(1));
   const width = useRef(0);
   const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
-  const primary = variant === 'primary', fg = primary ? c.ctaFg : c.text;
+  // `accent`: a primary button in the theme's own colour in the dark theme too (where the primary is white), e.g. the
+  // exam tab's start (Mojtaba 2026-10-20).
+  const accent = variant === 'accent', primary = variant === 'primary' || accent, fg = accent ? c.accentText : primary ? c.ctaFg : c.text;
+  const fill = accent ? c.accent : c.cta;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
@@ -716,8 +719,8 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
           minHeight: big ? 56 : 50, borderRadius: big ? 16 : radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
-          borderColor: primary ? c.cta : c.line,
-          backgroundColor: primary ? c.cta : pressed || hovered ? c.surface2 : c.surface,
+          borderColor: primary ? fill : c.line,
+          backgroundColor: primary ? fill : pressed || hovered ? c.surface2 : c.surface,
           opacity: disabled ? (big ? 0.72 : 0.52) : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
           transform: [{ scale }],
           ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
