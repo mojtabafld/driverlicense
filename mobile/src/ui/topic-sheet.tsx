@@ -9,7 +9,9 @@ import type { Question } from '@/lib/bank';
 import { FULL, shuffle } from '@/lib/logic';
 import { sectionFa, sectionIcon, topicName } from '@/lib/names';
 import { session } from '@/lib/session';
-import { useApp } from '@/lib/store';
+import { UI_LANG } from '@/lib/i18n';
+import STRINGS from '@/lib/i18n/strings.json';
+import { useApp, useExamLang } from '@/lib/store';
 import { Icon } from './icon';
 import { ArcButton, T } from './kit';
 import { Sheet, SheetScroll } from './sheet';
@@ -18,9 +20,11 @@ import { DA_FONT, useColors } from './theme';
 export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; onClose: () => void }) {
   const c = useColors();
   const { bank, Q } = useApp();
+  const exam = useExamLang();
   const t = bank?.topics[q.c];
   if (!bank || !t) return null;
   const name = topicName(bank, q.c), section = sectionFa(bank, q.c);
+  const second = UI_LANG === exam ? null : exam === 'en' ? (STRINGS as Record<string, string[]>)[name]?.[0] ?? null : t.da;
   // At most a real test's 25 of the topic's questions, in random order (from the bank in use).
   const practice = () => {
     const ids = shuffle([...Q.values()].filter(x => x.c === q.c).map(x => x.id)).slice(0, FULL);
@@ -38,10 +42,12 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
             <T style={{ fontSize: 12.5, fontWeight: '600', color: c.link }} numberOfLines={1}>{section}</T>
           </View>
         ) : null}
-        <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700' }}>{name}</T>
-        <T raw style={{ fontSize: 12.5, color: c.muted, fontFamily: DA_FONT, writingDirection: 'ltr' }}>{t.da}</T>
+        {/* The topic's name, then after a dash its name in the exam's language: the official Danish one, or the English
+            one with an English exam; none when the app is in that language already (Mojtaba 2026-10-20). */}
+        <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700' }}>{name}{second ? <T raw style={{ fontSize: 14, fontWeight: '500', color: c.muted, fontFamily: DA_FONT }}>{` - ${second}`}</T> : null}</T>
       </View>
-      <SheetScroll contentContainerStyle={{ gap: 10, paddingVertical: 12, paddingHorizontal: 4 }}>
+      {/* Close under the name (the sheet keeps 14 between its parts): 10 points in all (Mojtaba 2026-10-20). */}
+      <SheetScroll style={{ marginTop: -8 }} contentContainerStyle={{ gap: 10, paddingTop: 4, paddingBottom: 12, paddingHorizontal: 4 }}>
         <T style={{ fontSize: 14, fontWeight: '700', color: c.muted }}>آموزش این مبحث</T>
         {t.lesson.map((l, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
