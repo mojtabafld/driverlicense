@@ -179,6 +179,42 @@ async function sendCodeMail(u, e, lang, kind) {
   await mail.sendCode(u ? u.email || u.username : e, u ? u.name || '' : '', code, ui, kind);
   console.log('code mail sent', kind, u ? u.username : e.replace(/^(.{2}).*@/, '$1…@'));
 }
+// What stays of a deleted account, by its address (a hash of it, not the address; Mojtaba 2026-10-20), in store.meta.gone:
+// that it had the free trial (so the trial cannot be had again with the address), and its bought pass (given back when
+// the address signs up again while it lasts; its purchases go with it either way, so the payments' sync, which finds
+// accounts by address too, never counts them again for the new account).
+const mailKey = e => tokenHash(`mail:${mail.normal(e)}`);
+const gone = () => (store.meta.gone = store.meta.gone || { trial: {}, pass: {} });
+async function rememberGone(u) {
+  const e = u.email || (String(u.username).includes('@') ? u.username : '');
+  if (!e) return;
+  const g = gone(), k = mailKey(e), keys = [k, ...(u.promoEmail && mail.normal(u.promoEmail) !== mail.normal(e) ? [mailKey(u.promoEmail)] : [])];
+  if (u.promoUsed || (u.premium && u.premium.promo)) for (const x of keys) g.trial[x] = u.promoUsed || Date.now();
+  const paid = u.premium && (u.premium.buys || []).some(b => !b.refunded);
+  if (paid) g.pass[k] = { until: u.premium.until, plan: u.premium.plan, buys: u.premium.buys };
+  if (keys.some(x => g.trial[x]) || g.pass[k]) await store.saveMeta('gone', g);
+}
+// A new account at an address a deleted account had: no trial again, and its pass back while it lasts. Returns the
+// pass's end when one was given back.
+async function welcomeBack(u, e) {
+  const g = gone(), k = mailKey(e);
+  if (g.trial[k]) { u.promoUsed = g.trial[k]; u.promoEmail = mail.normal(e); }
+  const p = g.pass[k];
+  if (!p) return 0;
+  delete g.pass[k];
+  await store.saveMeta('gone', g);
+  u.premium = { until: p.until, plan: p.plan, buys: p.buys || [], ...(p.until > Date.now() ? { restored: Date.now() } : {}) };
+  if (!(p.until > Date.now())) return 0;
+  console.log('premium pass given back', u.username, new Date(p.until).toISOString());
+  return p.until;
+}
+// The emails after signing up and after buying the pass (mail.js sendWelcome / sendPremium), not waited for.
+const appLink = req => `${req ? originOf(req) : 'https://teori.bitlane.app'}/`;
+function premiumMail(u, req) {
+  if (!mail.available() || !u.email || !u.premium) return;
+  mail.sendPremium(u.email, u.name || u.username, (u.settings || {}).ui, appLink(req), u.premium.until).catch(err => console.error('premium mail', u.username, err.message));
+}
+
 // Whether the code is the one waiting for a new account at this address; a wrong code counts as a try.
 function signupCodeOk(e, code) {
   const r = signupCodes.get(e);
@@ -225,6 +261,7 @@ async function syncPayments() {
       const u = store.users[name] || (email && Object.values(store.users).find(x => x.email && x.emailOk && mail.normal(x.email) === email));
       if (u && payments.grant(u, s)) {
         await store.saveUser(u);
+        premiumMail(u);
         console.log('premium bought (sync)', u.username, s.metadata && s.metadata.plan, s.amount_total, s.currency, s.livemode ? 'live' : 'test');
       } else if (!u) missing.push(s.id + ' ' + name);
     }
@@ -720,7 +757,7 @@ async function api(req, res, route) {
   // signing up; a random password nobody knows) and signs in.
   if (req.method === 'POST' && route === 'codein') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
-    const { email, code, name, exam } = await readBody(req);
+    const b = await readBody(req), { email, code, name, exam } = b;
     const e = mail.normal(email);
     let u = resetUser(e);
     if (u) {
@@ -735,9 +772,11 @@ async function api(req, res, route) {
       const now = Date.now();
       u = { username: e, name: String(name || e.split('@')[0]).trim().slice(0, 40) || e, salt, hash: await hashPw(crypto.randomBytes(24).toString('hex'), salt),
         created: now, attempts: [], settings: { header: 'plain', ...(exam === 'da' || exam === 'en' ? { lang: exam, langChosen: true } : {}) }, email: e, emailOk: now, okOnce: now };
+      const back = await welcomeBack(u, e);
       store.users[e] = u;
       await store.saveUser(u);
       console.log('account made with a code', e.replace(/^(.{2}).*@/, '$1…@'));
+      mail.sendWelcome(e, u.name, ['fa', 'en', 'da'].includes(b.lang) ? b.lang : 'fa', appLink(req), back).catch(err => console.error('welcome mail', err.message));
     }
     fails.delete(ip);
     const token = await newSession(req, res, u.username);
@@ -795,6 +834,7 @@ async function api(req, res, route) {
       const u = store.users[String(o.client_reference_id || '')];
       if (u && payments.grant(u, o)) {
         await store.saveUser(u);
+        premiumMail(u, req);
         console.log('premium bought', u.username, o.metadata && o.metadata.plan, o.amount_total, o.currency, o.livemode ? 'live' : 'test');
       }
     } else if (ev.type === 'charge.refunded' && o.refunded && o.payment_intent) {
@@ -925,6 +965,7 @@ async function api(req, res, route) {
       if (s.payment_status !== 'paid') return send(res, 200, { user: publicUser(user), pending: true });
       if (payments.grant(user, s)) {
         await store.saveUser(user);
+        premiumMail(user, req);
         console.log('premium bought', user.username, s.metadata && s.metadata.plan, s.amount_total, s.currency, s.livemode ? 'live' : 'test');
       }
     }
@@ -942,7 +983,7 @@ async function api(req, res, route) {
     // With email on: only for a confirmed address, and one trial per address (whichever account had it).
     if (mail.available()) {
       if (!user.email || !user.emailOk) return send(res, 403, { error: 'برای استفاده از کد تخفیف، اول ایمیل خود را در «حساب کاربری» ثبت و تأیید کنید.' });
-      if (Object.values(store.users).some(x => x !== user && ((x.premium && x.premium.promo && x.premium.promo.email === user.email) || (x.promoEmail && x.promoEmail === user.email)))) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
+      if (gone().trial[mailKey(user.email)] || Object.values(store.users).some(x => x !== user && ((x.premium && x.premium.promo && x.premium.promo.email === user.email) || (x.promoEmail && x.promoEmail === user.email)))) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
     }
     if (!payments.grantPromo(user, match, user.emailOk ? user.email : undefined)) return send(res, 409, { error: 'شما قبلاً از کد تخفیف استفاده کرده‌اید.' });
     await store.saveUser(user);
@@ -987,6 +1028,7 @@ async function api(req, res, route) {
     const b = await readBody(req);
     if (b.code != null ? !(await resetCodeOk(user, b.code)) : typeof b.password !== 'string' || !(await checkPw(b.password, user))) { addFail(ip); return send(res, 403, { error: b.code != null ? BAD_CODE : 'رمز عبور درست نیست.' }); }
     const u = user.username;
+    await rememberGone(user);
     for (const [t, x] of Object.entries(store.sessions)) if (x.username === u) delete store.sessions[t];
     delete store.users[u];
     await store.deleteUser(u);
