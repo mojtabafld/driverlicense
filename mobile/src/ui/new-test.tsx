@@ -4,10 +4,13 @@
 // once, and of those how many were right the last time. Called «آزمون جدید» until 2026-10-19, beside the random exam of
 // the old bank; then it took that card's place and name (Mojtaba). Its exams keep their own mode, 'new'.
 // useNewTest holds the card's choices and its start, so the exam tab's header button starts the same test.
+// At /app (PROVE_BANK) the same card with prove.dk's bank: its questions, its random exams (mode 'random'), the progress
+// through it and its mistakes (Mojtaba 2026-10-20).
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { t } from '@/lib/i18n';
 import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
@@ -23,11 +26,12 @@ import { ARC, radius, useColors } from './theme';
 
 export type NewTest = ReturnType<typeof useNewTest>;
 export function useNewTest() {
-  const { newBank, attempts } = useApp();
+  const { newBank, bank, attempts } = useApp();
+  const src = PROVE_BANK ? bank : newBank;
   const { randomLeft } = useFree();
   const [size, setSize] = useState(FULL);
   const [fresh, setFresh] = useState(true);
-  const ids = newBank ? newBank.questions.map(q => q.id) : [], mine = new Set(ids);
+  const ids = src ? src.questions.map(q => q.id) : [], mine = new Set(ids);
   // Each question's latest answer, and those answered wrong at least once.
   const last = new Map<number, boolean>(), missed = new Set<number>();
   attempts.forEach(a => a.items.forEach(it => { if (mine.has(it.id)) { last.set(it.id, it.ok); if (!it.ok) missed.add(it.id); } }));
@@ -36,7 +40,7 @@ export function useNewTest() {
   const start = () => {
     if (!randomLeft) { tap(); toPremium(); return; }
     if (!count) return;
-    session.plan = { mode: 'new', ids: shuffle(pool).slice(0, count), title: 'آزمون تصادفی' };
+    session.plan = { mode: PROVE_BANK ? 'random' : 'new', ids: shuffle(pool).slice(0, count), title: 'آزمون تصادفی' };
     router.push('/run');
   };
   return { ready: ids.length > 0, ids, last, missed, unseen, size, setSize, fresh, setFresh, count, start, randomLeft };
@@ -58,7 +62,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(total)} سؤال تازه، نوشته‌شده از روی قوانین رسمی دانمارک`}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه، نوشته‌شده از روی قوانین رسمی دانمارک`}</T>
         </View>
       </View>
       <Progress answered={answered} total={total} right={right} wrong={wrong} />
@@ -80,7 +84,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
             : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
         </View>
       ) : null}
-      {pics < total ? <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>تصویرهای این آزمون به‌تدریج اضافه می‌شوند.</T> : null}
+      {!PROVE_BANK && pics < total ? <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>تصویرهای این آزمون به‌تدریج اضافه می‌شوند.</T> : null}
       {limited ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
           <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
