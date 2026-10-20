@@ -2,7 +2,7 @@
 // with a note, before the first one). On the main site the random exam is the app's own questions (ui/new-test.tsx,
 // Mojtaba 2026-10-19: it took the old card's place and name); the /app copy keeps the old bank's random exam.
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds } from '@/lib/logic';
@@ -118,9 +118,16 @@ export default function Exam() {
   const head = own
     ? { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(test.count || test.size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: test.start }
     : { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: start };
+  // Scrolled down to the page's end, where the history card is: its arrow button shows «نمایش همه» for a moment, once
+  // each time the end is reached (Mojtaba 2026-10-20).
+  const [hint, setHint] = useState(0), atEnd = useRef(false);
+  const onScrollY = (_y: number, end: boolean) => {
+    if (end && !atEnd.current) setHint(h => h + 1);
+    atEnd.current = end;
+  };
   return (
     <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
-      heroAction={head}>
+      heroAction={head} onScrollY={onScrollY}>
       {own ? <NewTestCard test={test} /> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
@@ -153,7 +160,7 @@ export default function Exam() {
       </Card>
       )}
       {/* The arrow button in its head opens every exam on its own page (/history), like the mistakes card's. */}
-      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" />
+      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" hint={hint} />
       {/* Main site: no mistakes card (Mojtaba 2026-10-19); the random test's card has the mistakes bar and its test. */}
       {own ? null : <MistakesCard />}
     </Screen>

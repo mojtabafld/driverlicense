@@ -214,7 +214,7 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 // With `fill` its content gets at least the height between the header and the tab bar (so a part set to flex: 1 takes
 // what is left), and the screen scrolls only when the content needs more than that (a part's own minimum height, e.g.
 // the home page's chart under its picture header on a short screen); `gap` can be set tighter for short screens.
-// `scrollRef` / `onScrollY`: the scroll view and where it is scrolled.
+// `scrollRef` / `onScrollY`: the scroll view and where it is scrolled (and whether to its end).
 // Room for the floating tab bar (src/ui/tabs/app-tabs.tsx: 64 high, above the bottom edge) and a clear gap above it,
 // on every platform.
 const BAR_ROOM = 64 + 30;
@@ -485,8 +485,11 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
 
 // `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
 // page's chart ends just above the bar).
+// Whether a scroll view is scrolled to (within 48 points of) its end.
+const atEndOf = (n: { contentOffset: { y: number }; layoutMeasurement: { height: number }; contentSize: { height: number } }) =>
+  n.contentOffset.y + n.layoutMeasurement.height >= n.contentSize.height - 48;
 export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter }: { lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
-  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
+  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number, atEnd: boolean) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
@@ -512,10 +515,10 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
       <PageIn>
       <View style={{ flex: 1 }}>
       {fill
-        ? <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        ? <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
             {top}<View style={[box, { flex: 1, paddingBottom: (barGap != null ? 64 + barGap : BAR_ROOM) + Math.max(16, ins.bottom) }]}>{head}{children}</View>
           </ScrollView>
-        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
+        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
             {top}<View style={box}>{head}{children}</View>
           </ScrollView>}
       </View>
