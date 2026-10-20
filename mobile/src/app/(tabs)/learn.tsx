@@ -21,7 +21,7 @@ import { SearchBox } from '@/ui/search-box';
 import { ARC, useColors } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 
-function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
+function Part({ n, icon, title, text, note, href, keepDa }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href; keepDa?: boolean }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const v = learnArt[n];
@@ -34,7 +34,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
     </View>
   );
-  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={short ? 1 : 2} note={note} />;
+  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={short ? 1 : 2} note={note} keepDa={keepDa} />;
 }
 
 // /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
@@ -113,7 +113,8 @@ export default function Learn() {
             text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
             text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
-          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary"
+          {/* keepDa: its example words stay Danish («vigepligt» was shown as «duty to give way» to English-exam users). */}
+          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" keepDa
             text="اصطلاح‌های دانمارکی آزمون تئوری با معنی فارسی، مثل vigepligt و højreregel." />
         </View>
       )}
