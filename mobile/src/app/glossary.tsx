@@ -14,6 +14,7 @@ import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Card, Segmented, T, physicalAlign, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
+import { NoSwipe } from '@/ui/swipe';
 import { DA_FONT, radius, useColors } from '@/ui/theme';
 
 const NOTE_OF = { fa: 0, en: 1, da: 2 } as const;
@@ -93,11 +94,14 @@ export default function Glossary() {
       </View>
       <Segmented value={tab} onChange={v => { setTab(v); setCat(null); }}
         options={[{ value: 'all', label: 'همه' }, { value: 'saved', label: `نشان‌شده‌ها (${faNum(terms.length)})` }]} />
-      {/* The groups, in a row that scrolls sideways, each with how many terms it has in the list shown. */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-        {chip(null, 'همه‌ی گروه‌ها', base.length)}
-        {TERM_CATS.filter(g => count(g.id)).map(g => chip(g.id, g.fa, count(g.id), g.icon))}
-      </ScrollView>
+      {/* The groups, in a row that scrolls sideways, each with how many terms it has in the list shown; a swipe on it
+          scrolls it and does not go back (NoSwipe). */}
+      <NoSwipe>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+          {chip(null, 'همه‌ی گروه‌ها', base.length)}
+          {TERM_CATS.filter(g => count(g.id)).map(g => chip(g.id, g.fa, count(g.id), g.icon))}
+        </ScrollView>
+      </NoSwipe>
       <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(list.length)} اصطلاح</T>
       {list.map(t => <TermCard key={t.da} t={t} on={terms.includes(t.da)} onToggle={() => { toggleTerm(t.da).catch(() => {}); }} />)}
       {list.length ? null : (
