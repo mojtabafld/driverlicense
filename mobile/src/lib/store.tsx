@@ -62,6 +62,8 @@ type Ctx = {
   // Without passwords (email on): a 6-digit code to the address, to sign in or (signup) to make a new account; then the
   // code signs in or makes the account with its shown name and the questions' language (ui/sign-steps.tsx).
   sendCode: (email: string, signup: boolean) => Promise<void>;
+  // Throws when an account already has the address (sign-up's email step).
+  emailFree: (email: string) => Promise<void>;
   codeIn: (email: string, code: string, name?: string, exam?: 'da' | 'en') => Promise<void>;
   // The code that deletes the account, to its address (the settings' «حذف حساب کاربری»).
   deleteCode: () => Promise<void>;
@@ -243,6 +245,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     guest: async name => { const d = await api<{ token: string }>('POST', 'guest', { name }); await signedIn(d.token); },
     forgot: async email => { await api('POST', 'forgot', { email, lang: UI_LANG }); },
+    emailFree: async email => { await api('POST', 'emailfree', { email }); },
     sendCode: async (email, signup) => { await api('POST', 'code', { email, signup, lang: UI_LANG }); },
     codeIn: async (email, code, name, exam) => { const d = await api<{ token: string }>('POST', 'codein', { email, code, name, exam }); await signedIn(d.token); },
     deleteCode: async () => { await api('POST', 'deletecode', { lang: UI_LANG }); },
