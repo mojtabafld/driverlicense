@@ -43,10 +43,13 @@ function Bold({ text, color }: { text: string; color: string }) {
 function PointCard({ p }: { p: Point }) {
   const c = useColors();
   const k = KIND[p.kind];
-  const [fg, bg] = p.kind === 'warn' ? [c.warn, c.warnSoft] : p.kind === 'tip' ? [c.ok, c.okSoft] : [c.link, c.accentSoft];
+  // «اشتباه رایج» and «نکته» on their own colour's soft background, with the icon on a plain tile there (Mojtaba
+  // 2026-10-20); the others on the sheet's grey with the icon on the theme's soft colour.
+  const tint = p.kind === 'warn' ? c.warnSoft : p.kind === 'tip' ? c.okSoft : null;
+  const fg = p.kind === 'warn' ? c.warn : p.kind === 'tip' ? c.ok : c.link;
   return (
-    <View style={{ flexDirection: 'row', gap: 12, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
-      <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: bg }}>
+    <View style={{ flexDirection: 'row', gap: 12, padding: 12, borderRadius: 14, backgroundColor: tint ?? c.surface2 }}>
+      <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: tint ? c.surface : c.accentSoft }}>
         <Icon name={k.icon} size={18} color={fg} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
