@@ -102,7 +102,11 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
   // picture is made), the title and line under it.
   const headH = ins.top + Math.min(Math.round(height * 0.56), 540), artH = Math.min(height * 0.42, 340);
   const shift = fade.interpolate({ inputRange: [0, 1], outputRange: [16, 0] });
+  // Main site: the language wheel is the whole intro now; the slides are not shown (the sign-in page's welcome screen
+  // tells what the app does; Mojtaba 2026-10-20).
+  useEffect(() => { if (ARC && !wheel) onDone(); }, [wheel, onDone]);
   if (wheel) return <LangWheel onDone={l => { if (!setUiLang(l)) setWheel(false); }} />;
+  if (ARC) return null;
   return (
     <View style={{ flex: 1 }} {...swipe}>
       <LinearGradient colors={[BG[0], BG[0], BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />

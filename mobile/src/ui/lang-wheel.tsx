@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
+import { RTL, UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
 import { Icon } from './icon';
 import { T, ThemeButton, tap } from './kit';
 import { useColors } from './theme';
@@ -49,7 +49,11 @@ export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
   const l = LANGS[at];
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <View style={{ position: 'absolute', top: ins.top + 14, left: 16, zIndex: 2, borderRadius: 23, backgroundColor: c.surface2 }}><ThemeButton /></View>
+      {/* The theme button where the welcome screen has it (ui/welcome.tsx), so the top does not change between them. */}
+      <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 0, right: 0, zIndex: 2, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24,
+        alignItems: RTL ? 'flex-start' : 'flex-end' }}>
+        <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View>
+      </View>
       <View style={{ flex: 1, paddingTop: ins.top + 64, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 30 }}>
           <View style={{ alignItems: 'center', gap: 12 }}>
