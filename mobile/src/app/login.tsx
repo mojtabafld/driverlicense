@@ -18,6 +18,7 @@ import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { LOGIN_BG, LoginArt } from '@/ui/header-art';
 import { RTL, t as fmt, tr } from '@/lib/i18n';
 import { CodeBoxes } from '@/ui/code-boxes';
+import { Welcome } from '@/ui/welcome';
 
 // Sign in / sign up switch: a soft track with the chosen side raised. (Main site, light: the track a step darker than
 // the page, as the app's switches look on their white cards, «پاسخ شما / پاسخ صحیح» for one.)
@@ -44,7 +45,7 @@ function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: 
 
 // Main site: a drawing like the tab pages' headers across the top (LoginArt, both themes), its foot fading into
 // the page as theirs do, the theme switch over it; the greeting and its line under it on the page, in the form's column.
-function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
+function SceneHead({ title, subtitle, onBack }: { title: string; subtitle: string; onBack?: () => void }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const sky = dark ? LOGIN_BG.dark : LOGIN_BG.light;
   useHeaderTop(sky);
@@ -55,7 +56,15 @@ function SceneHead({ title, subtitle }: { title: string; subtitle: string }) {
       <View style={{ height: H + ins.top, backgroundColor: sky, paddingTop: ins.top, overflow: 'hidden' }}>
         <LoginArt light={!dark} width={width} height={H - 84} />{/* (above the fade, as on the tab pages) */}
         <HeroFade />
-        <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, maxWidth: 980 - 32, alignSelf: 'center', alignItems: 'flex-end' }}>
+        {/* Back to the first screen (ui/welcome.tsx) at the start, the theme switch at the end. */}
+        <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, maxWidth: 980 - 32, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between' }}>
+          {onBack ? (
+            <Pressable onPress={onBack} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('بازگشت')}
+              style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.7 : 1,
+                backgroundColor: dark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.55)' })}>
+              <Icon name={RTL ? 'arrowRight' : 'arrowLeft'} size={19} color={c.text} />
+            </Pressable>
+          ) : <View />}
           <View style={{ borderRadius: 19, backgroundColor: dark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.55)' }}><ThemeButton /></View>
         </View>
       </View>
@@ -71,6 +80,8 @@ export default function Login() {
   const c = useColors(), dark = useIsDark();
   const { login, register, guest, mail, forgot, checkResetCode, resetPassword } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  // Main site and /app: first the welcome screen, whose two buttons open the form in their mode (Mojtaba 2026-10-20).
+  const [welcome, setWelcome] = useState(ARC);
   // 'ask': the forgotten-password form; 'code': its code went out and is typed in; 'set': the new password.
   const [lost, setLost] = useState<'' | 'ask' | 'code' | 'set'>('');
   const [code, setCode] = useState(''), [sentAt, setSentAt] = useState(0), [now, setNow] = useState(Date.now());
@@ -150,11 +161,18 @@ export default function Login() {
     <ArcButton big label={busy ? '…' : 'ذخیره و ورود'} onPress={setNew} disabled={busy || !pw || !pw2} style={{ marginTop: 4 }} />
     {link('بازگشت به ورود', backToLogin)}
   </>;
+  if (welcome) return (
+    <Backdrop>
+      <Welcome busy={busy} err={err} onGuest={asGuest}
+        onLogin={() => { setMode('login'); setErr(''); setWelcome(false); }} onRegister={() => { setMode('register'); setErr(''); setWelcome(false); }} />
+      <InstallHint />
+    </Backdrop>
+  );
   return (
     <Backdrop>
       <KeyboardAvoidingView behavior={Platform.OS === 'web' ? undefined : 'padding'} style={{ flex: 1 }}>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}>
-          {ARC ? <SceneHead title={title} subtitle={subtitle} />
+          {ARC ? <SceneHead title={title} subtitle={subtitle} onBack={() => { backToLogin(); setMode('login'); setWelcome(true); }} />
             : <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={title} subtitle={subtitle} />}
           <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: ARC ? 0 : 6 }}>
             {lost ? lostForm : <>
