@@ -8,7 +8,7 @@
 // the left, as Persian reads); the page follows the finger and slides out past a third of the width or on a flick.
 // Both take only clearly sideways moves, so scrolling up and down is left alone.
 import { useEffect, useState } from 'react';
-import { Animated, Easing, PanResponder, Platform, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing, PanResponder, Platform, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 
 import { RTL } from '@/lib/i18n';
 import { tap } from './kit';
@@ -16,7 +16,15 @@ import { PROVE_PICS } from '@/lib/config';
 
 // On the web the browser keeps only vertical scrolling for itself (no sideways history swipe over these views).
 const WEB = Platform.OS === 'web' ? ({ touchAction: 'pan-y' } as any) : null;
-const sideways = (_: unknown, g: { dx: number; dy: number }) => Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.8;
+// A touch that began in a row that scrolls sideways itself (NoSwipe, e.g. the glossary's group chips) is that row's:
+// the page's sideways swipes leave it alone (on the iPhone's web app it went back instead of scrolling the row;
+// Mojtaba 2026-10-20).
+const hold = { on: false };
+const sideways = (_: unknown, g: { dx: number; dy: number }) => !hold.on && Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.8;
+export function NoSwipe({ style, children }: { style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
+  const off = () => { hold.on = false; };
+  return <View style={style} onTouchStart={() => { hold.on = true; }} onTouchEnd={off} onTouchCancel={off}>{children}</View>;
+}
 
 // The learning pages (not the exam) turn right to left, as Persian reads; only on the main site, the /app copy stays as
 // it was.
