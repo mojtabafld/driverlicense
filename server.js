@@ -35,7 +35,9 @@ const PORT = +process.env.PORT || 3000;
 // asks its user to install it (mobile/src/ui/update-prompt.tsx), from APP_DOWNLOAD_URL (default: the latest release's page).
 const latestApp = () => {
   const version = String(process.env.LATEST_APP_VERSION || '').trim();
-  return /^\d+\.\d+$/.test(version) ? { version, url: (process.env.APP_DOWNLOAD_URL || '').trim() || 'https://github.com/mojtabafld/driverlicense/releases/latest' } : undefined;
+  // The /app copy's own Android app (its releases are «Android /app build N», tags prove-N) from APP_DOWNLOAD_URL_PROVE.
+  return /^\d+\.\d+$/.test(version) ? { version, url: (process.env.APP_DOWNLOAD_URL || '').trim() || 'https://github.com/mojtabafld/driverlicense/releases/latest',
+    urlProve: (process.env.APP_DOWNLOAD_URL_PROVE || '').trim() || 'https://github.com/mojtabafld/driverlicense/releases' } : undefined;
 };
 const HOST = process.env.HOST || '0.0.0.0';
 const SITE = path.join(__dirname, 'site');

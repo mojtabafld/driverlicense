@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Linking, Platform } from 'react-native';
 
 import { api } from '@/lib/api';
+import { PROVE_BANK } from '@/lib/config';
 import { Confirm } from './confirm';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '';
@@ -21,8 +22,9 @@ export function UpdatePrompt() {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     if (Platform.OS !== 'android' || !parts(APP_VERSION)) return;
-    api<{ app?: { version: string; url: string } }>('GET', 'config')
-      .then(d => { if (d.app && isNewer(d.app.version, APP_VERSION) && d.app.url) setUrl(d.app.url); })
+    // The /app copy's own app (PROVE_BANK) has its own download.
+    api<{ app?: { version: string; url: string; urlProve?: string } }>('GET', 'config')
+      .then(d => { const u = d.app && (PROVE_BANK ? d.app.urlProve : d.app.url); if (d.app && isNewer(d.app.version, APP_VERSION) && u) setUrl(u); })
       .catch(() => {});
   }, []);
   return (

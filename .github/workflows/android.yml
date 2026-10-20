@@ -16,12 +16,18 @@ name: Android APK
 # tab or the API.
 on:
   workflow_dispatch:
+    inputs:
+      copy:
+        description: "main: the main site's app; prove: the app of teori.bitlane.app/app (prove.dk's bank and lessons)"
+        type: choice
+        options: [main, prove]
+        default: main
 
 permissions:
   contents: write
 
 concurrency:
-  group: android-apk
+  group: android-apk-${{ inputs.copy || 'main' }}
   cancel-in-progress: true
 
 jobs:
@@ -33,6 +39,11 @@ jobs:
         working-directory: mobile
     env:
       HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      # prove: the /app copy's app (mobile/app.config.js: its own name and package; lib/config.ts: PROVE_BANK), released as
+      # «Android /app build N» (tags prove-N, file teoriprove-prove.apk), never as the latest release (the main app's).
+      EXPO_PUBLIC_PROVE: ${{ inputs.copy == 'prove' && '1' || '' }}
+      TAG: ${{ inputs.copy == 'prove' && 'prove' || 'release' }}
+      APK: ${{ inputs.copy == 'prove' && 'teoriprove-prove.apk' || 'teoriprove.apk' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +51,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 500 --json tagName --jq '.[].tagName' | { grep -E '^release-[0-9]+$' || true; } | sed 's/release-//' | sort -n | tail -1)
+          last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 500 --json tagName --jq '.[].tagName' | { grep -E "^${TAG}-[0-9]+$" || true; } | sed "s/${TAG}-//" | sort -n | tail -1)
           echo "RELEASE_N=$(( ${last:-0} + 1 ))" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v4
@@ -128,15 +139,15 @@ jobs:
       - name: Collect
         run: |
           mkdir -p "$RUNNER_TEMP/out"
-          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/out/teoriprove.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/out/$APK"
           ls -la "$RUNNER_TEMP/out"
 
       # A copy for the run page only; the release below is what counts, so a full artifact storage quota does not stop it.
       - uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: teoriprove-apk
-          path: ${{ runner.temp }}/out/teoriprove.apk
+          name: ${{ env.TAG }}-apk
+          path: ${{ runner.temp }}/out/${{ env.APK }}
 
       # The releases of the old numbering (tags android-1 … android-110): removed, with their tags.
       - name: Remove the old releases
@@ -149,11 +160,11 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: release-${{ env.RELEASE_N }}
-          name: Android build ${{ env.RELEASE_N }}
+          tag_name: ${{ env.TAG }}-${{ env.RELEASE_N }}
+          name: ${{ inputs.copy == 'prove' && 'Android /app build' || 'Android build' }} ${{ env.RELEASE_N }}
           target_commitish: ${{ github.sha }}
-          make_latest: true
+          make_latest: ${{ inputs.copy != 'prove' }}
           body: |
-            TeoriPrøve for Android (arm64), build ${{ env.RELEASE_N }} from ${{ github.sha }}.
-            Download teoriprove.apk on the phone and open it to install.
-          files: ${{ runner.temp }}/out/teoriprove.apk
+            ${{ inputs.copy == 'prove' && 'TeoriPrøve Prove, the app of teori.bitlane.app/app (prove.dk''s question bank and lessons)' || 'TeoriPrøve' }} for Android (arm64), build ${{ env.RELEASE_N }} from ${{ github.sha }}.
+            Download ${{ env.APK }} on the phone and open it to install.
+          files: ${{ runner.temp }}/out/${{ env.APK }}

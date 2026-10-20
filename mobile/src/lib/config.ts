@@ -11,7 +11,9 @@ export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? webOrigin ?? 'https:/
 // tests, as the learn tab's first card in place of «آموزش گام‌به‌گام» (PROVE_BANK). PROVE_PICS, the copy's old look
 // and its other differences (Persian only, no premium, prove.dk's pictures for the signs and right of way…), is off;
 // its branches are kept, so the old copy can come back by setting it to PROVE_BANK.
-export const PROVE_BANK = Platform.OS === 'web' && typeof window !== 'undefined' && /^\/app(\/|$)/.test(window.location.pathname);
+// On the web by its path; the phone app of the copy is built with EXPO_PUBLIC_PROVE=1 (app.config.js, the APK workflow).
+export const PROVE_BANK = process.env.EXPO_PUBLIC_PROVE === '1'
+  || (Platform.OS === 'web' && typeof window !== 'undefined' && /^\/app(\/|$)/.test(window.location.pathname));
 export const PROVE_PICS = false as boolean;
 // That copy is fixed: it asks for the question bank (its questions and 44 lessons) and the questions' pictures as they
 // were when it was fixed (the server's frozen/app/), so later changes to them do not reach it.
