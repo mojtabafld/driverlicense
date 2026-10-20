@@ -1,7 +1,7 @@
 // «همه»: a small round button with an arrow in the theme's colours, in a card's head (the exam tab's history and mistakes
 // cards); it opens the page with all of that card's items. The arrow points forward (left in Persian; icon.tsx mirrors it
 // for English and Danish).
-// `hint`: each new value plays a short hint (Mojtaba 2026-10-20): the button opens out into a pill with «نمایش همه»
+// `hint`: each new value (after the button shows) plays a short hint (Mojtaba 2026-10-20): the button opens out into a pill with «نمایش همه»
 // (in the app's language) before its arrow, rests a moment and closes back into its circle, both ways with the same
 // light easing; not with «reduce motion».
 import { useEffect, useRef, useState } from 'react';
@@ -21,9 +21,12 @@ export function MoreButton({ onPress, label, hint = 0 }: { onPress: () => void; 
   const c = useColors();
   const [p] = useState(() => new Animated.Value(0));
   const [textW, setTextW] = useState(0);
-  const running = useRef(false);
+  // `played`: the last hint value played or there when the button first showed, so a button that shows again (the
+  // home page's chart view builds its card anew each time it opens) does not play the value it finds, only a new one.
+  const running = useRef(false), played = useRef(hint);
   useEffect(() => {
-    if (!hint || !textW || running.current) return;
+    if (!hint || hint === played.current || !textW || running.current) return;
+    played.current = hint;
     let live = true;
     AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then(reduce => {
       if (!live || reduce) return;

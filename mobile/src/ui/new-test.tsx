@@ -156,8 +156,9 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
 function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
   const c = useColors();
   const fixed = missed - open.length, share = fixed / missed;
-  // All put right: the count and the bar in green, with a round tick before the title, as the progress above.
-  const done = !open.length, tone = done ? c.ok : c.accent;
+  // All put right: the count and the bar in green, with a round tick before the title, as the progress above; until
+  // then in the theme's warning orange, mistakes still to put right (Mojtaba 2026-10-20).
+  const done = !open.length, tone = done ? c.ok : c.warn;
   const bar = useCountUp(share, 1100);
   const start = () => {
     tap();
@@ -174,13 +175,13 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
         {/* The count opens the mistakes page, as the mistakes count above does (Mojtaba 2026-10-20). */}
         <Pressable onPress={() => { tap(); router.push('/mistakes'); }} hitSlop={10} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-          <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: tone, opacity: done ? 1 : 0.7 }}>{faNum(open.length)}</T>
+          <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: tone }}>{faNum(open.length)}</T>
         </Pressable>
       </View>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: missed, now: fixed }}
         style={{ height: 10, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: done ? c.okSoft : c.accentSoft, opacity: 0.55 }} />
-        <View style={{ width: `${fixed ? bar * 100 : 0}%`, minWidth: fixed ? 10 : 0, borderRadius: radius.pill, backgroundColor: tone, opacity: done ? 0.75 : 0.45 }} />
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: done ? c.okSoft : c.warnSoft, opacity: done ? 0.55 : 1 }} />
+        <View style={{ width: `${fixed ? bar * 100 : 0}%`, minWidth: fixed ? 10 : 0, borderRadius: radius.pill, backgroundColor: tone, opacity: done ? 0.75 : 0.7 }} />
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
         <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
