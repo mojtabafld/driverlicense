@@ -1,14 +1,12 @@
 // A reviewed question's topic, from its category chip under the picture (ui/review.tsx; Mojtaba 2026-10-20): a sheet
-// from the bottom with the topic's short lesson (its official section and name, the lesson's points), a practice test
-// of the topic's questions and a search of the learning pages for it. It closes with a drag down (or a tap outside,
+// from the bottom with the topic's short lesson (its official section and name, the lesson's points) and a search of
+// the learning pages for it (its practice test taken out; Mojtaba 2026-10-20). It closes with a drag down (or a tap outside,
 // the back button), as the app's other sheets.
 import { router } from 'expo-router';
 import { View } from 'react-native';
 
 import type { Question } from '@/lib/bank';
-import { FULL, shuffle } from '@/lib/logic';
 import { sectionFa, sectionIcon, topicName } from '@/lib/names';
-import { session } from '@/lib/session';
 import { UI_LANG } from '@/lib/i18n';
 import STRINGS from '@/lib/i18n/strings.json';
 import { useApp, useExamLang } from '@/lib/store';
@@ -19,19 +17,12 @@ import { DA_FONT, useColors } from './theme';
 
 export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; onClose: () => void }) {
   const c = useColors();
-  const { bank, Q } = useApp();
+  const { bank } = useApp();
   const exam = useExamLang();
   const t = bank?.topics[q.c];
   if (!bank || !t) return null;
   const name = topicName(bank, q.c), section = sectionFa(bank, q.c);
   const second = UI_LANG === exam ? null : exam === 'en' ? (STRINGS as Record<string, string[]>)[name]?.[0] ?? null : t.da;
-  // At most a real test's 25 of the topic's questions, in random order (from the bank in use).
-  const practice = () => {
-    const ids = shuffle([...Q.values()].filter(x => x.c === q.c).map(x => x.id)).slice(0, FULL);
-    onClose();
-    session.plan = { mode: 'sections', ids, title: name };
-    router.push('/run');
-  };
   const search = () => { onClose(); router.push({ pathname: '/course-search', params: { q: name } }); };
   return (
     <Sheet open={open} onClose={onClose} maxHeight="82%">
@@ -57,7 +48,6 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
         ))}
       </SheetScroll>
       <View style={{ gap: 8, paddingTop: 4 }}>
-        <ArcButton label="تمرین این مبحث" icon="play" variant="accent" onPress={practice} />
         <ArcButton label="جستجو در آموزش" icon="search" variant="secondary" onPress={search} />
       </View>
     </Sheet>
