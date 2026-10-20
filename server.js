@@ -1423,6 +1423,25 @@ async function main() {
     }
     await store.saveMeta('removeNegin2223', 1);
   }
+  // One-time, asked by the owner (2026-10-20): user negin keeps only what was done on prove.dk's questions (the bank's
+  // numbers below 5001, where the app's own bank, site/newq.js, starts): every test with a question of the app's own
+  // bank goes, and so do such saved questions and an unfinished test of them. A copy of all that is removed is kept in
+  // meta (`removed:negin:own-bank`) so it can be put back.
+  if (store.meta.neginProveOnly !== 1) {
+    const u = store.users.negin, prove = id => Number.isInteger(+id) && +id > 0 && +id < 5001;
+    if (u) {
+      const attempts = (u.attempts || []).filter(a => !(a.items || []).every(it => prove(it.id)));
+      const saved = (u.saved || []).filter(x => !prove(x.id));
+      const draft = u.draft && !(u.draft.ids || []).every(prove) ? u.draft : null;
+      await store.saveMeta('removed:negin:own-bank', { at: Date.now(), attempts, saved, draft });
+      u.attempts = (u.attempts || []).filter(a => (a.items || []).every(it => prove(it.id)));
+      u.saved = (u.saved || []).filter(x => prove(x.id));
+      if (draft) delete u.draft;
+      await store.saveUser(u);
+      console.log('negin: prove.dk only; removed', attempts.length, 'tests', saved.length, 'saved', draft ? 'and the unfinished test' : '', '; kept', u.attempts.length, 'tests');
+      await store.saveMeta('neginProveOnly', 1);
+    } else console.log('negin prove only: no such user');
+  }
   // One-time, asked by the owner: user test starts over as if just registered (same username, name and password).
   // A copy of what it had is kept in meta (`removed:test:reset`) so it can be restored.
   if (store.meta.resetTest !== 1) {
