@@ -534,8 +534,9 @@ const trKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ?
   : Array.isArray(k) ? (k.every(x => typeof x === 'string' || typeof x === 'number') ? tryTr(k.join('')) ?? k.map(trKids) : k.map(trKids))
   : isValidElement<{ children?: React.ReactNode }>(k) && k.type === Fragment ? cloneElement(k, undefined, trKids(k.props.children)) : k);
 const swapAlign = (a: TextStyle['textAlign']) => (a === 'left' ? 'right' : a === 'right' ? 'left' : a);
-export function T({ style, raw, ...p }: TextProps & { style?: StyleProp<TextStyle>; raw?: boolean }) {
-  const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS;
+// `keepDa`: the Danish words in it stay Danish for users who take the exam in English (the glossary, which is about them).
+export function T({ style, raw, keepDa, ...p }: TextProps & { style?: StyleProp<TextStyle>; raw?: boolean; keepDa?: boolean }) {
+  const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS && !keepDa;
   if (!RTL && !raw) p = { ...p, children: trKids(p.children) };
   if (en) p = { ...p, children: enKids(p.children) };
   const flat = StyleSheet.flatten(style) ?? {};

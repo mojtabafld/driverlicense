@@ -3988,5 +3988,16 @@
 "نسخه‌ی جدید اپ":["New version of the app", "Ny version af appen"],
 "نسخه‌ی تازه‌ای از اپ منتشر شده است. برای استفاده از آخرین امکانات و اصلاحات، آن را نصب کنید.":["A new version of the app is out. Install it to get the latest features and fixes.", "En ny version af appen er udkommet. Installer den for at få de nyeste funktioner og rettelser."],
 "نصب نسخه‌ی جدید":["Install new version", "Installer ny version"],
-"بعداً":["Later", "Senere"]
+"بعداً":["Later", "Senere"],
+"نشان‌شده‌ها (#)":["Saved (#)", "Gemte (#)"],
+"همه‌ی گروه‌ها":["All groups", "Alle grupper"],
+"راه و تقاطع":["Roads and junctions", "Veje og kryds"],
+"تابلو و خط‌کشی":["Signs and markings", "Tavler og afmærkning"],
+"رانندگی و سرعت":["Driving and speed", "Kørsel og hastighed"],
+"خودرو و چراغ‌ها":["The car and its lights", "Bilen og lygterne"],
+"ایمنی و قانون":["Safety and the law", "Sikkerhed og loven"],
+"کاربران راه":["Road users", "Trafikanter"],
+"نشان کردن":["Save", "Gem"],
+"برداشتن نشان":["Remove from saved", "Fjern fra gemte"],
+"هنوز اصطلاحی را نشان نکرده‌اید. با دکمه‌ی نشان روی هر اصطلاح، آن را اینجا نگه دارید.":["You haven't saved any terms yet. Use the bookmark on a term to keep it here.", "Du har ikke gemt nogen fagord endnu. Brug bogmærket på et fagord for at gemme det her."]
 }
