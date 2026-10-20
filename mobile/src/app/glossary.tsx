@@ -10,7 +10,7 @@ import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { RTL, UI_LANG, getTransLang, tr } from '@/lib/i18n';
 import { GLOSSARY, TERM_CATS, searchTerms, type Term, type TermCat } from '@/lib/glossary';
 import { faNum } from '@/lib/logic';
-import { useApp } from '@/lib/store';
+import { useApp, useExamLang } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Card, Segmented, T, physicalAlign, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
@@ -18,24 +18,27 @@ import { NoSwipe } from '@/ui/swipe';
 import { DA_FONT, radius, useColors } from '@/ui/theme';
 
 const NOTE_OF = { fa: 0, en: 1, da: 2 } as const;
-// The meaning in the app's language first (English in a Danish app); under it the one in the translation language of
-// the settings («زبان ترجمه»), unless that is the same meaning or Danish, the term's own language (Mojtaba 2026-10-20).
-const mainOf = (t: Term) => (UI_LANG === 'fa' ? t.fa : t.en);
-const otherOf = (t: Term) => {
-  const l = getTransLang(), v = l === 'fa' ? t.fa : l === 'en' ? t.en : null;
-  return v && v !== mainOf(t) ? { v, fa: l === 'fa' } : null;
+// The word itself in the exam's language (Danish, or English when the questions are in English; Mojtaba 2026-10-20),
+// under it its meaning in the app's language (in an English or Danish app taking the exam in English, the Danish word,
+// which the English one stands for), then the one in the translation language of the settings («زبان ترجمه»), unless
+// it would repeat a line above (Mojtaba 2026-10-20).
+const headOf = (t: Term, en: boolean) => (en ? t.en : t.da);
+const mainOf = (t: Term, en: boolean) => (UI_LANG === 'fa' ? t.fa : en ? t.da : t.en);
+const otherOf = (t: Term, en: boolean) => {
+  const l = getTransLang(), v = l === 'fa' ? t.fa : l === 'en' ? t.en : t.da;
+  return v !== mainOf(t, en) && v !== headOf(t, en) ? { v, fa: l === 'fa' } : null;
 };
 const CAT = Object.fromEntries(TERM_CATS.map(g => [g.id, g])) as Record<TermCat, (typeof TERM_CATS)[number]>;
 
-function TermCard({ t, on, onToggle }: { t: Term; on: boolean; onToggle: () => void }) {
+function TermCard({ t, on, onToggle, en }: { t: Term; on: boolean; onToggle: () => void; en: boolean }) {
   const c = useColors();
-  const g = CAT[t.cat], note = t.note ? t.note[NOTE_OF[UI_LANG]] : null, other = otherOf(t);
+  const g = CAT[t.cat], note = t.note ? t.note[NOTE_OF[UI_LANG]] : null, other = otherOf(t, en), main = mainOf(t, en);
   return (
     <Card style={{ gap: 10, padding: 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
         <View style={{ flex: 1, gap: 3 }}>
-          <T raw keepDa style={{ fontFamily: DA_FONT, fontSize: 18, lineHeight: 25, fontWeight: '700', writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{t.da}</T>
-          <T raw keepDa style={{ fontSize: 14.5, lineHeight: 23, fontWeight: '600', color: c.link }}>{mainOf(t)}</T>
+          <T raw keepDa style={{ fontFamily: DA_FONT, fontSize: 18, lineHeight: 25, fontWeight: '700', writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{headOf(t, en)}</T>
+          <T raw keepDa style={[{ fontSize: 14.5, lineHeight: 23, fontWeight: '600', color: c.link }, main === t.da ? { fontFamily: DA_FONT, writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') } : null]}>{main}</T>
           {other ? <T raw keepDa style={[{ fontSize: 12.5, lineHeight: 19, color: c.faint }, RTL ? { writingDirection: 'ltr', textAlign: physicalAlign('right') } : other.fa ? { fontFamily: 'Vazirmatn-400' } : null]}>{other.v}</T> : null}
         </View>
         <Pressable onPress={() => { tap(); onToggle(); }} hitSlop={8} accessibilityRole="button" accessibilityState={{ selected: on }}
@@ -48,7 +51,7 @@ function TermCard({ t, on, onToggle }: { t: Term; on: boolean; onToggle: () => v
       {note ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 10, borderRadius: 12, backgroundColor: c.surface2 }}>
           <Icon name="info" size={15} color={c.muted} />
-          <T raw keepDa style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{note}</T>
+          <T raw keepDa={!en} style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{note}</T>
         </View>
       ) : null}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -63,6 +66,7 @@ export default function Glossary() {
   const c = useColors();
   const p = useLocalSearchParams<{ q?: string }>();
   const { terms, toggleTerm } = useApp();
+  const en = useExamLang() === 'en';
   const [q, setQ] = useState(String(p.q || ''));
   const [tab, setTab] = useState<'all' | 'saved'>('all');
   const [cat, setCat] = useState<TermCat | null>(null);
@@ -103,7 +107,7 @@ export default function Glossary() {
         </ScrollView>
       </NoSwipe>
       <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(list.length)} اصطلاح</T>
-      {list.map(t => <TermCard key={t.da} t={t} on={terms.includes(t.da)} onToggle={() => { toggleTerm(t.da).catch(() => {}); }} />)}
+      {list.map(t => <TermCard key={t.da} t={t} en={en} on={terms.includes(t.da)} onToggle={() => { toggleTerm(t.da).catch(() => {}); }} />)}
       {list.length ? null : (
         <Card style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 14 }}>
           <Icon name={tab === 'saved' && !terms.length ? 'bookmark' : 'search'} size={17} color={c.muted} />
