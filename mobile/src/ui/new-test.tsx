@@ -173,11 +173,9 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
           <T style={{ fontSize: 14, fontWeight: '700' }}>اشتباهات اصلاح‌نشده</T>
         </View>
         {/* The count opens the mistakes page, as the mistakes count above does (Mojtaba 2026-10-20). */}
-        {/* After it, the share of this test's mistakes still to put right (Mojtaba 2026-10-20). */}
         <Pressable onPress={() => { tap(); router.push('/mistakes'); }} hitSlop={10} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, flexDirection: 'row', alignItems: 'baseline', gap: 6 })}>
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
           <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: tone }}>{faNum(open.length)}</T>
-          <T style={{ fontSize: 13, lineHeight: 22, fontWeight: '600', color: c.muted }}>{`· ${pctText(open.length / missed)}`}</T>
         </Pressable>
       </View>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: missed, now: fixed }}
