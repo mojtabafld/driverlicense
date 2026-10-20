@@ -30,6 +30,13 @@ const mail = require('./mail');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
+// The newest Android app build (its release number, «Android build N»), set in the dashboard as LATEST_APP_VERSION when
+// a new APK is published; an app with an older build asks its user to install it (mobile/src/ui/update-prompt.tsx),
+// from APP_DOWNLOAD_URL (default: the latest release's page).
+const latestApp = () => {
+  const build = parseInt(process.env.LATEST_APP_VERSION || '', 10);
+  return build > 0 ? { build, url: (process.env.APP_DOWNLOAD_URL || '').trim() || 'https://github.com/mojtabafld/driverlicense/releases/latest' } : undefined;
+};
 const HOST = process.env.HOST || '0.0.0.0';
 const SITE = path.join(__dirname, 'site');
 const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'data', 'db.json');
@@ -569,7 +576,7 @@ async function api(req, res, route) {
   const ip = clientIp(req);
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, theme: defaultTheme(), version: VERSION, aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, theme: defaultTheme(), version: VERSION, app: latestApp(), aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
         promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
