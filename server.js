@@ -30,12 +30,12 @@ const mail = require('./mail');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
-// The newest Android app build (its release number, «Android build N»), set in the dashboard as LATEST_APP_VERSION when
-// a new APK is published; an app with an older build asks its user to install it (mobile/src/ui/update-prompt.tsx),
-// from APP_DOWNLOAD_URL (default: the latest release's page).
+// The newest Android app's version, as the settings show it («نسخه‌ی نرم‌افزار», mobile/app.json, x.x such as 1.0), set
+// in the dashboard as LATEST_APP_VERSION when a new APK is published (Mojtaba 2026-10-20); an app with an older version
+// asks its user to install it (mobile/src/ui/update-prompt.tsx), from APP_DOWNLOAD_URL (default: the latest release's page).
 const latestApp = () => {
-  const build = parseInt(process.env.LATEST_APP_VERSION || '', 10);
-  return build > 0 ? { build, url: (process.env.APP_DOWNLOAD_URL || '').trim() || 'https://github.com/mojtabafld/driverlicense/releases/latest' } : undefined;
+  const version = String(process.env.LATEST_APP_VERSION || '').trim();
+  return /^\d+\.\d+$/.test(version) ? { version, url: (process.env.APP_DOWNLOAD_URL || '').trim() || 'https://github.com/mojtabafld/driverlicense/releases/latest' } : undefined;
 };
 const HOST = process.env.HOST || '0.0.0.0';
 const SITE = path.join(__dirname, 'site');

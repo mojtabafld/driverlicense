@@ -42,8 +42,6 @@ jobs:
         run: |
           last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 500 --json tagName --jq '.[].tagName' | { grep -E '^release-[0-9]+$' || true; } | sed 's/release-//' | sort -n | tail -1)
           echo "RELEASE_N=$(( ${last:-0} + 1 ))" >> "$GITHUB_ENV"
-          # The app knows its own build (ui/update-prompt.tsx compares it with the server's LATEST_APP_VERSION).
-          echo "EXPO_PUBLIC_APP_BUILD=$(( ${last:-0} + 1 ))" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v4
         with:
