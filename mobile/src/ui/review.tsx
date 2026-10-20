@@ -21,6 +21,7 @@ import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
 import { PicPending } from './pic-pending';
 import { Marquee } from './marquee';
+import { TopicSheet } from './topic-sheet';
 import { OptionBox, OptionGroup } from './option-box';
 import { ARC, DA_FONT, radius, useColors, useIsDark } from './theme';
 
@@ -318,7 +319,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
   const pic = useQuestionImage();
   const [open, setOpen] = useState(!!(alwaysOpen || startOpen));
   const [fa, setFa] = useState(faStart);
-  const [play, setPlay] = useState(0); // a tap on the category chip runs its long name through once more
+  const [topicOpen, setTopicOpen] = useState(false); // the category chip's sheet (ui/topic-sheet.tsx)
   const [view, setView] = useState<'mine' | 'right'>(it.a ? 'mine' : 'right');
   const isSaved = saved.some(x => x.id === q.id);
   const t = bank?.topics[q.c];
@@ -354,6 +355,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
               category at the row's other end (swapped, Mojtaba 2026-10-20; here and in the mistakes page's review). */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
           <TranslateButton on={fa} onPress={() => setFa(!fa)} lang={lang} />
+          {ARC ? <TopicSheet q={q} open={topicOpen} onClose={() => setTopicOpen(false)} /> : null}
           <View style={{ flex: 1, minWidth: 4 }} />
           {badge ? (
             <View style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: badge.bg }}>
@@ -362,7 +364,8 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           ) : null}
           {/* The question's category (official section) */}
           {bank && sectionFa(bank, q.c) ? (
-            <Chip {...(ARC ? { onPress: () => setPlay(n => n + 1), accessibilityRole: 'button' as const } : null)} style={{ flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
+            // A tap opens the topic's lesson in a sheet from the bottom (ui/topic-sheet.tsx; Mojtaba 2026-10-20).
+            <Chip {...(ARC ? { onPress: () => { tap(); setTopicOpen(true); }, accessibilityRole: 'button' as const } : null)} style={{ flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
               {/* Its section's icon before the name, like the glossary's groups (Mojtaba 2026-10-20). */}
               <Icon name={sectionIcon(q.c)} size={13} color={c.link} />
               <View style={{ flexShrink: 1, minWidth: 0 }}>
@@ -372,7 +375,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
                 {ARC ? (
                   // 8 points wider each side than the name: the glide's faded edges (fade 8), so a name that fits stays put.
                   <View style={{ position: 'absolute', top: 0, bottom: 0, left: -8, right: -8, flexDirection: 'row' }}>
-                    <Marquee text={sectionFa(bank, q.c) ?? ''} height={20} mask fade={8} once play={play} style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} />
+                    <Marquee text={sectionFa(bank, q.c) ?? ''} height={20} mask fade={8} once style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} />
                   </View>
                 ) : null}
               </View>
