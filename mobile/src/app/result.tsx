@@ -94,7 +94,7 @@ const Empty = ({ text }: { text: string }) => {
 
 export default function Result() {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets();
-  const { Q, settings, bank } = useApp();
+  const { Q, settings, bank, saved } = useApp();
   const motion = usePageMotion('push');
   const wide = useWindowDimensions().width >= 480; // «جزئیات آزمون» with its label; an icon on phones
   const [a] = useState<Attempt | null>(() => session.result);
@@ -200,7 +200,9 @@ export default function Result() {
         {total ? nav : null}
         {/* The questions on show (this tab's), green when right and red when wrong; a tap opens that one. */}
         <QuestionSheet open={listOpen} current={k} onClose={() => setListOpen(false)} onPick={j => { setListOpen(false); step(j); }}
-          items={list.map(r => ({ n: r.i + 1, tone: r.it.ok ? 'ok' : 'bad', marked: !!r.it.m }))} />
+          // Marked: bookmarked during the exam, or saved («سؤالات ذخیره‌شده») with the bookmark on its picture, here
+          // or before, so the list shows which ones are saved (Mojtaba 2026-10-20).
+          items={list.map(r => ({ n: r.i + 1, tone: r.it.ok ? 'ok' : 'bad', marked: !!r.it.m || saved.some(x => x.id === r.it.id) }))} />
       </Backdrop>
     );
   }
