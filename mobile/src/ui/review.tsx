@@ -10,7 +10,7 @@ import { api } from '@/lib/api';
 import type { Item, Question } from '@/lib/bank';
 import { imgSource } from '@/lib/img-source';
 import { faNum } from '@/lib/logic';
-import { sectionFa, topicFa } from '@/lib/names';
+import { sectionFa, sectionIcon, topicFa } from '@/lib/names';
 import { useApp, useQuestionImage } from '@/lib/store';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -357,15 +357,20 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
           ) : null}
           {/* The question's category (official section) */}
           {bank && sectionFa(bank, q.c) ? (
-            <Chip {...(ARC ? { onPress: () => setPlay(n => n + 1), accessibilityRole: 'button' as const } : null)} style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
-              {/* Main site: a name too long for its room glides through once (again at a tap) instead of being cut; the
-                  hidden copy still gives the chip its natural width, held to the room the row leaves. */}
-              <T style={[{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }, ARC && { opacity: 0 }]} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
-              {ARC ? (
-                <View style={{ position: 'absolute', top: 2, bottom: 2, left: 2, right: 2, flexDirection: 'row' }}>
-                  <Marquee text={sectionFa(bank, q.c) ?? ''} height={20} mask fade={8} once play={play} style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} />
-                </View>
-              ) : null}
+            <Chip {...(ARC ? { onPress: () => setPlay(n => n + 1), accessibilityRole: 'button' as const } : null)} style={{ flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 2, borderRadius: 99, backgroundColor: c.accentSoft }}>
+              {/* Its section's icon before the name, like the glossary's groups (Mojtaba 2026-10-20). */}
+              <Icon name={sectionIcon(q.c)} size={13} color={c.link} />
+              <View style={{ flexShrink: 1, minWidth: 0 }}>
+                {/* Main site: a name too long for its room glides through once (again at a tap) instead of being cut; the
+                    hidden copy still gives the chip its natural width, held to the room the row leaves. */}
+                <T style={[{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }, ARC && { opacity: 0 }]} numberOfLines={1} ellipsizeMode="tail">{sectionFa(bank, q.c)}</T>
+                {ARC ? (
+                  // 8 points wider each side than the name: the glide's faded edges (fade 8), so a name that fits stays put.
+                  <View style={{ position: 'absolute', top: 0, bottom: 0, left: -8, right: -8, flexDirection: 'row' }}>
+                    <Marquee text={sectionFa(bank, q.c) ?? ''} height={20} mask fade={8} once play={play} style={{ fontSize: 12.5, lineHeight: 20, fontWeight: '600', color: c.link }} />
+                  </View>
+                ) : null}
+              </View>
             </Chip>
           ) : null}
           <View style={{ flex: 1, minWidth: 4 }} />

@@ -2,6 +2,7 @@
 import type { Attempt, Bank } from './bank';
 import { DATE_LOCALE } from './i18n';
 import { faNum, lessonNumber } from './logic';
+import type { IconName } from '@/ui/icon-names';
 
 // «آزمون تصادفی», «درس ۱۲», … (the app's own random exam, mode 'new', is «آزمون تصادفی» too since it took the old one's
 // place on 2026-10-19)
@@ -19,6 +20,12 @@ export function sectionFa(bank: Bank, c: string): string | null {
   const n = +String(c).split('.')[0];
   return bank.sections.find(s => s.n === n)?.fa ?? null;
 }
+
+// An icon for each official section, beside its name under a reviewed question's picture, like the glossary's groups'
+// (Mojtaba 2026-10-20): 1 the car and its papers, 3 manoeuvring, 4 behaviour in traffic, 5 road conditions, 6 basic
+// rules, 7 manoeuvres on the road, 8 special risks, 10 the licence's rules.
+const SECTION_ICON: Record<number, IconName> = { 1: 'car', 3: 'gauge', 4: 'person', 5: 'road', 6: 'rules', 7: 'lanes', 8: 'warning', 10: 'idCard' };
+export const sectionIcon = (c: string): IconName => SECTION_ICON[+String(c).split('.')[0]] ?? 'sign';
 
 export const topicFa = (bank: Bank, c: string) => bank.topics[c]?.fa ?? 'سایر';
 // The topic's name alone, without its number (e.g. a practice exam's title).
