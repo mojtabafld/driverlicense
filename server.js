@@ -158,6 +158,31 @@ async function sendResetMail(u, lang) {
   await mail.sendReset(u.email || u.username, u.name || u.username, code, ['fa', 'en', 'da'].includes(lang) ? lang : (u.settings || {}).ui);
   console.log('reset mail sent', u.username);
 }
+// Signing in, up and deleting the account with a code instead of a password (Mojtaba 2026-10-20): a random 6-digit
+// code to the address, kept as the forgotten password's is (u.reset; the same 15 minutes, 5 tries, one a minute and 6 a
+// day). For an address with no account yet (signing up) the code waits in memory with the same limits (a restart
+// only means asking for a new one). Unlike sendResetMail, waiting a minute is said to the app, as it shows a timer.
+const signupCodes = new Map();   // address → { h, exp, sent, day, n, tries }
+async function sendCodeMail(u, e, lang, kind) {
+  const now = Date.now(), v = (u ? u.reset : signupCodes.get(e)) || {};
+  if (v.sent && now - v.sent < 60e3) throw Object.assign(new Error('یک دقیقه صبر کنید و دوباره امتحان کنید.'), { status: 429 });
+  const day = (v.day && now - v.day < 864e5) ? v.day : now, n = day === v.day ? (v.n || 0) : 0;
+  if (n >= 6) throw Object.assign(new Error('امروز ایمیل زیادی فرستاده شده است؛ فردا دوباره امتحان کنید.'), { status: 429 });
+  const code = String(crypto.randomInt(0, 1e6)).padStart(6, '0');
+  const rec = { h: tokenHash(`${u ? u.username : e}:${code}`), exp: now + 15 * 60e3, sent: now, day, n: n + 1, tries: 0 };
+  if (u) { u.reset = rec; await store.saveUser(u); } else signupCodes.set(e, rec);
+  const ui = ['fa', 'en', 'da'].includes(lang) ? lang : u ? (u.settings || {}).ui : 'fa';
+  await mail.sendCode(u ? u.email || u.username : e, u ? u.name || '' : '', code, ui, kind);
+  console.log('code mail sent', kind, u ? u.username : e.replace(/^(.{2}).*@/, '$1…@'));
+}
+// Whether the code is the one waiting for a new account at this address; a wrong code counts as a try.
+function signupCodeOk(e, code) {
+  const r = signupCodes.get(e);
+  if (!r || !(r.exp > Date.now()) || (r.tries || 0) >= RESET_TRIES) return false;
+  if (safeEqual(r.h, tokenHash(`${e}:${String(code || '').replace(/\D/g, '')}`))) return true;
+  r.tries = (r.tries || 0) + 1;
+  return false;
+}
 // The account a forgotten-password address belongs to: by its address, or by a username that is this address.
 function resetUser(e) {
   const same = v => !!v && mail.normal(v) === e;
@@ -651,6 +676,51 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
 
+  // POST code { email, lang, signup }: the code that signs in (an account with this address; else 404) or, with
+  // `signup`, makes a new account (no account with it yet; else 409). Counted as a failed try, as «forgot».
+  if (req.method === 'POST' && route === 'code') {
+    if (!mail.available()) return send(res, 404, { error: 'ایمیل فعال نیست.' });
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const { email, lang, signup } = await readBody(req);
+    const e = mail.normal(email);
+    if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
+    addFail(ip);
+    const u = resetUser(e);
+    if (signup && u) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.' });
+    if (!signup && !u) return send(res, 404, { error: 'حسابی با این ایمیل ثبت نشده است.' });
+    if (signup && !registerAllowed(ip)) return send(res, 429, { error: 'ساخت حساب از این اتصال زیاد بوده است؛ کمی بعد دوباره امتحان کنید.' });
+    try { await sendCodeMail(u, e, lang, signup ? 'signup' : 'login'); }
+    catch (err) { if (err.status) return send(res, err.status, { error: err.message }); console.error('code mail', err.message); return send(res, 502, { error: 'ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.' }); }
+    return send(res, 200, { ok: true });
+  }
+  // POST codein { email, code, name, exam }: the code from /api/code. For an account with this address it signs in (and
+  // confirms the address); for a new one it makes the account (its shown name, the questions' language chosen while
+  // signing up; a random password nobody knows) and signs in.
+  if (req.method === 'POST' && route === 'codein') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const { email, code, name, exam } = await readBody(req);
+    const e = mail.normal(email);
+    let u = resetUser(e);
+    if (u) {
+      if (!(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+      delete u.reset;
+      if (!u.emailOk && u.email) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
+      await store.saveUser(u);
+    } else {
+      if (!signupCodeOk(e, code)) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+      signupCodes.delete(e);
+      const salt = crypto.randomBytes(16).toString('hex');
+      const now = Date.now();
+      u = { username: e, name: String(name || e.split('@')[0]).trim().slice(0, 40) || e, salt, hash: await hashPw(crypto.randomBytes(24).toString('hex'), salt),
+        created: now, attempts: [], settings: { header: 'plain', ...(exam === 'da' || exam === 'en' ? { lang: exam, langChosen: true } : {}) }, email: e, emailOk: now, okOnce: now };
+      store.users[e] = u;
+      await store.saveUser(u);
+      console.log('account made with a code', e.replace(/^(.{2}).*@/, '$1…@'));
+    }
+    fails.delete(ip);
+    const token = await newSession(req, res, u.username);
+    return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
+  }
   // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (else 404). Counted as a
   // failed try, so one address cannot ask again and again (nor test many addresses).
   if (req.method === 'POST' && route === 'forgot') {
@@ -879,13 +949,21 @@ async function api(req, res, route) {
     await store.saveUser(user);
     return send(res, 200, { user: publicUser(user) });
   }
-  // Delete the account, asked from the settings with the user's password (failed tries count like failed sign-ins):
+  // POST deletecode: the code that deletes the account, to its address (accounts with one, while email is on).
+  if (req.method === 'POST' && route === 'deletecode') {
+    if (!mail.available() || !user.email) return send(res, 404, { error: 'ایمیل فعال نیست.' });
+    try { await sendCodeMail(user, user.email, (await readBody(req)).lang, 'delete'); }
+    catch (err) { if (err.status) return send(res, err.status, { error: err.message }); console.error('delete code mail', err.message); return send(res, 502, { error: 'ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.' }); }
+    return send(res, 200, { ok: true });
+  }
+  // Delete the account, asked from the settings with the code sent to its address (deletecode) or, for accounts
+  // without one, the user's password (failed tries count like failed sign-ins):
   // the user, all their sessions, their own profile picture, their error reports and the emails received from their
   // address are removed, and the cookie cleared.
   if (req.method === 'DELETE' && route === 'account') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const b = await readBody(req);
-    if (typeof b.password !== 'string' || !(await checkPw(b.password, user))) { addFail(ip); return send(res, 403, { error: 'رمز عبور درست نیست.' }); }
+    if (b.code != null ? !(await resetCodeOk(user, b.code)) : typeof b.password !== 'string' || !(await checkPw(b.password, user))) { addFail(ip); return send(res, 403, { error: b.code != null ? BAD_CODE : 'رمز عبور درست نیست.' }); }
     const u = user.username;
     for (const [t, x] of Object.entries(store.sessions)) if (x.username === u) delete store.sessions[t];
     delete store.users[u];

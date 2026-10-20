@@ -1,4 +1,10 @@
 {
+"برای ورود به حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.":["Enter your email to log in to your TeoriPrøve account; we'll send a login code to it.", "Indtast din e-mail for at logge ind på din TeoriPrøve-konto; vi sender en loginkode til den."],
+"برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.":["Enter your email to create your TeoriPrøve account; we'll send a verification code to it.", "Indtast din e-mail for at oprette din TeoriPrøve-konto; vi sender en bekræftelseskode til den."],
+"یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا حساب‌تان ساخته شود.":["We've sent a 6-digit code to {0}. Enter the code to create your account.", "Vi har sendt en 6-cifret kode til {0}. Indtast koden for at oprette din konto."],
+"حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، کد ۶ رقمی‌ای را که به {0} فرستادیم وارد کنید.":["Your account, with all its tests, lessons, mistakes and settings, will be deleted for good and cannot be restored. To confirm, enter the 6-digit code we've sent to {0}.", "Din konto med alle prøver, lektioner, fejl og indstillinger slettes for altid og kan ikke gendannes. Indtast den 6-cifrede kode, vi har sendt til {0}, for at bekræfte."],
+"کد ۶ رقمی را وارد کنید.":["Enter the 6-digit code.", "Indtast den 6-cifrede kode."],
+"با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.":["An account already exists with this email; use “Log in”.", "Der findes allerede en konto med denne e-mail; brug »Log ind«."],
 "آماده‌ی آزمون تئوری.":["Ready for the theory test.", "Klar til teoriprøven."],
 "مطمئن":["Confident", "Tryg"],
 "پشت فرمان.":["behind the wheel.", "bag rattet."],
