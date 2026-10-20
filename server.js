@@ -16,7 +16,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
-const { getLesson, getSummary, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
+const { getLesson, getSummary, getTopic, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
 const { search: aiSearch } = require('./search');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
@@ -945,7 +945,7 @@ async function api(req, res, route) {
     else { att.ai.q = att.ai.q || {}; if (att.ai.q[slot] === key) return; att.ai.q[slot] = key; }
     await store.saveUser(user);
   };
-  if (['lesson', 'summary', 'ttsai'].includes(route) && needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
+  if (['lesson', 'summary', 'ttsai', 'topic'].includes(route) && needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
   if (req.method === 'POST' && route === 'lesson') {
     const b = await readBody(req);
     const qid = +b.qid, att = attemptAt(b.at);
@@ -957,6 +957,17 @@ async function api(req, res, route) {
       return send(res, 200, { text: lesson.text });
     } catch (e) {
       if (e instanceof Anthropic.APIError) { console.error('lesson API error', e.status, e.message); return send(res, 502, { error: 'آموزش هوش مصنوعی الان در دسترس نیست.' }); }
+      if (e.status) return send(res, e.status, { error: e.message });
+      throw e;
+    }
+  }
+  // The topic sheet's points for one reviewed question, written by AI (lesson.js getTopic): { qid, lang, ui }.
+  if (req.method === 'POST' && route === 'topic') {
+    const b = await readBody(req);
+    try {
+      return send(res, 200, { text: (await getTopic({ store, siteDir: SITE, username: user.username, qid: +b.qid, lang: b.lang, ui: b.ui })).text });
+    } catch (e) {
+      if (e instanceof Anthropic.APIError) { console.error('topic API error', e.status, e.message); return send(res, 502, { error: 'آموزش هوش مصنوعی الان در دسترس نیست.' }); }
       if (e.status) return send(res, e.status, { error: e.message });
       throw e;
     }
