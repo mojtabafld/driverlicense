@@ -11,7 +11,7 @@ import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { t } from '@/lib/i18n';
-import { PROVE_PICS } from '@/lib/config';
+import { PROVE_BANK } from '@/lib/config';
 import { useApp } from '@/lib/store';
 import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
@@ -114,7 +114,7 @@ export default function Exam() {
     router.push('/run');
   };
   // Main site: the app's own random exam, its card's choices shared with the header's start button.
-  const test = useNewTest(), own = !PROVE_PICS;
+  const test = useNewTest(), own = !PROVE_BANK; // /app: the random test of prove.dk's bank
   const head = own
     ? { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(test.count || test.size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: test.start }
     : { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: start };

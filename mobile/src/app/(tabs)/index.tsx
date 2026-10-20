@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
-import { PROVE_PICS } from '@/lib/config';
+import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
@@ -238,8 +238,8 @@ export default function Home() {
   // Main site: the step-by-step course's lessons (lib/course.ts) finished out of those written; /app: prove.dk's lessons tried.
   const { done } = useCourseProgress();
   const ready = COURSE.flatMap(ch => ch.lessons);
-  const lessonsDone = PROVE_PICS ? new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size : ready.filter(l => done[l.id]).length;
-  const lessonsAll = PROVE_PICS ? bank?.tests.length ?? 44 : Math.max(1, ready.length);
+  const lessonsDone = PROVE_BANK ? new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size : ready.filter(l => done[l.id]).length;
+  const lessonsAll = PROVE_BANK ? bank?.tests.length ?? 44 : Math.max(1, ready.length);
   const mistakes = mistakeIds(attempts).length;
   // Average of the last 5 attempts and its change against the 5 before.
   const avg = (xs: Attempt[]) => (xs.length ? xs.reduce((s, a) => s + pctOf(a), 0) / xs.length : null);

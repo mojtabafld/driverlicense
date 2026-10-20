@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
 
-import { API_URL, PROVE_PICS } from '@/lib/config';
+import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
@@ -97,9 +97,16 @@ export default function Learn() {
           {/* Search the learning pages (the course, rules, signs, right of way) by their words and, with «جستجو», by the
               AI; the results open on their own page (app/course-search.tsx). */}
           <SearchBox />
-          <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
-            text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
-            note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
+          {/* /app: prove.dk's 44 numbered tests in place of the app's own course (Mojtaba 2026-10-20). */}
+          {PROVE_BANK ? (
+            <Part n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
+              text="۴۴ درس رسمی، یکی‌یکی، یا تمرین بر اساس دسته‌بندی رسمی آزمون."
+              note={tried ? `${faNum(tried)} از ${faNum(all)} درس انجام شده` : undefined} />
+          ) : (
+            <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
+              text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
+              note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
+          )}
           <Part n={2} icon="rules" title="قوانین" href="/rules"
             text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
           <Part n={3} icon="sign" title="علائم رانندگی" href="/signs"
