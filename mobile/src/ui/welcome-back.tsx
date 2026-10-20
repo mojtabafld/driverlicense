@@ -5,6 +5,7 @@
 // tap on it asks only for the password. «شما نیستید؟» forgets the account and shows the welcome screen.
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,10 +14,38 @@ import { RTL } from '@/lib/i18n';
 import type { LastUser } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
-import { L, T, ThemeButton, tap } from './kit';
+import { L, T, ThemeButton, tap, useHeaderTop } from './kit';
 import { useColors, useIsDark } from './theme';
 
 const PEACH = '#f2b48c'; // the lines' warm accent, as the reference's
+// The photo's top edge (its car's roof lining) until it is read from the photo itself, and the warm wash's top.
+const PHOTO_TOP = '#38302a', WASH_TOP = '#b5643a';
+
+// The colour of a picture's top edge (the average of its top rows), read on the web from the picture (same site);
+// null where it cannot be read.
+function useTopColour(uri: string | null) {
+  const [top, setTop] = useState<string | null>(null);
+  useEffect(() => {
+    if (!uri || Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const im = new window.Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = () => {
+      try {
+        const cv = document.createElement('canvas'), w = 64, h = 4;
+        cv.width = w; cv.height = h;
+        const g = cv.getContext('2d'); if (!g) return;
+        g.drawImage(im, 0, 0, im.naturalWidth, Math.max(1, Math.round(im.naturalHeight * 0.01)), 0, 0, w, h);
+        const d = g.getImageData(0, 0, w, h).data;
+        let r = 0, gg = 0, b = 0;
+        for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
+        const n = d.length / 4, hex = (v: number) => Math.round(v / n).toString(16).padStart(2, '0');
+        setTop(`#${hex(r)}${hex(gg)}${hex(b)}`);
+      } catch {}
+    };
+    im.src = uri;
+  }, [uri]);
+  return top;
+}
 
 function Face({ u, size }: { u: LastUser; size: number }) {
   const c = useColors();
@@ -34,12 +63,19 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
   const { loginArt } = useApp();
   const H = Math.round(Math.min(height * 0.52, width * 1.35, 560));
   const v = loginArt['3'];
+  const uri = v ? `${API_URL}/login-art/3.png?v=${v}` : null;
+  // The top of the screen (the phone's status bar on the web, the page behind the app) in the photo's own top colour,
+  // so the photo runs up to the screen's edge in one piece (Mojtaba 2026-10-20).
+  const read = useTopColour(uri), top = uri ? read ?? PHOTO_TOP : WASH_TOP;
+  useHeaderTop(top);
   const line = { color: '#fff', fontSize: 20, lineHeight: 30, fontWeight: '700' as const, textAlign: 'center' as const };
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
       <View style={{ height: H, overflow: 'hidden' }}>
-        {v ? <Image source={{ uri: `${API_URL}/login-art/3.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" contentPosition="center" transition={250} />
+        {uri ? <Image source={{ uri }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" contentPosition="center" transition={250} />
           : <LinearGradient colors={['#b5643a', '#5b3a2c', '#1d2433']} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />}
+        {/* Its top edge melting into the strip above it (the status bar, in the same colour). */}
+        <LinearGradient pointerEvents="none" colors={[top, `${top}00`]} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 28 }} />
         {/* The foot of the photo fading into the page. */}
         <LinearGradient pointerEvents="none" colors={['transparent', c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(H * 0.28) }} />
         <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, alignItems: RTL ? 'flex-start' : 'flex-end' }}>
