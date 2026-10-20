@@ -1,4 +1,4 @@
-// An on / off switch in the app's teal. On the web the Switch of react-native-web misplaces its knob on a right-to-left
+// An on / off switch in the theme's colour. On the web the Switch of react-native-web misplaces its knob on a right-to-left
 // page (it ends up outside the track), so the app draws its own there: an iOS-sized track with a white knob that
 // slides, mirrored for the right-to-left page (on = knob on the left, as iOS does in Persian). Native keeps the system
 // Switch.
@@ -13,18 +13,19 @@ const W = 51, H = 31, PAD = 2, KNOB = H - PAD * 2;
 
 export function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label?: string }) {
   const c = useColors();
-  // Main site: on in the deep green of its buttons (`cta`), so switches and buttons match.
-  const on = ARC ? c.cta : c.accent;
+  // In the theme's colour (Mojtaba 2026-10-20): on in its accent (in the dark theme too, where the main buttons are
+  // white), off in a soft tint of it; /app's old look kept its own.
+  const on = c.accent, off = ARC ? c.accentSoft : c.line;
   const [pos] = useState(() => new Animated.Value(value ? 1 : 0));
   useEffect(() => {
     Animated.timing(pos, { toValue: value ? 1 : 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   }, [value, pos]);
   if (Platform.OS !== 'web') {
-    return <Switch value={value} onValueChange={v => { tap(); onChange(v); }} trackColor={{ false: c.line, true: on }} thumbColor="#fff" accessibilityLabel={label} />;
+    return <Switch value={value} onValueChange={v => { tap(); onChange(v); }} trackColor={{ false: off, true: on }} thumbColor="#fff" accessibilityLabel={label} />;
   }
   // (On is the knob at the right in English and Danish.)
   const left = pos.interpolate({ inputRange: [0, 1], outputRange: RTL ? [W - PAD - KNOB, PAD] : [PAD, W - PAD - KNOB] });
-  const bg = pos.interpolate({ inputRange: [0, 1], outputRange: [c.line, on] });
+  const bg = pos.interpolate({ inputRange: [0, 1], outputRange: [off, on] });
   return (
     <Pressable onPress={() => { tap(); onChange(!value); }} accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={label} hitSlop={6}>
       <Animated.View style={{ width: W, height: H, borderRadius: H / 2, backgroundColor: bg, direction: 'ltr' } as any}>
