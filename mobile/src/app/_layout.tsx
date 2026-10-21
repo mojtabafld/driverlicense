@@ -1,11 +1,12 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { RTL, UI_LANG, syncNativeDir } from '@/lib/i18n';
+import { api } from '@/lib/api';
+import { RTL, UI_LANG, syncNativeDir, tr } from '@/lib/i18n';
 import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
@@ -130,4 +131,36 @@ function Root() {
 
 export default function RootLayout() {
   return <ThemeModeProvider><AppProvider><Root /><VerifiedPopup /></AppProvider></ThemeModeProvider>;
+}
+
+// A page that broke while drawing (Mojtaba 2026-10-21: the review opened as a blank white page): its error said on the
+// screen instead of a blank one, with «دوباره امتحان کنید» and «بازگشت», and sent to the server (/api/clienterror,
+// for the admin panel and the log). Plain parts only: the app's providers may be what broke.
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  const c = useColors(), route = usePathname();
+  const path = Platform.OS === 'web' && typeof location !== 'undefined' ? `${location.pathname}${location.search}` : route;
+  const sent = useRef(false);
+  useEffect(() => {
+    if (sent.current) return; sent.current = true;
+    api('POST', 'clienterror', { message: error?.message, stack: error?.stack, path, version: Platform.OS }).catch(() => {});
+  }, [error, path]);
+  const btn = (label: string, onPress: () => void, main?: boolean) => (
+    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => ({ height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20,
+      backgroundColor: main ? c.cta : c.surface2, opacity: pressed ? 0.8 : 1 })}>
+      <Text style={{ color: main ? c.ctaFg : c.text, fontSize: 16, fontWeight: '600' }}>{label}</Text>
+    </Pressable>
+  );
+  return (
+    <ScrollView style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, gap: 14, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
+      <Text style={{ color: c.text, fontSize: 22, fontWeight: '700', textAlign: RTL ? 'right' : 'left' }}>{tr('این صفحه باز نشد')}</Text>
+      <Text style={{ color: c.muted, fontSize: 15, lineHeight: 23, textAlign: RTL ? 'right' : 'left' }}>{tr('خطا برای ما فرستاده شد. دوباره امتحان کنید یا برگردید.')}</Text>
+      <View style={{ padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+        <Text selectable style={{ color: c.bad, fontSize: 13, lineHeight: 19, fontFamily: Platform.OS === 'web' ? 'monospace' : undefined, writingDirection: 'ltr', textAlign: 'left' }}>
+          {`${path}\n${error?.message ?? ''}\n${(error?.stack ?? '').split('\n').slice(0, 6).join('\n')}`}
+        </Text>
+      </View>
+      {btn(tr('دوباره امتحان کنید'), () => { retry(); }, true)}
+      {btn(tr('بازگشت'), () => { if (router.canGoBack()) router.back(); else router.replace('/'); retry(); })}
+    </ScrollView>
+  );
 }

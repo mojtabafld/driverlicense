@@ -4078,5 +4078,8 @@
 "حذف یادداشت":["Delete note", "Slet note"],
 "{0} از {1} درست":["{0} of {1} right", "{0} af {1} rigtige"],
 "{0} دقیقه":["{0} min", "{0} min"],
-"فصل {0}":["Chapter {0}", "Kapitel {0}"]
+"فصل {0}":["Chapter {0}", "Kapitel {0}"],
+"این صفحه باز نشد":["This page didn't open", "Siden kunne ikke åbnes"],
+"خطا برای ما فرستاده شد. دوباره امتحان کنید یا برگردید.":["The error has been sent to us. Try again or go back.", "Fejlen er sendt til os. Prøv igen, eller gå tilbage."],
+"دوباره امتحان کنید":["Try again", "Prøv igen"]
 }
