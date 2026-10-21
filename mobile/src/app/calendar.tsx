@@ -1,7 +1,7 @@
 // «تقویم»: what the user did on each day, opened from the calendar button in the head of the learning and exam tabs
 // (Mojtaba 2026-10-21, after a planner app's schedule: modern and minimal, in the app's theme). The month's name over a
 // week strip (Monday first; the chosen day in the theme's filled colour, a dot under the days with something on them;
-// the name opens the whole month), then the chosen day as a timeline: its exams and the course lessons finished, each
+// it opens on the whole month, its name folding it to the week), then the chosen day as a timeline: its exams and the course lessons finished, each
 // at its time on a card that opens it, with the user's own note on it (the note button on each card). The day's own
 // note sits on top, written with the round «+» button. Days are Copenhagen's, as the server's study days.
 import { router } from 'expo-router';
@@ -80,7 +80,7 @@ export default function Calendar() {
   const { done } = useCourseProgress();
   const { notes, save } = useNotes();
   const [today] = useState(() => keyOf(Date.now()));
-  const [day, setDay] = useState(today), [month, setMonth] = useState(false);
+  const [day, setDay] = useState(today), [month, setMonth] = useState(true);   // the whole month to begin with (Mojtaba 2026-10-21)
   const [edit, setEdit] = useState<{ key: string; title: string } | null>(null), [text, setText] = useState(''), [busy, setBusy] = useState(false), [err, setErr] = useState('');
   const note = (key: string, title: string) => { setText(notes[key]?.text ?? ''); setErr(''); setEdit({ key, title }); };
 
@@ -139,7 +139,7 @@ export default function Calendar() {
               {Array.from({ length: grid.length / 7 }, (_, r) => (
                 <View key={r} style={{ flexDirection: 'row' }}>
                   {grid.slice(r * 7, r * 7 + 7).map(k => <DayCell key={k} k={k} on={k === day} today={k === today} busy={busyDays.has(k)} dim={k.slice(0, 7) !== day.slice(0, 7)} c={c}
-                    onPress={() => { setDay(k); setMonth(false); }} />)}
+                    onPress={() => setDay(k)} />)}
                 </View>
               ))}
             </View>
