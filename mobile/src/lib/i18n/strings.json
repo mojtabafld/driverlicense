@@ -1,4 +1,7 @@
 {
+"اعلان آزمایشی فرستاده شد.":["The test notification was sent.", "Testnotifikationen er sendt."],
+"اعلان آزمایشی به هیچ دستگاهی نرسید.":["The test notification reached no device.", "Testnotifikationen nåede ingen enhed."],
+"اعلان آزمایشی فرستاده نشد؛ دوباره امتحان کنید.":["The test notification could not be sent; try again.", "Testnotifikationen kunne ikke sendes; prøv igen."],
 "حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد.":["Your account, with all its tests, lessons, mistakes and settings, is deleted for good and cannot be restored.", "Din konto med alle prøver, lektioner, fejl og indstillinger slettes for altid og kan ikke gendannes."],
 "یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا وارد حساب‌تان شوید.":["We've sent a 6-digit code to {0}. Enter the code to log in.", "Vi har sendt en 6-cifret kode til {0}. Indtast koden for at logge ind."],
 "یک بار رایگان؛ بعد از آن مخصوص نسخه‌ی ویژه":["Free once; after that for premium", "Gratis én gang; derefter med premium"],
