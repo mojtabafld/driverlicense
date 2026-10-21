@@ -166,7 +166,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
         accessibilityLabel={wrong ? `${faNum(wrong)} اشتباه` : undefined} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
         <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }}
           style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : rest }}>
-          <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 24 : 0, borderRadius: wrong ? 0 : radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
+          <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 24 : 0, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
             <View style={{ flex: right, backgroundColor: rightTone }} />
             <View style={{ flex: wrong, backgroundColor: c.bad }} />
             {inside ? (
