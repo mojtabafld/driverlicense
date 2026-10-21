@@ -170,7 +170,8 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
       {answered ? (
         // The questions answered, then the right and wrong ones, in turn every 5 seconds with the home header's swap
         // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21); plain text, no link.
-        <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
+        // (at the bar's far end, Mojtaba 2026-10-21)
+        <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
           transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
           {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
             {dot(c.ok, `${faNum(right)} درست`)}
@@ -210,13 +211,12 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
       {/* The bar, with the mistakes still open in it, opens the mistakes page (as the count beside the title did). */}
       <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
         style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
-        <LabelBar atEnd share={fixed ? share : 0} shown={fixed ? bar : 0} tone={tone} soft={done ? c.okSoft : c.warnSoft} fill={0.85}
-          label={faNum(open.length)} a11y={{ min: 0, max: missed, now: fixed }} />
+        {/* (in it how many are put right, «x از y»; the line under it gone, Mojtaba 2026-10-21) */}
+        <LabelBar share={fixed ? share : 0} shown={fixed ? bar : 0} tone={tone} soft={done ? c.okSoft : c.warnSoft} fill={0.85}
+          label={t('{0} از {1}', faNum(fixed), faNum(missed))} a11y={{ min: 0, max: missed, now: fixed }} />
       </Pressable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
-        <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-          {open.length ? `${faNum(fixed)} از ${faNum(missed)} اشتباه اصلاح شده` : 'همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.'}
-        </T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', columnGap: 12 }}>
+        {open.length ? null : <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.</T>}
         {open.length ? (
           // A small pill in the theme's soft colour, so it reads as a button; the text at the size it had (Mojtaba 2026-10-19).
           // Before the text the practice sign of «تمرین همه‌ی اشتباهات» (refresh), no arrow after it (Mojtaba 2026-10-20).
