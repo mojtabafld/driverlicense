@@ -22,7 +22,7 @@ import { ArcButton, Button, Card, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
-import { ARC, radius, useColors, useIsDark } from './theme';
+import { ARC, radius, useColors } from './theme';
 
 export type NewTest = ReturnType<typeof useNewTest>;
 export function useNewTest() {
@@ -136,7 +136,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
     </View>
   );
   // Every question answered: the percent and the bar in green, with a round tick before the title (Mojtaba 2026-10-20).
-  const done = total > 0 && answered >= total, dark = useIsDark();
+  const done = total > 0 && answered >= total;
   // The right ones in green in every theme and colour (Mojtaba 2026-10-21), the wrong ones in red, on a neutral track.
   const rightTone = c.ok, inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
   return (
@@ -159,12 +159,15 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
             <View style={{ flex: wrong, backgroundColor: c.bad }} />
             {inside ? (
               // (at the fill's start, on the right ones' colour, so never on the small red part)
-              <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'flex-start', paddingHorizontal: 10 }}>
-                <T raw style={{ color: dark ? c.bg : '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T>
+              <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'flex-start', paddingHorizontal: 4 }}>
+                <View style={{ paddingHorizontal: 7, paddingVertical: 1, borderRadius: radius.pill, backgroundColor: c.surface }}>
+                  {/* In the theme's colour (Mojtaba 2026-10-21), on a small chip so it reads on the green. */}
+                  <T raw style={{ color: c.link, fontSize: 12, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T>
+                </View>
               </View>
             ) : null}
           </View>
-          {inside ? null : <View style={{ justifyContent: 'center', paddingHorizontal: 8 }}><T raw style={{ color: answered ? rightTone : c.muted, fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T></View>}
+          {inside ? null : <View style={{ justifyContent: 'center', paddingHorizontal: 8 }}><T raw style={{ color: answered ? c.link : c.muted, fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T></View>}
         </View>
       </Pressable>
       {answered ? (
