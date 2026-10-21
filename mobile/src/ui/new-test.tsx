@@ -17,12 +17,13 @@ import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { pctText } from './activity';
+import { PALETTE, PALETTES } from './palette';
 import { Icon } from './icon';
 import { ArcButton, Button, Card, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
-import { ARC, radius, useColors } from './theme';
+import { ARC, radius, useColors, useIsDark } from './theme';
 
 export type NewTest = ReturnType<typeof useNewTest>;
 export function useNewTest() {
@@ -50,7 +51,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
   const c = useColors();
   const { newqArt } = useApp();
   const { limited } = useFree();
-  const { ready, ids, last, missed, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
+  const { ready, ids, last, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
   if (!ready) return null;
   const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
   // Before any question is answered (Mojtaba 2026-10-21): the card without its empty progress, the line over the
@@ -98,9 +99,8 @@ export function NewTestCard({ test }: { test: NewTest }) {
         : count ? (ARC ? <ArcButton label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
       {/* The progress and the mistakes at the card's foot, under the start button (Mojtaba 2026-10-21). */}
-      {tight && !missed.size ? null : <View style={{ height: 1, backgroundColor: c.line, marginVertical: 2 }} />}
+      {tight ? null : <View style={{ height: 1, backgroundColor: c.line, marginVertical: 2 }} />}
       {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} />}
-      {missed.size ? <MistakesBar open={[...last].filter(([, ok]) => !ok).map(([id]) => id)} missed={missed.size} /> : null}
     </Card>
   );
 }
@@ -109,28 +109,6 @@ export function NewTestCard({ test }: { test: NewTest }) {
 // line of text): the share of the questions answered at least once, filling in when the card shows, its percent beside
 // the title; under it how many of how many, and of those how many were right / wrong the last time, each with a dot in
 // its colour. The mistakes open the mistakes page (Mojtaba 2026-10-19), where this test's questions are among them.
-// A tall bar with its number in it (Mojtaba 2026-10-21): at the end of the filled part, in white, once that part is
-// wide enough; before that just after it, in the bar's colour. `atEnd`: the number is of what is left (the mistakes
-// still open), so it sits at the bar's far end, on the part not filled (in white once the fill reaches it).
-function LabelBar({ share, shown, tone, soft, label, fill = 1, a11y, atEnd }: { share: number; shown: number; tone: string; soft: string; label: string; fill?: number;
-  a11y: { min: number; max: number; now: number }; atEnd?: boolean }) {
-  const inside = !atEnd && share >= 0.22;
-  return (
-    <View accessibilityRole="progressbar" accessibilityValue={a11y}
-      style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', alignItems: 'stretch', backgroundColor: soft }}>
-      <View style={{ width: `${shown * 100}%`, minWidth: share ? 24 : 0, borderRadius: radius.pill, justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: inside ? 10 : 0 }}>
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: radius.pill, backgroundColor: tone, opacity: fill }} />
-        {inside ? <T raw style={{ color: '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{label}</T> : null}
-      </View>
-      {atEnd ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 10 }}>
-          <T raw style={{ color: share >= 0.8 ? '#fff' : tone, fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{label}</T>
-        </View>
-      ) : inside ? null : <View style={{ justifyContent: 'center', paddingHorizontal: 8 }}><T raw style={{ color: tone, fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{label}</T></View>}
-    </View>
-  );
-}
-
 function Progress({ answered, total, right, wrong }: { answered: number; total: number; right: number; wrong: number }) {
   const c = useColors();
   const share = total ? answered / total : 0;
@@ -159,7 +137,11 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
     </View>
   );
   // Every question answered: the percent and the bar in green, with a round tick before the title (Mojtaba 2026-10-20).
-  const done = total > 0 && answered >= total, tone = done ? c.ok : c.accent;
+  const done = total > 0 && answered >= total, dark = useIsDark();
+  // The right ones in the theme's colour, unless it is near the mistakes' red (coral, rose): then green; green when all
+  // are answered, as before.
+  const reddish = (() => { const h = PALETTES.find(x => x.id === PALETTE)?.hue ?? 0; return h <= 40 || h >= 320; })();
+  const rightTone = done || reddish ? c.ok : c.accent, inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
   return (
     <View style={{ gap: 9 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -168,14 +150,33 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
           <T style={{ fontSize: 14, fontWeight: '700' }}>پیشرفت شما</T>
         </View>
       </View>
-      <LabelBar share={answered ? share : 0} shown={answered ? bar : 0} tone={tone} soft={done ? c.okSoft : c.accentSoft} label={pctText(pct)} a11y={{ min: 0, max: total, now: answered }} />
+      {/* One bar for both (Mojtaba 2026-10-21): the questions answered, the right ones in the theme's colour and the wrong
+          ones (the mistakes not put right yet) in red at the fill's end, the percent in it as before; it opens the mistakes
+          page while there are some. */}
+      <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
+        accessibilityLabel={wrong ? `${faNum(wrong)} اشتباه` : undefined} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+        <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }}
+          style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : reddish ? c.line : c.accentSoft }}>
+          <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 24 : 0, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
+            <View style={{ flex: right, backgroundColor: rightTone }} />
+            <View style={{ flex: wrong, backgroundColor: c.bad }} />
+            {inside ? (
+              // (at the fill's start, on the right ones' colour, so never on the small red part)
+              <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'flex-start', paddingHorizontal: 10 }}>
+                <T raw style={{ color: rightTone === c.accent ? c.accentText : dark ? c.bg : '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T>
+              </View>
+            ) : null}
+          </View>
+          {inside ? null : <View style={{ justifyContent: 'center', paddingHorizontal: 8 }}><T raw style={{ color: answered ? rightTone : c.muted, fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T></View>}
+        </View>
+      </Pressable>
       {answered ? (
         // The questions answered, then the right and wrong ones, in turn every 5 seconds with the home header's swap
         // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21); plain text, no link.
         <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
           transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
           {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
-            {dot(c.ok, `${faNum(right)} درست`)}
+            {dot(rightTone, `${faNum(right)} درست`)}
             {dot(c.bad, `${faNum(wrong)} اشتباه`)}
           </>}
         </Animated.View>
@@ -184,35 +185,3 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
   );
 }
 
-// Under the progress, once a question of this test was answered wrong (Mojtaba 2026-10-19): the mistakes put right
-// (right the last time) as a share of all this test's questions ever answered wrong, so the bar fills as they are fixed
-// (it emptied as they were fixed until Mojtaba asked for it the other way); its title counts those still wrong. In the
-// same look as the progress bar above, in a paler shade of the theme's colour. «آزمون اشتباهات» starts a test of them
-// (at most a real test's 25, in random order).
-function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
-  const c = useColors();
-  const fixed = missed - open.length, share = fixed / missed;
-  // All put right: the count and the bar in green, with a round tick before the title, as the progress above; until
-  // then in the theme's warning orange, mistakes still to put right (Mojtaba 2026-10-20).
-  const done = !open.length, tone = done ? c.ok : c.warn;
-  const bar = useCountUp(share, 1100);
-  return (
-    <View style={{ gap: 9 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          {done ? <Icon name="checkCircle" size={17} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
-          <T style={{ fontSize: 14, fontWeight: '700' }}>اشتباهات اصلاح‌نشده</T>
-        </View>
-      </View>
-      {/* The bar, with the mistakes still open in it, opens the mistakes page (as the count beside the title did). */}
-      <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
-        style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
-        {/* (in it how many are put right, «x از y»; the line under it gone, Mojtaba 2026-10-21) */}
-        <LabelBar share={fixed ? share : 0} shown={fixed ? bar : 0} tone={tone} soft={done ? c.okSoft : c.warnSoft} fill={0.85}
-          label={t('{0} از {1}', faNum(fixed), faNum(missed))} a11y={{ min: 0, max: missed, now: fixed }} />
-      </Pressable>
-      {/* No mistakes test button here any more (Mojtaba 2026-10-21): the bar opens the mistakes page. */}
-      {open.length ? null : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.</T>}
-    </View>
-  );
-}
