@@ -1,14 +1,21 @@
 // The account, opened from the user card in the settings (an inner page: fixed head, a drag back): the username (fixed),
 // the shown name; with email on, the address (to add, change or confirm; the trial code needs a confirmed one). A new
 // password (only with the current one) only for accounts that still sign in with one: those with no address, while
-// accounts with one sign in with a code sent there (Mojtaba 2026-10-20).
-import { useState } from 'react';
-import { View } from 'react-native';
+// accounts with one sign in with a code sent there (Mojtaba 2026-10-20). Last, deleting the account (moved here from the
+// settings, Mojtaba 2026-10-21; main site only): a red button that asks first, with a 6-digit code sent to the account's
+// address as the dialog opens («ارسال دوباره‌ی کد» after a minute) or, for accounts without one, the password.
+import { useEffect, useState } from 'react';
+import { Pressable, View } from 'react-native';
+
+import { PROVE_PICS } from '@/lib/config';
+import { t as fmt } from '@/lib/i18n';
 
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
-import { Button, Card, L, T } from '@/ui/kit';
+import { CodeBoxes } from '@/ui/code-boxes';
+import { Confirm } from '@/ui/confirm';
+import { ActionButton, Button, Card, L, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
@@ -22,14 +29,32 @@ const errText = (e: unknown) => (e instanceof Error && e.message ? e.message : '
 
 export default function Account() {
   const c = useColors();
-  const { user, updateAccount, mail, sendVerify } = useApp();
+  const { user, updateAccount, mail, sendVerify, deleteAccount, deleteCode } = useApp();
   const [email, setEmail] = useState(user?.email ?? ''), [mailMsg, setMailMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [name, setName] = useState(user?.name ?? '');
   const [nameMsg, setNameMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [cur, setCur] = useState(''), [pw, setPw] = useState(''), [pw2, setPw2] = useState('');
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState<'name' | 'pw' | 'mail' | null>(null);
-  const byPw = !mail || !user?.email;
+  const byPw = !mail || !user?.email, byCode = !byPw;
+  const [askDel, setAskDel] = useState(false), [delPw, setDelPw] = useState(''), [delErr, setDelErr] = useState(''), [delBusy, setDelBusy] = useState(false);
+  const [delSent, setDelSent] = useState(0), [delNow, setDelNow] = useState(0);
+  useEffect(() => { if (!askDel || !delSent) return; const t = setInterval(() => setDelNow(Date.now()), 1000); return () => clearInterval(t); }, [askDel, delSent]);
+  const delWait = delSent ? Math.max(0, 60 - Math.floor((delNow - delSent) / 1000)) : 0;
+  const sendDel = () => {
+    const at = Date.now();
+    setDelSent(at); setDelNow(at); setDelErr('');
+    deleteCode().catch(e => setDelErr(e instanceof Error && e.message ? e.message : 'ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.'));
+  };
+  const openDel = () => { setAskDel(true); if (byCode) sendDel(); };
+  const closeDel = () => { if (delBusy) return; setAskDel(false); setDelPw(''); setDelErr(''); };
+  const doDelete = async (v = delPw) => {
+    if (delBusy) return;
+    if (byCode ? v.length !== 6 : !v) return setDelErr(byCode ? 'کد ۶ رقمی را وارد کنید.' : 'رمز عبور را وارد کنید.');
+    setDelBusy(true); setDelErr('');
+    try { await deleteAccount(byCode ? { code: v } : { password: v }); }
+    catch (e) { setDelErr(e instanceof Error && e.message ? e.message : 'حذف نشد؛ دوباره امتحان کنید.'); setDelBusy(false); if (byCode) setDelPw(''); }
+  };
   // Unsaved changes: a new name not saved yet, or anything typed in the password fields.
   const dirty = name.trim() !== (user?.name ?? '') || !!(cur || pw || pw2);
 
@@ -101,6 +126,29 @@ export default function Account() {
             <Note msg={pwMsg} />
             <Button label={busy === 'pw' ? 'در حال ذخیره…' : 'تغییر رمز عبور'} onPress={savePw} disabled={!!busy} icon="lock" />
           </Card> : null}
+
+          {!PROVE_PICS && !user?.guest ? (
+            <Card style={{ gap: 10 }}>
+              <T style={{ fontWeight: '700' }}>حذف حساب کاربری</T>
+              <T style={{ fontSize: 12.5, lineHeight: 20, color: c.muted }}>حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد.</T>
+              <ActionButton label="حذف حساب کاربری" icon="trash" tone="danger" onPress={openDel} />
+            </Card>
+          ) : null}
+          <Confirm open={askDel} icon="trash" danger title="حذف حساب کاربری؟"
+            text={byCode ? fmt('حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، کد ۶ رقمی‌ای را که به {0} فرستادیم وارد کنید.', user?.email ?? '')
+              : 'حساب شما با همه‌ی آزمون‌ها، درس‌ها، اشتباهات و تنظیمات برای همیشه پاک می‌شود و برنمی‌گردد. برای تأیید، رمز عبور خود را وارد کنید.'}
+            cancel="انصراف" ok={delBusy ? 'در حال حذف…' : 'حذف حساب'} okIcon="trash" onCancel={closeDel} onOk={() => doDelete()}>
+            <View style={{ gap: 8 }}>
+              {byCode ? <>
+                <CodeBoxes value={delPw} onChange={v => { setDelPw(v); setDelErr(''); }} bad={!!delErr} />
+                {delWait ? <T style={{ fontSize: 13, color: c.faint, textAlign: 'center' }}>{fmt('ارسال دوباره‌ی کد تا {0} ثانیه‌ی دیگر', delWait)}</T>
+                  : <Pressable onPress={() => { tap(); sendDel(); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center' }}>
+                    <T style={{ fontSize: 14, fontWeight: '600', color: c.link }}>ارسال دوباره‌ی کد</T>
+                  </Pressable>}
+              </> : <Field icon="lock" label="رمز عبور" value={delPw} onChange={v => { setDelPw(v); setDelErr(''); }} secure ltr onSubmit={doDelete} />}
+              {delErr ? <T style={{ fontSize: 13.5, color: c.bad, textAlign: 'center' }}>{delErr}</T> : null}
+            </View>
+          </Confirm>
     </SubPage>
   );
 }
