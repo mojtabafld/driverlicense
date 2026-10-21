@@ -170,8 +170,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
       {answered ? (
         // The questions answered, then the right and wrong ones, in turn every 5 seconds with the home header's swap
         // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21); plain text, no link.
-        // (the count at the start, the right and wrong at the bar's far end, Mojtaba 2026-10-21)
-        <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', justifyContent: phase === 0 ? 'flex-start' : 'flex-end', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
+        <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
           transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
           {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
             {dot(c.ok, `${faNum(right)} درست`)}
