@@ -1,5 +1,5 @@
 // Design tokens of the app: the same colours, radii and fonts as the web site (site/style.css).
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { PROVE_PICS } from '@/lib/config';
@@ -133,7 +133,14 @@ export const ARC = STYLE === 'arc';
 export type Colors = typeof light;
 // The theme in use (light or dark) and the mode it comes from (follow the system by default, or fixed); set by
 // ThemeModeProvider in src/ui/theme-mode.tsx.
-export const ThemeContext = createContext<{ theme: ThemeName; mode: ThemeMode; setMode: (m: ThemeMode) => void }>({ theme: 'light', mode: 'system', setMode: () => {} });
+export const ThemeContext = createContext<{ theme: ThemeName; mode: ThemeMode; setMode: (m: ThemeMode) => void; followSystem: (on: boolean) => void }>({ theme: 'light', mode: 'system', setMode: () => {}, followSystem: () => {} });
+// The sign-in pages (the intro, the language wheel, the welcome screens, signing in and up): light or dark as the
+// phone is set, whatever the saved choice, with no theme button there (Mojtaba 2026-10-21); their colours stay the
+// server's default palette (DEFAULT_THEME), as before.
+export function useSystemTheme() {
+  const { followSystem } = useContext(ThemeContext);
+  useEffect(() => { followSystem(true); return () => followSystem(false); }, [followSystem]);
+}
 export const useTheme = () => useContext(ThemeContext);
 export const useIsDark = () => useContext(ThemeContext).theme === 'dark';
 export const useColors = (): Colors => (useIsDark() ? dark : light);

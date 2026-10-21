@@ -10,11 +10,10 @@ import { Platform, Pressable, ScrollView, View, useWindowDimensions } from 'reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
-import { RTL } from '@/lib/i18n';
 import type { LastUser } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
-import { L, T, ThemeButton, tap, useHeaderTop } from './kit';
+import { L, T, tap, useHeaderTop } from './kit';
 import { useColors, useIsDark } from './theme';
 
 const PEACH = '#f2b48c'; // the lines' warm accent, as the reference's
@@ -85,9 +84,6 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
         {/* Its top edge melting into the strip above it (the status bar, in the same colour). */}
         <LinearGradient pointerEvents="none" colors={[top, `${top}00`]} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 28 }} />
         <LinearGradient pointerEvents="none" colors={card ? ['transparent', 'rgba(12,10,9,0.55)'] : [`${c.bg}00`, c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(H * (card ? 0.32 : dark ? 0.28 : 0.34)) }} />
-        <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 16, right: 16, alignItems: RTL ? 'flex-start' : 'flex-end' }}>
-          <View style={{ borderRadius: 22, backgroundColor: dark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)' }}><ThemeButton /></View>
-        </View>
         {/* The app's two lines on a soft dark glass in the middle, its accent word in peach. */}
         <View style={{ position: 'absolute', top: H * 0.38, left: 0, right: 0, alignItems: 'center', paddingHorizontal: 24 }}>
           <View style={{ paddingVertical: 14, paddingHorizontal: 22, borderRadius: 26, backgroundColor: 'rgba(20,16,14,0.42)', alignItems: 'center' }}>

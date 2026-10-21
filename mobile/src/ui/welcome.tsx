@@ -11,7 +11,7 @@ import { RTL, UI_LANG, setUiLang, tr } from '@/lib/i18n';
 import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
 import { Icon, type IconName } from './icon';
-import { L, T, ThemeButton, physical, physicalAlign, tap } from './kit';
+import { L, T, physical, physicalAlign, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 import { WelcomeAi, WelcomeBank, WelcomeExam, WelcomeProgress } from './welcome-art';
 import Svg, { Path } from 'react-native-svg';
@@ -127,10 +127,9 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err }: { onEmail: ()
     <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
       <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
         {/* At the top right, as in the reference, in every language. */}
-        {/* The language beside it, the theme in the corner (a right-to-left row starts on the right). */}
-        <View style={{ flexDirection: 'row', gap: 8, justifyContent: RTL ? 'flex-start' : 'flex-end' }}>
-          {RTL ? <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View> : <LangButton />}
-          {RTL ? <LangButton /> : <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View>}
+        {/* The language only; the theme is the phone's here (ui/theme.ts useSystemTheme; Mojtaba 2026-10-21). */}
+        <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
+          <LangButton />
         </View>
         <L style={{ alignSelf: 'center', textAlign: 'center', marginTop: Math.min(24, height * 0.02), fontSize: 42, lineHeight: 52, fontWeight: '500', letterSpacing: -1.2, color: c.text }}>Teori Prøve</L>
         {/* The slides, in the middle of what is left. */}
