@@ -29,14 +29,15 @@ function Row({ item }: { item: SearchItem }) {
   const ok = item.free === 'lesson' ? lessonOk(item.lesson) : typeof item.free === 'number' ? firstOk(item.free) : true;
   const k = KIND[item.kind];
   return (
-    <Pressable onPress={() => { tap(); if (!ok) return toPremium(); router.push(item.href); }} accessibilityRole="button" accessibilityLabel={item.title}
+    <Pressable onPress={() => { tap(); if (!ok) return toPremium(); router.push(item.href); }} accessibilityRole="button" accessibilityLabel={item.shown?.title ?? item.title}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 14, opacity: ok ? (pressed ? 0.7 : 1) : 0.55 })}>
       <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name={k.icon} size={19} color={c.link} />
       </View>
       <View style={{ flex: 1, gap: 1 }}>
-        <T raw style={{ fontSize: 14.5, lineHeight: 22, fontWeight: '600' }} numberOfLines={2}>{item.title}</T>
-        <T style={{ fontSize: 12, lineHeight: 18, color: c.muted }} numberOfLines={1}>{tr(k.label)}: <T raw style={{ fontSize: 12, lineHeight: 18, color: c.muted }}>{item.where}</T></T>
+        {/* In the app's language (lib/search.ts `shown`; Persian as written). */}
+        <T raw style={{ fontSize: 14.5, lineHeight: 22, fontWeight: '600' }} numberOfLines={2}>{item.shown?.title ?? item.title}</T>
+        <T style={{ fontSize: 12, lineHeight: 18, color: c.muted }} numberOfLines={1}>{tr(k.label)}: <T raw style={{ fontSize: 12, lineHeight: 18, color: c.muted }}>{item.shown?.where ?? item.where}</T></T>
       </View>
       <Icon name={ok ? 'chevronLeft' : 'lock'} size={14} color={c.faint} />
     </Pressable>
