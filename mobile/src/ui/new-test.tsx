@@ -127,16 +127,17 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
   useEffect(() => {
     if (!answered) return;
     const native = Platform.OS !== 'web';
-    const t = setInterval(() => {
+    // The count shows for 3 s, the colours' legend for 10 s (Mojtaba 2026-10-21).
+    const t = setTimeout(() => {
       Animated.timing(swap, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: native }).start(({ finished }) => {
         if (!finished) return;
         setPhase(p => 1 - p);
         swap.setValue(-1);
         Animated.timing(swap, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
       });
-    }, 5000);
-    return () => { clearInterval(t); swap.stopAnimation(); swap.setValue(1); };
-  }, [answered > 0, swap]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, phase === 0 ? 3000 : 10000);
+    return () => clearTimeout(t);
+  }, [answered > 0, phase, swap]); // eslint-disable-line react-hooks/exhaustive-deps
   const dot = (color: string, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
       <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
@@ -182,7 +183,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
         </View>
       </Pressable>
       {answered ? (
-        // The questions answered, then the right and wrong ones, in turn every 5 seconds with the home header's swap
+        // The questions answered, then the right and wrong ones, in turn (3 s and 10 s) with the home header's swap
         // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21); plain text, no link.
         <Animated.View style={{ minHeight: 19, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 14, rowGap: 2, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
           transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
