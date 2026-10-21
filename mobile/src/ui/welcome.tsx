@@ -16,7 +16,10 @@ import { useColors, useIsDark } from './theme';
 import { WelcomeAi, WelcomeBank, WelcomeExam, WelcomeProgress } from './welcome-art';
 import Svg, { Path } from 'react-native-svg';
 
-// Apple's apple, for «ادامه با اپل» (kept off for now; Mojtaba 2026-10-21).
+// «ادامه با اپل»: hidden until there is an Apple Developer account (Mojtaba 2026-10-21); what it still needs is in
+// TODO.md («Sign in with Apple»).
+const APPLE = false as boolean;
+// Apple's apple, for «ادامه با اپل».
 function AppleMark({ size = 20, color }: { size?: number; color: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -92,7 +95,7 @@ function Wide({ label, icon, light, onPress, mark, off }: { label: string; icon?
   );
 }
 
-// The three ways in, as the Saphe app's first screen (Mojtaba 2026-10-21): Apple (off for now), Google (`onGoogle`, while
+// The ways in, as the Saphe app's first screen (Mojtaba 2026-10-21): Apple (hidden for now, APPLE), Google (`onGoogle`, while
 // the server has it on; else off) and email (`onEmail`: one flow for signing in and up, ui/sign-steps.tsx), then the
 // guest link and the line on the privacy policy.
 export function Welcome({ onEmail, onGuest, onGoogle, busy, err }: { onEmail: () => void; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
@@ -152,7 +155,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err }: { onEmail: ()
             <T style={{ fontSize: 20, lineHeight: 29, fontWeight: '700', textAlign: 'center' }}>سفرتان را با TeoriPrøve شروع کنید</T>
             <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>آماده‌ی آزمون تئوری، مطمئن پشت فرمان.</T>
           </View>
-          <Wide light off label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} />
+          {APPLE ? <Wide light label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} /> : null}
           <Wide label="ادامه با گوگل" mark={() => <GoogleG />} onPress={onGoogle} off={!onGoogle} />
           <Wide label="ادامه با ایمیل" icon="mail" onPress={onEmail} />
           {err ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
