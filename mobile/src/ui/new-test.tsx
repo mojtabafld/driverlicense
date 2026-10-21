@@ -22,7 +22,7 @@ import { ArcButton, Button, Card, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
-import { ARC, radius, useColors } from './theme';
+import { ARC, radius, useColors, useIsDark } from './theme';
 
 export type NewTest = ReturnType<typeof useNewTest>;
 export function useNewTest() {
@@ -108,6 +108,14 @@ export function NewTestCard({ test }: { test: NewTest }) {
 // line of text): the share of the questions answered at least once, filling in when the card shows, its percent beside
 // the title; under it how many of how many, and of those how many were right / wrong the last time, each with a dot in
 // its colour. The mistakes open the mistakes page (Mojtaba 2026-10-19), where this test's questions are among them.
+// Two #rrggbb colours mixed (`t` of the second); null when either is not one.
+function mix(a: string, b: string, t: number): string | null {
+  const m = (h: string) => /^#[0-9a-f]{6}$/i.test(h) ? [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)) : null;
+  const x = m(a), y = m(b);
+  if (!x || !y) return null;
+  return `#${x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('')}`;
+}
+
 function Progress({ answered, total, right, wrong }: { answered: number; total: number; right: number; wrong: number }) {
   const c = useColors();
   const share = total ? answered / total : 0;
@@ -129,18 +137,18 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
     }, 5000);
     return () => { clearInterval(t); swap.stopAnimation(); swap.setValue(1); };
   }, [answered > 0, swap]); // eslint-disable-line react-hooks/exhaustive-deps
-  // (`ring`: a thin edge, for the soft colour of what is not answered yet)
-  const dot = (color: string, text: string, ring?: boolean) => (
+  const dot = (color: string, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color, borderWidth: ring ? 1 : 0, borderColor: c.link }} />
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
       <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{text}</T>
     </View>
   );
   // Every question answered: the percent and the bar in green, with a round tick before the title (Mojtaba 2026-10-20).
-  const done = total > 0 && answered >= total;
+  const done = total > 0 && answered >= total, dark = useIsDark();
   // The right ones in green in every theme and colour (Mojtaba 2026-10-21), the wrong ones in red, on a neutral track.
-  // Not answered yet: the bar's empty part and its dot, in a soft tint of the theme (Mojtaba 2026-10-21).
-  const rest = c.accentSoft;
+  // Not answered yet: the bar's empty part and its dot, a neutral grey with some of the theme in it, strong enough to
+  // read as the bar's third part (Mojtaba 2026-10-21).
+  const rest = mix(c.line, c.accent, dark ? 0.3 : 0.22) ?? c.accentSoft;
   const rightTone = c.ok, inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
   return (
     <View style={{ gap: 9 }}>
@@ -181,7 +189,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
           {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
             {dot(rightTone, `${faNum(right)} درست`)}
             {dot(c.bad, `${faNum(wrong)} اشتباه`)}
-            {total > answered ? dot(rest, `${faNum(total - answered)} جواب‌نداده`, true) : null}
+            {total > answered ? dot(rest, `${faNum(total - answered)} جواب‌نداده`) : null}
           </>}
         </Animated.View>
       ) : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.</T>}
