@@ -51,8 +51,8 @@ function pageOf(t: Term): SearchItem | null {
 const CAT = Object.fromEntries(TERM_CATS.map(g => [g.id, g])) as Record<TermCat, (typeof TERM_CATS)[number]>;
 
 // A tapped term (Mojtaba 2026-10-21): a word card in a sheet from the bottom, closed with a drag down back to the list.
-// It teaches the word, not its lesson (Mojtaba 2026-10-21): the word large in the exam's language, then the word in each
-// of the other languages (the app's first), the line on what the test expects, and a button to the learning page that
+// It teaches the word, not its lesson (Mojtaba 2026-10-21): the word large in the exam's language, then the word in the
+// app's language, the translation language and Danish (the app's first), the line on what the test expects, and a button to the learning page that
 // teaches it (only a page that has the word itself; else the course search for it).
 const WORD_LANG = { fa: 'فارسی', da: 'Dansk', en: 'English' } as const;
 function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: () => void }) {
@@ -66,7 +66,9 @@ function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: (
   if (!x) return null;
   const ok = !page || (page.free === 'lesson' ? lessonOk(page.lesson) : typeof page.free === 'number' ? firstOk(page.free) : true);
   const g = CAT[x.cat], note = x.note ? x.note[NOTE_OF[UI_LANG]] : null, head: 'da' | 'en' = en ? 'en' : 'da';
-  const langs = ([UI_LANG, 'fa', 'da', 'en'] as const).filter((l, i, a) => l !== head && a.indexOf(l) === i);
+  // Only the languages the user reads (Mojtaba 2026-10-21): the app's, the questions' translation, and Danish, the
+  // test's own (the glossary's subject), never the word in the exam's language again.
+  const langs = ([UI_LANG, getTransLang(), 'da'] as const).filter((l, i, a) => l !== head && a.indexOf(l) === i);
   const go = () => { onClose(); if (!page) router.push({ pathname: '/course-search', params: { q: x.da } }); else if (!ok) toPremium(); else router.push(page.href); };
   return (
     <Sheet open={!!t} onClose={onClose} maxHeight="86%">
