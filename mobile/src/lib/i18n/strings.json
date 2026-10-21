@@ -4081,5 +4081,8 @@
 "فصل {0}":["Chapter {0}", "Kapitel {0}"],
 "این صفحه باز نشد":["This page didn't open", "Siden kunne ikke åbnes"],
 "خطا برای ما فرستاده شد. دوباره امتحان کنید یا برگردید.":["The error has been sent to us. Try again or go back.", "Fejlen er sendt til os. Prøv igen, eller gå tilbage."],
-"دوباره امتحان کنید":["Try again", "Prøv igen"]
+"دوباره امتحان کنید":["Try again", "Prøv igen"],
+"ادامه با گوگل":["Continue with Google", "Fortsæt med Google"],
+"ورود با گوگل کامل نشد؛ دوباره امتحان کنید.":["Signing in with Google didn't finish; please try again.", "Login med Google blev ikke fuldført; prøv igen."],
+"ورود با گوگل لغو شد.":["Signing in with Google was cancelled.", "Login med Google blev annulleret."]
 }

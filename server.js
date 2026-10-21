@@ -251,6 +251,13 @@ async function resetCodeOk(u, code) {
   await store.saveUser(u);
   return false;
 }
+// Google sign-in (the route google/start): the web client's ID (public) and its secret, kept in the dashboard only.
+const GOOGLE_ID = (process.env.GOOGLE_CLIENT_ID || '181063268831-njoti40kij1q7af2hk20m06ed09vqvg7.apps.googleusercontent.com').trim();
+const GOOGLE_SECRET = () => (process.env.GOOGLE_CLIENT_SECRET || '').trim();
+const googleOn = () => !!GOOGLE_ID && !!GOOGLE_SECRET();
+// The sign-ins on their way (state → where to go back, for 10 minutes) and the one-time codes (a minute).
+const googleStates = new Map(), googleCodes = new Map();
+setInterval(() => { const t = Date.now(); for (const [k, v] of googleStates) if (t - v.at > 10 * 60e3) googleStates.delete(k); for (const [k, v] of googleCodes) if (t - v.at > 60e3) googleCodes.delete(k); }, 60e3).unref();
 const RULES_TO_ACCOUNT = Date.parse('2026-10-21T00:00:00Z');   // «قوانین»'s reading moved from the browser to the account
 const BAD_CODE = 'کد درست نیست یا دیگر معتبر نیست.';
 const hasPremium = u => payments.active(u) || isAdmin(u);
@@ -664,7 +671,7 @@ async function api(req, res, route) {
   const ip = clientIp(req);
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, theme: defaultTheme(), version: VERSION, app: latestApp(), aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, google: googleOn() || undefined, theme: defaultTheme(), version: VERSION, app: latestApp(), aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
         promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
@@ -736,6 +743,75 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
 
+  // Signing in with Google (Mojtaba 2026-10-21), the authorization-code flow, on the web and in the Android apps alike:
+  // GET google/start?ret=web|app&base=/|/app/&scheme=…&lang=… goes to Google's own page; Google comes back to
+  // google/callback, whose code the server trades (with GOOGLE_CLIENT_SECRET) for the user's verified email and name.
+  // The account with that address signs in; without one, an account is made (as a code sign-up: the trial and pass of a
+  // deleted one kept, the welcome email; the questions' language is asked after, as for any account). The browser or
+  // app then gets a one-time code (a minute) in its address, which POST google/finish { code } trades for the session,
+  // so no session token is ever in an address.
+  if (req.method === 'GET' && route === 'google/start') {
+    if (!googleOn()) return send(res, 404, { error: 'ورود با گوگل فعال نیست.' });
+    const q = new URL(req.url, 'http://x').searchParams;
+    const st = crypto.randomBytes(18).toString('hex');
+    googleStates.set(st, { at: Date.now(), ret: q.get('ret') === 'app' ? 'app' : 'web', base: q.get('base') === '/app/' ? '/app/' : '/',
+      scheme: ['teoriprove', 'teoriprove-prove'].includes(q.get('scheme')) ? q.get('scheme') : 'teoriprove', lang: ['fa', 'en', 'da'].includes(q.get('lang')) ? q.get('lang') : 'fa' });
+    const u = new URL(process.env.GOOGLE_AUTH_URL || 'https://accounts.google.com/o/oauth2/v2/auth');   // (the env: a stand-in for tests)
+    for (const [k, v] of Object.entries({ client_id: GOOGLE_ID, redirect_uri: `${originOf(req)}/api/google/callback`, response_type: 'code', scope: 'openid email profile', state: st, prompt: 'select_account' })) u.searchParams.set(k, v);
+    res.writeHead(302, { Location: u.toString(), 'Cache-Control': 'no-store' });
+    return res.end();
+  }
+  if (req.method === 'GET' && route === 'google/callback') {
+    const q = new URL(req.url, 'http://x').searchParams, st = googleStates.get(String(q.get('state') || ''));
+    googleStates.delete(String(q.get('state') || ''));
+    const back = (o, params) => {
+      const where = o && o.ret === 'app' ? `${o.scheme}://google` : `${originOf(req)}${o ? o.base : '/'}`;
+      res.writeHead(302, { Location: `${where}?${new URLSearchParams(params)}`, 'Cache-Control': 'no-store' });
+      res.end();
+    };
+    if (!st || Date.now() - st.at > 10 * 60e3) return back(st, { google_error: 'expired' });
+    if (q.get('error') || !q.get('code')) return back(st, { google_error: 'cancelled' });
+    try {
+      const r = await fetch(process.env.GOOGLE_TOKEN_URL || 'https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ code: q.get('code'), client_id: GOOGLE_ID, client_secret: GOOGLE_SECRET(), redirect_uri: `${originOf(req)}/api/google/callback`, grant_type: 'authorization_code' }) });
+      const t = await r.json();
+      if (!r.ok || !t.id_token) throw new Error(t.error || `token ${r.status}`);
+      // The ID token came straight from Google over TLS, so its claims can be read without checking its signature.
+      const c = JSON.parse(Buffer.from(t.id_token.split('.')[1], 'base64url').toString('utf8'));
+      if (c.aud !== GOOGLE_ID || !['accounts.google.com', 'https://accounts.google.com'].includes(c.iss) || !c.email || c.email_verified === false) throw new Error('bad id token');
+      const e = mail.normal(c.email);
+      let u = await live(resetUser(e));
+      if (!u) {
+        if (!registerAllowed(ip)) return back(st, { google_error: 'busy' });
+        const salt = crypto.randomBytes(16).toString('hex'), now = Date.now();
+        u = { username: e, name: String(c.given_name || c.name || e.split('@')[0]).trim().slice(0, 40) || e, salt, hash: await hashPw(crypto.randomBytes(24).toString('hex'), salt),
+          created: now, attempts: [], settings: { header: 'plain' }, email: e, emailOk: now, okOnce: now, google: String(c.sub || '') };
+        const restored = await welcomeBack(u, e);
+        store.users[e] = u;
+        await store.saveUser(u);
+        console.log('account made with Google', e.replace(/^(.{2}).*@/, '$1…@'));
+        mail.sendWelcome(e, u.name, st.lang, appLink(req), restored).catch(err => console.error('welcome mail', err.message));
+      } else {
+        if (!u.google && c.sub) u.google = String(c.sub);
+        if (!u.emailOk && u.email) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
+        await store.saveUser(u);
+      }
+      const once = crypto.randomBytes(18).toString('hex');
+      googleCodes.set(once, { username: u.username, at: Date.now() });
+      return back(st, { google: once });
+    } catch (err) {
+      console.error('google sign-in', err.message);
+      return back(st, { google_error: 'failed' });
+    }
+  }
+  if (req.method === 'POST' && route === 'google/finish') {
+    const k = String((await readBody(req)).code || ''), g = googleCodes.get(k);
+    googleCodes.delete(k);
+    const u = g && Date.now() - g.at < 60e3 ? store.users[g.username] : null;
+    if (!u) { addFail(ip); return send(res, 400, { error: 'ورود با گوگل کامل نشد؛ دوباره امتحان کنید.' }); }
+    const token = await newSession(req, res, u.username);
+    return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
+  }
   // POST code { email, lang, signup }: the code that signs in (an account with this address; else 404) or, with
   // `signup`, makes a new account (no account with it yet; else 409). Counted as a failed try, as «forgot».
   if (req.method === 'POST' && route === 'code') {
@@ -1730,7 +1806,7 @@ async function main() {
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     }
-    const m = /^\/api\/([a-z]+)$/.exec(pathname);
+    const m = /^\/api\/([a-z]+(?:\/[a-z]+)?)$/.exec(pathname);   // (google/callback: one more part)
     if (m) {
       try { await api(req, res, m[1]); }
       catch (e) {
