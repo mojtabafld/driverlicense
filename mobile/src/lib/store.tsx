@@ -1,5 +1,6 @@
 // App state: the signed-in user, their exams and settings, and the question bank.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
@@ -65,6 +66,9 @@ type Ctx = {
   // Throws when an account already has the address (sign-up's email step).
   emailFree: (email: string) => Promise<void>;
   codeIn: (email: string, code: string, name?: string, exam?: 'da' | 'en') => Promise<void>;
+  // Signing in with Google (server.js google/start): `google` while the server has it on; on the web the page goes to
+  // Google and comes back (its outcome read at start, `googleErr` when it failed); in the app it opens in a browser.
+  google: boolean; googleErr: string; googleSignIn: () => Promise<void>;
   // Throws when a sign-up code is wrong (before its last step).
   checkCode: (email: string, code: string) => Promise<void>;
   // The code that deletes the account, to its address (the settings' «حذف حساب کاربری»).
@@ -90,6 +94,24 @@ type Ctx = {
 export type Plan = { id: 'week' | 'month' | 'quarter'; days: number; price: number };
 // promo: the free trial's days when a trial code can be entered.
 export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean; promo?: number };
+// Back from Google on the web (server.js google/callback): its one-time code or its error, read once from the address,
+// which is then cleaned.
+const GOOGLE_FAILED = 'ورود با گوگل کامل نشد؛ دوباره امتحان کنید.';
+const googleError = (k: string) => (k === 'cancelled' ? 'ورود با گوگل لغو شد.' : k === 'busy' ? 'ساخت حساب از این اتصال زیاد بوده است؛ کمی بعد دوباره امتحان کنید.' : GOOGLE_FAILED);
+function googleBack(): { code?: string; error?: string } | null {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
+  const q = new URLSearchParams(window.location.search), code = q.get('google'), error = q.get('google_error');
+  if (!code && !error) return null;
+  // (once now, and again after the router has set its own first address from the one it opened with)
+  const clean = () => {
+    const now = new URLSearchParams(window.location.search);
+    if (!now.has('google') && !now.has('google_error')) return;
+    now.delete('google'); now.delete('google_error');
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${now.toString() ? `?${now}` : ''}`);
+  };
+  clean(); setTimeout(clean, 1500); setTimeout(clean, 4000);
+  return { code: code ?? undefined, error: error ?? undefined };
+}
 const AppCtx = createContext<Ctx | null>(null);
 const DEFAULTS: Settings = { showFa: true, timer: true, lang: 'da' };
 
@@ -119,7 +141,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [aiLessons, setAiLessons] = useState(false);
   const [tts, setTts] = useState(false); // questions read aloud (the server has an ElevenLabs key)
   const [pay, setPay] = useState<Pay | null>(null);
-  const [mail, setMail] = useState(false);
+  const [mail, setMail] = useState(false), [google, setGoogle] = useState(false), [googleErr, setGoogleErr] = useState('');
   const [lastUser, setLastUser] = useState<LastUser | null | undefined>(undefined);
   useEffect(() => { loadLastUser().then(setLastUser, () => setLastUser(null)); }, []);
   const [intro, setIntro] = useState<Record<string, string>>({});
@@ -187,10 +209,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [bank, newBank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; newqArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; mail?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setMail(!!x.mail && !PROVE_PICS); rememberDefault(x.theme); setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setNewqArt(x.newqArt || {}); setAvatarArt(x.avatarArt || {}); setHeroArt(x.heroArt || {}); setLoginArt(x.loginArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
+  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; newqArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; mail?: boolean; google?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setMail(!!x.mail && !PROVE_PICS); setGoogle(!!x.google && !PROVE_PICS); rememberDefault(x.theme); setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setNewqArt(x.newqArt || {}); setAvatarArt(x.avatarArt || {}); setHeroArt(x.heroArt || {}); setLoginArt(x.loginArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
 
   useEffect(() => {
     (async () => {
+      // Back from Google on the web: its one-time code is traded for the session (and taken out of the address).
+      const back = googleBack();
+      if (back?.code) {
+        try { const d = await api<{ token: string }>('POST', 'google/finish', { code: back.code }); setApiToken(d.token); await saveToken(d.token); }
+        // (an old code left in the address after a reload, while signed in, says nothing)
+        catch (e) { if (!(await loadToken())) setGoogleErr(e instanceof Error ? e.message : GOOGLE_FAILED); }
+      } else if (back?.error) setGoogleErr(googleError(back.error));
       const t = await loadToken();
       if (t) {
         setApiToken(t); setToken(t);
@@ -252,6 +281,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     forgot: async email => { await api('POST', 'forgot', { email, lang: UI_LANG }); },
     emailFree: async email => { await api('POST', 'emailfree', { email }); },
     sendCode: async (email, signup) => { await api('POST', 'code', { email, signup, lang: UI_LANG }); },
+    google, googleErr,
+    googleSignIn: async () => {
+      setGoogleErr('');
+      const url = `${API_URL}/api/google/start?lang=${UI_LANG}&base=${PROVE_BANK ? '/app/' : '/'}`;
+      if (Platform.OS === 'web') { window.location.assign(`${url}&ret=web`); return; }
+      const scheme = PROVE_BANK ? 'teoriprove-prove' : 'teoriprove';
+      const r = await WebBrowser.openAuthSessionAsync(`${url}&ret=app&scheme=${scheme}`, `${scheme}://google`);
+      if (r.type !== 'success') return;
+      const q = new URL(r.url).searchParams;
+      if (q.get('google_error')) throw new Error(googleError(q.get('google_error')!));
+      const d = await api<{ token: string }>('POST', 'google/finish', { code: q.get('google') });
+      await signedIn(d.token);
+    },
     codeIn: async (email, code, name, exam) => { const d = await api<{ token: string }>('POST', 'codein', { email, code, name, exam, lang: UI_LANG }); await signedIn(d.token); },
     checkCode: async (email, code) => { await api('POST', 'codecheck', { email, code }); },
     takeUser: u => setMe(m => (m ? { ...m, user: u } : m)),
@@ -291,7 +333,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser]);
+  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser, google, googleErr]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 

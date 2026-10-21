@@ -46,7 +46,7 @@ function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: 
 
 export default function Login() {
   const c = useColors(), dark = useIsDark();
-  const { login, register, guest, mail, forgot, checkResetCode, resetPassword } = useApp();
+  const { login, register, guest, mail, forgot, checkResetCode, resetPassword, google, googleErr, googleSignIn } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   // Main site and /app: first the welcome screen, whose two buttons open the form in their mode (Mojtaba 2026-10-20).
   const [welcome, setWelcome] = useState(ARC);
@@ -140,7 +140,7 @@ export default function Login() {
     <Backdrop>
       {last === undefined ? null
         : welcome && last ? <WelcomeBack last={last} onPick={() => { setMode('login'); setErr(''); setWelcome(false); }} onNotYou={forgetLastUser} />
-        : welcome ? <Welcome busy={busy} err={err} onGuest={asGuest}
+        : welcome ? <Welcome busy={busy} err={err || googleErr} onGuest={asGuest} onGoogle={google ? () => { setErr(''); googleSignIn().catch((e: any) => setErr(e.message)); } : undefined}
           onLogin={() => { setMode('login'); setErr(''); setWelcome(false); }} onRegister={() => { setMode('register'); setErr(''); setWelcome(false); }} />
         : <SignSteps start={mode} known={mode === 'login' && last ? last.id : undefined} onBack={() => setWelcome(true)} />}
       <InstallHint />
