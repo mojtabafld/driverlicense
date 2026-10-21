@@ -7,8 +7,8 @@
 // At /app (PROVE_BANK) the same card with prove.dk's bank: its questions, its random exams (mode 'random'), the progress
 // through it and its mistakes (Mojtaba 2026-10-20).
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
@@ -135,6 +135,21 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
   const bar = useCountUp(share, 1100);
   // A whole percent: never 0 once a question is answered, never 100 before all of them are.
   const pct = answered >= total ? 1 : Math.min(0.99, Math.max(answered ? 0.01 : 0, share));
+  const [phase, setPhase] = useState(0);
+  const [swap] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (!answered) return;
+    const native = Platform.OS !== 'web';
+    const t = setInterval(() => {
+      Animated.timing(swap, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: native }).start(({ finished }) => {
+        if (!finished) return;
+        setPhase(p => 1 - p);
+        swap.setValue(-1);
+        Animated.timing(swap, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
+      });
+    }, 5000);
+    return () => { clearInterval(t); swap.stopAnimation(); swap.setValue(1); };
+  }, [answered > 0, swap]); // eslint-disable-line react-hooks/exhaustive-deps
   const dot = (color: string, text: string, onPress?: () => void) => {
     const body = (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
@@ -158,13 +173,17 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
         </View>
       </View>
       <LabelBar share={answered ? share : 0} shown={answered ? bar : 0} tone={tone} soft={done ? c.okSoft : c.accentSoft} label={pctText(pct)} a11y={{ min: 0, max: total, now: answered }} />
-      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 12, rowGap: 2 }}>
-        <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-          {answered ? `${faNum(answered)} از ${faNum(total)} سؤال` : 'هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.'}
-        </T>
-        {answered ? dot(c.ok, `${faNum(right)} درست`) : null}
-        {answered ? dot(c.bad, `${faNum(wrong)} اشتباه`, wrong ? () => router.push('/mistakes') : undefined) : null}
-      </View>
+      {answered ? (
+        // The questions answered, then the right and wrong ones, in turn every 5 seconds with the home header's swap
+        // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21).
+        <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
+          transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
+          {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
+            {dot(c.ok, `${faNum(right)} درست`)}
+            {dot(c.bad, `${faNum(wrong)} اشتباه`, wrong ? () => router.push('/mistakes') : undefined)}
+          </>}
+        </Animated.View>
+      ) : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.</T>}
     </View>
   );
 }
