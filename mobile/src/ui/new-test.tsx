@@ -68,8 +68,6 @@ export function NewTestCard({ test }: { test: NewTest }) {
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه`}</T>
         </View>
       </View>
-      {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} />}
-      {missed.size ? <MistakesBar open={[...last].filter(([, ok]) => !ok).map(([id]) => id)} missed={missed.size} /> : null}
       {tight ? null : <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>}
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -99,6 +97,10 @@ export function NewTestCard({ test }: { test: NewTest }) {
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
         : count ? (ARC ? <ArcButton label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
+      {/* The progress and the mistakes at the card's foot, under the start button (Mojtaba 2026-10-21). */}
+      {tight && !missed.size ? null : <View style={{ height: 1, backgroundColor: c.line, marginVertical: 2 }} />}
+      {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} />}
+      {missed.size ? <MistakesBar open={[...last].filter(([, ok]) => !ok).map(([id]) => id)} missed={missed.size} /> : null}
     </Card>
   );
 }
