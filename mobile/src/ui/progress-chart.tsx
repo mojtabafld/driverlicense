@@ -76,7 +76,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
         </View>
         {/* Where the dates go once there are attempts (not with `noNote`). */}
-        {noNote ? null : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>بعد از حداقل دو آزمون، نمودار پیشرفت به‌روز می‌شود.</T>}
+        {noNote ? null : <T numberOfLines={1} style={{ color: c.muted, fontSize: 12, lineHeight: 19, textAlign: 'center' }}>نمودار بعد از حداقل دو آزمون به‌روز می‌شود.</T>}
       </View>
     );
   }
