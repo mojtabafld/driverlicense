@@ -150,18 +150,12 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
     }, 5000);
     return () => { clearInterval(t); swap.stopAnimation(); swap.setValue(1); };
   }, [answered > 0, swap]); // eslint-disable-line react-hooks/exhaustive-deps
-  const dot = (color: string, text: string, onPress?: () => void) => {
-    const body = (
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
-        <T style={{ color: onPress ? c.text : c.muted, fontSize: 12.5, lineHeight: 19, fontWeight: onPress ? '600' : undefined }}>{text}</T>
-        {onPress ? <Icon name="chevronLeft" size={12} color={c.muted} weight="semibold" /> : null}
-      </View>
-    );
-    return onPress ? (
-      <Pressable onPress={() => { tap(); onPress(); }} hitSlop={8} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>{body}</Pressable>
-    ) : body;
-  };
+  const dot = (color: string, text: string) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+      <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{text}</T>
+    </View>
+  );
   // Every question answered: the percent and the bar in green, with a round tick before the title (Mojtaba 2026-10-20).
   const done = total > 0 && answered >= total, tone = done ? c.ok : c.accent;
   return (
@@ -175,12 +169,12 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
       <LabelBar share={answered ? share : 0} shown={answered ? bar : 0} tone={tone} soft={done ? c.okSoft : c.accentSoft} label={pctText(pct)} a11y={{ min: 0, max: total, now: answered }} />
       {answered ? (
         // The questions answered, then the right and wrong ones, in turn every 5 seconds with the home header's swap
-        // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21).
+        // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21); plain text, no link.
         <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
           transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
           {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
             {dot(c.ok, `${faNum(right)} درست`)}
-            {dot(c.bad, `${faNum(wrong)} اشتباه`, wrong ? () => router.push('/mistakes') : undefined)}
+            {dot(c.bad, `${faNum(wrong)} اشتباه`)}
           </>}
         </Animated.View>
       ) : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.</T>}
