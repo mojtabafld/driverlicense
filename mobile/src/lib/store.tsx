@@ -224,11 +224,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const d = await api<{ user: User }>('POST', 'paysync');
       setMe(m => (m ? { ...m, user: d.user } : m));
     },
-    saved: me?.saved ?? [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt,
+    saved: Array.isArray(me?.saved) ? me.saved : [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt,
     toggleSaved: async (id, a) => {
-      const on = !(me?.saved ?? []).some(x => x.id === id);
-      const before = me?.saved ?? [];
-      setMe(m => (m ? { ...m, saved: on ? [...(m.saved ?? []).filter(x => x.id !== id), { id, a, at: Date.now() }] : (m.saved ?? []).filter(x => x.id !== id) } : m));
+      const list = (v?: Saved[]) => (Array.isArray(v) ? v : []);
+      const on = !list(me?.saved).some(x => x.id === id);
+      const before = list(me?.saved);
+      setMe(m => (m ? { ...m, saved: on ? [...list(m.saved).filter(x => x.id !== id), { id, a, at: Date.now() }] : list(m.saved).filter(x => x.id !== id) } : m));
       try { if (on) await api('POST', 'saved', { id, a }); else await api('DELETE', 'saved', { id }); }
       catch (e) { setMe(m => (m ? { ...m, saved: before } : m)); throw e; }
     },
