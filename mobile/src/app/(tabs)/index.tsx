@@ -215,6 +215,9 @@ export default function Home() {
   };
   // Closed, the other way: a swipe up on the progress chart's card (at least 50 points, mostly vertical) opens the view,
   // as a tap does (Mojtaba 2026-10-20).
+  // Android: the page's scroll takes over a drag once it moves a few points (the chart view's page scrolls), and the touch
+  // is cancelled there instead of ending; so in the chart view, at the page's top, a drag down cancelled that way
+  // closes it too (Mojtaba 2026-10-21: it did not close on Android).
   const swipe = ARC ? {
     onTouchStart: (e: GestureResponderEvent) => { touch.current = !view || scrollY.current <= 0 ? at(e) : null; },
     onTouchEnd: (e: GestureResponderEvent) => {
@@ -222,6 +225,12 @@ export default function Home() {
       if (!from || to.y == null) return;
       const dy = to.y - from.y, dx = to.x - from.x;
       if ((view ? dy > 50 : dy < -50) && Math.abs(dy) > Math.abs(dx) * 2) { swiped.current = Date.now(); toggle(); }
+    },
+    onTouchCancel: (e: GestureResponderEvent) => {
+      const from = touch.current, to = at(e); touch.current = null;
+      if (!from || to.y == null || !view || scrollY.current > 0) return;
+      const dy = to.y - from.y, dx = to.x - from.x;
+      if (dy > 4 && dy > Math.abs(dx) * 2) { swiped.current = Date.now(); toggle(); }
     },
   } : null;
   const chartMin = tighter ? (ARC ? 52 : 84) : 120;

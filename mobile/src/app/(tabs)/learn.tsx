@@ -1,40 +1,60 @@
-// «آموزش»: four parts as rows one under the other (the page scrolls under its picture header), each a quiet card
-// (ui/list-card.tsx) with its picture on a small tile at its right (made by the server's image model; the part's icon
-// until it is there), and to the left of it its title, a line on what is in it and its progress note; a row opens
-// its part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules, the road signs, and right of way.
+// «آموزش»: five parts as cards one under the other, each with its picture (made by the server's image model; the part's
+// icon until it is there) filling the card from the picture's side and melting into the card's colour under its title
+// and progress note; a card opens its part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules,
+// the road signs, right of way and the test's glossary.
 // At /app (prove.dk's copy) the cards stay two by two and the first one is prove.dk's 44 lessons one by one
 // (app/learn-lessons.tsx) instead of the app's own course.
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
 
 import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
+import { RTL } from '@/lib/i18n';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
-import { Card, Screen, T } from '@/ui/kit';
-import { ListCard } from '@/ui/list-card';
+import { Card, Screen, T, physical } from '@/ui/kit';
 import { SearchBox } from '@/ui/search-box';
 import { ARC, useColors } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 
-function Part({ n, icon, title, note, href, keepDa }: { n: number; icon: IconName; title: string; note?: string; href: Href; keepDa?: boolean }) {
+// The fade from the picture into the card's own colour: its steps slow at both ends (smoothstep, as ui/tall-picture.tsx),
+// from clear over the picture to the full colour under the title.
+const FADE = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
+const FADE_AT = FADE.map(t => 0.34 + 0.24 * t) as unknown as readonly [number, number, ...number[]];
+const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
+
+// A card of the five (Mojtaba 2026-10-21): its picture fills the card from its end (the left in Persian, the right in
+// English and Danish) and melts into the card's colour, light or dark, under the title at its start.
+function Part({ n, icon, title, note, href }: { n: number; icon: IconName; title: string; note?: string; href: Href }) {
   const c = useColors();
-  const { learnArt, learnBg } = useApp();
+  const { learnArt } = useApp();
   const v = learnArt[n];
-  // Short phones: a lower picture, so all five cards fit above the tab bar.
   const short = useWindowDimensions().height < 760;
-  // The picture, whole, on its tile in the picture's own background colour; the icon until the picture is made.
-  const pic = (
-    <View style={{ flex: 1, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-      {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, transform: [{ scale: 1.15 }] }} contentFit="contain" transition={250} />
-        : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
-    </View>
+  const fades = FADE_A.map(a => `${c.surface}${a}`) as unknown as readonly [string, string, ...string[]];
+  // The gradient runs from the picture's side to the other one.
+  const from = RTL ? { x: 0, y: 0.5 } : { x: 1, y: 0.5 }, to = RTL ? { x: 1, y: 0.5 } : { x: 0, y: 0.5 };
+  return (
+    <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: short ? 76 : 92 }}>
+      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '58%', backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { left: 0 } : { right: 0 })]}>
+        {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={250} />
+          : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
+      </View>
+      <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
+      <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 16 }}>
+        {/* The title over the fade, the picture's room beside it; no arrow (Mojtaba 2026-10-21). */}
+        <View style={{ flex: 1, gap: 2 }}>
+          <T style={{ fontSize: 17.5, lineHeight: 26, fontWeight: '700' }} numberOfLines={2}>{title}</T>
+          {note ? <T style={{ fontSize: 11.5, lineHeight: 17, color: c.faint }} numberOfLines={1}>{note}</T> : null}
+        </View>
+        <View style={{ width: '48%' }} />
+      </View>
+    </Card>
   );
-  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} note={note} keepDa={keepDa} />;
 }
 
 // /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
@@ -102,8 +122,7 @@ export default function Learn() {
           <Part n={2} icon="rules" title="قوانین" href="/rules" />
           <Part n={3} icon="sign" title="علائم رانندگی" href="/signs" />
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority" />
-          {/* keepDa: its example words stay Danish («vigepligt» was shown as «duty to give way» to English-exam users). */}
-          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" keepDa />
+          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" />
         </View>
       )}
     </Screen>

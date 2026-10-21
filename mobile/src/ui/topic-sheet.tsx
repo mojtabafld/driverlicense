@@ -88,7 +88,7 @@ function Loading() {
   }, [pulse]);
   return (
     <Animated.View style={{ opacity: pulse, gap: 10 }} accessibilityRole="progressbar">
-      {[88, 72, 80].map(w => (
+      {[88, 72].map(w => (
         <View key={w} style={{ flexDirection: 'row', gap: 12, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
           <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: c.line }} />
           <View style={{ flex: 1, gap: 8, paddingTop: 4 }}>
@@ -125,7 +125,8 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
   const second = UI_LANG === exam ? null : exam === 'en' ? (STRINGS as Record<string, string[]>)[name]?.[0] ?? null : t.da;
   const learn = LEARN[q.c];
   const toLearn = () => { if (!learn) return; onClose(); router.push(learn); };
-  const fixed: Point[] = t.lesson.map(l => ({ kind: 'rule', text: l }));
+  // Without the AI: the topic's first two fixed points only, kept short as the AI's (Mojtaba 2026-10-21).
+  const fixed: Point[] = t.lesson.slice(0, 2).map(l => ({ kind: 'rule', text: l }));
   const shown = points ?? (ai && !failed ? null : fixed);
   return (
     <Sheet open={open} onClose={onClose} maxHeight="82%">

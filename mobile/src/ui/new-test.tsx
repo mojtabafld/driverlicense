@@ -147,7 +147,9 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
   // Not answered yet: the bar's empty part and its dot, a neutral grey with some of the theme in it, strong enough to
   // read as the bar's third part (Mojtaba 2026-10-21).
   const rest = mix(c.line, c.accent, dark ? 0.3 : 0.22) ?? c.accentSoft;
-  const rightTone = c.ok, inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
+  // In the light theme the green and the red a little softer, toward the card's white (Mojtaba 2026-10-21).
+  const soft = (x: string) => (dark ? x : mix(x, c.surface, 0.3) ?? x);
+  const rightTone = soft(c.ok), wrongTone = soft(c.bad), inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
   return (
     <View style={{ gap: 9 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -165,7 +167,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
           style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : rest }}>
           <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 24 : 0, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
             <View style={{ flex: right, backgroundColor: rightTone }} />
-            <View style={{ flex: wrong, backgroundColor: c.bad }} />
+            <View style={{ flex: wrong, backgroundColor: wrongTone }} />
             {inside ? (
               // (at the fill's start, on the right ones' colour, so never on the small red part)
               <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'flex-start', paddingHorizontal: 4 }}>
@@ -186,7 +188,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
           transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
           {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
             {dot(rightTone, `${faNum(right)} درست`)}
-            {dot(c.bad, `${faNum(wrong)} اشتباه`)}
+            {dot(wrongTone, `${faNum(wrong)} اشتباه`)}
             {total > answered ? dot(rest, `${faNum(total - answered)} جواب‌نداده`) : null}
           </>}
         </Animated.View>
