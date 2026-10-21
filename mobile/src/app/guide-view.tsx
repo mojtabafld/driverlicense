@@ -84,7 +84,8 @@ export default function GuideView() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Icon name="info" size={17} color={c.muted} />
               <T style={{ flex: 1, fontSize: 14, fontWeight: '700' }}>قواعد کلی این گروه</T>
-              <View style={{ transform: [{ rotate: intro ? '90deg' : '-90deg' }] }}><Icon name="chevronLeft" size={14} color={c.faint} /></View>
+              {/* Down while folded, up when open, in every language (a turned «chevronLeft» was mirrored in English and Danish). */}
+              <View style={{ transform: [{ rotate: intro ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={16} color={c.faint} /></View>
             </View>
             {intro ? <Rich text={cat.intro} style={{ fontSize: 14, lineHeight: 24, color: c.muted }} /> : null}
           </Card>
