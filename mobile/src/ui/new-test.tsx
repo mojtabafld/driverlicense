@@ -8,7 +8,7 @@
 // through it and its mistakes (Mojtaba 2026-10-20).
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
@@ -51,15 +51,14 @@ export function NewTestCard({ test }: { test: NewTest }) {
   const { newqArt } = useApp();
   const { limited } = useFree();
   const { ready, ids, last, missed, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
-  const { height } = useWindowDimensions();
   if (!ready) return null;
   const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
-  // A short screen before any question is answered (Mojtaba 2026-10-21): the card without its empty progress, the
-  // line over the numbers and the pictures' line, so the history card under it shows above the tab bar too.
-  const tight = height < 800 && !answered;
+  // Before any question is answered (Mojtaba 2026-10-21): the card without its empty progress, the line over the
+  // numbers and the pictures' line, so on every screen the history card under it shows above the tab bar too.
+  const tight = !answered;
   const pics = ids.filter(id => newqArt[id]).length;
   return (
-    <Card style={{ gap: 14 }}>
+    <Card style={{ gap: tight ? 11 : 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
           <Icon name="shuffle" size={19} color={c.text} weight="semibold" />
@@ -90,7 +89,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
       ) : null}
       {!PROVE_BANK && pics < total && !tight ? <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>تصویرهای این آزمون به‌تدریج اضافه می‌شوند.</T> : null}
       {limited ? (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
           <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
           <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: randomLeft ? c.muted : c.text }}>{randomLeft
             ? t('در نسخه‌ی رایگان {0} آزمون تصادفی دارید؛ {1} آزمون مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))
