@@ -7,9 +7,11 @@ import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
-import { RTL, UI_LANG, tr } from '@/lib/i18n';
+import { RTL, UI_LANG, setUiLang, tr } from '@/lib/i18n';
+import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
+import { Sheet } from './sheet';
 import { Icon, type IconName } from './icon';
-import { L, T, ThemeButton, physical, tap } from './kit';
+import { L, T, ThemeButton, physical, physicalAlign, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 import { WelcomeAi, WelcomeBank, WelcomeExam, WelcomeProgress } from './welcome-art';
 import Svg, { Path } from 'react-native-svg';
@@ -44,6 +46,37 @@ const SLIDES = [
 const EVERY = 4500; // ms on each slide
 
 // A wide button with its icon at the reading side's edge and its label in the middle.
+// The app's language from the welcome screen (Mojtaba 2026-10-21), beside the theme button: a sheet of the three, each
+// in its own language; another one loads the app again in it (lib/i18n.ts setUiLang).
+function LangButton() {
+  const c = useColors();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('زبان برنامه')}
+        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+        <Icon name="translate" size={19} color={c.text} />
+      </Pressable>
+      <Sheet open={open} onClose={() => setOpen(false)}>
+        <View style={{ gap: 10, paddingHorizontal: 4 }}>
+          <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '700' }}>زبان برنامه</T>
+          {LANGS.map(l => {
+            const on = l === UI_LANG;
+            return (
+              <Pressable key={l} onPress={() => { tap(); setOpen(false); if (!on) setUiLang(l); }} accessibilityRole="button" accessibilityState={{ selected: on }}
+                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, height: 56, paddingHorizontal: 16, borderRadius: 16,
+                  backgroundColor: on ? c.accentSoft : c.surface2, opacity: pressed ? 0.8 : 1 })}>
+                <T raw style={{ flex: 1, fontSize: 17, fontFamily: LANG_FONT(l, on ? 700 : 500), fontWeight: 'normal', color: c.text, writingDirection: l === 'fa' ? 'rtl' : 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{LANG_NAMES[l]}</T>
+                {on ? <Icon name="checkCircle" size={20} color={c.link} /> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      </Sheet>
+    </>
+  );
+}
+
 // A wide button of the welcome screen; `light`: the first one, in the text's colour on the page (as the reference's
 // Apple button); `off`: shown but not usable yet, with «به‌زودی».
 function Wide({ label, icon, light, onPress, mark, off }: { label: string; icon?: IconName; light?: boolean; onPress?: () => void; mark?: (fg: string) => React.ReactNode; off?: boolean }) {
@@ -94,8 +127,10 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err }: { onEmail: ()
     <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
       <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
         {/* At the top right, as in the reference, in every language. */}
-        <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
-          <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View>
+        {/* The language beside it, the theme in the corner (a right-to-left row starts on the right). */}
+        <View style={{ flexDirection: 'row', gap: 8, justifyContent: RTL ? 'flex-start' : 'flex-end' }}>
+          {RTL ? <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View> : <LangButton />}
+          {RTL ? <LangButton /> : <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View>}
         </View>
         <L style={{ alignSelf: 'center', textAlign: 'center', marginTop: Math.min(24, height * 0.02), fontSize: 42, lineHeight: 52, fontWeight: '500', letterSpacing: -1.2, color: c.text }}>Teori Prøve</L>
         {/* The slides, in the middle of what is left. */}
