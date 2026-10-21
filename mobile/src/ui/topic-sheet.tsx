@@ -1,7 +1,7 @@
 // A reviewed question's topic, from its category chip under the picture (ui/review.tsx; Mojtaba 2026-10-20): a sheet
 // from the bottom with the topic's official section and name, a few points on the topic written by AI for this question
-// (each with its coloured icon, a few words each), a button to the topic's own lesson and a search of the learning pages
-// for it (its practice test taken out). It closes with a drag down (or a tap outside,
+// (each with its coloured icon, a few words each), and a button to the topic's own lesson (no search;
+// Mojtaba 2026-10-21). It closes with a drag down (or a tap outside,
 // the back button), as the app's other sheets.
 import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -123,7 +123,6 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
   if (!bank || !t) return null;
   const name = topicName(bank, q.c), section = sectionFa(bank, q.c);
   const second = UI_LANG === exam ? null : exam === 'en' ? (STRINGS as Record<string, string[]>)[name]?.[0] ?? null : t.da;
-  const search = () => { onClose(); router.push({ pathname: '/course-search', params: { q: name } }); };
   const learn = LEARN[q.c];
   const toLearn = () => { if (!learn) return; onClose(); router.push(learn); };
   const fixed: Point[] = t.lesson.map(l => ({ kind: 'rule', text: l }));
@@ -151,7 +150,6 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
       </SheetScroll>
       <View style={{ gap: 8, paddingTop: 4 }}>
         {learn ? <ArcButton label="رفتن به آموزش" icon="learn" onPress={toLearn} /> : null}
-        <ArcButton label="جستجو در آموزش" icon="search" variant="secondary" onPress={search} />
       </View>
     </Sheet>
   );
