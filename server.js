@@ -525,16 +525,17 @@ const isProtected = p => p === '/data.js' || p === '/newq.js' || p.startsWith('/
 // bank and the questions' pictures are fixed too (frozen/app/, FROZEN in config.ts).
 const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
 // DEFAULT_THEME: the main site's colour theme for everyone who has not picked one (mobile/src/ui/palette.ts; default
-// sky). Written into the root page, so the web version starts in it; phones read it from /api/config.
+// sky). Written into the root page and /app's, so the web versions start in it; phones read it from /api/config.
 const THEMES = ['ocean', 'violet', 'lime', 'coral', 'amber', 'emerald', 'forest', 'rose', 'sky', 'mono', 'teal', 'indigo', 'orchid', 'gold', 'slate'];
 const defaultTheme = () => { const t = String(process.env.DEFAULT_THEME || '').trim().toLowerCase(); return THEMES.includes(t) ? t : 'sky'; };
+const withTheme = html => html.replace('<head>', `<head><script>window.__TP_THEME=${JSON.stringify(defaultTheme())}</script>`);
 const WEBS = {
-  root: { dir: path.join(__dirname, 'app-web'),
-    page: b => Buffer.from(b.toString('utf8').replace('<head>', `<head><script>window.__TP_THEME=${JSON.stringify(defaultTheme())}</script>`)) },
+  root: { dir: path.join(__dirname, 'app-web'), page: b => Buffer.from(withTheme(b.toString('utf8'))) },
   // Its page links the manifest and the icon of /app (its own start page), and its manifest is that of the root's
   // with /app/ as start and scope.
   app: { dir: path.join(__dirname, 'app-web-app'), base: '/app',
-    page: b => Buffer.from(b.toString('utf8').replace('href="/manifest.webmanifest"', 'href="/app/manifest.webmanifest"')),
+    // (and the same default theme as the root page: without it the copy started in sky, Mojtaba 2026-10-21)
+    page: b => Buffer.from(withTheme(b.toString('utf8')).replace('href="/manifest.webmanifest"', 'href="/app/manifest.webmanifest"')),
     manifest: () => { const m = JSON.parse(fs.readFileSync(path.join(__dirname, 'app-web', 'manifest.webmanifest'), 'utf8')); return Buffer.from(JSON.stringify({ ...m, start_url: '/app/', scope: '/app/' })); } },
 };
 // The pages themselves: never shown inside another site's frame (clickjacking), no plugins, no <base> tricks, and
