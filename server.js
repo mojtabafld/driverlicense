@@ -425,7 +425,7 @@ function adminStats() {
       tests: u.attempts.length, testsToday, tests7, full, passed, words: (u.words || []).length, lang: (u.settings || {}).lang || null,
       lastPct: lastA ? Math.round(scoreOf(lastA) / lastA.items.length * 100) : null,
       guest: !!u.guest, email: u.email || null, emailOk: !!u.emailOk, verifyPending: needsVerify(u), ui: ui || null, pass,
-      until: prem.until || null, plan: prem.plan || null, promo: !!prem.promo, paid, saved: (u.saved || []).length, modes,
+      until: prem.until || null, plan: prem.plan || null, promo: !!prem.promo, paid, saved: Array.isArray(u.saved) ? u.saved.length : 0, modes,
       avgPct: u.attempts.length ? Math.round(u.attempts.reduce((x, a) => x + scoreOf(a) / a.items.length, 0) / u.attempts.length * 100) : null });
   }
   users.sort((a, b) => b.lastActive - a.lastActive);
@@ -1437,7 +1437,7 @@ async function api(req, res, route) {
       if (user.draft.lesson) (user.lessonDrafts = user.lessonDrafts || {})[user.draft.lesson] = user.draft;
       delete user.draft; await store.saveUser(user);
     }
-    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: user.saved || [], terms: user.terms || [], draft: user.draft || null, lessonDrafts: user.lessonDrafts || {}, imgv: imagegen.versions() });
+    return send(res, 200, { user: publicUser(user), attempts: user.attempts, settings: user.settings || {}, words: user.words || [], saved: Array.isArray(user.saved) ? user.saved : [], terms: user.terms || [], draft: user.draft || null, lessonDrafts: user.lessonDrafts || {}, imgv: imagegen.versions() });
   }
   if (req.method === 'POST' && route === 'attempts') {
     const b = await readBody(req);
@@ -1513,7 +1513,7 @@ async function api(req, res, route) {
     const b = await readBody(req);
     const id = +b.id;
     if (!Number.isInteger(id) || id <= 0) return send(res, 400, { error: 'bad question' });
-    user.saved = user.saved || [];
+    if (!Array.isArray(user.saved)) user.saved = [];
     const entry = { id, a: Array.isArray(b.a) ? b.a.slice(0, 4).map(v => (v ? 1 : 0)) : undefined, at: Date.now() };
     const old = user.saved.find(x => x.id === id);
     if (old) Object.assign(old, entry);
@@ -1526,7 +1526,7 @@ async function api(req, res, route) {
   }
   if (req.method === 'DELETE' && route === 'saved') {
     const id = +(await readBody(req)).id;
-    user.saved = (user.saved || []).filter(x => x.id !== id);
+    user.saved = (Array.isArray(user.saved) ? user.saved : []).filter(x => x.id !== id);
     await store.saveUser(user);
     return send(res, 200, { ok: true });
   }
@@ -1589,6 +1589,14 @@ async function main() {
   if (store.catchUp) {
     const t = setInterval(() => store.catchUp().catch(e => console.error('catch up', e.message)), 60e3);
     setTimeout(() => clearInterval(t), 20 * 60e3).unref();
+  }
+  // Repair (2026-10-21): for a few hours each save wrote its time into `saved` (store.js, now `savedAt`), over the
+  // user's saved questions; those accounts get an empty list back (what they had is not in the row any more).
+  for (const u of Object.values(store.users)) {
+    if (u.saved === undefined || Array.isArray(u.saved)) continue;
+    console.log('saved questions lost, list reset for', u.username);
+    u.saved = [];
+    await store.saveUser(u);
   }
   // One-time: everyone is asked again which language the questions are in (with the app's renewed intro).
   // (2: once more, with the app's look chosen on the same screen.)

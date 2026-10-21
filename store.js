@@ -59,10 +59,10 @@ async function openStore({ dbFile }) {
     return {
       ...mem,
       kind: 'postgres',
-      // Each save stamped (`saved`), so catchUp can tell the newer copy; never a deleted account's row again, unless it
+      // Each save stamped (`savedAt`; not `saved`, the user's saved questions), so catchUp can tell the newer copy; never a deleted account's row again, unless it
       // is a new account made after the deletion (the same address signing up again).
       saveUser: u => {
-        u.saved = Date.now();
+        u.savedAt = Date.now();
         return pool.query(
           `INSERT INTO tp_users (username, data) SELECT $1::text, $2::jsonb
              WHERE NOT EXISTS (SELECT 1 FROM tp_gone WHERE username = $1::text AND at >= $3::bigint)
@@ -88,7 +88,7 @@ async function openStore({ dbFile }) {
         for (const { data: d } of rows) {
           seen.add(d.username);
           const m = mem.users[d.username];
-          if (!m || (+d.saved || 0) > (+m.saved || 0)) mem.users[d.username] = d;
+          if (!m || (+d.savedAt || 0) > (+m.savedAt || 0)) mem.users[d.username] = d;
         }
         const fresh = Date.now() - 60e3;
         for (const [k, u] of Object.entries(mem.users)) if (!seen.has(k) && !((+u.created || 0) > fresh)) delete mem.users[k];
