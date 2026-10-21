@@ -14,6 +14,7 @@ import { RTL, tr } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { RULES, RULE_NUMBERS, type GuidePart } from '@/lib/guide';
 import { FULL, faNum, shuffle } from '@/lib/logic';
+import { api } from '@/lib/api';
 import { loadRulesRead, saveRulesRead } from '@/lib/prefs';
 import { session } from '@/lib/session';
 import { toPremium, useFree } from '@/lib/free';
@@ -196,9 +197,18 @@ export default function Rules() {
   // just opening it, so a tap on a number does not tick a part nobody has read).
   const markRead = useCallback((i: number) => {
     const t = RULES[i].title;
-    setRead(r => { if (r.includes(t)) return r; const next = [...r, t]; saveRulesRead(next); return next; });
+    setRead(r => { if (r.includes(t)) return r; api('POST', 'rulesread', { title: t }).catch(() => {}); return [...r, t]; });
   }, []);
-  useEffect(() => { loadRulesRead().then(setRead); }, []);
+  // Kept with the account (/api/rulesread); what this browser kept until now goes to the account once (only an account
+  // made before, the server decides) and is cleared here, so it never shows for another account.
+  useEffect(() => {
+    (async () => {
+      const local = await loadRulesRead();
+      const d = await (local.length ? api<{ read: string[] }>('POST', 'rulesread', { titles: local }) : api<{ read: string[] }>('GET', 'rulesread'));
+      if (local.length) saveRulesRead([]);
+      setRead(r => [...new Set([...d.read, ...r])]);
+    })().catch(() => {});
+  }, []);
 
   // Scrolling to the part just opened: where the content starts under the header, the list in it, and each card in the list.
   const scroll = useRef<ScrollView>(null);

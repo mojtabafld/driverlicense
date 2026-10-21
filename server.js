@@ -249,6 +249,7 @@ async function resetCodeOk(u, code) {
   await store.saveUser(u);
   return false;
 }
+const RULES_TO_ACCOUNT = Date.parse('2026-10-21T00:00:00Z');   // «قوانین»'s reading moved from the browser to the account
 const BAD_CODE = 'کد درست نیست یا دیگر معتبر نیست.';
 const hasPremium = u => payments.active(u) || isAdmin(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
@@ -1227,6 +1228,20 @@ async function api(req, res, route) {
       await store.saveUser(user);
     }
     return send(res, 200, { notes: user.notes || {} });
+  }
+  // «قوانین»: the parts the user has read (their titles), kept with the account so they go when it is deleted (Mojtaba
+  // 2026-10-21; before, in the browser, a deleted account's reading showed for the next one). GET → { read }; POST
+  // { title } adds one; POST { titles } takes the list kept in the browser until now, once, and only for an account made
+  // before this change (a newer one on the same browser may follow a deleted one).
+  if (route === 'rulesread' && (req.method === 'GET' || req.method === 'POST')) {
+    if (req.method === 'POST') {
+      const b = await readBody(req), ok = t => typeof t === 'string' && t.length > 0 && t.length <= 120;
+      const add = ok(b.title) ? [b.title] : Array.isArray(b.titles) && !user.rulesImported && (+user.created || 0) < RULES_TO_ACCOUNT ? b.titles.filter(ok) : [];
+      if (Array.isArray(b.titles)) user.rulesImported = true;
+      user.rulesRead = [...new Set([...(user.rulesRead || []), ...add])].slice(0, 100);
+      await store.saveUser(user);
+    }
+    return send(res, 200, { read: user.rulesRead || [] });
   }
   // «تمرین هوشمند»: the user's spaced-repetition cards (question id → { b: box, due, n: answers, w: wrong, mis: wrong
   // while sure }). GET → { cards }; POST { cards } keeps the given ones.
