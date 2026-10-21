@@ -8,7 +8,7 @@
 // through it and its mistakes (Mojtaba 2026-10-20).
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
@@ -51,8 +51,12 @@ export function NewTestCard({ test }: { test: NewTest }) {
   const { newqArt } = useApp();
   const { limited } = useFree();
   const { ready, ids, last, missed, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
+  const { height } = useWindowDimensions();
   if (!ready) return null;
   const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
+  // A short screen before any question is answered (Mojtaba 2026-10-21): the card without its empty progress, the
+  // line over the numbers and the pictures' line, so the history card under it shows above the tab bar too.
+  const tight = height < 800 && !answered;
   const pics = ids.filter(id => newqArt[id]).length;
   return (
     <Card style={{ gap: 14 }}>
@@ -65,9 +69,9 @@ export function NewTestCard({ test }: { test: NewTest }) {
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه، نوشته‌شده از روی قوانین رسمی دانمارک`}</T>
         </View>
       </View>
-      <Progress answered={answered} total={total} right={right} wrong={wrong} />
+      {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} />}
       {missed.size ? <MistakesBar open={[...last].filter(([, ok]) => !ok).map(([id]) => id)} missed={missed.size} /> : null}
-      <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>
+      {tight ? null : <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>}
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
@@ -84,7 +88,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
             : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
         </View>
       ) : null}
-      {!PROVE_BANK && pics < total ? <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>تصویرهای این آزمون به‌تدریج اضافه می‌شوند.</T> : null}
+      {!PROVE_BANK && pics < total && !tight ? <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>تصویرهای این آزمون به‌تدریج اضافه می‌شوند.</T> : null}
       {limited ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
           <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
