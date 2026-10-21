@@ -1386,7 +1386,7 @@ async function api(req, res, route) {
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse(), inbox: (store.meta.inbox || []).slice().reverse(),
+    return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse(), clientErrors: (store.meta.clientErrors || []).slice().reverse(), inbox: (store.meta.inbox || []).slice().reverse(),
       mail: { on: mail.available(), reportTo: mail.reportTo(), inbound: !!process.env.RESEND_WEBHOOK_SECRET, forward: !!process.env.FORWARD_TO } });
   }
   // «گزارش خطا» from the app: { kind: 'bug' | 'idea', text, platform, version }, kept (newest REPORTS_KEPT) in
@@ -1405,6 +1405,16 @@ async function api(req, res, route) {
     store.meta.reports = (store.meta.reports || []).concat(r).slice(-REPORTS_KEPT);
     await store.saveMeta('reports', store.meta.reports);
     if (mail.available()) mail.sendReport(r).then(() => console.log('report emailed', user.username)).catch(e => console.error('report email', e.message));
+    return send(res, 200, { ok: true });
+  }
+  // A page of the app that broke (mobile/src/app/_layout.tsx ErrorBoundary; Mojtaba 2026-10-21): its error, where and
+  // on what, kept (the newest 100) in store.meta.clientErrors for the admin panel and written to the log.
+  if (req.method === 'POST' && route === 'clienterror') {
+    const b = await readBody(req), clip = (v, n) => String(v || '').slice(0, n);
+    const e = { at: Date.now(), username: user.username, message: clip(b.message, 500), stack: clip(b.stack, 3000), path: clip(b.path, 200), agent: clip(req.headers['user-agent'], 200), version: clip(b.version, 40) };
+    console.error('client error', e.username, e.path, e.message, '|', e.stack.split('\n').slice(0, 4).join(' | '));
+    store.meta.clientErrors = (store.meta.clientErrors || []).concat(e).slice(-100);
+    await store.saveMeta('clientErrors', store.meta.clientErrors);
     return send(res, 200, { ok: true });
   }
   if (req.method === 'GET' && route === 'me') {
