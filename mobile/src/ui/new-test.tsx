@@ -215,7 +215,8 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
         <LabelBar share={fixed ? share : 0} shown={fixed ? bar : 0} tone={tone} soft={done ? c.okSoft : c.warnSoft} fill={0.85}
           label={t('{0} از {1}', faNum(fixed), faNum(missed))} a11y={{ min: 0, max: missed, now: fixed }} />
       </Pressable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', columnGap: 12 }}>
+      {/* The mistakes test button in the middle (Mojtaba 2026-10-21). */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', columnGap: 12 }}>
         {open.length ? null : <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.</T>}
         {open.length ? (
           // A small pill in the theme's soft colour, so it reads as a button; the text at the size it had (Mojtaba 2026-10-19).
