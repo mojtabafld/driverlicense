@@ -763,18 +763,20 @@ const introBlob = async n => { const j = introNow()[n]; return j && j.blob ? blo
 // store.meta.learnArt and served at /learn-art/<n>.png; the app shows its icon tile until a picture is there.
 // Changing LEARN_SET makes new ones.
 const LEARN_SET = 'v1';
-const LEARN_STYLE = 'Style: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter, no fine texture. The objects are centred with generous empty space around them. Danish traffic signs follow their official design (shape and colours). No text, no letters, no numbers, no logos, no brand names, no watermarks, no people\'s faces.';
+// v2 (Mojtaba 2026-10-21): a little more realistic and modern, each picture filling its card from one end and melting
+// into the card's colour (light or dark) under the title, so the subject sits in the middle with a calm scene around it.
+const LEARN_STYLE = 'Style: a modern, slightly realistic 3D render like the cards of a premium automotive app: realistic materials (glossy car paint, real asphalt, brushed metal sign poles, paper), soft natural daylight, gentle depth of field, calm muted modern colours, clean and uncluttered. One compact subject in the exact centre of the picture, about half its width, with a calm, softly blurred scene around it reaching all four edges (no plain studio backdrop, no frame, no vignette). Danish traffic signs and road markings follow their official design (shape and colours). No text, no letters, no numbers, no logos, no brand names, no readable licence plates, no watermarks, no people\'s faces.';
 const LEARN_PROMPTS = [
-  // 1: lessons one by one
-  'Background: one plain soft pale mint (#d9efe3) colour, no gradient, no floor line. A small stack of three rounded theory books in white, mint green and periwinkle blue, the top one open with a tiny winding grey road with white dashes on its page; a small rounded coral car stands on the road; a pencil and a small green round badge with a white check mark lie beside the books.',
+  // 1: the course, lesson by lesson
+  'A small modern white compact car drives along a gently curving Danish country road with crisp white edge lines, seen from a low three-quarter front view; a theory book lies open on a low stone wall at the roadside in front of it; soft green fields and a pale morning sky blurred behind.',
   // 2: rules
-  'Background: one plain soft warm peach (#f6e1d3) colour, no gradient, no floor line. A balanced pair of rounded white justice scales in the centre; on one pan a tiny rounded coral car, on the other a small round speed-limit sign (white with a red ring, blank in the middle); a small rounded seat-belt buckle and a tiny traffic cone stand beside the scales.',
+  'Close-up inside a modern car on a bright day: a fastened grey seat belt buckle and a sleek steering wheel in soft focus, the dashboard\'s clean lines, daylight through the windscreen with a blurred Danish street outside.',
   // 3: road signs
-  'Background: one plain soft lavender (#e3e1f5) colour, no gradient, no floor line. A small group of rounded road signs on short grey poles at slightly different heights: a white triangular warning sign with a red border, a round white sign with a red ring, a round blue sign with a white arrow, and a red octagonal stop sign (blank, no text); a short piece of grey road with a white broken line lies in front of them.',
+  'Three real Danish road signs on one brushed metal pole at a roadside: on top a white triangular warning sign with a red border, under it a round blue mandatory sign with a white arrow; green trees and a quiet street softly blurred behind, soft daylight.',
   // 4: right of way
-  'Background: one plain soft sky blue (#d8e8f6) colour, no gradient, no floor line. A small rounded crossroads seen from above at an isometric angle, grey roads with white markings and white shark-teeth triangles at one side; two small rounded cars (coral and periwinkle blue) wait at the junction while a third (mint green) drives through; a white inverted give-way triangle sign with a red border and a yellow diamond priority-road sign stand at the corners.',
-  // 5: the test's glossary (the Danish words of the theory test with their meaning; Mojtaba 2026-10-19)
-  'Background: one plain soft butter yellow (#f5ebcf) colour, no gradient, no floor line. A small rounded dictionary book standing half open in white and butter yellow, its pages blank with a few soft grey lines; two rounded speech bubbles rise from it, one coral and one periwinkle blue, each with three small white dots instead of words; a tiny rounded Danish flag on a short stick (red with a white Nordic cross) leans against the book, and a small rounded coral car stands in front of it.',
+  'A quiet Danish residential junction seen from slightly above: white shark-teeth give-way markings across the side road, a white inverted triangular give-way sign with a red border at its corner, one modern car waiting at the line while a cyclist passes on the main road; soft daylight, houses and trees blurred around.',
+  // 5: the test's glossary (Danish words of the theory test with their meaning)
+  'An open pocket dictionary with blank pages and a slim pen lying on the passenger seat of a modern car, a small Danish flag (red with a white Nordic cross) on a short stick leaning beside it; soft daylight, the car\'s interior softly blurred.',
 ];
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
@@ -951,7 +953,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
 }
 // Only the cards ordered again in data/art-orders.json («learn») are made.
 const LEARN_REDO = learnOrders();
-const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '4:3', prefix: 'learn',
+const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '3:2', prefix: 'learn',
   redo: LEARN_REDO, allow: new Set(Object.keys(LEARN_REDO)) });
 const startLearn = LEARN.start, pollLearn = LEARN.poll, learnVersions = LEARN.versions, learnBlob = LEARN.blob;
 // The «آموزش» cards' pictures' background colour (from their edges), so a card can show the whole picture and fill the

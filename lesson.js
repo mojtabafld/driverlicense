@@ -340,17 +340,16 @@ For one picture question of the exam, write a short lesson on the question's top
 its picture, its statements and their official explanations. It is shown under the topic's name, so do not repeat the name.
 The question's picture is given too; it is the picture the user sees.
 
-Be very brief. Write exactly 3 lines and nothing else (no headings, no introduction). Each line starts with exactly one of
-the kinds ${TOPIC_KINDS} in square brackets, then a space and one short sentence:
-- [look] (first): what in this picture decides the question (a sign, a marking, a light, a road user).
-- [rule] (second): the Danish rule that decides it, precisely.
-- [warn] or [tip] (third): the common mistake here, or a short way to remember it.
+Be extremely brief (Mojtaba 2026-10-21). Write exactly 2 lines and nothing else (no headings, no introduction). Each line
+starts with exactly one of the kinds ${TOPIC_KINDS} in square brackets, then a space and one short phrase or sentence:
+- [rule] (first): the Danish rule that decides this question, as it applies to what is in the picture.
+- [warn] or [tip] (second): the common mistake here, or a short way to remember it.
 
 Rules:
 - The correct answer of each statement is the one in the data; never contradict it or the official explanation.
 ${LAW_RULES_X}
 ${IMAGE_RULES_X}
-- Write in ${lang} only, at most about 12 words per line. Keep important Danish terms (like ubetinget vigepligt) in brackets where useful.
+- Write in ${lang} only, at most about 10 words per line. Keep important Danish terms (like ubetinget vigepligt) in brackets where useful.
 - Mark one key phrase per line in **double asterisks**, not whole sentences.`;
 const TOPIC_LANG = { fa: 'Persian (natural, simple Persian for Persian speakers)', en: 'English', da: 'Danish' };
 
@@ -361,7 +360,7 @@ async function getTopic({ store, siteDir, username, qid, lang, ui }) {
   if (!q) throw Object.assign(new Error('سؤال پیدا نشد.'), { status: 404 });
   lang = lang === 'en' ? 'en' : 'da';
   ui = uiOf(ui);
-  const key = `topic:v2:${qkey(q)}:${lang}:${ui}`;
+  const key = `topic:v3:${qkey(q)}:${lang}:${ui}`;
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
