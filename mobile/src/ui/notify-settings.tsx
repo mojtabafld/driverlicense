@@ -100,7 +100,6 @@ export function NotifySettings() {
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>اعلان‌ها</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>یادآوری آزمون و آموزش روی همین دستگاه</T>
         </View>
         {why ? null : <Toggle label="اعلان‌ها" value={on} onChange={v => { if (!busy) turn(v); }} />}
       </View>
@@ -111,7 +110,7 @@ export function NotifySettings() {
       ) : null}
       {on && n ? (
         <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6, gap: 4 }}>
-          <Line title="یادآوری روزانه" sub="هر روز در ساعتی که انتخاب می‌کنید." right={<Toggle label="یادآوری روزانه" value={n.remind} onChange={v => change({ remind: v })} />} />
+          <Line title="یادآوری روزانه" right={<Toggle label="یادآوری روزانه" value={n.remind} onChange={v => change({ remind: v })} />} />
           {n.remind ? (
             <View style={{ gap: 10, paddingBottom: 6 }}>
               <TimeStepper time={n.time} onChange={time => change({ time })} />
@@ -119,7 +118,7 @@ export function NotifySettings() {
             </View>
           ) : null}
           <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 2 }}>
-            <Line title="پیام‌های روزانه" sub="روزی یک بار، بین ۱۰ صبح تا ۸ شب، درباره‌ی آموزش و آزمون." right={<Toggle label="پیام‌های روزانه" value={n.daily} onChange={v => change({ daily: v })} />} />
+            <Line title="پیام‌های روزانه" right={<Toggle label="پیام‌های روزانه" value={n.daily} onChange={v => change({ daily: v })} />} />
           </View>
         </View>
       ) : null}

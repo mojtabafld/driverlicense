@@ -112,7 +112,7 @@ export default function Settings() {
       {PROVE_PICS && showPrem ? <Card style={{ gap: 4 }}>{premRow}</Card> : null}
       {/* One card: the look and the colour theme. */}
       <Card style={{ gap: 10 }}>
-        <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />
+        <Row title="ظاهر" right={null} />
         <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
         {/* The colour theme (main site and the Android app): ten named themes; a change reloads the app in it. */}
         {!PROVE_PICS ? (
@@ -124,18 +124,18 @@ export default function Settings() {
       <Card style={{ gap: 10 }}>
         {!PROVE_PICS ? (
           <>
-            <Row title="زبان برنامه" sub="متن‌ها، درس‌ها و منوهای اپ به این زبان نمایش داده می‌شوند." right={null} />
+            <Row title="زبان برنامه" right={null} />
             <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui, lang: EXAM_FOR[ui] }).catch(() => {}).finally(() => setUiLang(ui)); }}
               options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
           </>
         ) : null}
-        <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
+        <Row title="زبان آزمون" right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
         {/* Main site: the translation's language; left alone it follows the app's language (picked on first signing in).
             The exam's own language shows no translation. */}
         {!PROVE_PICS ? (
           <>
-            <Row title="زبان ترجمه" sub="ترجمه‌ی زیر سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شود." right={null} />
+            <Row title="زبان ترجمه" right={null} />
             <Segmented value={getTransLang()} onChange={(trans: 'fa' | 'en' | 'da') => setSettings({ trans: trans === TRANS_DEFAULT ? 'auto' : trans })}
               options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'انگلیسی' }, { value: 'da', label: 'دانمارکی' }]} />
           </>
@@ -143,12 +143,12 @@ export default function Settings() {
         {/* The read-aloud voice, when the server can read aloud: each option plays a sample in this language. */}
         {tts ? (
           <View style={{ gap: 10, paddingBottom: 4 }}>
-            <Row title="صدای خواندن سؤال‌ها" sub="صدای خانم یا آقا؛ روی هر گزینه بزنید تا نمونه‌اش به زبان آزمون پخش شود." right={null} />
+            <Row title="صدای خواندن سؤال‌ها" right={null} />
             <VoiceChoice />
           </View>
         ) : null}
         {getTransLang() === (settings.lang ?? 'da') ? null : <Row title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />}
-        <Row title="زمان‌سنج" sub="برای هر سؤال یک دقیقه، مثل آزمون اصلی." right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
+        <Row title="زمان‌سنج" right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
       </Card>
       {/* Notifications, under the exam's settings (Mojtaba 2026-10-18; main site on the web): reminders and a daily message (ui/notify-settings.tsx). */}
       {!PROVE_PICS ? <NotifySettings /> : null}
