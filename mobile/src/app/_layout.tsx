@@ -107,6 +107,7 @@ function Root() {
           <Stack.Screen name="course-search" />
           <Stack.Screen name="sign-cards" />
           <Stack.Screen name="glossary" />
+          <Stack.Screen name="calendar" />
           <Stack.Screen name="drill" />
           <Stack.Screen name="help" />
           <Stack.Screen name="report" />

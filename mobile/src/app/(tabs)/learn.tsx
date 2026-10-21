@@ -75,7 +75,7 @@ export default function Learn() {
     // Main site: the five cards share the screen's height between the search box and the tab bar (taller on tall
     // phones, never shorter than their content; Mojtaba 2026-10-18).
     <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 8} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
-      heroAction={{ icon: 'search', label: 'جستجو در آموزش', onPress: () => router.push('/course-search') }}>
+      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 12 }}>

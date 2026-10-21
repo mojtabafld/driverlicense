@@ -1212,6 +1212,22 @@ async function api(req, res, route) {
     }
     return send(res, 200, { done: user.course || {} });
   }
+  // The calendar's notes (mobile/src/app/calendar.tsx; Mojtaba 2026-10-21): the user's own lines on a day (key d:YYYY-MM-DD),
+  // a course lesson (c:<lesson id>) or an exam (a:<its time>). GET → { notes: key → { text, at } }; POST { key, text }
+  // keeps one, an empty text removes it.
+  if (route === 'notes' && (req.method === 'GET' || req.method === 'POST')) {
+    if (req.method === 'POST') {
+      const b = await readBody(req), key = String(b.key || ''), text = String(b.text ?? '').trim();
+      if (!/^(d:\d{4}-\d{2}-\d{2}|c:[a-z0-9-]{2,40}|a:\d{10,14})$/.test(key)) return send(res, 400, { error: 'bad note' });
+      if (text.length > 2000) return send(res, 400, { error: 'یادداشت بیش از حد بلند است.' });
+      const notes = { ...(user.notes || {}) };
+      if (text) notes[key] = { text, at: Date.now() }; else delete notes[key];
+      if (Object.keys(notes).length > 1000) return send(res, 400, { error: 'یادداشت‌ها بیش از حد زیاد است.' });
+      user.notes = notes;
+      await store.saveUser(user);
+    }
+    return send(res, 200, { notes: user.notes || {} });
+  }
   // «تمرین هوشمند»: the user's spaced-repetition cards (question id → { b: box, due, n: answers, w: wrong, mis: wrong
   // while sure }). GET → { cards }; POST { cards } keeps the given ones.
   if (route === 'drill' && (req.method === 'GET' || req.method === 'POST')) {
