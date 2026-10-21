@@ -9,9 +9,9 @@ import { Platform, Pressable, View } from 'react-native';
 import { api } from '@/lib/api';
 import { t as fmt } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
-import { applyNotify, disablePush, enablePush, openSystemSettings, pushState, testPush, type Notify, type PushState } from '@/lib/push';
+import { applyNotify, disablePush, enablePush, openSystemSettings, pushState, type Notify, type PushState } from '@/lib/push';
 import { Icon, type IconName } from './icon';
-import { ActionButton, Card, Segmented, T, tap } from './kit';
+import { Card, Segmented, T, tap } from './kit';
 import { useColors } from './theme';
 import { Toggle } from './toggle';
 
@@ -89,16 +89,7 @@ function TimeStepper({ time, onChange, size = 26 }: { time: string; onChange: (t
 
 export function NotifySettings() {
   const c = useColors();
-  const { state, n, busy, note, setNote, change, turn } = useNotify();
-  // For now (Mojtaba 2026-10-21, to check how they look): a test notification to this account's devices at once.
-  const [testing, setTesting] = useState(false);
-  const test = async () => {
-    if (testing) return;
-    setTesting(true); setNote(null);
-    try { const sent = await testPush(); setNote(sent ? 'اعلان آزمایشی فرستاده شد.' : 'اعلان آزمایشی به هیچ دستگاهی نرسید.'); }
-    catch { setNote('اعلان آزمایشی فرستاده نشد؛ دوباره امتحان کنید.'); }
-    setTesting(false);
-  };
+  const { state, n, busy, note, change, turn } = useNotify();
   if (!state) return null;
   const on = state === 'on', why = WHY[state];
   return (
@@ -129,9 +120,6 @@ export function NotifySettings() {
           ) : null}
           <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 2 }}>
             <Line title="پیام‌های روزانه" sub="روزی یک بار، بین ۱۰ صبح تا ۸ شب، درباره‌ی آموزش و آزمون." right={<Toggle label="پیام‌های روزانه" value={n.daily} onChange={v => change({ daily: v })} />} />
-          </View>
-          <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 10, paddingBottom: 2 }}>
-            <ActionButton label={testing ? 'در حال فرستادن…' : 'ارسال اعلان آزمایشی'} icon="send" tone="soft" onPress={test} disabled={testing} />
           </View>
         </View>
       ) : null}
