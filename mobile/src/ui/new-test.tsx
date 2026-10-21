@@ -129,15 +129,18 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
     }, 5000);
     return () => { clearInterval(t); swap.stopAnimation(); swap.setValue(1); };
   }, [answered > 0, swap]); // eslint-disable-line react-hooks/exhaustive-deps
-  const dot = (color: string, text: string) => (
+  // (`ring`: a thin edge, for the soft colour of what is not answered yet)
+  const dot = (color: string, text: string, ring?: boolean) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-      <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color, borderWidth: ring ? 1 : 0, borderColor: c.link }} />
       <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{text}</T>
     </View>
   );
   // Every question answered: the percent and the bar in green, with a round tick before the title (Mojtaba 2026-10-20).
   const done = total > 0 && answered >= total;
   // The right ones in green in every theme and colour (Mojtaba 2026-10-21), the wrong ones in red, on a neutral track.
+  // Not answered yet: the bar's empty part and its dot, in a soft tint of the theme (Mojtaba 2026-10-21).
+  const rest = c.accentSoft;
   const rightTone = c.ok, inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
   return (
     <View style={{ gap: 9 }}>
@@ -153,7 +156,7 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
       <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
         accessibilityLabel={wrong ? `${faNum(wrong)} اشتباه` : undefined} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
         <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }}
-          style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : c.line }}>
+          style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : rest }}>
           <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 24 : 0, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
             <View style={{ flex: right, backgroundColor: rightTone }} />
             <View style={{ flex: wrong, backgroundColor: c.bad }} />
@@ -173,11 +176,12 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
       {answered ? (
         // The questions answered, then the right and wrong ones, in turn every 5 seconds with the home header's swap
         // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21); plain text, no link.
-        <Animated.View style={{ minHeight: 19, flexDirection: 'row', alignItems: 'center', columnGap: 14, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
+        <Animated.View style={{ minHeight: 19, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 14, rowGap: 2, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
           transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
           {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
             {dot(rightTone, `${faNum(right)} درست`)}
             {dot(c.bad, `${faNum(wrong)} اشتباه`)}
+            {total > answered ? dot(rest, `${faNum(total - answered)} جواب‌نداده`, true) : null}
           </>}
         </Animated.View>
       ) : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.</T>}
