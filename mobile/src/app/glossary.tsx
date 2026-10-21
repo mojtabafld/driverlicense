@@ -14,7 +14,8 @@ import { faNum } from '@/lib/logic';
 import { localSearch, type SearchItem, type SearchKind } from '@/lib/search';
 import { useApp, useExamLang } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Card, Segmented, T, physicalAlign, tap } from '@/ui/kit';
+import { ArcButton, Card, Segmented, T, physicalAlign, tap } from '@/ui/kit';
+import { Sheet, SheetScroll } from '@/ui/sheet';
 import { SubPage } from '@/ui/sub-page';
 import { NoSwipe } from '@/ui/swipe';
 import { DA_FONT, radius, useColors } from '@/ui/theme';
@@ -47,16 +48,65 @@ function pageOf(t: Term): SearchItem | null {
 }
 const CAT = Object.fromEntries(TERM_CATS.map(g => [g.id, g])) as Record<TermCat, (typeof TERM_CATS)[number]>;
 
-function TermCard({ t, on, onToggle, en }: { t: Term; on: boolean; onToggle: () => void; en: boolean }) {
+// A tapped term (Mojtaba 2026-10-21): its lesson in a sheet from the bottom, closed with a drag down back to the list:
+// the term and its meaning, the part of the learning pages that teaches it (its title, place and text, in the app's
+// language), and a button to that page. A locked page: the premium page instead of its text.
+function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: () => void }) {
   const c = useColors();
   const { lessonOk, firstOk } = useFree();
-  const page = useMemo(() => pageOf(t), [t]);
-  // A locked page opens the premium page, as from the search.
-  const open = () => {
-    if (!page) { router.push({ pathname: '/course-search', params: { q: t.da } }); return; }
-    const ok = page.free === 'lesson' ? lessonOk(page.lesson) : typeof page.free === 'number' ? firstOk(page.free) : true;
-    if (!ok) toPremium(); else router.push(page.href);
-  };
+  const page = useMemo(() => (t ? pageOf(t) : null), [t]);
+  // Kept while the sheet slides out after it closes.
+  const [last, setLast] = useState<Term | null>(t);
+  if (t && t !== last) setLast(t);
+  const x = t ?? last;
+  if (!x) return null;
+  const ok = !page || (page.free === 'lesson' ? lessonOk(page.lesson) : typeof page.free === 'number' ? firstOk(page.free) : true);
+  const g = CAT[x.cat], note = x.note ? x.note[NOTE_OF[UI_LANG]] : null, main = mainOf(x, en);
+  const parts = page ? page.shown?.body ?? page.text.split(' | ').map(s => s.trim()).filter(Boolean) : [];
+  const go = () => { onClose(); if (!page) router.push({ pathname: '/course-search', params: { q: x.da } }); else if (!ok) toPremium(); else router.push(page.href); };
+  return (
+    <Sheet open={!!t} onClose={onClose} maxHeight="86%">
+      <View style={{ gap: 4, paddingHorizontal: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Icon name={g.icon} size={14} color={c.link} />
+          <T style={{ fontSize: 12.5, fontWeight: '600', color: c.link }}>{g.fa}</T>
+        </View>
+        <T raw keepDa style={{ fontFamily: DA_FONT, fontSize: 22, lineHeight: 30, fontWeight: '700', writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{headOf(x, en)}</T>
+        <T raw keepDa style={[{ fontSize: 15, lineHeight: 24, fontWeight: '600', color: c.muted }, main === x.da ? { fontFamily: DA_FONT, writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') } : null]}>{main}</T>
+      </View>
+      <SheetScroll style={{ marginTop: -4 }} contentContainerStyle={{ gap: 10, paddingTop: 4, paddingBottom: 8, paddingHorizontal: 4 }}>
+        {note ? (
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
+            <Icon name="info" size={16} color={c.muted} />
+            <T raw keepDa={!en} style={{ flex: 1, fontSize: 14, lineHeight: 23, color: c.muted }}>{note}</T>
+          </View>
+        ) : null}
+        {page ? <>
+          <View style={{ gap: 2, marginTop: 4 }}>
+            <T raw style={{ fontSize: 16, lineHeight: 25, fontWeight: '700' }}>{page.shown?.title ?? page.title}</T>
+            <T raw style={{ fontSize: 12.5, lineHeight: 19, color: c.faint }}>{page.shown?.where ?? page.where}</T>
+          </View>
+          {ok ? parts.map((s, i) => (
+            <View key={i} style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
+              <Icon name="checkCircle" size={16} color={c.link} />
+              <T raw keepDa={x.cat === 'signs' && i === 0} style={{ flex: 1, fontSize: 14.5, lineHeight: 24 }}>{s}</T>
+            </View>
+          )) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
+              <Icon name="lock" size={16} color={c.muted} />
+              <T style={{ flex: 1, fontSize: 14, lineHeight: 23, color: c.muted }}>این آموزش مخصوص نسخه‌ی ویژه است.</T>
+            </View>
+          )}
+        </> : null}
+      </SheetScroll>
+      <ArcButton label={!page ? 'جستجو در آموزش' : ok ? 'باز کردن آموزش کامل' : 'نسخه‌ی ویژه'} icon={!page ? 'search' : ok ? 'learn' : 'sparkles'} onPress={go} />
+    </Sheet>
+  );
+}
+
+function TermCard({ t, on, onToggle, en, onOpen }: { t: Term; on: boolean; onToggle: () => void; en: boolean; onOpen: () => void }) {
+  const c = useColors();
+  const open = () => { tap(); onOpen(); };
   const g = CAT[t.cat], note = t.note ? t.note[NOTE_OF[UI_LANG]] : null, other = otherOf(t, en), main = mainOf(t, en);
   return (
     <Card onPress={open} style={{ gap: 10, padding: 14 }}>
@@ -96,6 +146,7 @@ export default function Glossary() {
   const [q, setQ] = useState(String(p.q || ''));
   const [tab, setTab] = useState<'all' | 'saved'>('all');
   const [cat, setCat] = useState<TermCat | null>(null);
+  const [sel, setSel] = useState<Term | null>(null); // the term whose lesson is open in the sheet
   // The bookmarked ones in the order they were saved (newest first); the rest in the glossary's order.
   const base = tab === 'saved' ? terms.map(da => GLOSSARY.find(t => t.da === da)).filter((t): t is Term => !!t) : GLOSSARY;
   const list = searchTerms(q, cat ? base.filter(t => t.cat === cat) : base);
@@ -133,7 +184,7 @@ export default function Glossary() {
         </ScrollView>
       </NoSwipe>
       <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(list.length)} اصطلاح</T>
-      {list.map(t => <TermCard key={t.da} t={t} en={en} on={terms.includes(t.da)} onToggle={() => { toggleTerm(t.da).catch(() => {}); }} />)}
+      {list.map(t => <TermCard key={t.da} t={t} en={en} on={terms.includes(t.da)} onToggle={() => { toggleTerm(t.da).catch(() => {}); }} onOpen={() => setSel(t)} />)}
       {list.length ? null : (
         <Card style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 14 }}>
           <Icon name={tab === 'saved' && !terms.length ? 'bookmark' : 'search'} size={17} color={c.muted} />
@@ -143,6 +194,7 @@ export default function Glossary() {
         </Card>
       )}
       <View style={{ height: 40 }} />
+      <TermSheet t={sel} en={en} onClose={() => setSel(null)} />
     </SubPage>
   );
 }
