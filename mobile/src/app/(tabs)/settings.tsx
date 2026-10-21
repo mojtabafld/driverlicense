@@ -159,18 +159,8 @@ export default function Settings() {
       </Card>
       {/* /app: «نسخه‌ی ویژه» stays a card of its own. */}
       {PROVE_PICS && showPrem ? <Card style={{ gap: 4 }}>{premRow}</Card> : null}
-      {/* The app's language (main site): Persian, English or Danish, each named in its own language; a change reloads
-          the page in it and is kept in the account too. */}
-      {/* One card: the app's language (main site) and the look. */}
+      {/* One card: the look and the colour theme. */}
       <Card style={{ gap: 10 }}>
-      {!PROVE_PICS ? (
-        <>
-          <Row title="زبان برنامه" sub="متن‌ها، درس‌ها و منوهای اپ به این زبان نمایش داده می‌شوند." right={null} />
-          <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui, lang: EXAM_FOR[ui] }).catch(() => {}).finally(() => setUiLang(ui)); }}
-            options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
-          <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line }} />
-        </>
-      ) : null}
         <Row title="ظاهر" sub="«خودکار» مثل تنظیم روشن / تیره‌ی دستگاه شما عوض می‌شود." right={null} />
         <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
         {/* The colour theme (main site and the Android app): ten named themes; a change reloads the app in it. */}
@@ -178,7 +168,16 @@ export default function Settings() {
           <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}><PaletteRow /></View>
         ) : null}
       </Card>
+      {/* The languages in one card (Mojtaba 2026-10-21): the app's first (main site: Persian, English or Danish, each named
+          in its own language; a change reloads the page in it and is kept in the account too), then the exam's. */}
       <Card style={{ gap: 10 }}>
+        {!PROVE_PICS ? (
+          <>
+            <Row title="زبان برنامه" sub="متن‌ها، درس‌ها و منوهای اپ به این زبان نمایش داده می‌شوند." right={null} />
+            <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui, lang: EXAM_FOR[ui] }).catch(() => {}).finally(() => setUiLang(ui)); }}
+              options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
+          </>
+        ) : null}
         <Row title="زبان آزمون" sub="سؤال‌ها و گزینه‌ها به این زبان نمایش داده می‌شوند." right={null} />
         <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
         {/* Main site: the translation's language; left alone it follows the app's language (picked on first signing in).
