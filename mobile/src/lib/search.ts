@@ -8,13 +8,22 @@ import type { Href } from 'expo-router';
 import { COURSE } from './course';
 import { PRIORITY_CATS, SIGN_CATS } from './guide-data';
 import { RULES } from './guide';
+import { UI_LANG, tr } from './i18n';
 import { faNum } from './logic';
 
 export type SearchKind = 'lesson' | 'rule' | 'sign' | 'priority';
-export type SearchItem = { id: string; kind: SearchKind; title: string; text: string; where: string; href: Href; free?: 'lesson' | number; lesson?: string };
+// `alt`: the entry's words in the app's language when it is not Persian (the pages show them translated, so an English
+// or Danish search has to find them too; Mojtaba 2026-10-21), and `shown`: its title and place in that language, for
+// the results list.
+export type SearchItem = { id: string; kind: SearchKind; title: string; text: string; where: string; href: Href; free?: 'lesson' | number; lesson?: string; alt?: string;
+  shown?: { title: string; where: string } };
 
 const clean = (s: string) => s.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
 const cut = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+// Each piece in the app's language, as the page shows it (strings.json has the pieces as they are written, before
+// their bold marks are taken off).
+const alt = (parts: (string | undefined)[]) => (UI_LANG === 'fa' ? undefined : clean(parts.filter((x): x is string => !!x).map(x => tr(x)).join(' | ')));
+const shown = (title: string, where: string[]) => (UI_LANG === 'fa' ? undefined : { title: clean(title), where: where.join(' | ') });
 
 function build(): SearchItem[] {
   const out: SearchItem[] = [];
@@ -24,16 +33,19 @@ function build(): SearchItem[] {
         if (s.kind !== 'intro' && s.kind !== 'teach') return;
         const body = s.kind === 'teach' ? [s.text, s.rule, ...(s.points ?? []), s.trap, s.law] : [s.text, ...s.goals];
         out.push({ id: `c:${l.id}:${k}`, kind: 'lesson', title: clean(s.title), text: clean(body.filter(Boolean).join(' | ')),
-          where: `${l.title} | فصل ${faNum(ch.n)}`, href: { pathname: '/course-lesson', params: { id: l.id, step: String(k) } }, free: 'lesson', lesson: l.id });
+          where: `${l.title} | فصل ${faNum(ch.n)}`, href: { pathname: '/course-lesson', params: { id: l.id, step: String(k) } }, free: 'lesson', lesson: l.id,
+          alt: alt([s.title, ...body, l.title]), shown: shown(tr(s.title), [tr(l.title), `${tr('فصل')} ${ch.n}`]) });
       });
     }
   }
   RULES.forEach((r, i) => out.push({ id: `r:${i}`, kind: 'rule', title: clean(r.title), text: clean([r.intro, ...r.points, r.tip].filter(Boolean).join(' | ')),
-    where: 'قوانین', href: { pathname: '/rules', params: { open: String(i) } }, free: i }));
+    where: 'قوانین', href: { pathname: '/rules', params: { open: String(i) } }, free: i, alt: alt([r.title, r.intro, ...r.points, r.tip, 'قوانین']), shown: shown(tr(r.title), [tr('قوانین')]) }));
   SIGN_CATS.forEach((g, gi) => g.items.forEach((s, i) => out.push({ id: `s:${g.id}:${i}`, kind: 'sign', title: `${s.code.replace(/^([A-Z]+)(\d)/, '$1 $2')}: ${clean(s.fa)}`,
-    text: clean(`${s.da} | ${s.text}`), where: g.title, href: { pathname: '/guide-view', params: { kind: 'signs', cat: g.id, i: String(i) } }, free: gi })));
+    text: clean(`${s.da} | ${s.text}`), where: g.title, href: { pathname: '/guide-view', params: { kind: 'signs', cat: g.id, i: String(i) } }, free: gi,
+    alt: alt([s.fa, s.text, g.title]), shown: shown(`${s.code.replace(/^([A-Z]+)(\d)/, '$1 $2')}: ${tr(s.fa)}`, [tr(g.title)]) })));
   PRIORITY_CATS.forEach((g, gi) => g.items.forEach((p, i) => out.push({ id: `p:${g.id}:${i}`, kind: 'priority', title: clean(p.title),
-    text: clean(`${p.text} | ${p.first} | ${p.law}`), where: `حق تقدم | ${g.title}`, href: { pathname: '/guide-view', params: { kind: 'priority', cat: g.id, i: String(i) } }, free: gi })));
+    text: clean(`${p.text} | ${p.first} | ${p.law}`), where: `حق تقدم | ${g.title}`, href: { pathname: '/guide-view', params: { kind: 'priority', cat: g.id, i: String(i) } }, free: gi,
+    alt: alt([p.title, p.text, p.first, p.law, 'حق تقدم', g.title]), shown: shown(tr(p.title), [tr('حق تقدم'), tr(g.title)]) })));
   return out;
 }
 
@@ -57,7 +69,11 @@ export function norm(s: string) {
     .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 
-const INDEX = SEARCH_ITEMS.map(x => ({ x, title: ` ${norm(x.title)} `, text: ` ${norm(x.text)} ${norm(x.where)} ` }));
+// (In English or Danish the translated title counts as the title too, and the rest of the translated words as text.)
+const INDEX = SEARCH_ITEMS.map(x => {
+  const a = x.alt ? norm(x.alt) : '', head = x.alt ? norm(tr(x.title)) : '';
+  return { x, title: ` ${norm(x.title)} ${head} `, text: ` ${norm(x.text)} ${norm(x.where)} ${a} ` };
+});
 
 // The entries holding the words typed, best first: a whole word in the title counts most, then the start of a word,
 // then anywhere; every word must be found somewhere (in Persian «ها» / «ی» endings are left to the part match).
