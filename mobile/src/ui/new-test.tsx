@@ -107,6 +107,28 @@ export function NewTestCard({ test }: { test: NewTest }) {
 // line of text): the share of the questions answered at least once, filling in when the card shows, its percent beside
 // the title; under it how many of how many, and of those how many were right / wrong the last time, each with a dot in
 // its colour. The mistakes open the mistakes page (Mojtaba 2026-10-19), where this test's questions are among them.
+// A tall bar with its number in it (Mojtaba 2026-10-21): at the end of the filled part, in white, once that part is
+// wide enough; before that just after it, in the bar's colour. `atEnd`: the number is of what is left (the mistakes
+// still open), so it sits at the bar's far end, on the part not filled (in white once the fill reaches it).
+function LabelBar({ share, shown, tone, soft, label, fill = 1, a11y, atEnd }: { share: number; shown: number; tone: string; soft: string; label: string; fill?: number;
+  a11y: { min: number; max: number; now: number }; atEnd?: boolean }) {
+  const inside = !atEnd && share >= 0.22;
+  return (
+    <View accessibilityRole="progressbar" accessibilityValue={a11y}
+      style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', alignItems: 'stretch', backgroundColor: soft }}>
+      <View style={{ width: `${shown * 100}%`, minWidth: share ? 24 : 0, borderRadius: radius.pill, justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: inside ? 10 : 0 }}>
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: radius.pill, backgroundColor: tone, opacity: fill }} />
+        {inside ? <T raw style={{ color: '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{label}</T> : null}
+      </View>
+      {atEnd ? (
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'flex-end', paddingHorizontal: 10 }}>
+          <T raw style={{ color: share >= 0.8 ? '#fff' : tone, fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{label}</T>
+        </View>
+      ) : inside ? null : <View style={{ justifyContent: 'center', paddingHorizontal: 8 }}><T raw style={{ color: tone, fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{label}</T></View>}
+    </View>
+  );
+}
+
 function Progress({ answered, total, right, wrong }: { answered: number; total: number; right: number; wrong: number }) {
   const c = useColors();
   const share = total ? answered / total : 0;
@@ -134,12 +156,8 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
           {done ? <Icon name="checkCircle" size={17} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
           <T style={{ fontSize: 14, fontWeight: '700' }}>پیشرفت شما</T>
         </View>
-        <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: answered ? tone : c.muted }}>{pctText(pct)}</T>
       </View>
-      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }}
-        style={{ height: 10, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : c.accentSoft }}>
-        <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 10 : 0, borderRadius: radius.pill, backgroundColor: tone }} />
-      </View>
+      <LabelBar share={answered ? share : 0} shown={answered ? bar : 0} tone={tone} soft={done ? c.okSoft : c.accentSoft} label={pctText(pct)} a11y={{ min: 0, max: total, now: answered }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 12, rowGap: 2 }}>
         <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
           {answered ? `${faNum(answered)} از ${faNum(total)} سؤال` : 'هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.'}
@@ -175,17 +193,13 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
           {done ? <Icon name="checkCircle" size={17} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
           <T style={{ fontSize: 14, fontWeight: '700' }}>اشتباهات اصلاح‌نشده</T>
         </View>
-        {/* The count opens the mistakes page, as the mistakes count above does (Mojtaba 2026-10-20). */}
-        <Pressable onPress={() => { tap(); router.push('/mistakes'); }} hitSlop={10} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
-          <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '800', color: tone }}>{faNum(open.length)}</T>
-        </Pressable>
       </View>
-      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: missed, now: fixed }}
-        style={{ height: 10, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
-        <View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: done ? c.okSoft : c.warnSoft, opacity: done ? 0.55 : 1 }} />
-        <View style={{ width: `${fixed ? bar * 100 : 0}%`, minWidth: fixed ? 10 : 0, borderRadius: radius.pill, backgroundColor: tone, opacity: done ? 0.75 : 0.7 }} />
-      </View>
+      {/* The bar, with the mistakes still open in it, opens the mistakes page (as the count beside the title did). */}
+      <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
+        style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
+        <LabelBar atEnd share={fixed ? share : 0} shown={fixed ? bar : 0} tone={tone} soft={done ? c.okSoft : c.warnSoft} fill={0.85}
+          label={t('{0} اشتباه', faNum(open.length))} a11y={{ min: 0, max: missed, now: fixed }} />
+      </Pressable>
       <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
         <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
           {open.length ? `${faNum(fixed)} از ${faNum(missed)} اشتباه اصلاح شده` : 'همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.'}
