@@ -3,15 +3,25 @@
 // short line under it, ui/welcome-art.tsx; they turn by themselves, with a swipe or a tap on their dots), then
 // «ورود» and «ساخت حساب», each opening the form in that mode (app/login.tsx), and a link to go on as a guest.
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
+import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { RTL } from '@/lib/i18n';
+import { API_URL } from '@/lib/config';
+import { RTL, UI_LANG, tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { L, T, ThemeButton, physical, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 import { WelcomeAi, WelcomeBank, WelcomeExam, WelcomeProgress } from './welcome-art';
 import Svg, { Path } from 'react-native-svg';
+
+// Apple's apple, for «ادامه با اپل» (kept off for now; Mojtaba 2026-10-21).
+function AppleMark({ size = 20, color }: { size?: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path fill={color} d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+    </Svg>
+  );
+}
 
 // Google's «G», in its four colours, as its sign-in buttons show it.
 function GoogleG({ size = 20 }: { size?: number }) {
@@ -34,21 +44,25 @@ const SLIDES = [
 const EVERY = 4500; // ms on each slide
 
 // A wide button with its icon at the reading side's edge and its label in the middle.
-function Wide({ label, icon, primary, onPress, mark }: { label: string; icon?: IconName; primary?: boolean; onPress: () => void; mark?: React.ReactNode }) {
+// A wide button of the welcome screen; `light`: the first one, in the text's colour on the page (as the reference's
+// Apple button); `off`: shown but not usable yet, with «به‌زودی».
+function Wide({ label, icon, light, onPress, mark, off }: { label: string; icon?: IconName; light?: boolean; onPress?: () => void; mark?: (fg: string) => React.ReactNode; off?: boolean }) {
   const c = useColors(), dark = useIsDark();
-  const fg = primary ? c.ctaFg : c.text;
+  const fg = light ? c.bg : c.text;
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button"
-      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ height: 54, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
-        backgroundColor: primary ? c.cta : dark ? c.surface2 : c.line, opacity: pressed ? 0.85 : hovered ? 0.93 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] })}>
-      <View style={{ position: 'absolute', top: 0, bottom: 0, ...physical(RTL ? { right: 18 } : { left: 18 }), justifyContent: 'center' }}>{mark ?? (icon ? <Icon name={icon} size={21} color={fg} /> : null)}</View>
-      <T style={{ fontSize: 16.5, fontWeight: '600', color: fg }}>{label}</T>
+    <Pressable onPress={() => { if (off || !onPress) return; tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled: !!off }}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
+        backgroundColor: light ? c.text : dark ? c.surface2 : c.line, opacity: off ? 0.45 : pressed ? 0.85 : hovered ? 0.93 : 1, transform: [{ scale: pressed && !off ? 0.985 : 1 }] })}>
+      <View style={{ position: 'absolute', top: 0, bottom: 0, ...physical(RTL ? { right: 18 } : { left: 18 }), justifyContent: 'center' }}>{mark ? mark(fg) : icon ? <Icon name={icon} size={21} color={fg} /> : null}</View>
+      <T style={{ fontSize: 16.5, fontWeight: '600', color: fg }}>{label}{off ? <T style={{ fontSize: 13, fontWeight: '500', color: fg }}>{`  · ${tr('به‌زودی')}`}</T> : null}</T>
     </Pressable>
   );
 }
 
-// `onGoogle`: «ادامه با گوگل» under the two buttons, while the server has Google sign-in on (Mojtaba 2026-10-21).
-export function Welcome({ onLogin, onRegister, onGuest, onGoogle, busy, err }: { onLogin: () => void; onRegister: () => void; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
+// The three ways in, as the Saphe app's first screen (Mojtaba 2026-10-21): Apple (off for now), Google (`onGoogle`, while
+// the server has it on; else off) and email (`onEmail`: one flow for signing in and up, ui/sign-steps.tsx), then the
+// guest link and the line on the privacy policy.
+export function Welcome({ onEmail, onGuest, onGoogle, busy, err }: { onEmail: () => void; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const [i, setI] = useState(0);
   const [fade] = useState(() => new Animated.Value(1));
@@ -75,17 +89,17 @@ export function Welcome({ onLogin, onRegister, onGuest, onGoogle, busy, err }: {
     tap(); go(at.current + ((dx < 0) !== RTL ? 1 : -1)); setTick(t => t + 1);
   };
   const { Art, text } = SLIDES[i];
-  const art = Math.round(Math.min(width * 0.42, height * 0.17, 180));
+  const art = Math.round(Math.min(width * 0.42, height * 0.14, 160));   // (three ways in under it now: a little smaller)
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 28 }} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
       <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
         {/* At the top right, as in the reference, in every language. */}
         <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
           <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View>
         </View>
-        <L style={{ alignSelf: 'center', textAlign: 'center', marginTop: Math.min(36, height * 0.03), fontSize: 46, lineHeight: 56, fontWeight: '500', letterSpacing: -1.2, color: c.text }}>Teori Prøve</L>
+        <L style={{ alignSelf: 'center', textAlign: 'center', marginTop: Math.min(24, height * 0.02), fontSize: 42, lineHeight: 52, fontWeight: '500', letterSpacing: -1.2, color: c.text }}>Teori Prøve</L>
         {/* The slides, in the middle of what is left. */}
-        <View onTouchStart={onStart} onTouchEnd={onEnd} style={{ flex: 1, minHeight: art + 150, justifyContent: 'center', alignItems: 'center', gap: 26, paddingVertical: 20 }}>
+        <View onTouchStart={onStart} onTouchEnd={onEnd} style={{ flex: 1, minHeight: art + 130, justifyContent: 'center', alignItems: 'center', gap: 18, paddingVertical: 10 }}>
           <Animated.View style={{ opacity: fade, alignItems: 'center', gap: 22, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
             <View style={{ width: art * 1.2, height: art }}><Art fg={c.accent} hole={dark ? c.bg : c.text} /></View>
             <T style={{ textAlign: 'center', fontSize: 17, lineHeight: 28, color: c.text, maxWidth: 320, minHeight: 56 }}>{text}</T>
@@ -99,19 +113,23 @@ export function Welcome({ onLogin, onRegister, onGuest, onGoogle, busy, err }: {
             ))}
           </View>
         </View>
-        <View style={{ gap: 12 }}>
-          <View style={{ alignItems: 'center', gap: 4, marginBottom: 8 }}>
-            <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '700', textAlign: 'center' }}>ادامه با حساب کاربری</T>
-            <T style={{ fontSize: 15.5, lineHeight: 24, color: c.muted, textAlign: 'center' }}>وارد شوید یا یک حساب تازه بسازید</T>
+        <View style={{ gap: 10 }}>
+          <View style={{ alignItems: 'center', gap: 2, marginBottom: 6 }}>
+            <T style={{ fontSize: 20, lineHeight: 29, fontWeight: '700', textAlign: 'center' }}>سفرتان را با TeoriPrøve شروع کنید</T>
+            <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>آماده‌ی آزمون تئوری، مطمئن پشت فرمان.</T>
           </View>
-          <Wide primary label="ورود" icon="person" onPress={onLogin} />
-          <Wide label="ساخت حساب" icon="personAdd" onPress={onRegister} />
-          {onGoogle ? <Wide label="ادامه با گوگل" mark={<GoogleG />} onPress={onGoogle} /> : null}
+          <Wide light off label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} />
+          <Wide label="ادامه با گوگل" mark={() => <GoogleG />} onPress={onGoogle} off={!onGoogle} />
+          <Wide label="ادامه با ایمیل" icon="mail" onPress={onEmail} />
           {err ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
-          <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 8, marginTop: 6 }}>
+          <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
             {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
               <T style={{ color: c.muted, fontSize: 14.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
             )}
+          </Pressable>
+          <Pressable onPress={() => { tap(); Linking.openURL(`${API_URL}/privacy?lang=${UI_LANG}`).catch(() => {}); }} accessibilityRole="link" style={{ alignSelf: 'center', marginTop: 2 }}>
+            <T style={{ color: c.muted, fontSize: 13, lineHeight: 20, textAlign: 'center' }}>با ادامه، این را می‌پذیرید:</T>
+            <T style={{ color: c.text, fontSize: 13.5, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>سیاست حفظ حریم خصوصی</T>
           </Pressable>
         </View>
       </View>

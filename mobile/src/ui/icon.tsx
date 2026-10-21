@@ -35,6 +35,9 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'bell':
       body = <G><Path d="M6 16.6V11a6 6 0 0 1 12 0v5.6l1.6 2.1H4.4z" {...line} /><Path d="M9.9 20.6a2.3 2.3 0 0 0 4.2 0" {...line} /></G>;
       break;
+    case 'mail':
+      body = <G><Path d="M5 5.5h14A1.5 1.5 0 0 1 20.5 7v10a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17V7A1.5 1.5 0 0 1 5 5.5z" {...line} /><Path d="M4 7l8 6 8-6" {...line} /></G>;
+      break;
     case 'calendar':
       body = <G><Path d="M6 5.5h12A1.5 1.5 0 0 1 19.5 7v11.5A1.5 1.5 0 0 1 18 20H6a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 6 5.5z" {...line} /><Path d="M4.5 10h15M8.5 3.5v3.5M15.5 3.5v3.5" {...line} /><Path d="M8.5 14h.01M12 14h.01M15.5 14h.01M8.5 17h.01M12 17h.01" {...line} strokeWidth={2.6} /></G>;
       break;
