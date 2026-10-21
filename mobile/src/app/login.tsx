@@ -48,13 +48,15 @@ export default function Login() {
   const c = useColors(), dark = useIsDark();
   const { login, register, guest, mail, forgot, checkResetCode, resetPassword, google, googleErr, googleSignIn } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  // The steps' flow (ui/sign-steps.tsx): «ادامه با ایمیل» signs in or up by the address; the account signed out last signs in.
+  const [flow, setFlow] = useState<'login' | 'register' | 'email'>('login');
   // Main site and /app: first the welcome screen, whose two buttons open the form in their mode (Mojtaba 2026-10-20).
   const [welcome, setWelcome] = useState(ARC);
   // The account signed out last on this device (undefined while it is read); each sign-out shows the first screen
   // again (the page stays loaded while signed in).
   const { lastUser: last, forgetLastUser } = useApp();
   const [seen, setSeen] = useState(last);
-  if (seen !== last) { setSeen(last); setWelcome(true); setMode('login'); }
+  if (seen !== last) { setSeen(last); setWelcome(true); setMode('login'); setFlow('login'); }
   // 'ask': the forgotten-password form; 'code': its code went out and is typed in; 'set': the new password.
   const [lost, setLost] = useState<'' | 'ask' | 'code' | 'set'>('');
   const [code, setCode] = useState(''), [sentAt, setSentAt] = useState(0), [now, setNow] = useState(Date.now());
@@ -139,10 +141,10 @@ export default function Login() {
   if (ARC) return (
     <Backdrop>
       {last === undefined ? null
-        : welcome && last ? <WelcomeBack last={last} onPick={() => { setMode('login'); setErr(''); setWelcome(false); }} onNotYou={forgetLastUser} />
+        : welcome && last ? <WelcomeBack last={last} onPick={() => { setFlow('login'); setErr(''); setWelcome(false); }} onNotYou={forgetLastUser} />
         : welcome ? <Welcome busy={busy} err={err || googleErr} onGuest={asGuest} onGoogle={google ? () => { setErr(''); googleSignIn().catch((e: any) => setErr(e.message)); } : undefined}
-          onLogin={() => { setMode('login'); setErr(''); setWelcome(false); }} onRegister={() => { setMode('register'); setErr(''); setWelcome(false); }} />
-        : <SignSteps start={mode} known={mode === 'login' && last ? last.id : undefined} onBack={() => setWelcome(true)} />}
+          onEmail={() => { setFlow(mail ? 'email' : 'login'); setErr(''); setWelcome(false); }} />
+        : <SignSteps start={flow} known={flow === 'login' && last ? last.id : undefined} onBack={() => setWelcome(true)} />}
       <InstallHint />
     </Backdrop>
   );

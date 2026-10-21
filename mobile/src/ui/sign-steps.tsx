@@ -21,11 +21,13 @@ type Step = 'id' | 'name' | 'email' | 'user' | 'pw' | 'lang' | 'code';
 const MAIL = /^\S+@\S+\.\S+$/;
 
 // `known`: the email or username of the account signed out last (ui/welcome-back.tsx): its code is sent at once (or,
-// for a username, its password asked).
-export function SignSteps({ start, onBack, known }: { start: 'login' | 'register'; onBack: () => void; known?: string }) {
+// for a username, its password asked). `email` (the welcome screen's «ادامه با ایمیل», Mojtaba 2026-10-21): one flow
+// for both, by the address: an account has it → its sign-in code; none → the sign-up's name, code and language.
+export function SignSteps({ start, onBack, known }: { start: 'login' | 'register' | 'email'; onBack: () => void; known?: string }) {
   const c = useColors();
   const { login, register, mail, sendCode, codeIn, checkCode, emailFree } = useApp();
-  const up = start === 'register';
+  const unified = start === 'email' && mail;
+  const [up, setUp] = useState(start === 'register');
   const knownMail = !!known && known.includes('@') && mail;
   const [step, setStep] = useState<Step>(up ? 'name' : knownMail ? 'code' : known ? 'pw' : 'id');
   const [trail, setTrail] = useState<Step[]>([]);
@@ -48,6 +50,7 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
   const back = () => {
     if (!trail.length) { onBack(); return; }
     setTrail(t => t.slice(0, -1));
+    if (unified && trail[trail.length - 1] === 'id') setUp(false);   // the address asked again: not known yet whether it signs up
     show(trail[trail.length - 1]);
   };
   const run = async (f: () => Promise<void>) => {
@@ -68,12 +71,21 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
   const enter = (v = code) => { if (!busy && v.length === 6) run(async () => { try { if (up) { await checkCode(email, v); go('lang'); } else await codeIn(email, v); } catch (e) { setCode(''); throw e; } }); };
   // What each step asks, whether its answer is ready, and what its button does.
   const steps: Record<Step, { title: string; sub: string; ok: boolean; next: () => void; label?: string }> = {
-    id: { title: mail ? 'ایمیل‌تان چیست؟' : 'نام کاربری‌تان چیست؟', sub: mail ? 'برای ورود به حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.' : 'نام کاربری حساب TeoriPrøve خود را وارد کنید.',
-      ok: !!id.trim(), next: () => (mail && id.includes('@') ? send() : go('pw')) },
+    id: unified
+      ? { title: 'ایمیل‌تان چیست؟', sub: 'برای ورود یا ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد به آن می‌فرستیم.', ok: MAIL.test(id.trim()),
+        next: () => run(async () => {
+          const e = id.trim(), free = await emailFree(e).then(() => true, (x: any) => { if (x?.status === 409) return false; throw x; });
+          if (free) { setUp(true); setUser(e); go('name'); return; }
+          await sendCode(e, false); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code');
+        }) }
+      : { title: mail ? 'ایمیل‌تان چیست؟' : 'نام کاربری‌تان چیست؟', sub: mail ? 'برای ورود به حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.' : 'نام کاربری حساب TeoriPrøve خود را وارد کنید.',
+        ok: !!id.trim(), next: () => (mail && id.includes('@') ? send() : go('pw')) },
     pw: up
       ? { title: 'یک رمز عبور انتخاب کنید', sub: 'با این رمز، از هر دستگاهی وارد حساب خود می‌شوید.', ok: !!pw, next: () => go('lang') }
       : { title: 'رمز عبورتان را وارد کنید', sub: fmt('برای ورود با {0}', id.trim()), ok: !!pw, label: 'ورود', next: () => run(() => login(id.trim(), pw)) },
-    name: { title: 'اسم‌تان چیست؟', sub: 'برنامه شما را با این نام صدا می‌کند.', ok: !!name.trim(), next: () => go(mail ? 'email' : 'user') },
+    name: { title: 'اسم‌تان چیست؟', sub: 'برنامه شما را با این نام صدا می‌کند.', ok: !!name.trim(),
+      // (the address already given: its code at once)
+      next: () => (unified ? run(async () => { await sendCode(user.trim(), true); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code'); }) : go(mail ? 'email' : 'user')) },
     email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => run(async () => { await emailFree(user.trim()); await sendCode(user.trim(), true); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code'); }) },
     user: { title: 'یک نام کاربری انتخاب کنید', sub: 'با این نام وارد حساب خود می‌شوید (حروف انگلیسی و عدد).', ok: !!user.trim(), next: () => go('pw') },
     lang: { title: 'سؤال‌ها به چه زبانی باشند؟', sub: 'ترجمه‌ی فارسی در هر دو حالت زیر سؤال‌ها نمایش داده می‌شود. بعداً هم از تنظیمات قابل تغییر است.', ok: true,
@@ -84,7 +96,7 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
   const s = steps[step];
   const submit = () => { if (s.ok && !busy) { tap(); s.next(); } };
   // Sign-up's steps are counted; its button says it goes on with signing up.
-  const order: Step[] = mail ? ['name', 'email', 'code', 'lang'] : ['name', 'user', 'pw', 'lang'];
+  const order: Step[] = unified ? ['name', 'code', 'lang'] : mail ? ['name', 'email', 'code', 'lang'] : ['name', 'user', 'pw', 'lang'];
   const at = up ? order.indexOf(step) : -1;
   const label = s.label ?? (up ? 'ادامه‌ی ثبت‌نام' : 'ادامه');
   const pill = (text: string, onPress: () => void, off?: boolean) => (
