@@ -194,11 +194,6 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
   // then in the theme's warning orange, mistakes still to put right (Mojtaba 2026-10-20).
   const done = !open.length, tone = done ? c.ok : c.warn;
   const bar = useCountUp(share, 1100);
-  const start = () => {
-    tap();
-    session.plan = { mode: 'mistakes', ids: shuffle(open).slice(0, FULL), title: 'آزمون اشتباهات' };
-    router.push('/run');
-  };
   return (
     <View style={{ gap: 9 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -214,21 +209,8 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
         <LabelBar share={fixed ? share : 0} shown={fixed ? bar : 0} tone={tone} soft={done ? c.okSoft : c.warnSoft} fill={0.85}
           label={t('{0} از {1}', faNum(fixed), faNum(missed))} a11y={{ min: 0, max: missed, now: fixed }} />
       </Pressable>
-      {/* The mistakes test button in the middle (Mojtaba 2026-10-21). */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', columnGap: 12 }}>
-        {open.length ? null : <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.</T>}
-        {open.length ? (
-          // A small pill in the theme's soft colour, so it reads as a button; the text at the size it had (Mojtaba 2026-10-19).
-          // Before the text the practice sign of «تمرین همه‌ی اشتباهات» (refresh), no arrow after it (Mojtaba 2026-10-20).
-          // In the bar's colours: there are mistakes to put right while it shows, so the warning orange (Mojtaba 2026-10-20).
-          <Pressable onPress={start} hitSlop={6} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1, flexDirection: 'row', alignItems: 'center', gap: 6,
-            paddingVertical: 7, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: c.warnSoft })}>
-            {/* A little bigger (Mojtaba 2026-10-21). */}
-            <Icon name="refresh" size={15} color={tone} weight="semibold" />
-            <T style={{ color: tone, fontSize: 14, lineHeight: 20, fontWeight: '700' }}>آزمون اشتباهات</T>
-          </Pressable>
-        ) : null}
-      </View>
+      {/* No mistakes test button here any more (Mojtaba 2026-10-21): the bar opens the mistakes page. */}
+      {open.length ? null : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>همه‌ی اشتباهات این آزمون را اصلاح کرده‌اید.</T>}
     </View>
   );
 }
