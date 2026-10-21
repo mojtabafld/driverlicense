@@ -232,6 +232,14 @@ function resetUser(e) {
   const same = v => !!v && mail.normal(v) === e;
   return Object.values(store.users).find(x => !x.guest && same(x.email)) || Object.values(store.users).find(x => !x.guest && same(x.username));
 }
+// The account found when signing in, if it is still in the database: one the other server deleted during a deploy
+// (store.js catchUp) goes from memory with its sessions, and none is found.
+async function live(u) {
+  if (!u || !store.exists || (+u.created || 0) > Date.now() - 60e3 || (await store.exists(u.username))) return u;
+  delete store.users[u.username];
+  for (const [t, x] of Object.entries(store.sessions)) if (x.username === u.username) delete store.sessions[t];
+  return undefined;
+}
 // Whether the code is the account's current one; a wrong code counts as a try (the code is dropped after 5).
 async function resetCodeOk(u, code) {
   const r = u && u.reset;
@@ -711,7 +719,7 @@ async function api(req, res, route) {
     // By username (accounts from before) or by email (the username of accounts made with one, or an address added later).
     const { username, password } = await readBody(req);
     const id = String(username || '').trim().toLowerCase();
-    const user = store.users[id] || (id.includes('@') ? Object.values(store.users).find(x => x.email === id) : undefined);
+    const user = await live(store.users[id] || (id.includes('@') ? Object.values(store.users).find(x => x.email === id) : undefined));
     if (!user || typeof password !== 'string' || !(await checkPw(password, user))) {
       addFail(ip);
       return send(res, 401, { error: 'ایمیل (یا نام کاربری) یا رمز عبور اشتباه است.' });
@@ -730,7 +738,7 @@ async function api(req, res, route) {
     const e = mail.normal(email);
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
     addFail(ip);
-    const u = resetUser(e);
+    const u = await live(resetUser(e));
     if (signup && u) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.' });
     if (!signup && !u) return send(res, 404, { error: 'حسابی با این ایمیل ثبت نشده است.' });
     if (signup && !registerAllowed(ip)) return send(res, 429, { error: 'ساخت حساب از این اتصال زیاد بوده است؛ کمی بعد دوباره امتحان کنید.' });
@@ -745,7 +753,7 @@ async function api(req, res, route) {
     const e = mail.normal((await readBody(req)).email);
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
     addFail(ip);
-    if (resetUser(e)) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.' });
+    if (await live(resetUser(e))) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.' });
     return send(res, 200, { ok: true });
   }
   // POST codecheck { email, code }: whether a sign-up code is right, before its last step (the questions' language)
@@ -763,7 +771,7 @@ async function api(req, res, route) {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const b = await readBody(req), { email, code, name, exam } = b;
     const e = mail.normal(email);
-    let u = resetUser(e);
+    let u = await live(resetUser(e));
     if (u) {
       if (!(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
       delete u.reset;
@@ -795,7 +803,7 @@ async function api(req, res, route) {
     const e = mail.normal(email);
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
     addFail(ip);
-    const u = resetUser(e);
+    const u = await live(resetUser(e));
     // No account with this address: said at once (Mojtaba, 2026-10-17), so the user is not left waiting for a code.
     if (!u) { console.log('reset mail: no account for', e.replace(/^(.{2}).*@/, '$1…@')); return send(res, 404, { error: 'حسابی با این ایمیل ثبت نشده است.' }); }
     await sendResetMail(u, lang).catch(err => console.error('reset mail', u.username, err.message));
@@ -1536,6 +1544,11 @@ async function api(req, res, route) {
 
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
+  // A deploy's first minutes, while the old server may still be answering (store.js catchUp).
+  if (store.catchUp) {
+    const t = setInterval(() => store.catchUp().catch(e => console.error('catch up', e.message)), 60e3);
+    setTimeout(() => clearInterval(t), 20 * 60e3).unref();
+  }
   // One-time: everyone is asked again which language the questions are in (with the app's renewed intro).
   // (2: once more, with the app's look chosen on the same screen.)
   if (store.meta.langAskReset !== 2) {

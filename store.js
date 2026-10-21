@@ -3,6 +3,10 @@
 // - otherwise         → a local JSON file (data/db.json), handy for running on your own computer.
 // Everything is kept in memory; writes go through saveUser / deleteUser / saveSession / deleteSession / saveMeta
 // (deleteUser removes the user's row and sessions in the database; the caller drops them from memory).
+// With PostgreSQL a deploy runs the old server and the new one side by side for a few minutes, each with its own copy in
+// memory: catchUp (called by the server in its first minutes) takes in what the old one changed after the new one had
+// read the database, and a deleted account's row is marked in tp_gone so a late save of it (by the other server, or a
+// background job still holding it) never puts it back (Mojtaba 2026-10-21: a deleted account could sign in again).
 // meta holds small site-wide documents by key (e.g. 'visits' for the admin panel's visit counts).
 // Blobs (generated question pictures) are binary files kept apart from meta and read on demand: saveBlob / getBlob
 // (blobKeys lists the keys that start with a prefix).
@@ -30,6 +34,7 @@ async function openStore({ dbFile }) {
       await p.query(`CREATE TABLE IF NOT EXISTS tp_users (username TEXT PRIMARY KEY, data JSONB NOT NULL)`);
       await p.query(`CREATE TABLE IF NOT EXISTS tp_sessions (token TEXT PRIMARY KEY, username TEXT NOT NULL, exp BIGINT NOT NULL)`);
       await p.query(`CREATE TABLE IF NOT EXISTS tp_meta (key TEXT PRIMARY KEY, data JSONB NOT NULL)`);
+      await p.query(`CREATE TABLE IF NOT EXISTS tp_gone (username TEXT PRIMARY KEY, at BIGINT NOT NULL)`);
       await p.query(`CREATE TABLE IF NOT EXISTS tp_blobs (key TEXT PRIMARY KEY, mime TEXT NOT NULL, data BYTEA NOT NULL)`);
     };
     let pool = makePool();
@@ -54,14 +59,44 @@ async function openStore({ dbFile }) {
     return {
       ...mem,
       kind: 'postgres',
-      saveUser: u => pool.query(
-        'INSERT INTO tp_users (username, data) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET data = EXCLUDED.data',
-        [u.username, u]),
+      // Each save stamped (`saved`), so catchUp can tell the newer copy; never a deleted account's row again, unless it
+      // is a new account made after the deletion (the same address signing up again).
+      saveUser: u => {
+        u.saved = Date.now();
+        return pool.query(
+          `INSERT INTO tp_users (username, data) SELECT $1::text, $2::jsonb
+             WHERE NOT EXISTS (SELECT 1 FROM tp_gone WHERE username = $1::text AND at >= $3::bigint)
+           ON CONFLICT (username) DO UPDATE SET data = EXCLUDED.data`,
+          [u.username, JSON.stringify(u), Math.round(+u.created || 0)]);
+      },
       saveSession: (token, s) => pool.query(
         'INSERT INTO tp_sessions (token, username, exp) VALUES ($1, $2, $3) ON CONFLICT (token) DO UPDATE SET exp = EXCLUDED.exp',
         [token, s.username, s.exp]),
       deleteSession: token => pool.query('DELETE FROM tp_sessions WHERE token = $1', [token]),
-      deleteUser: async username => { await pool.query('DELETE FROM tp_sessions WHERE username = $1', [username]); await pool.query('DELETE FROM tp_users WHERE username = $1', [username]); },
+      deleteUser: async username => {
+        await pool.query('INSERT INTO tp_gone (username, at) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET at = EXCLUDED.at', [username, Date.now()]);
+        await pool.query('DELETE FROM tp_sessions WHERE username = $1', [username]);
+        await pool.query('DELETE FROM tp_users WHERE username = $1', [username]);
+      },
+      // The database's newer copies into memory: accounts saved later by the other server, accounts it made, and the
+      // sessions it started; accounts it deleted go from memory with their sessions (not one made here this last minute,
+      // whose first save may still be on its way), and so does its record of deleted accounts (meta `gone`).
+      // Whether the account is still in the database (asked when signing in, as catchUp runs only once a minute).
+      exists: async username => (await pool.query('SELECT 1 FROM tp_users WHERE username = $1', [username])).rowCount > 0,
+      catchUp: async () => {
+        const rows = (await pool.query('SELECT data FROM tp_users')).rows, seen = new Set();
+        for (const { data: d } of rows) {
+          seen.add(d.username);
+          const m = mem.users[d.username];
+          if (!m || (+d.saved || 0) > (+m.saved || 0)) mem.users[d.username] = d;
+        }
+        const fresh = Date.now() - 60e3;
+        for (const [k, u] of Object.entries(mem.users)) if (!seen.has(k) && !((+u.created || 0) > fresh)) delete mem.users[k];
+        for (const r of (await pool.query('SELECT token, username, exp FROM tp_sessions')).rows) if (!mem.sessions[r.token]) mem.sessions[r.token] = { username: r.username, exp: +r.exp };
+        for (const [t, x] of Object.entries(mem.sessions)) if (!mem.users[x.username]) delete mem.sessions[t];
+        const g = (await pool.query("SELECT data FROM tp_meta WHERE key = 'gone'")).rows[0];
+        if (g) mem.meta.gone = g.data;
+      },
       // Sent as JSON text: given a JavaScript array (the app's reports, the received emails) pg writes a PostgreSQL
       // array literal, which a JSONB column refuses, so such a save always failed. Kept in memory too, as the file
       // store does.
