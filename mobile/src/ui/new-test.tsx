@@ -65,7 +65,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه، نوشته‌شده از روی قوانین رسمی دانمارک`}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه`}</T>
         </View>
       </View>
       {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} />}
