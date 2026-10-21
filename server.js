@@ -67,6 +67,8 @@ const VERSION = crypto.createHash('sha256')
   .digest('hex').slice(0, 8);
 // The admin's console at /console (console/index.html): only the comparison of the teaching pictures with prove.dk's.
 const CONSOLE_HTML = fs.readFileSync(path.join(__dirname, 'console', 'index.html'));
+// The privacy policy at /privacy (pages/privacy.html, in English, Danish and Persian; Mojtaba 2026-10-21, for Google sign-in).
+const PRIVACY_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'privacy.html'));
 const ADMIN_HTML = fs.readFileSync(path.join(__dirname, 'console', 'admin.html'));
 
 let store; // set in main()
@@ -561,6 +563,10 @@ function serveAppWeb(req, res, p, web = WEBS.root) {
 function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
+  if (p === '/privacy' || p === '/privacy/' || p === '/app/privacy') {
+    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff', ...PAGE_HEADERS });
+    return res.end(req.method === 'HEAD' ? undefined : PRIVACY_HTML);
+  }
   // The admin's console (its page; it signs in and reads /api/guideref itself).
   if (p === '/console' || p === '/console/') {
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...PAGE_HEADERS });
