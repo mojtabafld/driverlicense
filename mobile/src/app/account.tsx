@@ -1,5 +1,7 @@
-// The account, opened from the user card in the settings (an inner page: fixed head, a drag back): the username (fixed), the shown name, and a new password
-// (only with the current one); with email on, the address (to add, change or confirm; the trial code needs a confirmed one).
+// The account, opened from the user card in the settings (an inner page: fixed head, a drag back): the username (fixed),
+// the shown name; with email on, the address (to add, change or confirm; the trial code needs a confirmed one). A new
+// password (only with the current one) only for accounts that still sign in with one: those with no address, while
+// accounts with one sign in with a code sent there (Mojtaba 2026-10-20).
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -27,6 +29,7 @@ export default function Account() {
   const [cur, setCur] = useState(''), [pw, setPw] = useState(''), [pw2, setPw2] = useState('');
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState<'name' | 'pw' | 'mail' | null>(null);
+  const byPw = !mail || !user?.email;
   // Unsaved changes: a new name not saved yet, or anything typed in the password fields.
   const dirty = name.trim() !== (user?.name ?? '') || !!(cur || pw || pw2);
 
@@ -90,14 +93,14 @@ export default function Account() {
             </Card>
           ) : null}
 
-          <Card style={{ gap: 10 }}>
+          {byPw ? <Card style={{ gap: 10 }}>
             <T style={{ fontWeight: '700' }}>تغییر رمز عبور</T>
             <Field icon="lock" label="رمز عبور فعلی" value={cur} onChange={v => { setCur(v); setPwMsg(null); }} secure ltr />
             <Field icon="lock" label="رمز عبور جدید" value={pw} onChange={v => { setPw(v); setPwMsg(null); }} secure ltr />
             <Field icon="lock" label="تکرار رمز عبور جدید" value={pw2} onChange={v => { setPw2(v); setPwMsg(null); }} secure ltr onSubmit={savePw} />
             <Note msg={pwMsg} />
             <Button label={busy === 'pw' ? 'در حال ذخیره…' : 'تغییر رمز عبور'} onPress={savePw} disabled={!!busy} icon="lock" />
-          </Card>
+          </Card> : null}
     </SubPage>
   );
 }
