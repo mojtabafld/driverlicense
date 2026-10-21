@@ -65,13 +65,24 @@ function sendCode(to, name, code, lang, kind) {
 // the checkout's return, the payments' sync): a welcome with what the app does, and a confirmation of the pass with its
 // end and what it opens (Mojtaba 2026-10-20). A pass kept from a deleted account and given back on signing up again
 // is said in the welcome (`restored`: its end).
+// What the main app has (the site's own questions and course; /app is only a backup with prove.dk's bank, so its 44
+// lesson tests and 1000+ questions are not said; Mojtaba 2026-10-21). No counts that change as the app grows.
 const FEATURES = {
-  fa: ['بیش از ۱۰۰۰ سؤال آزمون تئوری با تصویر، به دانمارکی یا انگلیسی و با ترجمه‌ی فارسی', '۴۴ درس آزمون و آزمون ۲۵ سؤالی با زمان‌سنج، درست مثل روز امتحان',
-    'آموزش گام‌به‌گام، قوانین، علائم رانندگی و حق تقدم', 'مرور اشتباهات و تمرین همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید', 'نمودار پیشرفت و احتمال قبولی'],
-  en: ['More than 1,000 theory test questions with pictures, in Danish or English with translations', '44 lesson tests and a 25-question test with a timer, just like on the day',
-    'A step-by-step course, the rules, road signs and right of way', 'Review your mistakes and practise the topics you get wrong most', 'Your progress chart and chance of passing'],
-  da: ['Over 1.000 teoriprøvespørgsmål med billeder, på dansk eller engelsk med oversættelse', '44 lektionsprøver og en prøve med 25 spørgsmål og ur, præcis som på dagen',
-    'Et trin-for-trin-kursus, reglerne, færdselstavler og vigepligt', 'Gennemgå dine fejl, og øv de emner, du oftest svarer forkert på', 'Dine fremskridt og din chance for at bestå'],
+  fa: ['آزمون با سؤال‌های تازه‌ای که از روی قوانین رسمی دانمارک نوشته شده‌اند، به دانمارکی یا انگلیسی و با ترجمه',
+    'آزمون ۲۵ سؤالی با زمان‌سنج، درست مثل روز امتحان، یا آزمونی کوتاه‌تر برای تمرین',
+    'آموزش گام‌به‌گام، قوانین، تابلوها، حق تقدم و واژه‌نامه‌ی اصطلاحات آزمون',
+    'آزمون اشتباهات و تمرین هوشمند برای مباحثی که بیشتر در آن‌ها اشتباه می‌کنید',
+    'تقویم آزمون‌ها و درس‌ها با یادداشت‌های خودتان، و نمودار پیشرفت و احتمال قبولی'],
+  en: ['Tests with new questions written from Denmark\'s official rules, in Danish or English with a translation',
+    'A 25-question test with a timer, just like on the day, or a shorter one to practise',
+    'A step-by-step course, the rules, road signs, right of way and a glossary of the test\'s terms',
+    'A test of your mistakes and smart practice of the topics you get wrong most',
+    'A calendar of your tests and lessons with your own notes, and your progress and chance of passing'],
+  da: ['Prøver med nye spørgsmål skrevet ud fra de officielle danske regler, på dansk eller engelsk med oversættelse',
+    'En prøve med 25 spørgsmål og ur, præcis som på dagen, eller en kortere til at øve',
+    'Et trin-for-trin-kursus, reglerne, færdselstavler, vigepligt og en ordliste med prøvens begreber',
+    'En prøve med dine fejl og smart øvelse i de emner, du oftest svarer forkert på',
+    'En kalender over dine prøver og lektioner med dine egne noter, og dine fremskridt og din chance for at bestå'],
 };
 const PREMIUM_FEATURES = {
   fa: ['تحلیل هر پاسخ با هوش مصنوعی: چرا درست یا اشتباه بود', 'جمع‌بندی اشتباهات هر آزمون و درس با هوش مصنوعی', 'آموزش هر مبحث برای همان سؤال، با هوش مصنوعی',

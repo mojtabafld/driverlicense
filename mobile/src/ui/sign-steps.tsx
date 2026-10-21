@@ -2,13 +2,14 @@
 // the screen's parts in ui/step-frame.tsx). No passwords while the server has email (Mojtaba 2026-10-20): signing in
 // asks for the email and then the 6-digit code sent there (/api/code, /api/codein); signing up goes through four
 // steps, counted at the top: the name, the email, the code (checked, /api/codecheck) and last the questions' language
-// (Danish or English, so the language screen after signing in does not come), whose button makes the account. Accounts from before email, with a username
+// (Danish or English, so the language screen after signing in does not come; chosen to begin with as the app's language
+// says, Danish for a Danish app and English for any other, Mojtaba 2026-10-21), whose button makes the account. Accounts from before email, with a username
 // only, still sign in with their password; without email on the server, signing up asks for a username and a password
 // instead of the code. The back button goes a step back, from the first one to the welcome screen.
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
-import { t as fmt } from '@/lib/i18n';
+import { EXAM_FOR, UI_LANG, t as fmt } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
 import { CodeBoxes } from './code-boxes';
 import { Icon } from './icon';
@@ -29,7 +30,7 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
   const [step, setStep] = useState<Step>(up ? 'name' : knownMail ? 'code' : known ? 'pw' : 'id');
   const [trail, setTrail] = useState<Step[]>([]);
   const [id, setId] = useState(known ?? ''), [name, setName] = useState(''), [user, setUser] = useState('');
-  const [pw, setPw] = useState(''), [code, setCode] = useState(''), [exam, setExam] = useState<'da' | 'en'>('da');
+  const [pw, setPw] = useState(''), [code, setCode] = useState(''), [exam, setExam] = useState<'da' | 'en'>(EXAM_FOR[UI_LANG]);
   const [err, setErr] = useState(''), [busy, setBusy] = useState(false);
   // The address the code goes to: the one typed in (signing up) or signed in with.
   const email = (up ? user : id).trim();
