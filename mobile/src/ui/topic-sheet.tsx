@@ -1,8 +1,9 @@
 // A reviewed question's topic, from its category chip under the picture (ui/review.tsx; Mojtaba 2026-10-20): a sheet
 // from the bottom with the topic's official section and name, a few points on the topic written by AI for this question
-// (each with its coloured icon), and a search of the learning pages for it (its practice test taken out). It closes with a drag down (or a tap outside,
+// (each with its coloured icon, a few words each), a button to the topic's own lesson and a search of the learning pages
+// for it (its practice test taken out). It closes with a drag down (or a tap outside,
 // the back button), as the app's other sheets.
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, View } from 'react-native';
 
@@ -28,6 +29,20 @@ const KIND: Record<Kind, { icon: IconName; label: string }> = {
 };
 const parse = (text: string): Point[] => text.split('\n').map(l => /^\s*(?:[-•]\s*)?\[(look|rule|warn|tip)\]\s*(.+)$/.exec(l))
   .filter((m): m is RegExpExecArray => !!m).map(m => ({ kind: m[1] as Kind, text: m[2].trim() }));
+// The course lesson (app/course-lesson.tsx) that teaches each official topic, for the sheet's «رفتن به آموزش» (Mojtaba
+// 2026-10-21); the road signs' topic opens the signs, the licence's rules the rules.
+const LEARN: Record<string, Href> = {
+  '1.2': lesson('car-check'), '3.2': lesson('distance'), '4.4': lesson('alcohol'), '4.5': lesson('vulnerable'),
+  '5.1': lesson('markings'), '5.2': lesson('weather'), '6.1': '/signs', '6.2': lesson('distance'),
+  '7.1': lesson('parking'), '7.2': lesson('lane-position'), '7.3': lesson('speed'), '7.4': lesson('lanes'),
+  '7.5': lesson('parking'), '7.6': lesson('crossing'), '7.7': lesson('lane-position'), '7.8': lesson('distance'),
+  '7.9': lesson('overtaking'), '7.10': lesson('speed'), '7.11': lesson('right-rule'), '7.12': lesson('right-rule'),
+  '7.13': lesson('turns'), '7.14': lesson('turns'), '7.15': lesson('roundabout'), '7.16': lesson('motorway'),
+  '7.17': lesson('lanes'), '7.18': lesson('parking'), '7.19': lesson('darkness'), '7.20': lesson('darkness'),
+  '8.1': lesson('alcohol'), '10.3': '/rules',
+};
+function lesson(id: string): Href { return { pathname: '/course-lesson', params: { id } }; }
+
 // Points already fetched while the app is open (the server keeps them too, so they are written once per question).
 const cache = new Map<string, Point[]>();
 
@@ -109,6 +124,8 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
   const name = topicName(bank, q.c), section = sectionFa(bank, q.c);
   const second = UI_LANG === exam ? null : exam === 'en' ? (STRINGS as Record<string, string[]>)[name]?.[0] ?? null : t.da;
   const search = () => { onClose(); router.push({ pathname: '/course-search', params: { q: name } }); };
+  const learn = LEARN[q.c];
+  const toLearn = () => { if (!learn) return; onClose(); router.push(learn); };
   const fixed: Point[] = t.lesson.map(l => ({ kind: 'rule', text: l }));
   const shown = points ?? (ai && !failed ? null : fixed);
   return (
@@ -133,6 +150,7 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
         {shown ? shown.map((p, i) => <PointCard key={i} p={p} />) : <Loading />}
       </SheetScroll>
       <View style={{ gap: 8, paddingTop: 4 }}>
+        {learn ? <ArcButton label="رفتن به آموزش" icon="learn" onPress={toLearn} /> : null}
         <ArcButton label="جستجو در آموزش" icon="search" variant="secondary" onPress={search} />
       </View>
     </Sheet>
