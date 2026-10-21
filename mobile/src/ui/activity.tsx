@@ -2,7 +2,7 @@
 // date and time, duration, mistakes, score and percent. Tapping a row opens its review.
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import type { Attempt, Bank } from '@/lib/bank';
 import { DATE_LOCALE, RTL } from '@/lib/i18n';
@@ -74,7 +74,17 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
   const rows = attempts.slice().reverse(), shown = all ? rows : rows.slice(0, limit);
-  // Nothing done yet: the card stays, with a line on what will show here.
+  const short = useWindowDimensions().height < 800;
+  // Nothing done yet: the card stays, with a line on what will show here; on a short screen just a short line under its
+  // title (Mojtaba 2026-10-21), so it shows above the tab bar.
+  if (!rows.length && short) {
+    return (
+      <Card style={{ gap: 8 }}>
+        <Head title={title} c={c} />
+        <T style={{ color: c.muted, fontSize: 13, lineHeight: 20 }}>نتیجه‌ی آزمون‌های شما اینجا نمایش داده می‌شود.</T>
+      </Card>
+    );
+  }
   if (!rows.length) {
     return (
       <Card style={{ gap: 12 }}>
