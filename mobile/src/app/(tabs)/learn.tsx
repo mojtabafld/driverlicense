@@ -21,11 +21,11 @@ import { SearchBox } from '@/ui/search-box';
 import { ARC, useColors } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 
-function Part({ n, icon, title, text, note, href, keepDa }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href; keepDa?: boolean }) {
+function Part({ n, icon, title, note, href, keepDa }: { n: number; icon: IconName; title: string; note?: string; href: Href; keepDa?: boolean }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const v = learnArt[n];
-  // Short phones: one line under the title and a lower picture, so all five cards fit above the tab bar.
+  // Short phones: a lower picture, so all five cards fit above the tab bar.
   const short = useWindowDimensions().height < 760;
   // The picture, whole, on its tile in the picture's own background colour; the icon until the picture is made.
   const pic = (
@@ -34,11 +34,11 @@ function Part({ n, icon, title, text, note, href, keepDa }: { n: number; icon: I
         : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
     </View>
   );
-  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} sub={text} subLines={short ? 1 : 2} note={note} keepDa={keepDa} />;
+  return <ListCard grow small={short} onPress={() => router.push(href)} pic={pic} title={title} note={note} keepDa={keepDa} />;
 }
 
 // /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
-function Tile({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
+function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title: string; note?: string; href: Href }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const short = useWindowDimensions().height < 700; // less text on short screens
@@ -53,12 +53,10 @@ function Tile({ n, icon, title, text, note, href }: { n: number; icon: IconName;
       </View>
       <View style={{ padding: 12, gap: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <T style={{ flex: 1, fontWeight: '700', fontSize: 15.5, lineHeight: 23 }} numberOfLines={1}>{title}</T>
+          <T style={{ flex: 1, fontWeight: '700', fontSize: 17.5, lineHeight: 26 }} numberOfLines={1}>{title}</T>
           <Icon name="chevronLeft" size={15} color={c.faint} weight="semibold" />
         </View>
-        {/* The text takes the same height on every card (its lines and a line for the note, empty when there is
-            none), so the four pictures are the same size. */}
-        <T style={{ color: c.muted, fontSize: 12, lineHeight: 19, height: (short ? 2 : 3) * 19 }} numberOfLines={short ? 2 : 3}>{text}</T>
+        {/* A line for the note on every card (empty when there is none), so the four pictures are the same size. */}
         <T style={{ color: c.text, fontSize: 11.5, lineHeight: 17, height: 17, fontWeight: '600' }} numberOfLines={1}>{note ?? ''}</T>
       </View>
     </Card>
@@ -80,16 +78,12 @@ export default function Learn() {
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Tile n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
-              text="۴۴ درس رسمی، یکی‌یکی، یا تمرین بر اساس دسته‌بندی رسمی آزمون."
               note={tried ? `${faNum(tried)} از ${faNum(all)} درس انجام شده` : undefined} />
-            <Tile n={2} icon="rules" title="قوانین" href="/rules"
-              text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
+            <Tile n={2} icon="rules" title="قوانین" href="/rules" />
           </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Tile n={3} icon="sign" title="علائم رانندگی" href="/signs"
-              text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
-            <Tile n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
-              text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
+            <Tile n={3} icon="sign" title="علائم رانندگی" href="/signs" />
+            <Tile n={4} icon="priority" title="آموزش حق تقدم" href="/priority" />
           </View>
         </View>
       ) : (
@@ -100,22 +94,16 @@ export default function Learn() {
           {/* /app: prove.dk's 44 numbered tests in place of the app's own course (Mojtaba 2026-10-20). */}
           {PROVE_BANK ? (
             <Part n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons"
-              text="۴۴ درس رسمی، یکی‌یکی، یا تمرین بر اساس دسته‌بندی رسمی آزمون."
               note={tried ? `${faNum(tried)} از ${faNum(all)} درس انجام شده` : undefined} />
           ) : (
             <Part n={1} icon="learn" title="آموزش گام‌به‌گام" href="/course"
-              text="آمادگی آزمون تئوری، فصل به فصل، با سؤال‌هایی به شکل آزمون واقعی."
               note={finished ? `${faNum(finished)} از ${faNum(ready.length)} درس انجام شده` : undefined} />
           )}
-          <Part n={2} icon="rules" title="قوانین" href="/rules"
-            text="سرعت مجاز، الکل، کمربند، چراغ‌ها، سبقت، پارک، بزرگراه و قوانین مهم دیگر به زبان ساده." />
-          <Part n={3} icon="sign" title="علائم رانندگی" href="/signs"
-            text="تابلوهای هشدار، حق تقدم، ممنوعیت و الزامی، خط‌کشی‌ها و چراغ راهنمایی." />
-          <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority"
-            text="چه کسی اول می‌رود؟ قاعده‌ی دست راست، تقاطع، گردش، میدان و عابران." />
+          <Part n={2} icon="rules" title="قوانین" href="/rules" />
+          <Part n={3} icon="sign" title="علائم رانندگی" href="/signs" />
+          <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority" />
           {/* keepDa: its example words stay Danish («vigepligt» was shown as «duty to give way» to English-exam users). */}
-          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" keepDa
-            text="اصطلاح‌های دانمارکی آزمون تئوری با معنی فارسی، مثل vigepligt و højreregel." />
+          <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" keepDa />
         </View>
       )}
     </Screen>
