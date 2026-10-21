@@ -214,15 +214,16 @@ export default function Calendar() {
       </Pressable>
       <Sheet open={!!edit} onClose={() => { if (!busy) setEdit(null); }} maxHeight="80%">
         {edit ? (
-          <View style={{ gap: 12, paddingHorizontal: 4 }}>
+          <View style={{ gap: 10, paddingHorizontal: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Icon name="note" size={18} color={c.link} />
               <T style={{ fontSize: 13, fontWeight: '700', color: c.link }}>یادداشت</T>
             </View>
-            <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700' }}>{edit.title}</T>
+            <T style={{ fontSize: 17, lineHeight: 25, fontWeight: '700' }}>{edit.title}</T>
+            {/* 16px at least: a smaller field makes iPhone zoom the page in as it is typed in, and stay zoomed. */}
             <TextInput value={text} onChangeText={v => { setText(v); if (err) setErr(''); }} multiline autoFocus maxLength={2000} placeholder={tr('چیزی که می‌خواهید به خاطر بسپارید…')}
               placeholderTextColor={c.faint} textAlignVertical="top"
-              style={[{ minHeight: 130, maxHeight: 260, padding: 14, borderRadius: 16, backgroundColor: c.surface2, color: c.text, fontSize: 15, lineHeight: 24,
+              style={[{ minHeight: 92, maxHeight: 180, padding: 12, borderRadius: 14, backgroundColor: c.surface2, color: c.text, fontSize: 16, lineHeight: 24,
                 fontFamily: RTL ? 'Vazirmatn-400' : 'Inter-400', textAlign: RTL ? 'right' : 'left' }, Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null]} />
             {err ? <T raw style={{ color: c.bad, fontSize: 13 }}>{err}</T> : null}
             <ArcButton label={busy ? 'در حال ذخیره…' : 'ذخیره'} icon="check" onPress={keep} />
