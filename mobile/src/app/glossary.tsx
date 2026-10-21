@@ -62,7 +62,9 @@ function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: (
   if (!x) return null;
   const ok = !page || (page.free === 'lesson' ? lessonOk(page.lesson) : typeof page.free === 'number' ? firstOk(page.free) : true);
   const g = CAT[x.cat], note = x.note ? x.note[NOTE_OF[UI_LANG]] : null, main = mainOf(x, en);
-  const parts = page ? page.shown?.body ?? page.text.split(' | ').map(s => s.trim()).filter(Boolean) : [];
+  // A sign's page starts with the sign's official Danish name, left out here (Mojtaba 2026-10-21): its title already
+  // names it in the app's language.
+  const parts = (page ? page.shown?.body ?? page.text.split(' | ').map(s => s.trim()).filter(Boolean) : []).slice(page?.kind === 'sign' ? 1 : 0);
   const go = () => { onClose(); if (!page) router.push({ pathname: '/course-search', params: { q: x.da } }); else if (!ok) toPremium(); else router.push(page.href); };
   return (
     <Sheet open={!!t} onClose={onClose} maxHeight="86%">
@@ -89,7 +91,7 @@ function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: (
           {ok ? parts.map((s, i) => (
             <View key={i} style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
               <Icon name="checkCircle" size={16} color={c.link} />
-              <T raw keepDa={x.cat === 'signs' && i === 0} style={{ flex: 1, fontSize: 14.5, lineHeight: 24 }}>{s}</T>
+              <T raw style={{ flex: 1, fontSize: 14.5, lineHeight: 24 }}>{s}</T>
             </View>
           )) : (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
