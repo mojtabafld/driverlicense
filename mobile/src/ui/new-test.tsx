@@ -48,15 +48,13 @@ export function useNewTest() {
 
 export function NewTestCard({ test }: { test: NewTest }) {
   const c = useColors();
-  const { newqArt } = useApp();
   const { limited } = useFree();
   const { ready, ids, last, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
   if (!ready) return null;
   const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
   // Before any question is answered (Mojtaba 2026-10-21): the card without its empty progress, the line over the
-  // numbers and the pictures' line, so on every screen the history card under it shows above the tab bar too.
+  // numbers, so on every screen the history card under it shows above the tab bar too.
   const tight = !answered;
-  const pics = ids.filter(id => newqArt[id]).length;
   return (
     <Card style={{ gap: tight ? 11 : 14 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -85,7 +83,6 @@ export function NewTestCard({ test }: { test: NewTest }) {
             : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
         </View>
       ) : null}
-      {!PROVE_BANK && pics < total && !tight ? <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>تصویرهای این آزمون به‌تدریج اضافه می‌شوند.</T> : null}
       {limited ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
           <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
