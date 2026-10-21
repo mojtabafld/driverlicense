@@ -32,7 +32,7 @@ const otherOf = (t: Term, en: boolean) => {
   return v !== mainOf(t, en) && v !== headOf(t, en) ? { v, fa: l === 'fa' } : null;
 };
 // The learning page a term is taught on (Mojtaba 2026-10-20): the learning pages' search (lib/search.ts) for its Danish
-// word, else the start of its Persian meaning, the kind of page its group suggests first (right of way, a sign, a rule
+// word, else the start of its Persian meaning (a page with the word itself), the kind of page its group suggests first (right of way, a sign, a rule
 // or a lesson of the course), else the best hit; none, and the search page opens with the word.
 const PREFER: Record<TermCat, SearchKind[]> = {
   priority: ['priority', 'lesson', 'rule'], signs: ['sign', 'rule', 'lesson'], roads: ['lesson', 'rule', 'priority'],
@@ -40,7 +40,9 @@ const PREFER: Record<TermCat, SearchKind[]> = {
 };
 function pageOf(t: Term): SearchItem | null {
   for (const q of [t.da, t.fa.split(' (')[0]]) {
-    const hits = localSearch(q, 30);
+    // Only a page that has the word itself (the search also finds it inside other words: «rat» in «acceleration»).
+    const has = q === t.da ? (v: string) => new RegExp(`(^|[^\\p{L}])${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}])`, 'iu').test(v) : (v: string) => v.includes(q);
+    const hits = localSearch(q, 30).filter(h => has(`${h.title} | ${h.text}`));
     for (const k of PREFER[t.cat]) { const h = hits.find(x => x.kind === k); if (h) return h; }
     if (hits[0]) return hits[0];
   }
@@ -48,9 +50,11 @@ function pageOf(t: Term): SearchItem | null {
 }
 const CAT = Object.fromEntries(TERM_CATS.map(g => [g.id, g])) as Record<TermCat, (typeof TERM_CATS)[number]>;
 
-// A tapped term (Mojtaba 2026-10-21): its lesson in a sheet from the bottom, closed with a drag down back to the list:
-// the term and its meaning, the part of the learning pages that teaches it (its title, place and text, in the app's
-// language), and a button to that page. A locked page: the premium page instead of its text.
+// A tapped term (Mojtaba 2026-10-21): a word card in a sheet from the bottom, closed with a drag down back to the list.
+// It teaches the word, not its lesson (Mojtaba 2026-10-21): the word large in the exam's language, then the word in each
+// of the other languages (the app's first), the line on what the test expects, and a button to the learning page that
+// teaches it (only a page that has the word itself; else the course search for it).
+const WORD_LANG = { fa: 'فارسی', da: 'Dansk', en: 'English' } as const;
 function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: () => void }) {
   const c = useColors();
   const { lessonOk, firstOk } = useFree();
@@ -61,47 +65,36 @@ function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: (
   const x = t ?? last;
   if (!x) return null;
   const ok = !page || (page.free === 'lesson' ? lessonOk(page.lesson) : typeof page.free === 'number' ? firstOk(page.free) : true);
-  const g = CAT[x.cat], note = x.note ? x.note[NOTE_OF[UI_LANG]] : null, main = mainOf(x, en);
-  // A sign's page starts with the sign's official Danish name, left out here (Mojtaba 2026-10-21): its title already
-  // names it in the app's language.
-  const parts = (page ? page.shown?.body ?? page.text.split(' | ').map(s => s.trim()).filter(Boolean) : []).slice(page?.kind === 'sign' ? 1 : 0);
+  const g = CAT[x.cat], note = x.note ? x.note[NOTE_OF[UI_LANG]] : null, head: 'da' | 'en' = en ? 'en' : 'da';
+  const langs = ([UI_LANG, 'fa', 'da', 'en'] as const).filter((l, i, a) => l !== head && a.indexOf(l) === i);
   const go = () => { onClose(); if (!page) router.push({ pathname: '/course-search', params: { q: x.da } }); else if (!ok) toPremium(); else router.push(page.href); };
   return (
     <Sheet open={!!t} onClose={onClose} maxHeight="86%">
-      <View style={{ gap: 4, paddingHorizontal: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Icon name={g.icon} size={14} color={c.link} />
-          <T style={{ fontSize: 12.5, fontWeight: '600', color: c.link }}>{g.fa}</T>
+      <SheetScroll contentContainerStyle={{ gap: 16, paddingBottom: 8, paddingHorizontal: 4 }}>
+        <View style={{ gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Icon name={g.icon} size={14} color={c.link} />
+            <T style={{ fontSize: 12.5, fontWeight: '600', color: c.link }}>{g.fa}</T>
+          </View>
+          <T raw keepDa style={{ fontFamily: DA_FONT, fontSize: 30, lineHeight: 38, fontWeight: '700', writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{x[head]}</T>
         </View>
-        <T raw keepDa style={{ fontFamily: DA_FONT, fontSize: 22, lineHeight: 30, fontWeight: '700', writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{headOf(x, en)}</T>
-        <T raw keepDa style={[{ fontSize: 15, lineHeight: 24, fontWeight: '600', color: c.muted }, main === x.da ? { fontFamily: DA_FONT, writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') } : null]}>{main}</T>
-      </View>
-      <SheetScroll style={{ marginTop: -4 }} contentContainerStyle={{ gap: 10, paddingTop: 4, paddingBottom: 8, paddingHorizontal: 4 }}>
+        <View style={{ borderRadius: 16, backgroundColor: c.surface2, overflow: 'hidden' }}>
+          {langs.map((l, i) => (
+            <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, paddingHorizontal: 14, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
+              <T raw style={{ width: 64, fontSize: 12.5, fontWeight: '600', color: c.faint, fontFamily: l === 'fa' ? 'Vazirmatn-600' : 'Inter-600' }}>{WORD_LANG[l]}</T>
+              <T raw keepDa style={[{ flex: 1, fontSize: i ? 16 : 19, lineHeight: i ? 24 : 28, fontWeight: i ? '500' : '700' }, l === 'fa' ? { fontFamily: i ? 'Vazirmatn-500' : 'Vazirmatn-700' }
+                : { fontFamily: DA_FONT, writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }]}>{x[l]}</T>
+            </View>
+          ))}
+        </View>
         {note ? (
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
-            <Icon name="info" size={16} color={c.muted} />
-            <T raw keepDa={!en} style={{ flex: 1, fontSize: 14, lineHeight: 23, color: c.muted }}>{note}</T>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 14, backgroundColor: c.accentSoft }}>
+            <Icon name="info" size={16} color={c.link} />
+            <T raw keepDa={!en} style={{ flex: 1, fontSize: 14, lineHeight: 23 }}>{note}</T>
           </View>
         ) : null}
-        {page ? <>
-          <View style={{ gap: 2, marginTop: 4 }}>
-            <T raw style={{ fontSize: 16, lineHeight: 25, fontWeight: '700' }}>{page.shown?.title ?? page.title}</T>
-            <T raw style={{ fontSize: 12.5, lineHeight: 19, color: c.faint }}>{page.shown?.where ?? page.where}</T>
-          </View>
-          {ok ? parts.map((s, i) => (
-            <View key={i} style={{ flexDirection: 'row', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
-              <Icon name="checkCircle" size={16} color={c.link} />
-              <T raw style={{ flex: 1, fontSize: 14.5, lineHeight: 24 }}>{s}</T>
-            </View>
-          )) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
-              <Icon name="lock" size={16} color={c.muted} />
-              <T style={{ flex: 1, fontSize: 14, lineHeight: 23, color: c.muted }}>این آموزش مخصوص نسخه‌ی ویژه است.</T>
-            </View>
-          )}
-        </> : null}
       </SheetScroll>
-      <ArcButton label={!page ? 'جستجو در آموزش' : ok ? 'باز کردن آموزش کامل' : 'نسخه‌ی ویژه'} icon={!page ? 'search' : ok ? 'learn' : 'sparkles'} onPress={go} />
+      <ArcButton label={!page ? 'جستجو در آموزش' : ok ? 'آموزش این واژه' : 'نسخه‌ی ویژه'} icon={!page ? 'search' : ok ? 'learn' : 'sparkles'} onPress={go} />
     </Sheet>
   );
 }
