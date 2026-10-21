@@ -113,11 +113,8 @@ export default function Exam() {
     session.plan = { mode: 'random', ids: randomIds(bank, size), title: 'آزمون تصادفی' };
     router.push('/run');
   };
-  // Main site: the app's own random exam, its card's choices shared with the header's start button.
+  // Main site: the app's own random exam (the header's button is the calendar's now, app/calendar.tsx; Mojtaba 2026-10-21).
   const test = useNewTest(), own = !PROVE_PICS; // /app too, with prove.dk's bank (ui/new-test.tsx; Mojtaba 2026-10-20)
-  const head = own
-    ? { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(test.count || test.size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: test.start }
-    : { icon: (randomLeft ? 'play' : 'lock') as 'play' | 'lock', label: randomLeft ? `شروع آزمون ${faNum(size)} سؤالی` : 'فعال کردن نسخه‌ی ویژه', onPress: start };
   // Scrolled down to the page's end, where the history card is: its arrow button shows «نمایش همه» for a moment, once
   // each time the end is reached (Mojtaba 2026-10-20).
   const [hint, setHint] = useState(0), atEnd = useRef(false);
@@ -127,7 +124,7 @@ export default function Exam() {
   };
   return (
     <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
-      heroAction={head} onScrollY={onScrollY}>
+      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} onScrollY={onScrollY}>
       {own ? <NewTestCard test={test} /> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
