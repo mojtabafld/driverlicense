@@ -2,14 +2,14 @@
 // (Mojtaba, 2026-10-15), laid out as it was then but in the sign-in pages' look (Mojtaba 2026-10-20): the page's own
 // colour (black in the dark theme), its text colours and its wide button. The three languages turn on a drum that
 // settles on the one in the middle band; the title, its line and the button speak the language in the middle as it
-// turns. «ادامه» keeps it (the page reloads in it when it is not Persian). The theme button sits at the top.
+// turns. «ادامه» keeps it (the page reloads in it when it is not Persian). The theme is the phone's (no theme button; Mojtaba 2026-10-21).
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { RTL, UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
+import { UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
 import { Icon } from './icon';
-import { T, ThemeButton, tap } from './kit';
+import { T, tap } from './kit';
 import { useColors } from './theme';
 
 export const LANG_NAMES: Record<UiLang, string> = { fa: 'فارسی', en: 'English', da: 'Dansk' };
@@ -49,11 +49,6 @@ export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
   const l = LANGS[at];
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      {/* The theme button where the welcome screen has it (ui/welcome.tsx), so the top does not change between them. */}
-      <View style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 0, right: 0, zIndex: 2, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24,
-        alignItems: RTL ? 'flex-start' : 'flex-end' }}>
-        <View style={{ borderRadius: 22, backgroundColor: c.surface2 }}><ThemeButton /></View>
-      </View>
       <View style={{ flex: 1, paddingTop: ins.top + 64, paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 30 }}>
           <View style={{ alignItems: 'center', gap: 12 }}>

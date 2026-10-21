@@ -15,8 +15,8 @@ import { T, tap } from './kit';
 import { TallPicture } from './tall-picture';
 import { ArtAi, ArtBank, ArtExam, ArtProgress } from './onboarding-art';
 import { IntroAi, IntroBank, IntroExam, IntroProgress } from './intro-art';
-import { ARC, useIsDark } from './theme';
-import { LangButton, ThemeButton } from './intro-top';
+import { ARC, useIsDark, useSystemTheme } from './theme';
+import { LangButton } from './intro-top';
 import { LangWheel } from './lang-wheel';
 import { px } from './palette';
 
@@ -60,6 +60,7 @@ function FitTitle({ text, size }: { text: string; size: number }) {
 
 // `onTop`: the colour at the top of the screen, for the browser's own bar on the web.
 export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: string) => void }) {
+  useSystemTheme();   // (the phone's light or dark, as on the sign-in pages)
   const BG = useIntroBg();
   // Main site: the language first, on its wheel, when this browser has none chosen yet (a language other than
   // Persian reloads the page, which then opens on the slides).
@@ -127,7 +128,6 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
         {menu ? <Pressable onPress={() => setMenu(false)} accessibilityLabel={tr('بستن')} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2 }} /> : null}
         <View style={{ position: 'absolute', top: ins.top + 14, left: 16, flexDirection: 'row', gap: 10, zIndex: 3 }}>
           <LangButton open={menu} setOpen={setMenu} />
-          <ThemeButton />
         </View>
       </>)}
       <View style={{ paddingBottom: ins.bottom + 20, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>

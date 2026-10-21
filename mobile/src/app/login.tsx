@@ -14,7 +14,7 @@ import { Field } from '@/ui/field';
 import { Icon } from '@/ui/icon';
 import { InstallHint } from '@/ui/install-hint';
 import { ArcButton, Backdrop, Button, Hero, L, SegPill, T, tap, useArcSeg } from '@/ui/kit';
-import { ARC, useColors, useIsDark } from '@/ui/theme';
+import { ARC, useColors, useIsDark, useSystemTheme } from '@/ui/theme';
 import { t as fmt, tr } from '@/lib/i18n';
 import { CodeBoxes } from '@/ui/code-boxes';
 import { SignSteps } from '@/ui/sign-steps';
@@ -45,6 +45,8 @@ function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: 
 }
 
 export default function Login() {
+  // Light or dark as the phone is set, with no theme button on these pages (Mojtaba 2026-10-21).
+  useSystemTheme();
   const c = useColors(), dark = useIsDark();
   const { login, register, guest, mail, forgot, checkResetCode, resetPassword, google, googleErr, googleSignIn } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
