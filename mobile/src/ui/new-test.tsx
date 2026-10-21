@@ -17,7 +17,6 @@ import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { pctText } from './activity';
-import { PALETTE, PALETTES } from './palette';
 import { Icon } from './icon';
 import { ArcButton, Button, Card, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
@@ -138,10 +137,8 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
   );
   // Every question answered: the percent and the bar in green, with a round tick before the title (Mojtaba 2026-10-20).
   const done = total > 0 && answered >= total, dark = useIsDark();
-  // The right ones in the theme's colour, unless it is near the mistakes' red (coral, rose): then green; green when all
-  // are answered, as before.
-  const reddish = (() => { const h = PALETTES.find(x => x.id === PALETTE)?.hue ?? 0; return h <= 40 || h >= 320; })();
-  const rightTone = done || reddish ? c.ok : c.accent, inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
+  // The right ones in green in every theme and colour (Mojtaba 2026-10-21), the wrong ones in red, on a neutral track.
+  const rightTone = c.ok, inside = share >= 0.22 && right / Math.max(answered, 1) >= 0.5;
   return (
     <View style={{ gap: 9 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -156,14 +153,14 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
       <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
         accessibilityLabel={wrong ? `${faNum(wrong)} اشتباه` : undefined} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
         <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }}
-          style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : reddish ? c.line : c.accentSoft }}>
+          style={{ height: 24, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row', backgroundColor: done ? c.okSoft : c.line }}>
           <View style={{ width: `${answered ? bar * 100 : 0}%`, minWidth: answered ? 24 : 0, borderRadius: radius.pill, overflow: 'hidden', flexDirection: 'row' }}>
             <View style={{ flex: right, backgroundColor: rightTone }} />
             <View style={{ flex: wrong, backgroundColor: c.bad }} />
             {inside ? (
               // (at the fill's start, on the right ones' colour, so never on the small red part)
               <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'center', alignItems: 'flex-start', paddingHorizontal: 10 }}>
-                <T raw style={{ color: rightTone === c.accent ? c.accentText : dark ? c.bg : '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T>
+                <T raw style={{ color: dark ? c.bg : '#fff', fontSize: 12.5, lineHeight: 16, fontWeight: '800' }}>{pctText(pct)}</T>
               </View>
             ) : null}
           </View>
