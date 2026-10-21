@@ -77,7 +77,7 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
     user: { title: 'یک نام کاربری انتخاب کنید', sub: 'با این نام وارد حساب خود می‌شوید (حروف انگلیسی و عدد).', ok: !!user.trim(), next: () => go('pw') },
     lang: { title: 'سؤال‌ها به چه زبانی باشند؟', sub: 'ترجمه‌ی فارسی در هر دو حالت زیر سؤال‌ها نمایش داده می‌شود. بعداً هم از تنظیمات قابل تغییر است.', ok: true,
       label: 'ساخت حساب', next: () => run(() => (mail ? codeIn(email, code, name.trim(), exam) : register(name.trim(), user.trim(), pw, undefined, exam))) },
-    code: { title: 'ایمیل‌تان را ببینید', sub: up ? fmt('یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا حساب‌تان ساخته شود.', email) : fmt('اگر حسابی با {0} باشد، یک کد تأیید برایش فرستادیم. کد را وارد کنید تا ادامه دهید.', email),
+    code: { title: 'ایمیل‌تان را ببینید', sub: up ? fmt('یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا حساب‌تان ساخته شود.', email) : fmt('یک کد ۶ رقمی به {0} فرستادیم. کد را وارد کنید تا وارد حساب‌تان شوید.', email),
       ok: code.length === 6, label: up ? undefined : 'ورود', next: () => enter() },
   };
   const s = steps[step];
