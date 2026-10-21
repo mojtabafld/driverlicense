@@ -198,7 +198,7 @@ function MistakesBar({ open, missed }: { open: number[]; missed: number }) {
       <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button" accessibilityLabel={`${faNum(open.length)} اشتباه`}
         style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}>
         <LabelBar atEnd share={fixed ? share : 0} shown={fixed ? bar : 0} tone={tone} soft={done ? c.okSoft : c.warnSoft} fill={0.85}
-          label={t('{0} اشتباه', faNum(open.length))} a11y={{ min: 0, max: missed, now: fixed }} />
+          label={faNum(open.length)} a11y={{ min: 0, max: missed, now: fixed }} />
       </Pressable>
       <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
         <T style={{ flex: 1, color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
