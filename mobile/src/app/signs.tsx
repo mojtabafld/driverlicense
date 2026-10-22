@@ -2,9 +2,8 @@
 // sub-signs). On top, «تمرین سریع تابلوها» (app/sign-cards.tsx: flash cards with spaced repetition) with how many
 // signs are learned and due (main site only, not /app); then the groups as cards, each with its thumbnail (ui/guide-visual.tsx CatGrid); a card
 // opens the group page by page.
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PROVE_PICS } from '@/lib/config';
@@ -13,35 +12,15 @@ import { faNum } from '@/lib/logic';
 import { ALL_SIGNS, dueSigns, learned, useSignCards } from '@/lib/sign-cards';
 import { CatGrid } from '@/ui/guide-visual';
 import { SignsArt } from '@/ui/header-art';
-import { Icon } from '@/ui/icon';
-import { ArcButton, Card, T, tap } from '@/ui/kit';
+import { ArcButton } from '@/ui/kit';
+import { PracticeEntry } from '@/ui/practice-entry';
 import { SubPage } from '@/ui/sub-page';
-import { useColors } from '@/ui/theme';
 
 function CardsEntry({ tight }: { tight?: boolean }) {
-  const c = useColors();
   const { cards, loaded } = useSignCards();
   const due = dueSigns(cards), known = learned(cards);
-  return (
-    <Pressable onPress={() => { tap(); router.push('/sign-cards'); }} accessibilityRole="button">
-      {({ pressed }) => (
-        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.85 : 1, padding: tight ? 10 : 16 }}>
-          <View style={{ width: 46, height: 46, borderRadius: 23, backgroundColor: c.btn, alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="shuffle" size={20} color={c.btnFg} />
-          </View>
-          <View style={{ flex: 1, gap: 1 }}>
-            <T style={{ fontWeight: '700', fontSize: 15.5 }}>تمرین سریع تابلوها</T>
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>
-              {!loaded ? 'تابلو را ببینید و معنی‌اش را انتخاب کنید' : due ? `${faNum(due)} تابلو منتظر مرور است` : `${faNum(known)} از ${faNum(ALL_SIGNS.length)} تابلو یاد گرفته‌اید`}
-            </T>
-          </View>
-          <View style={{ paddingHorizontal: 14, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.btn }}>
-            <T style={{ fontWeight: '700', fontSize: 13.5, color: c.btnFg }}>شروع</T>
-          </View>
-        </Card>
-      )}
-    </Pressable>
-  );
+  return <PracticeEntry title="تمرین سریع تابلوها" href="/sign-cards" tight={tight}
+    line={!loaded ? 'تابلو را ببینید و معنی‌اش را انتخاب کنید' : due ? `${faNum(due)} تابلو منتظر مرور است` : `${faNum(known)} از ${faNum(ALL_SIGNS.length)} تابلو یاد گرفته‌اید`} />;
 }
 
 // Main site: the first five groups share the screen's height with «نمایش همه» at its foot, like the learn tab's five
