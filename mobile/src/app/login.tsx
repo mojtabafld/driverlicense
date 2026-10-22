@@ -54,11 +54,13 @@ export default function Login() {
   const [flow, setFlow] = useState<'login' | 'register' | 'email'>('login');
   // Main site and /app: first the welcome screen, whose two buttons open the form in their mode (Mojtaba 2026-10-20).
   const [welcome, setWelcome] = useState(ARC);
+  // Back from the email's steps: the welcome screen with its «ورود» / «ساخت حساب» again.
+  const [mailFirst, setMailFirst] = useState(false);
   // The account signed out last on this device (undefined while it is read); each sign-out shows the first screen
   // again (the page stays loaded while signed in).
   const { lastUser: last, forgetLastUser } = useApp();
   const [seen, setSeen] = useState(last);
-  if (seen !== last) { setSeen(last); setWelcome(true); setMode('login'); setFlow('login'); }
+  if (seen !== last) { setSeen(last); setWelcome(true); setMode('login'); setFlow('login'); setMailFirst(false); }
   // 'ask': the forgotten-password form; 'code': its code went out and is typed in; 'set': the new password.
   const [lost, setLost] = useState<'' | 'ask' | 'code' | 'set'>('');
   const [code, setCode] = useState(''), [sentAt, setSentAt] = useState(0), [now, setNow] = useState(Date.now());
@@ -143,9 +145,9 @@ export default function Login() {
   if (ARC) return (
     <Backdrop>
       {last === undefined ? null
-        : welcome && last ? <WelcomeBack last={last} onPick={() => { setFlow('login'); setErr(''); setWelcome(false); }} onNotYou={forgetLastUser} />
+        : welcome && last ? <WelcomeBack last={last} onPick={() => { setFlow('login'); setMailFirst(false); setErr(''); setWelcome(false); }} onNotYou={forgetLastUser} />
         : welcome ? <Welcome busy={busy} err={err || googleErr} onGuest={asGuest} onGoogle={google ? () => { setErr(''); googleSignIn().catch((e: any) => setErr(e.message)); } : undefined}
-          onEmail={() => { setFlow(mail ? 'email' : 'login'); setErr(''); setWelcome(false); }} />
+          mailFirst={mailFirst} onEmail={m => { setFlow(m); setMailFirst(true); setErr(''); setWelcome(false); }} />
         : <SignSteps start={flow} known={flow === 'login' && last ? last.id : undefined} onBack={() => setWelcome(true)} />}
       <InstallHint />
     </Backdrop>
