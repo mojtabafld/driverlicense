@@ -21,13 +21,15 @@ import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { Card, Screen, T, physical } from '@/ui/kit';
 import { SearchBox } from '@/ui/search-box';
-import { ARC, useColors } from '@/ui/theme';
+import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 
 // The fade from the picture into the card's own colour: its steps slow at both ends (smoothstep, as ui/tall-picture.tsx),
 // from clear over the picture to the full colour under the title.
 const FADE = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_AT = FADE.map(t => 0.22 + 0.2 * t) as unknown as readonly [number, number, ...number[]];
+// The dark theme's fade, a little longer and softer, from its pictures' deep tints into the dark card.
+const FADE_AT_DARK = FADE.map(t => 0.12 + 0.28 * t) as unknown as readonly [number, number, ...number[]];
 const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 
 // A card of the five (Mojtaba 2026-10-21/22): its picture fills the card from its start (the right in Persian, the left
@@ -36,7 +38,9 @@ const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
-  const v = learnArt[n];
+  // The dark theme draws the card's own dark picture (6–10: the same drawing on a deep tint of its colour; Mojtaba
+  // 2026-10-22) once the server has made it; until then the light one, toned down to sit on the dark card.
+  const dark = useIsDark(), dn = n + 5, own = dark && !!learnArt[dn], pn = own ? dn : n, v = learnArt[pn], dim = dark && !own && !!v;
   // The card's height (its picture's room is as high), so the picture is drawn whole at that height.
   const [boxH, setBoxH] = useState(0);
   // Short phones: lower cards; very short ones (iPhone SE first generation) without the short line, so all five fit
@@ -54,15 +58,16 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   );
   return (
     <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: tiny ? 52 : short ? 62 : 92 }}>
-      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
+      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: (v && learnBg[pn]) || (dark ? c.surface2 : c.accentSoft), alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
         onLayout={e => setBoxH(Math.round(e.nativeEvent.layout.height))}>
         {/* Whole, as high as the card (never cropped top or bottom: smaller on a short card, Mojtaba 2026-10-22), pushed a
             little past the card's edge so the picture's plain margin on that side is cut away; the rest of the room in
             the picture's own background colour. */}
-        {v && boxH ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={[{ position: 'absolute', top: 0, height: boxH, width: boxH * 1.5 }, physical(RTL ? { right: -0.15 * boxH * 1.5 } : { left: -0.15 * boxH * 1.5 })]} contentFit="contain" transition={250} />
+        {v && boxH ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}` }} style={[{ position: 'absolute', top: 0, height: boxH, width: boxH * 1.5 }, physical(RTL ? { right: -0.15 * boxH * 1.5 } : { left: -0.15 * boxH * 1.5 })]} contentFit="contain" transition={250} />
           : v ? null : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
+        {dim ? <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(8,10,14,0.3)' }} /> : null}
       </View>
-      <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
+      <LinearGradient pointerEvents="none" colors={fades} locations={dark ? FADE_AT_DARK : FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
       <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: short ? 7 : 12, paddingHorizontal: 12 }}>
         {room}
         <View style={{ flex: 1, gap: 1 }}>

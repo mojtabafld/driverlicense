@@ -779,6 +779,10 @@ const LEARN_PROMPTS = [
   // 5: the test's glossary (the Danish words of the theory test with their meaning)
   'Background: one plain soft butter yellow (#f5ebcf) colour filling the whole picture, no gradient, no floor line. A small rounded dictionary book standing half open in white and butter yellow, its pages blank with a few soft grey lines; two rounded speech bubbles rise from it, one coral and one periwinkle blue, each with three small white dots instead of words; a tiny rounded Danish flag on a short stick (red with a white Nordic cross) leans against the book, and a small rounded coral car stands in front of it.',
 ];
+// 6–10: the dark theme's versions of 1–5 (Mojtaba 2026-10-22), redrawn from them: the same drawing on a deep, dark tint
+// of its card's colour, so the picture melts into the dark card instead of a light patch on it.
+const LEARN_DARK = (name, hex) => ({ style: '', prompt: `Redraw this exact picture for a dark theme. Keep every object exactly as it is: the same objects, shapes, sizes, positions, angles, colours, materials and composition, nothing added, removed or moved. Change only the background: the light pastel background becomes one plain, even, deep dark ${name} (${hex}) from edge to edge, with no gradient, no floor line, no vignette and no frame. Give the objects a soft rim light so they stand out on the dark background, and deepen their soft shadows to suit it. No text, no letters, no numbers, no logos, no watermarks.` });
+const LEARN_DARKS = [LEARN_DARK('mint green', '#1c332b'), LEARN_DARK('peach', '#3a2820'), LEARN_DARK('lavender', '#26243f'), LEARN_DARK('sky blue', '#1a2d40'), LEARN_DARK('butter yellow', '#36301b')];
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
 // pictures; each has start (on server start), poll (in the poll round), versions (for /api/config) and blob.
@@ -954,7 +958,8 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
 }
 // Only the cards ordered again in data/art-orders.json («learn») are made.
 const LEARN_REDO = learnOrders();
-const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: LEARN_PROMPTS, style: LEARN_STYLE, aspect: '3:2', prefix: 'learn',
+const LEARN = artSet({ metaKey: 'learnArt', set: LEARN_SET, prompts: [...LEARN_PROMPTS, ...LEARN_DARKS], style: LEARN_STYLE, aspect: '3:2', prefix: 'learn',
+  derive: { 6: '1', 7: '2', 8: '3', 9: '4', 10: '5' },
   redo: LEARN_REDO, allow: new Set(Object.keys(LEARN_REDO)) });
 const startLearn = LEARN.start, pollLearn = LEARN.poll, learnVersions = LEARN.versions, learnBlob = LEARN.blob;
 // The «آموزش» cards' pictures' background colour (from their edges), so a card can show the whole picture and fill the
