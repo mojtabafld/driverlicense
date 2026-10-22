@@ -1752,6 +1752,24 @@ async function main() {
       await store.saveMeta('neginProveOnly', 1);
     } else console.log('negin prove only: no such user');
   }
+  // Read-only report (2026-10-22, Mojtaba: negin's past tests are gone): what the account and the copies kept in meta hold.
+  {
+    const sum = list => {
+      const a = Array.isArray(list) ? list : [], modes = {};
+      for (const x of a) modes[x.mode] = (modes[x.mode] || 0) + 1;
+      const ts = a.map(x => +x.at).filter(Boolean).sort((p, q) => p - q), d = t => t ? new Date(t).toISOString() : null;
+      return { n: a.length, modes, first: d(ts[0]), last: d(ts[ts.length - 1]) };
+    };
+    const hits = Object.values(store.users).filter(x => /negin/i.test(`${x.username} ${x.name || ''} ${x.email || ''}`));
+    for (const u of hits) console.log('negin report: user', JSON.stringify({ username: u.username.replace(/^(.{3}).*@/, '$1…@'), name: u.name, created: new Date(+u.created || 0).toISOString(),
+      savedAt: u.savedAt ? new Date(u.savedAt).toISOString() : null, attempts: sum(u.attempts), saved: (u.saved || []).length, study: (u.study || []).length, course: Object.keys(u.course || {}).length }));
+    if (!hits.length) console.log('negin report: no user');
+    for (const k of Object.keys(store.meta).filter(k => /negin/i.test(k))) {
+      const m = store.meta[k];
+      console.log('negin report: meta', k, JSON.stringify(m && typeof m === 'object' ? { at: m.at ? new Date(m.at).toISOString() : null, attempts: sum(m.attempts), saved: (m.saved || []).length, draft: !!m.draft } : m));
+    }
+    console.log('negin report: gone', JSON.stringify(Object.keys(store.meta.gone || {})));
+  }
   // One-time, asked by the owner: user test starts over as if just registered (same username, name and password).
   // A copy of what it had is kept in meta (`removed:test:reset`) so it can be restored.
   if (store.meta.resetTest !== 1) {
