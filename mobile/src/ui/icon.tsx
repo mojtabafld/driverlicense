@@ -165,6 +165,9 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
     case 'list':
       body = <Path d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" {...line} />;
       break;
+    case 'listCheck': // a list with ticks: questions gone through
+      body = <Path d="M11 6.5h9M11 12h9M11 17.5h9M3.8 6.6l1.4 1.4 2.6-2.8M3.8 12.1l1.4 1.4 2.6-2.8M3.8 17.6l1.4 1.4 2.6-2.8" {...line} />;
+      break;
     case 'filter':
       body = <Path d="M4.5 7h15M7.5 12h9M10.5 17h3" {...line} />;
       break;

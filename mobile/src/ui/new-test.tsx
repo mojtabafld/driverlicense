@@ -12,7 +12,7 @@ import { Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
-import { t } from '@/lib/i18n';
+import { RTL, t } from '@/lib/i18n';
 import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
@@ -100,14 +100,18 @@ export function NewTestCard({ test }: { test: NewTest }) {
         </View>
       ) : null}
       {/* Premium (Mojtaba 2026-10-22): in the free notice's place, how many of the bank's questions they have been tested on. */}
-      {!limited && premium ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: c.surface2 }}>
-          <Icon name="clipboard" size={17} color={c.link} />
-          {/* (its numbers in bold, Mojtaba 2026-10-22) */}
-          <T raw style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((x, i) =>
-            x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: 13, lineHeight: 21, fontWeight: '800', color: c.text }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</T>
+      {!limited && premium ? (() => {
+        // Every question answered: in green (Mojtaba 2026-10-22).
+        const all = answered >= total, ink = all ? c.ok : c.text;
+        return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: all ? c.okSoft : c.warnSoft }}>
+          <Icon name="listCheck" size={17} color={all ? c.ok : c.warn} />
+          {/* The free notice's colours; its numbers a step bolder than the site's 500 (Mojtaba 2026-10-22). */}
+          <T raw style={{ flex: 1, fontSize: 13, lineHeight: 21, color: ink }}>{t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((x, i) =>
+            x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: 13, lineHeight: 21, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600', color: ink }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</T>
         </View>
-      ) : null}
+        );
+      })() : null}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
         : count ? (ARC ? <ArcButton label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
