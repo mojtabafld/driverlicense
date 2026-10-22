@@ -26,8 +26,11 @@ import { LearnBookArt } from '@/ui/header-art';
 
 // The fade from the picture into the card's own colour: its steps slow at both ends (smoothstep, as ui/tall-picture.tsx),
 // from clear over the picture to the full colour under the title.
-const FADE = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
+const FADE = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] as const;
 const FADE_AT = FADE.map(t => 0.22 + 0.2 * t) as unknown as readonly [number, number, ...number[]];
+// The dark theme (Mojtaba 2026-10-22): the picture's deep colour against the near-black card made a hard band, so
+// there the fade is twice as long, starts a little sooner and its colour runs on under it (the picture's room is wider).
+const FADE_AT_DARK = FADE.map(t => 0.18 + 0.4 * t) as unknown as readonly [number, number, ...number[]];
 const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 
 // A card of the five (Mojtaba 2026-10-21/22): its picture fills the card from its start (the right in Persian, the left
@@ -56,7 +59,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   );
   return (
     <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: tiny ? 52 : short ? 62 : 92 }}>
-      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: (v && learnBg[pn]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
+      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: dark ? '60%' : '42%', backgroundColor: (v && learnBg[pn]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
         onLayout={e => setBoxH(Math.round(e.nativeEvent.layout.height))}>
         {/* Whole, as high as the card (never cropped top or bottom: smaller on a short card, Mojtaba 2026-10-22), pushed a
             little past the card's edge so the picture's plain margin on that side is cut away; the rest of the room in
@@ -64,7 +67,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         {v && boxH ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}` }} style={[{ position: 'absolute', top: 0, height: boxH, width: boxH * 1.5 }, physical(RTL ? { right: -0.15 * boxH * 1.5 } : { left: -0.15 * boxH * 1.5 })]} contentFit="contain" transition={250} />
           : v ? null : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
       </View>
-      <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
+      <LinearGradient pointerEvents="none" colors={fades} locations={dark ? FADE_AT_DARK : FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
       <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: short ? 7 : 12, paddingHorizontal: 12 }}>
         {room}
         <View style={{ flex: 1, gap: 1 }}>
