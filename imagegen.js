@@ -772,7 +772,7 @@ const LEARN_PROMPTS = [
   // 2: rules
   'Close-up inside a modern car on a bright day: a fastened grey seat belt buckle and a sleek steering wheel in soft focus, the dashboard\'s clean lines, daylight through the windscreen with a blurred Danish street outside.',
   // 3: road signs
-  'Three real Danish road signs on one brushed metal pole at a roadside: on top a white triangular warning sign with a red border, under it a round blue mandatory sign with a white arrow; green trees and a quiet street softly blurred behind, soft daylight.',
+  'Two real Danish road signs on their own brushed metal poles at the corner of a quiet street, seen from a low angle: a white inverted triangular give-way sign with a thick red border, and beside it a round red no-entry sign with one wide white horizontal bar; white shark-teeth markings on the asphalt in front, green trees and houses softly blurred behind, soft daylight.',
   // 4: right of way
   'A quiet Danish residential junction seen from slightly above: white shark-teeth give-way markings across the side road, a white inverted triangular give-way sign with a red border at its corner, one modern car waiting at the line while a cyclist passes on the main road; soft daylight, houses and trees blurred around.',
   // 5: the test's glossary (Danish words of the theory test with their meaning)
