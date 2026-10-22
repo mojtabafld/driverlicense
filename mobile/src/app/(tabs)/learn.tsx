@@ -48,7 +48,9 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   return (
     <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: short ? 76 : 92 }}>
       <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}>
-        {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={250} />
+        {/* Wider than its room and pushed out past the card's edge, so the picture's plain margin on that side is cut away
+            and its subject sits nearer the edge (Mojtaba 2026-10-22). */}
+        {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={[{ position: 'absolute', top: 0, bottom: 0, width: '125%' }, physical(RTL ? { right: '-22%' as const } : { left: '-22%' as const })]} contentFit="cover" transition={250} />
           : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
       </View>
       <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
