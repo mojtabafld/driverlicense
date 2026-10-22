@@ -10,7 +10,7 @@ import { Animated, Easing, View } from 'react-native';
 import { api } from '@/lib/api';
 import type { Question } from '@/lib/bank';
 import { sectionFa, sectionIcon, topicName } from '@/lib/names';
-import { UI_LANG } from '@/lib/i18n';
+import { UI_LANG, tr } from '@/lib/i18n';
 import STRINGS from '@/lib/i18n/strings.json';
 import { useApp, useExamLang } from '@/lib/store';
 import { Icon, type IconName } from './icon';
@@ -125,8 +125,9 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
   const second = UI_LANG === exam ? null : exam === 'en' ? (STRINGS as Record<string, string[]>)[name]?.[0] ?? null : t.da;
   const learn = LEARN[q.c];
   const toLearn = () => { if (!learn) return; onClose(); router.push(learn); };
-  // Without the AI: the topic's first two fixed points only, kept short as the AI's (Mojtaba 2026-10-21).
-  const fixed: Point[] = t.lesson.slice(0, 2).map(l => ({ kind: 'rule', text: l }));
+  // Without the AI: the topic's first two fixed points only, kept short as the AI's (Mojtaba 2026-10-21), in the app's
+  // language (strings.json has them in English and Danish; the AI's points come written in it already; Mojtaba 2026-10-22).
+  const fixed: Point[] = t.lesson.slice(0, 2).map(l => ({ kind: 'rule', text: tr(l) }));
   const shown = points ?? (ai && !failed ? null : fixed);
   return (
     <Sheet open={open} onClose={onClose} maxHeight="82%">
