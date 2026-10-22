@@ -49,6 +49,7 @@ export function useNewTest() {
 export function NewTestCard({ test }: { test: NewTest }) {
   const c = useColors();
   const { limited } = useFree();
+  const { premium } = useApp();
   const { ready, ids, last, unseen, size, setSize, fresh, setFresh, count, start, randomLeft } = test;
   if (!ready) return null;
   const total = ids.length, answered = last.size, right = [...last.values()].filter(Boolean).length, wrong = answered - right;
@@ -96,6 +97,13 @@ export function NewTestCard({ test }: { test: NewTest }) {
               <FitLine size={13} min={10.5} style={{ lineHeight: 21, color: c.muted }}>{t('{1} از {0} آزمون تصادفی رایگان مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))}</FitLine>
             </View>
           ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
+        </View>
+      ) : null}
+      {/* Premium (Mojtaba 2026-10-22): in the free notice's place, how many of the bank's questions they have been tested on. */}
+      {!limited && premium ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+          <Icon name="clipboard" size={17} color={c.link} />
+          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', faNum(answered), faNum(total))}</T>
         </View>
       ) : null}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
