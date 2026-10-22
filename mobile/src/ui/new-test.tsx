@@ -103,7 +103,9 @@ export function NewTestCard({ test }: { test: NewTest }) {
       {!limited && premium ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: c.surface2 }}>
           <Icon name="clipboard" size={17} color={c.link} />
-          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', faNum(answered), faNum(total))}</T>
+          {/* (its numbers in bold, Mojtaba 2026-10-22) */}
+          <T raw style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((x, i) =>
+            x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: 13, lineHeight: 21, fontWeight: '800', color: c.text }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</T>
         </View>
       ) : null}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
