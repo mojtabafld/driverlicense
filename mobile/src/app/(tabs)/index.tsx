@@ -352,10 +352,13 @@ export default function Home() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            {/* Main site: the picked test's point is in the theme's colour when it passed and red when not; the pass line thin and solid. */}
+            {/* Main site: the points are in the theme's colour when passed and red when not, the pass line thin and solid.
+                Closed, only the pass line is named (only the picked test has a point); the chart view names all three. */}
             {ARC ? <>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.bad, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
+              {view ? <>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.bad, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
+              </> : null}
               <View style={{ width: 14, borderTopWidth: 1.5, borderColor: c.forest, opacity: 0.45, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
             </> : <>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
@@ -364,7 +367,7 @@ export default function Home() {
             </>}
           </View>
         </View>
-        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => { if (Date.now() - swiped.current >= 400) toggle(); } : undefined} />
+        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} allPoints={view} onBlank={ARC ? () => { if (Date.now() - swiped.current >= 400) toggle(); } : undefined} />
       </Card>
       </Pressable>
       </View>
