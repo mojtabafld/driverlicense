@@ -177,3 +177,24 @@ is new.
   holidays; no times: always.
 - Transportministeriet via lovguiden.dk: since 1 July 2025 a 17-year-old may drive alone between 05 and 20; between 20 and
   05 the companion rule stays until 18.
+- Færdselsloven (LBK nr 118 af 12/01/2026), checked for batch 5: § 2 nr. 18 (any leaving of a vehicle, with or without
+  the driver, is parking; stops under 3 minutes and for people or goods getting on or off are not); § 9 (everyone
+  involved stops, whoever is to blame; name and address on request, also to the owner of damaged property; with nobody
+  there, the owner or the police told as soon as possible; the scene left unchanged only after death or serious injury);
+  § 15 stk. 4 (keep right of islands); § 23 stk. 1 nr. 3 (limited view at a hill or in a bend); § 24 (dense traffic in
+  several lanes); § 27 stk. 5 (turning: pedestrians crossing the new road get unhindered passage), stk. 8 (avoid stopping
+  on a crossing); § 28 stk. 2 (outside built-up areas a car park on the right where possible; at the edge or, if
+  possible, outside the carriageway; the left side on less busy roads), stk. 3 (not on a cycle path, central reserve or
+  islands); § 29 stk. 1 nr. 1 (also opposite a cycle-path exit), nr. 2 (a roundabout is a junction), stk. 3 nr. 4 (no
+  parking beside a vehicle at the edge, except beside a two-wheeled bicycle, moped or motorcycle without sidecar); § 32
+  stk. 1, 2 and 5; § 33 stk. 3–5 (high beam allowed on an unlit road when nobody is met or followed; fog lights only in
+  fog and heavy precipitation); § 41 stk. 1 (adjust the speed before dipping), stk. 3 (no sudden braking); § 46 stk. 2
+  (no turning or reversing on the motorway's slip roads); § 80 (passengers of 15 and over answer for their own belt).
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 5: A 23 «Ridende», A 31 «Glat vej», A 33 «Løse sten»,
+  A 46 steep descent (the largest gradient), A 92 «Havnekaj»; C 12 «Vending forbudt» (only at that junction; turning left
+  is allowed), C 22,1 (motor vehicles, large mopeds, tractors and motorredskaber banned); D 16 «Valgfri passage», D 21
+  «Cykelsti» (cyclists and small mopeds only); E 68 P-zone with a P-skive; Q 45 hatched area at a slip road; Q 46 the
+  hard shoulder beyond the unbroken edge line (crossed only to stop or to drive on or off); S 21 cycle crossing (blue,
+  § 54); T 33.
+- Vejdirektoratet via FDM: 2-minus-1 roads (one shared lane in the middle, edge lanes for cyclists and pedestrians, used by
+  cars only to make room for oncoming traffic; not for overtaking).
