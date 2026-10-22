@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { RTL } from '@/lib/i18n';
@@ -39,8 +40,9 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   // The card's height (its picture's room is as high), so the picture is drawn whole at that height.
   const [boxH, setBoxH] = useState(0);
   // Short phones: lower cards; very short ones (iPhone SE first generation) without the short line, so all five fit
-  // above the tab bar (Mojtaba 2026-10-22).
-  const h = useWindowDimensions().height, short = h < 760, tiny = h < 640;
+  // above the tab bar (Mojtaba 2026-10-22). The height left by the status bar and the home indicator counts (an
+  // iPhone's 844 points are about 760 there).
+  const ins = useSafeAreaInsets(), h = useWindowDimensions().height - ins.top - ins.bottom, short = h < 780, tiny = h < 640;
   const fades = FADE_A.map(a => `${c.surface}${a}`) as unknown as readonly [string, string, ...string[]];
   // The picture's room before the words; the gradient runs from the picture to them.
   const room = <View style={{ width: '38%' }} />, from = { x: RTL ? 1 : 0, y: 0.5 }, to = { x: RTL ? 0 : 1, y: 0.5 };
@@ -104,12 +106,12 @@ export default function Learn() {
   const { done } = useCourseProgress();
   const { bank, attempts } = useApp();
   const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
-  const short = useWindowDimensions().height < 760;
+  const ins = useSafeAreaInsets(), short = useWindowDimensions().height - ins.top - ins.bottom < 780;
   const tried = new Set(attempts.filter(a => a.mode === 'lesson').map(a => a.lesson)).size, all = bank?.tests.length ?? 44;
   return (
     // Main site: the five cards share the screen's height between the search box and the tab bar (taller on tall
     // phones, never shorter than their content; Mojtaba 2026-10-18).
-    <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 8} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
+    <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 16} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>
