@@ -48,3 +48,10 @@ export const loadLastUser = async (): Promise<LastUser | null> => {
   try { const v = JSON.parse((await SecureStore.getItemAsync(LAST_USER)) || 'null'); return v && typeof v.id === 'string' && typeof v.name === 'string' ? v : null; } catch { return null; }
 };
 export const saveLastUser = (u: LastUser | null) => (u ? SecureStore.setItemAsync(LAST_USER, JSON.stringify({ ...u, photo: undefined })) : SecureStore.deleteItemAsync(LAST_USER)).catch(() => {});
+
+// The accounts (and banks) that have seen the confetti for answering every question of the random test, so it plays once.
+const CHEERED = 'tp_cheered';
+export const loadCheered = async (): Promise<string[]> => {
+  try { const v = JSON.parse((await SecureStore.getItemAsync(CHEERED)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
+};
+export const saveCheered = (keys: string[]) => SecureStore.setItemAsync(CHEERED, JSON.stringify(keys)).catch(() => {});

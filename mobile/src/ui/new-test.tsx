@@ -80,7 +80,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
         </View>
         <Toggle label="بدون سؤال تکراری" value={fresh} onChange={setFresh} />
       </View>
-      {fresh && unseen.length < size ? (
+      {fresh && unseen.length < size && !(unseen.length === 0 && premium && !limited) ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
           <Icon name="info" size={17} color={c.muted} />
           <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{unseen.length
@@ -101,14 +101,15 @@ export function NewTestCard({ test }: { test: NewTest }) {
       ) : null}
       {/* Premium (Mojtaba 2026-10-22): in the free notice's place, how many of the bank's questions they have been tested on. */}
       {!limited && premium ? (() => {
-        // Every question answered: in green (Mojtaba 2026-10-22).
+        // Every question answered: in green, and says so (Mojtaba 2026-10-22; the exam tab plays the confetti once).
         const all = answered >= total, ink = all ? c.ok : c.text;
         return (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: all ? c.okSoft : c.warnSoft }}>
           <Icon name="listCheck" size={17} color={all ? c.ok : c.warn} />
           {/* The free notice's colours; its numbers a step bolder than the site's 500 (Mojtaba 2026-10-22). */}
+          {all ? <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: ink, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600' }}>شما به همه‌ی سؤال‌ها پاسخ داده‌اید.</T> : (
           <T raw style={{ flex: 1, fontSize: 13, lineHeight: 21, color: ink }}>{t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((x, i) =>
-            x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: 13, lineHeight: 21, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600', color: ink }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</T>
+            x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: 13, lineHeight: 21, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600', color: ink }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</T>)}
         </View>
         );
       })() : null}
