@@ -120,7 +120,7 @@ export default function Settings() {
         ) : null}
       </Card>
       {/* The languages in one card (Mojtaba 2026-10-21): the app's first (main site: Persian, English or Danish, each named
-          in its own language; a change reloads the page in it and is kept in the account too), then the translation's and the exam's. */}
+          in its own language; a change reloads the page in it and is kept in the account too), then the exam's and the translation's. */}
       <Card style={{ gap: 10 }}>
         {!PROVE_PICS ? (
           <>
@@ -129,7 +129,9 @@ export default function Settings() {
               options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
           </>
         ) : null}
-        {/* Main site: the translation's language, before the exam's (Mojtaba 2026-10-21); left alone it follows the app's language (picked on first signing in).
+        <Row title="زبان آزمون" right={null} />
+        <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
+        {/* Main site: the translation's language, after the exam's again (Mojtaba 2026-10-22); left alone it follows the app's language (picked on first signing in).
             The exam's own language shows no translation. */}
         {!PROVE_PICS ? (
           <>
@@ -138,8 +140,6 @@ export default function Settings() {
               options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'انگلیسی' }, { value: 'da', label: 'دانمارکی' }]} />
           </>
         ) : null}
-        <Row title="زبان آزمون" right={null} />
-        <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
         {/* The read-aloud voice, when the server can read aloud: each option plays a sample in this language. */}
         {tts ? (
           <View style={{ gap: 10, paddingBottom: 4 }}>
