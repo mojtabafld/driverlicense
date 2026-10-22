@@ -107,11 +107,15 @@ export function NewTestCard({ test }: { test: NewTest }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: all ? c.okSoft : c.warnSoft }}>
           <Icon name="listCheck" size={17} color={all ? c.ok : c.warn} />
           {/* The free notice's colours; its numbers a step bolder than the site's 500 (Mojtaba 2026-10-22). */}
-          {all ? <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: ink, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600' }}>شما به همه‌ی سؤال‌ها پاسخ داده‌اید.</T>
-            // None answered yet: says so rather than «۰ از ۳۰۰» (Mojtaba 2026-10-22).
-            : !answered ? <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: ink }}>هنوز هیچ آزمونی نداده‌اید.</T> : (
-          <T raw style={{ flex: 1, fontSize: 13, lineHeight: 21, color: ink }}>{t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((x, i) =>
-            x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: 13, lineHeight: 21, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600', color: ink }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</T>)}
+          {/* Always one line, smaller on a narrow screen (Mojtaba 2026-10-22). */}
+          <View style={{ flex: 1 }}>
+            {all ? <FitLine size={13} min={10} style={{ lineHeight: 21, color: ink, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600' }}>{t('شما به همه‌ی سؤال‌ها پاسخ داده‌اید.')}</FitLine>
+              // None answered yet: says so rather than «۰ از ۳۰۰» (Mojtaba 2026-10-22).
+              : !answered ? <FitLine size={13} min={10} style={{ lineHeight: 21, color: ink }}>{t('هنوز هیچ آزمونی نداده‌اید.')}</FitLine>
+              : <FitLine size={13} min={10} style={{ lineHeight: 21, color: ink }} id={`${answered}/${total}`}>{fs =>
+                t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((x, i) =>
+                  x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: fs, lineHeight: 21, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600', color: ink }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</FitLine>}
+          </View>
         </View>
         );
       })() : null}
