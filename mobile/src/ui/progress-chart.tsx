@@ -18,9 +18,11 @@ import { Marquee } from './marquee';
 import { ArcButton, Button, T, tap, useCountUp } from './kit';
 import { ARC, useColors } from './theme';
 
-// The main site (ARC) draws it flat, as a cash-forecast card: no percent scale or grid, the green line edge to edge
-// over a soft green fill, the pass line dashed grey with its label, green points on passed attempts and red on failed ones, dates below.
-const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
+// The main site (ARC) draws it as a soft gradient (Mojtaba picked it of five samples, 2026-10-22): no percent scale or
+// grid, a thick line in the theme's colour from the left edge over a deep fill fading down, the pass line thin and
+// solid, no points but a glowing one on the picked attempt (green when it passed, red when not), dates below.
+// PAD: room after the newest point, so its glow is not cut at the right edge.
+const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120, PAD = ARC ? 12 : 0;
 // The line drew itself in already since the app started.
 let drawnOnce = false;
 // (The app's own random exam, mode 'new', is «آزمون تصادفی» too since it took the old one's place; Mojtaba 2026-10-19.)
@@ -98,8 +100,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
   const VIEW = 10, VW = Math.max(0, W - L - R);
   // ARC: the first and last points sit on the edges, so the line runs the full width.
-  const slot = ARC ? VW / Math.max(1, Math.min(VIEW, data.length) - 1) : VW / Math.min(VIEW, data.length);
-  const CW = ARC ? slot * (data.length - 1) : slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
+  const slot = ARC ? (VW - PAD) / Math.max(1, Math.min(VIEW, data.length) - 1) : VW / Math.min(VIEW, data.length);
+  const CW = ARC ? slot * (data.length - 1) + PAD : slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
   const DOT = ARC ? 4 : 5;   // the points' radius (10 across), with a ring in the card's colour
   const x0 = (i: number) => (ARC ? slot * i : slot * (i + 0.5));
   // In every language the chart runs left to right, the oldest at the left and the newest at the right edge, where it
@@ -151,27 +153,29 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                 <Svg width={CW} height={H} pointerEvents="none">
                   {ARC ? null : ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
                   <Defs>
-                    <LinearGradient id="pcArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(0))} gradientUnits="userSpaceOnUse">
-                      <Stop offset="0" stopColor={c.forest} stopOpacity={0.32} />
+                    <LinearGradient id="pcArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(ARC ? lo : 0))} gradientUnits="userSpaceOnUse">
+                      <Stop offset="0" stopColor={c.forest} stopOpacity={ARC ? 0.38 : 0.32} />
                       <Stop offset="1" stopColor={c.forest} stopOpacity={0} />
                     </LinearGradient>
                     {/* The part drawn so far: the line and its fill show up to `edge`. */}
                     <ClipPath id={clipId} key={clipId}><Rect x={FLIP ? CW - edge : 0} y={0} width={edge} height={H} /></ClipPath>
                   </Defs>
-                  {ARC ? <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.faint} strokeOpacity={0.8} strokeWidth={1} strokeDasharray="4 4" /> : null}
+                  {ARC ? <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.35} strokeWidth={1} /> : null}
                   <G key={clipId} clipPath={`url(#${clipId})`}>
                     {ARC ? <>
-                      <Path d={area} fill={c.forest} fillOpacity={0.13} />
-                      <Path d={line} fill="none" stroke={c.cta} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.6} />
+                      <Path d={area} fill="url(#pcArea)" />
+                      <Path d={line} fill="none" stroke={c.forest} strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" />
                     </> : <>
                       <Path d={area} fill="url(#pcArea)" />
                       <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
                     </>}
                   </G>
                   {/* Each point shows once the line has reached it. */}
-                  {/* ARC: a green point on each passed attempt (or 80% and over), a red one on the others. */}
-                  {ARC ? data.map((d, i) => ahead(i) ? null : (
-                    <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.ok : c.bad} stroke={c.surface} strokeWidth={2} />))
+                  {/* ARC: only the picked attempt has a point, in a soft glow: green when it passed (or 80% and over), red when not. */}
+                  {ARC ? (sel != null && data[sel] && !ahead(sel) ? <>
+                    <Circle cx={x(sel)} cy={tops[sel]} r={11} fill={c.forest} fillOpacity={0.18} />
+                    <Circle cx={x(sel)} cy={tops[sel]} r={5.5} fill={good(data[sel]) ? c.forest : c.bad} stroke={c.surface} strokeWidth={2.5} />
+                  </> : null)
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
                   : data.map((d, i) => ahead(i) ? null : (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
@@ -179,7 +183,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   ))}
                   {/* The picked point's percent above it, kept inside the chart at its ends. */}
                   {sel != null && data[sel] ? (
-                    <SvgText x={Math.min(CW - 16, Math.max(16, x(sel)))} y={Math.max(11, tops[sel] - DOT - 8)} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
+                    <SvgText x={Math.min(CW - 16, Math.max(16, x(sel)))} y={Math.max(11, tops[sel] - (ARC ? 18 : DOT + 8))} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
                       {`${faNum(Math.round(pctOf(data[sel]) * 100))}${RTL ? '٪' : '%'}`}
                     </SvgText>
                   ) : null}

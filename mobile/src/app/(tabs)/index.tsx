@@ -352,11 +352,11 @@ export default function Home() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            {/* Main site: the chart marks passed attempts green and failed ones red, and draws the pass line dashed grey. */}
+            {/* Main site: the picked test's point is in the theme's colour when it passed and red when not; the pass line thin and solid. */}
             {ARC ? <>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.ok }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.bad, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
-              <View style={{ width: 14, borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: c.faint, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
+              <View style={{ width: 14, borderTopWidth: 1.5, borderColor: c.forest, opacity: 0.45, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
             </> : <>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.faint, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
