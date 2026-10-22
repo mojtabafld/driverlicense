@@ -1813,6 +1813,23 @@ async function main() {
     if (found.length) await store.saveMeta('endPremiumAlireza', 1);
     else console.log('end premium: no account with', email);
   }
+  // One-time, asked by the owner (2026-10-22): ten sample tests (data/demo-attempts.json, 13-22 Oct, 48% to 100%) added
+  // to his own account mojtaba.devops@gmail.com, to see the app's states. Nothing he had is changed; the added tests'
+  // times are kept in meta (`demo:<username>:attempts`) so they can be taken out again.
+  if (store.meta.demoMojtaba !== 1) {
+    const email = 'mojtaba.devops@gmail.com';
+    const found = Object.values(store.users).filter(x => [x.email, x.username].some(v => String(v || '').trim().toLowerCase() === email));
+    for (const u of found) {
+      const had = new Set((u.attempts || []).map(a => a.at));
+      const add = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'demo-attempts.json'), 'utf8')).filter(a => !had.has(a.at));
+      u.attempts = (u.attempts || []).concat(add).sort((p, q) => p.at - q.at);
+      await store.saveMeta(`demo:${u.username}:attempts`, { at: Date.now(), added: add.map(a => a.at) });
+      await store.saveUser(u);
+      console.log('demo tests for', u.username.replace(/^(.{3}).*@/, '$1…@'), 'added', add.length, 'now', u.attempts.length, 'tests');
+    }
+    if (found.length) await store.saveMeta('demoMojtaba', 1);
+    else console.log('demo tests: no account with', email);
+  }
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
