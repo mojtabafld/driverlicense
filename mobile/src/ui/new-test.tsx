@@ -7,8 +7,8 @@
 // At /app (PROVE_BANK) the same card with prove.dk's bank: its questions, its random exams (mode 'random'), the progress
 // through it and its mistakes (Mojtaba 2026-10-20).
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, View } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
@@ -122,7 +122,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
 
 // How far through the bank, as one bar in the theme's colour (Mojtaba 2026-10-19: a minimal, modern progress bar, not a
 // line of text): the share of the questions answered at least once, filling in when the card shows, its percent beside
-// the title; under it how many of how many, and of those how many were right / wrong the last time, each with a dot in
+// the title; under it how many were right / wrong the last time and how many are not answered yet, each with a dot in
 // its colour. The mistakes open the mistakes page (Mojtaba 2026-10-19), where this test's questions are among them.
 // Two #rrggbb colours mixed (`t` of the second); null when either is not one.
 function mix(a: string, b: string, t: number): string | null {
@@ -138,22 +138,6 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
   const bar = useCountUp(share, 1100);
   // A whole percent: never 0 once a question is answered, never 100 before all of them are.
   const pct = answered >= total ? 1 : Math.min(0.99, Math.max(answered ? 0.01 : 0, share));
-  const [phase, setPhase] = useState(0);
-  const [swap] = useState(() => new Animated.Value(1));
-  useEffect(() => {
-    if (!answered) return;
-    const native = Platform.OS !== 'web';
-    // The count shows for 3 s, the colours' legend for 10 s (Mojtaba 2026-10-21).
-    const t = setTimeout(() => {
-      Animated.timing(swap, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: native }).start(({ finished }) => {
-        if (!finished) return;
-        setPhase(p => 1 - p);
-        swap.setValue(-1);
-        Animated.timing(swap, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start();
-      });
-    }, phase === 0 ? 3000 : 10000);
-    return () => clearTimeout(t);
-  }, [answered > 0, phase, swap]); // eslint-disable-line react-hooks/exhaustive-deps
   const dot = (color: string, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
       <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
@@ -201,16 +185,12 @@ function Progress({ answered, total, right, wrong }: { answered: number; total: 
         </View>
       </Pressable>
       {answered ? (
-        // The questions answered, then the right and wrong ones, in turn (3 s and 10 s) with the home header's swap
-        // (the old fades and lifts away, the new comes in from just below; Mojtaba 2026-10-21); plain text, no link.
-        <Animated.View style={{ minHeight: 19, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 14, rowGap: 2, opacity: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] }),
-          transform: [{ translateY: swap.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] }) }] }}>
-          {phase === 0 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{`${faNum(answered)} از ${faNum(total)} سؤال`}</T> : <>
-            {dot(rightTone, `${faNum(right)} درست`)}
-            {dot(wrongTone, `${faNum(wrong)} اشتباه`)}
-            {total > answered ? dot(rest, `${faNum(total - answered)} جواب‌نداده`) : null}
-          </>}
-        </Animated.View>
+        // The right, wrong and unanswered ones, fixed (Mojtaba 2026-10-22: no more «… of … questions» in turn with them).
+        <View style={{ minHeight: 19, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 14, rowGap: 2 }}>
+          {dot(rightTone, `${faNum(right)} درست`)}
+          {dot(wrongTone, `${faNum(wrong)} اشتباه`)}
+          {total > answered ? dot(rest, `${faNum(total - answered)} جواب‌نداده`) : null}
+        </View>
       ) : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>هنوز هیچ سؤالی از این آزمون را جواب نداده‌اید.</T>}
     </View>
   );
