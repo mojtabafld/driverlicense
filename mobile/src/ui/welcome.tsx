@@ -1,7 +1,8 @@
 // The sign-in page's first screen on the main site and /app (Mojtaba 2026-10-20, after the Saphe app's): the theme
 // switch at the top, the app's name, the intro's four subjects as slides (a flat icon in the theme's colour with a
-// short line under it, ui/welcome-art.tsx; they turn by themselves, with a swipe or a tap on their dots), then
-// «ورود» and «ساخت حساب», each opening the form in that mode (app/login.tsx), and a link to go on as a guest.
+// short line under it, ui/welcome-art.tsx; they turn by themselves, with a swipe or a tap on their dots), then the ways
+// in and a link to go on as a guest. «ادامه با ایمیل» puts «ورود» and «ساخت حساب» in their place (Mojtaba 2026-10-22),
+// each opening the steps in that mode (app/login.tsx), with «گزینه‌های دیگر» to go back to the ways in.
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -96,10 +97,17 @@ function Wide({ label, icon, light, onPress, mark, off }: { label: string; icon?
 }
 
 // The ways in, as the Saphe app's first screen (Mojtaba 2026-10-21): Apple (hidden for now, APPLE), Google (`onGoogle`, while
-// the server has it on; else off) and email (`onEmail`: one flow for signing in and up, ui/sign-steps.tsx), then the
+// the server has it on; else off) and email (its two choices, then `onEmail` in that mode, ui/sign-steps.tsx), then the
 // guest link and the line on the privacy policy.
-export function Welcome({ onEmail, onGuest, onGoogle, busy, err }: { onEmail: () => void; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
+export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { onEmail: (mode: 'login' | 'register') => void; mailFirst?: boolean; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
+  // The email's choices in place of the ways in, with a short fade (`mailFirst`: back from their steps, they show again).
+  const [byMail, setByMail] = useState(!!mailFirst);
+  const [ways] = useState(() => new Animated.Value(1));
+  const pick = (on: boolean) => {
+    ways.setValue(0); setByMail(on);
+    Animated.timing(ways, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+  };
   const [i, setI] = useState(0);
   const [fade] = useState(() => new Animated.Value(1));
   const at = useRef(0);
@@ -150,25 +158,35 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err }: { onEmail: ()
             ))}
           </View>
         </View>
-        <View style={{ gap: 10 }}>
+        <Animated.View style={{ gap: 10, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
           <View style={{ alignItems: 'center', gap: 2, marginBottom: 6 }}>
-            <T style={{ fontSize: 20, lineHeight: 29, fontWeight: '700', textAlign: 'center' }}>سفرتان را با TeoriPrøve شروع کنید</T>
-            <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>آماده‌ی آزمون تئوری، مطمئن پشت فرمان.</T>
+            <T style={{ fontSize: 20, lineHeight: 29, fontWeight: '700', textAlign: 'center' }}>{byMail ? 'ادامه با ایمیل' : 'سفرتان را با TeoriPrøve شروع کنید'}</T>
+            <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'آماده‌ی آزمون تئوری، مطمئن پشت فرمان.'}</T>
           </View>
-          {APPLE ? <Wide light label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} /> : null}
-          <Wide label="ادامه با گوگل" mark={() => <GoogleG />} onPress={onGoogle} off={!onGoogle} />
-          <Wide label="ادامه با ایمیل" icon="mail" onPress={onEmail} />
-          {err ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
-          <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
+          {byMail ? <>
+            <Wide light label="ورود" icon="login" onPress={() => onEmail('login')} />
+            <Wide label="ساخت حساب" icon="personAdd" onPress={() => onEmail('register')} />
+            <Pressable onPress={() => { tap(); pick(false); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6, marginTop: 2 }}>
+              {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
+                <T style={{ color: c.text, fontSize: 15.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>گزینه‌های دیگر</T>
+              )}
+            </Pressable>
+          </> : <>
+            {APPLE ? <Wide light label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} /> : null}
+            <Wide label="ادامه با گوگل" mark={() => <GoogleG />} onPress={onGoogle} off={!onGoogle} />
+            <Wide label="ادامه با ایمیل" icon="mail" onPress={() => pick(true)} />
+          </>}
+          {err && !byMail ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
+          {byMail ? null : <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
             {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
               <T style={{ color: c.muted, fontSize: 14.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
             )}
-          </Pressable>
+          </Pressable>}
           <Pressable onPress={() => { tap(); Linking.openURL(`${API_URL}/privacy?lang=${UI_LANG}`).catch(() => {}); }} accessibilityRole="link" style={{ alignSelf: 'center', marginTop: 2 }}>
             <T style={{ color: c.muted, fontSize: 13, lineHeight: 20, textAlign: 'center' }}>با ادامه، این را می‌پذیرید:</T>
             <T style={{ color: c.text, fontSize: 13.5, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>سیاست حفظ حریم خصوصی</T>
           </Pressable>
-        </View>
+        </Animated.View>
       </View>
     </ScrollView>
   );

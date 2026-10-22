@@ -141,6 +141,10 @@ export function Icon({ name, size = 24, color, filled = false }: IconProps) {
         </G>
       );
       break;
+    case 'login':
+      // A door with an arrow going in: signing in.
+      body = <G><Path d="M10.5 4.5H17a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-6.5" {...line} /><Path d="M3.5 12h10M10 8.5l3.5 3.5-3.5 3.5" {...line} /></G>;
+      break;
     case 'exit':
       body = <G><Path d="M13.5 4.5H7a1.5 1.5 0 0 0-1.5 1.5v12A1.5 1.5 0 0 0 7 19.5h6.5" {...line} /><Path d="M10.5 12h10M17 8.5l3.5 3.5-3.5 3.5" {...line} /></G>;
       break;
