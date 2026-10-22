@@ -383,9 +383,9 @@ MUST NOT APPEAR: signs, text."""),
     "خیلی امن‌تر است که شما جایی که جا هست کنار بکشید."),
   S(False, "Jeg blinker med lyset, så den modkørende ved, at den skal holde ind.", "I flash my lights so that the oncoming driver knows they must pull in.",
     "با چراغ علامت می‌دهم تا خودروی روبه‌رو بداند باید کنار بکشد.",
-    "Den modkørende har ingen udvidelse i nærheden, og lyssignal må kun bruges for at advare om fare.",
-    "The oncoming car has no widening nearby, and a light signal may only be used to warn of danger.",
-    "خودروی روبه‌رو نزدیکش جای پهنی ندارد و علامت نوری فقط برای هشدار خطر است."),
+    "Den modkørende har ingen udvidelse i nærheden, og et lyssignal giver dig ingen ret.",
+    "The oncoming car has no widening nearby, and a light signal gives you no right.",
+    "خودروی روبه‌رو نزدیکش جای پهنی ندارد و علامت نوری به شما حقی نمی‌دهد."),
 )
 
 Q(5466, "7.7", town("""
@@ -409,7 +409,8 @@ MUST NOT APPEAR: signs, text."""),
     "Bilens størrelse giver ingen ret.", "The size of the car gives no right.", "اندازه‌ی خودرو حقی نمی‌دهد."),
   S(False, "Jeg blinker med fjernlyset, så den modkørende bakker tilbage.", "I flash my high beam so that the oncoming car reverses.",
     "با نور بالا چراغ می‌زنم تا خودروی روبه‌رو دنده‌عقب برود.",
-    "Lyssignal må kun bruges for at advare om fare.", "A light signal may only be used to warn of danger.", "علامت نوری فقط برای هشدار خطر است."),
+    "Et lyssignal giver dig ingen ret til at få den anden til at bakke.", "A light signal gives you no right to make the other driver reverse.",
+    "علامت نوری به شما حق نمی‌دهد که دیگری را وادار به دنده‌عقب کنید."),
 )
 
 Q(5467, "7.7", view("""

@@ -92,9 +92,9 @@ MUST NOT APPEAR: signs, text.""", cond="night, dark, dry road, weak street light
     "در تاریکی دوچرخه‌سوارِ بدون چراغ در آینه به‌سختی دیده می‌شود."),
   S(False, "Jeg blinker med fjernlyset for at vise de andre, at jeg vil køre ud.", "I flash my high beam to show the others that I want to pull out.",
     "با نور بالا چراغ می‌زنم تا به دیگران نشان دهم می‌خواهم حرکت کنم.",
-    "Lyssignal må kun bruges for at advare om fare; at du vil køre ud, viser du med blinklyset.",
-    "A light signal may only be used to warn of danger; you show that you want to pull out with the indicator.",
-    "علامت نوری فقط برای هشدار خطر است؛ این‌که می‌خواهید حرکت کنید را با راهنما نشان می‌دهید."),
+    "Et lyssignal kan misforstås; at du vil køre ud, viser du med blinklyset.",
+    "A light signal can be misunderstood; you show that you want to pull out with the indicator.",
+    "علامت نوری ممکن است اشتباه فهمیده شود؛ این‌که می‌خواهید حرکت کنید را با راهنما نشان می‌دهید."),
 )
 
 Q(5379, "7.1", town("""
