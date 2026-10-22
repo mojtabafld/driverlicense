@@ -102,9 +102,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const CW = ARC ? slot * (data.length - 1) : slot * data.length, bw = Math.max(4, Math.min(34, slot * 0.66));
   const DOT = ARC ? 4 : 5;   // the points' radius (10 across), with a ring in the card's colour
   const x0 = (i: number) => (ARC ? slot * i : slot * (i + 0.5));
-  // Main site in Persian: the chart runs right to left, the oldest at the right and the newest at the left edge, where it
-  // opens (Mojtaba 2026-10-19); English and Danish, and /app, left to right.
-  const FLIP = ARC && RTL;
+  // In every language the chart runs left to right, the oldest at the left and the newest at the right edge, where it
+  // opens (Persian too, as English, Mojtaba 2026-10-22; it ran right to left in Persian before). FLIP mirrors it.
+  const FLIP = false as boolean;
   const x = (i: number) => (FLIP ? CW - x0(i) : x0(i));
   // ARC: the scale starts a little under the lowest score (in tens, at most 60%), so the line uses the card's height.
   const lo = ARC ? Math.max(0, Math.min(60, Math.floor((Math.min(...data.map(a => pctOf(a) * 100)) - 15) / 10) * 10)) : 0;
