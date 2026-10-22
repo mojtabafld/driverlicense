@@ -7,6 +7,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
+import { useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 
 import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
@@ -29,12 +30,14 @@ const FADE_AT = FADE.map(t => 0.22 + 0.2 * t) as unknown as readonly [number, nu
 const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 
 // A card of the five (Mojtaba 2026-10-21/22): its picture fills the card from its start (the right in Persian, the left
-// in English and Danish), cropped to its middle so little of its plain colour shows, and melts into the card's colour
+// in English and Danish), drawn whole at the card's height, and melts into the card's colour
 // (light or dark) under the title and its short line, with the round ‹ at the card's end.
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
-  const { learnArt } = useApp();
+  const { learnArt, learnBg } = useApp();
   const v = learnArt[n];
+  // The card's height (its picture's room is as high), so the picture is drawn whole at that height.
+  const [boxH, setBoxH] = useState(0);
   // Short phones: lower cards; very short ones (iPhone SE first generation) without the short line, so all five fit
   // above the tab bar (Mojtaba 2026-10-22).
   const h = useWindowDimensions().height, short = h < 760, tiny = h < 640;
@@ -49,11 +52,13 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   );
   return (
     <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: tiny ? 52 : short ? 62 : 92 }}>
-      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}>
-        {/* Wider than its room and pushed out past the card's edge, so the picture's plain margin on that side is cut away
-            and its subject sits nearer the edge (Mojtaba 2026-10-22). */}
-        {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={[{ position: 'absolute', top: 0, bottom: 0, width: '125%' }, physical(RTL ? { right: '-22%' as const } : { left: '-22%' as const })]} contentFit="cover" transition={250} />
-          : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
+      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
+        onLayout={e => setBoxH(Math.round(e.nativeEvent.layout.height))}>
+        {/* Whole, as high as the card (never cropped top or bottom: smaller on a short card, Mojtaba 2026-10-22), pushed a
+            little past the card's edge so the picture's plain margin on that side is cut away; the rest of the room in
+            the picture's own background colour. */}
+        {v && boxH ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={[{ position: 'absolute', top: 0, height: boxH, width: boxH * 1.5 }, physical(RTL ? { right: -0.15 * boxH * 1.5 } : { left: -0.15 * boxH * 1.5 })]} contentFit="contain" transition={250} />
+          : v ? null : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
       </View>
       <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
       <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: short ? 7 : 12, paddingHorizontal: 12 }}>
