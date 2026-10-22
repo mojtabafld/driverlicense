@@ -1,5 +1,5 @@
 // «آموزش»: five parts as cards one under the other, each with its picture (made by the server's image model; the part's
-// icon until it is there) filling the card from its left edge and melting into the card's colour under its title, a
+// icon until it is there) filling the card from its end and melting into the card's colour under its title, a
 // short line on what is in it and its progress note; a card opens its part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules,
 // the road signs, right of way and the test's glossary.
 // At /app (prove.dk's copy) the cards stay two by two and the first one is prove.dk's 44 lessons one by one
@@ -28,37 +28,37 @@ const FADE = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_AT = FADE.map(t => 0.34 + 0.24 * t) as unknown as readonly [number, number, ...number[]];
 const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 
-// A card of the five (Mojtaba 2026-10-21/22): its picture fills the card from its left edge in every language, with the
-// round ‹ on it, and melts into the card's colour (light or dark) under the title and its short line on the right.
+// A card of the five (Mojtaba 2026-10-21/22): its picture fills the card from its end (the left in Persian, the right in
+// English and Danish), with the round ‹ on it, and melts into the card's colour (light or dark) under the title and its
+// short line at the start.
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
   const { learnArt } = useApp();
   const v = learnArt[n];
   const short = useWindowDimensions().height < 760;
   const fades = FADE_A.map(a => `${c.surface}${a}`) as unknown as readonly [string, string, ...string[]];
-  // The picture's room, beside the words: at the row's end in Persian (its left), at its start in English and Danish.
-  const room = <View style={{ width: '48%' }} />;
+  // The picture's side, and the gradient from it to the words.
+  const side = RTL ? { left: 0 } : { right: 0 }, from = { x: RTL ? 0 : 1, y: 0.5 }, to = { x: RTL ? 1 : 0, y: 0.5 };
   return (
     <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: short ? 76 : 92 }}>
-      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '58%', backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical({ left: 0 })]}>
+      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '58%', backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(side)]}>
         {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="cover" transition={250} />
           : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
       </View>
-      <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
-      {/* The round ‹ on the picture, at the card's left edge. */}
-      <View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, justifyContent: 'center' }, physical({ left: 12 })]}>
+      <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
+      {/* The round ‹ on the picture, at the card's edge there. */}
+      <View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, justifyContent: 'center' }, physical(RTL ? { left: 12 } : { right: 12 })]}>
         <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center', opacity: 0.92 }}>
           <Icon name="chevronLeft" size={14} color={c.muted} weight="semibold" />
         </View>
       </View>
       <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 16 }}>
-        {RTL ? null : room}
         <View style={{ flex: 1, gap: 1 }}>
           <T style={{ fontSize: 17.5, lineHeight: 25, fontWeight: '700' }} numberOfLines={2}>{title}</T>
           <T style={{ fontSize: 12.5, lineHeight: 18, color: c.muted }} numberOfLines={1}>{text}</T>
           {note ? <T style={{ fontSize: 11.5, lineHeight: 17, color: c.faint }} numberOfLines={1}>{note}</T> : null}
         </View>
-        {RTL ? room : null}
+        <View style={{ width: '48%' }} />
       </View>
     </Card>
   );
