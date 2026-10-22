@@ -493,9 +493,9 @@ MUST NOT APPEAR: signs, text."""),
     "دنده‌عقبِ سریع کنترل و فرصت واکنش شما را باز هم کمتر می‌کند."),
   S(False, "Bakning er tilladt, når jeg viser det med blinklyset.", "Reversing is allowed when I show it with the indicator.",
     "اگر با راهنما نشانش دهم، دنده‌عقب مجاز است.",
-    "Du skal ikke give tegn med blinklyset, når du bakker, og bakning må kun ske, når det kan ske uden fare.",
-    "You do not signal with the indicator when reversing, and reversing may only be done when it can be done safely.",
-    "هنگام دنده‌عقب نباید با راهنما علامت داد و دنده‌عقب فقط وقتی مجاز است که بی‌خطر باشد."),
+    "Der er ingen pligt til at give tegn, når du bakker, og et blinklys gør ikke bakningen tilladt; den må kun ske, når det kan ske uden fare.",
+    "There is no duty to signal when reversing, and an indicator does not make reversing allowed; it may only be done when it can be done safely.",
+    "هنگام دنده‌عقب الزامی به راهنما زدن نیست و راهنما هم دنده‌عقب را مجاز نمی‌کند؛ فقط وقتی مجاز است که بی‌خطر باشد."),
 )
 
 Q(5394, "5.2", view("""
