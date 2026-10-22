@@ -4094,5 +4094,6 @@
 "# سؤال تازه":["# new questions", "# nye spørgsmål"],
 "{0} از {1}":["{0} of {1}", "{0} af {1}"],
 "نمودار بعد از حداقل دو آزمون به‌روز می‌شود.":["The chart updates after at least two tests.", "Grafen opdateres efter mindst to prøver."],
-"# جواب‌نداده":["# unanswered", "# ubesvarede"]
+"# جواب‌نداده":["# unanswered", "# ubesvarede"],
+"تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.":["So far you have been tested on {0} of {1} questions.", "Indtil nu er du blevet testet i {0} af {1} spørgsmål."]
 }
