@@ -35,7 +35,9 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   const c = useColors();
   const { learnArt } = useApp();
   const v = learnArt[n];
-  const short = useWindowDimensions().height < 760;
+  // Short phones: lower cards; very short ones (iPhone SE first generation) without the short line, so all five fit
+  // above the tab bar (Mojtaba 2026-10-22).
+  const h = useWindowDimensions().height, short = h < 760, tiny = h < 640;
   const fades = FADE_A.map(a => `${c.surface}${a}`) as unknown as readonly [string, string, ...string[]];
   // The picture's room before the words; the gradient runs from the picture to them.
   const room = <View style={{ width: '38%' }} />, from = { x: RTL ? 1 : 0, y: 0.5 }, to = { x: RTL ? 0 : 1, y: 0.5 };
@@ -46,7 +48,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
     </View>
   );
   return (
-    <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: short ? 76 : 92 }}>
+    <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: tiny ? 52 : short ? 62 : 92 }}>
       <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}>
         {/* Wider than its room and pushed out past the card's edge, so the picture's plain margin on that side is cut away
             and its subject sits nearer the edge (Mojtaba 2026-10-22). */}
@@ -54,11 +56,11 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
           : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
       </View>
       <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
-      <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12, paddingHorizontal: 12 }}>
+      <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: short ? 7 : 12, paddingHorizontal: 12 }}>
         {room}
         <View style={{ flex: 1, gap: 1 }}>
-          <T style={{ fontSize: 17.5, lineHeight: 25, fontWeight: '700' }} numberOfLines={2}>{title}</T>
-          <T style={{ fontSize: 12.5, lineHeight: 18, color: c.muted }} numberOfLines={1}>{text}</T>
+          <T style={{ fontSize: short ? 16 : 17.5, lineHeight: short ? 22 : 25, fontWeight: '700' }} numberOfLines={short ? 1 : 2}>{title}</T>
+          {tiny ? null : <T style={{ fontSize: 12.5, lineHeight: 18, color: c.muted }} numberOfLines={1}>{text}</T>}
           {note ? <T style={{ fontSize: 11.5, lineHeight: 17, color: c.faint }} numberOfLines={1}>{note}</T> : null}
         </View>
         {arrow}
