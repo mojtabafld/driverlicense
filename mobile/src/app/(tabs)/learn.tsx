@@ -38,7 +38,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   const short = useWindowDimensions().height < 760;
   const fades = FADE_A.map(a => `${c.surface}${a}`) as unknown as readonly [string, string, ...string[]];
   // The picture's room before the words; the gradient runs from the picture to them.
-  const room = <View style={{ width: '32%' }} />, from = { x: RTL ? 1 : 0, y: 0.5 }, to = { x: RTL ? 0 : 1, y: 0.5 };
+  const room = <View style={{ width: '38%' }} />, from = { x: RTL ? 1 : 0, y: 0.5 }, to = { x: RTL ? 0 : 1, y: 0.5 };
   // The round ‹ at the card's end, beside the words, not on the picture (Mojtaba 2026-10-22).
   const arrow = (
     <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>
