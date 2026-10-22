@@ -766,11 +766,14 @@ const LEARN_SET = 'v1';
 // v2 (Mojtaba 2026-10-21): a little more realistic and modern, each picture filling its card from one end and melting
 // into the card's colour (light or dark) under the title, so the subject sits in the middle with a calm scene around it.
 const LEARN_STYLE = 'Style: a modern, slightly realistic 3D render like the cards of a premium automotive app: realistic materials (glossy car paint, real asphalt, brushed metal sign poles, paper), soft natural daylight, gentle depth of field, calm muted modern colours, clean and uncluttered. One compact subject in the exact centre of the picture, about half its width, with a calm, softly blurred scene around it reaching all four edges (no plain studio backdrop, no frame, no vignette). Danish traffic signs and road markings follow their official design (shape and colours). No text, no letters, no numbers, no logos, no brand names, no readable licence plates, no watermarks, no people\'s faces.';
+// The first set's look, for a card that keeps a drawn picture (the rules).
+const LEARN_STYLE_3D = 'Style: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter, no fine texture. The objects are centred, about half the picture\'s width, with generous empty space around them. Danish traffic signs follow their official design (shape and colours). No text, no letters, no numbers, no logos, no brand names, no watermarks, no people\'s faces.';
 const LEARN_PROMPTS = [
   // 1: the course, lesson by lesson
   'A small modern white compact car drives along a gently curving Danish country road with crisp white edge lines, seen from a low three-quarter front view; a theory book lies open on a low stone wall at the roadside in front of it; soft green fields and a pale morning sky blurred behind.',
-  // 2: rules
-  'Close-up inside a modern car on a bright day: a fastened grey seat belt buckle and a sleek steering wheel in soft focus, the dashboard\'s clean lines, daylight through the windscreen with a blurred Danish street outside.',
+  // 2: rules, not realistic (Mojtaba 2026-10-22): the earlier minimal 3D look, on its own soft colour
+  { prompt: 'Background: one plain soft warm peach (#f6e1d3) colour filling the whole picture, no gradient, no floor line. A balanced pair of rounded white justice scales in the centre; on one pan a tiny rounded coral car, on the other a small round speed-limit sign (white with a red ring, blank in the middle); a small rounded seat-belt buckle and a tiny traffic cone stand beside the scales.',
+    style: LEARN_STYLE_3D },
   // 3: road signs
   'Two real Danish road signs on their own brushed metal poles at the corner of a quiet street, seen from a low angle: a white inverted triangular give-way sign with a thick red border, and beside it a round red no-entry sign with one wide white horizontal bar; white shark-teeth markings on the asphalt in front, green trees and houses softly blurred behind, soft daylight.',
   // 4: right of way
@@ -781,8 +784,8 @@ const LEARN_PROMPTS = [
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
 // pictures; each has start (on server start), poll (in the poll round), versions (for /api/config) and blob.
-// `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`; an entry may be { prompt, aspect } for its own
-// shape) or an object of key → { prompt, aspect, ref }.
+// `prompts`: a list (numbered 1…n, each followed by `style`, in `aspect`; an entry may be { prompt, aspect, style } for its
+// own shape or look) or an object of key → { prompt, aspect, ref }.
 // `ref`: a picture in `refDir` the model redraws (image to image), e.g. a sign's official drawing; without it, text only.
 // `limit`: at most this many being made at a time (the rest start as earlier ones finish); none = all at once.
 // Keyed prompts carry a revision (a hash of the prompt and its reference): when it changes, that one picture is made
@@ -808,7 +811,7 @@ function artSet({ metaKey, set, prompts, style = '', aspect = '1:1', prefix, lim
   const meta = () => (store.meta[metaKey] = store.meta[metaKey] && store.meta[metaKey].set === set ? store.meta[metaKey] : { set, items: {} });
   const save = () => store.saveMeta(metaKey, meta());
   const list = Array.isArray(prompts)
-    ? prompts.map((p, i) => [String(i + 1), { prompt: `${typeof p === 'string' ? p : p.prompt}\n${style}`, aspect: (typeof p === 'string' ? null : p.aspect) || aspect, rev: redo[String(i + 1)] }])
+    ? prompts.map((p, i) => [String(i + 1), { prompt: `${typeof p === 'string' ? p : p.prompt}\n${typeof p !== 'string' && p.style != null ? p.style : style}`, aspect: (typeof p === 'string' ? null : p.aspect) || aspect, rev: redo[String(i + 1)] }])
     : Object.entries(prompts).map(([k, v]) => [k, { prompt: v.prompt, aspect: v.aspect || aspect, ref: v.ref,
       rev: require('node:crypto').createHash('sha1').update(`${v.prompt}|${v.ref || ''}|${v.aspect || aspect}`).digest('hex').slice(0, 10) }]);
   // Never started, failed with tries left, or made from an earlier version of its prompt.
