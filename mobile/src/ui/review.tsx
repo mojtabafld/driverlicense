@@ -141,25 +141,24 @@ function AiLoading({ text }: { text: string }) {
   );
 }
 
-// The site's «تحلیل پاسخ شما» button: outlined in teal, filled while its text is shown.
+// The site's «تحلیل پاسخ شما» button, on the blush-to-lavender wash of the profile picture's button (ui/avatar.tsx)
+// with its mark and arrow in the theme's link colour (Mojtaba 2026-10-22), open or closed.
 function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; shown: boolean; onPress: () => void }) {
   const c = useColors(), dark = useIsDark();
-  // In the neutral `strong` grey: outlined while closed (the AI mark on a solid tile), filled while its text shows.
-  const fg = shown ? c.strongFg : c.text;
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ expanded: shown }}
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.99 : 1 }] })}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5,
-        borderColor: shown ? c.strong : c.line, backgroundColor: shown ? c.strong : c.surface }}>
-        <View style={{ width: 34, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: shown ? (dark ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.14)') : c.strong }}>
-          <Icon name="sparkles" size={18} color={c.strongFg} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, overflow: 'hidden', borderWidth: 1,
+        borderColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(31,42,68,0.07)', backgroundColor: c.surface }}>
+        <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+        <View style={{ width: 34, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+          <Icon name="sparkles" size={18} color={c.link} />
         </View>
         <View style={{ flex: 1 }}>
-          <T style={{ fontSize: 15, fontWeight: '700', color: fg }}>{title}</T>
-          <T style={{ fontSize: 11.5, lineHeight: 17, color: fg, opacity: 0.75 }}>{sub}</T>
+          <T style={{ fontSize: 15, fontWeight: '700', color: c.text }}>{title}</T>
+          <T style={{ fontSize: 11.5, lineHeight: 17, color: c.muted }}>{sub}</T>
         </View>
-        <View style={{ transform: [{ rotate: shown ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={18} color={fg} /></View>
+        <View style={{ transform: [{ rotate: shown ? '180deg' : '0deg' }] }}><Icon name="chevronDown" size={18} color={c.link} /></View>
       </View>
     </Pressable>
   );
