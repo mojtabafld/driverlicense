@@ -36,7 +36,7 @@ export function CatGrid({ kind, cats, limit, grow, dense, bare, tight }: { kind:
   if (!PROVE_PICS) return (
     <View style={{ gap: tight ? 6 : grow ? 8 : 10, flexGrow: grow ? 1 : undefined }}>
       {cats.slice(0, limit ?? cats.length).map((g, i) => (
-        <ListCard key={g.id} grow={grow} small={grow} onPress={() => open(g, i)} locked={!firstOk(i)} title={g.title} sub={bare ? undefined : g.blurb} subLines={grow ? 1 : 2} note={dense ? undefined : `${faNum(g.items.length)} مورد`}
+        <ListCard key={g.id} grow={grow} small={grow} titleLines={tight ? 1 : 2} onPress={() => open(g, i)} locked={!firstOk(i)} title={g.title} sub={bare ? undefined : g.blurb} subLines={grow ? 1 : 2} note={dense ? undefined : `${faNum(g.items.length)} مورد`}
           label={`${g.title}، ${faNum(g.items.length)} مورد`} pic={<GuideImage k={g.thumb} aspect={LIST_PIC.width / LIST_PIC.height} radius={0} size="m" />} />
       ))}
     </View>
