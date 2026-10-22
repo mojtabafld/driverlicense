@@ -573,20 +573,24 @@ export function TransT({ style, ...p }: TextProps & { style?: StyleProp<TextStyl
     { fontFamily: font, fontWeight: 'normal', writingDirection: fa ? 'rtl' : 'ltr', textAlign: fa ? 'right' : 'left', ...(Platform.OS === 'web' ? null : { direction: fa ? 'rtl' as const : 'ltr' as const }) }]}>{kids}</Text>;
 }
 // A label kept on one line in every language (Mojtaba, 2026-10-15): measured once at `size` in a hidden, very wide
-// box, then set just small enough to fit the width it has (never below `min`).
-export function FitLine({ children, size, min = 9, style }: { children: string; size: number; min?: number; style?: StyleProp<TextStyle> }) {
+// box, then set just small enough to fit the width it has (never below `min`). `children` may be a function of the
+// font size, for a line with parts in its own style (then `id` names the text, so a new one is measured again).
+export function FitLine({ children, size, min = 9, style, id }: { children: string | ((fs: number) => React.ReactNode); size: number; min?: number; style?: StyleProp<TextStyle>; id?: string }) {
   const [full, setFull] = useState<{ text: string; w: number } | null>(null);
   const [room, setRoom] = useState(0);
-  const w = full && full.text === children ? full.w : 0;
+  const key = typeof children === 'string' ? children : id ?? '';
+  const w = full && full.text === key ? full.w : 0;
   const fs = w && room ? Math.max(min, Math.min(size, Math.floor(size * room / w * 0.97 * 10) / 10)) : size;
+  const line = (f: number) => (typeof children === 'string' ? children : children(f));
+  const raw = typeof children !== 'string';
   return (
     <View onLayout={e => setRoom(e.nativeEvent.layout.width)} style={{ alignSelf: 'stretch', overflow: 'hidden' }}>
       <View pointerEvents="none" style={{ position: 'absolute', opacity: 0, top: 0, left: 0, width: 4000, flexDirection: 'row' }}>
-        <View onLayout={e => setFull({ text: children, w: e.nativeEvent.layout.width })} style={{ flexShrink: 0, flexGrow: 0 }}>
-          <T numberOfLines={1} style={[style, { fontSize: size }]}>{children}</T>
+        <View onLayout={e => setFull({ text: key, w: e.nativeEvent.layout.width })} style={{ flexShrink: 0, flexGrow: 0 }}>
+          <T raw={raw} numberOfLines={1} style={[style, { fontSize: size }]}>{line(size)}</T>
         </View>
       </View>
-      <T numberOfLines={1} style={[style, { fontSize: fs, opacity: w && room ? 1 : 0 }]}>{children}</T>
+      <T raw={raw} numberOfLines={1} style={[style, { fontSize: fs, opacity: w && room ? 1 : 0 }]}>{line(fs)}</T>
     </View>
   );
 }
