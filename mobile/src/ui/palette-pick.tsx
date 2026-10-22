@@ -26,7 +26,7 @@ function PalettePick() {
           <Pressable key={p.id} onPress={() => pick(p.id)} accessibilityRole="radio" accessibilityState={{ selected: on }}
             accessibilityLabel={p.name} style={{ width: '20%', alignItems: 'center', gap: 6 }}>
             <View style={{ width: 48, height: 48, borderRadius: 24, padding: 3, borderWidth: 2, borderColor: on ? c.text : 'transparent' }}>
-              <View style={{ flex: 1, borderRadius: 20, backgroundColor: dark ? s.bg : '#ffffff', alignItems: 'center', justifyContent: 'center',
+              <View style={{ flex: 1, borderRadius: 20, backgroundColor: dark ? s.bg : s.bgL, alignItems: 'center', justifyContent: 'center',
                 borderWidth: dark ? 0 : 1, borderColor: c.line }}>
                 <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: dark ? s.accent : s.accentL, alignItems: 'center', justifyContent: 'center' }}>
                   {on ? <Icon name="check" size={12} color={dark ? p.onD : (p.onL ?? '#fff')} weight="bold" /> : null}
@@ -49,7 +49,7 @@ export function PaletteRow() {
     <>
       <Pressable onPress={() => { tap(); if (limited) toPremium(); else setOpen(true); }} accessibilityRole="button" accessibilityLabel="رنگ برنامه"
         style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6, opacity: pressed ? 0.7 : 1 })}>
-        <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: dark ? s.bg : c.surface2 }}>
+        <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: dark ? s.bg : s.bgL }}>
           <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: dark ? s.accent : s.accentL }} />
         </View>
         <View style={{ flex: 1 }}>

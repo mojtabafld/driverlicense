@@ -123,37 +123,41 @@ export function px(hex: string): string {
 // The same for an rgba() of an ocean colour.
 export const pxa = (hex: string, a: number) => rgba(px(hex), a);
 
-// The theme's colours for the light and dark themes (null for «اقیانوس», which keeps theme.ts's own values).
+// The theme's colours for the light and dark themes. (2026-10-22, Mojtaba, after a green planner app's screens: the
+// chosen colour tints the whole page, not only its accent. Light: a soft pale wash of the hue that fades to near white
+// down the page, near-white cards with a hint of it, text, titles and main buttons in a deep shade of the hue, the chosen
+// row in a pale tint. Dark: the same turned over: a deep wash of the hue, cards a step lighter, and pale buttons of the
+// hue with deep text on them.) t: how much colour the greys take (none for «سیاه و سفید»).
 export function paletteColors() {
-  if (PALETTE === 'ocean') return null;
-  const S = SPEC, NS = S.nsat, n = (l: number, sat = NS * 0.6) => fromHls(S.nhue, l, sat), nl = (l: number) => n(l, NS * 0.5);
-  const aD = S.accD, aL = S.accL;
+  const S = SPEC, H = S.hue, t = S.asat ?? 1, h = (l: number, s: number) => fromHls(H, l, Math.min(1, s * t));
+  const aD = S.accD, mono = t === 0;
+  const deep = mono ? '#151515' : h(0.13, 0.72), ink = mono ? '#111111' : h(0.1, 0.55), mid = mono ? '#151515' : h(0.24, 0.75);
+  const dTop = h(0.13, 0.42), dMid = h(0.075, 0.38), dBot = fromHls(S.nhue, 0.045, Math.min(1, 0.3 * t));
   const dark = {
-    bg: n(0.045), surface: n(0.09), surface2: n(0.12), line: n(0.16), text: n(0.96, 0.1 * Math.min(1, NS * 4)), muted: n(0.66, 0.08 * Math.min(1, NS * 4)), faint: n(0.48, 0.08 * Math.min(1, NS * 4)),
+    bg: dMid, surface: h(0.12, 0.3), surface2: h(0.155, 0.28), line: h(0.2, 0.24), text: h(0.95, 0.35), muted: h(0.7, 0.16), faint: h(0.52, 0.12),
     accent: aD, accentText: S.onD, accentSoft: rgba(aD, 0.18), link: S.accD2, forest: aD,
     ok: '#4fd1a5', okSoft: '#0f2a26', bad: '#f2706e', badSoft: '#341620', warn: '#f5b84a', warnSoft: '#30260f', info: '#ffffff',
-    note: n(0.12), submit: '#ffffff', checked: rgba(aD, 0.2), cardBorder: n(0.13), hairline: n(0.13),
-    glass: n(0.09), glassStrong: n(0.09), glassBorder: n(0.16),
-    pick: aD, pickSoft: S.pickSoftD ?? fromHls(S.hue, 0.16, 0.45),
-    nav: n(0.12), navFg: n(0.96, 0.1), navOff: n(0.09), navNum: n(0.66, 0.08),
-    strong: '#ffffff', strongFg: n(0.06), btn: '#ffffff', btnFg: n(0.06), cta: '#ffffff', ctaFg: n(0.06),
+    note: h(0.155, 0.28), submit: h(0.88, 0.55), checked: rgba(aD, 0.2), cardBorder: h(0.17, 0.26), hairline: h(0.16, 0.26),
+    glass: h(0.12, 0.3), glassStrong: h(0.12, 0.3), glassBorder: h(0.2, 0.24),
+    pick: aD, pickSoft: S.pickSoftD ?? h(0.18, 0.45),
+    nav: h(0.16, 0.28), navFg: h(0.95, 0.35), navOff: h(0.12, 0.3), navNum: h(0.7, 0.16),
+    strong: h(0.88, 0.55), strongFg: deep, btn: h(0.88, 0.55), btnFg: deep, cta: h(0.88, 0.55), ctaFg: deep,
   };
+  const lTop = h(0.895, 0.55), lMid = h(0.93, 0.42), lBot = fromHls(S.nhue, 0.96, Math.min(1, 0.18 * t));
   const light = {
-    bg: nl(0.955), surface: '#ffffff', surface2: nl(0.972), line: nl(0.905), text: n(0.05), muted: n(0.38, 0.1 * Math.min(1, NS * 4)), faint: n(0.52, 0.08 * Math.min(1, NS * 4)),
-    accent: aL, accentText: S.onL ?? '#ffffff', accentSoft: rgba(aL, 0.12), link: aL, forest: aL,
+    bg: lMid, surface: h(0.988, 0.5), surface2: h(0.955, 0.36), line: h(0.88, 0.26), text: ink, muted: h(0.36, 0.2), faint: h(0.52, 0.13),
+    accent: mid, accentText: '#ffffff', accentSoft: rgba(deep, 0.08), link: mid, forest: deep,
     ok: '#0f8a68', okSoft: '#e3f4ee', bad: '#cd1526', badSoft: '#fbe9ea', warn: '#b66400', warnSoft: '#fdf1e2', info: '#000000',
-    // (The AI text's panel: a light cool grey, set apart from the white card as the dark theme's panel is; Mojtaba
-    // 2026-10-18.)
-    note: '#e6e9ed', submit: n(0.1), checked: rgba(aL, 0.12), cardBorder: nl(0.905), hairline: nl(0.935),
-    glass: '#ffffff', glassStrong: '#ffffff', glassBorder: nl(0.905),
-    pick: aL, pickSoft: S.asat === 0 ? '#efefef' : fromHls(S.hue, 0.955, 0.6),
-    nav: nl(0.935), navFg: n(0.05), navOff: nl(0.972), navNum: n(0.38, 0.1),
-    strong: n(0.1), strongFg: '#ffffff', btn: n(0.1), btnFg: '#ffffff', cta: aL, ctaFg: S.onL ?? '#ffffff',
+    note: h(0.93, 0.3), submit: deep, checked: rgba(deep, 0.1), cardBorder: h(0.9, 0.28), hairline: h(0.925, 0.28),
+    glass: h(0.988, 0.5), glassStrong: h(0.988, 0.5), glassBorder: h(0.9, 0.28),
+    pick: deep, pickSoft: mono ? '#efefef' : h(0.91, 0.45),
+    nav: h(0.92, 0.32), navFg: ink, navOff: h(0.955, 0.36), navNum: h(0.36, 0.2),
+    strong: deep, strongFg: '#ffffff', btn: deep, btnFg: '#ffffff', cta: deep, ctaFg: '#ffffff',
   };
   return {
-    dark: { ...dark, bgGradient: [dark.bg, dark.bg, dark.bg] as readonly [string, string, string] },
-    light: { ...light, bgGradient: [light.bg, light.bg, light.bg] as readonly [string, string, string] },
+    dark: { ...dark, bgGradient: [dTop, dMid, dBot] as readonly [string, string, string] },
+    light: { ...light, bgGradient: [lTop, lMid, lBot] as readonly [string, string, string] },
   };
 }
-// A swatch for the picker: the theme's page and accent in the dark theme.
-export const swatch = (s: Spec) => ({ accent: s.accD, accentL: s.accL, bg: s.id === 'ocean' ? '#121524' : fromHls(s.nhue, 0.09, s.nsat * 0.6) });
+// A swatch for the picker: the theme's page (dark and light) and accent.
+export const swatch = (s: Spec) => ({ accent: s.accD, accentL: s.accL, bg: fromHls(s.hue, 0.1, 0.4 * (s.asat ?? 1)), bgL: fromHls(s.hue, 0.93, 0.5 * (s.asat ?? 1)) });
