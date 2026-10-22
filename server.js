@@ -183,6 +183,15 @@ async function sendCodeMail(u, e, lang, kind) {
   await mail.sendCode(u ? u.email || u.username : e, u ? u.name || '' : '', code, ui, kind);
   console.log('code mail sent', kind, u ? u.username : e.replace(/^(.{2}).*@/, '$1…@'));
 }
+// Past exams a user deletes (one, or the whole history) are kept in meta `removed:<username>:attempts`, the newest
+// KEPT_REMOVED, so they can be put back (Mojtaba 2026-10-22: negin's history was gone and there was no copy).
+const KEPT_REMOVED = 1000;
+async function keepRemoved(u, list) {
+  if (!list.length) return;
+  const key = `removed:${u.username}:attempts`, old = (store.meta[key] && store.meta[key].attempts) || [];
+  await store.saveMeta(key, { at: Date.now(), attempts: old.concat(list.map(a => ({ ...a, removedAt: Date.now() }))).slice(-KEPT_REMOVED) });
+  console.log('attempts removed, copy kept', u.username.replace(/^(.{2}).*@/, '$1…@'), list.length);
+}
 // What stays of a deleted account, by its address (a hash of it, not the address; Mojtaba 2026-10-20), in store.meta.gone:
 // that it had the free trial (so the trial cannot be had again with the address), and its bought pass (given back when
 // the address signs up again while it lasts; its purchases go with it either way, so the payments' sync, which finds
@@ -1128,6 +1137,7 @@ async function api(req, res, route) {
     for (const [t, x] of Object.entries(store.sessions)) if (x.username === u) delete store.sessions[t];
     delete store.users[u];
     await store.deleteUser(u);
+    if (store.meta[`removed:${u}:attempts`]) await store.saveMeta(`removed:${u}:attempts`, { at: Date.now(), attempts: [] }); // a deleted account's tests go too
     if (user.avatar && user.avatar.photo) await store.deleteBlob(`avatar-${u}`).catch(() => {});
     if ((store.meta.reports || []).some(r => r.username === u)) {
       store.meta.reports = store.meta.reports.filter(r => r.username !== u);
@@ -1543,14 +1553,17 @@ async function api(req, res, route) {
   if (req.method === 'DELETE' && route === 'attempt') {
     const at = +(await readBody(req)).at;
     const n = user.attempts.length;
+    const removed = user.attempts.filter(a => a.at === at);
     user.attempts = user.attempts.filter(a => a.at !== at);
     if (user.attempts.length === n) return send(res, 404, { error: 'آزمون پیدا نشد.' });
+    await keepRemoved(user, removed);
     await store.saveUser(user);
     return send(res, 200, { ok: true });
   }
   // All past exams; with { keepLessons: true } the lessons' attempts stay (the past-exams page lists no lessons).
   if (req.method === 'DELETE' && route === 'attempts') {
     const b = await readBody(req);
+    await keepRemoved(user, b.keepLessons ? user.attempts.filter(a => a.mode !== 'lesson') : user.attempts);
     user.attempts = b.keepLessons ? user.attempts.filter(a => a.mode === 'lesson') : [];
     await store.saveUser(user);
     return send(res, 200, { ok: true });
