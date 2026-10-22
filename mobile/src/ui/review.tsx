@@ -149,7 +149,7 @@ function AiButton({ title, sub, shown, onPress }: { title: string; sub: string; 
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ expanded: shown }}
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.99 : 1 }] })}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, overflow: 'hidden', borderWidth: 1,
-        borderColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(31,42,68,0.07)', backgroundColor: c.surface }}>
+        borderColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(31,42,68,0.16)', backgroundColor: c.surface }}>
         <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
         <View style={{ width: 34, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
           <Icon name="sparkles" size={18} color={c.link} />
