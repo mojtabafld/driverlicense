@@ -2775,7 +2775,7 @@
 "{0}، این تحلیل پاسخ شماست:":["{0}, here is the analysis of your answer:", "{0}, her er analysen af dit svar:"],
 "حساب مهمان قابل ویرایش یا حذف نیست.":["A guest account cannot be edited or deleted.", "En gæstekonto kan ikke redigeres eller slettes."],
 "ایمیل تأییدشده قابل تغییر نیست.":["A confirmed email cannot be changed.", "En bekræftet e-mail kan ikke ændres."],
-"در نسخه‌ی رایگان {0} آزمون تصادفی دارید؛ {1} آزمون مانده است.":["The free version includes {0} random exams; {1} left.", "Den gratis version har {0} tilfældige prøver; {1} tilbage."],
+"{1} از {0} آزمون تصادفی رایگان مانده است.":["{1} of {0} free random exams left.", "{1} af {0} gratis tilfældige prøver tilbage."],
 "{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.":["You have used your {0} free exams. Activate Premium for more exams.", "Du har brugt dine {0} gratis prøver. Aktivér Premium for flere prøver."],
 "فعال کردن نسخه‌ی ویژه":["Activate Premium", "Aktivér Premium"],
 "حساب شما فعال شد":["Your account is active", "Din konto er aktiv"],

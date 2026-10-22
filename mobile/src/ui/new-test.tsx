@@ -18,7 +18,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { pctText } from './activity';
 import { Icon } from './icon';
-import { ArcButton, Button, Card, T, tap, useCountUp } from './kit';
+import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
@@ -84,11 +84,14 @@ export function NewTestCard({ test }: { test: NewTest }) {
         </View>
       ) : null}
       {limited ? (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
+        <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
           <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
-          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: randomLeft ? c.muted : c.text }}>{randomLeft
-            ? t('در نسخه‌ی رایگان {0} آزمون تصادفی دارید؛ {1} آزمون مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))
-            : t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>
+          {/* The free tests left: always one line, shorter and smaller on a narrow screen (Mojtaba 2026-10-22). */}
+          {randomLeft ? (
+            <View style={{ flex: 1 }}>
+              <FitLine size={13} min={10.5} style={{ lineHeight: 21, color: c.muted }}>{t('{1} از {0} آزمون تصادفی رایگان مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))}</FitLine>
+            </View>
+          ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
         </View>
       ) : null}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
