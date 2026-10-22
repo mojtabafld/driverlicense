@@ -19,7 +19,7 @@ import { useNotes } from '@/lib/notes';
 import { useApp } from '@/lib/store';
 import { openAttempt } from '@/ui/activity';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, T, tap } from '@/ui/kit';
+import { ArcButton, physical, T, tap } from '@/ui/kit';
 import { Sheet } from '@/ui/sheet';
 import { SubPage } from '@/ui/sub-page';
 import { useColors, type Colors } from '@/ui/theme';
@@ -162,11 +162,18 @@ export default function Calendar() {
         ) : null}
         {items.length ? (
           <View style={{ gap: 12 }}>
+            {/* The day's rail between the hours and the cards: one rounded line in the theme's colour, a ringed dot at each
+                hour (Mojtaba 2026-10-22). Rows: hour 50, gap 8, rail 14, gap 8, card; the line runs down the rail's middle. */}
+            <View pointerEvents="none" style={{ position: 'absolute', top: 12, bottom: 12, width: 3, borderRadius: 2, backgroundColor: c.accent, opacity: 0.35,
+              ...physical(RTL ? { right: 50 + 8 + 5.5 } : { left: 50 + 8 + 5.5 }) }} />
             {items.map(it => {
               const n = notes[it.key];
               return (
-                <View key={it.key} style={{ flexDirection: 'row', gap: 12 }}>
+                <View key={it.key} style={{ flexDirection: 'row', gap: 8 }}>
                   <T raw style={{ width: 50, paddingTop: 16, fontSize: 12.5, color: c.muted }}>{clock(it.at)}</T>
+                  <View style={{ width: 14, alignItems: 'center', paddingTop: 19 }}>
+                    <View style={{ width: 12, height: 12, borderRadius: 6, borderWidth: 3, borderColor: c.accent, backgroundColor: c.bg }} />
+                  </View>
                   <View style={{ flex: 1, borderRadius: 18, backgroundColor: n ? c.accentSoft : c.surface, borderWidth: n ? 0 : 1, borderColor: c.line, overflow: 'hidden' }}>
                     <Pressable onPress={() => { tap(); it.open(); }} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, opacity: pressed ? 0.75 : 1 })}>
                       <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: n ? c.surface : c.surface2 }}>
