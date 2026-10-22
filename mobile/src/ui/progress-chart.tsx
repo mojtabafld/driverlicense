@@ -20,7 +20,7 @@ import { ARC, useColors } from './theme';
 
 // The main site (ARC) draws it as a soft gradient (Mojtaba picked it of five samples, 2026-10-22): no percent scale or
 // grid, a thick line in the theme's colour from the left edge over a deep fill fading down, the pass line thin and
-// solid, a point on each attempt (theme colour when it passed, red when not) and a glow on the picked one, dates below.
+// solid, a glowing point on the picked attempt (green when it passed, red when not; the chart view adds one on each), dates below.
 // PAD: room after the newest point, so its glow is not cut at the right edge; PADL before the oldest, for its point.
 const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120, PAD = ARC ? 12 : 0, PADL = ARC ? 6 : 0;
 // The line drew itself in already since the app started.
@@ -34,7 +34,9 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 // `noNote`: the empty chart without its line under it (home's chart view on a very short screen, Mojtaba 2026-10-19).
 // `onBlank`: a tap on the chart off its points does this instead of clearing the pick (home: it opens or closes its chart
 // view, and the picked test stays picked; Mojtaba 2026-10-19).
-export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; onBlank?: () => void }) {
+// `allPoints`: on the main site, a point on every attempt (home's chart view); without it only the picked one (by
+// default the newest) has its point (Mojtaba 2026-10-22).
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, onBlank, allPoints }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; onBlank?: () => void; allPoints?: boolean }) {
   const c = useColors();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
@@ -171,10 +173,10 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                     </>}
                   </G>
                   {/* Each point shows once the line has reached it. */}
-                  {/* ARC: a point on every attempt (Mojtaba 2026-10-22), in the theme's colour when it passed (or 80% and over),
-                      red when not; the picked one larger, in a soft glow. */}
+                  {/* ARC: with `allPoints` a point on every attempt, in the theme's colour when it passed (or 80% and over),
+                      red when not; the picked one larger, in a soft glow (the only one without `allPoints`). */}
                   {ARC ? <>
-                    {data.map((d, i) => ahead(i) || i === sel ? null : (
+                    {data.map((d, i) => !allPoints || ahead(i) || i === sel ? null : (
                       <Circle key={i} cx={x(i)} cy={tops[i]} r={DOT} fill={good(d) ? c.forest : c.bad} stroke={c.surface} strokeWidth={2} />))}
                     {sel != null && data[sel] && !ahead(sel) ? <>
                       <Circle cx={x(sel)} cy={tops[sel]} r={11} fill={c.forest} fillOpacity={0.18} />
