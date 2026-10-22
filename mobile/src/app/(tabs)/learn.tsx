@@ -36,7 +36,7 @@ const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
   const { learnArt, learnBg } = useApp();
-  // The dark theme draws the card's own dark picture (6–10: the same drawing on a near-black background; Mojtaba
+  // The dark theme draws the card's own dark picture (6–10: the same drawing on a dark tint of its colour; Mojtaba
   // 2026-10-22) once the server has made it, with the light theme's fade; until then the light one.
   const dark = useIsDark(), pn = dark && learnArt[n + 5] ? n + 5 : n, v = learnArt[pn];
   // The card's height (its picture's room is as high), so the picture is drawn whole at that height.
