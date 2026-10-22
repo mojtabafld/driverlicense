@@ -5,6 +5,7 @@
 // `onConfirm` runs a moment later. Screen readers get one «activate» action instead of dragging. PanResponder and
 // Animated only, so it needs no extra native module.
 // `toRight`: mirrored, the handle at the left end, dragged to the right (the main site's exam hand-in, Mojtaba asked).
+// `danger`: the handle and its fill in red (deleting the exam history, Mojtaba 2026-10-22).
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { Animated, Easing, PanResponder, Platform, View, type LayoutChangeEvent } from 'react-native';
@@ -59,8 +60,9 @@ function DragArrow({ color }: { color: string }) {
   );
 }
 
-export function SlideToConfirm({ label, doneLabel, onConfirm, toRight = false }: { label: string; doneLabel: string; onConfirm: () => void; toRight?: boolean }) {
+export function SlideToConfirm({ label, doneLabel, onConfirm, toRight = false, danger = false }: { label: string; doneLabel: string; onConfirm: () => void; toRight?: boolean; danger?: boolean }) {
   const c = useColors();
+  const bg = danger ? c.bad : c.btn, fg = danger ? '#ffffff' : c.btnFg;
   const [done, setDone] = useState(false);
   const [s] = useState(() => makeSlide(onConfirm, () => setDone(true), toRight));
   // The handle's own end of the track, and the far end it is dragged to.
@@ -83,15 +85,15 @@ export function SlideToConfirm({ label, doneLabel, onConfirm, toRight = false }:
       {/* The handle and the fill it grows into, from the right end. The same label inside it, standing still with the
           track, shows in the button's text colour where the fill covers it. */}
       <Animated.View {...s.pan.panHandlers}
-        style={{ position: 'absolute', top: 0, bottom: 0, [near]: 0, width: fill, borderRadius: R, backgroundColor: c.btn, overflow: 'hidden',
+        style={{ position: 'absolute', top: 0, bottom: 0, [near]: 0, width: fill, borderRadius: R, backgroundColor: bg, overflow: 'hidden',
           ...(Platform.OS === 'web' ? { cursor: 'grab', touchAction: 'none' } as any : {}) }}>
         {done ? (
           <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, [near]: 0, width: w, [toRight ? 'paddingRight' : 'paddingLeft']: KNOB, alignItems: 'center', justifyContent: 'center' }}>
-            <T style={[text, { color: c.btnFg }]} numberOfLines={1}>{doneLabel}</T>
+            <T style={[text, { color: fg }]} numberOfLines={1}>{doneLabel}</T>
           </View>
         ) : null}
         <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, [far]: 0, width: KNOB, alignItems: 'center', justifyContent: 'center' }}>
-          {done ? <Icon name="check" size={22} color={c.btnFg} weight="bold" /> : <View style={toRight ? { transform: [{ scaleX: -1 }] } : undefined}><DragArrow color={c.btnFg} /></View>}
+          {done ? <Icon name="check" size={22} color={fg} weight="bold" /> : <View style={toRight ? { transform: [{ scaleX: -1 }] } : undefined}><DragArrow color={fg} /></View>}
         </View>
       </Animated.View>
     </View>
