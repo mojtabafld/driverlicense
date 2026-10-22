@@ -25,10 +25,11 @@ import { useColors } from './theme';
 // the way out never looks like the bar's arrows.
 // `pager`: a page with its own previous / next bar turns its steps with a sideways swipe (as the exam does) instead of
 // going back with one, so a swipe for the next step never leaves the page; `rtl`: turning right to left (see swipe.tsx).
-export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close, pager, theme }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
+export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close, pager, theme, fill }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
   maxWidth?: number; guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook; scrollRef?: React.RefObject<ScrollView | null>;
   onBodyY?: (y: number) => void; close?: boolean; pager?: { i: number; n: number; go: (k: number) => void; rtl?: boolean };
-  /** The light / dark switch in the head, as on the signs' and right of way's pages (the course's lessons). */ theme?: boolean }) {
+  /** The light / dark switch in the head, as on the signs' and right of way's pages (the course's lessons). */ theme?: boolean;
+  /** With a picture header: the body takes at least the rest of the screen (its cards can grow to fill it). */ fill?: boolean }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
   const ref = useTopOnFocus(scrollRef);
@@ -49,9 +50,9 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
       <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, pager ? { transform: [{ translateX: turn.dx }] } : backLean(backSwipe.dx)]}>
         <KeyboardAvoidingView behavior={Platform.OS === 'web' ? undefined : 'padding'} style={{ flex: 1 }}>
           {hero ? (
-            <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: ins.bottom + 40 }}>
+            <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={fill ? { flexGrow: 1, paddingBottom: ins.bottom + 12 } : { paddingBottom: ins.bottom + 40 }}>
               <Hero look={hero} title={title} subtitle={subtitle} back />
-              <View onLayout={e => onBodyY?.(e.nativeEvent.layout.y)} style={{ paddingTop: 6, paddingHorizontal: 16, gap, maxWidth, width: '100%', alignSelf: 'center' }}>{children}</View>
+              <View onLayout={e => onBodyY?.(e.nativeEvent.layout.y)} style={{ paddingTop: 6, paddingHorizontal: 16, gap, maxWidth, width: '100%', alignSelf: 'center', flexGrow: fill ? 1 : undefined }}>{children}</View>
             </ScrollView>
           ) : (
           <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"

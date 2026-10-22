@@ -21,7 +21,10 @@ export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same
 
 // The groups as cards: the group's thumbnail, its title, a line about it and how many items it has. On the main site
 // they are rows one under the other like «آموزش»'s (ui/list-card.tsx); at /app two to a row with the picture on top. A card opens the group page by page (/guide-view).
-export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[] }) {
+// `limit`: only the first ones (main site; the page offers the rest); `grow`: the cards share the height the list is given,
+// lower (a small picture, one line about the group); `dense`: without the count (short screens), `bare`: without the line too;
+// `tight`: closer together.
+export function CatGrid({ kind, cats, limit, grow, dense, bare, tight }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[]; limit?: number; grow?: boolean; dense?: boolean; bare?: boolean; tight?: boolean }) {
   const c = useColors();
   const { firstOk } = useFree();
   const open = (g: { id: string }, i: number) => { tap(); if (!firstOk(i)) return toPremium(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
@@ -31,9 +34,9 @@ export function CatGrid({ kind, cats }: { kind: GuideKind; cats: { id: string; t
     </View>
   );
   if (!PROVE_PICS) return (
-    <View style={{ gap: 10 }}>
-      {cats.map((g, i) => (
-        <ListCard key={g.id} onPress={() => open(g, i)} locked={!firstOk(i)} title={g.title} sub={g.blurb} subLines={2} note={`${faNum(g.items.length)} مورد`}
+    <View style={{ gap: tight ? 6 : grow ? 8 : 10, flexGrow: grow ? 1 : undefined }}>
+      {cats.slice(0, limit ?? cats.length).map((g, i) => (
+        <ListCard key={g.id} grow={grow} small={grow} onPress={() => open(g, i)} locked={!firstOk(i)} title={g.title} sub={bare ? undefined : g.blurb} subLines={grow ? 1 : 2} note={dense ? undefined : `${faNum(g.items.length)} مورد`}
           label={`${g.title}، ${faNum(g.items.length)} مورد`} pic={<GuideImage k={g.thumb} aspect={LIST_PIC.width / LIST_PIC.height} radius={0} size="m" />} />
       ))}
     </View>
