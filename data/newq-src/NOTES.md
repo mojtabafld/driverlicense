@@ -138,3 +138,42 @@ is new.
   BUS: only regular buses (taxis, zero-emission cars where their symbols are added), cyclists and small mopeds must use a
   bus lane on the right.
 - FDM: Tempo 100: an approved car and trailer may drive 100 km/h on the motorway only (otherwise 80).
+- Færdselsloven (LBK nr 118 af 12/01/2026), checked for batch 4 (lovguiden.dk): § 2 nr. 18 a vehicle left because an
+  accident or a technical fault stops it counts as parked 18 hours after it was left, nr. 27 tættere bebygget område is
+  only where its borders are marked; § 3 stk. 1 consideration and care, stk. 2 særligt hensyn for children, school
+  patrols, the elderly and people with poor sight or hearing or another impairment; § 9 accident: stop at once, help the
+  injured, help make the traffic safe, name and address on request (also to the owner of damaged property), tell the
+  police after more than minor injury, the injured party or the police after damage with nobody there, stk. 3 nothing
+  moved after death or serious injury unless it endangers traffic; § 23 stk. 1 nr. 3 exact exception: «medmindre
+  kørebanen i kørselsretningen har mindst to vognbaner, hvor modkørende færdsel ikke må forekomme», stk. 2; § 28 stk. 2
+  left side on less busy and one-way roads, lengthwise at the edge or outside it if possible, stk. 3 not on cycle path,
+  footpath, pavement, central reserve, islands (outside built-up areas a vehicle up to 3,500 kg partly on the pavement or
+  separating verge), stk. 4 secured against moving off and against use by others, anti-theft device on, stk. 5; § 35
+  stk. 1 parked in lighting-up time: position, rear and number-plate lights, stk. 3 no other lights, stk. 4 in built-up
+  areas a motor vehicle up to 6 m by 2 m along the edge only the position and rear light towards the middle (not when
+  towing); § 41 stk. 2 nr. 9 a bus or a letbane standing for passengers; § 49 stk. 1 two cyclists abreast where there is
+  room and it is safe, not when an overtaking signal is given unless the traffic allows or requires it, three-wheelers
+  never, stk. 2 keep right, stk. 3 keep right before junctions, may wait at the line between a right-turn lane and the
+  next lane, left turn in two stages (through the junction first) unless a marking says it is for cyclists.
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 4 (lovguiden.dk): § 5 variable signs (A 20, A 22, A 39,
+  A 95, A 99, C 11, C 51–C 56, E 16, E 91, E 92); § 9 plates white under A, B and C signs, blue under D and E signs; A 19
+  Lyssignal, A 20 Kø (particular risk of queues), A 37 Ujævn vej, A 38 Lunke (water on the road in heavy rain), A 91
+  Oplukkelig bro, A 92 Havnekaj (ferry berth, quay), A 99 with UA 99 Uheldskryds; E 15 lanes at a junction (the
+  directions each lane is for), E 16,1 merge (mutual consideration), E 16,2 lane change (the one changing lanes makes sure
+  it is safe), E 30 letbane stop, E 31 bus stop (regular buses), E 32 taxi stand, E 34 emergency place, E 41 exit bend
+  speed, E 42 motorway (also slip roads), E 44 end of motorway, E 47 cykelgade (reserved for bicycles and small mopeds,
+  others by permission, speed like the cyclists', normally under 30 km/h, særlig agtpågivenhed, parking only in marked
+  places), E 49 gågade (reserved for pedestrians, driving by permission on a plate, very low speed, normally under
+  15 km/h, parking only in marked places except bicycles, mopeds and two-wheeled motorcycles, ubetinget vigepligt out of
+  it), E 53 area with speed reduction (no number of its own), E 55 built-up area, E 80 general limits with UE 80
+  (daytime running lights, seat belts and child restraints compulsory), E 90 ATK, E 91 speed display; § 54 yellow
+  markings are temporary and are followed before white ones (S 21 cycle crossing may be blue, V 45 / V 46 green); § 60
+  T 33 inside the bay, wheels on a broad edge line towards the carriageway but not beyond, in a car park not outside the
+  bays, vehicles with more than two wheels lengthwise, a symbol (bus, taxi, lorry, motorcycle, V 23) keeps the bay for
+  those, T 61 unbroken yellow: no stopping, T 62 dotted yellow: no parking, T 63 yellow triangle: end of the ban at a
+  junction; § 65 red and red-and-yellow stop, yellow stop unless that is dangerous, green go; § 66 an arrow signal is for
+  those going the arrow's way, left-turning cyclists and small mopeds follow the signals for straight on.
+- FDM (p-skilte): times in black or white apply on weekdays, in brackets on Saturdays, in red on Sundays and public
+  holidays; no times: always.
+- Transportministeriet via lovguiden.dk: since 1 July 2025 a 17-year-old may drive alone between 05 and 20; between 20 and
+  05 the companion rule stays until 18.
