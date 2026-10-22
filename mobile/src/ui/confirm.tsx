@@ -2,12 +2,16 @@
 // line of text, optional content, and two buttons (stay / go on). The second one is red when it is `danger`. `icon`: a
 // round badge above the title (red with `danger`). It comes in at once with its own short fade (the system Modal's
 // fade is slow, ~300 ms) and a slight grow of the card.
+// `slide`: instead of the going-on button, a slide-to-confirm track (as the exam's hand-in) with the stay button under
+// it, so a step that cannot be undone never happens on a stray tap (deleting the exam history; Mojtaba 2026-10-22).
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Modal, Pressable, View } from 'react-native';
 
+import { PROVE_PICS } from '@/lib/config';
 import { tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { ActionButton, T } from './kit';
+import { SlideToConfirm } from './slide-confirm';
 import { useColors, useIsDark } from './theme';
 
 type Props = {
@@ -15,14 +19,17 @@ type Props = {
   cancel: string; ok: string; danger?: boolean; onCancel: () => void; onOk: () => void;
   // Flat icons before the two labels.
   cancelIcon?: IconName; okIcon?: IconName; icon?: IconName;
+  slide?: { label: string; doneLabel: string };
 };
-export function Confirm({ open, title, text, children, cancel, ok, danger, onCancel, onOk, cancelIcon = 'xmark', okIcon = 'check', icon }: Props) {
+export function Confirm({ open, title, text, children, cancel, ok, danger, onCancel, onOk, cancelIcon = 'xmark', okIcon = 'check', icon, slide }: Props) {
   const c = useColors(), dark = useIsDark();
   const long = Math.max(tr(ok).length, tr(cancel).length) > 11;
   const [v] = useState(() => new Animated.Value(0));
   // Still shown while it fades out after `open` goes false.
   const [shown, setShown] = useState(open);
-  if (open && !shown) setShown(true);
+  // Each opening gets a fresh slide track (a finished one stays at its end).
+  const [round, setRound] = useState(0);
+  if (open && !shown) { setShown(true); setRound(round + 1); }
   useEffect(() => {
     if (open) { Animated.timing(v, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(); return; }
     Animated.timing(v, { toValue: 0, duration: 110, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(({ finished }) => { if (finished) setShown(false); });
@@ -49,11 +56,18 @@ export function Confirm({ open, title, text, children, cancel, ok, danger, onCan
           {children}
           {/* Side by side; one above the other, the going-on one first, when a label (in the app's language) would not fit
               in half the card (e.g. «Delete account»; Mojtaba 2026-10-20). */}
+          {slide ? (
+            <View style={{ gap: 10 }}>
+              <SlideToConfirm key={round} toRight={!PROVE_PICS} danger={danger} label={slide.label} doneLabel={slide.doneLabel} onConfirm={onOk} />
+              <ActionButton label={cancel} icon={cancelIcon} tone="soft" onPress={onCancel} />
+            </View>
+          ) : (
           <View style={long ? { gap: 10 } : { flexDirection: 'row', gap: 10 }}>
             {long ? <ActionButton label={ok} icon={okIcon} tone={danger ? 'danger' : 'main'} onPress={onOk} /> : null}
             <ActionButton label={cancel} icon={cancelIcon} tone="soft" onPress={onCancel} style={long ? undefined : { flex: 1 }} />
             {long ? null : <ActionButton label={ok} icon={okIcon} tone={danger ? 'danger' : 'main'} onPress={onOk} style={{ flex: 1 }} />}
           </View>
+          )}
         </Pressable>
         </Animated.View>
       </Pressable>

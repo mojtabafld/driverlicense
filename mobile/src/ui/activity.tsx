@@ -91,14 +91,14 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
         {allHref ? (
           <MoreButton onPress={() => router.push(allHref as any)} label={`همه‌ی ${faNum(rows.length)} آزمون`} hint={hint} />
         ) : null}
-        {/* Delete the whole history, after a question (the history page only). */}
+        {/* Delete the whole history, after a question answered by sliding (the history page only). */}
         {clearable ? <Pressable onPress={() => { tap(); setAsk(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="حذف تاریخچه‌ی آزمون‌ها"
           style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.badSoft : c.surface2 })}>
           <Icon name="trash" size={18} color={c.bad} />
         </Pressable> : null}
       </View>
       <Confirm open={ask} icon="trash" title="حذف تاریخچه؟" text={`همه‌ی ${faNum(rows.length)} آزمون و درس انجام‌شده و نتیجه‌هایشان پاک می‌شوند. این کار برگشت‌پذیر نیست.`}
-        cancel="انصراف" ok={busy ? 'در حال حذف…' : 'حذف همه'} okIcon="trash" danger onCancel={() => setAsk(false)}
+        cancel="انصراف" ok="حذف همه" okIcon="trash" danger slide={{ label: 'برای حذف همه، بکشید', doneLabel: busy ? 'در حال حذف…' : 'حذف شد' }} onCancel={() => setAsk(false)}
         onOk={() => { if (busy) return; setBusy(true); clearAttempts().then(() => setAsk(false)).catch(() => {}).finally(() => setBusy(false)); }} />
       {shown.map((a, i) => <Enter key={a.at}><ActivityRow a={a} bank={bank} c={c} last={i === shown.length - 1} /></Enter>)}
       {!allHref && rows.length > limit ? (
