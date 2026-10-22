@@ -52,9 +52,9 @@ MUST NOT APPEAR: signs, text."""),
     "وسایل کُند وظیفه ندارند برایتان بایستند؛ هر دو باید ملاحظه کنید."),
   S(False, "Jeg blinker med fjernlyset, så traktoren kører ind til siden.", "I flash my high beam so that the tractor pulls in to the side.",
     "با نور بالا چراغ می‌زنم تا تراکتور کنار بکشد.",
-    "Lyssignal må kun bruges for at advare om fare, og traktoren har måske ingen plads at køre ind på.",
-    "A light signal may only be used to warn of danger, and the tractor may have nowhere to pull in.",
-    "علامت نوری فقط برای هشدار خطر است و شاید تراکتور جایی برای کنار کشیدن نداشته باشد."),
+    "Et lyssignal giver dig ingen ret og kan misforstås, og traktoren har måske ingen plads at køre ind på.",
+    "A light signal gives you no right and can be misunderstood, and the tractor may have nowhere to pull in.",
+    "علامت نوری به شما حقی نمی‌دهد و ممکن است اشتباه فهمیده شود و شاید تراکتور جایی برای کنار کشیدن نداشته باشد."),
 )
 
 Q(5278, "7.7", view("""

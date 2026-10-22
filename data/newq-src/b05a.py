@@ -270,7 +270,9 @@ MUST NOT APPEAR: signs, text."""),
     "بالا بردن سرعت هنگام سبقت گرفتن دیگری از شما ممنوع و خطرناک است."),
   S(False, "Jeg blinker med fjernlyset for at vise, at den ikke må komme ind.", "I flash my high beam to show that it must not move in.",
     "با نور بالا چراغ می‌زنم تا نشان دهم نباید وارد شود.",
-    "Lyssignal må kun bruges for at advare om fare.", "A light signal may only be used to warn of danger.", "علامت نوری فقط برای هشدار خطر است."),
+    "Et lyssignal giver dig ingen ret og kan blænde føreren; giv i stedet lastbilen plads til at komme ind.",
+    "A light signal gives you no right and can dazzle the driver; give the lorry room to move in instead.",
+    "علامت نوری به شما حقی نمی‌دهد و ممکن است چشم راننده را خیره کند؛ به‌جایش به کامیون جا بدهید تا وارد شود."),
 )
 
 Q(5411, "6.1", view("""

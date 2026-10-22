@@ -198,3 +198,31 @@ is new.
   § 54); T 33.
 - Vejdirektoratet via FDM: 2-minus-1 roads (one shared lane in the middle, edge lanes for cyclists and pedestrians, used by
   cars only to make room for oncoming traffic; not for overtaking).
+- Færdselsloven, checked for batch 6 (the full text on danskelove.dk): § 4 stk. 2 (police directions before signs, markings
+  and signals); § 5 stk. 1 (special care at level crossings, a speed that lets you stop before the tracks), stk. 2 (no
+  crossing when a signal shows stop, while the barriers are closed, closing or opening, or when railway staff signal a
+  train); § 7 stk. 6 (free passage for groups of children under a leader's supervision, funeral and other closed
+  processions); § 12 (a closed procession on the verge or the right side of the carriageway; in lighting-up time a white
+  or yellow lamp in front towards the middle of the road and a red lamp at the back); § 16 stk. 3 (a left turn ends on
+  the right of the carriageway turned into); § 20 (the one with the obstruction on his side stops if necessary); § 21
+  stk. 1; § 22 stk. 1–2; § 26 stk. 3 exactly: any exit from a road over a pavement, cycle path or verge «som er hævet over
+  kørebanen på den vej, der køres ind på»; § 27 stk. 1–2 (room for pedestrians; give way to them when crossing a
+  pavement or footpath or coming out of a property); § 28 stk. 2–4; § 29 stk. 1 nr. 5 («på bro over motorvej, i viadukt
+  eller tunnel»), nr. 11 (not hindering light rail); § 32 stk. 1 (only the horn is limited to preventing or averting
+  danger; the law sets no such limit for light signals, so five earlier explanations that said so were reworded); § 33
+  stk. 5 (fog lights only in fog and heavy precipitation, and then instead of the prescribed lights); § 41 stk. 3 (no
+  needlessly low speed or sudden braking); §§ 44, 46 stk. 2, 48 (§§ 44–47 also on a motortrafikvej); §§ 125 stk. 2–3, 127
+  and 60 c (two klip in the first 3 years: kørselsforbud until special driving lessons and a kontrollerende køreprøve).
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023, the XML on retsinformation.dk), batch 6: § 18 stk. 2 (bans up to
+  the next junction), stk. 3 («Ærindekørsel tilladt»: aflevering, afhentning, arbejde, indkøb, gæstebud og lignende with
+  parking for it, and driving to and from one's own home or business); UB 11,1 (advance warning of a stop at a junction,
+  with the distance), UB 11,3 (light rail in both directions on the crossing road); B 16 (unless B 11, B 13 or B 15 stands
+  on the main road); A 17 «Fodgængerfelt», A 33 «Løse sten» (stone chips), A 34 «Stenskred», A 73; C 22,1; D 22 «Gangsti»,
+  D 23 «Ridesti», D 26 «Delt sti», D 27 «Fællessti» (mutual consideration); E 33 with UE 33,4 (only electric vehicles, those
+  that can be charged from an outside source, may stop and park); E 43 «Motortrafikvej»; Q 44 (not crossed, also not when
+  turning round; crossed with special care where e.g. road works or a stopped or parked vehicle make it necessary); Q 45;
+  Q 46 (slow vehicles briefly to ease overtaking; passing a left-turner on the right unless the lane beyond is a special
+  lane); Q 46–47 (no stopping or parking in special lanes with a broad line, e.g. cycle lanes, except parking lanes).
+- FDM (parking with an electric car or a plug-in hybrid): the cable symbol reserves the space for electric cars and plug-in
+  hybrids; petrol and diesel cars may neither stop nor park there; charging is required only when the sign says so; a time
+  limit on the sign applies to them too. UN Regulation 39: a speedometer never shows less than the true speed.
