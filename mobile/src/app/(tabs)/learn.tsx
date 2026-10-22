@@ -83,13 +83,14 @@ function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title
   const c = useColors();
   const { learnArt, learnBg } = useApp();
   const short = useWindowDimensions().height < 700; // less text on short screens
-  const v = learnArt[n];
+  // The dark theme's own pictures (6–10) here too (Mojtaba 2026-10-22), as on the main site's cards.
+  const pn = useIsDark() && learnArt[n + 5] ? n + 5 : n, v = learnArt[pn];
   return (
     <Card onPress={() => router.push(href)} style={{ flex: 1, padding: 0, overflow: 'hidden' }}>
       {/* The picture, whole (never cropped), in the card's top, the rest of
           it in the picture's own background colour; the icon on a soft tile until the picture is made. */}
-      <View style={{ height: short ? 96 : 120, backgroundColor: (v && learnBg[n]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-        {v ? <Image source={{ uri: `${API_URL}/learn-art/${n}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="contain" transition={250} />
+      <View style={{ height: short ? 96 : 120, backgroundColor: (v && learnBg[pn]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+        {v ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="contain" transition={250} />
           : <Icon name={icon} size={40} color={c.link} weight="semibold" />}
       </View>
       <View style={{ padding: 12, gap: 4 }}>
