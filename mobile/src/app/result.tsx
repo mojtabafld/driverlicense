@@ -16,6 +16,7 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
+import { Confetti } from '@/ui/confetti';
 import { Backdrop, Button, Card, EmptyState, Enter, SegPill, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
@@ -277,6 +278,8 @@ export default function Result() {
           </View>
         </Card>
       </ScrollView>
+      {/* Every answer right: confetti over the summary (Mojtaba 2026-10-22). */}
+      {n && !wrongN ? <Confetti /> : null}
     </Backdrop>
   );
 }

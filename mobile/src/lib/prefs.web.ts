@@ -45,3 +45,10 @@ export const loadLastUser = async (): Promise<LastUser | null> => {
   try { const v = JSON.parse(localStorage.getItem(LAST_USER) || 'null'); return v && typeof v.id === 'string' && typeof v.name === 'string' ? v : null; } catch { return null; }
 };
 export const saveLastUser = async (u: LastUser | null) => { try { if (u) localStorage.setItem(LAST_USER, JSON.stringify(u)); else localStorage.removeItem(LAST_USER); } catch {} };
+
+// The accounts (and banks) that have seen the confetti for answering every question of the random test, so it plays once.
+const CHEERED = 'tp.cheered';
+export const loadCheered = async (): Promise<string[]> => {
+  try { const v = JSON.parse(localStorage.getItem(CHEERED) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
+};
+export const saveCheered = async (keys: string[]) => { try { localStorage.setItem(CHEERED, JSON.stringify(keys)); } catch {} };

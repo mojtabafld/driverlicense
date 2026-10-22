@@ -2,7 +2,7 @@
 // with a note, before the first one). On the main site the random exam is the app's own questions (ui/new-test.tsx,
 // Mojtaba 2026-10-19: it took the old card's place and name); the /app copy keeps the old bank's random exam.
 import { router } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds } from '@/lib/logic';
@@ -11,7 +11,8 @@ import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { t } from '@/lib/i18n';
-import { PROVE_PICS } from '@/lib/config';
+import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
+import { loadCheered, saveCheered } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
@@ -23,6 +24,7 @@ import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 import { ExamWheelArt } from '@/ui/header-art';
 import { NewTestCard, useNewTest } from '@/ui/new-test';
+import { Confetti } from '@/ui/confetti';
 
 // What the chosen number of questions means: 25 is the real exam; fewer is a shorter practice with the same rules.
 function sizeHint(n: number) {
@@ -103,7 +105,7 @@ function MistakesCard() {
 
 export default function Exam() {
   const c = useColors();
-  const { bank, attempts } = useApp();
+  const { bank, attempts, premium, user } = useApp();
   const [size, setSize] = useState(FULL);
   // Without premium, FREE_RANDOM random exams (lib/free.ts); then the button opens the premium page.
   const { limited, randomLeft } = useFree();
@@ -115,6 +117,17 @@ export default function Exam() {
   };
   // Main site: the app's own random exam (the header's button is the calendar's now, app/calendar.tsx; Mojtaba 2026-10-21).
   const test = useNewTest(), own = !PROVE_PICS; // /app too, with prove.dk's bank (ui/new-test.tsx; Mojtaba 2026-10-20)
+  // Premium, every question of the random test answered: confetti once (per account and bank, on this device;
+  // Mojtaba 2026-10-22).
+  const [party, setParty] = useState(false);
+  const allDone = own && test.ready && test.last.size >= test.ids.length && premium && !limited && !!user;
+  useEffect(() => {
+    if (!allDone || !user) return;
+    const key = `${user.username}:${PROVE_BANK ? 'app' : 'main'}`;
+    let live = true;
+    loadCheered().then(seen => { if (live && !seen.includes(key)) { setParty(true); saveCheered([...seen, key].slice(-20)); } });
+    return () => { live = false; };
+  }, [allDone]); // eslint-disable-line react-hooks/exhaustive-deps
   // Scrolled down to the page's end, where the history card is: its arrow button shows «نمایش همه» for a moment, once
   // each time the end is reached (Mojtaba 2026-10-20).
   const [hint, setHint] = useState(0), atEnd = useRef(false);
@@ -123,6 +136,7 @@ export default function Exam() {
     atEnd.current = end;
   };
   return (
+    <View style={{ flex: 1 }}>
     <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} onScrollY={onScrollY}>
       {own ? <NewTestCard test={test} /> : (
@@ -161,5 +175,7 @@ export default function Exam() {
       {/* Main site: no mistakes card (Mojtaba 2026-10-19); the random test's card has the mistakes bar and its test. */}
       {own ? null : <MistakesCard />}
     </Screen>
+    {party ? <Confetti onDone={() => setParty(false)} /> : null}
+    </View>
   );
 }
