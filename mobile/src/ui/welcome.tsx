@@ -166,7 +166,8 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
           <View style={{ alignItems: 'center', gap: 2, marginBottom: 6 }}>
             {/* On one line on every screen (Mojtaba 2026-10-23): the font as large as the column lets it be, at most 20. */}
             <T numberOfLines={1} style={{ fontSize: head, lineHeight: Math.round(head * 1.45), fontWeight: '700', textAlign: 'center' }}>{headline}</T>
-            <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'آماده‌ی آزمون تئوری.'}</T>
+            {/* «آماده‌ی آزمون تئوری.» under the headline is gone (Mojtaba 2026-10-23); the email step keeps its line. */}
+            {byMail ? <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>وارد شوید یا یک حساب تازه بسازید</T> : null}
           </View>
           {byMail ? <>
             <Wide light label="ورود" icon="login" onPress={() => onEmail('login')} />
