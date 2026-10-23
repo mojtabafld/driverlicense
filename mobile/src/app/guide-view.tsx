@@ -60,7 +60,7 @@ export default function GuideView() {
   const back = () => motion.leave(() => (router.canGoBack() ? router.back() : router.replace('/')));
   const drill = kind === 'priority' && cat.id.startsWith('drill');
   return (
-    <Backdrop anim={motion.style}>
+    <Backdrop anim={motion.style} glass>
       <GlassTop onHeight={setHeadH}>
         <SafeAreaView edges={['top']} style={{ paddingTop: Platform.OS === 'web' ? 14 : 8, paddingBottom: 10, paddingHorizontal: 14 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 760, alignSelf: 'center' }}>

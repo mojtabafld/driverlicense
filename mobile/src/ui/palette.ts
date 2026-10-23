@@ -111,7 +111,7 @@ function fromHls(h: number, l: number, s: number): string {
   const f = (t: number) => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
   return toHex([f(k + 1 / 3), f(k), f(k - 1 / 3)]);
 }
-const rgba = (hex: string, a: number) => `rgba(${parse(hex).map(v => Math.round(v * 255)).join(',')},${a})`;
+export const rgba = (hex: string, a: number) => `rgba(${parse(hex).map(v => Math.round(v * 255)).join(',')},${a})`;
 
 // A drawing's ocean colour in the chosen theme: blues move to the theme's hue (its strong blues to the accent hue,
 // the soft and dark ones to the tint of its greys); other colours stay.

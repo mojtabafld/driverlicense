@@ -22,6 +22,7 @@ import { FIRST_LESSON, useFree } from '@/lib/free';
 import { useApp, useExamLang } from '@/lib/store';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
 import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
+import { GlassArea } from '@/ui/glass-area';
 import { learnRtl } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
 import { Button, Card, Enter, T, TransT, TranslateButton, tap } from '@/ui/kit';
@@ -245,7 +246,7 @@ export default function Drill() {
   const title = only ? `${tr('تمرین:')} ${tr(lessonItems(only)[0]?.lesson.title ?? '')}` : 'تمرین هوشمند';
 
   return (
-    <View style={{ flex: 1 }}>
+    <GlassArea style={{ flex: 1 }}>
       <SubPage theme title={title} gap={12} scrollKey={finished ? 'end' : i} scrollRef={scroll} close={!finished}
         // Only forwards, and only once answered: the practice has no way back to a question.
         pager={finished || !turns?.length ? undefined : { i: 0, n: answer ? 2 : 1, go: k => { if (k === 1) next(); }, rtl: learnRtl }}>
@@ -289,6 +290,6 @@ export default function Drill() {
           )}
           end={answer ? <FootBtn label={i === turns.length - 1 ? 'نتیجه' : 'بعدی'} icon={i === turns.length - 1 ? 'check' : navIcons(learnRtl).next} onPress={next} /> : null} />
       ) : null}
-    </View>
+    </GlassArea>
   );
 }
