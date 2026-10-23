@@ -27,7 +27,7 @@ export const TERMS: Record<string, string> = {
   motorvej: 'motorway',
   nærlys: 'dipped headlights',
   overhaling: 'overtaking',
-  overkørsel: 'level crossing',
+  overkørsel: 'crossing over a raised kerb',
   'P-skive': 'parking disc',
   promille: 'per mille',
   selepude: 'booster cushion',
