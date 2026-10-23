@@ -71,6 +71,14 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#D97757"
         }
+      ],
+      [
+        "expo-iap",
+        {
+          "android": {
+            "store": "play"
+          }
+        }
       ]
     ],
     "experiments": {

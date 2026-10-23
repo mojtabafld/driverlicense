@@ -88,6 +88,17 @@ function grant(u, s) {
     ...(u.premium && u.premium.promo ? { promo: u.premium.promo } : {}) };
   return true;
 }
+// A Google Play purchase (playbilling.js) of this user: kept by its token; its plan's days added as a Stripe payment's.
+// Returns false when the token was counted already.
+const hasPlay = (u, token) => !!(u.premium && (u.premium.buys || []).some(b => b.play === token));
+function grantPlay(u, { token, plan, orderId, test }) {
+  if (hasPlay(u, token) || !PLANS[plan]) return false;
+  const now = Date.now(), from = Math.max(now, (u.premium && u.premium.until) || 0);
+  const buy = { play: token, order: orderId, plan, days: PLANS[plan].days, at: now, test };
+  u.premium = { until: from + PLANS[plan].days * 864e5, plan, buys: [...((u.premium && u.premium.buys) || []), buy].slice(-50),
+    ...(u.premium && u.premium.promo ? { promo: u.premium.promo } : {}) };
+  return true;
+}
 // The free trial codes (upper case) and its length in days.
 const promoCodes = () => (process.env.PROMO_CODE || '').split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
 const promoDays = () => { const n = Math.round(+process.env.PROMO_DAYS); return Number.isFinite(n) && n >= 1 && n <= 90 ? n : 3; };
@@ -126,4 +137,4 @@ function verifyEvent(raw, header, secret = process.env.STRIPE_WEBHOOK_SECRET || 
   try { return JSON.parse(raw.toString('utf8')); } catch { return null; }
 }
 
-module.exports = { available, testMode, gated, plans, createCheckout, getSession, recentPaid, active, hasSession, grant, refund, verifyEvent, promoCodes, promoDays, grantPromo };
+module.exports = { available, testMode, gated, plans, createCheckout, getSession, recentPaid, active, hasSession, grant, hasPlay, grantPlay, refund, verifyEvent, promoCodes, promoDays, grantPromo };

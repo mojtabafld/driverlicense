@@ -18,4 +18,6 @@ export type Settings = { showFa: boolean; timer: boolean; lang?: 'da' | 'en'; la
 // avatar: one of the made pictures ({ preset }) or their own photo ({ photo: version }).
 export type User = { username: string; name: string; created: number; admin?: boolean; avatar?: { preset?: number; photo?: string }; premium?: { until: number; plan?: string; promo?: boolean }; guest?: boolean; email?: string;
   // The one free answer analysis without premium: still to be had (true), or the question it was had for.
-  freeAi?: true | number; emailOk?: boolean; verify?: boolean; promoUsed?: boolean };
+  freeAi?: true | number; emailOk?: boolean; verify?: boolean; promoUsed?: boolean;
+  // playId: the id the Android app hands Google Play with a purchase (server's playbilling.js), when it sells there.
+  playId?: string };

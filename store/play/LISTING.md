@@ -107,9 +107,31 @@ Teoripro وابسته به اداره‌ی راهنمایی و رانندگی د
 
 ## Purchases
 
-The Android app sells nothing (Play's billing rule): it shows no plans, no buy button and no link to pay. A premium pass
-on the account (bought on the website) works in the app too. If in-app sales are wanted later: Google Play Billing, or
-the EEA's User Choice Billing.
+The Android app sells the premium passes with Google Play Billing (never with Stripe, never pointing to the website). It
+shows them only when the server has a Play service account (`GOOGLE_PLAY_SERVICE_ACCOUNT`); until then it sells nothing.
+A pass bought on the website works in the app too, and the other way round.
+
+Turning it on, once the app is uploaded to a testing track:
+
+1. **Payments profile**: Play Console → Settings → Payments profile (name, address, bank account).
+2. **Products**: Monetize → Products → One-time products → Create, three of them, each «Active»:
+   - `pass_week` – Teoripro Premium, 1 uge – 49 kr.
+   - `pass_month` – Teoripro Premium, 1 måned – 79 kr.
+   - `pass_quarter` – Teoripro Premium, 3 måneder – 149 kr.
+
+   (The ids must be exactly these; prices and names are free, set per country.)
+3. **Service account**: Google Cloud Console → a project → IAM → Service accounts → Create (no role needed there) →
+   Keys → Add key → JSON. Enable the «Google Play Android Developer API» in the same project. Then Play Console →
+   Users and permissions → Invite new users → the service account's email → app permissions for Teoripro: «View
+   financial data» and «Manage orders and subscriptions».
+4. **Server**: DigitalOcean → the app → Settings → Environment Variables → `GOOGLE_PLAY_SERVICE_ACCOUNT` = the whole
+   JSON file's content (or the file in base64), encrypted; redeploy. Keep the file private; it is never put in the
+   repository or sent anywhere else.
+5. **Testing**: Play Console → Settings → License testing → your Gmail address. Your test purchases then cost nothing.
+   Install the app from the internal testing link (not the APK from GitHub: Play Billing works only in a copy installed
+   from Play), open «نسخه‌ی ویژه», buy.
+
+Google keeps its service fee (about 15 % for most developers) and pays out monthly.
 
 ## Build and upload
 
