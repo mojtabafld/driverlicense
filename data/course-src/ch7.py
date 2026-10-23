@@ -327,7 +327,7 @@ WEATHER = lesson('weather', 'WEATHER', ('باران، برف و یخ', 'Rain, sn
       st(True, 'Der kan være isglat på broen, selv om vejen før den er tør.', 'The bridge may be icy even though the road before it is dry.', 'ممکن است روی پل یخ باشد، حتی اگر جاده‌ی پیش از آن خشک است.',
          ('پل‌ها و جاهای سایه زودتر یخ می‌زنند.', 'Bridges and shaded places freeze sooner.', 'Broer og steder i skygge fryser først.')),
       st(True, 'Jeg sænker farten før broen.', 'I slow down before the bridge.', 'پیش از پل سرعتم را کم می‌کنم.',
-         ('روی یخ نباید سرعت را کم کنید؛ پیش از آن کم کنید.', 'You should not brake on the ice; slow down before it.', 'Du skal ikke bremse på isen; sænk farten før den.')),
+         ('روی یخ ترمز نکنید؛ پیش از آن سرعت را کم کنید.', 'You should not brake on the ice; slow down before it.', 'Du skal ikke bremse på isen; sænk farten før den.')),
       st(False, 'Broen er lige så sikker som resten af vejen.', 'The bridge is just as safe as the rest of the road.', 'پل هم به اندازه‌ی بقیه‌ی جاده امن است.',
          ('پل از زیر هم سرد می‌شود و زودتر یخ می‌زند.', 'A bridge is cooled from below too and freezes sooner.', 'En bro afkøles også nedefra og fryser før.')),
       rule=1),

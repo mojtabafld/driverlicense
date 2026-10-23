@@ -81,6 +81,54 @@ TEXTS = [
     ('در ۳۰ متری گذرگاه راه‌آهن پارک ممنوع است و روی خود گذرگاه، توقف هم ممنوع است.',
      'Parking is prohibited within 30 metres of a level crossing, and stopping on the crossing itself is prohibited too.',
      'Parkering er forbudt nærmere end 30 meter fra en jernbaneoverkørsel, og på selve overkørslen er standsning også forbudt.'),
+    # The course review of 2026-10-23, checked against Færdselsloven (LBK 1312/2024 with lov 567/2025) and
+    # Bekendtgørelse om vejafmærkning (BEK 425/2023):
+    # CAR_CHECK: the owner answers for the car's lawful state and the driver for its safe state (§ 67, stk. 2 and 3), not
+    # the driver for both; carrying a warning triangle is not required in Denmark, putting one out is (§ 31, stk. 2; FDM).
+    ('پیش از هر رانندگی، راننده مسئول است که خودرو سالم و بی‌خطر باشد. در آزمون تئوری درباره‌ی لاستیک، چراغ‌ها، شیشه‌ها، چراغ‌های هشدار داشبورد و مثلث خطر سؤال می‌آید.',
+     'Before every drive, the driver is responsible for the car being roadworthy and safe. The theory test includes questions about tyres, lights, windows, dashboard warning lights and the warning triangle.',
+     'Før hver tur er føreren ansvarlig for, at bilen er i forsvarlig stand. Til teoriprøven kommer der spørgsmål om dæk, lygter, ruder, advarselslamper i instrumentbrættet og advarselstrekant.'),
+    ('خودرو باید طوری ساخته و نگه داشته شود که بدون خطر برای کسی بشود از آن استفاده کرد. صاحب خودرو مسئول است که خودرو قانونی باشد، و کسی که پشت فرمان می‌نشیند باید همیشه مطمئن باشد که خودرو بی‌خطر است، حتی اگر مال او نیست. پیش از حرکت، این‌ها را بررسی کنید:',
+     'A car must be built and maintained so that it can be used without danger to anyone. The owner is responsible for the car being legal, and whoever is behind the wheel must always make sure it is safe, even if the car is not theirs. Before setting off, check the following:',
+     'En bil skal være indrettet og holdt i en sådan stand, at den kan bruges uden fare for nogen. Ejeren er ansvarlig for, at bilen er i lovlig stand, og den, der sidder bag rattet, skal altid være opmærksom på, at bilen er i forsvarlig stand, også selvom den ikke er hans eller hendes egen. Kontrollér følgende, før du kører:'),
+    ('راننده همیشه مسئول است که خودرو بی‌خطر باشد، حتی اگر مال او نیست؛ قانونی بودنش با صاحب خودرو است.',
+     'The driver is always responsible for the car being safe, even if it is not theirs; its being legal is the owner\'s responsibility.',
+     'Føreren skal altid sørge for, at bilen er i forsvarlig stand, også når den ikke er førerens egen; ejeren har ansvaret for, at den er i lovlig stand.'),
+    ('Færdselsloven § 67، بند ۲ و ۳', 'Færdselsloven § 67(2) and (3)', 'Færdselsloven § 67, stk. 2 og 3'),
+    ('Færdselsloven § 33 و § 33 a', 'Færdselsloven § 33 and § 33 a', 'Færdselsloven § 33 og § 33 a'),
+    ('در دانمارک همراه داشتن مثلث خطر (advarselstrekant) اجباری نیست، ولی اگر خودرو جایی بایستد که برای دیگران خطر دارد، باید آن را بگذارید؛ پس همیشه یکی در خودرو داشته باشید. اگر خودرو جایی خراب شد که برای دیگران خطر دارد، این کارها را بکنید:',
+     'In Denmark you are not required to carry a warning triangle (advarselstrekant), but if the car stops where it is a danger to others, you must put one out, so always keep one in the car. If your car breaks down somewhere it is a danger to others, do the following:',
+     'I Danmark er det ikke lovpligtigt at have en advarselstrekant i bilen, men holder bilen et sted, hvor den er til fare for andre, skal du stille en op – så hav altid en i bilen. Hvis bilen bryder sammen et sted, hvor den er til fare for andre, skal du gøre følgende:'),
+    ('چراغ خطر (چهارراهنما) را روشن کنید؛ ولی جای مثلث خطر را نمی‌گیرد',
+     'Switch on the hazard warning lights; they do not replace the warning triangle',
+     'Tænd havariblinket; det erstatter ikke advarselstrekanten'),
+    ('خودرو جای خطرناکی ایستاده؟ مثلث خطر را دورتر پشت آن بگذارید، نه درست پشتش.',
+     'Is the car stopped in a dangerous place? Put the warning triangle well behind it, not right behind it.',
+     'Holder bilen et farligt sted? Stil advarselstrekanten et godt stykke bag den, ikke lige bag den.'),
+    ('راننده مسئول است که خودرو بی‌خطر باشد، حتی خودروی امانتی؛ قانونی بودنش با صاحب خودرو است.',
+     'The driver is responsible for the car being safe, even a borrowed car; its being legal is the owner\'s responsibility.',
+     'Føreren er ansvarlig for, at bilen er i forsvarlig stand, også når bilen er lånt; ejeren har ansvaret for, at den er i lovlig stand.'),
+    # BELTS: seat belts are § 80 and children's seats § 80 a (§ 81 is about helmets).
+    ('Færdselsloven § 80، بند ۴ | § 80 a', 'Færdselsloven § 80(4) | § 80 a', 'Færdselsloven § 80, stk. 4 | § 80 a'),
+    ('Færdselsloven § 80 a، بند ۳ | Undervisningsplan for kategori B', 'Færdselsloven § 80 a(3) | Undervisningsplan for kategori B',
+     'Færdselsloven § 80 a, stk. 3 | Undervisningsplan for kategori B'),
+    # ALCOHOL: since lov 567/2025, § 53, stk. 2 is the new drivers' limit and stk. 3 driving unsafely below the limits; drugs
+    # are § 54, stk. 1, and medicine, tiredness and illness § 54, stk. 2. The body burns a unit in about 1.5 to 2 hours.
+    ('Færdselsloven § 53، بند ۱ تا ۳', 'Færdselsloven § 53(1)-(3)', 'Færdselsloven § 53, stk. 1-3'),
+    ('Færdselsloven § 54، بند ۱ و ۲', 'Færdselsloven § 54(1) and (2)', 'Færdselsloven § 54, stk. 1 og 2'),
+    ('Færdselsloven § 54، بند ۲', 'Færdselsloven § 54(2)', 'Færdselsloven § 54, stk. 2'),
+    ('بدن الکل را آهسته دفع می‌کند: هر واحد (genstand) حدود ۱٫۵ تا ۲ ساعت طول می‌کشد.',
+     'The body gets rid of alcohol slowly: each unit (genstand) takes about 1.5 to 2 hours.',
+     'Kroppen forbrænder alkohol langsomt: hver genstand tager cirka 1½ til 2 timer.'),
+    # OVERTAKING: C 51 does not cover two-wheeled bicycles and small mopeds, but it does cover motorcycles.
+    ('ممنوعیت سبقت از دوچرخه و موپد کوچکِ دوچرخ را شامل نمی‌شود.',
+     'The ban does not cover overtaking two-wheeled bicycles and small mopeds.',
+     'Forbuddet gælder ikke overhaling af tohjulede cykler og små knallerter.'),
+    # TURNS: § 16, stk. 5 lets two oncoming left-turners pass each other to the left, that is turn in front of each other
+    # (each keeps the other on its right), if it can be done without danger or inconvenience; it is not «usually behind».
+    ('وقتی دو خودرو از روبه‌روی هم هر دو به چپ می‌پیچند، اگر خطر یا مزاحمتی پیش نیاید، می‌توانند جلوی هم بپیچند: هر کدام پیش از مرکز تقاطع می‌پیچد و دیگری را سمت راست خود دارد.',
+     'When two oncoming cars both turn left, they may turn in front of each other if this causes no danger or inconvenience: each turns before the centre of the junction, with the other car on its right.',
+     'Når to modkørende biler begge skal svinge til venstre, må de køre forbi hinanden til venstre, hvis det kan ske uden fare eller ulempe: hver bil svinger før krydsets midte og har den anden bil på sin højre side.'),
     # (build.py, the topic lesson of 4.4)
     ('حد مجاز الکل ۰٫۵ پرومیل است و برای راننده‌ی تازه‌کار، در ۳ سال اول پس از نخستین گواهینامه‌ی B، ۰٫۲ پرومیل؛ اما اگر ناایمن برانید، حتی زیر این حد هم مجازات می‌شوید.',
      'The legal alcohol limit is 0.5 per mille, and 0.2 per mille for a new driver in the first 3 years after a first category B licence; but if you drive unsafely, you can be punished even below this limit.',
