@@ -226,3 +226,27 @@ is new.
 - FDM (parking with an electric car or a plug-in hybrid): the cable symbol reserves the space for electric cars and plug-in
   hybrids; petrol and diesel cars may neither stop nor park there; charging is required only when the sign says so; a time
   limit on the sign applies to them too. UN Regulation 39: a speedometer never shows less than the true speed.
+- Færdselsloven, checked for batch 7 (danskelove.dk): § 7 stk. 4 (a car with a white cloth in front carrying the seriously ill
+  or injured counts as an emergency vehicle; the driver tells the police afterwards), stk. 5 (not so near a fire or an accident
+  that the rescue work is hampered), stk. 6 (the defence forces' columns, funeral and other closed processions); § 10 stk. 2
+  (on the carriageway pedestrians walk at the far left, but someone pushing a bicycle at the far right), § 11; § 14 stk. 5
+  (crawler lane); § 16 stk. 3; § 19 stk. 1–2; § 21 stk. 1–2 (only cyclists and small mopeds overtake on the right; a
+  light-rail vehicle may be overtaken on the right with special care); § 23 stk. 1–2 (the junction exception only for
+  two-wheeled bicycles and small mopeds); § 24 stk. 1–2 (passing a vehicle in a lane reserved for one kind of traffic is not
+  overtaking); § 29 stk. 1 nr. 2 (10 m from the cycle path's nearest edge where carriageway and cycle path open out together),
+  nr. 6; § 31 stk. 1 (parked within 2 m of a rail: stay near, move without being asked), stk. 2–3 (stuck on a level crossing:
+  warn the train drivers); § 32 stk. 1; § 33 a; § 54 stk. 4; § 70 (one trailer to a car); § 80 stk. 4, § 80 a stk. 1, 3 and 6,
+  § 80 b (no more passengers than belted seats, front and back; the driver answers for those under 15); § 83 a (nobody carried
+  in a caravan); § 125 stk. 1 nr. 3 (more than 40 % over a temporary limit at road works).
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 7: § 9 U 1 and U 3 (black or white times: weekdays except
+  Saturdays; brackets: Saturdays; red: Sundays and holidays); § 19 (parking signs only on their own side; the law goes first
+  where it is stricter); A 39, A 42,1, A 43,1, A 43,3, A 75 (distance to a level crossing), A 95; B 11 with U 1 (advance warning
+  of B 11); C 21, C 25,1, C 31 (actual total weight; for a combination each vehicle), C 55 (a weight plate counts the
+  combination's permitted total weight together; «Støj»), C 61 (only stopping not done for the sake of the traffic), UC 60,6,
+  UC 60,8; D 26; E 11; E 33 with UE 33 (a horizontal arrow: parking crosswise); E 34; E 37; E 47 and E 49 (parking only in marked
+  places); E 51 (play on the whole width, very low speed, drive past only when people have seen the car and made room); Q 41, Q 42,
+  Q 46 (parking lanes: wheels on the broad line but not beyond it), Q 46–47 (a broad edge line: room outside it for pedestrians
+  and cyclists); R 11, R 13 (double arrows for two junctions), R 15 (diagonal arrows: change lanes as soon as possible); S 16, S 18,
+  S 22; V 60 (two symbols to the vehicle in front), V 61; § 65 stk. 2–3 (leave the junction when red comes; red and yellow by a
+  level crossing can go back to red); § 68 Y 17; § 69 Z 72,1 and Z 72,2 (a green arrow under the red flashing signal).
+- Picture prompts assume the usual symbols where the order does not describe them: a windsock for A 95, white chevrons for V 60.
