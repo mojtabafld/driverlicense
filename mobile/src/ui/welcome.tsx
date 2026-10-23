@@ -134,6 +134,10 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
   };
   const { Art, text } = SLIDES[i];
   const art = Math.round(Math.min(width * 0.42, height * 0.14, 160));   // (three ways in under it now: a little smaller)
+  // The headline's size: the column's width (at most 440, less its 24 a side) over the text's width at 1 px, measured
+  // by its letters (bold Inter about 0.47 of the size each, Vazirmatn 0.42, measured; a little room kept).
+  const headline = byMail ? 'ادامه با ایمیل' : 'تضمین قبولی در آزمون تئوری رانندگی';
+  const head = Math.min(20, Math.floor((Math.min(width, 440) - 48) / (tr(headline).length * (UI_LANG === 'fa' ? 0.45 : 0.5))));
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
       <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
@@ -160,7 +164,8 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
         </View>
         <Animated.View style={{ gap: 10, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
           <View style={{ alignItems: 'center', gap: 2, marginBottom: 6 }}>
-            <T style={{ fontSize: 20, lineHeight: 29, fontWeight: '700', textAlign: 'center' }}>{byMail ? 'ادامه با ایمیل' : 'تضمین قبولی در آزمون تئوری رانندگی'}</T>
+            {/* On one line on every screen (Mojtaba 2026-10-23): the font as large as the column lets it be, at most 20. */}
+            <T numberOfLines={1} style={{ fontSize: head, lineHeight: Math.round(head * 1.45), fontWeight: '700', textAlign: 'center' }}>{headline}</T>
             <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'آماده‌ی آزمون تئوری.'}</T>
           </View>
           {byMail ? <>
