@@ -22,7 +22,6 @@ import { useExamLang } from '@/lib/store';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
-import { GlassArea } from '@/ui/glass-area';
 import { learnRtl } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
 import { OptionBox, OptionGroup } from '@/ui/option-box';
@@ -289,7 +288,7 @@ function Lesson({ id, start }: { id: string; start: number }) {
   const full = chapter.id === 'final';
   const phase = full && (step.kind === 'exam' || step.kind === 'result') ? 'آزمون' : PHASE[step.kind];
   return (
-    <GlassArea style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <SubPage theme title={lesson.title} gap={12} scrollKey={complete ? -1 : i} scrollRef={scroll} close={!complete}
         pager={complete ? undefined : { i, n: toCheck || last ? i + 1 : steps.length, go: setI, rtl: learnRtl }}
         guard={!complete && Object.keys(checked).length ? (full ? { title: 'خروج از آزمون؟', text: 'جواب‌های این آزمون ذخیره نمی‌شوند.' }
@@ -323,6 +322,6 @@ function Lesson({ id, start }: { id: string; start: number }) {
             : last ? <FootBtn label={full ? 'پایان آزمون' : 'پایان درس'} icon="check" submit onPress={end} />
               : <FootBtn label="بعدی" icon={navIcons(learnRtl).next} onPress={() => setI(i + 1)} />} />
       )}
-    </GlassArea>
+    </View>
   );
 }

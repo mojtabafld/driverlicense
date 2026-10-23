@@ -101,7 +101,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
   const ui = uiText(lang);
   const step = (to: number) => { setK(to); scroll.current?.scrollTo({ y: 0, animated: true }); };
   return (
-    <Backdrop anim={motion.style} glass>
+    <Backdrop anim={motion.style}>
       <RevealScrollProvider value={reveal.value}>
       {/* Question by question a sideways swipe turns the questions; the overview pages go back with a drag from right to
           left. */}

@@ -112,6 +112,8 @@ function fromHls(h: number, l: number, s: number): string {
   return toHex([f(k + 1 / 3), f(k), f(k - 1 / 3)]);
 }
 export const rgba = (hex: string, a: number) => `rgba(${parse(hex).map(v => Math.round(v * 255)).join(',')},${a})`;
+// The colour a fraction `t` of the way from `a` to `b`.
+export const mix = (a: string, b: string, t: number) => { const x = parse(a), y = parse(b); return toHex(x.map((v, i) => v + (y[i] - v) * t) as RGB); };
 
 // A drawing's ocean colour in the chosen theme: blues move to the theme's hue (its strong blues to the accent hue,
 // the soft and dark ones to the tint of its greys); other colours stay.
