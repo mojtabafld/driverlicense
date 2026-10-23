@@ -134,9 +134,10 @@ MUST NOT APPEAR: signs, text, other vehicles."""),
 )
 
 Q(5481, "7.2", view("""
-THE SCENE: a dark country road at night with no centre line and no edge lines; white edge posts with reflectors stand along both
-edges of the road and show its course into a bend ahead; our dipped beam lights them up.
-MUST BE CLEARLY VISIBLE: the reflecting edge posts on both sides showing the bend.
+THE SCENE: a dark country road at night with no centre line and no edge lines; white edge posts stand along both edges of the road
+and show its course into a bend ahead, the posts at the right edge with yellow reflectors and those at the left edge with white
+reflectors; our dipped beam lights them up.
+MUST BE CLEARLY VISIBLE: the reflecting edge posts on both sides showing the bend (yellow reflectors on the right, white on the left).
 MUST NOT APPEAR: signs, text, other vehicles.""", cond="night, dark, dry road, no street lights"),
   "Det er mørkt, og vejen har hverken midterlinje eller kantlinjer. Langs vejen står kantpæle med reflekser. Hvad gælder?",
   "It is dark, and the road has neither a centre line nor edge lines. Edge posts with reflectors stand along the road. What applies?",
