@@ -281,3 +281,32 @@ is new.
   shoulder before moving out.
 - Picture prompts assume the usual designs where the order does not describe them: a bicycle and a right-bending arrow on the U 7
   plate, a white bent arrow with the number on the blue E 41 sign, a walking figure on steps for E 26, a tram symbol for V 43.
+- Batch 9 (5801–5900), Færdselsloven checked: § 1 and § 2 nr. 28 (the Act applies on roads used for general traffic, public
+  or private, so also on a private shared road and a public car park), § 2 nr. 10 (the rules for drivers also apply to people
+  driving cattle), nr. 12 (the lighting-up time runs from sunset to sunrise), nr. 14 (an electric wheelchair of at most 15 km/h
+  follows the rules for cycles) and nr. 18 (waiting for a passenger who has not arrived is parking), § 5 stk. 1 (speed so that you
+  can stop before the tracks; cross without unnecessary delay), § 6 stk. 1–2 (no jumping on or off a moving vehicle; no sledge
+  hung behind a vehicle), § 7 stk. 2, § 15 stk. 3, § 18 stk. 1–5 (a turning lane is used from its beginning; mutual consideration
+  where two carriageways run together), § 19, § 20 (the vehicle with the obstruction on its side waits), § 21 stk. 1 and 3, § 22,
+  § 23 stk. 1 nr. 2 and stk. 2 (two-wheeled bicycles and small mopeds may be overtaken just before a level crossing), § 26 stk. 2–7,
+  § 27 stk. 2–3 and 6–8, § 28 stk. 1–2 and 5, § 29 stk. 1 nr. 2 and 5 (bridge over a motorway, viaduct, tunnel — not other bridges)
+  and stk. 3 nr. 1 (30 m on both sides of a level crossing) and nr. 5, § 32 stk. 1–2 and 5 (signal before moving off from the edge
+  also when nobody is about), § 33 stk. 1–5, § 35 stk. 1 and 4 (the relaxed parking lights in town only for a single car, not one
+  with a trailer coupled), § 41 stk. 1–3, § 42 stk. 3, § 43 stk. 3, §§ 44–48, § 56 stk. 1, § 59 (licence valid 15 years), § 67
+  stk. 3, § 82 stk. 1 and 3, § 87 stk. 2 (anything dropped from a vehicle is removed at once or others are warned), § 125 stk. 1
+  nr. 3 and stk. 2 nr. 5 (more than 30 pct. over the limit counts as one of three offences; conditional disqualification at more
+  than 60 pct., 160 km/h, or more than 40 pct. at road works).
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 9: § 8 (signs over lanes with downward arrows apply to that
+  lane), § 9 U 1 (distance to where the sign starts to apply) and U 6 (the sign applies to an adjoining road), A 44, A 96, B 16,
+  C 41 (width including load), C 51 (not for two-wheeled bicycles and small mopeds, nor vehicles turning off), C 61, D 21 (cycle
+  path only for cyclists and small mopeds), E 17, E 18, E 23 (a plate may reserve a disabled bay for particular vehicles), E 33
+  (a black plate refers to private parking rules), E 42, E 49 (very low speed; drive past only when people have noticed the car),
+  E 92, § 54 (yellow marking for temporary regulation is obeyed before white), Q 45, Q 46 nr. 2 (a parking lane beside a cycle
+  lane) and the broad edge line to a bus lane, § 69 Z 72,1 (no need to stop if you are so close when it comes on that stopping
+  would cause danger) and Z 95 (blue flashing light: special care because of an accident or fire).
+- Not in the two law texts and taken from general guidance: tyres on the same axle of the same type and size; a breakaway cable
+  on a braked trailer; extension mirrors when the caravan is wider than the car; a wrong-way driver stops as far to the side as
+  possible, waits behind the crash barrier and calls 1-1-2; signs of black ice (quiet tyres, light steering).
+- Picture prompts assume the usual designs where the order does not describe them: a green square sign with a white motorway
+  symbol for E 42 (its plates have a green background, § 9 stk. 2), a blue square sign with a white triangle and a walking figure
+  for E 17, an orange-red triangle with a red reflective border for slow vehicles, a black arrow on the U 6 plate.

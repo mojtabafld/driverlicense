@@ -484,7 +484,7 @@ MUST NOT APPEAR: street lamps, signs, text.""", cond="night, dark unlit road, dr
 )
 
 Q(5075, "7.16", view("""
-THE SCENE: the start of a motorway access road: on the right verge stands the blue motorway sign (white symbol of a road under a
+THE SCENE: the start of a motorway access road: on the right verge stands the green square motorway sign (white symbol of a road under a
 bridge). On the verge of the access road a cyclist and a person with a small 30 km/h moped (a light two-wheeler) stand looking at the
 sign. A car drives ahead of us onto the access road.
 MUST BE CLEARLY VISIBLE: the motorway sign, the cyclist and the moped rider by the access road.

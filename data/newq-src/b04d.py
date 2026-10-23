@@ -281,7 +281,7 @@ MUST NOT APPEAR: signs, text, other vehicles.""", cond="night, thick fog, wet ro
 
 Q(5386, "7.16", view("""
 THE SCENE: a motorway with two lanes in our direction ending ahead: further on, the road narrows into an ordinary two-way road with one
-lane in each direction. On the right verge stands a blue rectangular sign with the white motorway symbol crossed by a red diagonal bar
+lane in each direction. On the right verge stands a green square sign with the white motorway symbol crossed by a red diagonal bar
 (the Danish end-of-motorway sign, E 44).
 MUST BE CLEARLY VISIBLE: the end-of-motorway sign, the road narrowing into an ordinary road.
 MUST NOT APPEAR: other signs, text."""),
