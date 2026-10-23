@@ -338,3 +338,37 @@ is new.
   motorway rest area, extra main-beam lamps as two round lamps on the front bumper, a black vehicle-and-trailer silhouette above
   the weight for C 32, red and white diagonal stripes on N 42 (BEK 426/2023 § 164 gives N 43 red and white fields in the same
   proportions as N 42).
+- Batch 11 (6001–6100), Færdselsloven checked: § 7 stk. 2 (an ambulance without its special signals has no special rights), § 9
+  stk. 3 (after an accident with serious injury nothing may be changed and no traces removed; a vehicle that is a danger must be
+  moved), § 11 (roller skaters count as pedestrians), § 13, § 15 stk. 4 (keep to the right of traffic islands and beacons; to the left
+  only where marked or on one-way roads), § 16 stk. 3, § 18 stk. 1 and 5, § 20 stk. 1, § 21 stk. 3–4, § 26 stk. 2–6 (a cyclist who
+  turns from a cycle path out onto the carriageway must give way to all; give way to the right also at a Y-junction), § 27 stk. 2
+  and 7, § 29 stk. 1 nr. 1–2 and stk. 3 nr. 1, § 32 stk. 2–3, § 33 stk. 1–4 (dipped beam where main beam may not be used; parking
+  lights are not enough when driving), § 41, § 42 and § 43 stk. 2–4 (130 km/h on a motorway for vehicles of at most 3,500 kg), § 46
+  stk. 2 (no reversing or turning round on a motorway or its slip roads), § 53, § 54 stk. 1 nr. 2 and 4 and stk. 2 (THC over
+  0,001 mg/kg; THC on a lawful prescription only when taken as prescribed; no driving when illness or medicine means you cannot
+  drive fully safely), § 55 stk. 1–2 (the police may at any time ask a driver for a breath, saliva or sweat test), § 56 stk. 1, § 62
+  and § 63 (a car licence also covers tractors and small mopeds), § 80 stk. 1, § 105 (compulsory liability insurance).
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 11: § 9 U 3 (times in black for weekdays except Saturdays, in
+  brackets for Saturdays, in red for Sundays and holidays), § 9 «Gælder kun gennemkørsel», § 48 N 41 (yellow reflectors on the
+  right, white on the left, normally 100 m apart, closer in bends; the direction to the nearest emergency telephone may be shown)
+  and N 43 (passed on both sides), § 50 (a farm entrance may be marked with a small red reflector), § 51 O 43–45 (striped barriers
+  are passed on the side the stripes slope down towards), § 52 P 11 (traffic-island beacons are yellow columns), C 51 (the ban does
+  not apply to two-wheeled bicycles and small mopeds and lasts until it is lifted), UC 60,1 and UC 60,5, § 60 T 33 (a vehicle parked
+  in a marked bay must stand inside it, vehicles with more than two wheels along the bay) and V 23, § 61 V 42 with V 46 (a bus lane
+  that zero-emission cars, that is cars on electricity or hydrogen, may use), § 63 (a signal that works still applies).
+- Not in the two law texts and taken from general guidance or other rules: one person only on an electric kick scooter (the rules
+  for motorised kick scooters); a parking card for disabled people only when the vehicle carries its holder (the parking-card
+  rules); help for an animal you have hit and game reported to the police (Dyrevelfærdsloven); the licence's harmonised code 01
+  (vision correction); alcohol is burnt slowly, also while you sleep; a burst tyre pulls the car to its side; hail can lie like ice;
+  a bus's rear overhang swings out when it turns; right wheels in a soft verge: ease off and steer back gently; with the engine
+  stopped, steering and brakes need more force; a stuck accelerator: declutch or select neutral, brake, switch off when stopped;
+  ABS cannot give more grip on gravel; leaving a tunnel the light dazzles and the road may be icy; worn tyres, seat belts, shock
+  absorbers and brake pads must be replaced; exhaust fumes in the car are dangerous; an engine fire: do not open the bonnet fully;
+  retighten wheel bolts; an automatic car is driven with the right foot only; the recovery position; what to tell 1-1-2; sneezing
+  at speed means metres driven blind; plan breaks on a long drive.
+- Picture prompts assume the usual designs where the order does not describe them: white roadside posts with a black slanted top
+  for N 41, red and white stripes forming an upside-down V for N 43 (in the style of N 42), a short yellow column lit from inside for
+  P 11, a horizontal barrier with red and white diagonal stripes for O 43–45, a car on a verge under a blue roundel with a red X for
+  UC 60,5 (as 5630 shows UC 60,6 with one red bar), a vertical double-headed arrow for UC 60,1, a car symbol on a green field for
+  V 46, a yellow ambulance with a chequered pattern.
