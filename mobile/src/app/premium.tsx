@@ -30,6 +30,11 @@ function Perk({ title, small }: { title: string; small?: boolean }) {
   );
 }
 
+// The store apps (Android, iOS) sell nothing (Mojtaba 2026-10-23): Google Play and the App Store want digital goods
+// bought inside an app paid through their own billing, so there the passes, the buy button and Stripe are left out and
+// nothing points elsewhere to buy; a pass already on the account works as everywhere, and a trial code still counts.
+const STORE_APP = Platform.OS !== 'web';
+
 const PLAN_NAME: Record<Plan['id'], string> = { week: 'یک هفته', month: 'یک ماه', quarter: 'سه ماه' };
 
 // One pass to choose: its length and price, outlined in the text colour while chosen; the three months one is marked
@@ -163,6 +168,12 @@ export default function Premium() {
           <T style={{ fontWeight: '700', fontSize: 16, textAlign: 'center' }}>برای نسخه‌ی ویژه حساب کاربری بسازید</T>
           <T style={{ color: c.muted, fontSize: 13, lineHeight: 22, textAlign: 'center' }}>کاربر مهمان نمی‌تواند نسخه‌ی ویژه بخرد یا کد تخفیف بزند. پیشرفت حساب مهمان به حساب تازه منتقل نمی‌شود.</T>
           <Button big icon="personAdd" label="ساخت حساب کاربری" onPress={() => { logout().catch(() => {}); }} style={{ alignSelf: 'stretch', marginTop: 4 }} />
+        </Card>
+      ) : pay && STORE_APP ? (
+        <Card style={{ gap: 10, alignItems: 'center', paddingVertical: 18 }}>
+          <Icon name="info" size={26} color={c.muted} />
+          <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22, textAlign: 'center' }}>{premium ? 'نسخه‌ی ویژه را نمی‌توان در این نسخه‌ی اپ تمدید کرد.' : 'نسخه‌ی ویژه را نمی‌توان در این نسخه‌ی اپ خرید. اگر حساب شما نسخه‌ی ویژه دارد، اینجا هم فعال است.'}</T>
+          <Button kind="glass" icon="refresh" label="بررسی دوباره‌ی حساب" onPress={check} disabled={!!busy} />
         </Card>
       ) : pay ? (
         <Card style={{ gap: level ? 9 : 12, ...(level ? { paddingVertical: 12 } : null) }}>

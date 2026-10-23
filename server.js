@@ -69,6 +69,9 @@ const VERSION = crypto.createHash('sha256')
 const CONSOLE_HTML = fs.readFileSync(path.join(__dirname, 'console', 'index.html'));
 // The privacy policy at /privacy (pages/privacy.html, in English, Danish and Persian; Mojtaba 2026-10-21, for Google sign-in).
 const PRIVACY_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'privacy.html'));
+// How to delete an account, at /delete-account (pages/delete-account.html, three languages): the address Google Play's
+// Data safety form asks for (Mojtaba 2026-10-23).
+const DELETE_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'delete-account.html'));
 const ADMIN_HTML = fs.readFileSync(path.join(__dirname, 'console', 'admin.html'));
 
 let store; // set in main()
@@ -583,6 +586,10 @@ function serveStatic(req, res) {
   if (p === '/privacy' || p === '/privacy/' || p === '/app/privacy') {
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff', ...PAGE_HEADERS });
     return res.end(req.method === 'HEAD' ? undefined : PRIVACY_HTML);
+  }
+  if (p === '/delete-account' || p === '/delete-account/' || p === '/app/delete-account') {
+    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff', ...PAGE_HEADERS });
+    return res.end(req.method === 'HEAD' ? undefined : DELETE_HTML);
   }
   // The admin's console (its page; it signs in and reads /api/guideref itself).
   if (p === '/console' || p === '/console/') {
