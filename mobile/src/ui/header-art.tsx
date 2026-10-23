@@ -5,7 +5,7 @@
 import { ARC } from './theme';
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { RTL, latin } from '@/lib/i18n';
-import { px } from './palette';
+import { heroDark, px } from './palette';
 
 type Art = { light: boolean; height: number };
 
@@ -225,7 +225,7 @@ export function LearnBookArt({ light, height }: Art) {
 // The sign-in page's picture (main site), drawn like the home, exam and learn headers (Mojtaba, 2026-10-15): a phone
 // with a profile, a password field and a green button, a shield with a tick beside it and the Danish flag, on two soft
 // circles, in the middle of a plain box in the headers' own green (light / dark), as wide as the screen.
-export const LOGIN_BG = { light: px('#d3d9ee'), dark: ARC ? px('#141c3d') : '#18244b' };
+export const LOGIN_BG = { light: px('#d3d9ee'), dark: ARC ? heroDark() : '#18244b' };
 export function LoginArt({ light, width, height }: { light: boolean; width: number; height: number }) {
   const t = light ? LIGHT : DARK, back = light ? px('#b0bada') : px('#111b3d');
   return (

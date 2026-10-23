@@ -18,7 +18,7 @@ import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
-import { px } from './palette';
+import { heroDark, px } from './palette';
 import { WASH_DARK, WASH_LIGHT } from './wash';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
@@ -254,7 +254,7 @@ export function setWebTop(base: string, cover: string | null) { webTop.base = ba
 // In the light theme, a light version of the same picture (number + 3, on a soft light green) with a dark green title,
 // once the server has made it; until then the dark one.
 // (the main site's in its teal green, from Mojtaba's reference)
-const HERO_BG = ARC ? px('#141c3d') : '#1b4827', HERO_BG_LIGHT = ARC ? px('#d3d9ee') : '#d9ecd5', HERO_INK_LIGHT = ARC ? px('#111d45') : '#14421c';
+const HERO_BG = ARC ? heroDark() : '#1b4827', HERO_BG_LIGHT = ARC ? px('#d3d9ee') : '#d9ecd5', HERO_INK_LIGHT = ARC ? px('#111d45') : '#14421c';
 const HERO_FADE = 110;   // how far up from the header's bottom the picture fades into the page
 // The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
