@@ -1,19 +1,20 @@
 # «آزمون جدید», batch 10 (5901–6000), part d: meeting (7.7), placement (7.2), road users beside you (7.6), moving off (7.1), lane
-# changes (7.4), motorways (7.16), turning round (7.5), braking (7.3), distance (7.8), lights (7.19), signs (6.1), stopping and
-# parking (7.18) and general duties (6.2).
+# changes (7.4), motorways (7.16), turning round (7.5), braking (7.3), distance (7.8), lights (7.19), signs (6.1), straight on at
+# junctions (7.12) and left turns (7.14).
 # Rules: Færdselsloven §§ 9 stk. 1 and stk. 2 nr. 3 (stop after an accident; give name and address on request), 14 stk. 1 and 5 (use
-# the lane meant for your vehicle; only vehicles slower than the sign may use a crawler lane), 15 stk. 1 and 3, 18 stk. 1–2 (turn
-# round forwards to the left; make sure that moving off and lane changes can be done without danger), 21 stk. 1 and 4, 24 (passing in
-# dense traffic in rows), 26 stk. 6 (no left turn until it causes no inconvenience to oncoming traffic), 29 stk. 1 nr. 4 and 7
-# (no stopping where a sign is hidden, or before a junction where lanes are divided by unbroken lines and 5 m before), 31 stk. 2
-# (move a vehicle stopped after an accident or breakdown; a warning triangle placed so that others are warned in good time), 32 stk.
-# 1–2 (the horn only to avert danger; signal before moving off, turning round and lane changes on a motorway), 33 stk. 3 nr. 1–2 and
-# stk. 5 (main beam; auxiliary lamps only for their purpose), 46 stk. 2 (on a motorway no stopping outside the designated parking and
-# rest areas), 55 a (no hand-held phone); BEK 425/2023: Q 46 (an unbroken edge line may only be crossed to stop, park or drive onto or
-# off the road), E 37 (crawler lane), E 47 (cycle street: the cyclists' speed, special care).
-# Guidance (not law): a motorcyclist leaning into a bend may reach over the centre line; a large vehicle that has stopped can hide
-# road users behind it; oncoming drivers facing a low sun may not see you; a small child close to a car can be hidden from the
-# driver; ABS keeps the car steerable while braking hard; wet leaves make the road slippery; only rest helps against tiredness.
+# the lane meant for your vehicle; only vehicles slower than the sign may use a crawler lane), 15 stk. 1 and 3, 16 stk. 3 (a left turn
+# from close to the middle), 18 stk. 1–2 (turn round forwards to the left; make sure that moving off and lane changes can be done
+# without danger), 21 stk. 1 and 4, 26 stk. 1 (special care at junctions, also on green) and stk. 6 (no left turn until it causes no
+# inconvenience to oncoming traffic), 31 stk. 2 (move a vehicle stopped after an accident as soon as possible), 32 stk. 1–2 (the horn
+# only to avert danger; signal before moving off, turning round and lane changes on a motorway), 33 stk. 3 nr. 1–2 and stk. 5 (main
+# beam; auxiliary lamps only for their purpose), 46 stk. 2 (on a motorway no stopping outside the designated parking and rest areas),
+# 55 a (no hand-held phone); BEK 425/2023: C 19 (no entry), C 32 (the total weight of a combination), E 37 (crawler lane), N 42 (edge
+# marker plates are passed on the side the stripes slope down towards), N 44,2 and N 46 (cones and marker lamps mark off road works),
+# Q 46 (an unbroken edge line may only be crossed to stop, park or drive onto or off the road).
+# Guidance (not law): a motorcyclist leaning into a bend may reach over the centre line; a lorry that has stopped can hide road users
+# behind it; oncoming drivers facing a low sun may not see you; a small child close to a car can be hidden from the driver; ABS keeps
+# the car steerable while braking hard; wet leaves make the road slippery; only rest helps against tiredness; a green light does not
+# protect you from a driver running a red light.
 from nq import Q, S, above, picture, town, view
 
 Q(5976, "7.7", view("""
@@ -395,34 +396,32 @@ MUST NOT APPEAR: text, readable number plates, logos."""),
     "آینه‌ها همه‌چیز را نشان نمی‌دهند؛ درست جلو و پشت خودرو جاهایی هست که نمی‌بینید."),
 )
 
-Q(5988, "7.4", view("""
-THE SCENE: a motorway with two lanes in our direction in light traffic; we drive in the left lane behind a car that is driving rather
-slowly in the left lane, although the right lane is completely empty for a long way ahead.
-MUST BE CLEARLY VISIBLE: the car ahead in the left lane, the empty right lane.
-MUST NOT APPEAR: signs, text, readable number plates."""),
-  "På motorvejen kører bilen foran dig langsomt i venstre vognbane, selv om højre vognbane er tom. Du vil gerne køre hurtigere. Hvad "
-  "gælder?",
-  "On the motorway the car in front of you is driving slowly in the left lane, even though the right lane is empty. You would like to go "
-  "faster. What applies?",
-  "در آزادراه، خودروی جلوی شما در خط چپ آهسته می‌رود، با این‌که خط راست خالی است. می‌خواهید تندتر بروید. چه قاعده‌ای برقرار است؟",
-  S(True, "Jeg må ikke overhale den højre om.", "I must not overtake it on the right.", "نباید از سمت راست از آن سبقت بگیرم.",
-    "Overhaling skal ske til venstre, og her er der ikke tæt trafik i flere rækker.",
-    "Overtaking must be done on the left, and here there is no dense traffic in several rows.",
-    "سبقت باید از چپ باشد و این‌جا ترافیک سنگینِ چندردیفه وجود ندارد."),
-  S(True, "Jeg holder god afstand og venter, til føreren skifter til højre vognbane.",
-    "I keep a good distance and wait until the driver moves to the right lane.", "فاصله‌ی کافی نگه می‌دارم و صبر می‌کنم تا راننده به خط راست برود.",
-    "Føreren burde holde til højre, så snart det kan ske uden fare, men du må ikke presse ham.",
-    "The driver ought to keep to the right as soon as it is safe, but you must not pressure him.",
-    "راننده باید به‌محض این‌که بی‌خطر باشد به راست برود، ولی شما نباید به او فشار بیاورید."),
-  S(False, "Jeg skifter til højre vognbane, kører forbi og skifter tilbage foran den.",
-    "I move to the right lane, drive past and move back in front of it.", "به خط راست می‌روم، از کنارش رد می‌شوم و جلوی آن به خط چپ برمی‌گردم.",
-    "Det er en overhaling højre om, og den er ikke tilladt her.", "That is overtaking on the right, and it is not allowed here.",
-    "این سبقت از سمت راست است و این‌جا مجاز نیست."),
-  S(False, "Jeg kører tæt op bag den, så føreren forstår, at han skal flytte sig.",
-    "I drive up close behind it so that the driver understands that he must move over.", "نزدیکِ پشتش می‌رانم تا راننده بفهمد باید کنار برود.",
-    "Afstanden skal være så stor, at du ikke kører ind i bilen, hvis den bremser.",
-    "The distance must be large enough that you do not run into the car if it brakes.",
-    "فاصله باید آن‌قدر باشد که اگر ترمز کرد به آن نخورید."),
+Q(5988, "6.1", view("""
+THE SCENE: a two-lane country road; ahead in the middle of the road lies a narrow traffic island; on its nose facing us stands a tall,
+narrow plate with diagonal red and white stripes that slope down towards the RIGHT.
+MUST BE CLEARLY VISIBLE: the traffic island, the tall plate with red and white stripes sloping down to the right.
+MUST NOT APPEAR: other signs, text."""),
+  "Midt på vejen ligger en helle. På spidsen af den står en plade med røde og hvide striber, der hælder ned mod højre. Hvad betyder den?",
+  "There is a traffic island in the middle of the road. On its nose stands a plate with red and white stripes that slope down to the "
+  "right. What does it mean?",
+  "وسط جاده یک جزیره‌ی ترافیکی هست. روی نوک آن تابلویی با نوارهای قرمز و سفید است که به سمت راست پایین آمده‌اند. معنی آن چیست؟",
+  S(True, "Jeg skal køre forbi pladen i højre side.", "I must pass the plate on the right.", "باید از سمت راستِ تابلو عبور کنم.",
+    "Pladen skal passeres på den side, striberne hælder ned imod.", "The plate must be passed on the side the stripes slope down "
+    "towards.", "باید از سمتی از تابلو رد شد که نوارها به طرف آن پایین آمده‌اند."),
+  S(True, "Pladen giver en særlig kraftig markering af hellen.", "The plate gives a particularly strong marking of the island.",
+    "این تابلو جزیره را به‌طور ویژه پررنگ مشخص می‌کند.",
+    "Den bruges, hvor trafikanterne skal gøres ekstra opmærksomme på kanten.",
+    "It is used where road users have to be made especially aware of the edge.",
+    "جایی به کار می‌رود که باید توجه کاربران جاده را به‌طور ویژه به لبه جلب کرد."),
+  S(False, "Jeg må selv vælge, om jeg kører forbi pladen i højre eller venstre side.",
+    "I may choose myself whether to pass the plate on the right or on the left.", "خودم می‌توانم انتخاب کنم از راستِ تابلو رد شوم یا از چپ.",
+    "Striberne viser, hvilken side du skal køre forbi på.", "The stripes show which side you must pass on.",
+    "نوارها نشان می‌دهند از کدام سمت باید رد شوید."),
+  S(False, "Pladen betyder, at vejen er spærret lige efter hellen.", "The plate means that the road is closed just after the island.",
+    "این تابلو یعنی جاده درست بعد از جزیره بسته است.",
+    "Pladen markerer hellen og viser, hvor du skal passere; den spærrer ikke vejen.",
+    "The plate marks the island and shows where to pass; it does not close the road.",
+    "این تابلو جزیره را مشخص می‌کند و جای عبور را نشان می‌دهد؛ جاده را نمی‌بندد."),
 )
 
 Q(5989, "7.4", view("""
@@ -577,37 +576,40 @@ MUST NOT APPEAR: signs, text, readable number plates."""),
     "دور زدن باید رو به جلو و به سمت چپ انجام شود، مگر این‌که شرایط اجازه ندهد."),
 )
 
-Q(5994, "7.18", town("""
-THE SCENE: a town street approaching a junction with traffic lights; about 40 m before the junction the carriageway in our direction
-is divided into two lanes by an unbroken white line, with painted arrows for straight ahead and for a right turn; along the right kerb
-on this stretch there is free space in front of a shop.
-MUST BE CLEARLY VISIBLE: the unbroken line dividing the lanes before the junction, the arrows, the free kerb along the stretch.
-MUST NOT APPEAR: text, readable number plates."""),
-  "Før et lyskryds er kørebanen delt i vognbaner med en ubrudt linje og pile. Langs kantstenen på denne strækning er der plads. Du vil "
-  "standse og sætte en passager af. Hvad gælder?",
-  "Before a traffic-light junction the carriageway is divided into lanes by an unbroken line and arrows. There is room along the kerb on "
-  "this stretch. You want to stop and let a passenger out. What applies?",
-  "پیش از یک تقاطع چراغ‌دار، سواره‌رو با یک خط ممتد و فلش‌ها به چند خط تقسیم شده است. در این بخش کنار جدول جا هست. می‌خواهید بایستید و "
-  "مسافری را پیاده کنید. چه قاعده‌ای برقرار است؟",
-  S(True, "Jeg må ikke standse på den strækning, hvor vognbanerne er adskilt af ubrudte linjer.",
-    "I must not stop on the stretch where the lanes are separated by unbroken lines.",
-    "نباید در بخشی که خطوط عبور با خط ممتد از هم جدا شده‌اند بایستم.",
-    "Standsning og parkering er forbudt, hvor kørebanen før et vejkryds er inddelt i vognbaner med spærrelinjer.",
-    "Stopping and parking are forbidden where the carriageway before a junction is divided into lanes by unbroken lines.",
-    "توقف و پارک در جایی که سواره‌رو پیش از تقاطع با خطوط ممتد به چند خط تقسیم شده ممنوع است."),
-  S(True, "Forbuddet gælder også de sidste 5 m, før de ubrudte linjer begynder.",
-    "The ban also applies to the last 5 m before the unbroken lines begin.", "این ممنوعیت در ۵ متر پیش از شروع خطوط ممتد هم برقرار است.",
-    "Det gælder også inden for 5 m før begyndelsen af en sådan strækning.",
-    "It also applies within 5 m before the start of such a stretch.", "این قاعده تا ۵ متر پیش از شروع چنین بخشی هم اعمال می‌شود."),
-  S(False, "Det er tilladt, når passageren kun skal hurtigt ud.", "It is allowed if the passenger is only getting out quickly.",
-    "اگر مسافر فقط سریع پیاده شود، مجاز است.",
-    "Forbuddet gælder også en kort standsning for at sætte en passager af.",
-    "The ban also covers a short stop to let a passenger out.", "این ممنوعیت شامل توقف کوتاه برای پیاده کردن مسافر هم می‌شود."),
-  S(False, "Det er tilladt, fordi der ikke står en tavle med standsningsforbud.",
-    "It is allowed because there is no no-stopping sign.", "مجاز است، چون تابلوی توقف ممنوع نصب نشده است.",
-    "Forbuddet står i færdselsloven og gælder, selv om der ikke er en tavle.",
-    "The ban is in the Road Traffic Act and applies even though there is no sign.",
-    "این ممنوعیت در قانون راهنمایی و رانندگی آمده و حتی بدون تابلو هم برقرار است."),
+Q(5994, "7.4", view("""
+THE SCENE: a road with two lanes in our direction at night, with street lights and little traffic; a little ahead the right lane, in
+which we drive, is closed by a row of orange cones placed diagonally across it, with lamps flashing white light along the cones;
+behind them road-works machines stand in the closed lane; the left lane is open.
+MUST BE CLEARLY VISIBLE: the diagonal row of orange cones closing our lane, the flashing white lamps, the open left lane.
+MUST NOT APPEAR: signs, text, readable number plates.""", cond="night, dark, dry road, street lights"),
+  "Det er mørkt, og der er kun lidt trafik. Lidt fremme er din vognbane spærret med orange kegler og lamper, der blinker med hvidt lys. "
+  "Vognbanen til venstre er åben. Hvordan forholder du dig?",
+  "It is dark, and there is only a little traffic. A little ahead your lane is closed with orange cones and lamps flashing white light. "
+  "The lane to the left is open. What do you do?",
+  "هوا تاریک است و ترافیک کم است. کمی جلوتر خط شما با مخروط‌های نارنجی و چراغ‌هایی که نور سفید چشمک‌زن دارند بسته شده است. خط سمت چپ "
+  "باز است. چه می‌کنید؟",
+  S(True, "Jeg skifter i god tid over i den åbne vognbane, når det kan ske uden fare.",
+    "I move over to the open lane in good time, when it can be done without danger.", "به‌موقع و وقتی بی‌خطر باشد به خط باز می‌روم.",
+    "Keglerne og lamperne afgrænser arbejdsområdet, og du skal sikre dig, at vognbaneskiftet kan ske uden fare.",
+    "The cones and lamps mark off the work area, and you must make sure that the lane change can be done without danger.",
+    "مخروط‌ها و چراغ‌ها محدوده‌ی کار را مشخص می‌کنند و باید مطمئن شوید که تغییر خط بی‌خطر است."),
+  S(True, "Jeg sætter farten ned, fordi der kan være vejarbejdere og maskiner bag keglerne.",
+    "I slow down because there may be road workers and machines behind the cones.",
+    "سرعتم را کم می‌کنم، چون ممکن است پشت مخروط‌ها کارگران و ماشین‌آلات باشند.",
+    "Ved vejarbejde skal du være særlig opmærksom på dem, der arbejder.", "At road works you must pay special attention to those working "
+    "there.", "در محل کارهای جاده‌ای باید به‌طور ویژه مراقب کسانی باشید که کار می‌کنند."),
+  S(False, "Jeg kører helt frem til keglerne med uændret fart og skifter først i sidste øjeblik.",
+    "I drive right up to the cones at unchanged speed and change lanes only at the last moment.",
+    "با همان سرعت تا خودِ مخروط‌ها می‌روم و فقط در آخرین لحظه خط عوض می‌کنم.",
+    "Et sent vognbaneskift giver dårlig tid til at se, om der er plads, og kan tvinge andre til at bremse.",
+    "A late lane change gives little time to see whether there is room and may force others to brake.",
+    "تغییر خطِ دیرهنگام فرصت کمی برای دیدن جای خالی می‌دهد و ممکن است دیگران را به ترمز وادار کند."),
+  S(False, "De blinkende hvide lamper betyder, at vejarbejdet er slut, og at vognbanen snart åbner.",
+    "The flashing white lamps mean that the road works are over and that the lane will soon open.",
+    "چراغ‌های سفید چشمک‌زن یعنی کار جاده تمام شده و خط به‌زودی باز می‌شود.",
+    "Lamperne markerer, ligesom keglerne, det område, der er spærret på grund af vejarbejdet.",
+    "Like the cones, the lamps mark the area that is closed because of the road works.",
+    "این چراغ‌ها هم مثل مخروط‌ها محدوده‌ای را مشخص می‌کنند که به خاطر کار جاده‌ای بسته است."),
 )
 
 Q(5995, "7.3", town("""
@@ -697,94 +699,96 @@ MUST NOT APPEAR: text, letters or numbers on the number plate, logos."""),
     "در بخشی از جاده که به اندازه‌ی کافی روشن است، نباید از نور بالا استفاده کرد."),
 )
 
-Q(5998, "6.1", town("""
-THE SCENE: the start of a street where bicycles dominate: a blue square sign showing a white bicycle above a small white car (the
-Danish sign for a cycle street) with a plate allowing cars; a little ahead two cyclists ride side by side at a calm pace in the middle
-of the street.
-MUST BE CLEARLY VISIBLE: the cycle-street sign, the two cyclists side by side ahead.
-MUST NOT APPEAR: readable text, brand names."""),
-  "Du kører i bil ind i en gade med denne tavle. Undertavlen tillader kørsel med bil. Foran dig cykler to cyklister ved siden af hinanden "
-  "i roligt tempo. Hvad gælder?",
-  "You drive a car into a street with this sign. The plate allows cars. In front of you two cyclists are riding side by side at a calm "
-  "pace. What applies?",
-  "با خودرو وارد خیابانی با این تابلو می‌شوید. تابلوی زیرین رانندگی با خودرو را مجاز می‌کند. جلوی شما دو دوچرخه‌سوار کنار هم با "
-  "سرعتی آرام رکاب می‌زنند. چه قاعده‌ای برقرار است؟",
-  S(True, "Jeg tilpasser farten til cyklisternes.", "I adjust my speed to the cyclists'.", "سرعتم را با سرعت دوچرخه‌سواران هماهنگ می‌کنم.",
-    "I en cykelgade må der kun køres med en hastighed, der svarer til cyklisternes, normalt under 30 km/t.",
-    "In a cycle street you may only drive at a speed matching the cyclists', normally under 30 km/h.",
-    "در خیابان دوچرخه فقط با سرعتی هم‌اندازه‌ی سرعت دوچرخه‌سواران، معمولاً کمتر از ۳۰ کیلومتر در ساعت، می‌توان راند."),
-  S(True, "Jeg skal vise særlig agtpågivenhed og hensynsfuldhed over for cyklisterne.",
-    "I must show special attentiveness and consideration towards the cyclists.", "باید نسبت به دوچرخه‌سواران دقت و ملاحظه‌ی ویژه داشته باشم.",
-    "Det er en af de særlige regler, der gælder i en cykelgade.", "That is one of the special rules that apply in a cycle street.",
-    "این یکی از قواعد ویژه‌ی خیابان دوچرخه است."),
-  S(False, "Jeg må køre op til 50 km/t, fordi der ikke står en hastighedstavle.",
-    "I may drive at up to 50 km/h because there is no speed-limit sign.", "می‌توانم تا ۵۰ کیلومتر در ساعت برانم، چون تابلوی حد سرعت نیست.",
-    "I en cykelgade gælder cyklisternes hastighed, selv om der ikke står en hastighedstavle.",
-    "In a cycle street the cyclists' speed applies, even though there is no speed-limit sign.",
-    "در خیابان دوچرخه سرعت دوچرخه‌سواران معیار است، حتی اگر تابلوی حد سرعت نباشد."),
-  S(False, "Jeg dytter, så cyklisterne ved, at jeg er bag dem.", "I sound the horn so that the cyclists know I am behind them.",
-    "بوق می‌زنم تا دوچرخه‌سواران بدانند پشت سرشان هستم.",
-    "Hornet må kun bruges for at afværge fare.", "The horn may only be used to avert danger.", "بوق فقط برای دفع خطر است."),
-)
-
-Q(5999, "7.18", town("""
-THE SCENE: a long straight town street; at the right kerb a little ahead stands a round speed-limit sign 30 on a low post, where a
-lower speed limit begins in the middle of the street; just before the sign there is a free space at the kerb, long enough for a van.
-MUST BE CLEARLY VISIBLE: the 30 sign on its low post, the free space at the kerb right before it.
+Q(5998, "6.1", view("""
+THE SCENE: the entrance to a narrow road over an old bridge; at the entrance stands a round white sign with a red border showing a black
+silhouette of a vehicle pulling a trailer and below it the black text «3,5 t»; in the right exterior mirror a small trailer coupled to
+our car can be seen.
+MUST BE CLEARLY VISIBLE: the round sign with the vehicle-and-trailer silhouette and «3,5 t», the trailer in the mirror.
 MUST NOT APPEAR: other signs, any other text."""),
-  "Du kører en høj varevogn og vil parkere ved kantstenen lige før en tavle, der står på en lav stander. Varevognen vil skjule tavlen "
-  "for dem, der kommer bagfra. Hvad gælder?",
-  "You are driving a tall van and want to park at the kerb just before a sign on a low post. The van will hide the sign from those "
-  "coming from behind. What applies?",
-  "با یک ون بلند می‌رانید و می‌خواهید درست پیش از تابلویی که روی پایه‌ای کوتاه نصب شده، کنار جدول پارک کنید. ون تابلو را از دید کسانی که "
-  "از پشت می‌آیند پنهان می‌کند. چه قاعده‌ای برقرار است؟",
-  S(True, "Jeg må ikke parkere, så tavlen bliver dækket.", "I must not park so that the sign is hidden.",
-    "نباید طوری پارک کنم که تابلو پوشیده شود.",
-    "Standsning eller parkering må ikke ske på en sådan måde, at en færdselstavle dækkes.",
-    "Stopping or parking must not be done in such a way that a traffic sign is hidden.",
-    "توقف یا پارک نباید طوری باشد که تابلوی راهنمایی پوشیده شود."),
-  S(False, "Det er i orden, når jeg kun holder der et par minutter.", "It is all right if I only stand there for a couple of minutes.",
-    "اگر فقط چند دقیقه آن‌جا بایستم، اشکالی ندارد.",
-    "Forbuddet gælder også standsning, ikke kun parkering.", "The ban also covers stopping, not only parking.",
-    "این ممنوعیت شامل توقف هم می‌شود، نه فقط پارک."),
-  S(False, "Det er i orden, fordi de bagfra kan se tavlen, når de er kørt forbi varevognen.",
-    "It is all right because those behind can see the sign once they have passed the van.",
-    "اشکالی ندارد، چون پشت‌سری‌ها وقتی از ون رد شدند تابلو را می‌بینند.",
-    "Så ser de tavlen for sent; den skal kunne ses i god tid.", "Then they see the sign too late; it must be visible in good time.",
-    "در این صورت تابلو را خیلی دیر می‌بینند؛ تابلو باید به‌موقع دیده شود."),
+  "Ved en bro står denne tavle, der viser et køretøj med påhængsvogn og »3,5 t«. Du trækker en trailer. Bilen vejer med fører og bagage "
+  "1,9 t, og traileren vejer med last 1,4 t. Hvad gælder?",
+  "By a bridge stands this sign showing a vehicle with a trailer and «3.5 t». You are towing a trailer. The car weighs 1.9 t with driver "
+  "and luggage, and the trailer weighs 1.4 t with its load. What applies?",
+  "کنار یک پل این تابلو قرار دارد که یک وسیله با یدک و عدد «۳٫۵ تن» را نشان می‌دهد. یدک می‌کشید. خودرو با راننده و بار ۱٫۹ تن و یدک با "
+  "بارش ۱٫۴ تن وزن دارد. چه قاعده‌ای برقرار است؟",
+  S(True, "Jeg må godt køre over broen, fordi vogntoget i alt vejer 3,3 t.", "I may drive over the bridge because the combination weighs "
+    "3.3 t in all.", "می‌توانم از پل رد شوم، چون مجموعه روی هم ۳٫۳ تن وزن دارد.",
+    "Tavlen forbyder vogntog, hvis samlede faktiske totalvægt er større end den angivne.",
+    "The sign prohibits combinations whose combined actual total weight is greater than the one shown.",
+    "این تابلو مجموعه‌هایی را ممنوع می‌کند که وزن واقعیِ کلِ آن‌ها بیشتر از عدد نوشته‌شده باشد."),
+  S(True, "Lægger jeg så meget mere last i traileren, at vogntoget vejer over 3,5 t, må jeg ikke køre over broen.",
+    "If I put so much more load in the trailer that the combination weighs over 3.5 t, I must not drive over the bridge.",
+    "اگر آن‌قدر بار بیشتری در یدک بگذارم که وزن مجموعه از ۳٫۵ تن بیشتر شود، نباید از پل رد شوم.",
+    "Det er bilens og trailerens samlede faktiske vægt, der tæller.", "It is the combined actual weight of the car and the trailer that "
+    "counts.", "وزن واقعیِ مجموعِ خودرو و یدک ملاک است."),
+  S(False, "Tavlen gælder kun bilen; traileren tæller ikke med.", "The sign only applies to the car; the trailer does not count.",
+    "این تابلو فقط برای خودروست و یدک حساب نمی‌شود.",
+    "Tavlen gælder netop hele vogntoget, altså bil og trailer tilsammen.",
+    "The sign applies precisely to the whole combination, that is car and trailer together.",
+    "این تابلو دقیقاً برای کل مجموعه، یعنی خودرو و یدک با هم، است."),
+  S(False, "Det er de tilladte totalvægte i registreringsattesterne, der tæller.",
+    "It is the permitted total weights in the registration certificates that count.", "وزن‌های کلِ مجاز در کارت‌های ثبت خودرو ملاک‌اند.",
+    "Det er den faktiske vægt med last, der tæller.", "It is the actual weight with the load that counts.", "وزن واقعی با بار ملاک است."),
 )
 
-Q(6000, "6.2", picture("""
-A two-lane country road just after a sharp, blind bend to the left, seen from the side of the road: a car stands broken down at the
-right edge of its lane with its hazard lights flashing; a person in a yellow high-visibility vest walks back along the grass verge
-towards the bend, carrying a red warning triangle, so that it can be set up before the bend.
-MUST BE CLEARLY VISIBLE: the broken-down car with hazard lights just after the blind bend, the person carrying the red warning
-triangle towards the bend.
-MUST NOT APPEAR: text, letters or numbers on the number plate, logos."""),
-  "Din bil er gået i stå i højre side af landevejen lige efter et uoverskueligt sving, og du kan ikke flytte den med det samme. Hvad "
-  "gør du?",
-  "Your car has broken down on the right-hand side of the country road just after a blind bend, and you cannot move it straight away. "
-  "What do you do?",
-  "خودروی شما درست بعد از یک پیچ کور در سمت راست جاده‌ی بیرون شهر خراب شده و نمی‌توانید فوراً جابه‌جایش کنید. چه می‌کنید؟",
-  S(True, "Jeg sørger for, at havariblinket er tændt.", "I make sure that the hazard lights are on.", "مطمئن می‌شوم که فلاشر روشن باشد.",
-    "Holder bilen, så den er til fare for andre, skal du advare de andre trafikanter.",
-    "If the car is standing where it is a danger to others, you must warn other road users.",
-    "اگر خودرو جایی ایستاده که برای دیگران خطرساز است، باید دیگران را آگاه کنید."),
-  S(True, "Jeg stiller advarselstrekanten op før svinget, så de bagfra kommende advares i god tid.",
-    "I set up the warning triangle before the bend so that those coming from behind are warned in good time.",
-    "مثلث هشدار را پیش از پیچ قرار می‌دهم تا کسانی که از پشت می‌آیند به‌موقع آگاه شوند.",
-    "Advarselstrekanten skal anbringes, så kørende, der nærmer sig, advares i god tid.",
-    "The warning triangle must be placed so that drivers approaching are warned in good time.",
-    "مثلث هشدار باید طوری گذاشته شود که رانندگانِ در حال نزدیک شدن به‌موقع آگاه شوند."),
-  S(True, "Jeg sørger for at få bilen flyttet til et sikkert sted så hurtigt som muligt.",
-    "I make sure that the car is moved to a safe place as quickly as possible.", "ترتیبی می‌دهم که خودرو هر چه زودتر به جای امنی منتقل شود.",
-    "En bil, der er gået i stå, hvor den er til fare, skal snarest muligt flyttes.",
-    "A car that has broken down where it is a danger must be moved as soon as possible.",
-    "خودرویی که در جای خطرناک خراب شده، باید هر چه زودتر جابه‌جا شود."),
-  S(False, "Jeg stiller advarselstrekanten lige bag bilen, så den kan ses sammen med bilen.",
-    "I put the warning triangle just behind the car so that it can be seen together with the car.",
-    "مثلث هشدار را درست پشت خودرو می‌گذارم تا همراه خودرو دیده شود.",
-    "Så advarer den for sent; de bagfra skal advares, før de kommer frem til bilen.",
-    "Then it warns too late; those behind must be warned before they reach the car.",
-    "در این صورت دیر هشدار می‌دهد؛ پشت‌سری‌ها باید پیش از رسیدن به خودرو آگاه شوند."),
+Q(5999, "7.12", town("""
+THE SCENE: a junction with traffic lights in town; our light has just turned green; from the RIGHT on the crossing road a car comes fast
+towards the junction and is already close to its stop line, although its light is now red, and it does not seem able to stop.
+MUST BE CLEARLY VISIBLE: our green light, the car from the right approaching fast close to the junction.
+MUST NOT APPEAR: text, readable number plates."""),
+  "Dit lys skifter til grønt. Fra højre kommer en bil med høj fart tæt på krydset, selv om den nu har rødt, og den ser ikke ud til at "
+  "kunne standse. Hvad gør du?",
+  "Your light turns green. From the right a car is coming fast close to the junction, although it now has red, and it does not look "
+  "able to stop. What do you do?",
+  "چراغ شما سبز می‌شود. از سمت راست خودرویی با سرعت زیاد به تقاطع نزدیک می‌شود، با این‌که حالا چراغش قرمز است، و به نظر نمی‌رسد "
+  "بتواند بایستد. چه می‌کنید؟",
+  S(True, "Jeg venter med at køre, til jeg er sikker på, at bilen standser eller er kørt forbi.",
+    "I wait to drive off until I am sure that the car stops or has gone past.", "صبر می‌کنم تا مطمئن شوم آن خودرو می‌ایستد یا رد شده است.",
+    "Grønt lys giver dig lov til at køre, men du skal stadig vise særlig forsigtighed i krydset.",
+    "A green light allows you to go, but you must still take special care in the junction.",
+    "چراغ سبز به شما اجازه‌ی حرکت می‌دهد، ولی همچنان باید در تقاطع احتیاط ویژه کنید."),
+  S(False, "Jeg kører med det samme, fordi jeg har grønt lys.", "I drive off at once because I have a green light.",
+    "فوراً حرکت می‌کنم، چون چراغم سبز است.",
+    "Det hjælper ikke at have ret, hvis den anden bil kører ind i dig.", "Being in the right does not help if the other car runs into "
+    "you.", "اگر آن خودرو به شما بزند، حق داشتن کمکی نمی‌کند."),
+  S(False, "Jeg dytter og kører, så føreren ved, at jeg har grønt.", "I sound the horn and go so that the driver knows I have green.",
+    "بوق می‌زنم و حرکت می‌کنم تا راننده بداند چراغ من سبز است.",
+    "Hornet kan ikke standse bilen; vent, til der ikke længere er fare.", "The horn cannot stop the car; wait until there is no longer "
+    "any danger.", "بوق نمی‌تواند آن خودرو را متوقف کند؛ صبر کنید تا دیگر خطری نباشد."),
+)
+
+Q(6000, "7.14", view("""
+THE SCENE: a two-lane road leading over a motorway on a bridge; just before the bridge a ramp goes off to the LEFT, and at its start
+stands a round red sign with a white horizontal bar (no entry), because it is the exit ramp coming up from the motorway; just after
+the bridge another ramp goes off to the left, the on-ramp down to the motorway; an oncoming car approaches in the other lane.
+MUST BE CLEARLY VISIBLE: the ramp before the bridge with the no-entry sign, the on-ramp after the bridge, the oncoming car.
+MUST NOT APPEAR: other signs, text, readable number plates."""),
+  "Du skal til venstre ad tilkørslen til motorvejen, som ligger lige efter broen. Før broen går der også en rampe til venstre, men ved "
+  "den står en tavle med indkørsel forbudt. En bil kommer imod dig. Hvad gælder?",
+  "You are to turn left onto the on-ramp to the motorway, just after the bridge. Before the bridge there is also a ramp to the left, but "
+  "a no-entry sign stands at it. A car is coming towards you. What applies?",
+  "باید به چپ وارد ورودیِ آزادراه شوید که درست بعد از پل است. پیش از پل هم رمپی به چپ هست، ولی کنارش تابلوی ورود ممنوع قرار دارد. "
+  "خودرویی از روبه‌رو می‌آید. چه قاعده‌ای برقرار است؟",
+  S(True, "Jeg svinger først til venstre efter broen, hvor tilkørslen er.", "I only turn left after the bridge, where the on-ramp is.",
+    "فقط بعد از پل، جایی که ورودی است، به چپ می‌پیچم.",
+    "Rampen før broen er en frakørsel, hvor tavlen forbyder indkørsel med ethvert køretøj.",
+    "The ramp before the bridge is an exit ramp, where the sign prohibits entry with any vehicle.",
+    "رمپِ پیش از پل یک خروجی است که تابلو ورود هر وسیله‌ای را به آن ممنوع کرده است."),
+  S(True, "Jeg holder tilbage for den modkørende bil, før jeg svinger.", "I give way to the oncoming car before I turn.",
+    "پیش از پیچیدن به خودروی روبه‌رو راه می‌دهم.",
+    "Du må ikke svinge til venstre, før det kan ske uden ulempe for den modkørende færdsel.",
+    "You must not turn left until it can be done without inconvenience to oncoming traffic.",
+    "تا وقتی پیچیدن به چپ برای ترافیک روبه‌رو مزاحمت ایجاد کند، نباید بپیچید."),
+  S(True, "Jeg placerer mig i god tid ind mod midten af vejen og giver tegn til venstre.",
+    "I position myself towards the middle of the road in good time and signal left.",
+    "به‌موقع به سمت وسط جاده می‌روم و راهنمای چپ می‌زنم.",
+    "Ved venstresving skal bilen føres så langt ind mod kørebanens midte som muligt, og tegnet skal gives i god tid.",
+    "When turning left the car must be driven as close to the middle of the carriageway as possible, and the signal must be given in "
+    "good time.", "هنگام پیچیدن به چپ باید خودرو را تا حد امکان به وسط سواره‌رو برد و به‌موقع علامت داد."),
+  S(False, "Jeg kan lige så godt svinge ind ad rampen før broen, fordi begge ramper fører til motorvejen.",
+    "I may just as well turn onto the ramp before the bridge because both ramps lead to the motorway.",
+    "می‌توانم همان رمپِ پیش از پل را بگیرم، چون هر دو رمپ به آزادراه می‌روند.",
+    "Rampen før broen er frakørslen; kører du ind ad den, kommer du til at køre mod kørselsretningen på motorvejen.",
+    "The ramp before the bridge is the exit; if you drive in there, you end up driving against the traffic on the motorway.",
+    "رمپِ پیش از پل خروجی است؛ اگر واردش شوید، در آزادراه خلاف جهت حرکت خواهید راند."),
 )

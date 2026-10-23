@@ -314,26 +314,27 @@ is new.
   passenger is not parking), § 4 stk. 2 (police directions are obeyed before signs and signals), § 5 stk. 1, § 7 stk. 2, § 9 stk. 1
   and stk. 2 nr. 3 (stop after any accident; give name and address when another person involved asks), § 14 stk. 1 and 5 (use the
   lane meant for your vehicle; only vehicles slower than the sign may use a crawler lane), § 15 stk. 1 and 3, § 16 stk. 2–3, § 17,
-  § 18 stk. 1–2 (turning round is done forwards to the left; moving off and lane changes only without danger), § 19 (the duty to let
-  a bus out applies in built-up areas), § 20, § 21 stk. 1, 3 nr. 2 and 4, and 4, § 24 (passing in dense traffic in rows is not
-  overtaking), § 26 stk. 2–7, § 27 stk. 8, § 28 stk. 1–2, § 29 stk. 1 nr. 4 (no stopping where a sign or signal is hidden) and nr. 7
-  (no stopping where lanes before a junction are divided by unbroken lines, nor 5 m before) and stk. 3 nr. 3, § 31 stk. 2 (move a
-  vehicle stopped by an accident or a breakdown as soon as possible; a warning triangle placed so that others are warned in good
-  time), § 32 stk. 1–2 and 4, § 33 stk. 3 and 5 (auxiliary lamps only for their purpose), § 35 stk. 1, § 36 stk. 1, § 41 stk. 1–3,
-  § 46 stk. 2 (on a motorway no stopping outside the designated parking and rest areas), § 55 a, § 56 stk. 1, § 82.
-- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 10: § 6 (temporary signs on a yellow plate), § 18 stk. 2–3
-  (a prohibition normally ends at the next junction; beboerkørsel), A 37, A 43,3, A 46,1, A 74,2, A 97, B 16, C 22,2, C 31 (in a
-  combination the limit applies to each vehicle), C 55, C 62, D 55, E 18, E 37 (crawler lane), E 39/E 40, E 47 (cycle street: the
-  cyclists' speed, normally under 30 km/h, and special care), E 51 nr. 6 and E 52, Q 46 (an unbroken edge line, also to a cycle
-  lane or a parking lane, may only be crossed to stop, park or drive onto or off the road), V 50, X 16, § 69 Z 72,2 and Z 93, the
-  shark's teeth marking.
+  § 16 stk. 3, § 18 stk. 1–2 (turning round is done forwards to the left; moving off and lane changes only without danger), § 19 (the
+  duty to let a bus out applies in built-up areas), § 20, § 21 stk. 1, 3 nr. 2 and 4, and 4, § 26 stk. 1 (special care at junctions,
+  also on green) and stk. 2–7, § 27 stk. 8, § 28 stk. 1–2, § 29 stk. 3 nr. 3, § 31 stk. 2 (move a vehicle stopped by an accident or a
+  breakdown as soon as possible), § 32 stk. 1–2 and 4, § 33 stk. 3 and 5 (auxiliary lamps only for their purpose), § 35 stk. 1, § 36
+  stk. 1, § 41 stk. 1–3, § 42 (the limit also applies downhill), § 46 stk. 2 (on a motorway no stopping outside the designated
+  parking and rest areas), § 55 a, § 56 stk. 1, § 82.
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 10: § 6 (temporary signs on a yellow plate), § 18 stk. 3
+  (beboerkørsel), A 37, A 43,3, A 46,1, A 74,2, A 97, B 16, C 19, C 22,2, C 31 (in a combination the limit applies to each vehicle),
+  C 32 (the limit applies to the combined weight of a combination), C 62, D 55, E 18, E 37 (crawler lane), E 39/E 40, E 51 nr. 6 and
+  E 52, N 42 (edge marker plates are passed on the side the stripes slope down towards), N 44,2 and N 46 (cones and marker lamps
+  mark off road works), Q 46 (an unbroken edge line, also to a cycle lane or a parking lane, may only be crossed to stop, park or
+  drive onto or off the road), V 50, X 16, § 69 Z 72,2 and Z 93, the shark's teeth marking.
 - Not in the two law texts and taken from general guidance: dip the lights for an animal in the beam (FDM); the dashboard lamps for
   airbag, tyre pressure, brakes and fuel; convex traffic mirrors make things look smaller and further away; long lorries swing out;
   a motorcyclist leaning into a bend can reach over the centre line; a lorry that has stopped can hide road users behind it;
   oncoming drivers facing a low sun may not see you; a small child close to a car can be hidden from the driver; an emergency stop
   with ABS (brake hard and keep pressing, steer if needed, clutch down in a manual car); wet leaves are slippery; only rest helps
-  against tiredness.
+  against tiredness; the driver, not the cruise control, answers for the speed; a green light does not protect you from someone
+  running a red light.
 - Picture prompts assume the usual designs where the order does not describe them: a blue square sign with a slow lorry and the
-  speed for E 37, a blue square sign with a white bicycle above a small car for E 47, a contraflow cycle lane marked with bicycle
-  symbols and arrows, a blue sign with a picnic-table symbol for a motorway rest area, extra main-beam lamps as two round lamps on
-  the front bumper.
+  speed for E 37, a contraflow cycle lane marked with bicycle symbols and arrows, a blue sign with a picnic-table symbol for a
+  motorway rest area, extra main-beam lamps as two round lamps on the front bumper, a black vehicle-and-trailer silhouette above
+  the weight for C 32, red and white diagonal stripes on N 42 (BEK 426/2023 § 164 gives N 43 red and white fields in the same
+  proportions as N 42).
