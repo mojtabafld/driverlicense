@@ -146,7 +146,15 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
         <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
           <LangButton />
         </View>
-        <L style={{ alignSelf: 'center', textAlign: 'center', marginTop: Math.min(24, height * 0.02), fontSize: 42, lineHeight: 52, fontWeight: '500', letterSpacing: -1.2, color: c.text }}>Teoripro</L>
+        {/* The name as a logo (Mojtaba 2026-10-23): «Teori» large and bold in the text colour, «pro» on a pill of the
+            theme's colour, bold italic in its own text colour. Left to right in every language; read as one word. */}
+        <View accessible accessibilityRole="header" accessibilityLabel="Teoripro"
+          style={{ alignSelf: 'center', flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 6, marginTop: Math.min(24, height * 0.02) } as any}>
+          <L style={{ fontSize: 42, lineHeight: 52, fontWeight: '800', letterSpacing: -1.6, color: c.text }}>Teori</L>
+          <View style={{ backgroundColor: c.accent, borderRadius: 14, paddingHorizontal: 11, paddingTop: 1, paddingBottom: 3, marginTop: 4, transform: [{ rotate: '-4deg' }] }}>
+            <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', fontStyle: 'italic', letterSpacing: -0.6, color: c.accentText }}>pro</L>
+          </View>
+        </View>
         {/* The slides, in the middle of what is left. */}
         <View onTouchStart={onStart} onTouchEnd={onEnd} style={{ flex: 1, minHeight: art + 130, justifyContent: 'center', alignItems: 'center', gap: 18, paddingVertical: 10 }}>
           <Animated.View style={{ opacity: fade, alignItems: 'center', gap: 22, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
