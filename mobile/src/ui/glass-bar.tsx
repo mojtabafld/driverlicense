@@ -25,10 +25,12 @@ const NATIVE_GLASS = Platform.OS === 'ios' && (() => { try { return isLiquidGlas
 // Liquid Glass (iOS 26+): grey glass, light enough to stay glass and dark enough that the white labels (4.7:1) and the
 // chosen item's colour on its capsule (6:1) read well; on the main site's light theme the glass is light (dark
 // labels, the theme's deep colour for the chosen / main item) and turns to the grey glass while something dark lies
-// under it (ui/bar-shade.tsx), as Liquid Glass does. «سیاه و سفید» (mono): the glass is the cards' own colour with
-// their edge in both themes, the chosen item on a lighter capsule in the dark theme (Mojtaba 2026-10-23).
-// Web, Android and older iPhones: flat, the cards' own colour and edge; the chosen item on a capsule a little lighter
-// than the card in the dark theme, tinted with the theme's colour in the light one.
+// under it (ui/bar-shade.tsx), as Liquid Glass does. «سیاه و سفید» (mono): the glass is one step off the cards' colour
+// (as the flat bars) with their edge in both themes, the chosen item on a lighter capsule in the dark theme.
+// Web, Android and older iPhones: flat, one step off the cards' colour so the bar stands out over them (the theme's
+// second surface: lighter in the dark themes, a shade darker than the white cards in the light ones; Mojtaba
+// 2026-10-23), with their edge; the chosen item on a capsule a little lighter than the bar in the dark theme, tinted with
+// the theme's colour in the light one.
 // `scheme`: the glass's own light or dark.
 const MONO = PALETTE === 'mono';
 export function useBarLook() {
@@ -37,19 +39,19 @@ export function useBarLook() {
     // (The capsule see-through: on the web the tab bar's capsule is a positioned layer drawn over the icon.)
     return {
       dark, light, scheme: (dark ? 'dark' : 'light') as 'dark' | 'light',
-      grey: c.surface, solid: c.surface, edge: c.cardBorder,
+      grey: c.surface2, solid: c.surface2, edge: c.cardBorder,
       capsule: dark ? 'rgba(255,255,255,0.1)' : ARC ? pxa('#2f55d4', 0.12) : 'rgba(31,111,92,0.12)',
       green: dark ? (ARC ? px('#8ea8ff') : '#6fdc7c') : (ARC ? px('#2f55d4') : '#1f6f5c'),
       fg: dark ? '#ffffff' : '#1d1d1d',
-      contrast: dark ? mix(c.surface, '#ffffff', 0.1) : ARC ? px('#e6eaf5') : '#e6ede8', // a filled icon's inner lines: the capsule's own colour
+      contrast: dark ? mix(c.surface2, '#ffffff', 0.1) : ARC ? px('#e6eaf5') : '#e6ede8', // a filled icon's inner lines: the capsule's own colour
     };
   }
   const card = MONO && (light || dark); // (not the grey glass of the light theme over something dark)
   if (light) {
     return {
       dark, light, scheme: 'light' as 'dark' | 'light',
-      grey: card ? rgba(c.surface, 0.74) : 'rgba(255,255,255,0.82)',
-      solid: card ? c.surface : 'rgba(252,252,252,0.97)',
+      grey: card ? rgba(c.surface2, 0.74) : 'rgba(255,255,255,0.82)',
+      solid: card ? c.surface2 : 'rgba(252,252,252,0.97)',
       edge: card ? c.cardBorder : 'rgba(0,0,0,0.08)',
       capsule: ARC ? pxa('#2f55d4', 0.12) : 'rgba(31,111,92,0.12)',
       green: ARC ? px('#2f55d4') : '#1f6f5c',
@@ -59,8 +61,8 @@ export function useBarLook() {
   }
   return {
     dark, light, scheme: 'dark' as 'dark' | 'light',
-    grey: card ? rgba(c.surface, 0.74) : dark ? (ARC ? pxa('#1e233a', 0.82) : 'rgba(58,58,62,0.78)') : 'rgba(88,88,94,0.84)',
-    solid: card ? c.surface : dark ? (ARC ? pxa('#1a1e31', 0.97) : 'rgba(52,52,56,0.96)') : 'rgba(84,84,90,0.96)',
+    grey: card ? rgba(c.surface2, 0.74) : dark ? (ARC ? pxa('#1e233a', 0.82) : 'rgba(58,58,62,0.78)') : 'rgba(88,88,94,0.84)',
+    solid: card ? c.surface2 : dark ? (ARC ? pxa('#1a1e31', 0.97) : 'rgba(52,52,56,0.96)') : 'rgba(84,84,90,0.96)',
     edge: card ? c.cardBorder : 'rgba(255,255,255,0.18)',
     capsule: card ? 'rgba(255,255,255,0.1)' : dark ? 'rgba(0,0,0,0.38)' : 'rgba(30,30,34,0.6)',
     green: (ARC ? (dark ? px('#8ea8ff') : px('#9db3ff')) : '#6fdc7c'),
@@ -79,7 +81,7 @@ export function useBarShade() {
 // The bars' surface. iOS 26 and later (iOS 27's reworked Liquid Glass and its clear–tinted setting included): Apple's
 // own glass (UIGlassEffect, its regular style) in the bar's colour, in the app's light or dark rather than the phone's,
 // and lively to the touch as the system's bars are. Web, Android and older iPhones: flat and minimal (Mojtaba
-// 2026-10-04, again 2026-10-23): the cards' own colour with a thin line around it; no see-through, blur, sheen or
+// 2026-10-04, again 2026-10-23): one step off the cards' colour, with a thin line around it; no see-through, blur, sheen or
 // shadow.
 export function BarSurface({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   const look = useBarLook(), r = BAR_H / 2;

@@ -1,4 +1,4 @@
-// Rahvej server: serves ./site and a small JSON API with per-user accounts.
+// Grønpil server: serves ./site and a small JSON API with per-user accounts.
 // Run locally:  node server.js            (data kept in data/db.json)
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
@@ -1881,13 +1881,13 @@ async function main() {
   server.headersTimeout = 30e3; server.requestTimeout = 120e3;
   server.listen(PORT, HOST, () => {
     const nets = Object.values(require('node:os').networkInterfaces()).flat().filter(n => n && n.family === 'IPv4' && !n.internal);
-    console.log(`Rahvej ${VERSION} running:\n  http://localhost:${PORT}`);
+    console.log(`Grønpil ${VERSION} running:\n  http://localhost:${PORT}`);
     nets.forEach(n => console.log(`  http://${n.address}:${PORT}   (other devices on your Wi-Fi)`));
     if (INVITE_CODE) console.log('  Sign-up requires the invite code (INVITE_CODE).');
     syncPayments();
   }).on('error', err => {
     if (err.code !== 'EADDRINUSE') throw err;
-    console.error(`Port ${PORT} is already in use — Rahvej is probably already running in another terminal tab.\n` +
+    console.error(`Port ${PORT} is already in use — Grønpil is probably already running in another terminal tab.\n` +
       `Open http://localhost:${PORT}, or stop the other one first:  kill $(lsof -ti tcp:${PORT} -sTCP:LISTEN)`);
     process.exit(1);
   });

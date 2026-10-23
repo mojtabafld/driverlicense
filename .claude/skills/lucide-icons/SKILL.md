@@ -3,7 +3,7 @@ name: lucide-icons
 description: Chooses, adds and changes the app's icons with the Lucide icon set (lucide.dev, lucide-react-native), checking that each icon exists in the installed package. Use whenever an icon is added, changed or discussed in the mobile app or its web builds (mobile/src/ui/icon.tsx, icon-names.ts), or when the user mentions Lucide or asks for "a better icon" for something.
 ---
 
-# Lucide icons in Rahvej
+# Lucide icons in Grønpil
 
 Every icon in the app (iOS, Android, the web site and /app) is drawn by one component, `Icon` in
 `mobile/src/ui/icon.tsx`, which maps the app's own icon names (`IconName` in `mobile/src/ui/icon-names.ts`) to Lucide

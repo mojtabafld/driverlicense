@@ -179,7 +179,7 @@ export function ThemeButton() {
   );
 }
 
-// Top bar with the Rahvej brand and the theme button, in the page's own background so it reads as one surface.
+// Top bar with the Grønpil brand and the theme button, in the page's own background so it reads as one surface.
 export function TopBar({ right }: { right?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   return (
@@ -187,9 +187,9 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
           {/* The logo first in the page's reading order: at the outer (right) edge, the name inside it. */}
-          {/* uber: «Rah» in the text colour and «vej» in the accent, like «Uber Eats» */}
+          {/* uber: «Grøn» in the text colour and «pil» in the accent, like «Uber Eats» */}
           <Text style={{ fontFamily: DA_FONT, fontSize: 18, color: c.link }}>
-            <Text style={{ fontWeight: '700', color: UBER ? c.text : c.link }}>Rah</Text>vej
+            <Text style={{ fontWeight: '700', color: UBER ? c.text : c.link }}>Grøn</Text>pil
           </Text>
           <Logo />
         </View>

@@ -1,4 +1,4 @@
-// (Rahvej: the symbol is also copied to ../expo.icon/Assets/rahvej-symbol.svg, the iPhone's layered icon.)
+// (Grønpil: the symbol is also copied to ../expo.icon/Assets/groenpil-symbol.svg, the iPhone's layered icon.)
 // Renders the app's icons from symbol.svg (run: NODE_PATH=<playwright> node make-icons.js). An orange background
 // (#D97757, Claude's orange, Mojtaba 2026-10-18; a faint fade #DE7F5F → #D16C4B), the white symbol on top.
 const fs = require('fs'), path = require('path');
