@@ -147,7 +147,7 @@ function dailyMessage(user, h) {
 async function sendTo(user, msg) {
   const l = langOf(user);
   // The title says what the message is (not the app's name, which the phone shows by itself; Mojtaba 2026-10-18).
-  // (The iPhone adds a «from Teorivej» line under the title of a Home Screen web app's notification whatever the
+  // (The iPhone adds a «from Teoripro» line under the title of a Home Screen web app's notification whatever the
   // title is; with the app's name as the title it was still there, so the title stays what the message is, 2026-10-21.)
   const kind = msg.tag === 'tp-remind' ? 'remind' : msg.tag === 'tp-test' ? 'test' : 'daily';
   const payload = JSON.stringify({ title: TEXT[l].titles[kind], body: msg.body, url: msg.url || '/', tag: msg.tag || 'tp', lang: l, dir: dirOf(l) });

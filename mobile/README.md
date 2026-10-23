@@ -1,4 +1,4 @@
-# Teorivej — iOS, Android and web app
+# Teoripro — iOS, Android and web app
 
 One Expo (React Native) code base for iOS, Android and the web. It uses the same server and accounts as
 https://teori.bitlane.app. Design: the same look as the web site (colours, background, cards, buttons and fonts from

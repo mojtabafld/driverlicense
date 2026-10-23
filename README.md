@@ -1,4 +1,4 @@
-# Teorivej
+# Teoripro
 
 Practice site for the Danish category B theory test: random 25-question exams in the style of
 Færdselsstyrelsen's digital test, Persian translations, explanations and short lessons, per-user
@@ -76,7 +76,7 @@ it replaces the whole variable list and would delete the secrets that were added
 | `STRIPE_WEBHOOK_SECRET` | Dashboard, encrypted (optional) | Signing secret (`whsec_…`) of the Stripe webhook to `https://<site>/api/stripehook` with the events `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `charge.refunded`. The return page also checks the payment, so premium works without it, but late (MobilePay) payments and refunds need it. |
 | `PREMIUM_PRICE_WEEK`, `PREMIUM_PRICE_MONTH`, `PREMIUM_PRICE_QUARTER` | Dashboard (optional) | The passes' prices in kroner, defaults `49`, `79` and `149`. |
 | `PREMIUM_TESTERS` | Dashboard (optional) | With a test key, payments and the lock are only for the admins and these comma-separated usernames; everyone else sees the app as before. With a live key they are for everyone. |
-| `RESEND_API_KEY` | Dashboard, encrypted (optional) | Email with Resend: signing up on the main site asks for an address and the new account waits until the link sent there is opened (24 h; «send again» and a corrected address on that page). Accounts from before and guests are not held up; they can add an address under «حساب کاربری». The trial code needs a confirmed address, one trial per address. `MAIL_FROM`: sender, default `Teorivej <no-reply@teori.bitlane.app>` (its domain verified in Resend). |
+| `RESEND_API_KEY` | Dashboard, encrypted (optional) | Email with Resend: signing up on the main site asks for an address and the new account waits until the link sent there is opened (24 h; «send again» and a corrected address on that page). Accounts from before and guests are not held up; they can add an address under «حساب کاربری». The trial code needs a confirmed address, one trial per address. `MAIL_FROM`: sender, default `Teoripro <no-reply@teori.bitlane.app>` (its domain verified in Resend). |
 | `REPORT_TO` | Dashboard (optional) | Where «گزارش خطا» reports are emailed (comma-separated); default `support@` the `MAIL_FROM` domain, which Resend receives (MX), so they show in Resend → Emails → Receiving. Reply-To is the user's confirmed address. |
 | `RESEND_WEBHOOK_SECRET` | Dashboard, encrypted (optional) | The signing secret (`whsec_…`) of a Resend webhook for the event `email.received` pointing at `https://teori.bitlane.app/api/inbound`: received emails are then kept for the admin panel («ایمیل‌های دریافتی»). Reading their text needs a `RESEND_API_KEY` with full access. |
 | `FORWARD_TO` | Dashboard (optional) | An address elsewhere (e.g. your own inbox) that received emails are forwarded to, Reply-To their sender. Never an address of the receiving domain. |
@@ -87,7 +87,7 @@ it replaces the whole variable list and would delete the secrets that were added
 | `ELEVENLABS_VOICE_ID_FA_MAN` / `ELEVENLABS_VOICE_ID_FA` / `ELEVENLABS_MODEL_FA` | Dashboard (optional) | The AI analysis and summary read aloud in Persian («گوش دادن» in their panels): voice `_FA_MAN`, else `_FA`, else `ELEVENLABS_VOICE_ID`; model default `eleven_v3` (Persian is not spoken by multilingual v2). |
 | `LATEST_APP_VERSION` | Dashboard (optional) | The newest Android app's version, as the settings show it («نسخه‌ی نرم‌افزار»: `version` in `mobile/app.json`), in the form x.x (e.g. `1.0`). Raise the version in `app.json` for a new APK and set this to it after publishing: an Android app with an older version asks its user once per start to install the new one. |
 | `APP_DOWNLOAD_URL` | Dashboard (optional) | Where that message's install button goes; default the latest GitHub release's page. |
-| `APP_DOWNLOAD_URL_PROVE` | Dashboard (optional) | The same for the app of `/app` («Teorivej Prove», built by the «Android APK» workflow with `copy: prove`, released as «Android /app build N»); default the repository's releases page. |
+| `APP_DOWNLOAD_URL_PROVE` | Dashboard (optional) | The same for the app of `/app` («Teoripro Prove», built by the «Android APK» workflow with `copy: prove`, released as «Android /app build N»); default the repository's releases page. |
 | `INVITE_CODE` | Dashboard, encrypted (optional) | When set, sign-up requires this code. |
 | `ADMIN_USERS` | Dashboard (optional) | Comma-separated usernames that see «پنل مدیریت» (admin panel with usage stats) in the settings. |
 | `PORT` | App Platform (8080) | Port to listen on (3000 locally). |

@@ -10,7 +10,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Teorivej Admin</title>
+<title>Teoripro Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -93,7 +93,7 @@ tr.u:hover td{background:var(--surface2)}
 
   function login(msg = '') {
     $app.innerHTML = `<form class="card login" id="f">
-      <h1>داشبورد Teorivej</h1>
+      <h1>داشبورد Teoripro</h1>
       <p class="muted" style="margin:0">کاربران و استفاده از برنامه؛ فقط برای مدیران.</p>
       <input name="u" placeholder="نام کاربری یا ایمیل" autocomplete="username" dir="ltr" required>
       <input name="p" type="password" placeholder="رمز عبور" autocomplete="current-password" dir="ltr" required>
@@ -199,7 +199,7 @@ tr.u:hover td{background:var(--surface2)}
     const answer = (to, subject) => `<a href="mailto:${encodeURI(to)}?subject=${encodeURIComponent(subject)}" style="font-size:12.5px;font-weight:700">پاسخ</a>`;
     const short = t => (t.length > 1500 ? `${t.slice(0, 1500)}…` : t);
     $app.innerHTML = `
-      <div class="head"><h1 class="grow">داشبورد Teorivej</h1>
+      <div class="head"><h1 class="grow">داشبورد Teoripro</h1>
         <span class="muted" style="font-size:12.5px">به‌روز: ${when(Date.now())}</span>
         <button class="btn soft" id="re">تازه کردن</button><button class="btn soft" id="out">خروج</button></div>
       <div class="tiles">
@@ -222,7 +222,7 @@ tr.u:hover td{background:var(--surface2)}
       <div class="card reports" style="margin-bottom:16px"><h2>گزارش‌ها از برنامه</h2>
         <p class="muted" style="font-size:12.5px;margin:0 0 4px">${m.on ? `هر گزارش به ${esc((m.reportTo || []).join('، '))} هم ایمیل می‌شود.` : 'ایمیل خاموش است (RESEND_API_KEY)؛ گزارش‌ها فقط این‌جا می‌مانند.'}</p>
         ${reports.length ? reports.map(r => `<div class="r">
-        <div><span class="tag ${r.kind === 'bug' ? 'expired' : 'trial'}">${r.kind === 'bug' ? 'خطا' : 'پیشنهاد'}</span> <b>${esc(r.name || r.username)}</b> <span class="muted" style="font-size:12px">${when(r.at)} · ${esc(r.platform)} ${esc(r.version)}</span>${r.email ? ` <span class="muted" dir="ltr" style="font-size:12px">${esc(r.email)}</span> ${answer(r.email, 'Teorivej: گزارش شما')}` : ''}</div>
+        <div><span class="tag ${r.kind === 'bug' ? 'expired' : 'trial'}">${r.kind === 'bug' ? 'خطا' : 'پیشنهاد'}</span> <b>${esc(r.name || r.username)}</b> <span class="muted" style="font-size:12px">${when(r.at)} · ${esc(r.platform)} ${esc(r.version)}</span>${r.email ? ` <span class="muted" dir="ltr" style="font-size:12px">${esc(r.email)}</span> ${answer(r.email, 'Teoripro: گزارش شما')}` : ''}</div>
         <div style="white-space:pre-wrap">${esc(r.text)}</div></div>`).join('') : '<p class="muted">گزارشی نیست.</p>'}</div>
       <div class="card reports"><h2>ایمیل‌های دریافتی</h2>
         <p class="muted" style="font-size:12.5px;margin:0 0 4px">${m.inbound ? `ایمیل‌هایی که Resend برای دامنه دریافت کرده${m.forward ? '، که به FORWARD_TO هم فرستاده می‌شوند' : ''}.` : 'برای دیدن ایمیل‌های دریافتی این‌جا: در Resend یک webhook با رویداد email.received به آدرس /api/inbound بسازید و کلید امضایش را در RESEND_WEBHOOK_SECRET بگذارید.'}</p>

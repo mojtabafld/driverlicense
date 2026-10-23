@@ -165,6 +165,6 @@ jobs:
           target_commitish: ${{ github.sha }}
           make_latest: ${{ inputs.copy != 'prove' }}
           body: |
-            ${{ inputs.copy == 'prove' && 'Teorivej Prove, the app of teori.bitlane.app/app (prove.dk''s question bank and lessons)' || 'Teorivej' }} for Android (arm64), build ${{ env.RELEASE_N }} from ${{ github.sha }}.
+            ${{ inputs.copy == 'prove' && 'Teoripro Prove, the app of teori.bitlane.app/app (prove.dk''s question bank and lessons)' || 'Teoripro' }} for Android (arm64), build ${{ env.RELEASE_N }} from ${{ github.sha }}.
             Download ${{ env.APK }} on the phone and open it to install.
           files: ${{ runner.temp }}/out/${{ env.APK }}
