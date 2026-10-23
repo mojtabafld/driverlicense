@@ -53,7 +53,7 @@
  },
  "c-n": {
   "aspect": "4:3",
-  "prompt": "Background: one plain soft pale colour (#d8e8f6). Danish road-edge markers on a light grey ground: white edge posts with red reflectors, a red-and-white striped board and an orange traffic cylinder.\nStyle: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter. The objects are centred with generous empty space around them, on one plain soft pale background colour with no gradient and no floor line. Danish traffic signs follow their official design (shape and colours). No readable text, no letters, no numbers unless described, no logos, no watermarks, no faces."
+  "prompt": "Background: one plain soft pale colour (#d8e8f6). Danish road-edge markers on a light grey ground: white edge posts with a sloping top and a yellow reflector, a red-and-white striped board and an orange traffic cylinder.\nStyle: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter. The objects are centred with generous empty space around them, on one plain soft pale background colour with no gradient and no floor line. Danish traffic signs follow their official design (shape and colours). No readable text, no letters, no numbers unless described, no logos, no watermarks, no faces."
  },
  "c-o": {
   "aspect": "4:3",
@@ -187,7 +187,7 @@
  "s-a12-1": {
   "aspect": "4:3",
   "ref": "A12.1.png",
-  "prompt": "Redraw the road sign in the reference image as a clean flat vector illustration for a Danish driving-theory app, NOT photorealistic. Keep the sign EXACTLY as in the reference: the same shape, border, colours, symbol, numbers and letters, with nothing added, removed, mirrored or changed. Draw it large and centred, seen straight from the front, standing on a short plain grey post (a sub-sign plate or a pictogram is drawn alone, without a post), on a plain very light grey background (#f2f3f5), with only a very soft shadow. No scenery, no other objects, no watermark, no logo, no extra text.\nThe sign: Danish road sign A12.1 «Farligt vejkryds – trafikken fra højre har ubetinget vigepligt». Its official design: an upright equilateral triangle (point up) with a broad red border and a white centre; black symbol: a thick vertical black bar (the priority road) with a thinner black bar joining it from the right only."
+  "prompt": "Redraw the road sign in the reference image as a clean flat vector illustration for a Danish driving-theory app, NOT photorealistic. Keep the sign EXACTLY as in the reference: the same shape, border, colours, symbol, numbers and letters, with nothing added, removed, mirrored or changed. Draw it large and centred, seen straight from the front, standing on a short plain grey post (a sub-sign plate or a pictogram is drawn alone, without a post), on a plain very light grey background (#f2f3f5), with only a very soft shadow. No scenery, no other objects, no watermark, no logo, no extra text.\nThe sign: Danish road sign A12.1 «Farligt vejkryds, hvor den krydsende trafik har ubetinget vigepligt (sidevej fra højre)». Its official design: an upright equilateral triangle (point up) with a broad red border and a white centre; black symbol: a thick vertical black bar (the priority road) with a thinner black bar joining it from the right only."
  },
  "s-a16": {
   "aspect": "4:3",
@@ -394,7 +394,7 @@
  },
  "s-b13-2": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign B13 «Stop (ved jernbane)». Its official design: a round sign with a broad red border and a white centre containing an inverted red-bordered white triangle with the black word \"STOP\" in its upper part."
+  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign B13 «Stop (historisk udformning)». Its official design: a round sign with a broad red border and a white centre containing an inverted red-bordered white triangle with the black word \"STOP\" in its upper part."
  },
  "s-b15": {
   "aspect": "4:3",
@@ -536,7 +536,7 @@
  },
  "s-c51-2": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign C51 «Overhaling forbudt (anden udformning)». Its official design: a round sign with a broad red border and a white centre; black symbol: crossed by a thin red diagonal bar from top left to bottom right; two black cars seen from the front side by side."
+  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign C51 «Overhaling forbudt (historisk udformning)». Its official design: a round sign with a broad red border and a white centre; black symbol: crossed by a thin red diagonal bar from top left to bottom right; two black cars seen from the front side by side."
  },
  "s-c52": {
   "aspect": "4:3",
@@ -757,7 +757,7 @@
  },
  "s-e21-2": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign E21.2 «Anbefalet rute for gående». Its official design: a blue square sign with a thin white edge; white symbol: a white walking person."
+  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign E21.2 «Anbefalet rute for vandrere». Its official design: a blue square sign with a thin white edge; white symbol: a white walking person."
  },
  "s-e21-3": {
   "aspect": "4:3",
@@ -1051,7 +1051,7 @@
  },
  "s-f33-2": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign F33.2 «Parkeringspilvejviser». Its official design: a rectangular direction sign; any words are drawn as short abstract white or black bars, no readable letters; arrow-shaped, blue with a white edge, a white arrow pointing left, a white box with a blue \"P\" and abstract white text bars."
+  "prompt": "Educational picture for a Danish driving-theory app, made to teach what a road sign looks like. A clean flat vector illustration, NOT photorealistic: exactly ONE Danish road sign (or the one marking or signal described), drawn large and centred, seen straight from the front; a sign stands on a short plain grey post; the background is plain very light grey (#f2f3f5). Follow the official Danish design (Bekendtgørelse om vejafmærkning) precisely: the exact shape, border width, colours (signal red #d0021b, white, black, blue #0059a8, green #00a651, yellow #ffd200) and proportions; draw every symbol clearly with bold, simple, accurate shapes. No scenery, no other objects, no people, only a very soft shadow, no watermark, no logo, and no text except what the sign itself carries.\nThe sign: Danish road sign F33.2 «Parkeringstabelvejviser». Its official design: a rectangular direction sign; any words are drawn as short abstract white or black bars, no readable letters; rectangular, blue with a white edge, one row with a white arrow pointing left, a white box with a blue \"P\" and abstract white text bars."
  },
  "s-f34-1": {
   "aspect": "4:3",
@@ -1417,7 +1417,7 @@
  },
  "s-n41": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish N41 «Kantpæle»: three slim white roadside posts with black tops: one with a red reflector, one with a white reflector and one with a yellow reflector and small numbers."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish N41 «Kantpæle»: three slim white roadside posts with a top that slopes down towards the road and a thin red band along the sloping top: the left post has a white reflector, the right post a yellow reflector and a small plate with black numbers, the middle post a yellow reflector on one side and a white one on the other."
  },
  "s-n42": {
   "aspect": "4:3",
@@ -1437,11 +1437,11 @@
  },
  "s-n44-3": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish N44.3 «Vognbanedeler»: a red plastic lane separator post with a yellow base and a white reflective panel."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish N44.3 «Vognbanedeler»: a row of low lane separator posts with white reflective panels standing on a line between two lanes with traffic in opposite directions."
  },
  "s-n46": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish N46 «Markeringslygter»: an orange warning lamp with a hanging handle."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish N46 «Markeringslygter»: a row of small lamps with white light standing along the edge of a road works area."
  },
  "s-o41-42": {
   "aspect": "4:3",
@@ -1485,11 +1485,11 @@
  },
  "s-r13": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish R13 «Dobbelte vognbanepile»: a short piece of grey asphalt road seen from above with white road markings: a lane with a white double arrow: one going straight and one turning, both drawn as long road arrows."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish R13 «Dobbelte vognbanepile»: a short piece of grey asphalt road seen from above with white road markings: one long white lane arrow running along the lane with TWO arrowheads bending to the same side one after the other: the first branches off halfway along, the second at the end (one arrow for two junctions in a row)."
  },
  "s-r14": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish R14 «Vognbanepile med svingningsforbud»: a short piece of grey asphalt road seen from above with white road markings: a lane with a long white arrow going straight with a short crossed stub to the side."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish R14 «Vognbanepile med svingningsforbud»: a short piece of grey asphalt road seen from above with white road markings: one long white lane arrow with a short stub branching off halfway WITHOUT an arrowhead (the side road where turning is forbidden) and an arrowhead turning to the side at its end."
  },
  "s-r15": {
   "aspect": "4:3",
@@ -1505,7 +1505,7 @@
  },
  "s-s16": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish S16 «Afslutning af svingbane»: a short piece of grey asphalt road seen from above with white road markings: two lanes where a dashed white line runs diagonally to separate a turning lane."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish S16 «Afslutning af svingbane»: a short piece of grey asphalt road seen from above with white road markings: seen from above inside a junction: a left-turn lane drawn with dashed white lines curves into the junction and ends at a short broad dashed white line across the lane, where turning cars wait."
  },
  "s-s17": {
   "aspect": "4:3",
@@ -1545,7 +1545,7 @@
  },
  "s-t63": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish T63 «Ophør af standsning og parkering»: a kerb stone with a yellow triangle painted on its top face, seen from the side."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish T63 «Markering af ophør af standsning og parkering»: a kerb stone with a yellow triangle painted on its top face, seen from the side."
  },
  "s-u1": {
   "aspect": "4:3",
@@ -1854,7 +1854,7 @@
  },
  "s-x19": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish X19 «Bus- og letbanesignal»: an educational flat vector illustration of a black signal housing with three round lamps that show white symbols: a horizontal white bar on top, a white dot in the middle and a vertical white bar at the bottom, the bottom one lit."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish X19 «Bus- og letbanesignal samt signal for nulemissionsbil»: an educational flat vector illustration of a black signal housing with three round lamps that show white symbols: a horizontal white bar on top, a white dot in the middle and a vertical white bar at the bottom, the bottom one lit."
  },
  "s-y17": {
   "aspect": "4:3",
@@ -1866,7 +1866,7 @@
  },
  "s-z72-2": {
   "aspect": "4:3",
-  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish Z72.2 «Rødt blinksignal ved jernbaneoverkørsler»: an educational flat vector illustration of a railway level crossing with a red and white striped barrier going down, a red flashing light (two red lamps side by side, one lit) on a post with a St Andrew's cross above it, and railway tracks crossing the road."
+  "prompt": "Educational picture for a Danish driving-theory app. A clean flat vector illustration, NOT photorealistic, with simple shapes and clear outlines, so the important detail is easy to see. Right-hand traffic (Denmark). No people, no watermark, no logo, and no text except what is described.\nDanish Z72.2 «Rødt blinksignal ved jernbaneoverkørsler»: an educational flat vector illustration of a railway level crossing with a red and white striped barrier going down, a single round red flashing lamp (lit) on a post with a St Andrew's cross above it, and railway tracks crossing the road."
  },
  "s-z93": {
   "aspect": "4:3",
@@ -1942,7 +1942,7 @@
  },
  "p-turn-two-left": {
   "aspect": "4:3",
-  "prompt": "Educational right-of-way diagram for a Danish driving-theory app. A clean, detailed flat vector illustration, NOT photorealistic, seen straight from above (bird's-eye view): roads in medium grey with Danish white road markings, green verges and pavements in light grey, simple rounded cars seen from above, right-hand traffic (Denmark). Colour code, used strictly: the vehicle that has right of way is a BLUE car with a SOLID GREEN arrow showing its path; the vehicle that must give way is a RED car with a DASHED ORANGE arrow that stops before the conflict point; other cars are grey; pedestrians wear yellow; cyclists wear purple. Signs at the roadside drawn small but recognisable in their official Danish design. Keep it uncluttered with plenty of space around the important part. No text, no letters, no numbers, no watermark, no logo.\nThe situation: a crossroads seen from above; a blue car from the bottom and a second blue car from the top both turn left, each drives on past the centre of the junction before turning, so they pass each other driver side to driver side (left side to left side), each turning behind the other; two wide curved solid green arrows that pass each other near the centre.\nIMPORTANT, the whole point of the picture: the two cars turn BEHIND each other, never in front of each other. The car from the bottom drives up its RIGHT-hand lane PAST the centre of the junction and only then turns left, passing ABOVE the centre point into the lane of the left arm nearer the top. The car from the top drives down its own lane (left half) PAST the centre and only then turns left (towards the right side of the picture), passing BELOW the centre point into the lane of the right arm nearer the bottom. So at the moment they meet, the car from the bottom has the other car on its LEFT, and the car from the top has the other car on its LEFT (driver side to driver side). The two arrows go round the centre point like two hooks that do not run alongside each other."
+  "prompt": "Educational right-of-way diagram for a Danish driving-theory app. A clean, detailed flat vector illustration, NOT photorealistic, seen straight from above (bird's-eye view): roads in medium grey with Danish white road markings, green verges and pavements in light grey, simple rounded cars seen from above, right-hand traffic (Denmark). Colour code, used strictly: the vehicle that has right of way is a BLUE car with a SOLID GREEN arrow showing its path; the vehicle that must give way is a RED car with a DASHED ORANGE arrow that stops before the conflict point; other cars are grey; pedestrians wear yellow; cyclists wear purple. Signs at the roadside drawn small but recognisable in their official Danish design. Keep it uncluttered with plenty of space around the important part. No text, no letters, no numbers, no watermark, no logo.\nThe situation: a crossroads seen from above; a blue car from the bottom and a second blue car from the top both turn left IN FRONT OF each other: each turns before reaching the centre of the junction, so they pass each other passenger side to passenger side (right side to right side); two short curved solid green arrows, each staying on its own side of the centre point.\nIMPORTANT, the whole point of the picture: the two cars turn IN FRONT OF each other, never behind each other. The car from the bottom drives up its RIGHT-hand lane and starts its left turn BEFORE it reaches the centre of the junction, so its arc passes BELOW and to the LEFT of the centre point into the lane of the left arm nearer the top. The car from the top drives down its own lane (left half) and starts its left turn (towards the right side of the picture) BEFORE the centre, so its arc passes ABOVE and to the RIGHT of the centre point into the lane of the right arm nearer the bottom. So at the moment they meet, each car has the other car on its RIGHT (passenger side to passenger side). The two arrows are short, tight curves; neither goes round the centre point."
  },
  "p-signal-blocked": {
   "aspect": "4:3",

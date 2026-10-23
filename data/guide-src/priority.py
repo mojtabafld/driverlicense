@@ -1,4 +1,4 @@
-# Right of way in Denmark, from Færdselsloven (LBK 168 af 14/02/2023): §§ 4, 5, 7, 16, 18, 19, 20, 25, 26, 27 and the
+# Right of way in Denmark, from Færdselsloven (LBK 118 af 12/01/2026): §§ 4, 5, 7, 16, 18, 19, 20, 25, 26, 27 and the
 # road-marking order (B 11, B 13, B 15, B 16, B 18, B 19, S 11). Each scenario: a title, the situation, who goes first,
 # the legal basis and `scene` (a top-down diagram for the picture prompt).
 # In every picture: the BLUE car goes first (solid green arrow), the RED car gives way (dashed orange arrow that stops
@@ -63,7 +63,7 @@ cat('yield', 'راه دادن مطلق، ایست و جاده‌ی اصلی',
        'a main road running bottom to top with a yellow diamond main-road sign at its side; a side road joins from the left with shark-teeth markings; the blue car drives up the main road (solid green arrow), the red car waits at the end of the side road (dashed orange arrow).'),
     sc('yield-cycle-2way', 'مسیر دوچرخه‌ی دوطرفه',
        'قبل از جاده‌ی اصلی یک مسیر دوچرخه‌ی دوطرفه هست (تابلوی زیرین UB 11,2). دوچرخه‌ها از هر دو جهت می‌آیند؛ به هر دو طرف نگاه کنید.',
-       'دوچرخه‌سواران از هر دو جهت، و بعد ترافیک جاده.', 'UB 11,2 | § 26، بند ۶',
+       'دوچرخه‌سواران از هر دو جهت، و بعد ترافیک جاده.', 'B 11 | UB 11,2 | § 26، بند ۲',
        'a side road from the bottom meeting a main road; between them runs a two-way cycle path parallel to the main road; a give-way sign with a small sub-plate showing a bicycle and two opposite arrows; two purple-clad cyclists ride on the cycle path in opposite directions; the red car waits before the cycle path (dashed orange arrow); the cyclists pass first (solid green arrows).'),
 ])
 
@@ -98,9 +98,9 @@ cat('turn', 'گردش به چپ و راست',
        'عابران.', '§ 27، بندهای ۵ و ۶',
        'a crossroads with zebra crossings on every arm; the red car comes from the bottom turning right (dashed orange arrow stopping before the zebra crossing on the road to the right); two yellow-clad pedestrians are walking across that zebra crossing (solid green arrow along their path).'),
     sc('turn-two-left', 'دو خودروی روبه‌روی هم که هر دو به چپ می‌پیچند',
-       'دو خودرو از روبه‌روی هم وارد تقاطع می‌شوند و هر دو به چپ می‌پیچند. تا جایی که ممکن است از **سمت چپ** از کنار هم رد می‌شوند؛ یعنی هر کدام از کنار مرکز تقاطع رد می‌شود و دو خودرو **پشت سر هم** می‌پیچند، نه جلوی هم.',
-       'هر دو، اگر بی‌خطر باشد هم‌زمان.', '§ 16، بند ۵',
-       'a crossroads seen from above; a blue car from the bottom and a second blue car from the top both turn left, each drives on past the centre of the junction before turning, so they pass each other driver side to driver side (left side to left side), each turning behind the other; two wide curved solid green arrows that pass each other near the centre.'),
+       'دو خودرو از روبه‌روی هم وارد تقاطع می‌شوند و هر دو به چپ می‌پیچند. اگر خطر یا مزاحمتی پیش نیاید، می‌توانند **جلوی هم** بپیچند: هر کدام **پیش از مرکز تقاطع** می‌پیچد و دیگری را **سمت راست** خود دارد (از سمت چپِ هم رد می‌شوند). این‌طور هیچ‌کدام منتظر دیگری نمی‌ماند؛ ولی هر دو باید به ترافیک مستقیمِ روبه‌رو راه بدهند.',
+       'هر دو هم‌زمان، اگر بی‌خطر باشد.', '§ 16، بند ۵',
+       'a crossroads seen from above; a blue car from the bottom and a second blue car from the top both turn left IN FRONT OF each other: each turns before reaching the centre of the junction, so they pass each other passenger side to passenger side (right side to right side); two short curved solid green arrows, each staying on its own side of the centre point.'),
 ])
 
 cat('signals', 'تقاطع‌های چراغ‌دار',
@@ -110,7 +110,7 @@ cat('signals', 'تقاطع‌های چراغ‌دار',
        'ترافیکِ جاده‌ی متقاطع (وقتی چراغشان سبز شود).', '§ 26، بند ۷',
        'a signal-controlled crossroads; beyond the junction the lane going up is full of queuing grey cars; the red car waits before the stop line despite its green light (dashed orange arrow), leaving the junction box clear; the blue car crosses from the left (solid green arrow).'),
     sc('signal-arrow', 'فلش سبز',
-       'فلش سبز به چپ روشن است: خودروی قرمز می‌تواند بدون ترافیک روبه‌روی متقاطع به چپ بپیچد، چون ترافیک روبه‌رو چراغ قرمز دارد. باز هم مراقب عابران باشید.',
+       'فلش سبز به چپ روشن است: خودروی آبی می‌تواند به چپ بپیچد، چون ترافیک روبه‌رو چراغ قرمز دارد و مسیرش را قطع نمی‌کند. باز هم مراقب عابران و دوچرخه‌سوارانی باشید که شاید هنوز در تقاطع باشند.',
        'خودرویی که فلش سبز دارد.', 'X 12',
        'a signal-controlled crossroads; the left-turn lane from the bottom has a green left arrow lit, the oncoming traffic from the top has red and waits at its stop line (grey car); the car turning left is BLUE with a solid green arrow curving left.'),
     sc('signal-ped-green', 'گذرگاه عابر در تقاطع چراغ‌دار',
