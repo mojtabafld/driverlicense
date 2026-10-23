@@ -142,7 +142,7 @@ export default function Result() {
           : <FootBtn label={ui.next} icon={arrow.next} onPress={() => step(k + 1)} />} />
     );
     return (
-      <Backdrop anim={motion.style} glass>
+      <Backdrop anim={motion.style}>
         <RevealScrollProvider value={reveal.value}>
         {/* A sideways swipe turns to the next or previous question. */}
         <Pager i={k} n={total} go={to => { setK(to); toTop(); }} rtl={rtl}>

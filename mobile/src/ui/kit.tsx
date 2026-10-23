@@ -12,7 +12,6 @@ import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
 import { useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
-import { useGlassSplit } from './glass-area';
 import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
@@ -124,15 +123,13 @@ export function PageIn({ children, motion = 'tab' }: { children?: React.ReactNod
 }
 
 // Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes. `anim`: the
-// style from usePageMotion, for the page's content. `glass`: the page has a floating bar (GlassBar) among its children,
-// which on Android blurs the page under it (ui/glass-area.tsx).
-export function Backdrop({ children, anim, glass }: { children?: React.ReactNode; anim?: object; glass?: boolean }) {
+// style from usePageMotion, for the page's content.
+export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?: object }) {
   const c = useColors();
-  const body = useGlassSplit(children, !!glass, c.bg);
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
       <LinearGradient colors={c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
-      {anim ? <Animated.View style={anim as any}>{body}</Animated.View> : body}
+      {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
     </View>
   );
 }

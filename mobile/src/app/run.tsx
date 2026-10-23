@@ -118,7 +118,7 @@ export default function Run() {
   const clock = urgent ? c.bad : left <= atMin((total * 2) / 3) ? c.warn : dark ? c.link : c.accent;
 
   return (
-    <Backdrop anim={motion.style} glass>
+    <Backdrop anim={motion.style}>
       {/* Top: exit (icon), the timer (Persian digits) in the middle of the screen, and the theme switch (no title beside
           the exit: it moved, Mojtaba 2026-10-18). SafeAreaView measures the top inset itself (in a full-screen modal the hook's value can be
           stale), and the web gets extra room at the top. */}
