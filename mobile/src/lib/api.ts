@@ -6,7 +6,7 @@ export const getApiToken = () => token;
 
 export class ApiError extends Error { constructor(message: string, public status: number) { super(message); } }
 
-// JSON API of the Grønpil server. Errors carry the server's Persian message. The app signs in with its token only:
+// JSON API of the Teorivej server. Errors carry the server's Persian message. The app signs in with its token only:
 // cookies are never sent or kept (`credentials: 'omit'`), so the old site's session cookie on the same address cannot
 // stand in for it, e.g. right after signing out. `as`: the token to use instead of the current one.
 export async function api<T = any>(method: 'GET' | 'POST' | 'PUT' | 'DELETE', route: string, body?: unknown, as?: string | null): Promise<T> {
