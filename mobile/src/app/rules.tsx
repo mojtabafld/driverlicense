@@ -33,9 +33,9 @@ const LAW = 'خلاصه‌ای برای آمادگی آزمون تئوری؛ م�
 function startPractice(ids: number[], title: string) { tap(); session.plan = { mode: 'sections', ids, title }; router.push('/run'); }
 
 // A number in the text with its unit («۵۰ کیلومتر در ساعت», «۰٫۵ در هزار», «۳ سال»), drawn in bold.
-const NUM = /([۰-۹0-9][۰-۹0-9٬٫,.]*(?:\s?(?:کیلومتر در ساعت|کیلومتر|سانتی‌متر|میلی‌متر|متری|متر|کیلوگرم|سال|در هزار|برابر))?)/;
-// (In English and Danish the translated text, its numbers with their units.)
-const NUM_LATIN = /(\d[\d.,]*(?:\s?(?:km\/h|km|cm|mm|kg|m|‰|per mille|promille|years?|år|times|gange))?)/;
+const NUM = /([۰-۹0-9][۰-۹0-9٬٫,.]*(?:\s?(?:کیلومتر در ساعت|کیلومتر|سانتی‌متر|میلی‌متر|متری|متر|کیلوگرم|سال|ثانیه|دقیقه|در هزار|برابر))?)/;
+// (In English and Danish the translated text, its numbers with their units; «m» only as a word, not the start of «metres».)
+const NUM_LATIN = /(\d[\d.,]*(?:\s?(?:km\/h|km|cm|mm|kg|metres?|meter|seconds?|sekunder|minutes?|minutter|m(?![a-zæøå])|‰|per mille|promille|years?|år|times|gange))?)/;
 function Bold({ text, size }: { text: string; size: number }) {
   const c = useColors();
   return (
