@@ -147,12 +147,12 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
           <LangButton />
         </View>
         {/* The name as a logo (Mojtaba 2026-10-23): «Teori» large and bold in the text colour, «pro» on a pill of the
-            theme's colour, bold italic in its own text colour. Left to right in every language; read as one word. */}
+            theme's colour, bold in its own text colour, upright (no tilt; Mojtaba 2026-10-23). Left to right in every language; read as one word. */}
         <View accessible accessibilityRole="header" accessibilityLabel="Teoripro"
           style={{ alignSelf: 'center', flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 6, marginTop: Math.min(24, height * 0.02) } as any}>
           <L style={{ fontSize: 42, lineHeight: 52, fontWeight: '800', letterSpacing: -1.6, color: c.text }}>Teori</L>
-          <View style={{ backgroundColor: c.accent, borderRadius: 14, paddingHorizontal: 11, paddingTop: 1, paddingBottom: 3, marginTop: 4, transform: [{ rotate: '-4deg' }] }}>
-            <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', fontStyle: 'italic', letterSpacing: -0.6, color: c.accentText }}>pro</L>
+          <View style={{ backgroundColor: c.accent, borderRadius: 14, paddingHorizontal: 11, paddingTop: 1, paddingBottom: 3, marginTop: 4 }}>
+            <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -0.6, color: c.accentText }}>pro</L>
           </View>
         </View>
         {/* The slides, in the middle of what is left. */}
