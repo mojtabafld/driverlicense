@@ -134,15 +134,14 @@ export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?
   );
 }
 
-// The site's logo: a rounded navy square with a speedometer.
+// The site's logo: the app icon's road bent into a check (assets/icon-src/symbol.svg) on a rounded square in the accent.
 export function Logo({ size = 28 }: { size?: number }) {
   const c = useColors();
   return (
     <Svg width={size} height={size} viewBox="0 0 32 32">
       <Rect x={2} y={2} width={28} height={28} rx={9} fill={c.accent} />
-      <Path d="M9 20.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5" stroke="#fff" strokeWidth={2.4} fill="none" strokeLinecap="round" />
-      <Circle cx={16} cy={20.5} r={2.2} fill="#fff" />
-      <Path d="M16 20.5l3.2-3.8" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" />
+      <Path d="M10.3 16.5l3.8 3.8 7.6-8.6" stroke="#fff" strokeWidth={4.3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M10.3 16.5l3.8 3.8 7.6-8.6" stroke={c.accent} strokeWidth={0.7} strokeDasharray="1.2 1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -180,7 +179,7 @@ export function ThemeButton() {
   );
 }
 
-// Top bar with the TeoriPrøve brand and the theme button, in the page's own background so it reads as one surface.
+// Top bar with the Rahvej brand and the theme button, in the page's own background so it reads as one surface.
 export function TopBar({ right }: { right?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   return (
@@ -188,9 +187,9 @@ export function TopBar({ right }: { right?: React.ReactNode }) {
       <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
           {/* The logo first in the page's reading order: at the outer (right) edge, the name inside it. */}
-          {/* uber: «Teori» in the text colour and «Prøve» in the accent, like «Uber Eats» */}
+          {/* uber: «Rah» in the text colour and «vej» in the accent, like «Uber Eats» */}
           <Text style={{ fontFamily: DA_FONT, fontSize: 18, color: c.link }}>
-            <Text style={{ fontWeight: '700', color: UBER ? c.text : c.link }}>Teori</Text>Prøve
+            <Text style={{ fontWeight: '700', color: UBER ? c.text : c.link }}>Rah</Text>vej
           </Text>
           <Logo />
         </View>

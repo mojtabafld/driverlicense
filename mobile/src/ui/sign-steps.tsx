@@ -72,13 +72,13 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
   // What each step asks, whether its answer is ready, and what its button does.
   const steps: Record<Step, { title: string; sub: string; ok: boolean; next: () => void; label?: string }> = {
     id: unified
-      ? { title: 'ایمیل‌تان چیست؟', sub: 'برای ورود یا ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد به آن می‌فرستیم.', ok: MAIL.test(id.trim()),
+      ? { title: 'ایمیل‌تان چیست؟', sub: 'برای ورود یا ساخت حساب Rahvej ایمیل خود را وارد کنید؛ یک کد به آن می‌فرستیم.', ok: MAIL.test(id.trim()),
         next: () => run(async () => {
           const e = id.trim(), free = await emailFree(e).then(() => true, (x: any) => { if (x?.status === 409) return false; throw x; });
           if (free) { setUp(true); setUser(e); go('name'); return; }
           await sendCode(e, false); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code');
         }) }
-      : { title: mail ? 'ایمیل‌تان چیست؟' : 'نام کاربری‌تان چیست؟', sub: mail ? 'برای ورود به حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.' : 'نام کاربری حساب TeoriPrøve خود را وارد کنید.',
+      : { title: mail ? 'ایمیل‌تان چیست؟' : 'نام کاربری‌تان چیست؟', sub: mail ? 'برای ورود به حساب Rahvej ایمیل خود را وارد کنید؛ یک کد ورود به آن می‌فرستیم.' : 'نام کاربری حساب Rahvej خود را وارد کنید.',
         ok: !!id.trim(), next: () => (mail && id.includes('@') ? send() : go('pw')) },
     pw: up
       ? { title: 'یک رمز عبور انتخاب کنید', sub: 'با این رمز، از هر دستگاهی وارد حساب خود می‌شوید.', ok: !!pw, next: () => go('lang') }
@@ -86,7 +86,7 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
     name: { title: 'اسم‌تان چیست؟', sub: 'برنامه شما را با این نام صدا می‌کند.', ok: !!name.trim(),
       // (the address already given: its code at once)
       next: () => (unified ? run(async () => { await sendCode(user.trim(), true); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code'); }) : go(mail ? 'email' : 'user')) },
-    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب TeoriPrøve ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => run(async () => { await emailFree(user.trim()); await sendCode(user.trim(), true); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code'); }) },
+    email: { title: 'ایمیل‌تان چیست؟', sub: 'برای ساخت حساب Rahvej ایمیل خود را وارد کنید؛ یک کد تأیید به آن می‌فرستیم.', ok: MAIL.test(user.trim()), next: () => run(async () => { await emailFree(user.trim()); await sendCode(user.trim(), true); const at = Date.now(); setSentAt(at); setNow(at); setCode(''); go('code'); }) },
     user: { title: 'یک نام کاربری انتخاب کنید', sub: 'با این نام وارد حساب خود می‌شوید (حروف انگلیسی و عدد).', ok: !!user.trim(), next: () => go('pw') },
     lang: { title: 'سؤال‌ها به چه زبانی باشند؟', sub: 'ترجمه‌ی فارسی در هر دو حالت زیر سؤال‌ها نمایش داده می‌شود. بعداً هم از تنظیمات قابل تغییر است.', ok: true,
       label: 'ساخت حساب', next: () => run(() => (mail ? codeIn(email, code, name.trim(), exam) : register(name.trim(), user.trim(), pw, undefined, exam))) },
