@@ -1,7 +1,8 @@
 # Builds «آزمون جدید» (the new test) from the batch files beside this one (b01a.py … b11d.py: 11 batches of 100
 # questions, each written in four files of 25):
 # - site/newq.js: window.NEWQ = { questions: [...] }, each question in site/data.js's shape (id, img, c, sda, sfa, sen and
-#   st: da, fa, ok, eda, efa, en, een), served like data.js to signed-in users only;
+#   st: da, fa, ok, eda, efa, en, een), served like data.js to signed-in users only, and l: the lesson or page of «آموزش»
+#   that teaches it (learn.py; "" when none does), which the topic sheet's «رفتن به آموزش» opens;
 # - data/newq-art.json: each question's picture prompt for the image model, a new one with "order": false (made only when
 #   the admin orders it; an order already given, and the prompt's other fields, are kept).
 # Run: python3 -B data/newq-src/build.py
@@ -17,6 +18,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
 
+import learn  # noqa: E402
 import nq  # noqa: E402
 
 BATCHES = sorted(f[:-3] for f in os.listdir(HERE) if re.fullmatch(r'b\d\d[a-z]?\.py', f))
@@ -26,6 +28,10 @@ PERSIAN = re.compile('[؀-ۿ]')
 FIRST, LAST = 5001, 6100
 
 PREFIX = {True: ('Ja. ', 'Yes. ', 'بله. '), False: ('Nej. ', 'No. ', 'خیر. ')}
+
+# Questions whose text changed after they were published: their number of changes («rev», as in site/data.js), so the AI's
+# lessons and topic points cached for the old text (lesson.js qkey) are written again. 6025: 1812, not 1-1-2 (2026-10-23).
+REV = {6025: 1}
 
 
 def check(q, errors, warn):
@@ -66,7 +72,8 @@ def out(q):
         pda, pen, pfa = PREFIX[s['ok']]
         wda, wen, wfa = s['why']
         st.append({'da': s['da'], 'fa': s['fa'], 'ok': 1 if s['ok'] else 0, 'eda': pda + wda, 'efa': pfa + wfa, 'en': s['en'], 'een': pen + wen})
-    return {'id': q['id'], 'img': f'newq-art/{q["id"]}.png', 'c': q['c'], 'sda': q['da'], 'sfa': q['fa'], 'sen': q['en'], 'st': st}
+    return {'id': q['id'], 'img': f'newq-art/{q["id"]}.png', 'c': q['c'], 'sda': q['da'], 'sfa': q['fa'], 'sen': q['en'], 'st': st,
+            'l': learn.lesson_for(q) or '', **({'rev': REV[q['id']]} if q['id'] in REV else {})}
 
 
 def main():
@@ -80,6 +87,8 @@ def main():
     errors += [f'the same question twice: {t[:80]}' for t, n in texts.items() if n > 1]
     for q in qs:
         check(q, errors, warn)
+        l = learn.lesson_for(q)
+        if l is not None and l not in learn.LESSONS and l not in learn.PAGES: errors.append(f'{q["id"]}: unknown lesson {l}')
     for w in warn:
         print('note:', w)
     if errors:
@@ -106,6 +115,8 @@ def main():
     print('statements per question:', dict(sorted(st.items())), '| right statements per question:', dict(sorted(right.items())),
           '| right statements by place:', dict(sorted(where.items())))
     print('by subsection:', ', '.join(f'{c} {n}' for c, n in sorted(topics.items(), key=lambda x: [int(p) for p in x[0].split('.')])))
+    links = Counter(learn.lesson_for(q) or '(none)' for q in qs)
+    print('lessons:', ', '.join(f'{l} {n}' for l, n in links.most_common()))
 
 
 if __name__ == '__main__':

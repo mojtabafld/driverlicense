@@ -1,5 +1,6 @@
 # Chapter 7 «جاده‌های ویژه و شرایط سخت»: the motorway (after course.ts's joining it), driving in the dark, rain, snow,
-# ice and wind, and the chapter's test. Rules from Færdselsloven §§ 15, 18, 32, 33, 41 and 44–46.
+# ice and wind, tunnels, lights on a parked car, and the chapter's test. Rules from Færdselsloven §§ 15, 18, 29, 32, 33,
+# 35, 36, 41 and 44–46.
 from course import TOWN, above, intro, law, lesson, q, result, st, summary, teach, view
 
 NIGHT = 'night, dark sky, only our dipped headlights and the street or car lights light the scene'
@@ -187,7 +188,7 @@ MOTORWAY = lesson('motorway', 'MOTORWAY', ('بزرگراه', 'The motorway', 'Mo
             ('law', 'signs', 'plan')),
 ])
 
-DARKNESS = lesson('darkness', 'DARKNESS', ('رانندگی در تاریکی', 'Driving in the dark', 'Kørsel i mørke'), 8, [
+DARKNESS = lesson('darkness', 'DARKNESS', ('رانندگی در تاریکی', 'Driving in the dark', 'Kørsel i mørke'), 10, [
     intro(('رانندگی در تاریکی (kørsel i mørke)', 'Driving in the dark (kørsel i mørke)', 'Kørsel i mørke'),
           ('آزمون درباره‌ی نور بالا و پایین، سرعت در تاریکی، خیره شدن چشم و دیدن عابر می‌پرسد. در تاریکی خیلی کمتر و دیرتر می‌بینید.',
            'The test asks about high and dipped beams, speed in the dark, being dazzled and seeing pedestrians. In the dark you see far less and later.',
@@ -229,6 +230,23 @@ DARKNESS = lesson('darkness', 'DARKNESS', ('رانندگی در تاریکی', '
           rule=('چراغ مه‌شکن فقط در مه و بارش شدید.', 'Fog lights only in fog and heavy rain or snow.', 'Tågelygter kun i tåge og under kraftig nedbør.'),
           law=law((33, 5), (33, 6)),
           trap=('«مه‌شکن عقب را در باران معمولی روشن می‌کنم تا بهتر دیده شوم» غلط است.', '«I switch the rear fog light on in ordinary rain to be seen better» is wrong.', '«Jeg tænder tågebaglygten i almindelig regn for at blive set bedre» er forkert.')),
+    teach(('تونل', 'Tunnels', 'Tunneler'),
+          ('پیش از ورود به تونل نور پایین را روشن کنید و عینک آفتابی را بردارید. فاصله را حفظ کنید و در تونل نایستید و پارک نکنید، مگر مجبور باشید. هنگام بیرون آمدن، نور شدید ممکن است چشمتان را بزند، و بیرون از تونل ممکن است جاده یخ‌زده یا خیس باشد یا باد پهلو به خودرو بخورد.',
+           'Switch on the dipped beam before you drive into a tunnel, and take off your sunglasses. Keep your distance, and do not stop or park in the tunnel unless you are forced to. When you come out, the bright light can dazzle you, and outside the tunnel the road may be icy or wet, or a side wind may hit the car.',
+           'Tænd nærlyset, før du kører ind i en tunnel, og tag solbrillerne af. Hold afstand, og stands eller parkér ikke i tunnelen, medmindre du er tvunget til det. Når du kommer ud, kan det skarpe lys blænde dig, og uden for tunnelen kan vejen være isglat eller våd, eller en sidevind kan ramme bilen.'),
+          rule=('پیش از تونل نور پایین؛ در تونل نایستید؛ اگر دود دیدید، پیاده به خروجی اضطراری بروید.', 'Dipped beam before the tunnel; do not stop in it; if you see smoke, walk to the emergency exit.', 'Nærlys før tunnelen; stands ikke i den; ser du røg, så gå til nødudgangen.'),
+          law=law((29, 1), 'E 35'),
+          points=[('اگر خودرو در تونل از کار افتاد: چراغ خطر، تا جای ممکن کنار، موتور خاموش، و با تلفن اضطراری کمک بخواهید.', 'If the car breaks down in a tunnel: hazard lights, as far to the side as you can, engine off, and call for help from an emergency telephone.', 'Går bilen i stå i en tunnel: havariblink, så langt ind til siden som muligt, motoren slukket, og ring efter hjælp fra en nødtelefon.'),
+                  ('اگر در تونل دود یا آتش دیدید: موتور را خاموش کنید، کلید را در خودرو بگذارید و پیاده به نزدیک‌ترین خروجی اضطراری، دور از دود، بروید.', 'If you see smoke or fire in a tunnel: switch off the engine, leave the key in the car and walk to the nearest emergency exit, away from the smoke.', 'Ser du røg eller ild i en tunnel: sluk motoren, lad nøglen sidde i bilen, og gå til den nærmeste nødudgang væk fra røgen.'),
+                  ('در تونل دور نزنید و دنده‌عقب نروید.', 'Do not turn round or reverse in a tunnel.', 'Vend og bak ikke i en tunnel.')],
+          trap=('«جلوتر دود است، پس با شیشه‌های بسته در خودرو منتظر می‌مانم» غلط است؛ پیاده به خروجی اضطراری بروید.', '«There is smoke ahead, so I wait in the car with the windows closed» is wrong; walk to the emergency exit.', '«Der er røg længere fremme, så jeg venter i bilen med lukkede vinduer» er forkert; gå til nødudgangen.')),
+    teach(('پارک در تاریکی', 'Parked in the dark', 'Parkeret i mørke'),
+          ('اگر در تاریکی (از غروب تا طلوع) روی جاده توقف یا پارک کنید، چراغ موقعیت (چراغ پارک)، چراغ‌های عقب و چراغ پلاک باید روشن باشند؛ چراغ دیگری، مثلاً نور پایین، نباید روشن بماند. داخل شهر، خودروی تا ۶ متر طول و ۲ متر پهنا که کنار جدول پارک شده، فقط به چراغ پارک و چراغ عقبِ سمت وسط خیابان نیاز دارد، مگر تریلر به آن بسته باشد. اگر خیابان آن‌قدر روشن است که خودرو از فاصله‌ی کافی به‌وضوح دیده می‌شود، یا در پارکینگ یا جای علامت‌گذاری‌شده‌ی پارک ایستاده‌اید، چراغی لازم نیست.',
+           'If you stop or park on a road in the dark (in lighting-up time), the position lights (parking lights), the rear lights and the number plate light must be on; no other lights, such as the dipped beam, may be left on. In a built-up area, a vehicle of at most 6 m long and 2 m wide parked along the kerb only needs the parking light and the rear light on the side facing the middle of the road, unless a trailer is coupled to it. If the street is so well lit that the vehicle can clearly be seen from far enough away, or you are in a car park or a marked parking area, no lights are needed.',
+           'Standser eller parkerer du på vejen i lygtetændingstiden, skal positionslys (parkeringslys), baglygter og nummerpladelys være tændt; andre lygter, fx nærlys, må ikke være tændt. I tættere bebygget område er det nok med parkeringslys og baglygte i siden mod vejens midte, når et køretøj på højst 6 m i længden og 2 m i bredden holder langs kanten, medmindre en trailer er koblet på. Er vejen så godt oplyst, at køretøjet tydeligt kan ses på tilstrækkelig afstand, eller holder du på en parkeringsplads eller et andet afmærket område for parkering, behøver lygterne ikke være tændt.'),
+          rule=('پارک در تاریکی روی جاده: چراغ پارک، چراغ‌های عقب و چراغ پلاک؛ نه نور پایین.', 'Parked on a road in the dark: parking lights, rear lights and the number plate light; not the dipped beam.', 'Parkeret på vejen i mørke: parkeringslys, baglygter og nummerpladelys; ikke nærlys.'),
+          law=law((35, 1), (35, 3), (35, 4), (36, 1)),
+          trap=('«چراغ خطر را تمام شب روشن می‌گذارم» برای پارک عادی غلط است؛ چراغ خطر برای وقتی است که خودرو جای خطرناکی ایستاده.', '«I leave the hazard lights on all night» is wrong for ordinary parking; hazard lights are for a car that stands where it is a danger.', '«Jeg lader havariblinket være tændt hele natten» er forkert ved almindelig parkering; havariblink bruges, når bilen holder, så den er til fare.')),
     q('exam-dark-meet',
       'Du kører med fjernlys. Langt fremme kommer en bil imod dig. Hvordan forholder du dig?',
       'You are driving with high beam. Far ahead a car is coming towards you. What do you do?',
@@ -264,7 +282,9 @@ DARKNESS = lesson('darkness', 'DARKNESS', ('رانندگی در تاریکی', '
     summary([('نور بالا وقتی لازم است؛ هنگام روبه‌رو شدن، پشت خودروی دیگر و در جاده‌ی روشن، نور پایین.', 'High beam when needed; dipped beam when meeting, behind another vehicle and on lit roads.', 'Fjernlys når det er nødvendigt; nærlys ved mødekørsel, bag andre og på oplyst vej.'),
              ('پیش از کم کردن نور، سرعت را کم کنید؛ در محدوده‌ی نور چراغ‌ها بایستید.', 'Slow down before dipping; be able to stop within your lights\' reach.', 'Sænk farten før nedblænding; kunne standse inden for lygternes rækkevidde.'),
              ('عابر تیره‌پوش با نور پایین فقط از حدود ۲۵ تا ۳۰ متری دیده می‌شود.', 'With dipped beam a pedestrian in dark clothes is seen only from about 25-30 m.', 'En fodgænger i mørkt tøj ses med nærlys først på omkring 25-30 m.'),
-             ('چشمتان خیره شد: آهسته کنید و به لبه‌ی راست نگاه کنید؛ مه‌شکن فقط در مه و بارش شدید.', 'Dazzled: slow down and look at the right edge; fog lights only in fog and heavy rain or snow.', 'Blændet: sænk farten, og se mod højre kant; tågelygter kun i tåge og kraftig nedbør.')]),
+             ('چشمتان خیره شد: آهسته کنید و به لبه‌ی راست نگاه کنید؛ مه‌شکن فقط در مه و بارش شدید.', 'Dazzled: slow down and look at the right edge; fog lights only in fog and heavy rain or snow.', 'Blændet: sænk farten, og se mod højre kant; tågelygter kun i tåge og kraftig nedbør.'),
+             ('تونل: پیش از ورود نور پایین؛ در تونل نایستید.', 'Tunnels: dipped beam before you enter; do not stop in them.', 'Tunneler: nærlys, før du kører ind; stands ikke i dem.'),
+             ('پارک در تاریکی روی جاده: چراغ پارک و چراغ‌های عقب؛ در پارکینگ یا خیابان پرنور لازم نیست.', 'Parked on a road in the dark: parking and rear lights; not needed in a car park or on a well-lit street.', 'Parkeret på vejen i mørke: parkeringslys og baglygter; ikke nødvendigt på en parkeringsplads eller en godt oplyst vej.')]),
 ])
 
 WEATHER = lesson('weather', 'WEATHER', ('باران، برف و یخ', 'Rain, snow and ice', 'Regn, sne og is'), 8, [

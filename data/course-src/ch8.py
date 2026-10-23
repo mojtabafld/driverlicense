@@ -1,5 +1,6 @@
-# Chapter 8 «موقعیت‌های خاص»: emergency vehicles, accidents and first aid, breaking down, and the chapter's test. Rules
-# from Færdselsloven §§ 7, 9, 29, 31 and 47; first aid's four main points from Dansk Førstehjælpsråd.
+# Chapter 8 «موقعیت‌های خاص»: emergency vehicles, accidents and first aid, breaking down and faults while driving, and the
+# chapter's test. Rules from Færdselsloven §§ 7, 9, 29, 31, 47 and 67 stk. 3; first aid's four main points from Dansk
+# Førstehjælpsråd.
 from course import SRC, TOWN, above, intro, law, lesson, picture, q, result, st, summary, teach, view
 
 BLUE = 'its blue lights flashing (drawn as bright blue glows with small rays on its roof)'
@@ -286,7 +287,7 @@ ACCIDENT = lesson('accident', 'ACCIDENT', ('تصادف و کمک‌های اول
             ('law', 'firstaid', 'plan')),
 ])
 
-BREAKDOWN = lesson('breakdown', 'BREAKDOWN', ('خرابی خودرو در جاده', 'Breaking down on the road', 'Motorstop på vejen'), 8, [
+BREAKDOWN = lesson('breakdown', 'BREAKDOWN', ('خرابی خودرو در جاده', 'Breaking down on the road', 'Motorstop på vejen'), 9, [
     intro(('خرابی خودرو در جاده (motorstop)', 'Breaking down on the road (motorstop)', 'Motorstop på vejen'),
           ('خودرویی که خراب شده و ایستاده، برای دیگران خطرناک است. آزمون می‌پرسد چطور هشدار بدهید، مثلث خطر را کجا بگذارید و در بزرگراه و روی ریل قطار چه کنید.',
            'A car that has broken down and stands still is a danger to others. The test asks how to warn, where to put the warning triangle, and what to do on the motorway and on a level crossing.',
@@ -321,6 +322,18 @@ BREAKDOWN = lesson('breakdown', 'BREAKDOWN', ('خرابی خودرو در جاد
           rule=('روی ریل گیر کردید: همه فوراً بیرون و دور از ریل؛ بعد ۱۱۲.', 'Stuck on the rails: everyone out at once and away from the track; then 112.', 'Holder du fast på sporet: alle straks ud og væk fra sporet; derefter 112.'),
           law=law((5, 1), (5, 2), (29, 1), (31, 3)),
           trap=('«اول چند بار سعی می‌کنم روشنش کنم» غلط است؛ ممکن است قطار برسد.', '«First I try to start it a few times» is wrong; the train may arrive.', '«Først prøver jeg at starte den et par gange» er forkert; toget kan komme.')),
+    teach(('وقتی در حین رانندگی چیزی خراب می‌شود', 'When something fails while you drive', 'Når noget svigter under kørslen'),
+          ('بیشتر خرابی‌ها اول هشدار می‌دهند. چراغ هشدار قرمز (مثلاً ترمز، فشار روغن، باتری یا دمای موتور) یعنی هر جا بی‌خطر شد بایستید و ببینید چه شده؛ چراغ زرد یا نارنجی یعنی به‌زودی بررسی‌اش کنید. اگر پدال ترمز نرم شد یا خودرو هنگام ترمز به یک طرف کشیده شد، آهسته و با احتیاط تا جای امنی بروید و پیش از ادامه‌ی راه خودرو را تعمیر کنید.',
+           'Most faults give a warning first. A red warning light (for example brakes, oil pressure, battery or engine temperature) means stop as soon as it is safe and find out what is wrong; a yellow or orange one means get it checked soon. If the brake pedal goes soft or the car pulls to one side when you brake, drive slowly and carefully to a safe place and get the car repaired before you drive on.',
+           'De fleste fejl giver et varsel først. En rød advarselslampe (fx bremser, olietryk, batteri eller motortemperatur) betyder, at du skal standse, så snart det kan ske sikkert, og finde ud af, hvad der er galt; en gul eller orange lampe betyder, at bilen snart skal efterses. Bliver bremsepedalen blød, eller trækker bilen til den ene side, når du bremser, så kør langsomt og forsigtigt til et sikkert sted, og få bilen repareret, før du kører videre.'),
+          rule=('چراغ هشدار قرمز: هر جا بی‌خطر شد بایستید. ترکیدن لاستیک: فرمان را محکم بگیرید و ترمز شدید نکنید.', 'Red warning light: stop where it is safe. Burst tyre: hold the wheel firmly and do not brake hard.', 'Rød advarselslampe: stands, hvor det er sikkert. Et dæk springer: hold fast i rattet, og brems ikke hårdt.'),
+          law=law((67, 3)),
+          points=[('ترکیدن لاستیک: فرمان را با دو دست محکم نگه دارید و ترمز شدید نکنید؛ پا را از گاز بردارید و وقتی سرعت کم شد کنار بزنید.', 'A tyre bursts: hold the wheel firmly with both hands and do not brake hard; ease off the accelerator and pull over when the car has slowed down.', 'Et dæk springer: hold rattet fast med begge hænder, og brems ikke hårdt; slip speederen, og hold ind, når farten er nede.'),
+                  ('موتور خاموش شد: فرمان و ترمز هنوز کار می‌کنند ولی نیروی خیلی بیشتری می‌خواهند؛ محکم فرمان بدهید و ترمز کنید و کنار بزنید.', 'The engine stops: the steering and brakes still work but need much more force; steer and brake firmly and pull over.', 'Motoren går i stå: styring og bremser virker stadig, men kræver meget mere kraft; styr og brems bestemt, og hold ind.'),
+                  ('پدال گاز گیر کرد: کلاچ بگیرید یا دنده را خلاص (N) کنید، ترمز کنید و کنار بزنید؛ موتور را فقط وقتی خاموش کنید که خودرو ایستاده است.', 'The accelerator sticks: press the clutch or select neutral (N), brake and pull over; switch off the engine only once the car has stopped.', 'Speederen sidder fast: træd koblingen ned, eller sæt gearet i frigear (N), brems, og hold ind; sluk først motoren, når bilen holder stille.'),
+                  ('دود یا بوی سوختن از موتور: بایستید، موتور را خاموش کنید و همه پیاده شوند؛ به ۱۱۲ زنگ بزنید و کاپوت را کامل باز نکنید.', 'Smoke or a smell of burning from the engine: stop, switch off the engine and get everyone out; call 112 and do not open the bonnet fully.', 'Røg eller brandlugt fra motoren: hold ind, sluk motoren, og få alle ud; ring 112, og åbn ikke motorhjelmen helt.'),
+                  ('بوی دود اگزوز داخل خودرو: پنجره‌ها را باز کنید، بایستید و پیش از ادامه‌ی راه اگزوز را تعمیر کنید.', 'A smell of exhaust inside the car: open the windows, stop and get the exhaust repaired before you drive on.', 'Lugter det af udstødning inde i bilen: åbn vinduerne, hold ind, og få udstødningen repareret, før du kører videre.')],
+          trap=('«موتور خاموش شده، پس ترمز کار نمی‌کند» غلط است؛ ترمز کار می‌کند، ولی باید خیلی محکم‌تر فشار بدهید.', '«The engine has stopped, so the brakes do not work» is wrong; they work, but you must press much harder.', '«Motoren er gået i stå, så bremserne virker ikke» er forkert; de virker, men du skal træde meget hårdere.')),
     q('exam-bd-motorway',
       'Din bil har fået motorstop på motorvejen. Hvordan forholder du dig?',
       'Your car has broken down on the motorway. What do you do?',
@@ -354,7 +367,8 @@ BREAKDOWN = lesson('breakdown', 'BREAKDOWN', ('خرابی خودرو در جاد
     summary([('خودروی خراب را هر چه زودتر بردارید؛ وگرنه چراغ خطر و مثلث خطر.', 'Move a broken-down car as soon as possible; otherwise hazard lights and the warning triangle.', 'Flyt bilen snarest; ellers havariblink og advarselstrekant.'),
              ('مثلث: دست‌کم ۵۰ متر عقب، در بزرگراه ۱۰۰ متر؛ در پیچ، پیش از پیچ.', 'The triangle: at least 50 m behind, 100 m on the motorway; in a bend, before the bend.', 'Trekanten: mindst 50 m bagved, 100 m på motorvej; i et sving før svinget.'),
              ('بزرگراه: شانه‌ی اضطراری، چراغ خطر، همه پشت گاردریل.', 'Motorway: hard shoulder, hazard lights, everyone behind the barrier.', 'Motorvej: nødsporet, havariblink, alle bag autoværnet.'),
-             ('روی ریل: همه فوراً بیرون و دور از ریل، بعد ۱۱۲.', 'On the rails: everyone out at once and away from the track, then 112.', 'På sporet: alle straks ud og væk, derefter 112.')]),
+             ('روی ریل: همه فوراً بیرون و دور از ریل، بعد ۱۱۲.', 'On the rails: everyone out at once and away from the track, then 112.', 'På sporet: alle straks ud og væk, derefter 112.'),
+             ('چراغ قرمز: هر جا بی‌خطر شد بایستید؛ ترکیدن لاستیک: فرمان محکم، بدون ترمز شدید.', 'Red warning light: stop where it is safe; burst tyre: hold the wheel firmly, no hard braking.', 'Rød advarselslampe: stands, hvor det er sikkert; et dæk springer: hold fast i rattet, ingen hård opbremsning.')]),
 ])
 
 INCIDENTS_TEST = lesson('incidents-test', 'INCIDENTS_TEST', ('آزمون فصل', 'Chapter test', 'Kapiteltest'), 6, [

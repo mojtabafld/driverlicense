@@ -1,6 +1,6 @@
 # Chapter 4 «تابلوها، خط‌کشی‌ها و چراغ‌ها» (after course.ts's warning, priority, ban and mandatory signs): road markings,
-# traffic lights and the chapter's test. Rules from Bekendtgørelse om vejafmærkning §§ 55–60 and 65–66 and Færdselsloven
-# §§ 14, 27 and 29.
+# traffic lights and the chapter's test. Rules from Bekendtgørelse om vejafmærkning §§ 55–61 (V 46: a bus lane for zero-
+# emission cars too) and 65–66 and Færdselsloven §§ 14, 27 and 29.
 from course import SIGNS_BEK, TOWN, above, intro, law, lesson, picture, q, result, st, summary, teach, view
 
 LIGHTS = ("Traffic lights are drawn as small poles with a three-lamp signal head (red at the top, amber in the middle, green at "
@@ -145,12 +145,12 @@ MARKINGS = lesson('markings', 'MARKINGS', ('خط‌کشی‌ها', 'Road marking
           law=law(bek('§ 55'), 'Q 45 | Q 46 | Q 47'),
           trap=('«هاشور فقط رنگ است؛ وقتی کسی نیست می‌توانم از رویش رد شوم» غلط است.', '«A hatched area is only paint; when nobody is there I may drive over it» is wrong.', '«En spærreflade er bare maling; når der ikke er nogen, må jeg køre over den» er forkert.')),
     teach(('پیکان‌ها، خط اتوبوس و مسیر دوچرخه', 'Painted arrows, bus lanes and cycle lanes', 'Pile, busbaner og cykelbaner'),
-          ('پیکان‌های روی خط نشان می‌دهند آن خط در تقاطع به کدام جهت می‌رود؛ به موقع خط درست را بگیرید. از خطی که برای نوع دیگری از وسیله است، مثل خط اتوبوس (BUS) یا مسیر دوچرخه (cykelbane، با خط ممتد و نماد دوچرخه)، استفاده نکنید و در آن پارک نکنید. میدان آبی دوچرخه (S 21) در تقاطع نشان می‌دهد دوچرخه‌سواران از آن‌جا رد می‌شوند؛ هنگام گردش مراقب باشید.',
-           'The arrows painted in a lane show which way that lane goes at the junction; take the right lane in good time. Do not use or park in a lane meant for another kind of vehicle, such as a bus lane (BUS) or a cycle lane (cykelbane, with a solid line and bicycle symbols). A blue cycle field (S 21) in a junction shows that cyclists cross there; take care when you turn.',
-           'Pilene i en vognbane viser, hvilken vej vognbanen fører i krydset; vælg den rigtige vognbane i god tid. Brug ikke en bane, der er beregnet for en anden slags køretøjer, som en busbane (BUS) eller en cykelbane (med ubrudt linje og cykelsymboler), og parkér ikke i den. Et blåt cykelfelt (S 21) i krydset viser, at cyklister kører over der; pas på, når du svinger.'),
+          ('پیکان‌های روی خط نشان می‌دهند آن خط در تقاطع به کدام جهت می‌رود؛ به موقع خط درست را بگیرید. از خطی که برای نوع دیگری از وسیله است، مثل خط اتوبوس (BUS) یا مسیر دوچرخه (cykelbane، با خط ممتد و نماد دوچرخه)، استفاده نکنید و در آن پارک نکنید، مگر علامت آن خط وسیله‌ی شما را هم مجاز کند؛ مثلاً نماد خودروی بدون آلایندگی (V 46) در خط اتوبوس یعنی خودروی برقی یا هیدروژنی هم می‌تواند از آن برود. میدان آبی دوچرخه (S 21) در تقاطع نشان می‌دهد دوچرخه‌سواران از آن‌جا رد می‌شوند؛ هنگام گردش مراقب باشید.',
+           'The arrows painted in a lane show which way that lane goes at the junction; take the right lane in good time. Do not use or park in a lane meant for another kind of vehicle, such as a bus lane (BUS) or a cycle lane (cykelbane, with a solid line and bicycle symbols), unless the lane\'s marking also allows your vehicle; for example the symbol for zero-emission cars (V 46) in a bus lane means that electric or hydrogen cars may use it too. A blue cycle field (S 21) in a junction shows that cyclists cross there; take care when you turn.',
+           'Pilene i en vognbane viser, hvilken vej vognbanen fører i krydset; vælg den rigtige vognbane i god tid. Brug ikke en bane, der er beregnet for en anden slags køretøjer, som en busbane (BUS) eller en cykelbane (med ubrudt linje og cykelsymboler), og parkér ikke i den, medmindre afmærkningen også tillader dit køretøj; fx betyder symbolet for nulemissionsbil (V 46) i en busbane, at biler på el eller brint også må bruge den. Et blåt cykelfelt (S 21) i krydset viser, at cyklister kører over der; pas på, når du svinger.'),
           art='mark-arrows',
           rule=('پیکان خط را دنبال کنید؛ در خط اتوبوس و مسیر دوچرخه نرانید.', 'Follow your lane\'s arrow; do not drive in bus lanes or cycle lanes.', 'Følg pilen i din vognbane; kør ikke i busbaner og cykelbaner.'),
-          law=law((14, 1), [f'{SIGNS_BEK} § 55، § 57 و § 59', f'{SIGNS_BEK} § 55, § 57 and § 59', f'{SIGNS_BEK} § 55, § 57 og § 59'], 'Q 46 | R 11 | S 21'),
+          law=law((14, 1), [f'{SIGNS_BEK} § 55، § 57، § 59 و § 61', f'{SIGNS_BEK} § 55, § 57, § 59 and § 61', f'{SIGNS_BEK} § 55, § 57, § 59 og § 61'], 'Q 46 | R 11 | S 21 | V 46'),
           trap=('«خط اتوبوس خالی است، پس می‌توانم در آن برانم» غلط است.', '«The bus lane is empty, so I may drive in it» is wrong.', '«Busbanen er tom, så jeg må køre i den» er forkert.')),
     q('exam-mark-warn',
       'Midterlinjen har lange streger og korte mellemrum. Hvad betyder den?',
