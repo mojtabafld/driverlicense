@@ -10,6 +10,11 @@
 # and ANDROID_KEY_ALIAS every build is signed with that key, so a new APK installs over the old one. Without them a
 # key is made once and kept in the Actions cache (it is lost if no build runs for a week; then uninstall the app once
 # before installing the next APK).
+#
+# Google Play (input «play», 2026-10-23): the same build also makes teoriprove.aab, the bundle Google Play takes, for
+# every phone's processor (arm64, arm and x86), signed with the upload key; it goes on the release beside the APK. Play
+# needs the same upload key for every update, so this refuses to run with the key kept in the cache: the three secrets
+# above must be set.
 name: Android APK
 
 # Only by hand (the owner asked, 2026-10-10: an APK is built and published only when he asks for one), from the Actions
@@ -22,6 +27,10 @@ on:
         type: choice
         options: [main, prove]
         default: main
+      play:
+        description: "Also build teoriprove.aab for Google Play (all phones; needs the signing key in the repository secrets)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -33,7 +42,7 @@ concurrency:
 jobs:
   apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     defaults:
       run:
         working-directory: mobile
@@ -68,6 +77,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - run: npm ci
+
+      - name: Google Play needs the lasting key
+        if: inputs.play && env.HAS_KEY != 'true'
+        run: |
+          echo "::error::A Google Play bundle needs the upload key in the secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD and ANDROID_KEY_ALIAS (Settings → Secrets and variables → Actions)."
+          exit 1
 
       # The native Android project, made from app.json (it is not kept in the repository).
       - run: npx expo prebuild --platform android --no-install
@@ -136,10 +151,18 @@ jobs:
           printf '\nandroid { lint { checkReleaseBuilds false } }\n' >> app/build.gradle
           ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
 
+      # Google Play's bundle: every processor, so Play gives each phone its own part.
+      - name: Build the Google Play bundle
+        if: inputs.play
+        run: |
+          cd android
+          ./gradlew bundleRelease --no-daemon --stacktrace
+
       - name: Collect
         run: |
           mkdir -p "$RUNNER_TEMP/out"
           cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/out/$APK"
+          if [ "${{ inputs.play }}" = "true" ]; then cp android/app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/out/${APK%.apk}.aab"; fi
           ls -la "$RUNNER_TEMP/out"
 
       # A copy for the run page only; the release below is what counts, so a full artifact storage quota does not stop it.
@@ -166,5 +189,8 @@ jobs:
           make_latest: ${{ inputs.copy != 'prove' }}
           body: |
             ${{ inputs.copy == 'prove' && 'Teoripro Prove, the app of teori.bitlane.app/app (prove.dk''s question bank and lessons)' || 'Teoripro' }} for Android (arm64), build ${{ env.RELEASE_N }} from ${{ github.sha }}.
-            Download ${{ env.APK }} on the phone and open it to install.
-          files: ${{ runner.temp }}/out/${{ env.APK }}
+            Download ${{ env.APK }} on the phone and open it to install.${{ inputs.play && ' For Google Play: upload the .aab in Play Console (Testing or Production → Create new release).' || '' }}
+          files: |
+            ${{ runner.temp }}/out/${{ env.APK }}
+            ${{ runner.temp }}/out/*.aab
+          fail_on_unmatched_files: false
