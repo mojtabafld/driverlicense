@@ -25,6 +25,7 @@ const consoleprompts = require('./consoleprompts');
 const tts = require('./tts');
 const webpic = require('./webpic');
 const payments = require('./payments');
+const playbilling = require('./playbilling');
 const push = require('./push');
 const mail = require('./mail');
 const Anthropic = require('@anthropic-ai/sdk');
@@ -130,6 +131,8 @@ const publicUser = u => ({ username: u.username, name: u.name, created: u.create
   // freeAi: the one free answer analysis is still to be had (true), or the question it was had for.
   freeAi: u.guest ? undefined : u.freeAi ? u.freeAi.qid : true,
   guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined,
+  // playId: the id the Android app hands Google Play with a purchase, so it counts for this account only (playbilling.js).
+  playId: playbilling.available() && !u.guest ? playbilling.accountId(u.username) : undefined,
   // promoUsed: this account, or another with its confirmed address, has had the trial code (the premium page hides the code box).
   promoUsed: !!u.promoUsed || !!(u.premium && u.premium.promo) || !!(u.email && u.emailOk && Object.values(store.users).some(x => x !== u && x.premium && x.premium.promo && x.premium.promo.email === u.email)) || undefined });
 // Email confirmation (mail.js, RESEND_API_KEY): accounts made while it is on give an address and can use the app once its
@@ -692,6 +695,8 @@ async function api(req, res, route) {
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
         promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
+      // Premium can be bought in the Android app with Google Play (GOOGLE_PLAY_SERVICE_ACCOUNT): its product ids.
+      play: playbilling.available() ? { products: playbilling.products() } : undefined,
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
       guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions() });
   }
@@ -1081,6 +1086,31 @@ async function api(req, res, route) {
         console.log('premium bought', user.username, s.metadata && s.metadata.plan, s.amount_total, s.currency, s.livemode ? 'live' : 'test');
       }
     }
+    return send(res, 200, { user: publicUser(user) });
+  }
+  // POST playpurchase { product, token }: a pass bought in the Android app with Google Play (playbilling.js). Google is
+  // asked whether it is paid and bought for this account; then its days are added (once per token) and it is consumed.
+  if (req.method === 'POST' && route === 'playpurchase') {
+    if (!playbilling.available()) return send(res, 404, { error: 'خرید در اپ فعال نیست.' });
+    if (user.guest) return send(res, 403, { error: 'برای خرید نسخه‌ی ویژه، اول حساب کاربری بسازید.' });
+    const b = await readBody(req), product = String(b.product || ''), token = String(b.token || '');
+    if (!playbilling.PRODUCTS[product] || !/^[A-Za-z0-9._-]{20,1000}$/.test(token)) return send(res, 400, { error: 'bad purchase' });
+    if (!payments.hasPlay(user, token)) {
+      let p;
+      try { p = await playbilling.check(product, token, user.username); } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+      if (!p.tied || !p.mine) return send(res, 403, { error: 'forbidden' });
+      if (p.pending) return send(res, 200, { user: publicUser(user), pending: true });
+      if (!p.paid) return send(res, 402, { error: 'پرداخت انجام نشده است.' });
+      // A token counted on another account (it cannot be: it is tied to this one) or consumed already is not counted again.
+      if (p.consumed) return send(res, 409, { error: 'این خرید قبلاً ثبت شده است.' });
+      if (payments.grantPlay(user, { token, plan: p.plan, orderId: p.orderId, test: p.test })) {
+        await store.saveUser(user);
+        premiumMail(user, req);
+        console.log('premium bought (Google Play)', user.username, p.plan, p.orderId, p.test ? 'test' : 'live');
+      }
+    }
+    // Consumed once counted (again if a first try failed); the days stay either way.
+    try { await playbilling.consume(product, token); } catch (e) { if (e.status !== 404 && e.status !== 400) console.error('play consume', e.message); }
     return send(res, 200, { user: publicUser(user) });
   }
   // POST promo { code }: a free trial of PROMO_DAYS days with one of the PROMO_CODE codes, once per account (not for guest

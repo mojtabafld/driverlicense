@@ -13,6 +13,7 @@ import { api } from '@/lib/api';
 import { t, UI_LANG } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
+import { usePlayBilling } from '@/lib/play-billing';
 import { useApp, type Plan } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Button, Card, OkTick, T, tap } from '@/ui/kit';
@@ -30,16 +31,18 @@ function Perk({ title, small }: { title: string; small?: boolean }) {
   );
 }
 
-// The store apps (Android, iOS) sell nothing (Mojtaba 2026-10-23): Google Play and the App Store want digital goods
-// bought inside an app paid through their own billing, so there the passes, the buy button and Stripe are left out and
-// nothing points elsewhere to buy; a pass already on the account works as everywhere, and a trial code still counts.
+// The store apps (Android, iOS) never sell with Stripe (Mojtaba 2026-10-23): Google Play and the App Store want digital
+// goods bought inside an app paid through their own billing. Android sells the same passes with Google Play Billing when
+// the server does (lib/play-billing.ts); otherwise, and on iOS, the passes and the buy button are left out and nothing
+// points elsewhere to buy. A pass already on the account works as everywhere, and a trial code still counts.
 const STORE_APP = Platform.OS !== 'web';
 
 const PLAN_NAME: Record<Plan['id'], string> = { week: 'یک هفته', month: 'یک ماه', quarter: 'سه ماه' };
 
 // One pass to choose: its length and price, outlined in the text colour while chosen; the three months one is marked
 // as the best value.
-function PlanOption({ plan, on, best, onPress, pad = 14 }: { plan: Plan; on: boolean; best?: boolean; onPress: () => void; pad?: number }) {
+// `priceText`: the price as Google Play shows it (in the buyer's currency), in place of the kroner.
+function PlanOption({ plan, on, best, onPress, pad = 14, priceText }: { plan: Plan; on: boolean; best?: boolean; onPress: () => void; pad?: number; priceText?: string }) {
   const c = useColors();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="radio" accessibilityState={{ selected: on }}
@@ -52,7 +55,7 @@ function PlanOption({ plan, on, best, onPress, pad = 14 }: { plan: Plan; on: boo
         <T style={{ fontWeight: '700', fontSize: 16 }}>{PLAN_NAME[plan.id]}</T>
         {best ? <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: c.strong }}><T style={{ fontSize: 11.5, fontWeight: '700', color: c.strongFg }}>به‌صرفه‌ترین</T></View> : null}
       </View>
-      <T style={{ fontWeight: '800', fontSize: 17 }}>{t('{0} کرون', faNum(plan.price))}</T>
+      <T raw={!!priceText} style={{ fontWeight: '800', fontSize: 17 }}>{priceText ?? t('{0} کرون', faNum(plan.price))}</T>
     </Pressable>
   );
 }
@@ -130,6 +133,7 @@ export default function Premium() {
     catch (e) { setBad(true); nudge(); setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'کد تخفیف ثبت نشد؛ دوباره امتحان کنید.' }); }
     setRedeeming(false);
   };
+  const gp = usePlayBilling(setMsg);
   const check = async () => { setBusy('check'); try { await syncPremium(); } catch { try { await refresh(); } catch {} } setBusy(null); };
 
   return (
@@ -169,6 +173,22 @@ export default function Premium() {
           <T style={{ color: c.muted, fontSize: 13, lineHeight: 22, textAlign: 'center' }}>کاربر مهمان نمی‌تواند نسخه‌ی ویژه بخرد یا کد تخفیف بزند. پیشرفت حساب مهمان به حساب تازه منتقل نمی‌شود.</T>
           <Button big icon="personAdd" label="ساخت حساب کاربری" onPress={() => { logout().catch(() => {}); }} style={{ alignSelf: 'stretch', marginTop: 4 }} />
         </Card>
+      ) : STORE_APP && gp.on ? (
+        <Card style={{ gap: level ? 9 : 12, ...(level ? { paddingVertical: 12 } : null) }}>
+          <T style={{ fontWeight: '700', fontSize: 16 }}>{premium ? 'تمدید' : 'انتخاب مدت'}</T>
+          {gp.items === null ? <T style={{ color: c.muted, textAlign: 'center' }}>در حال دریافت قیمت‌ها از Google Play…</T>
+            : !gp.items.length ? <T style={{ color: c.muted, textAlign: 'center' }}>خرید در Google Play الان در دسترس نیست.</T> : (
+            <View accessibilityRole="radiogroup" style={{ gap: level ? 8 : 10 }}>
+              {gp.items.map(x => {
+                const id = x.id.replace(/^pass_/, '') as Plan['id'];
+                return <PlanOption key={x.id} pad={planPad} plan={{ id, days: 0, price: 0 }} priceText={x.price} on={plan === id} best={id === 'quarter'} onPress={() => setPlan(id)} />;
+              })}
+            </View>
+          )}
+          {premium && level < 3 ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>روزهای خرید تازه به آخر نسخه‌ی ویژه‌ی فعلی شما اضافه می‌شود.</T> : null}
+          <Button big={level < 2} icon="lock" label={gp.busy ? 'در حال خرید…' : premium ? 'تمدید نسخه‌ی ویژه' : 'خرید نسخه‌ی ویژه'} onPress={() => gp.buy(`pass_${plan}`)} disabled={gp.busy || !gp.items?.length} />
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>پرداخت امن با Google Play.</T>
+        </Card>
       ) : pay && STORE_APP ? (
         <Card style={{ gap: 10, alignItems: 'center', paddingVertical: 18 }}>
           <Icon name="info" size={26} color={c.muted} />
@@ -203,7 +223,7 @@ export default function Premium() {
           </View>
         </Card>
       ) : null}
-      {!pay && !premium ? (
+      {!pay && !premium && !gp.on ? (
         <Card><T style={{ color: c.muted, textAlign: 'center' }}>خرید نسخه‌ی ویژه الان فعال نیست.</T></Card>
       ) : null}
 

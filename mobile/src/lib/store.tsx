@@ -30,6 +30,8 @@ type Ctx = {
   // now (a pass that has not run out, or an admin), and `locked`: the AI analysis and the read-aloud need it here and this account has not got it
   // (then `tts` is off and the AI button leads to the premium page).
   pay: Pay | null; premium: boolean; locked: boolean;
+  // Premium sold in the Android app with Google Play: its product ids (the server has a Play service account), else null.
+  play: { products: string[] } | null;
   // After coming back from Stripe: the server checks the Checkout session; true once premium is on the account.
   confirmPremium: (sessionId: string) => Promise<boolean>;
   // Asks the server to count a payment it missed (Stripe's newest paid sessions), then has the account as it is now.
@@ -141,6 +143,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [aiLessons, setAiLessons] = useState(false);
   const [tts, setTts] = useState(false); // questions read aloud (the server has an ElevenLabs key)
   const [pay, setPay] = useState<Pay | null>(null);
+  const [play, setPlay] = useState<{ products: string[] } | null>(null);
   const [mail, setMail] = useState(false), [google, setGoogle] = useState(false), [googleErr, setGoogleErr] = useState('');
   const [lastUser, setLastUser] = useState<LastUser | null | undefined>(undefined);
   useEffect(() => { loadLastUser().then(setLastUser, () => setLastUser(null)); }, []);
@@ -200,7 +203,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMe(d);
     // Notifications allowed on this device before: it is this account's device now (lib/push.ts).
     if (!PROVE_PICS && !d.user.verify) syncPush(d.user.username).catch(() => {});
-    api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); }).catch(() => {});
+    api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay; play?: { products: string[] } }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); setPlay(x.play ?? null); }).catch(() => {});
     // An account still waiting for its email link reads only itself, so nothing else (the questions) is loaded yet.
     if (d.user.verify) return;
     if (!bank) setBank(await fetchBank<Bank>());
@@ -239,7 +242,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     ready, token, bank, newBank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
-    pay: PROVE_PICS ? null : pay, premium, locked,
+    pay: PROVE_PICS ? null : pay, play: PROVE_PICS ? null : play, premium, locked,
     redeemPromo: async code => {
       const d = await api<{ user: User }>('POST', 'promo', { code });
       setMe(m => (m ? { ...m, user: d.user } : m));
@@ -333,7 +336,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser, google, googleErr]);
+  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, play, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser, google, googleErr]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
