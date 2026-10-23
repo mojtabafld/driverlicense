@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 import { RTL, UI_LANG, getTransLang, tr } from '@/lib/i18n';
-import { GLOSSARY, TERM_CATS, searchTerms, type Term, type TermCat } from '@/lib/glossary';
+import { GLOSSARY, TERM_CATS, searchTerms, termKey, type Term, type TermCat } from '@/lib/glossary';
 import { toPremium, useFree } from '@/lib/free';
 import { faNum } from '@/lib/logic';
 import { aiTermPage, localSearch, type SearchItem, type SearchKind } from '@/lib/search';
@@ -193,8 +193,10 @@ export default function Glossary() {
   const [tab, setTab] = useState<'all' | 'saved'>('all');
   const [cat, setCat] = useState<TermCat | null>(null);
   const [sel, setSel] = useState<Term | null>(null); // the term whose lesson is open in the sheet
-  // The bookmarked ones in the order they were saved (newest first); the rest in the glossary's order.
-  const base = tab === 'saved' ? terms.map(da => GLOSSARY.find(t => t.da === da)).filter((t): t is Term => !!t) : GLOSSARY;
+  // The bookmarked ones in the order they were saved (newest first), a renamed headword under its new word; the rest in
+  // the glossary's order. `savedAs`: the word a term is bookmarked under, if it is.
+  const savedAs = (t: Term) => terms.find(k => termKey(k) === t.da);
+  const base = tab === 'saved' ? [...new Set(terms.map(termKey))].map(da => GLOSSARY.find(t => t.da === da)).filter((t): t is Term => !!t) : GLOSSARY;
   const list = searchTerms(q, cat ? base.filter(t => t.cat === cat) : base);
   const count = (id: TermCat) => base.filter(t => t.cat === id).length;
   const chip = (id: TermCat | null, label: string, n: number, icon?: (typeof TERM_CATS)[number]['icon']) => {
@@ -230,7 +232,7 @@ export default function Glossary() {
         </ScrollView>
       </NoSwipe>
       <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(list.length)} اصطلاح</T>
-      {list.map(t => <TermCard key={t.da} t={t} en={en} on={terms.includes(t.da)} onToggle={() => { toggleTerm(t.da).catch(() => {}); }} onOpen={() => setSel(t)} />)}
+      {list.map(t => <TermCard key={t.da} t={t} en={en} on={!!savedAs(t)} onToggle={() => { toggleTerm(savedAs(t) ?? t.da).catch(() => {}); }} onOpen={() => setSel(t)} />)}
       {list.length ? null : (
         <Card style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 14 }}>
           <Icon name={tab === 'saved' && !terms.length ? 'bookmark' : 'search'} size={17} color={c.muted} />
