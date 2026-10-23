@@ -359,7 +359,7 @@ is new.
   that zero-emission cars, that is cars on electricity or hydrogen, may use), § 63 (a signal that works still applies).
 - Not in the two law texts and taken from general guidance or other rules: one person only on an electric kick scooter (the rules
   for motorised kick scooters); a parking card for disabled people only when the vehicle carries its holder (the parking-card
-  rules); help for an animal you have hit and game reported to the police (Dyrevelfærdsloven); the licence's harmonised code 01
+  rules); an animal you have hit, also a wild one: call Dyrenes Vagtcentral on 1812 before driving on (borger.dk «Påkørsel af dyr»); the licence's harmonised code 01
   (vision correction); alcohol is burnt slowly, also while you sleep; a burst tyre pulls the car to its side; hail can lie like ice;
   a bus's rear overhang swings out when it turns; right wheels in a soft verge: ease off and steer back gently; with the engine
   stopped, steering and brakes need more force; a stuck accelerator: declutch or select neutral, brake, switch off when stopped;
@@ -372,3 +372,21 @@ is new.
   P 11, a horizontal barrier with red and white diagonal stripes for O 43–45, a car on a verge under a blue roundel with a red X for
   UC 60,5 (as 5630 shows UC 60,6 with one red bar), a vertical double-headed arrow for UC 60,1, a car symbol on a green field for
   V 46, a yellow ambulance with a chequered pattern.
+
+## The questions against «آموزش» (2026-10-23)
+
+- Each question links to the part of «آموزش» that teaches it (`l` in site/newq.js, from learn.py: a lesson of the
+  course, the road signs, or a part of the rules page; none for 5793, 5886 and 5888, which no lesson covers), and the
+  topic sheet's «رفتن به آموزش» opens it instead of its subsection's lesson. The rules place a question by its
+  subsection and its words; LINK in learn.py corrects the ones they place wrongly. Every link was checked by hand.
+- Facts compared with the lessons (the course, the rules page and the topics' fixed points in build.py): the numbers
+  (speeds, distances, times, weights, promille) agree. Fixed: 6025 said to call 1-1-2 after hitting a deer; it is
+  Dyrenes Vagtcentral on 1812 (borger.dk «Påkørsel af dyr», as the course's lesson on animals). In the topics' fixed
+  points (build.py): no stopping within 10 m of a junction (not 5), the 12 m at a bus stop is a stopping ban, no parking
+  within 30 m of a level crossing; the gap to the car in front is at least 2 seconds and more in bad conditions (the
+  «3 seconds outside towns» is not a rule).
+- Taught in the lessons now because many questions ask it (text only, no new pictures): load, roof box and trailer
+  (car-check); the junction exceptions to the ban on overtaking, Færdselsloven § 23 (overtaking, and the rules page);
+  living streets, pedestrian streets and cycle streets (speed); lorries and buses (distance); reversing and turning
+  round, and pulling out from the kerb (parking); tunnels, and lights on a parked car, §§ 35–36 (darkness); faults while
+  driving (breakdown); a bus lane with V 46 is for zero-emission cars too (markings).

@@ -42,6 +42,16 @@ const LEARN: Record<string, Href> = {
   '8.1': lesson('alcohol'), '10.3': '/rules',
 };
 function lesson(id: string): Href { return { pathname: '/course-lesson', params: { id } }; }
+// «آزمون جدید»'s questions name the part of «آموزش» that teaches each of them (q.l, data/newq-src/learn.py; checked
+// against the lessons, 2026-10-23): a lesson's id or a page with its part ('/rules?open=4'); '' when none teaches it, and
+// then the sheet has no button. The others (the bank of /app) keep their topic's lesson.
+function learnOf(q: Question): Href | undefined {
+  if (q.l === undefined) return LEARN[q.c];
+  if (!q.l) return undefined;
+  if (!q.l.startsWith('/')) return lesson(q.l);
+  const [pathname, query] = q.l.split('?');
+  return query ? { pathname, params: Object.fromEntries(query.split('&').map(kv => kv.split('='))) } as Href : pathname as Href;
+}
 
 // Points already fetched while the app is open (the server keeps them too, so they are written once per question).
 const cache = new Map<string, Point[]>();
@@ -123,7 +133,7 @@ export function TopicSheet({ q, open, onClose }: { q: Question; open: boolean; o
   if (!bank || !t) return null;
   const name = topicName(bank, q.c), section = sectionFa(bank, q.c);
   const second = UI_LANG === exam ? null : exam === 'en' ? (STRINGS as Record<string, string[]>)[name]?.[0] ?? null : t.da;
-  const learn = LEARN[q.c];
+  const learn = learnOf(q);
   const toLearn = () => { if (!learn) return; onClose(); router.push(learn); };
   // Without the AI: the topic's first two fixed points only, kept short as the AI's (Mojtaba 2026-10-21), in the app's
   // language (strings.json has them in English and Danish; the AI's points come written in it already; Mojtaba 2026-10-22).

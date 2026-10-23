@@ -6,9 +6,9 @@
 # (after a left turn be on the right of the new road), 18 stk. 2 and 4, 20 stk. 1, 21 stk. 3–4, 22, 26 stk. 2, 4 and 6 (give way to
 # the right; no left turn before it causes no inconvenience to oncoming traffic), 32 stk. 1–2, 41, 42 stk. 1–2, 46 stk. 2 (no reversing
 # on a motorway), 53 (0,50 promille during or after the drive), 55 stk. 1–2 (the police may at any time ask for a breath, saliva or
-# sweat test), 80 stk. 1 (seat belts); Dyrevelfærdsloven (help for an animal you have hit; game that has been hit is reported to the
-# police); BEK 425/2023: § 9 U 3 (times in black for weekdays except Saturdays, in red for Sundays
-# and holidays), § 48 N 41 (yellow reflectors on the right, white on the left, normally 100 m apart, closer in bends), § 51 O 43–45
+# sweat test), 80 stk. 1 (seat belts); borger.dk «Påkørsel af dyr» (an animal you have hit, also a wild one: call Dyrenes
+# Vagtcentral on 1812 before you drive on, as the course's lesson on animals); BEK 425/2023: § 9 U 3 (times in black for
+# weekdays except Saturdays, in red for Sundays and holidays), § 48 N 41 (yellow reflectors on the right, white on the left, normally 100 m apart, closer in bends), § 51 O 43–45
 # (striped barriers are passed on the side the stripes slope down towards), § 60 V 23 (a bay with the wheelchair symbol only for
 # vehicles with a parking card); the driving licence's harmonised code 01 (vision correction); one person only on an electric kick
 # scooter (the rules for motorised kick scooters).
@@ -790,12 +790,12 @@ MUST NOT APPEAR: blood, signs, text.""", cond="dusk, getting dark, dry road"),
   "Du har påkørt et rådyr. Dyret er kommet til skade og ligger i rabatten. Hvad gør du?",
   "You have hit a roe deer. The animal is injured and is lying on the verge. What do you do?",
   "با یک آهو برخورد کرده‌اید. حیوان آسیب دیده و در حاشیه‌ی جاده افتاده است. چه می‌کنید؟",
-  S(True, "Jeg ringer 1-1-2, så politiet kan sørge for, at dyret får hjælp.",
-    "I call 1-1-2 so that the police can make sure the animal gets help.",
-    "با ۱۱۲ تماس می‌گیرم تا پلیس ترتیبی بدهد که به حیوان کمک شود.",
-    "Den, der påkører et dyr, skal sørge for, at det får hjælp, og påkørt vildt skal meldes til politiet.",
-    "Anyone who hits an animal must make sure it gets help, and game that has been hit must be reported to the police.",
-    "کسی که با حیوانی برخورد می‌کند باید ترتیب کمک به آن را بدهد و برخورد با حیوان وحشی باید به پلیس گزارش شود."),
+  S(True, "Jeg ringer til Dyrenes Vagtcentral på 1812, før jeg kører videre.",
+    "I call Dyrenes Vagtcentral (the animal emergency line) on 1812 before I drive on.",
+    "پیش از ادامه‌ی راه به Dyrenes Vagtcentral (مرکز امداد حیوانات) با شماره‌ی ۱۸۱۲ زنگ می‌زنم.",
+    "Har du påkørt et dyr, også et vildt dyr, skal du ringe til Dyrenes Vagtcentral på 1812, før du kører videre, så dyret kan få hjælp.",
+    "If you have hit an animal, also a wild one, you must call Dyrenes Vagtcentral on 1812 before you drive on, so the animal can get help.",
+    "اگر با حیوانی برخورد کرده‌اید، حتی حیوان وحشی، باید پیش از ادامه‌ی راه به Dyrenes Vagtcentral با شماره‌ی ۱۸۱۲ زنگ بزنید تا به حیوان کمک شود."),
   S(False, "Jeg kører videre, fordi det kun er et vildt dyr.", "I drive on, because it is only a wild animal.",
     "به راهم ادامه می‌دهم، چون فقط یک حیوان وحشی است.",
     "Du skal sørge for hjælp til et dyr, du har påkørt, også når det er et vildt dyr.",

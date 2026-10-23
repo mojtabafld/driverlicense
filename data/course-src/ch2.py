@@ -1,6 +1,8 @@
-# Chapter 2 «جایگاه در جاده و سرعت»: where the car goes on the road, the speed limits and adapting to them, distance and
-# stopping distance, and the chapter's test. Rules from Færdselsloven §§ 14–20, 32, 33, 41–43 (retsinformation.dk).
-from course import TOWN, above, intro, law, lesson, picture, q, result, st, summary, teach, view
+# Chapter 2 «جایگاه در جاده و سرعت»: where the car goes on the road, the speed limits and adapting to them, living streets
+# and pedestrian streets, distance and stopping distance, lorries and buses, and the chapter's test. Rules from
+# Færdselsloven §§ 3, 14–20, 26 stk. 3, 32, 33, 41–43 and Bekendtgørelse om vejafmærkning E 47, E 49 and E 51
+# (retsinformation.dk).
+from course import SIGNS_BEK, TOWN, above, intro, law, lesson, picture, q, result, st, summary, teach, view
 
 # ---------- pictures (prompts for the image model) ----------
 above('pos-right', """
@@ -247,7 +249,7 @@ LANE_POSITION = lesson('lane-position', 'LANE_POSITION', ('جایگاه در م�
              ('مانع در سمت هر کس باشد، او صبر می‌کند.', 'Whoever has the obstacle on their side waits.', 'Den, der har forhindringen i sin side, venter.')]),
 ])
 
-SPEED = lesson('speed', 'SPEED', ('سرعت مجاز و تنظیم سرعت', 'Speed limits and adapting your speed', 'Hastighedsgrænser og tilpasning af hastigheden'), 8, [
+SPEED = lesson('speed', 'SPEED', ('سرعت مجاز و تنظیم سرعت', 'Speed limits and adapting your speed', 'Hastighedsgrænser og tilpasning af hastigheden'), 9, [
     intro(('سرعت مجاز و تنظیم سرعت', 'Speed limits and adapting your speed', 'Hastighedsgrænser og tilpasning af hastigheden'),
           ('آزمون هم عدد سرعت‌ها را می‌پرسد و هم این را که کِی باید آهسته‌تر از حد مجاز برانید. حد سرعت، بیشترین سرعت است، نه سرعتی که باید داشته باشید.',
            'The test asks both the speed limits and when you must drive slower than the limit. A speed limit is the highest speed, not the speed you must keep.',
@@ -294,6 +296,13 @@ SPEED = lesson('speed', 'SPEED', ('سرعت مجاز و تنظیم سرعت', 'S
           rule=('بی‌دلیل خیلی آهسته نرانید و بی‌دلیل ناگهان ترمز نکنید.', 'Do not drive very slowly or brake suddenly without reason.', 'Kør ikke meget langsomt, og brems ikke brat uden grund.'),
           law=law((41, 3), (44, 1)),
           trap=('«هرچه آهسته‌تر، بی‌خطرتر» همیشه درست نیست؛ سرعت باید با شرایط جور باشد.', '«The slower, the safer» is not always true; your speed must suit the conditions.', '«Jo langsommere, jo sikrere» passer ikke altid; hastigheden skal passe til forholdene.')),
+    teach(('منطقه‌ی اقامت و بازی، خیابان پیاده و خیابان دوچرخه', 'Living streets, pedestrian streets and cycle streets', 'Opholds- og legeområder, gågader og cykelgader'),
+          ('در منطقه‌ی اقامت و بازی (opholds- og legeområde، تابلوی E 51) عابران و کودکان می‌توانند در تمام عرض خیابان باشند و بازی کنند. خودرو فقط با سرعت خیلی کم، معمولاً زیر ۱۵ کیلومتر در ساعت، می‌رود و پیش از رد شدن باید مطمئن شوید که شما را دیده‌اند و راه داده‌اند. در خیابان پیاده (gågade، E 49) فقط جایی می‌توانید برانید که تابلوی زیرین اجازه بدهد، آن هم با همین سرعت خیلی کم. در خیابان دوچرخه (cykelgade، E 47)، اگر رانندگی مجاز باشد، با سرعت دوچرخه‌سواران، معمولاً زیر ۳۰ کیلومتر در ساعت، می‌رانید. در هر سه، پارک فقط در جاهای علامت‌گذاری‌شده مجاز است، و هنگام بیرون آمدن از منطقه‌ی اقامت و بازی یا خیابان پیاده باید به همه راه بدهید.',
+           'In a living street (opholds- og legeområde, sign E 51) pedestrians and children may stay and play across the whole width of the road. Cars may only drive at very low speed, normally under 15 km/h, and before you pass you must make sure that they have noticed you and made room. In a pedestrian street (gågade, E 49) you may only drive where a plate below the sign allows it, and then also at very low speed. In a cycle street (cykelgade, E 47), where driving is allowed, you drive at the cyclists\' speed, normally under 30 km/h. In all three, parking is only allowed in marked places, and when you drive out of a living street or a pedestrian street you give way to everyone.',
+           'I et opholds- og legeområde (tavle E 51) må gående og børn opholde sig og lege på vejen i hele dens bredde. Der må kun køres med meget lav hastighed, normalt under 15 km/t, og før du kører forbi, skal du sikre dig, at de er opmærksomme på dig og har givet plads. I en gågade (E 49) må du kun køre, hvor en undertavle tillader det, og også her kun med meget lav hastighed. I en cykelgade (E 47) kører du, hvor kørsel er tilladt, med cyklisternes hastighed, normalt under 30 km/t. I alle tre må der kun parkeres på særligt afmærkede pladser, og kører du ud fra et opholds- og legeområde eller en gågade, har du ubetinget vigepligt.'),
+          rule=('منطقه‌ی اقامت و بازی و خیابان پیاده: سرعت خیلی کم، معمولاً زیر ۱۵؛ هنگام بیرون آمدن به همه راه بدهید.', 'Living street and pedestrian street: very low speed, normally under 15 km/h; give way to everyone when you leave.', 'Opholds- og legeområde og gågade: meget lav hastighed, normalt under 15 km/t; ubetinget vigepligt, når du kører ud.'),
+          law=law((26, 3), SIGNS_BEK, 'E 47 | E 49 | E 51'),
+          trap=('«بچه‌ها باید وقتی خودرو می‌آید از خیابان کنار بروند» در منطقه‌ی اقامت و بازی غلط است؛ آن‌جا می‌توانند در تمام خیابان بازی کنند و شما صبر می‌کنید تا راه بدهند.', '«The children must get off the road when a car comes» is wrong in a living street; there they may play on the whole road, and you wait until they make room.', '«Børnene skal gå ind til siden, når der kommer en bil» er forkert i et opholds- og legeområde; der må de lege på hele vejen, og du venter, til de giver plads.')),
     q('exam-speed-town',
       'Du passerer tavlen. Hvad er den højst tilladte hastighed herefter, når der ikke er andre tavler?',
       'You pass the sign. What is the highest permitted speed after it when there are no other signs?',
@@ -328,11 +337,12 @@ SPEED = lesson('speed', 'SPEED', ('سرعت مجاز و تنظیم سرعت', 'S
              ('خودرو با تریلر: حداکثر ۸۰؛ در بزرگراه با تأیید ۱۰۰ تا ۱۰۰.', 'Car with a trailer: at most 80; on the motorway up to 100 with the 100 approval.', 'Bil med trailer: højst 80; på motorvej op til 100 med 100 km/t-godkendelse.'),
              ('حد سرعت بیشترین سرعت است؛ باید بتوانید در فاصله‌ای که می‌بینید بایستید.', 'The limit is the highest speed; you must be able to stop within the distance you can see.', 'Grænsen er den højeste hastighed; du skal kunne standse på den strækning, du kan overskue.'),
              ('در مه، باران، تاریکی، پیچ و نزدیک کودکان آهسته‌تر برانید.', 'Drive slower in fog, rain, darkness, bends and near children.', 'Kør langsommere i tåge, regn, mørke, sving og nær børn.'),
-             ('بی‌دلیل خیلی آهسته نرانید و بی‌دلیل ناگهان ترمز نکنید.', 'Do not drive very slowly or brake suddenly without reason.', 'Kør ikke meget langsomt, og brems ikke brat uden grund.')],
+             ('بی‌دلیل خیلی آهسته نرانید و بی‌دلیل ناگهان ترمز نکنید.', 'Do not drive very slowly or brake suddenly without reason.', 'Kør ikke meget langsomt, og brems ikke brat uden grund.'),
+             ('منطقه‌ی اقامت و بازی و خیابان پیاده: سرعت خیلی کم و احتیاط ویژه با عابران.', 'Living streets and pedestrian streets: very low speed and special care for pedestrians.', 'Opholds- og legeområder og gågader: meget lav hastighed og særligt hensyn til de gående.')],
             ('law', 'signs', 'plan')),
 ])
 
-DISTANCE = lesson('distance', 'DISTANCE', ('فاصله و مسافت توقف', 'Distance and stopping distance', 'Afstand og standselængde'), 8, [
+DISTANCE = lesson('distance', 'DISTANCE', ('فاصله و مسافت توقف', 'Distance and stopping distance', 'Afstand og standselængde'), 9, [
     intro(('فاصله و مسافت توقف', 'Distance and stopping distance', 'Afstand og standselængde'),
           ('بیشتر تصادف‌ها از پشت به این دلیل است که فاصله کم بوده. آزمون می‌پرسد چه فاصله‌ای کافی است، مسافت توقف از چه ساخته می‌شود و سرعت و جاده‌ی خیس چه اثری روی آن دارند.',
            'Most rear-end collisions happen because the distance was too short. The test asks what distance is enough, what makes up the stopping distance, and how speed and a wet road change it.',
@@ -369,6 +379,17 @@ DISTANCE = lesson('distance', 'DISTANCE', ('فاصله و مسافت توقف', 
           rule=('خودروی آهسته‌رو بیرون شهر برای سبقت‌گیرنده جا می‌گذارد.', 'Outside towns, a slow vehicle leaves room for those overtaking.', 'Uden for byen holder langsomme køretøjer plads til de overhalende.'),
           law=law((15, 3), (43, 3)),
           trap=('«پشت کامیون می‌چسبم تا از جریان عقب نمانم» غلط است؛ باید جا بگذارید.', '«I stay close behind the lorry so as not to fall behind» is wrong; you must leave room.', '«Jeg holder tæt bag lastbilen for ikke at sakke bagud» er forkert; du skal holde plads.')),
+    teach(('کامیون و اتوبوس', 'Lorries and buses', 'Lastbiler og busser'),
+          ('کامیون و اتوبوس نقطه‌های کور بزرگی دارند: درست جلوی کابین، کنار سمت راستش و درست پشتش. اگر صورت راننده را در آینه‌اش نمی‌بینید، او هم شما را نمی‌بیند. وسیله‌ی بلند در پیچ جای زیادی می‌گیرد و گاهی اول به طرف دیگر می‌رود، و عقب اتوبوس هنگام پیچیدن به کنار می‌چرخد. وسیله‌ی سنگین هم برای ایستادن فاصله‌ی بیشتری لازم دارد.',
+           'A lorry or a bus has large blind spots: just in front of the cab, along its right side and right behind it. If you cannot see the driver\'s face in their mirror, they cannot see you. A long vehicle needs a lot of room in a turn and may first swing out the other way, and a bus\'s rear end swings out to the side as it turns. A heavy vehicle also needs a longer distance to stop.',
+           'En lastbil eller en bus har store blinde vinkler: lige foran førerhuset, langs højre side og lige bagved. Kan du ikke se førerens ansigt i spejlet, kan føreren heller ikke se dig. Et langt køretøj skal bruge meget plads i et sving og kan først trække ud til den anden side, og på en bus svinger bagenden ud til siden, når den drejer. Et tungt køretøj skal også bruge længere vej for at standse.'),
+          rule=('راننده را در آینه‌اش نمی‌بینید؟ پس او هم شما را نمی‌بیند.', 'Cannot see the driver in their mirror? Then they cannot see you.', 'Kan du ikke se føreren i spejlet, kan føreren heller ikke se dig.'),
+          law=law((3, 1), 'Undervisningsplan for kategori B'),
+          points=[('پشت کامیونی که به راست می‌پیچد بمانید؛ از سمت راستش رد نشوید.', 'Stay behind a lorry that is turning right; do not pass it on its right.', 'Bliv bag en lastbil, der svinger til højre; kør ikke forbi den i højre side.'),
+                  ('نزدیک جلوی کامیون یا درست کنارش نایستید.', 'Do not stop close in front of a lorry or right beside it.', 'Hold ikke tæt foran en lastbil eller lige ved siden af den.'),
+                  ('سبقت از وسیله‌ی بلند زمان زیادی می‌برد؛ فقط وقتی سبقت بگیرید که راه تا دوردست آزاد است، و هنگام عبور منتظر ضربه‌ی باد باشید.', 'Overtaking a long vehicle takes a long time: only overtake when the road is clear far ahead, and expect a gust of wind as you pass it.', 'Overhaling af et langt køretøj tager lang tid: overhal kun, når vejen er fri langt frem, og vær forberedt på et vindstød, når du kører forbi.'),
+                  ('بعد از سبقت، خیلی نزدیک جلوی آن به خط برنگردید.', 'After overtaking, do not pull in too close in front of it.', 'Kør ikke for tæt ind foran det efter overhalingen.')],
+          trap=('«کامیون راهنمای راست زده، پس پیش از پیچیدنش از سمت راستش رد می‌شوم» غلط و خطرناک است.', '«The lorry is signalling right, so I pass it on the right before it turns» is wrong and dangerous.', '«Lastbilen blinker til højre, så jeg kører forbi den i højre side, før den svinger» er forkert og farligt.')),
     q('exam-dist-follow',
       'Hvor stor afstand skal du holde til bilen foran dig?',
       'How large a distance must you keep to the car in front of you?',
@@ -401,7 +422,8 @@ DISTANCE = lesson('distance', 'DISTANCE', ('فاصله و مسافت توقف', 
              ('مسافت توقف = مسافت واکنش (حدود ۱ ثانیه) + مسافت ترمز.', 'Stopping distance = reaction distance (about 1 second) + braking distance.', 'Standselængde = reaktionslængde (cirka 1 sekund) + bremselængde.'),
              ('سرعت دو برابر: مسافت ترمز حدود چهار برابر.', 'Twice the speed: about four times the braking distance.', 'Dobbelt hastighed: cirka fire gange så lang bremselængde.'),
              ('جاده‌ی خیس و یخ مسافت ترمز را و خستگی و تلفن زمان واکنش را طولانی می‌کنند.', 'A wet or icy road makes the braking distance longer; tiredness and the phone make the reaction time longer.', 'Våd vej og is gør bremselængden længere; træthed og telefon gør reaktionstiden længere.'),
-             ('خودروهای آهسته‌رو بیرون شهر برای سبقت‌گیرنده جا می‌گذارند.', 'Slow vehicles outside towns leave room for those overtaking.', 'Langsomme køretøjer uden for byen holder plads til de overhalende.')]),
+             ('خودروهای آهسته‌رو بیرون شهر برای سبقت‌گیرنده جا می‌گذارند.', 'Slow vehicles outside towns leave room for those overtaking.', 'Langsomme køretøjer uden for byen holder plads til de overhalende.'),
+             ('کامیون و اتوبوس نقطه‌ی کور بزرگ دارند؛ پشت کامیونی که به راست می‌پیچد بمانید.', 'Lorries and buses have large blind spots; stay behind a lorry that is turning right.', 'Lastbiler og busser har store blinde vinkler; bliv bag en lastbil, der svinger til højre.')]),
 ])
 
 ROAD_TEST = lesson('road-test', 'ROAD_TEST', ('آزمون فصل', 'Chapter test', 'Kapiteltest'), 6, [

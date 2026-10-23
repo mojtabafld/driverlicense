@@ -1,6 +1,8 @@
 // Types of the question bank built by build.py (site/data.js).
 export type Statement = { da: string; fa: string; ok: 0 | 1; eda: string; efa: string; en: string; een: string };
-export type Question = { id: number; img: string; c: string; sda: string; sfa: string; sen: string; st: Statement[] };
+// l («آزمون جدید»'s questions only): the part of «آموزش» that teaches the question, a course lesson's id or a page
+// ('/signs', '/rules?open=4'), '' when none does (data/newq-src/learn.py); the topic sheet's «رفتن به آموزش» opens it.
+export type Question = { id: number; img: string; c: string; sda: string; sfa: string; sen: string; st: Statement[]; l?: string };
 export type Test = { id: number; title: string; qs: number[]; thumb?: number };
 export type Topic = { fa: string; da: string; lesson: string[] };
 export type Section = { n: number; fa: string; da: string };

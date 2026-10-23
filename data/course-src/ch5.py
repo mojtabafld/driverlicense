@@ -1,5 +1,6 @@
-# Chapter 5 «مانورها» (after course.ts's overtaking and lane changes): stopping and parking, and the chapter's test.
-# Rules from Færdselsloven §§ 2 (nr. 18), 21, 28 and 29 and Bekendtgørelse om vejafmærkning § 60.
+# Chapter 5 «مانورها» (after course.ts's overtaking and lane changes): stopping and parking, reversing and turning round,
+# pulling out from the kerb, and the chapter's test. Rules from Færdselsloven §§ 2 (nr. 18), 18 stk. 1–2, 21, 26 stk. 3,
+# 28, 29, 32 stk. 2 and 46 stk. 2 and Bekendtgørelse om vejafmærkning § 60.
 from course import SIGNS_BEK, TOWN, above, intro, law, lesson, q, result, st, summary, teach, view
 
 # ---------- pictures (prompts for the image model) ----------
@@ -64,7 +65,7 @@ MUST NOT APPEAR: trains, arrows, other vehicles, people, other signs, text, lett
 
 
 # ---------- the lessons ----------
-PARKING = lesson('parking', 'PARKING', ('توقف و پارک', 'Stopping and parking', 'Standsning og parkering'), 8, [
+PARKING = lesson('parking', 'PARKING', ('توقف و پارک', 'Stopping and parking', 'Standsning og parkering'), 10, [
     intro(('توقف و پارک (standsning og parkering)', 'Stopping and parking (standsning og parkering)', 'Standsning og parkering'),
           ('آزمون می‌پرسد کجا می‌توانید بایستید و کجا پارک کنید: فاصله تا گذرگاه عابر، تقاطع، ایستگاه اتوبوس و ریل قطار، خط‌های زرد کنار جدول و این‌که در را چطور باز کنید.',
            'The test asks where you may stop and where you may park: the distance to pedestrian crossings, junctions, bus stops and level crossings, the yellow lines at the kerb, and how to open the door.',
@@ -107,6 +108,27 @@ PARKING = lesson('parking', 'PARKING', ('توقف و پارک', 'Stopping and pa
           rule=('پیش از باز کردن در، از روی شانه به عقب نگاه کنید.', 'Look back over your shoulder before you open the door.', 'Se tilbage over skulderen, før du åbner døren.'),
           law=law((28, 4), (28, 5)),
           trap=('«فقط در آینه نگاه می‌کنم» کافی نیست؛ دوچرخه‌سوار ممکن است در نقطه‌ی کور باشد.', '«I only look in the mirror» is not enough; a cyclist may be in the blind spot.', '«Jeg kigger kun i spejlet» er ikke nok; en cyklist kan være i den blinde vinkel.')),
+    teach(('دنده‌عقب و دور زدن', 'Reversing and turning round', 'Bakning og vending'),
+          ('پیش از دنده‌عقب یا دور زدن مطمئن شوید که برای دیگران خطر یا مزاحمتی ندارد. از روی شانه‌ها به عقب نگاه کنید، نه فقط در آینه یا دوربین، و آهسته دنده‌عقب بروید؛ اگر پشت خودرو را نمی‌بینید، کسی را برای راهنمایی بیاورید یا پیاده شوید و نگاه کنید. جایی که خیابان پهن است، رو به جلو و به چپ دور بزنید؛ وگرنه از یک فرعی، پارکینگ یا ورودی ملک استفاده کنید.',
+           'Before you reverse or turn round, make sure it causes no danger or inconvenience to others. Look back over your shoulders, not only in the mirrors or at the camera, and reverse slowly; if you cannot see behind the car, get someone to guide you or get out and look. Where the road is wide enough, turn round forwards to the left; otherwise use a side road, a car park or a driveway.',
+           'Før du bakker eller vender, skal du sikre dig, at det kan ske uden fare eller ulempe for andre. Se tilbage over skuldrene, ikke kun i spejlene eller på kameraet, og bak langsomt; kan du ikke se bag bilen, så få en til at dirigere dig, eller stig ud og se efter. Hvor vejen er bred nok, vender du forlæns til venstre; ellers bruger du en sidevej, en parkeringsplads eller en indkørsel.'),
+          rule=('پیش از دنده‌عقب و دور زدن مطمئن شوید بی‌خطر است و از روی شانه نگاه کنید؛ در بزرگراه هرگز.', 'Before reversing or turning round, make sure it is safe and look over your shoulder; never on a motorway.', 'Før bakning og vending: sørg for, at det kan ske uden fare, og se over skulderen; aldrig på motorvej.'),
+          law=law((18, 1), (26, 3), (46, 2)),
+          points=[('در بزرگراه و راه‌های ورود و خروج آن دور زدن و دنده‌عقب ممنوع است.', 'Turning round and reversing are forbidden on a motorway and its slip roads.', 'Vending og bakning er forbudt på motorvej og på dens til- og frakørselsveje.'),
+                  ('در پیچ یا نزدیک سربالایی که دیگران شما را دیر می‌بینند دور نزنید؛ از روی خط ممتد (Q 44) یا جایی که تابلوی C 11.2 یا C 12 ممنوع کرده هم نه.', 'Do not turn round in a bend or near a hilltop where others see you late, nor across a solid line (Q 44) or where sign C 11.2 or C 12 forbids it.', 'Vend ikke i et sving eller nær en bakketop, hvor andre ser dig sent, og heller ikke hen over en spærrelinje (Q 44) eller hvor tavle C 11.2 eller C 12 forbyder det.'),
+                  ('وقتی با دنده‌عقب از پارکینگ یا ملک بیرون می‌آیید، به همه راه بدهید، از جمله به عابران پیاده‌رو.', 'When you reverse out of a car park or a property, give way to everyone, also pedestrians on the pavement.', 'Når du bakker ud fra en parkeringsplads eller en ejendom, har du ubetinget vigepligt, også over for gående på fortovet.'),
+                  ('جایی که دید کم است، بهتر است با دنده‌عقب وارد شوید تا بعد رو به جلو بیرون بیایید.', 'Where the view is poor, it is better to reverse in, so that you can drive out forwards.', 'Hvor der er dårlig oversigt, er det bedre at bakke ind, så du kan køre forlæns ud.'),
+                  ('دوربین دنده‌عقب کمک می‌کند ولی همه‌چیز را نشان نمی‌دهد؛ کودک کوچک ممکن است دیده نشود.', 'A reversing camera helps, but it does not show everything; a small child may be hidden.', 'Et bakkamera hjælper, men det viser ikke alt; et lille barn kan være skjult.')],
+          trap=('«دوربین نشان می‌دهد پشت سر خالی است، پس بدون نگاه کردن به عقب دنده‌عقب می‌روم» غلط است.', '«The camera shows it is clear, so I reverse without looking back» is wrong.', '«Kameraet viser, at der er frit, så jeg bakker uden at se mig tilbage» er forkert.')),
+    teach(('حرکت از کنار جدول', 'Pulling out from the kerb', 'Igangsætning fra kantstenen'),
+          ('پیش از حرکت از کنار جدول یا از جای پارک، در آینه‌ها و از روی شانه‌ی چپ (نقطه‌ی کور) نگاه کنید و راهنما بزنید، و فقط وقتی راه بیفتید که برای کسی خطر یا مزاحمتی ندارد: همه‌ی کسانی که در جاده‌اند اول می‌روند، از جمله دوچرخه‌سوارِ مسیر یا خط دوچرخه‌ای که از آن رد می‌شوید. وقتی می‌خواهید کنار جدول بایستید هم پیش از آن در آینه نگاه کنید، به‌موقع راهنما بزنید و نرم ترمز کنید.',
+           'Before you pull out from the kerb or a parking space, look in the mirrors and over your left shoulder (blind spot) and signal, and only move off when it causes no danger or inconvenience to anyone: everyone already on the road goes first, also cyclists on a cycle track or lane you cross. When you want to stop at the kerb, also check the mirror first, signal in good time and brake gently.',
+           'Før du kører ud fra kantstenen eller en parkeringsplads, ser du i spejlene og over venstre skulder (den blinde vinkel) og giver tegn, og du kører først, når det kan ske uden fare eller ulempe for andre: alle, der allerede er på vejen, kører først, også cyklister på en cykelsti eller cykelbane, du skal krydse. Vil du standse ved kantstenen, ser du også først i spejlet, giver tegn i god tid og bremser blødt.'),
+          rule=('حرکت از کنار جدول: آینه، نگاه از روی شانه، راهنما؛ همه‌ی کسانی که در جاده‌اند اول می‌روند.', 'Pulling out from the kerb: mirror, look over your shoulder, signal; everyone on the road goes first.', 'Igangsætning fra kantstenen: spejl, se over skulderen, giv tegn; alle på vejen kører først.'),
+          law=law((18, 2), (32, 2)),
+          points=[('اگر راننده‌ای با چراغ به شما علامت داد که بیرون بیایید، باز هم خودتان نگاه کنید؛ علامت او حق تقدم به شما نمی‌دهد و ممکن است کسی پشت او باشد.', 'If a driver flashes the lights to let you out, still look for yourself; the flash gives you no right of way, and someone may be behind that car.', 'Blinker en anden fører med lyset for at lukke dig ud, ser du alligevel selv efter; blinket giver dig ingen ret, og der kan være andre bag bilen.'),
+                  ('در جاده‌ی یخ‌زده آرام گاز بدهید و چرخ‌ها را صاف نگه دارید تا هرز نچرخند.', 'On an icy road, accelerate gently and keep the wheels straight so that they do not spin.', 'På isglat vej giver du forsigtigt gas og holder hjulene lige, så de ikke spinder.')],
+          trap=('«راهنما زده‌ام، پس خودروی پشتی باید بگذارد بیرون بیایم» غلط است.', '«I have signalled, so the car behind must let me out» is wrong.', '«Jeg har givet tegn, så bilen bagfra skal lukke mig ud» er forkert.')),
     q('exam-park-crossing',
       'Du vil sætte en passager af. Hvor må du standse?',
       'You want to let a passenger out. Where may you stop?',
@@ -143,7 +165,9 @@ PARKING = lesson('parking', 'PARKING', ('توقف و پارک', 'Stopping and pa
              ('توقف ممنوع: گذرگاه عابر و ۵ متر، تقاطع و ۱۰ متر، ایستگاه اتوبوس و ۱۲ متر.', 'No stopping: crossing and 5 m, junction and 10 m, bus stop and 12 m.', 'Standsning forbudt: fodgængerfelt og 5 m, kryds og 10 m, busstoppested og 12 m.'),
              ('پارک ممنوع: ۳۰ متر از ریل قطار، جلوی ورودی ملک، جاده‌ی اصلی بیرون شهر، پارک دوبل.', 'No parking: 30 m from a level crossing, in front of a driveway, on main roads outside towns, double parking.', 'Parkering forbudt: 30 m fra jernbaneoverkørsel, ud for indkørsler, på hovedvej uden for byen, dobbeltparkering.'),
              ('زرد ممتد: توقف ممنوع؛ زرد بریده: پارک ممنوع.', 'Solid yellow: no stopping; broken yellow: no parking.', 'Ubrudt gul: standsning forbudt; punkteret gul: parkering forbudt.'),
-             ('پیش از باز کردن در از روی شانه نگاه کنید.', 'Look over your shoulder before opening the door.', 'Se over skulderen, før du åbner døren.')],
+             ('پیش از باز کردن در از روی شانه نگاه کنید.', 'Look over your shoulder before opening the door.', 'Se over skulderen, før du åbner døren.'),
+             ('پیش از دنده‌عقب و دور زدن از روی شانه نگاه کنید؛ در بزرگراه هرگز.', 'Look over your shoulder before reversing or turning round; never on a motorway.', 'Se over skulderen, før du bakker eller vender; aldrig på motorvej.'),
+             ('پیش از حرکت از کنار جدول در آینه و از روی شانه نگاه کنید؛ همه‌ی کسانی که در جاده‌اند اول می‌روند.', 'Before pulling out from the kerb, check the mirrors and over your shoulder; everyone on the road goes first.', 'Før du kører ud fra kantstenen, ser du i spejlene og over skulderen; alle på vejen kører først.')],
             ('law', 'signs', 'plan')),
 ])
 
