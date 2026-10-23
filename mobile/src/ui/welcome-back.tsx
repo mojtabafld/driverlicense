@@ -92,10 +92,14 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
           </View>
         </View>
         <View style={{ position: 'absolute', bottom: Math.round(H * 0.1), left: 0, right: 0, alignItems: 'center' }}>
-          {/* On the bright photo's light foot: dark, its accent a deeper terracotta. */}
-          <L style={{ fontSize: 27, lineHeight: 34, color: n === '4' ? c.text : '#fff', textAlign: 'center' }}>
-            <L style={{ fontSize: 27, lineHeight: 34, fontStyle: 'italic', color: n === '4' ? '#b85c32' : PEACH }}>Teori</L>pro
-          </L>
+          {/* The logo as on the welcome screen (ui/welcome.tsx; Mojtaba 2026-10-23): «Teori» large, white (dark on the bright
+              photo's light foot), «pro» upright on a pill of the theme's colour. */}
+          <View accessible accessibilityRole="header" accessibilityLabel="Teoripro" style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 5 } as any}>
+            <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -1.1, color: n === '4' ? c.text : '#fff' }}>Teori</L>
+            <View style={{ backgroundColor: c.accent, borderRadius: 10, paddingHorizontal: 8, paddingTop: 1, paddingBottom: 2, marginTop: 3 }}>
+              <L style={{ fontSize: 22, lineHeight: 28, fontWeight: '800', letterSpacing: -0.4, color: c.accentText }}>pro</L>
+            </View>
+          </View>
         </View>
       </View>
       </View>
