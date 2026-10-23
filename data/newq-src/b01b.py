@@ -179,7 +179,7 @@ MUST NOT APPEAR: traffic lights, other pedestrians, text."""),
 
 Q(5032, "7.3", view("""
 THE SCENE: a Danish motorway, two lanes in our direction, a wide central reserve with a crash barrier, a broad solid edge line and a
-hard shoulder on the right, light traffic. No speed-limit signs in sight. A blue motorway sign (white bridge-and-road symbol) stands
+hard shoulder on the right, light traffic. No speed-limit signs in sight. A green square motorway sign (white bridge-and-road symbol) stands
 on the right verge.
 MUST BE CLEARLY VISIBLE: the motorway layout, the motorway sign.
 MUST NOT APPEAR: speed-limit signs, text."""),
