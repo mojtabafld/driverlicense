@@ -74,7 +74,7 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
     <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
       {/* The photo's foot fades into the page. A dark photo fading into the light page turned muddy grey (Mojtaba
           2026-10-20), so in the light theme, until its own bright photo is there, it ends as a card's foot, rounded, with
-          a soft shadow, its foot only darkened under «Grønpil». */}
+          a soft shadow, its foot only darkened under «Teorivej». */}
       <View style={[{ height: H }, !card ? { overflow: 'hidden' } : { borderBottomLeftRadius: 32, borderBottomRightRadius: 32, backgroundColor: PHOTO_TOP,
         shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 6 }]}>
       <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, overflow: 'hidden' }, card ? { borderBottomLeftRadius: 32, borderBottomRightRadius: 32 } : null]}>
@@ -94,7 +94,7 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
         <View style={{ position: 'absolute', bottom: Math.round(H * 0.1), left: 0, right: 0, alignItems: 'center' }}>
           {/* On the bright photo's light foot: dark, its accent a deeper terracotta. */}
           <L style={{ fontSize: 27, lineHeight: 34, color: n === '4' ? c.text : '#fff', textAlign: 'center' }}>
-            <L style={{ fontSize: 27, lineHeight: 34, fontStyle: 'italic', color: n === '4' ? '#b85c32' : PEACH }}>Grøn</L>pil
+            <L style={{ fontSize: 27, lineHeight: 34, fontStyle: 'italic', color: n === '4' ? '#b85c32' : PEACH }}>Teori</L>vej
           </L>
         </View>
       </View>
@@ -111,7 +111,7 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
           </View>
           <Icon name="chevronLeft" size={18} color={c.muted} weight="semibold" />
         </Pressable>
-        <T style={{ fontSize: 15, lineHeight: 25, color: c.muted, textAlign: 'center' }}>به نظر می‌رسد قبلاً حساب Grønpil دارید. برای ورود دوباره روی نام‌تان بزنید.</T>
+        <T style={{ fontSize: 15, lineHeight: 25, color: c.muted, textAlign: 'center' }}>به نظر می‌رسد قبلاً حساب Teorivej دارید. برای ورود دوباره روی نام‌تان بزنید.</T>
         <View style={{ flex: 1, minHeight: 20 }} />
         <Pressable onPress={() => { tap(); onNotYou(); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 8 }}>
           {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ fontSize: 16, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>شما نیستید؟</T>}
