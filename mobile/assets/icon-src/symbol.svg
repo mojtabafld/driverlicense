@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- Rahvej («rah» and «vej», road in Persian and in Danish): a road that bends into a check, «passed», its broken
+  <!-- Grønpil («green arrow», the light that says go): a road that bends into a check, «passed», its broken
        centre line in the icon's orange. White on any background; in the monochrome icons the line goes white too and the
        check stays (2026-10-23). -->
   <path d="M268 531 L432 695 L756 329" fill="none" stroke="#ffffff" stroke-width="184" stroke-linecap="round" stroke-linejoin="round"/>

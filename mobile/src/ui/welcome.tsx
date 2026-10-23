@@ -142,7 +142,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
         <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
           <LangButton />
         </View>
-        <L style={{ alignSelf: 'center', textAlign: 'center', marginTop: Math.min(24, height * 0.02), fontSize: 42, lineHeight: 52, fontWeight: '500', letterSpacing: -1.2, color: c.text }}>Rahvej</L>
+        <L style={{ alignSelf: 'center', textAlign: 'center', marginTop: Math.min(24, height * 0.02), fontSize: 42, lineHeight: 52, fontWeight: '500', letterSpacing: -1.2, color: c.text }}>Grønpil</L>
         {/* The slides, in the middle of what is left. */}
         <View onTouchStart={onStart} onTouchEnd={onEnd} style={{ flex: 1, minHeight: art + 130, justifyContent: 'center', alignItems: 'center', gap: 18, paddingVertical: 10 }}>
           <Animated.View style={{ opacity: fade, alignItems: 'center', gap: 22, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
