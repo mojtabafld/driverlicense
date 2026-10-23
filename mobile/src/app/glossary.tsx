@@ -4,16 +4,16 @@
 // switches to the terms the user bookmarked (the bookmark on each card; kept on the account). ?q= fills the field (a
 // term tapped under a course step). Made more modern with groups and bookmarks (Mojtaba 2026-10-20).
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 
 import { RTL, UI_LANG, getTransLang, tr } from '@/lib/i18n';
 import { GLOSSARY, TERM_CATS, searchTerms, type Term, type TermCat } from '@/lib/glossary';
 import { toPremium, useFree } from '@/lib/free';
 import { faNum } from '@/lib/logic';
-import { localSearch, type SearchItem, type SearchKind } from '@/lib/search';
+import { aiTermPage, localSearch, type SearchItem, type SearchKind } from '@/lib/search';
 import { useApp, useExamLang } from '@/lib/store';
-import { Icon } from '@/ui/icon';
+import { Icon, type IconName } from '@/ui/icon';
 import { ArcButton, Card, Segmented, T, physicalAlign, tap } from '@/ui/kit';
 import { Sheet, SheetScroll } from '@/ui/sheet';
 import { SubPage } from '@/ui/sub-page';
@@ -50,6 +50,27 @@ function pageOf(t: Term): SearchItem | null {
 }
 const CAT = Object.fromEntries(TERM_CATS.map(g => [g.id, g])) as Record<TermCat, (typeof TERM_CATS)[number]>;
 
+// «آموزش این واژه» (Mojtaba 2026-10-23): the page is asked of the server's AI as the sheet opens, from the whole learning
+// material (the course's steps and tips, the rules, the signs, right of way; lib/search.ts aiTermPage), once per term in
+// a session; the local guess (pageOf) stands until it answers, and in its place when it cannot be asked or finds nothing.
+const asked = new Map<string, Promise<SearchItem | null>>();
+function askPage(t: Term) {
+  let p = asked.get(t.da);
+  if (!p) {
+    p = aiTermPage({ da: t.da, en: t.en, fa: t.fa, cat: t.cat });
+    asked.set(t.da, p);
+    p.catch(() => asked.delete(t.da)); // (asked again the next time)
+  }
+  return p;
+}
+const KIND_ICON: Record<SearchKind, IconName> = { lesson: 'learn', rule: 'rules', sign: 'sign', priority: 'priority' };
+// The page's place and title as the learning pages show them (in English or Danish, translated), with a dot between
+// them that reads the same either way (no arrow pointing back in Persian).
+const placeOf = (p: SearchItem) => {
+  const s = p.shown ?? { where: p.where, title: p.title };
+  return `${s.where.replace(/ \| /g, ' · ')} · ${s.title}`;
+};
+
 // A tapped term (Mojtaba 2026-10-21): a word card in a sheet from the bottom, closed with a drag down back to the list.
 // It teaches the word, not its lesson (Mojtaba 2026-10-21): the word large in the exam's language, then the word in the
 // app's language, the translation language and Danish (the app's first), the line on what the test expects, and a button to the learning page that
@@ -58,18 +79,37 @@ const WORD_LANG = { fa: 'فارسی', da: 'Dansk', en: 'English' } as const;
 function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: () => void }) {
   const c = useColors();
   const { lessonOk, firstOk } = useFree();
-  const page = useMemo(() => (t ? pageOf(t) : null), [t]);
   // Kept while the sheet slides out after it closes.
   const [last, setLast] = useState<Term | null>(t);
   if (t && t !== last) setLast(t);
   const x = t ?? last;
+  const local = useMemo(() => (x ? pageOf(x) : null), [x]);
+  // The AI's pick for the term (`page` null: it found none or could not be asked), and a tap waiting for it.
+  const [ai, setAi] = useState<{ da: string; page: SearchItem | null } | null>(null);
+  const [wait, setWait] = useState(false);
+  useEffect(() => {
+    if (!t) return;
+    let live = true;
+    askPage(t).then(page => { if (live) setAi({ da: t.da, page }); }, () => { if (live) setAi({ da: t.da, page: null }); });
+    return () => { live = false; };
+  }, [t]);
   if (!x) return null;
-  const ok = !page || (page.free === 'lesson' ? lessonOk(page.lesson) : typeof page.free === 'number' ? firstOk(page.free) : true);
+  const known = ai?.da === x.da, page = (known && ai.page) || local;
+  const okFor = (p: SearchItem | null) => !p || (p.free === 'lesson' ? lessonOk(p.lesson) : typeof p.free === 'number' ? firstOk(p.free) : true);
+  const ok = okFor(page);
   const g = CAT[x.cat], note = x.note ? x.note[NOTE_OF[UI_LANG]] : null, head: 'da' | 'en' = en ? 'en' : 'da';
   // Only the languages the user reads (Mojtaba 2026-10-21): the app's, the questions' translation, and Danish, the
   // test's own (the glossary's subject), never the word in the exam's language again.
   const langs = ([UI_LANG, getTransLang(), 'da'] as const).filter((l, i, a) => l !== head && a.indexOf(l) === i);
-  const go = () => { onClose(); if (!page) router.push({ pathname: '/course-search', params: { q: x.da } }); else if (!ok) toPremium(); else router.push(page.href); };
+  const open = (p: SearchItem | null) => { onClose(); if (!p) router.push({ pathname: '/course-search', params: { q: x.da } }); else if (!okFor(p)) toPremium(); else router.push(p.href); };
+  // A tap before the AI has answered waits for it (8 seconds at most), then opens its pick, or the local guess.
+  const go = () => {
+    if (wait) return;
+    if (known) { open(page); return; }
+    setWait(true);
+    Promise.race([askPage(x).catch(() => null), new Promise<null>(res => setTimeout(() => res(null), 8000))])
+      .then(p => { setWait(false); open(p || local); });
+  };
   return (
     <Sheet open={!!t} onClose={onClose} maxHeight="86%">
       <SheetScroll contentContainerStyle={{ gap: 16, paddingBottom: 8, paddingHorizontal: 4 }}>
@@ -96,7 +136,16 @@ function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: (
           </View>
         ) : null}
       </SheetScroll>
-      <ArcButton label={!page ? 'جستجو در آموزش' : ok ? 'آموزش این واژه' : 'نسخه‌ی ویژه'} icon={!page ? 'search' : ok ? 'learn' : 'sparkles'} onPress={go} />
+      {/* Where the button leads: a spinner while the AI looks, then the page it picked (or the local guess). */}
+      {!known || page ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 6, paddingTop: 4, paddingBottom: 10 }}>
+          {known && page ? <Icon name={KIND_ICON[page.kind]} size={15} color={c.faint} /> : <ActivityIndicator size="small" color={c.faint} />}
+          <T raw numberOfLines={1} style={{ flex: 1, fontSize: 12.5, lineHeight: 19, color: c.faint }}>
+            {known && page ? placeOf(page) : tr('در حال یافتن مرتبط‌ترین درس…')}
+          </T>
+        </View>
+      ) : null}
+      <ArcButton label={!page ? 'جستجو در آموزش' : ok ? 'آموزش این واژه' : 'نسخه‌ی ویژه'} icon={!page ? 'search' : ok ? 'learn' : 'sparkles'} busy={wait} onPress={go} />
     </Sheet>
   );
 }

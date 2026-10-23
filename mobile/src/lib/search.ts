@@ -5,6 +5,7 @@
 // question, with a short answer of its own. Each entry knows the page that opens it.
 import type { Href } from 'expo-router';
 
+import { ApiError, api } from './api';
 import { COURSE } from './course';
 import { PRIORITY_CATS, SIGN_CATS } from './guide-data';
 import { RULES } from './guide';
@@ -57,6 +58,19 @@ export const searchItem = (id: string) => BY_ID.get(id);
 // What the AI gets: id, title and the start of the text, one entry per line (the same for every search, so the
 // server's prompt cache holds it).
 export const AI_CATALOG = SEARCH_ITEMS.map(x => `${x.id}\t${x.title}\t${cut(x.text, x.kind === 'sign' ? 90 : 160)}`).join('\n');
+
+// «آموزش این واژه» in the glossary (Mojtaba 2026-10-23): the server's AI picks, from this whole catalogue (the course's
+// steps, the rules, the signs and the right-of-way situations), the one entry that best teaches a term (search.js
+// termPage). The app sends the catalogue's hash, and the catalogue itself the first time or when the server asks for it
+// (409). Null when nothing fits; throws when it cannot ask (offline, no AI on the server, too many questions).
+let catalogV: string | null = null;
+export async function aiTermPage(term: { da: string; en: string; fa: string; cat: string }): Promise<SearchItem | null> {
+  const ask = (full: boolean) => api<{ id: string | null; v: string }>('POST', 'termpage', full ? { term, catalog: AI_CATALOG } : { term, v: catalogV });
+  let r: { id: string | null; v: string };
+  try { r = await ask(!catalogV); } catch (e) { if (!(e instanceof ApiError) || e.status !== 409) throw e; r = await ask(true); }
+  catalogV = r.v;
+  return r.id ? BY_ID.get(r.id) ?? null : null;
+}
 
 // Persian / Arabic letters written alike, zero-width joiners, diacritics and Persian / Arabic digits made one form,
 // and letters folded to lower case without accents (ø, å and æ kept as Danish writes them), so «تابلو ایست»,

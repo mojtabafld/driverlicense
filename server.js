@@ -17,7 +17,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
 const { getLesson, getSummary, getTopic, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
-const { search: aiSearch } = require('./search');
+const { search: aiSearch, termPage: aiTermPage } = require('./search');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
@@ -1234,6 +1234,18 @@ async function api(req, res, route) {
       return send(res, 200, await aiSearch({ username: user.username, q: b.q, v: b.v, catalog: b.catalog, ui: b.ui }));
     } catch (e) {
       if (e instanceof Anthropic.APIError) { console.error('search API error', e.status, e.message); return send(res, 502, { error: 'جستجوی هوشمند الان در دسترس نیست.' }); }
+      if (e.status) return send(res, e.status, { error: e.message });
+      throw e;
+    }
+  }
+  // «آموزش این واژه» in the glossary (search.js termPage): { term: { da, en, fa, cat }, v } or, the first time / when the
+  // server asks (409), { term, catalog }. For every account: each term is asked about once, then kept.
+  if (req.method === 'POST' && route === 'termpage') {
+    const b = await readBody(req, 700e3);
+    try {
+      return send(res, 200, await aiTermPage({ store, username: user.username, term: b.term, v: b.v, catalog: b.catalog }));
+    } catch (e) {
+      if (e instanceof Anthropic.APIError) { console.error('term page API error', e.status, e.message); return send(res, 502, { error: 'جستجوی هوشمند الان در دسترس نیست.' }); }
       if (e.status) return send(res, e.status, { error: e.message });
       throw e;
     }
