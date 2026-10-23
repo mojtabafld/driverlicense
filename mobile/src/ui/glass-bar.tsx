@@ -10,7 +10,8 @@ import { RTL } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
 import { L, T, tap } from './kit';
-import { BarLight, useBarLight, useDarkUnder } from './bar-shade';
+import { BarApart, BarLight, useBarLight, useDarkUnder, useSimilarUnder } from './bar-shade';
+import { useContext } from 'react';
 import { ARC, useColors, useIsDark } from './theme';
 import { PALETTE, mix, px, pxa, rgba } from './palette';
 
@@ -34,16 +35,17 @@ const NATIVE_GLASS = Platform.OS === 'ios' && (() => { try { return isLiquidGlas
 // `scheme`: the glass's own light or dark.
 const MONO = PALETTE === 'mono';
 export function useBarLook() {
-  const dark = useIsDark(), light = useBarLight(), c = useColors();
+  const dark = useIsDark(), light = useBarLight(), apart = useContext(BarApart), c = useColors();
   if (!NATIVE_GLASS) {
     // (The capsule see-through: on the web the tab bar's capsule is a positioned layer drawn over the icon.)
+    const base = barBase(c.surface2, dark, apart);
     return {
       dark, light, scheme: (dark ? 'dark' : 'light') as 'dark' | 'light',
-      grey: c.surface2, solid: c.surface2, edge: c.cardBorder,
+      grey: base, solid: base, edge: c.cardBorder,
       capsule: dark ? 'rgba(255,255,255,0.1)' : ARC ? pxa('#2f55d4', 0.12) : 'rgba(31,111,92,0.12)',
       green: dark ? (ARC ? px('#8ea8ff') : '#6fdc7c') : (ARC ? px('#2f55d4') : '#1f6f5c'),
       fg: dark ? '#ffffff' : '#1d1d1d',
-      contrast: dark ? mix(c.surface2, '#ffffff', 0.1) : ARC ? px('#e6eaf5') : '#e6ede8', // a filled icon's inner lines: the capsule's own colour
+      contrast: dark ? mix(base, '#ffffff', 0.1) : ARC ? px('#e6eaf5') : '#e6ede8', // a filled icon's inner lines: the capsule's own colour
     };
   }
   const card = MONO && (light || dark); // (not the grey glass of the light theme over something dark)
@@ -71,6 +73,15 @@ export function useBarLook() {
   };
 }
 
+// The flat bar's colour: the theme's second surface, one step off the cards; `apart` (something of about that colour
+// under the bar: bar-shade.tsx useSimilarUnder) two steps further, lighter in the dark themes, darker in the light ones.
+const barBase = (surface2: string, dark: boolean, apart: boolean) => (apart ? mix(surface2, dark ? '#ffffff' : '#000000', dark ? 0.08 : 0.06) : surface2);
+// Whether the flat bars take it (never on Liquid Glass, which shows what is under it itself).
+export function useBarApart() {
+  const c = useColors();
+  return useSimilarUnder(!NATIVE_GLASS, BAR_H, c.surface2);
+}
+
 // The shade both bars take: light on the main site's light theme; on Liquid Glass not while something dark lies under
 // the bar (a flat bar hides what is under it, so it keeps its shade).
 export function useBarShade() {
@@ -92,13 +103,14 @@ export function BarSurface({ children, style }: { children: React.ReactNode; sty
       </GlassView>
     );
   }
-  return <View style={[{ borderRadius: r, borderWidth: 1, backgroundColor: look.solid, borderColor: look.edge }, style]}>{children}</View>;
+  // (data-bar: left out when the page under the bar is read, bar-shade.tsx)
+  return <View {...({ dataSet: { bar: '1' } } as any)} style={[{ borderRadius: r, borderWidth: 1, backgroundColor: look.solid, borderColor: look.edge }, style]}>{children}</View>;
 }
 
 // The capsule itself, floating above the bottom edge (the tab bar and GlassBar).
 export function BarShell({ children }: { children: React.ReactNode }) {
-  const light = useBarShade();
-  return <BarLight.Provider value={light}><Shell>{children}</Shell></BarLight.Provider>;
+  const light = useBarShade(), apart = useBarApart();
+  return <BarLight.Provider value={light}><BarApart.Provider value={apart}><Shell>{children}</Shell></BarApart.Provider></BarLight.Provider>;
 }
 function Shell({ children }: { children: React.ReactNode }) {
   const ins = useSafeAreaInsets();

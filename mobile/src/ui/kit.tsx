@@ -10,7 +10,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
-import { useUnderBar } from './bar-shade';
+import { useSurfaceUnder, useUnderBar } from './bar-shade';
 import { daFamily, faFamily } from './fonts';
 import { Icon, type IconName } from './icon';
 import { Glass } from './glass';
@@ -627,14 +627,14 @@ export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: (
 // side by side in a row keep the sizes they ask for.
 // Cards come in with useEnter; their place in the layout (flex, width, margins) stays on the outer box.
 export function Card({ children, style, onPress }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void }) {
-  const anim = useEnter();
+  const anim = useEnter(), c = useColors(), under = useSurfaceUnder(c.surface); // (in the apps: the bars see it under them)
   const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical, ...rest } = StyleSheet.flatten(style) ?? {};
   const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical };
   // Grows to the size the card is given; flexGrow, not flex: 1, so that inside a box of no set height (a row of cards)
   // phones keep the content's own height instead of collapsing it to nothing.
   const fill = flex != null || flexGrow != null ? { flexGrow: 1 } : null;
   return (
-    <Animated.View style={[outer, anim] as any}>
+    <Animated.View ref={under as any} style={[outer, anim] as any}>
       {onPress ? (
         <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [fill, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }]}>
           <Glass style={[{ padding: 16 }, rest, fill]}>{children}</Glass>
