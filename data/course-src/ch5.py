@@ -65,6 +65,27 @@ MUST NOT APPEAR: trains, arrows, other vehicles, people, other signs, text, lett
 
 
 # ---------- the lessons ----------
+# The two steps added after the check of «آزمون جدید»'s questions against the lessons (2026-10-23).
+above('park-reverse', """
+THE SCENE: a residential street running from left to right across the upper part of the picture, with a pavement along its near side; a short driveway leads down from the pavement to a house at the bottom of the picture, with tall green hedges on both sides of the driveway that hide the pavement from it.
+VEHICLES AND PEOPLE (colour code used strictly):
+- a RED car (ours) in the driveway, its front towards the house, reversing slowly out towards the street with its white reversing lights on; it has stopped with its rear just before the pavement;
+- on the pavement, a woman pushing a pram is about to pass right behind the red car, hidden from the driveway by the hedge; a thin yellow dashed line from the red car's driver's seat back over the shoulder to the woman shows the driver looking back;
+- a GREY car driving along the street from the left;
+- a short SOLID GREEN arrow from the red car's rear back to the edge of the pavement, where it waits.
+MUST NOT APPEAR: signs, text, letters, numbers, left-hand traffic.
+""")
+
+above('park-pullout', """
+THE SCENE: a straight two-way town street running from the bottom to the top of the picture, one lane in each direction, a white broken centre line, pavements with kerbs on both sides, cars parked along the right-hand kerb.
+VEHICLES AND PEOPLE (colour code used strictly):
+- a RED car (ours) standing at the right-hand kerb in the upper half of the picture, ready to pull out: its LEFT indicator flashing orange, its front wheels still straight; a thin yellow dashed line from the driver's seat back over the left shoulder shows the driver checking the blind spot;
+- a cyclist riding up the street at the right side of the lane, just behind the red car, and a BLUE car further back in the same lane, both with SOLID GREEN arrows going straight on past the red car (they go first);
+- a short DASHED ORANGE arrow from the red car's front out into the lane: the move it waits with;
+- GREY parked cars in front of and behind the red car.
+MUST NOT APPEAR: signs, text, letters, numbers, left-hand traffic.
+""")
+
 PARKING = lesson('parking', 'PARKING', ('توقف و پارک', 'Stopping and parking', 'Standsning og parkering'), 10, [
     intro(('توقف و پارک (standsning og parkering)', 'Stopping and parking (standsning og parkering)', 'Standsning og parkering'),
           ('آزمون می‌پرسد کجا می‌توانید بایستید و کجا پارک کنید: فاصله تا گذرگاه عابر، تقاطع، ایستگاه اتوبوس و ریل قطار، خط‌های زرد کنار جدول و این‌که در را چطور باز کنید.',
@@ -112,6 +133,7 @@ PARKING = lesson('parking', 'PARKING', ('توقف و پارک', 'Stopping and pa
           ('پیش از دنده‌عقب یا دور زدن مطمئن شوید که برای دیگران خطر یا مزاحمتی ندارد. از روی شانه‌ها به عقب نگاه کنید، نه فقط در آینه یا دوربین، و آهسته دنده‌عقب بروید؛ اگر پشت خودرو را نمی‌بینید، کسی را برای راهنمایی بیاورید یا پیاده شوید و نگاه کنید. جایی که خیابان پهن است، رو به جلو و به چپ دور بزنید؛ وگرنه از یک فرعی، پارکینگ یا ورودی ملک استفاده کنید.',
            'Before you reverse or turn round, make sure it causes no danger or inconvenience to others. Look back over your shoulders, not only in the mirrors or at the camera, and reverse slowly; if you cannot see behind the car, get someone to guide you or get out and look. Where the road is wide enough, turn round forwards to the left; otherwise use a side road, a car park or a driveway.',
            'Før du bakker eller vender, skal du sikre dig, at det kan ske uden fare eller ulempe for andre. Se tilbage over skuldrene, ikke kun i spejlene eller på kameraet, og bak langsomt; kan du ikke se bag bilen, så få en til at dirigere dig, eller stig ud og se efter. Hvor vejen er bred nok, vender du forlæns til venstre; ellers bruger du en sidevej, en parkeringsplads eller en indkørsel.'),
+          art='park-reverse',
           rule=('پیش از دنده‌عقب و دور زدن مطمئن شوید بی‌خطر است و از روی شانه نگاه کنید؛ در بزرگراه هرگز.', 'Before reversing or turning round, make sure it is safe and look over your shoulder; never on a motorway.', 'Før bakning og vending: sørg for, at det kan ske uden fare, og se over skulderen; aldrig på motorvej.'),
           law=law((18, 1), (26, 3), (46, 2)),
           points=[('در بزرگراه و راه‌های ورود و خروج آن دور زدن و دنده‌عقب ممنوع است.', 'Turning round and reversing are forbidden on a motorway and its slip roads.', 'Vending og bakning er forbudt på motorvej og på dens til- og frakørselsveje.'),
@@ -124,6 +146,7 @@ PARKING = lesson('parking', 'PARKING', ('توقف و پارک', 'Stopping and pa
           ('پیش از حرکت از کنار جدول یا از جای پارک، در آینه‌ها و از روی شانه‌ی چپ (نقطه‌ی کور) نگاه کنید و راهنما بزنید، و فقط وقتی راه بیفتید که برای کسی خطر یا مزاحمتی ندارد: همه‌ی کسانی که در جاده‌اند اول می‌روند، از جمله دوچرخه‌سوارِ مسیر یا خط دوچرخه‌ای که از آن رد می‌شوید. وقتی می‌خواهید کنار جدول بایستید هم پیش از آن در آینه نگاه کنید، به‌موقع راهنما بزنید و نرم ترمز کنید.',
            'Before you pull out from the kerb or a parking space, look in the mirrors and over your left shoulder (blind spot) and signal, and only move off when it causes no danger or inconvenience to anyone: everyone already on the road goes first, also cyclists on a cycle track or lane you cross. When you want to stop at the kerb, also check the mirror first, signal in good time and brake gently.',
            'Før du kører ud fra kantstenen eller en parkeringsplads, ser du i spejlene og over venstre skulder (den blinde vinkel) og giver tegn, og du kører først, når det kan ske uden fare eller ulempe for andre: alle, der allerede er på vejen, kører først, også cyklister på en cykelsti eller cykelbane, du skal krydse. Vil du standse ved kantstenen, ser du også først i spejlet, giver tegn i god tid og bremser blødt.'),
+          art='park-pullout',
           rule=('حرکت از کنار جدول: آینه، نگاه از روی شانه، راهنما؛ همه‌ی کسانی که در جاده‌اند اول می‌روند.', 'Pulling out from the kerb: mirror, look over your shoulder, signal; everyone on the road goes first.', 'Igangsætning fra kantstenen: spejl, se over skulderen, giv tegn; alle på vejen kører først.'),
           law=law((18, 2), (32, 2)),
           points=[('اگر راننده‌ای با چراغ به شما علامت داد که بیرون بیایید، باز هم خودتان نگاه کنید؛ علامت او حق تقدم به شما نمی‌دهد و ممکن است کسی پشت او باشد.', 'If a driver flashes the lights to let you out, still look for yourself; the flash gives you no right of way, and someone may be behind that car.', 'Blinker en anden fører med lyset for at lukke dig ud, ser du alligevel selv efter; blinket giver dig ingen ret, og der kan være andre bag bilen.'),

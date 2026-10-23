@@ -1,7 +1,10 @@
 # The English and Danish of texts changed in course.ts's own lessons (chapters 1, 3, 4 and 5), for i18n/strings.json:
 # the warning triangle's distance (CAR_CHECK), §§ 21-25 on overtaking and pedestrian crossings (OVERTAKING), and A 11
 # without the A 12 of the old rules (WARN_PRIORITY); C 51 exempts only bicycles and small mopeds (OVERTAKING); the alcohol
-# limit of new drivers, 0.2 since July 2025 (ALCOHOL, with the same rule in guide.ts and build.py).
+# limit of new drivers, 0.2 since July 2025 (ALCOHOL, with the same rule in guide.ts and build.py). At the end, the pictures
+# of course.ts's own new steps (OWN_ART), whose prompts build.py writes into data/course-art.json.
+from course import picture
+
 TEXTS = [
     # CAR_CHECK
     ('مثلث خطر را دورتر پشت خودرو بگذارید تا دیگران به‌موقع ببینند: در جاده‌ی معمولی دست‌کم ۵۰ متر و در بزرگراه دست‌کم ۱۰۰ متر',
@@ -254,3 +257,14 @@ TEXTS = [
      'At a junction overtaking is allowed when the crossing traffic must give way to you unconditionally, when the junction has traffic lights or a police officer, or when you drive in lanes going the same way.',
      'I et kryds må du godt overhale, når den krydsende trafik har ubetinget vigepligt over for dig, når krydset er reguleret af lyssignal eller politi, eller når I kører i vognbaner for samme retning.'),
 ]
+
+# The pictures of course.ts's own lessons that build.py writes into data/course-art.json (their steps name them there).
+# CAR_CHECK's step on load, roof box and trailer, added after the check of «آزمون جدید»'s questions (2026-10-23).
+picture('check-load', """
+Educational illustration for a Danish driving-theory app: a RED estate car (ours) with a small open trailer coupled behind it, standing on a plain light grey surface, seen from behind, a little from the side and slightly from above, so that the car's rear, the coupling and the whole trailer are clearly visible.
+THE SUBJECT: the trailer is loaded with garden waste and cardboard boxes under a tight dark green net, fastened with straps to the trailer's sides, so that nothing can blow off. The trailer's two rear lights glow red, and its number plate (blank, no characters) is clean and fully visible; nothing in the load covers the lights or the plate. At the coupling, the thin steel breakaway cable runs from the trailer's drawbar to the car's tow bar, and the trailer's electric cable is plugged into the car's socket. On the car's roof a closed black roof box sits on roof bars.
+MUST BE CLEARLY VISIBLE: the net and straps over the load, the trailer's lit rear lights and blank number plate, the coupling with the breakaway cable and the plugged-in electric cable, the roof box.
+MUST NOT APPEAR: people, other vehicles, signs, text, letters, numbers, brand names, logos.
+Style: a clean, precise flat vector illustration for a Danish driving-theory app, NOT photorealistic and NOT a 3D render: simple clean shapes, flat even colours, crisp edges, only very soft shadows, uncluttered. No text, letters or numbers anywhere.
+""")
+OWN_ART = ['check-load']

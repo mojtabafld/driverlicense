@@ -108,6 +108,19 @@ MUST NOT APPEAR: other road users, signs, text.
 
 
 # ---------- the lessons ----------
+# The two steps added after the check of «آزمون جدید»'s questions against the lessons (2026-10-23).
+view('dark-tunnel', """
+THE SCENE: we drive inside a long, gently curving road tunnel with two lanes in our direction, a broken white line between them and solid white edge lines; the concrete walls and ceiling are lit by a row of warm lamps. Our dipped headlights are on and light the road ahead; about 60 m ahead a car drives in our lane with its red rear lights on. In the right-hand wall a small lit niche holds an emergency telephone, marked by a blue square sign with a white telephone symbol; a little further on, an emergency exit door in the wall is marked by a green sign with a white running figure and an arrow.
+MUST BE CLEARLY VISIBLE: our dipped headlights on the road, the gap to the car ahead, the emergency telephone niche and the emergency exit door with their symbol signs.
+MUST NOT APPEAR: smoke, fire, oncoming traffic, other signs, text, letters, numbers.
+""", cond='inside a lit road tunnel, dry road', scenery="Scenery is reduced to the tunnel's plain concrete walls and ceiling.")
+
+view('dark-parked', """
+THE SCENE: a straight country road at NIGHT without street lights, one lane in each direction, white edge lines, dark fields on both sides. About 30 m ahead a GREY car is parked at the right edge of the road, facing away from us: its two red rear lights glow softly and the small white number-plate light lights its blank number plate; its front parking lights cast a faint glow on the road in front of it; no other lights are on. Our own dipped headlights light the road up to the parked car.
+MUST BE CLEARLY VISIBLE: the parked car's glowing red rear lights and lit number plate, the faint glow of its parking lights, the dark road around it.
+MUST NOT APPEAR: hazard lights, headlights or high beams on the parked car, people, other vehicles, signs, text, letters, numbers.
+""", cond=NIGHT)
+
 MOTORWAY = lesson('motorway', 'MOTORWAY', ('بزرگراه', 'The motorway', 'Motorvej'), 8, [
     intro(('بزرگراه (motorvej)', 'The motorway (motorvej)', 'Motorvejen'),
           ('ورود به بزرگراه را در درس تغییر خط دیدید. این درس بقیه‌اش را می‌گوید: چه کسی اجازه دارد بیاید، از کدام خط استفاده کنید، چطور بیرون بروید، چه چیزهایی ممنوع است و با صف ناگهانی چه کنید.',
@@ -234,6 +247,7 @@ DARKNESS = lesson('darkness', 'DARKNESS', ('رانندگی در تاریکی', '
           ('پیش از ورود به تونل نور پایین را روشن کنید و عینک آفتابی را بردارید. فاصله را حفظ کنید و در تونل نایستید و پارک نکنید، مگر مجبور باشید. هنگام بیرون آمدن، نور شدید ممکن است چشمتان را بزند، و بیرون از تونل ممکن است جاده یخ‌زده یا خیس باشد یا باد پهلو به خودرو بخورد.',
            'Switch on the dipped beam before you drive into a tunnel, and take off your sunglasses. Keep your distance, and do not stop or park in the tunnel unless you are forced to. When you come out, the bright light can dazzle you, and outside the tunnel the road may be icy or wet, or a side wind may hit the car.',
            'Tænd nærlyset, før du kører ind i en tunnel, og tag solbrillerne af. Hold afstand, og stands eller parkér ikke i tunnelen, medmindre du er tvunget til det. Når du kommer ud, kan det skarpe lys blænde dig, og uden for tunnelen kan vejen være isglat eller våd, eller en sidevind kan ramme bilen.'),
+          art='dark-tunnel',
           rule=('پیش از تونل نور پایین؛ در تونل نایستید؛ اگر دود دیدید، پیاده به خروجی اضطراری بروید.', 'Dipped beam before the tunnel; do not stop in it; if you see smoke, walk to the emergency exit.', 'Nærlys før tunnelen; stands ikke i den; ser du røg, så gå til nødudgangen.'),
           law=law((29, 1), 'E 35'),
           points=[('اگر خودرو در تونل از کار افتاد: چراغ خطر، تا جای ممکن کنار، موتور خاموش، و با تلفن اضطراری کمک بخواهید.', 'If the car breaks down in a tunnel: hazard lights, as far to the side as you can, engine off, and call for help from an emergency telephone.', 'Går bilen i stå i en tunnel: havariblink, så langt ind til siden som muligt, motoren slukket, og ring efter hjælp fra en nødtelefon.'),
@@ -244,6 +258,7 @@ DARKNESS = lesson('darkness', 'DARKNESS', ('رانندگی در تاریکی', '
           ('اگر در تاریکی (از غروب تا طلوع) روی جاده توقف یا پارک کنید، چراغ موقعیت (چراغ پارک)، چراغ‌های عقب و چراغ پلاک باید روشن باشند؛ چراغ دیگری، مثلاً نور پایین، نباید روشن بماند. داخل شهر، خودروی تا ۶ متر طول و ۲ متر پهنا که کنار جدول پارک شده، فقط به چراغ پارک و چراغ عقبِ سمت وسط خیابان نیاز دارد، مگر تریلر به آن بسته باشد. اگر خیابان آن‌قدر روشن است که خودرو از فاصله‌ی کافی به‌وضوح دیده می‌شود، یا در پارکینگ یا جای علامت‌گذاری‌شده‌ی پارک ایستاده‌اید، چراغی لازم نیست.',
            'If you stop or park on a road in the dark (in lighting-up time), the position lights (parking lights), the rear lights and the number plate light must be on; no other lights, such as the dipped beam, may be left on. In a built-up area, a vehicle of at most 6 m long and 2 m wide parked along the kerb only needs the parking light and the rear light on the side facing the middle of the road, unless a trailer is coupled to it. If the street is so well lit that the vehicle can clearly be seen from far enough away, or you are in a car park or a marked parking area, no lights are needed.',
            'Standser eller parkerer du på vejen i lygtetændingstiden, skal positionslys (parkeringslys), baglygter og nummerpladelys være tændt; andre lygter, fx nærlys, må ikke være tændt. I tættere bebygget område er det nok med parkeringslys og baglygte i siden mod vejens midte, når et køretøj på højst 6 m i længden og 2 m i bredden holder langs kanten, medmindre en trailer er koblet på. Er vejen så godt oplyst, at køretøjet tydeligt kan ses på tilstrækkelig afstand, eller holder du på en parkeringsplads eller et andet afmærket område for parkering, behøver lygterne ikke være tændt.'),
+          art='dark-parked',
           rule=('پارک در تاریکی روی جاده: چراغ پارک، چراغ‌های عقب و چراغ پلاک؛ نه نور پایین.', 'Parked on a road in the dark: parking lights, rear lights and the number plate light; not the dipped beam.', 'Parkeret på vejen i mørke: parkeringslys, baglygter og nummerpladelys; ikke nærlys.'),
           law=law((35, 1), (35, 3), (35, 4), (36, 1)),
           trap=('«چراغ خطر را تمام شب روشن می‌گذارم» برای پارک عادی غلط است؛ چراغ خطر برای وقتی است که خودرو جای خطرناکی ایستاده.', '«I leave the hazard lights on all night» is wrong for ordinary parking; hazard lights are for a car that stands where it is a danger.', '«Jeg lader havariblinket være tændt hele natten» er forkert ved almindelig parkering; havariblink bruges, når bilen holder, så den er til fare.')),

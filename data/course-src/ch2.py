@@ -163,6 +163,22 @@ MUST NOT APPEAR: speed-limit signs, other signs, other road users, text.
 
 
 # ---------- the lessons ----------
+# The two steps added after the check of «آزمون جدید»'s questions against the lessons (2026-10-23).
+view('speed-living', """
+THE SCENE: we drive very slowly into a narrow residential street paved with red and grey paving blocks across its whole width, with no kerbs and no raised pavement; low houses with small front gardens, flower tubs and a bench at the sides. At the entry, on the right, stands the Danish sign for a living street (E 51): a blue rectangle with white pictograms of a house, a walking adult, a child playing with a ball and a car. About 20 m ahead two children play with a ball in the middle of the street; one of them has seen our car and steps to the side.
+MUST BE CLEARLY VISIBLE: the blue living-street sign at the entry, the children playing in the middle of the street, the street paved the same from house to house.
+MUST NOT APPEAR: speed-limit signs, other moving cars, text, letters, numbers.
+""", scenery='Scenery is reduced to simple flat house fronts, small front gardens and a few trees.')
+
+above('dist-lorry', """
+THE SCENE: a town crossroads seen from above: a two-way street comes up from the bottom of the picture to the junction, with a cycle path along its right-hand side behind a kerb; the crossing street runs from left to right. Pavements with kerbs.
+VEHICLES (colour code used strictly):
+- a long WHITE lorry in our lane just before the junction, its right indicator flashing orange, about to turn right; around it, semi-transparent RED areas show where its driver cannot see: a strip right in front of the cab, a long wide strip along its whole right side over the cycle path, and a strip right behind its rear;
+- a RED car (ours) waiting behind the lorry, a little to the left and outside the red area behind it, where the lorry driver can see it in the left mirror; a SOLID GREEN arrow shows that it stays behind the lorry;
+- a faint semi-transparent ghost of a car squeezed in along the lorry's right side, inside the red area, crossed out by a red X in a white circle (wrong).
+MUST NOT APPEAR: signs, people, other vehicles, text, letters, numbers, left-hand traffic.
+""")
+
 LANE_POSITION = lesson('lane-position', 'LANE_POSITION', ('جایگاه در مسیر', 'Position on the road', 'Placering på vejen'), 8, [
     intro(('جایگاه در مسیر (placering på vejen)', 'Position on the road (placering på vejen)', 'Placering på vejen'),
           ('در آزمون تئوری از جای درست خودرو در جاده زیاد می‌پرسند: در جاده‌ی خلوت، در جاده‌ی سه‌خطه، پیش از گردش و وقتی مانعی سر راه است. این درس قاعده‌های اصلی را با هم مرور می‌کند.',
@@ -300,6 +316,7 @@ SPEED = lesson('speed', 'SPEED', ('سرعت مجاز و تنظیم سرعت', 'S
           ('در منطقه‌ی اقامت و بازی (opholds- og legeområde، تابلوی E 51) عابران و کودکان می‌توانند در تمام عرض خیابان باشند و بازی کنند. خودرو فقط با سرعت خیلی کم، معمولاً زیر ۱۵ کیلومتر در ساعت، می‌رود و پیش از رد شدن باید مطمئن شوید که شما را دیده‌اند و راه داده‌اند. در خیابان پیاده (gågade، E 49) فقط جایی می‌توانید برانید که تابلوی زیرین اجازه بدهد، آن هم با همین سرعت خیلی کم. در خیابان دوچرخه (cykelgade، E 47)، اگر رانندگی مجاز باشد، با سرعت دوچرخه‌سواران، معمولاً زیر ۳۰ کیلومتر در ساعت، می‌رانید. در هر سه، پارک فقط در جاهای علامت‌گذاری‌شده مجاز است، و هنگام بیرون آمدن از منطقه‌ی اقامت و بازی یا خیابان پیاده باید به همه راه بدهید.',
            'In a living street (opholds- og legeområde, sign E 51) pedestrians and children may stay and play across the whole width of the road. Cars may only drive at very low speed, normally under 15 km/h, and before you pass you must make sure that they have noticed you and made room. In a pedestrian street (gågade, E 49) you may only drive where a plate below the sign allows it, and then also at very low speed. In a cycle street (cykelgade, E 47), where driving is allowed, you drive at the cyclists\' speed, normally under 30 km/h. In all three, parking is only allowed in marked places, and when you drive out of a living street or a pedestrian street you give way to everyone.',
            'I et opholds- og legeområde (tavle E 51) må gående og børn opholde sig og lege på vejen i hele dens bredde. Der må kun køres med meget lav hastighed, normalt under 15 km/t, og før du kører forbi, skal du sikre dig, at de er opmærksomme på dig og har givet plads. I en gågade (E 49) må du kun køre, hvor en undertavle tillader det, og også her kun med meget lav hastighed. I en cykelgade (E 47) kører du, hvor kørsel er tilladt, med cyklisternes hastighed, normalt under 30 km/t. I alle tre må der kun parkeres på særligt afmærkede pladser, og kører du ud fra et opholds- og legeområde eller en gågade, har du ubetinget vigepligt.'),
+          art='speed-living',
           rule=('منطقه‌ی اقامت و بازی و خیابان پیاده: سرعت خیلی کم، معمولاً زیر ۱۵؛ هنگام بیرون آمدن به همه راه بدهید.', 'Living street and pedestrian street: very low speed, normally under 15 km/h; give way to everyone when you leave.', 'Opholds- og legeområde og gågade: meget lav hastighed, normalt under 15 km/t; ubetinget vigepligt, når du kører ud.'),
           law=law((26, 3), SIGNS_BEK, 'E 47 | E 49 | E 51'),
           trap=('«بچه‌ها باید وقتی خودرو می‌آید از خیابان کنار بروند» در منطقه‌ی اقامت و بازی غلط است؛ آن‌جا می‌توانند در تمام خیابان بازی کنند و شما صبر می‌کنید تا راه بدهند.', '«The children must get off the road when a car comes» is wrong in a living street; there they may play on the whole road, and you wait until they make room.', '«Børnene skal gå ind til siden, når der kommer en bil» er forkert i et opholds- og legeområde; der må de lege på hele vejen, og du venter, til de giver plads.')),
@@ -383,6 +400,7 @@ DISTANCE = lesson('distance', 'DISTANCE', ('فاصله و مسافت توقف', 
           ('کامیون و اتوبوس نقطه‌های کور بزرگی دارند: درست جلوی کابین، کنار سمت راستش و درست پشتش. اگر صورت راننده را در آینه‌اش نمی‌بینید، او هم شما را نمی‌بیند. وسیله‌ی بلند در پیچ جای زیادی می‌گیرد و گاهی اول به طرف دیگر می‌رود، و عقب اتوبوس هنگام پیچیدن به کنار می‌چرخد. وسیله‌ی سنگین هم برای ایستادن فاصله‌ی بیشتری لازم دارد.',
            'A lorry or a bus has large blind spots: just in front of the cab, along its right side and right behind it. If you cannot see the driver\'s face in their mirror, they cannot see you. A long vehicle needs a lot of room in a turn and may first swing out the other way, and a bus\'s rear end swings out to the side as it turns. A heavy vehicle also needs a longer distance to stop.',
            'En lastbil eller en bus har store blinde vinkler: lige foran førerhuset, langs højre side og lige bagved. Kan du ikke se førerens ansigt i spejlet, kan føreren heller ikke se dig. Et langt køretøj skal bruge meget plads i et sving og kan først trække ud til den anden side, og på en bus svinger bagenden ud til siden, når den drejer. Et tungt køretøj skal også bruge længere vej for at standse.'),
+          art='dist-lorry',
           rule=('راننده را در آینه‌اش نمی‌بینید؟ پس او هم شما را نمی‌بیند.', 'Cannot see the driver in their mirror? Then they cannot see you.', 'Kan du ikke se føreren i spejlet, kan føreren heller ikke se dig.'),
           law=law((3, 1), 'Undervisningsplan for kategori B'),
           points=[('پشت کامیونی که به راست می‌پیچد بمانید؛ از سمت راستش رد نشوید.', 'Stay behind a lorry that is turning right; do not pass it on its right.', 'Bliv bag en lastbil, der svinger til højre; kør ikke forbi den i højre side.'),
