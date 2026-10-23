@@ -250,3 +250,34 @@ is new.
   S 22; V 60 (two symbols to the vehicle in front), V 61; § 65 stk. 2–3 (leave the junction when red comes; red and yellow by a
   level crossing can go back to red); § 68 Y 17; § 69 Z 72,1 and Z 72,2 (a green arrow under the red flashing signal).
 - Picture prompts assume the usual symbols where the order does not describe them: a windsock for A 95, white chevrons for V 60.
+- Batch 8 (5701–5800), Færdselsloven checked (danskelove.dk): § 3 stk. 1–2 (consideration for those living by the road;
+  special care for children, school patrols and people with poor sight), § 8 (whoever damages a sign puts it right at once if
+  possible, otherwise tells the police and warns others), § 10 stk. 2 and 5 (pedestrians on the carriageway at the far left;
+  use a footbridge or pedestrian tunnel nearby if possible), § 11 (skateboarders and people pushing a bicycle are pedestrians),
+  § 14 stk. 1, § 15 stk. 4 (on a one-way carriageway an island may be passed on either side) and stk. 5, § 16 stk. 1–3, § 18
+  stk. 1–2 and 4 (a lane blocked by a parked van is not a lane reduction), § 20 stk. 1–2, § 21 stk. 1, 3 nr. 1 and 4, § 23 stk. 1
+  nr. 1 a and b, nr. 2 (no overtaking just before or on a level crossing, also with several lanes in the same direction) and
+  stk. 2 (not large mopeds), § 26 stk. 2–6, § 27 stk. 5, 7 and 8 (avoid stopping on the pedestrian crossing), § 28 stk. 2–3,
+  § 29 stk. 1 nr. 2 and 8 (the 3 m rule does not apply with a broken line between the vehicle and the unbroken line), stk. 2
+  (at a bus stop the whole marked stretch), stk. 3 nr. 2 (not where driving to or from a property is made substantially harder,
+  also from the other side of a narrow street), § 32 stk. 1–2, 4 (an arm raised: stopping or slowing sharply) and 5, § 33 stk. 3
+  nr. 2 and stk. 6, §§ 35–36 (no parking lights needed in a car park or other marked parking area), § 38 stk. 1–2, § 41 stk. 1–4,
+  § 42, § 46 stk. 2, § 47, § 67 stk. 3–4, § 82 stk. 1 and 3, § 90 (the authority in charge of road works may regulate traffic).
+- Bekendtgørelse om vejafmærkning (BEK nr 425 af 13/04/2023), batch 8: § 6 (temporary signs on a yellow background plate with a
+  black border), § 9 U 2 (distances from the sign to the start and end of the stretch), U 4 (a symbol limits the sign to that
+  kind of traffic), U 7 (cyclists turning right may ignore the red; Vejdirektoratet, «Cykelvenlig infrastruktur»: they still give
+  way to pedestrians crossing on green and to crossing cyclists), § 18 stk. 3 nr. 3 («Varekørsel tilladt»), A 46,2, B 19,
+  C 43, C 51–52 (until an end sign or a distance plate, past junctions), C 62, E 26, E 33, E 41 (the speed for the exit bend in
+  normal conditions), E 68 (local signs can change a zone's rules), E 68,9, E 69, E 91 (a white flash above the limit), Q 41–44
+  (follow the nearest line of a double line), Q 45 (hatched area; crossable from the side where its line is broken, when
+  turning), Q 46 (an unbroken edge line may be crossed when stopping, parking, driving onto or off the road, and to pass a
+  left-turner only when the lane beyond is not a special lane), § 60 T 33 (outside a car park, parking outside marked bays is
+  allowed if no other rule forbids it), T 61, T 63 (a yellow kerb triangle marks the end of the stop and parking ban at a
+  junction), § 61 V 11 (a triangle on the carriageway with the distance before it), V 20 (e-scooter box), V 42, V 43 (light-rail
+  lane), § 65, § 66 X 12, X 19 (white signals for scheduled buses, light rail and zero-emission cars), § 69 Z 93 (yellow flashing
+  light, e.g. at working school patrols).
+- Not in the two law texts and taken from the authorities' and FDM's guidance: periodic inspection of cars after 4 years, then every
+  2 years; in a tunnel fire leave the key in the car and walk to an emergency exit; after a breakdown build up speed on the hard
+  shoulder before moving out.
+- Picture prompts assume the usual designs where the order does not describe them: a bicycle and a right-bending arrow on the U 7
+  plate, a white bent arrow with the number on the blue E 41 sign, a walking figure on steps for E 26, a tram symbol for V 43.
