@@ -102,4 +102,60 @@ async function search({ username, q, v, catalog, ui }) {
   try { return { ...(await job), v }; } finally { inflight.delete(key); }
 }
 
-module.exports = { search, searchAvailable: available };
+// «آموزش این واژه» in the glossary (Mojtaba 2026-10-23): the entry of the same catalogue that best teaches one of the
+// test's Danish terms ({ da, en, fa, cat }: the word, its English and Persian, its glossary group), asked of the same
+// model with the same cached system prompt as the search, so it reads the catalogue from the prompt cache. Each term's
+// pick is kept in the store (meta 'termpages': per catalogue version, the newest three), so a term is asked about once,
+// for every account: { id (null: nothing fits), v }, or throws with .status like `search` (409: the catalogue is needed).
+const TERM_VERSIONS = 3;
+async function termPage({ store, username, term, v, catalog }) {
+  const t = term && typeof term === 'object' ? term : {};
+  const one = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, n);
+  const da = one(t.da, 80), en = one(t.en, 120), fa = one(t.fa, 160), group = one(t.cat, 20);
+  if (!da) throw Object.assign(new Error('واژه‌ای برای جستجو نیست.'), { status: 400 });
+  v = catalog !== undefined ? addCatalog(catalog) : String(v || '');
+  if (!v) throw Object.assign(new Error('فهرست جستجو معتبر نیست.'), { status: 400 });
+  const cat = catalogs.get(v);
+  if (!cat) throw Object.assign(new Error('catalog'), { status: 409 });
+  const slot = `v:${v}`;   // (a prefix, so a version never reads as a number and keeps its place among the keys)
+  const kept = (store.meta.termpages || {})[slot] || {};
+  if (Object.prototype.hasOwnProperty.call(kept, da)) return { id: kept[da] && cat.ids.has(kept[da]) ? kept[da] : null, v };
+  if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
+  const key = `term:${v}:${da}`;
+  if (inflight.has(key)) return { ...(await inflight.get(key)), v };
+  if (!allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
+  const job = (async () => {
+    client = client || new Anthropic({ timeout: 60e3, maxRetries: 1 });
+    const response = await client.beta.messages.create({
+      model: MODEL,
+      max_tokens: 1000,
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      system: system(cat.text),
+      messages: [{ role: 'user', content: `Answer language: ${LANG.fa}
+Query: the learning page for a term of the app's glossary of the theory test.
+Term (Danish): «${da}»
+English: ${en}
+Persian: ${fa}
+Glossary group: ${group}
+Pick the entries where a learner best learns what this term means and the rule about it, best first, at most 3. First an entry whose title or text has the term itself or its meaning. For a road sign or road marking, its sign entry (s:); for right of way, a right-of-way situation (p:) or the course step (c:) that teaches it; otherwise the course step (c:) or the rules part (r:) that explains it. Leave "answer" empty.` }],
+    });
+    if (response.stop_reason === 'refusal') throw Object.assign(new Error('جستجو انجام نشد.'), { status: 502 });
+    const text = response.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    let out;
+    try { out = JSON.parse(text); } catch { throw Object.assign(new Error('جستجو انجام نشد.'), { status: 502 }); }
+    const id = (Array.isArray(out.results) ? out.results : []).map(String).find(x => cat.ids.has(x)) || null;
+    // Kept under this version, the newest last; older versions beyond the newest three are dropped.
+    const all = { ...(store.meta.termpages || {}) }, mine = { ...(all[slot] || {}), [da]: id || '' };
+    delete all[slot]; all[slot] = mine;
+    for (const k of Object.keys(all).slice(0, -TERM_VERSIONS)) delete all[k];
+    store.meta.termpages = all;
+    await store.saveMeta('termpages', all);
+    return { id };
+  })();
+  inflight.set(key, job);
+  try { return { ...(await job), v }; } finally { inflight.delete(key); }
+}
+
+module.exports = { search, termPage, searchAvailable: available };

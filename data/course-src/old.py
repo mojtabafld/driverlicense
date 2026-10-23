@@ -211,4 +211,8 @@ TEXTS = [
     ('تریلر با گواهینامه‌ی B', 'Trailer with a B licence', 'Trailer på B-kørekort'),
     ('ثانیه', 'seconds', 'sekunder'), ('دقیقه', 'minutes', 'minutter'), ('سال', 'years', 'år'),
     ('۱٫۲', '1.2', '1,2'), ('۱۵', '15', '15'), ('۱۲', '12', '12'), ('۳', '3', '3'), ('۷۵۰', '750', '750'),
+    # The settings' «تنظیمات زبان», which slides open with the three languages, and the glossary's line under a word while
+    # the AI looks for the page that teaches it (2026-10-23).
+    ('تنظیمات زبان', 'Language Settings', 'Sprogindstillinger'),
+    ('در حال یافتن مرتبط‌ترین درس…', 'Finding the most relevant lesson…', 'Finder den mest relevante lektion…'),
 ]

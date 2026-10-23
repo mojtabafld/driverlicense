@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
 import { Fragment, cloneElement, isValidElement, useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -693,9 +693,10 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
 // in weight 500 with a 20px icon beside it. A press springs the button down to 0.985 (0.97 when it is narrower than
 // 220) and dims a primary to 0.84 / fills a secondary with the muted grey; with a mouse, hover lifts a primary with a
 // resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
-// `big`: taller, with a larger label (the sign-in page's one wide button).
-export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big }: {
-  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary' | 'accent'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
+// `big`: taller, with a larger label (the sign-in page's one wide button). `busy`: a spinner in the icon's place while
+// what it does is on its way (the glossary's «آموزش این واژه» waiting for the AI).
+export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big, busy }: {
+  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary' | 'accent'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean; busy?: boolean;
 }) {
   const c = useColors();
   const [scale] = useState(() => new Animated.Value(1));
@@ -717,7 +718,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const labelIn = { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
     ...(Platform.OS === 'web' ? { filter: enter.interpolate({ inputRange: [0, 1], outputRange: ['blur(2px)', 'blur(0px)'] }) } : {}) };
   return (
-    <Pressable ref={primary ? under : undefined} disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+    <Pressable ref={primary ? under : undefined} disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled, busy }}
       onLayout={e => { width.current = e.nativeEvent.layout.width; }}
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
@@ -730,7 +731,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
           ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
           ...(Platform.OS === 'web' ? { transitionProperty: 'background-color, opacity, box-shadow', transitionDuration: '150ms' } as any : {}),
         }}>
-          {icon ? <Icon name={icon} size={20} color={fg} /> : null}
+          {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={20} color={fg} /> : null}
           <Animated.View style={labelIn as any}>
             <T numberOfLines={1} style={{ fontSize: big ? 16.5 : 15, lineHeight: big ? 24 : 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
           </Animated.View>
