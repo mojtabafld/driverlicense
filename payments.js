@@ -15,9 +15,9 @@ const testMode = () => /^(sk|rk)_test_/.test(key());
 const gated = () => available() && process.env.PREMIUM_GATE !== '0';
 const kr = (v, d) => { const n = Math.round(+v); return Number.isFinite(n) && n >= 5 && n <= 10000 ? n : d; };
 const PLANS = {
-  week: { days: 7, price: () => kr(process.env.PREMIUM_PRICE_WEEK, 49), name: 'TeoriPrøve Premium – 1 uge' },
-  month: { days: 30, price: () => kr(process.env.PREMIUM_PRICE_MONTH, 79), name: 'TeoriPrøve Premium – 1 måned' },
-  quarter: { days: 90, price: () => kr(process.env.PREMIUM_PRICE_QUARTER, 149), name: 'TeoriPrøve Premium – 3 måneder' },
+  week: { days: 7, price: () => kr(process.env.PREMIUM_PRICE_WEEK, 49), name: 'Rahvej Premium – 1 uge' },
+  month: { days: 30, price: () => kr(process.env.PREMIUM_PRICE_MONTH, 79), name: 'Rahvej Premium – 1 måned' },
+  quarter: { days: 90, price: () => kr(process.env.PREMIUM_PRICE_QUARTER, 149), name: 'Rahvej Premium – 3 måneder' },
 };
 const plans = () => Object.entries(PLANS).map(([id, p]) => ({ id, days: p.days, price: p.price() }));
 const base = () => (process.env.STRIPE_API_BASE || 'https://api.stripe.com').replace(/\/$/, '');

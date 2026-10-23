@@ -1,4 +1,4 @@
-// TeoriPrøve's service worker: only the notifications (push.js on the server; the app's settings, «اعلان‌ها»).
+// Rahvej's service worker: only the notifications (push.js on the server; the app's settings, «اعلان‌ها»).
 // Nothing is cached here and no request goes through it.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));

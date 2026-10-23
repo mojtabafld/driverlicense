@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Double-click to start TeoriPrøve, then open http://localhost:3000
+# Double-click to start Rahvej, then open http://localhost:3000
 cd "$(dirname "$0")"
 (sleep 1 && open http://localhost:3000) &
 node server.js
