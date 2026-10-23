@@ -31,8 +31,8 @@ cat('A', 'تابلوهای هشدار', 'مثلث با حاشیه‌ی قرمز�
     'مثلث با رأس رو به بالا، حاشیه‌ی قرمز و زمینه‌ی سفید با علامت سیاه. خطری را نشان می‌دهند که دیدنش سخت است یا از حد انتظار بیشتر است. خارج از شهر معمولاً ۱۵۰ تا ۲۵۰ متر قبل از خطر نصب می‌شوند؛ اگر فاصله فرق کند روی تابلوی زیرین نوشته می‌شود. داخل شهر می‌توانند نزدیک‌تر و بدون ذکر فاصله باشند. با دیدن آن‌ها سرعت را کم کنید و آماده‌ی واکنش باشید.',
     'Three Danish warning signs on short grey poles at slightly different heights: white triangles with a red border, point up, with simple black symbols (a deer, a curve arrow, an exclamation mark).',
     ['A11',
-     n('A12.1', 'Farligt vejkryds – trafikken fra højre har ubetinget vigepligt', 'تقاطع خطرناک؛ ترافیک سمت راست باید راه بدهد',
-       'تقاطعی با دید کم در پیش است که فقط از **سمت راست** به جاده‌ی شما وصل می‌شود و ترافیک آن فرعی باید به شما راه بدهد. شما حق تقدم دارید، ولی با احتیاط نزدیک شوید.',
+     n('A12.1', 'Farligt vejkryds, hvor den krydsende trafik har ubetinget vigepligt (sidevej fra højre)', 'تقاطع خطرناک با فرعی از راست (نوعی از A 11)',
+       'نوعی از تابلوی A 11: تقاطعی با دید کم در پیش است که جاده‌ی فرعی‌اش فقط از **سمت راست** به جاده‌ی شما وصل می‌شود و ترافیک آن فرعی باید بی‌قید و شرط به شما راه بدهد. شما حق تقدم دارید، ولی با احتیاط نزدیک شوید. در مقررات فعلی این طرح جزو همان A 11 است، نه تابلویی جدا.',
        TRI + 'a thick vertical black bar (the priority road) with a thinner black bar joining it from the right only.'),
      'A16', 'A17', 'A18', 'A19', 'A20', 'A21', 'A22', 'A23', 'A26', 'A27', 'A31', 'A33', 'A34', 'A35', 'A36', 'A37',
      n('A38', 'Lunke', 'گودی جاده (جمع شدن آب)', 'جاده در اینجا گود می‌شود و در باران شدید ممکن است آب روی سواره‌رو جمع شود. سرعت را کم کنید تا خودرو روی آب سُر نخورد (آکواپلنینگ).',
@@ -51,7 +51,7 @@ cat('A', 'تابلوهای هشدار', 'مثلث با حاشیه‌ی قرمز�
      'A44', 'A46.1',
      n('A46.2', 'Stejl stigning', 'سربالایی تند', 'سربالایی تند در پیش است؛ عدد شیب را به درصد نشان می‌دهد. ممکن است لازم باشد دنده‌ی سنگین‌تری بگیرید و حواستان به خودروهای کُند باشد.',
        TRI + 'a black right-angled wedge rising from left to right (an uphill slope) with "10 %" written above the slope.'),
-     n('A71', 'Letbane', 'تراموا (letbane)', 'ریل تراموا از جاده رد می‌شود یا در کنار آن است. تراموا آرام صدا است و نمی‌تواند سریع بایستد؛ با احتیاط نزدیک شوید.',
+     n('A71', 'Letbane', 'تراموا (letbane)؛ تابلوی قدیمی', 'ریل تراموا از جاده رد می‌شود یا در کنار آن است. تراموا تقریباً بی‌صداست و نمی‌تواند سریع بایستد؛ با احتیاط نزدیک شوید. این تابلو در مقررات فعلی (۲۰۲۳) نیامده است؛ امروز ریل تراموا در تقاطع با تابلوی زیرین **UB 11,3** زیر تابلوی «حق تقدم بدهید» نشان داده می‌شود.',
        TRI + 'a black modern light-rail tram seen from the side with a small pantograph on its roof.'),
      'A72', 'A73', 'A74.1',
      n('A74.2', 'Krydsmærke for flersporet jernbaneoverkørsel', 'صلیب گذرگاه راه‌آهن چندخطه', 'درست کنار گذرگاه راه‌آهنی که **بیش از یک ریل** دارد نصب می‌شود. وقتی یک قطار رد شد، ممکن است قطار دیگری از ریل دیگر بیاید؛ تا مطمئن نشده‌اید عبور نکنید.',
@@ -71,7 +71,7 @@ cat('B', 'تابلوهای حق تقدم', 'مثلث وارونه، ایست و 
     'این تابلوها درست در جایی نصب می‌شوند که قاعده‌ی حق تقدم از آنجا اعتبار دارد. حق تقدم «مطلق» (ubetinget vigepligt) یعنی باید به همه‌ی ترافیکِ جاده‌ای که واردش می‌شوید، از هر دو طرف، راه بدهید. یادتان باشد: اگر چراغ راهنمایی تقاطع کار کند، چراغ بر تابلوهای حق تقدم مقدم است.',
     'Three Danish priority signs on short grey poles: an inverted white triangle with a red border (give way), a red octagon (stop, blank without letters) and a white diamond with a yellow centre and black edge (main road).',
     ['B11', 'B13',
-     n('B13', 'Stop (ved jernbane)', 'ایست (طرح دایره‌ای)', 'همان معنای تابلوی ایست را دارد: **توقف کامل** و راه دادن بی‌قید و شرط. این طرح، دایره‌ی قرمز با مثلث وارونه و کلمه‌ی STOP، بیشتر کنار گذرگاه راه‌آهن دیده می‌شود.',
+     n('B13', 'Stop (historisk udformning)', 'ایست (طرح قدیمی)', 'طرح قدیمی تابلوی ایست: دایره‌ی قرمز با مثلث وارونه و کلمه‌ی STOP. همان معنی را دارد: **توقف کامل** پشت خط ایست و راه دادن بی‌قید و شرط. امروز تابلوی ایست هشت‌ضلعی است (B 13)؛ کنار گذرگاه راه‌آهن هم همان تابلوی هشت‌ضلعی زیر صلیب گذرگاه (A 74) نصب می‌شود.',
        'a round sign with a broad red border and a white centre containing an inverted red-bordered white triangle with the black word "STOP" in its upper part.'),
      'B15', 'B16', 'B17', 'B18', 'B19'])
 
@@ -111,7 +111,7 @@ cat('C', 'تابلوهای ممنوعیت', 'دایره با حاشیه‌ی ق�
      n('C43', 'Køretøjslængde', 'حداکثر طول خودرو', 'خودرو یا خودرو با یدکی که طولش بیش از عدد تابلو باشد نباید وارد شود.',
        CIR + 'a small black lorry seen from the side above a double-headed black arrow with "10 m".'),
      'C51',
-     n('C51', 'Overhaling forbudt (anden udformning)', 'سبقت ممنوع (طرح دیگر)', 'همان معنای سبقت ممنوع (C 51) را دارد: تا تابلوی پایان سبقت ممنوع سبقت نگیرید. فقط از دوچرخه و موپد کوچک دوچرخ، و از وسیله‌ای که از جاده خارج می‌شود، می‌توانید سبقت بگیرید.',
+     n('C51', 'Overhaling forbudt (historisk udformning)', 'سبقت ممنوع (طرح قدیمی)', 'طرح قدیمی تابلوی سبقت ممنوع با همان معنی (C 51): تا تابلوی پایان سبقت ممنوع سبقت نگیرید. فقط از دوچرخه و موپد کوچک دوچرخ، و از وسیله‌ای که از جاده خارج می‌شود، می‌توانید سبقت بگیرید.',
        BAN + 'two black cars seen from the front side by side.'),
      'C52', 'C53',
      n('C54', 'Ophør af overhaling med lastbil forbudt', 'پایان سبقت ممنوع برای کامیون', 'از اینجا کامیون‌ها دوباره می‌توانند سبقت بگیرند.',
@@ -167,8 +167,8 @@ cat('E', 'تابلوهای اطلاع‌رسانی و منطقه', 'مستطیل
      n('E18.1.3', 'Blind vej – sti fortsætter til venstre', 'بن‌بست؛ مسیر پیاده و دوچرخه از چپ ادامه دارد', 'برای خودروها بن‌بست است، ولی مسیر **پیاده و دوچرخه** از سمت چپ ادامه پیدا می‌کند.',
        RECT + 'a white T with a red top bar (dead end); a thin white line branches off to the left with small white pedestrian and bicycle symbols.'),
      'E19',
-     n('E21.1', 'Anbefalet rute for cyklister', 'مسیر پیشنهادی برای دوچرخه', 'مسیر پیشنهادیِ دوچرخه‌سواران؛ اجباری نیست و خودروها هم می‌توانند از آن استفاده کنند.', RECT + 'a white bicycle seen from the side.'),
-     n('E21.2', 'Anbefalet rute for gående', 'مسیر پیشنهادی برای عابران پیاده', 'مسیر پیشنهادیِ عابران پیاده.', RECT + 'a white walking person.'),
+     n('E21.1', 'Anbefalet rute for cyklister', 'مسیر پیشنهادی برای دوچرخه', 'مسیر پیشنهادیِ دوچرخه‌سواران (مثلاً یک مسیر گردشگری دوچرخه). فقط پیشنهاد است: اجباری نیست و برای دیگران هم ممنوعیتی نمی‌سازد. در بخش‌هایی از این مسیرها ممکن است موپد کوچک ممنوع باشد.', RECT + 'a white bicycle seen from the side.'),
+     n('E21.2', 'Anbefalet rute for vandrere', 'مسیر پیشنهادی برای پیاده‌روی', 'مسیر پیشنهادی برای پیاده‌روی و گردش (vandrere)؛ اجباری نیست.', RECT + 'a white walking person.'),
      n('E21.3', 'Anbefalet rute for ridende', 'مسیر پیشنهادی برای اسب‌سواران', 'مسیر پیشنهادیِ اسب‌سواران.', RECT + 'a white horse with a rider.'),
      n('E21.4', 'Anbefalet rute for lille knallert', 'مسیر پیشنهادی برای موپد کوچک', 'مسیر پیشنهادیِ موپدهای کوچک (۳۰ کیلومتری).', RECT + 'a white small moped seen from the side.'),
      n('E22.1', 'Anbefalet rute for lastbiler', 'مسیر پیشنهادی برای کامیون', 'مسیر پیشنهادیِ کامیون‌ها؛ مثلاً برای دور زدن مرکز شهر.', RECT + 'a white lorry seen from the side.'),
@@ -188,8 +188,8 @@ cat('E', 'تابلوهای اطلاع‌رسانی و منطقه', 'مستطیل
      n('E41', 'Hastighedsangivelse for frakørsel', 'سرعت پیشنهادی خروجی', 'سرعتی که برای پیچِ خروجی پیش رو (مثلاً از بزرگراه) توصیه می‌شود.', 'a white square sign with a thin black border showing a red arrow curving up to the right and the black number "40".'),
      'E42', 'E43',
      n('E44', 'Motorvej ophører', 'پایان بزرگراه', 'بزرگراه اینجا تمام می‌شود و قواعد معمول جاده دوباره اعتبار دارند (مثلاً سرعت مجاز عمومی).', 'a green rectangular sign with a white motorway symbol (two lanes under a bridge), crossed by a red diagonal bar.'),
-     n('E45', 'Motortrafikvej ophører', 'پایان جاده‌ی ویژه‌ی خودرو', 'جاده‌ی ویژه‌ی خودرو (motortrafikvej) اینجا تمام می‌شود.', RECT + 'a white car seen from the front, crossed by a red diagonal bar.'),
-     n('E47', 'Cykelgade', 'خیابان دوچرخه', 'خیابانی که دوچرخه‌سواران در آن اولویت دارند. خودروها می‌توانند وارد شوند ولی حداکثر با **۳۰ کیلومتر بر ساعت**، و نباید مزاحم دوچرخه‌سوارها شوند.', 'a blue rectangle with a white bicycle above the black word "Zone" on a white panel.'),
+     n('E45', 'Motortrafikvej ophører', 'پایان جاده‌ی موتوری', 'جاده‌ی موتوری (motortrafikvej) اینجا تمام می‌شود و قواعد ویژه‌ی آن دیگر اعتبار ندارند.', RECT + 'a white car seen from the front, crossed by a red diagonal bar.'),
+     n('E47', 'Cykelgade', 'خیابان دوچرخه', 'منطقه‌ای که **سواره‌روی آن مخصوص دوچرخه و موپد کوچک** است. وسایل دیگر فقط وقتی می‌توانند وارد شوند که تابلوی زیرین (مثلاً «Kørsel tilladt») اجازه بدهد؛ آن وقت با سرعتی **هم‌اندازه‌ی دوچرخه‌ها** (معمولاً کمتر از ۳۰ کیلومتر بر ساعت)، با احتیاط ویژه و بدون مزاحمت برای آن‌ها برانید. پارک فقط در جاهای مشخص‌شده مجاز است.', 'a blue rectangle with a white bicycle above the black word "Zone" on a white panel.'),
      n('E48', 'Ophør af cykelgade', 'پایان خیابان دوچرخه', 'خیابان دوچرخه اینجا تمام می‌شود.', 'the cycle-street sign drawn in grey and crossed by several thin black diagonal lines.'),
      'E49',
      n('E50', 'Ophør af gågade', 'پایان خیابان پیاده', 'خیابان پیاده اینجا تمام می‌شود.', 'the pedestrian-street sign drawn in grey and crossed by several thin black diagonal lines.'),
@@ -216,11 +216,11 @@ cat('E', 'تابلوهای اطلاع‌رسانی و منطقه', 'مستطیل
 
 # ---------------------------------------------------------------- F
 cat('F', 'تابلوهای راهنمای مسیر (فلش‌دار)', 'فلش‌هایی که جهت شهرها و اماکن را نشان می‌دهند.',
-    'تابلوهای فلش‌دار جهت رسیدن به مقصدها را نشان می‌دهند. رنگ تابلو نوع مسیر را می‌گوید: **سفید با حاشیه‌ی قرمز** برای جاده‌های معمولی، **سبز** برای مسیرهایی که به بزرگراه می‌رسند، **آبی** برای مقصدهای محلی، **زرد** برای مسیر موقت و **سیاه** برای مسیر کسب‌وکارها. عدد کنار نام، فاصله به کیلومتر است.',
+    'تابلوهای فلش‌دار جهت رسیدن به مقصدها را نشان می‌دهند. رنگ تابلو نوع مقصد را می‌گوید: **سفید با نوشته و حاشیه‌ی قرمز** برای مقصدهای معمولی (شهرها و جاده‌ها)، **سبز** برای مقصدهایی که مسیرشان از **بزرگراه** می‌گذرد، **سفید با نوشته‌ی آبی** برای مقصدهای خدماتی و تجاری (ایستگاه، فرودگاه، جاذبه، هتل، شرکت‌ها)، **آبی با P** برای پارکینگ، **آبی** برای مسیرهای دوچرخه و پیاده و **زرد** برای مسیر موقت. عدد کنار نام، فاصله به کیلومتر است.',
     'Several Danish arrow-shaped direction signs on one grey pole pointing left and right, in white with a red border, green, blue and yellow; words drawn as abstract bars, no readable text.',
     [n('F11', 'Hvid/rød pilvejviser', 'تابلوی فلش‌دار سفید/قرمز', 'جهت و فاصله‌ی مقصدهایی که از جاده‌های معمولی به آن‌ها می‌رسید. شماره‌ی مسیر در کادر کوچک کنار نام است.', GUIDE + 'arrow-shaped, white with a red border, red abstract text bars and a small boxed route number on the left, pointing right.'),
      n('F12', 'Grøn/hvid pilvejviser', 'تابلوی فلش‌دار سبز', 'جهت مقصدهایی که مسیرشان از **بزرگراه** می‌گذرد. شماره‌ی بزرگراه (مثل E45) روی آن است.', GUIDE + 'arrow-shaped, green with a white edge, white abstract text bars, a small white motorway symbol and a boxed route number, pointing right.'),
-     n('F13', 'Hvid/blå pilvejviser', 'تابلوی فلش‌دار سفید/آبی', 'جهت مقصدهای **محلی** مثل موزه، ورزشگاه یا محله.', GUIDE + 'two arrow-shaped signs, white with a blue border and blue abstract text bars, pointing left.'),
+     n('F13', 'Hvid/blå pilvejviser', 'تابلوی فلش‌دار سفید/آبی', 'جهت مقصدهای **خدماتی و تجاری**: ایستگاه قطار، فرودگاه، بندر، جاذبه‌ها و دیدنی‌ها، هتل و کمپینگ، شرکت‌ها و مانند آن. اغلب علامت خدماتی (گروه M) هم روی آن است.', GUIDE + 'two arrow-shaped signs, white with a blue border and blue abstract text bars, pointing left.'),
      n('F14', 'Midlertidig pilvejviser', 'تابلوی فلش‌دار موقت (زرد)', 'مسیر **موقت**، مثلاً هنگام کار جاده‌ای یا برای یک رویداد. بر تابلوهای معمولی مقدم است.', GUIDE + 'arrow-shaped, yellow with a black border and black abstract text bars, pointing right.'),
      n('F16', 'Frakørselsvejviser', 'تابلوی جهت خروجی', 'درست سر خروجی نصب می‌شود و نشان می‌دهد این خروجی به کدام مقصدها می‌رود.', GUIDE + 'white with a red border, a yellow box with a black number, two lines of abstract text and a red arrow pointing up to the right.'),
      n('F18', 'Tabelvejviser', 'تابلوی جدولی جهت‌ها', 'چند مقصد را در یک تابلو با فلش‌های جداگانه نشان می‌دهد.', GUIDE + 'four stacked white panels with red borders, each with a red arrow (up, up, left, right) and abstract text bars.'),
@@ -228,9 +228,9 @@ cat('F', 'تابلوهای راهنمای مسیر (فلش‌دار)', 'فلش�
      n('F21.2', 'Stipilvejviser', 'فلش راهنمای مسیر دوچرخه و پیاده', 'جهت و فاصله‌ی مقصدها برای دوچرخه‌سواران و دیگر کاربران مسیرهای ویژه.', GUIDE + 'two arrow-shaped blue signs with white abstract text bars and small white bicycle and horse-rider symbols.'),
      n('F21.3', 'Stitabelvejviser', 'تابلوی جدولی مسیر دوچرخه', 'چند مقصد برای دوچرخه‌سواران در یک تابلو با فلش‌های جدا.', GUIDE + 'a blue rectangular board with white rows, each with a small bicycle symbol, a white arrow and abstract text bars.'),
      n('F21.4', 'Stidiagramtavle', 'نقشه‌ی مسیر دوچرخه', 'نقشه‌ی ساده‌ی تقاطع پیش رو برای دوچرخه‌سواران با شماره‌ی مسیرها.', 'a blue square board showing a white diagram of a roundabout with roads leaving it, small bicycle route number boxes at the ends.'),
-     n('F30', 'Pilvejviser til virksomhed', 'تابلوی جهت کسب‌وکار (سیاه)', 'جهت یک کسب‌وکار یا جاذبه‌ی محلی (مثلاً گلخانه یا فروشگاه) را نشان می‌دهد.', GUIDE + 'arrow-shaped, black with white abstract text bars and a white number, pointing right.'),
+     n('F30', 'Pilvejviser til virksomhed', 'تابلوی جهت کسب‌وکار (سیاه، قدیمی)', 'طرح قدیمیِ تابلوی جهت یک کسب‌وکار یا جاذبه‌ی محلی، با زمینه‌ی سیاه. در مقررات فعلی (۲۰۲۳) نیامده است؛ امروز برای کسب‌وکارها و جاذبه‌ها تابلوی سفید با نوشته‌ی آبی (F 13) به کار می‌رود.', GUIDE + 'arrow-shaped, black with white abstract text bars and a white number, pointing right.'),
      n('F33.1', 'Parkeringspilvejviser', 'فلش راهنمای پارکینگ', 'جهت پارکینگ را نشان می‌دهد.', GUIDE + 'arrow-shaped, blue with a white edge, a white box with a blue "P" and abstract white text bars, pointing right.'),
-     n('F33.2', 'Parkeringspilvejviser', 'فلش راهنمای پارکینگ (به چپ)', 'جهت پارکینگ را نشان می‌دهد؛ اینجا به سمت چپ.', GUIDE + 'arrow-shaped, blue with a white edge, a white arrow pointing left, a white box with a blue "P" and abstract white text bars.'),
+     n('F33.2', 'Parkeringstabelvejviser', 'تابلوی جدولی راهنمای پارکینگ', 'تابلوی مستطیلیِ راهنمای پارکینگ، درست قبل از تقاطع یا در آن: برای هر جهت یک ردیف با فلش و نام پارکینگ. ممکن است تعداد جاهای خالی، یا «Fri» (جا هست)، «Optaget» (پر) و «Lukket» (بسته) را هم نشان دهد.', GUIDE + 'rectangular, blue with a white edge, one row with a white arrow pointing left, a white box with a blue "P" and abstract white text bars.'),
      n('F34.1', 'Omkørselsrute', 'مسیر انحرافی', 'شماره‌ی مسیر انحرافی، مثلاً وقتی بزرگراه بسته است. همین علامت را دنبال کنید.', 'a small green sign with a white motorway symbol above a white hexagon with a green number, and a small white arrow.'),
      n('F34.2', 'Pilvejviser for omkørselsrute', 'فلش مسیر انحرافی', 'جهت مسیر انحرافی را نشان می‌دهد.', GUIDE + 'arrow-shaped, white with a green edge, a small green route box and a green hexagon number, pointing right.'),
      n('F34.3', 'Diagramorienteringstavle for omkørselsrute', 'نقشه‌ی مسیر انحرافی', 'نقشه‌ی ساده‌ی مسیر انحرافی در تقاطع پیش رو.', 'a small green sign with a white diagram of a road and a curved detour arrow with small green hexagon numbers.')])
@@ -248,16 +248,16 @@ cat('G', 'تابلوهای جهت‌یابی پیش از تقاطع', 'نقشه 
 cat('H', 'تابلوهای فاصله و نام مکان', 'فاصله تا شهرها، نام مکان و مرزها.',
     'فاصله تا شهرهای پیش رو و نام مکان‌ها، مناطق و مرزها را نشان می‌دهند. تابلوی نام مکان (H 45) **قاعده‌ی داخل شهر را شروع نمی‌کند**؛ آن کار تابلوی E 55 است.',
     'A blue Danish distance sign with three rows of abstract white text and numbers, beside a smaller blue place-name board; no readable text.',
-    [n('H41', 'Afstandstavle', 'تابلوی فاصله', 'فاصله تا شهرهای بعدی را به کیلومتر نشان می‌دهد؛ معمولاً بعد از خروج از یک شهر.', GUIDE + 'a blue board with yellow route number boxes at the top and three rows of white abstract text with numbers on the right.'),
-     n('H42', 'Delt afstandstavle', 'تابلوی فاصله‌ی دوقسمتی', 'فاصله تا مقصدهایی که از دو مسیر مختلف می‌گذرند، در دو بخش جدا.', GUIDE + 'two blue boards one above the other, each with yellow route boxes and rows of white abstract text with numbers.'),
+    [n('H41', 'Afstandstavle', 'تابلوی فاصله', 'فاصله تا مکان‌های بعدیِ همین مسیر را به کیلومتر نشان می‌دهد؛ بیشتر بعد از تقاطع‌های مهم نصب می‌شود. شماره‌ی مسیر بالای آن است و نزدیک‌ترین مکان در پایین.', GUIDE + 'a blue board with yellow route number boxes at the top and three rows of white abstract text with numbers on the right.'),
+     n('H42', 'Delt afstandstavle', 'تابلوی فاصله‌ی دوقسمتی', 'آخرین تابلوی فاصله قبل از تقاطع: مکان‌هایی که از جاده‌ی متقاطع یا انشعابی به آن‌ها می‌رسید، در بخش جداگانه‌ی پایین تابلو آمده‌اند.', GUIDE + 'two blue boards one above the other, each with yellow route boxes and rows of white abstract text with numbers.'),
      n('H45', 'Stedtavle', 'تابلوی نام مکان', 'نام روستا یا محل را نشان می‌دهد؛ برخلاف E 55، سرعت داخل شهر را شروع نمی‌کند.', GUIDE + 'a blue rectangular board with a white edge and one word of white abstract text.'),
      n('H46', 'Regionsgrænsetavle', 'تابلوی مرز منطقه (ریگیون)', 'ورود به یکی از پنج منطقه‌ی اداری دانمارک را نشان می‌دهد.', GUIDE + 'a blue rectangular board with two lines of white abstract text.'),
-     n('H47', 'Kommunegrænsetavle', 'تابلوی مرز شهرداری', 'ورود به محدوده‌ی یک شهرداری (کمون) یا پارک ملی را نشان می‌دهد.', GUIDE + 'a brown rectangular board with a small white crest on the left and white abstract text.'),
+     n('H47', 'Kommunegrænsetavle', 'تابلوی مرز شهرداری', 'ورود به محدوده‌ی یک شهرداری (کمون) را نشان می‌دهد؛ گاهی با نشان آن شهرداری.', GUIDE + 'a brown rectangular board with a small white crest on the left and white abstract text.'),
      n('H51', 'Landegrænsetavle', 'تابلوی مرز کشور', 'ورود به دانمارک را در مرز نشان می‌دهد؛ دایره‌ی ستاره‌های اتحادیه‌ی اروپا روی آن است.', 'a blue rectangular sign with a circle of yellow stars and abstract white text in the middle.')])
 
 # ---------------------------------------------------------------- I
 cat('I', 'تابلوهای خروجی بزرگراه', 'سبز یا آبی؛ خروجی‌ها و تقاطع‌های بزرگراه.',
-    'در بزرگراه، خروجی‌ها از قبل اعلام می‌شوند: تابلوی **۱۵۰۰ متر**، تابلوی **۵۰۰ متر** و تابلوی سر خروجی. تابلوی آبی یعنی خروجی به جاده‌ی معمولی می‌رود؛ تابلوی سبز یعنی به بزرگراه دیگری (تقاطع بزرگراهی). شماره‌ی خروجی در کادر کوچک است.',
+    'در بزرگراه، خروجی‌ها از قبل اعلام می‌شوند: تابلوی **۱۵۰۰ متر**، تابلوی **۵۰۰ متر** و تابلوی سر خروجی. تابلوی آبی یعنی خروجی به جاده‌ی معمولی می‌رود؛ تابلوی سبز یعنی به بزرگراه دیگری (تقاطع بزرگراهی). شماره‌ی خروجی با رنگ **قرمز** در کادر سفید شش‌ضلعی است.',
     'A green Danish motorway sign on a gantry above a motorway announcing an exit, with abstract white text, a white motorway symbol and a yellow number box; no readable text.',
     [n('I11', 'Frakørselsvejviser 0-m tavle', 'تابلوی سر خروجی', 'درست سر خروجی بزرگراه نصب می‌شود؛ فلش مایل یعنی همین‌جا خارج شوید.', GUIDE + 'a blue board with a white number box on the left, two lines of white abstract text and a white arrow pointing up to the right.'),
      n('I12', '500-m frakørselstavle', 'تابلوی ۵۰۰ متر تا خروجی', 'خروجی ۵۰۰ متر دیگر است. به خط راست بروید.', GUIDE + 'a blue board with a white number box, two lines of white abstract text and "500 m" at the bottom.'),
@@ -285,13 +285,13 @@ cat('K', 'تابلوهای تأیید، فاصله و گردشگری در بزر
 
 # ---------------------------------------------------------------- L
 cat('L', 'شماره‌ی مسیرها', 'شماره‌ی جاده‌ها و مسیرهای دوچرخه.',
-    'شماره‌ی جاده را نشان می‌دهند تا بتوانید با شماره مسیر را دنبال کنید: **سبز** برای جاده‌های اروپایی (E)، **زرد** برای مسیرهای اصلی، **سفید** برای مسیرهای فرعی و **قرمز** برای مسیرهای دوچرخه.',
+    'شماره‌ی جاده را نشان می‌دهند تا بتوانید با شماره مسیر را دنبال کنید: **سبز** برای جاده‌های اروپایی (E)، **زرد** برای مسیرهای اصلی، **سفید** برای مسیرهای فرعی، و برای مسیرهای دوچرخه **قرمز** (ملی) یا **آبی** (منطقه‌ای و محلی).',
     'Four small Danish route number plates in a row: a green one, a yellow one, a white one with a black border and a red one, each with abstract numbers drawn as simple bars.',
     [n('L41', 'Rutenummer for Europavej', 'شماره‌ی جاده‌ی اروپایی', 'شماره‌ی جاده‌ی بین‌المللی اروپا، مثل E20 یا E45.', 'two green rectangular plates with a white edge and the white text "E20" and "E45".'),
      n('L42', 'Rutenummer for primære ruter', 'شماره‌ی مسیر اصلی', 'شماره‌ی مسیرهای اصلی کشور (۱ تا ۹۹).', 'two yellow rectangular plates with a black border and black numbers "15" and "11".'),
      n('L43', 'Rutenummer for sekundære ruter', 'شماره‌ی مسیر فرعی', 'شماره‌ی مسیرهای فرعی (۱۰۰ به بالا).', 'two white rectangular plates with a black border and black numbers "189" and "453".'),
      n('L44', 'Rutenummer for ringruter', 'شماره‌ی کمربندی', 'شماره‌ی جاده‌ی کمربندی دور شهر؛ حرف O با یک عدد.', 'a yellow and a white rectangular plate with black borders showing "O 2" and "O 3".'),
-     n('L45', 'Rutenummer for cykelruter', 'شماره‌ی مسیر دوچرخه', 'شماره‌ی مسیر دوچرخه‌ی ملی (قرمز) یا منطقه‌ای (آبی).', 'a red square plate with a white "3" beside a blue rectangular plate with a white "41".'),
+     n('L45', 'Rutenummer for cykelruter', 'شماره‌ی مسیر دوچرخه', 'شماره‌ی مسیر دوچرخه: مسیرهای ملی (۱ تا ۱۵) سفید روی **قرمز**، مسیرهای منطقه‌ای و محلی سفید روی **آبی**.', 'a red square plate with a white "3" beside a blue rectangular plate with a white "41".'),
      n('L46', 'Ruteidentifikation for supercykelsti', 'علامت سوپر مسیر دوچرخه', 'نشان «سوپر مسیر دوچرخه»؛ مسیرهای سریع دوچرخه بین شهرها.', 'a round orange symbol shaped like a thick letter C around a small white circle.'),
      n('L47', 'Ruteidentifikation for EuroVelo-cykelrute', 'علامت مسیر دوچرخه‌ی اروپایی', 'شماره‌ی مسیر دوچرخه‌ی EuroVelo که از چند کشور می‌گذرد.', 'a small blue square with a circle of yellow stars around a white number "1".'),
      n('L50', 'Ruteidentifikation for Margueritruten', 'مسیر گردشگری مارگریت', 'نشان مسیر گردشگری «مارگریت» که از مناظر زیبای دانمارک می‌گذرد.', 'a brown square sign with a white daisy flower with a yellow centre.')])
@@ -299,11 +299,11 @@ cat('L', 'شماره‌ی مسیرها', 'شماره‌ی جاده‌ها و م�
 # ---------------------------------------------------------------- M
 _s = 'تابلوی خدماتی؛ نشان می‌دهد این امکان در نزدیکی هست: '
 cat('M', 'تابلوهای خدماتی', 'امکانات نزدیک: پمپ‌بنزین، پارکینگ، رستوران…',
-    'تابلوهای خدماتی مربعِ آبی با کادر سفید و علامت سیاه‌اند و امکانات نزدیک را نشان می‌دهند. اغلب با تابلوی جهت یا فاصله همراه‌اند. تابلوهای قهوه‌ای برای جاذبه‌های فرهنگی و طبیعی‌اند.',
+    'تابلوهای خدماتی مربعِ آبی با کادر سفید و علامت سیاه‌اند و امکانات نزدیک را نشان می‌دهند (علامت کمک‌های اولیه قرمز است). اغلب با تابلوی جهت یا فاصله همراه‌اند. تابلوهای قهوه‌ای برای میراث جهانی یونسکو و پارک ملی‌اند.',
     'Three Danish blue square service signs with a white inner square on short grey poles: a black fuel pump, a black knife and fork, and a black bed.',
     [n('M9', 'Erhvervs- og containerhavn', 'بندر تجاری و کانتینری', _s + 'بندر تجاری و کانتینری.', SERV + 'a cargo ship with containers under a crane.'),
      n('M10', 'Færge for cyklende og gående', 'کشتی برای دوچرخه‌سوار و پیاده', _s + 'قایق یا کشتی‌ای که فقط عابر پیاده و دوچرخه سوار می‌کند.', SERV + 'a small ferry boat on waves carrying a bicycle and a walking person.'),
-     n('M11', 'Færge', 'کشتی (فری)', _s + 'اسکله‌ی کشتی‌های مسافربری و خودروبر.', SERV + 'a ferry ship on water seen from the side.'),
+     n('M11', 'Færge', 'کشتی (فری)', _s + 'محل سوار شدن به کشتی (فری) که خودرو هم می‌برد.', SERV + 'a ferry ship on water seen from the side.'),
      n('M12', 'Lufthavn', 'فرودگاه', _s + 'فرودگاه.', SERV + 'an aeroplane seen from above, flying to the left.'),
      n('M13', 'Jernbanestation', 'ایستگاه قطار', _s + 'ایستگاه قطار.', SERV + 'a steam locomotive seen from the side under a station roof with a small clock.'),
      n('M13.1', 'S-tog', 'ایستگاه قطار شهری (S-tog)', _s + 'ایستگاه قطار شهری کپنهاگ (S-tog).', 'a small blue square sign with a white inner square and a black-and-white circular "S" logo.'),
@@ -333,26 +333,26 @@ cat('M', 'تابلوهای خدماتی', 'امکانات نزدیک: پمپ‌�
      n('M45', 'Cafeteria', 'کافه', _s + 'کافه یا کافه‌تریا.', SERV + 'a cup on a saucer.'),
      n('M46', 'WC', 'توالت', _s + 'توالت عمومی (با علامت ویلچر یعنی مناسب افراد دارای معلولیت).', SERV + 'the letters "WC" with a small wheelchair symbol above.'),
      n('M47', 'Tømning af kemisk toilet', 'تخلیه‌ی توالت شیمیایی', _s + 'محل تخلیه‌ی توالت کاروان‌ها.', SERV + 'a motorhome above a drain basin.'),
-     n('M51', 'Kirke', 'کلیسا', _s + 'کلیسا.', SERV + 'a simple church with a tower.'),
+     n('M51', 'Kirke', 'کلیسا', _s + 'کلیسا، کنیسه یا عبادتگاه مشابه.', SERV + 'a simple church with a tower.'),
      n('M52', 'Seværdighed eller attraktion', 'جاذبه‌ی دیدنی', _s + 'جاذبه‌ی دیدنی.', SERV + 'a looped square knot symbol (the place-of-interest symbol).'),
      n('M53', 'UNESCO verdensarvsmonument', 'میراث جهانی یونسکو', 'یک اثر ثبت‌شده در فهرست میراث جهانی یونسکو در نزدیکی است (تابلوی قهوه‌ای).', 'a brown square sign with a white edge and the white UNESCO world-heritage emblem (a square inside a circle).'),
      n('M54', 'Nationalpark', 'پارک ملی', 'ورود یا نزدیکی به پارک ملی (تابلوی قهوه‌ای).', 'a brown square sign with a white edge and a white royal crown (the Danish crown with a small cross on top) in the middle; not the round UNESCO emblem.'),
      n('M57', 'Industriområde', 'منطقه‌ی صنعتی', _s + 'منطقه‌ی صنعتی.', SERV + 'a factory with saw-tooth roofs and a chimney.'),
      n('M61', 'Information', 'اطلاعات گردشگری', _s + 'مرکز اطلاعات.', SERV + 'a lower-case letter "i".'),
-     n('M101', 'Dagligvareforretning', 'فروشگاه مواد غذایی', 'فروشگاه مواد غذایی نزدیک است (تابلوی خصوصی با زمینه‌ی سیاه).', 'a black square sign with a white inner square and a black shopping trolley.'),
-     n('M102', 'Værelse til leje', 'اتاق اجاره‌ای', 'اتاق برای اجاره (Bed & Breakfast) نزدیک است.', 'a black square sign with a white inner square showing a black bed under the black letters "B & B".')])
+     n('M101', 'Dagligvareforretning', 'فروشگاه مواد غذایی', _s + 'فروشگاه مواد غذایی.', 'a black square sign with a white inner square and a black shopping trolley.'),
+     n('M102', 'Værelse til leje', 'اتاق اجاره‌ای', _s + 'اتاق برای اجاره (مثلاً Bed & Breakfast).', 'a black square sign with a white inner square showing a black bed under the black letters "B & B".')])
 
 # ---------------------------------------------------------------- N
 cat('N', 'علائم لبه‌ی جاده', 'تیرک‌ها و صفحه‌هایی که لبه و مانع را نشان می‌دهند.',
     'این علائم لبه‌ی جاده، جزیره‌ها و موانع را در تاریکی و هوای بد قابل‌دیدن می‌کنند. خطوط مایل قرمز و سفید همیشه به سمتی پایین می‌روند که باید از آن طرف عبور کنید.',
-    'Danish road-edge markers on a light grey ground: white edge posts with red reflectors, a red-and-white striped board and an orange traffic cylinder.',
-    [n('N41', 'Kantpæle', 'تیرک‌های کنار جاده', 'تیرک‌های سفید کنار جاده با شبرنگ: شبرنگ **قرمز** در سمت راست و **سفید** در سمت چپ. شبرنگ زرد کنار خروجی یا ورودی است.', 'three slim white roadside posts with black tops: one with a red reflector, one with a white reflector and one with a yellow reflector and small numbers.'),
+    'Danish road-edge markers on a light grey ground: white edge posts with a sloping top and a yellow reflector, a red-and-white striped board and an orange traffic cylinder.',
+    [n('N41', 'Kantpæle', 'تیرک‌های کنار جاده', 'تیرک‌های سفید با سرِ مایل، معمولاً هر **۱۰۰ متر**: شبرنگ **زرد** در سمت **راست** جاده و شبرنگ **سفید** در سمت **چپ**. خودرو باید از طرفی رد شود که سرِ مایل تیرک به آن سمت پایین می‌رود. شبرنگ **قرمز** کوچک کنار جاده ورودی یک مزرعه یا ملک را نشان می‌دهد.', 'three slim white roadside posts with a top that slopes down towards the road and a thin red band along the sloping top: the left post has a white reflector, the right post a yellow reflector and a small plate with black numbers, the middle post a yellow reflector on one side and a white one on the other.'),
      n('N42', 'Kantafmærkningsplader', 'صفحه‌های لبه', 'صفحه‌ی راه‌راه قرمز و سفید برای نشان دادن لبه یا مانع؛ خطوط مایل به سمتی پایین می‌روند که باید از آن عبور کنید.', 'two tall narrow white boards with diagonal red stripes, the stripes sloping down in opposite directions.'),
      n('N43', 'Spidsmarkering', 'علامت نوک جزیره', 'نوک جزیره یا جایی که جاده دوشاخه می‌شود؛ می‌توانید از هر دو طرف عبور کنید.', 'a red rectangular board with white chevrons pointing up.'),
-     n('N44.1', 'Markeringscylinder', 'استوانه‌ی علامت', 'استوانه‌ی نارنجی با نوار شبرنگ برای جدا کردن خطوط یا نشان دادن کارگاه جاده‌ای.', 'an orange cylinder with a white reflective band and a red band, standing on a black base.'),
-     n('N44.2', 'Markeringskegle', 'مخروط ترافیکی', 'مخروط نارنجی با نوار شبرنگ؛ به‌طور موقت مسیر را مشخص یا مانع را نشان می‌دهد.', 'an orange traffic cone with white and red reflective bands on a square base.'),
-     n('N44.3', 'Vognbanedeler', 'جداکننده‌ی خط', 'جداکننده‌ی قرمز بین خطوط؛ نباید از آن عبور کنید.', 'a red plastic lane separator post with a yellow base and a white reflective panel.'),
-     n('N46', 'Markeringslygter', 'چراغ علامت', 'چراغ چشمک‌زن روی مانع یا کارگاه جاده‌ای در شب.', 'an orange warning lamp with a hanging handle.')])
+     n('N44.1', 'Markeringscylinder', 'استوانه‌ی علامت', 'استوانه‌ی قرمز یا نارنجی با نوار شبرنگ؛ در کار جاده‌ای و مانند آن، محدوده‌ی کارگاه را مشخص می‌کند.', 'an orange cylinder with a white reflective band and a red band, standing on a black base.'),
+     n('N44.2', 'Markeringskegle', 'مخروط ترافیکی', 'مخروط قرمز یا نارنجی با نوار شبرنگ؛ در کار جاده‌ای و مانند آن، محدوده‌ی کارگاه را مشخص می‌کند.', 'an orange traffic cone with white and red reflective bands on a square base.'),
+     n('N44.3', 'Vognbanedeler', 'جداکننده‌ی خط', 'در کار جاده‌ای، خطوطی را که ترافیکشان در **دو جهت مخالف** است از هم جدا می‌کند؛ از آن عبور نکنید.', 'a row of low lane separator posts with white reflective panels standing on a line between two lanes with traffic in opposite directions.'),
+     n('N46', 'Markeringslygter', 'چراغ علامت', 'چراغ‌هایی با نور **سفید** ثابت یا چشمک‌زن که در کار جاده‌ای محدوده‌ی کارگاه را مشخص می‌کنند.', 'a row of small lamps with white light standing along the edge of a road works area.')])
 
 # ---------------------------------------------------------------- O
 cat('O', 'علائم پس‌زمینه', 'فلش‌های جهت و راه‌بندها.',
@@ -363,9 +363,9 @@ cat('O', 'علائم پس‌زمینه', 'فلش‌های جهت و راه‌ب�
 
 # ---------------------------------------------------------------- P
 cat('P', 'چراغ جزیره', 'چراغ زرد روی جزیره‌ی وسط جاده.',
-    'چراغ جزیره در شب جزیره‌ی وسط جاده را نشان می‌دهد تا با آن برخورد نکنید.',
+    'چراغ جزیره در شب جزیره‌ی وسط جاده را نشان می‌دهد تا با آن برخورد نکنید و بدانید از کدام طرفش بروید.',
     'A yellow illuminated island beacon (a short yellow glowing column) standing on a traffic island at night-blue dusk, in a simple setting.',
-    [n('P11', 'Hellefyr', 'چراغ جزیره', 'ستون زرد نورانی روی جزیره‌ی وسط جاده؛ معمولاً تابلوی «عبور از راست» هم کنارش است.', 'a short upright yellow glowing column with grey ends, standing on a traffic island.')])
+    [n('P11', 'Hellefyr', 'چراغ جزیره', 'ستون زرد (معمولاً نورانی) روی جزیره‌ی وسط جاده: باید از **سمت راست** آن رد شوید، مگر علامت دیگری عبور از چپ را مجاز کرده باشد یا جاده یک‌طرفه باشد.', 'a short upright yellow glowing column with grey ends, standing on a traffic island.')])
 
 # ---------------------------------------------------------------- Q
 cat('Q', 'خطوط طولی', 'خط‌چین، خط ممتد و خطوط کنار جاده.',
@@ -375,38 +375,38 @@ cat('Q', 'خطوط طولی', 'خط‌چین، خط ممتد و خطوط کنا�
 
 # ---------------------------------------------------------------- R
 cat('R', 'فلش‌های روی جاده', 'فلش‌هایی که جهت هر خط را نشان می‌دهند.',
-    'فلش‌های روی سواره‌رو جهتی را نشان می‌دهند که از آن خط می‌توان رفت. در خطی که فلش دارد باید در جهت فلش حرکت کنید.',
+    'فلش‌های روی سواره‌رو جهتی را نشان می‌دهند که از آن خط می‌توان رفت. در خطی که فلش دارد باید در جهت فلش حرکت کنید. این فلش‌ها برای دوچرخه و موپد کوچک نیستند، مگر علامت دوچرخه کنارشان باشد.',
     'Grey asphalt lanes seen from above with big white lane arrows painted on them: left, straight and right.',
     ['R11',
-     n('R13', 'Dobbelte vognbanepile', 'فلش‌های دوطرفه', 'در خطوط برگشت‌پذیر یا مسیرهای خاص، فلش‌های دوجهته نشان می‌دهند از آن خط به دو جهت می‌توان رفت.', ROAD + 'a lane with a white double arrow: one going straight and one turning, both drawn as long road arrows.'),
-     n('R14', 'Vognbanepile med svingningsforbud', 'فلش با گردش ممنوع', 'فلش خط که نشان می‌دهد گردش به جهت خاصی ممنوع است.', ROAD + 'a lane with a long white arrow going straight with a short crossed stub to the side.'),
-     n('R15', 'Pile for vognbaneskift', 'فلش‌های تغییر خط', 'فلش‌های مایل که می‌گویند خط شما تمام می‌شود و باید به خط کناری بروید؛ به ترافیک آن خط راه بدهید.', ROAD + 'a lane with a long thin white arrow bending diagonally into the next lane, broken lane lines.')])
+     n('R13', 'Dobbelte vognbanepile', 'فلش‌های دوتایی (دو تقاطع پشت سر هم)', 'یک فلش بلند با دو سرِ گردش: برای **دو تقاطعِ پشت سر هم** است. از این خط می‌توانید در تقاطع اول یا در تقاطع بعدی به همان سمت بپیچید.', ROAD + 'one long white lane arrow running along the lane with TWO arrowheads bending to the same side one after the other: the first branches off halfway along, the second at the end (one arrow for two junctions in a row).'),
+     n('R14', 'Vognbanepile med svingningsforbud', 'فلش با گردش ممنوع', 'فلش برای تقاطعی است که **بعد از** یک جاده‌ی فرعی می‌آید؛ پیچیدن به آن فرعیِ نزدیک‌تر ممنوع است. شاخه‌ی کوتاهِ بی‌نوک روی فلش همان فرعی است.', ROAD + 'one long white lane arrow with a short stub branching off halfway WITHOUT an arrowhead (the side road where turning is forbidden) and an arrowhead turning to the side at its end.'),
+     n('R15', 'Pile for vognbaneskift', 'فلش‌های تغییر خط', 'فلش‌های مایل بین خط‌چین‌ها: هرچه زودتر به خطی که فلش نشان می‌دهد بروید. اگر خط‌چین ادامه دارد، شما که خط عوض می‌کنید باید مطمئن شوید بی‌خطر و بدون مزاحمت است؛ اگر خط‌چین تمام می‌شود (دو خط یکی می‌شوند)، همه باید با ملاحظه‌ی متقابل ادغام شوند.', ROAD + 'a lane with a long thin white arrow bending diagonally into the next lane, broken lane lines.')])
 
 # ---------------------------------------------------------------- S
 cat('S', 'خطوط عرضی', 'خط ایست، دندان کوسه و گذرگاه‌ها.',
     'خط‌کشی‌هایی که عرض جاده را قطع می‌کنند: جای توقف، حق تقدم یا عبور عابر و دوچرخه را نشان می‌دهند.',
     'Grey asphalt seen from above at a junction with white transverse markings: a stop line, a row of white shark-teeth triangles and a zebra crossing.',
     ['S11', 'S13',
-     n('S16', 'Afslutning af svingbane', 'پایان خط گردش', 'خط‌چین مایلی که نشان می‌دهد خط گردش از کجا شروع یا تمام می‌شود.', ROAD + 'two lanes where a dashed white line runs diagonally to separate a turning lane.'),
+     n('S16', 'Afslutning af svingbane', 'خط انتظارِ انتهای خط گردش', 'خط‌چین پهن در عرضِ انتهای خط گردش (معمولاً داخل تقاطع، مثلاً در گردش به چپ): اگر برای راه دادن (مثلاً به ترافیک روبه‌رو یا عابران) باید بایستید، پشت همین خط منتظر بمانید.', ROAD + 'seen from above inside a junction: a left-turn lane drawn with dashed white lines curves into the junction and ends at a short broad dashed white line across the lane, where turning cars wait.'),
      'S17',
      n('S18', 'Rumlestriber', 'نوارهای لرزاننده', 'نوارهای عرضی برجسته که هنگام عبور صدا و لرزش ایجاد می‌کنند تا به شما هشدار دهند (مثلاً قبل از تقاطع یا ورود به شهر).', ROAD + 'a group of many short parallel white raised stripes across the lane.'),
      n('S20', 'Løbehjulsboks', 'جای پارک اسکوتر برقی', 'محل خط‌کشی‌شده برای پارک اسکوتر برقی؛ فقط آنجا پارک کنید.', ROAD + 'a rectangular white outlined box on the pavement with a white electric scooter symbol.'),
      'S21',
-     n('S22', 'Cykelboks', 'جای انتظار دوچرخه', 'محدوده‌ای جلوی خط ایست خودروها در تقاطع چراغ‌دار که دوچرخه‌سوارها در آن منتظر می‌مانند. خودروها باید پشت خط ایست خودشان بایستند.', ROAD + 'a junction with a cycle box: a white bicycle symbol in an area in front of the cars\' stop line, a second stop line further back.'),
-     n('S32', 'Bump', 'علامت سرعت‌گیر', 'خط‌کشی شطرنجی سفید روی سرعت‌گیر؛ سرعت را کم کنید.', ROAD + 'a band of white chequered squares (two rows) across the lane on a speed bump.')])
+     n('S22', 'Cykelboks', 'جای انتظار دوچرخه', 'محدوده‌ای با علامت دوچرخه **جلوی خط گردش به راستِ** خودروها در تقاطع: دوچرخه‌سوارها و موپدهای کوچک می‌توانند آنجا جلوتر از خودروها منتظر بمانند تا راست‌گردها آن‌ها را ببینند. خودروها پشت خط ایست خودشان می‌ایستند.', ROAD + 'a junction with a cycle box: a white bicycle symbol in an area in front of the cars\' stop line, a second stop line further back.'),
+     n('S32', 'Bump', 'علامت سرعت‌گیر', 'مربع‌های سفید در عرض جاده: سرعت‌گیر (بامپ) هست؛ سرعت را کم کنید.', ROAD + 'a band of white chequered squares (two rows) across the lane on a speed bump.')])
 
 # ---------------------------------------------------------------- T
 cat('T', 'خط‌کشی توقف و پارک', 'جای پارک و خطوط زرد توقف ممنوع.',
     'خط‌کشی‌هایی که جای پارک یا ممنوعیت توقف و پارک را نشان می‌دهند. خط **زرد ممتد** کنار جدول یعنی توقف ممنوع و خط **زرد خط‌چین** یعنی پارک ممنوع.',
     'A kerb seen from above with a solid yellow line and a broken yellow line painted along it, beside white parking bays.',
-    [n('T33', 'Parkeringsbås', 'جای پارک', 'خطوط سفید که هر جای پارک را مشخص می‌کنند؛ خودرو را داخل خطوط پارک کنید.', ROAD + 'three rows of parking bays marked with white lines: parallel, angled and perpendicular.'),
+    [n('T33', 'Parkeringsbås', 'جای پارک', 'خطوط سفید که هر جای پارک را مشخص می‌کنند؛ خودرو را داخل خطوط پارک کنید. در پارکینگی که جای پارک خط‌کشی شده، بیرون از آن‌ها پارک نکنید. اگر نوشته یا علامتی (مثل معلولیت، تاکسی یا اتوبوس) در جای پارک باشد، فقط مخصوص همان است.', ROAD + 'three rows of parking bays marked with white lines: parallel, angled and perpendicular.'),
      'T61',
      n('T62', 'Parkeringsforbud', 'پارک ممنوع (خط زرد خط‌چین)', 'خط زرد **خط‌چین** کنار جدول یعنی **پارک ممنوع** است؛ توقف کوتاه برای سوار و پیاده کردن مسافر یا بارگیری مجاز است.', ROAD + 'a broken yellow line painted along the kerb.'),
-     n('T63', 'Ophør af standsning og parkering', 'پایان ممنوعیت (روی جدول)', 'مثلث زرد رنگ‌شده روی جدول، پایان ممنوعیت توقف یا پارک را نشان می‌دهد.', 'a kerb stone with a yellow triangle painted on its top face, seen from the side.')])
+     n('T63', 'Markering af ophør af standsning og parkering', 'پایان ممنوعیت کنار تقاطع (روی جدول)', 'مثلث زرد رنگ‌شده روی جدول: نشان می‌دهد ممنوعیت توقف و پارکِ کنار تقاطع (قاعده‌ی ۱۰ متر) کجا تمام می‌شود.', 'a kerb stone with a yellow triangle painted on its top face, seen from the side.')])
 
 # ---------------------------------------------------------------- U
 cat('U', 'تابلوهای زیرین: فاصله، زمان و استثنا', 'زیر تابلوی اصلی؛ معنای آن را دقیق‌تر می‌کنند.',
-    'تابلوی زیرین زیر تابلوی اصلی نصب می‌شود و معنایش را دقیق‌تر می‌کند: از کجا، تا کجا، چه زمانی یا برای چه کسانی. زیر تابلوهای هشدار و ممنوعیت حاشیه‌ی قرمز دارند و زیر تابلوهای آبی، زمینه‌ی آبی.',
+    'تابلوی زیرین زیر تابلوی اصلی نصب می‌شود و معنایش را دقیق‌تر می‌کند: از کجا، تا کجا، چه زمانی یا برای چه کسانی. زیر تابلوهای هشدار، حق تقدم و ممنوعیت **زمینه‌ی سفید با حاشیه‌ی قرمز** دارند و زیر تابلوهای الزامی و اطلاع‌رسانی **زمینه‌ی آبی** (زیر تابلوی بزرگراه، سبز).',
     'A Danish round red-bordered prohibition sign on a grey pole with a small white rectangular sub-sign below it with a red border and black text drawn as abstract bars.',
     [n('U1', 'Afstand', 'فاصله تا محل اعتبار', 'فاصله از تابلو تا جایی که تابلوی اصلی از آن اعتبار دارد.', PLATE + 'the text "500 m".'),
      n('U2', 'Vejstrækning', 'طول مسیر اعتبار', 'تابلوی اصلی برای بخشی از جاده اعتبار دارد؛ اعداد، فاصله تا ابتدا و انتهای آن بخش‌اند.', PLATE + 'the text "200-800 m".'),
@@ -414,16 +414,16 @@ cat('U', 'تابلوهای زیرین: فاصله، زمان و استثنا', '
      n('U4', 'Færdselsart', 'فقط برای این نوع وسیله', 'تابلوی اصلی فقط برای وسیله‌ای که علامتش روی تابلوی زیرین است اعتبار دارد.', PLATE + 'a black lorry seen from the side.'),
      n('U5', 'Undtaget færdselsart', 'به‌جز این نوع وسیله', 'تابلوی اصلی (یا چراغ) برای وسیله‌ای که روی تابلوی زیرین با کلمه‌ی «undtaget» آمده اعتبار **ندارد**.', PLATE + 'a black bicycle above the word "undtaget".'),
      n('U6', 'Tilstødende vej', 'برای جاده‌ی کناری', 'تابلوی اصلی برای جاده‌ای که در جهت فلش است اعتبار دارد، نه برای جاده‌ی خود شما.', PLATE + 'a black arrow going up and turning right.'),
-     n('U7', 'Undtaget ved lyssignal', 'استثنا از چراغ برای دوچرخه', 'دوچرخه‌سوارها می‌توانند در جهت فلش (به راست) از چراغ قرمز بگذرند، به شرط اینکه به دیگران راه بدهند.', PLATE + 'a black bicycle above an arrow turning right and the word "undtaget".')])
+     n('U7', 'Undtaget ved lyssignal', 'استثنا از چراغ برای دوچرخه', 'زیر چراغ راهنمایی: دوچرخه‌سوارها می‌توانند در جهت فلش (به راست) از چراغ قرمز بگذرند، به شرط اینکه بی‌قید و شرط به دیگران راه بدهند (در مسیر گردش به راستِ آن‌ها دندان‌کوسه هست).', PLATE + 'a black bicycle above an arrow turning right and the word "undtaget".')])
 
 cat('UA', 'تابلوهای زیرین هشدار', 'زیر تابلوهای هشدار؛ نوع خطر را می‌گویند.',
     'این تابلوهای زیرین زیر تابلوهای هشدار نصب می‌شوند و نوع خطر یا محدودیت را دقیق‌تر بیان می‌کنند.',
     'A Danish warning triangle on a grey pole with a small white rectangular sub-sign below it with a red border showing a black snowflake.',
     [n('UA31', 'Isglat', 'یخ‌زدگی', 'زیر تابلوی «جاده‌ی لغزنده»: لغزندگی به‌خاطر یخ است.', PLATE + 'a black snowflake.'),
-     n('UA41', 'Hastighedsangivelse', 'سرعت پیشنهادی در خطر', 'زیر تابلوی هشدار، سرعتی را که برای عبور امن از خطر توصیه می‌شود نشان می‌دهد.', PLATE + 'the black number "40" on a square plate.'),
+     n('UA41', 'Hastighedsangivelse', 'سرعت پیشنهادی در پیچ', 'زیر تابلوی پیچ خطرناک: سرعتی که در شرایط عادی می‌توان با آن از پیچ (یا پیچ‌ها) گذشت. در هوای بد یا جاده‌ی لغزنده آهسته‌تر برانید.', PLATE + 'the black number "40" on a square plate.'),
      n('UA43', 'Fri bredde', 'عرض آزاد', 'عرض آزاد جاده در بخش باریک.', PLATE + 'the text "3,5 m" between two black triangles pointing inwards.'),
      n('UA43.1', 'Smal vej (2-minus-1-vej)', 'جاده‌ی باریک «۲ منهای ۱»', 'جاده‌ی دوطرفه‌ای که وسطش یک خط برای هر دو جهت است و دو خودرو بدون رفتن روی خط کنار جاده نمی‌توانند از کنار هم رد شوند. روی خط وسط برانید و هنگام روبه‌رو شدن به راست بروید.', PLATE + 'the black words "Smal vej".'),
-     n('UA72', 'Se efter tog', 'مراقب قطار باشید', 'در گذرگاه راه‌آهن: قبل از عبور به دو طرف نگاه کنید.', PLATE + 'the black words "Se efter tog" above two black arrows pointing towards each other.'),
+     n('UA72', 'Se efter tog', 'مراقب قطار باشید', 'در گذرگاه راه‌آهنی که راه‌بند و چراغ ندارد: قبل از عبور به دو طرف نگاه کنید.', PLATE + 'the black words "Se efter tog" above two black arrows pointing towards each other.'),
      n('UA73', 'Varsling af elektrificeret bane', 'سیم برق راه‌آهن', 'سیم‌های برق بالای ریل؛ ارتفاع آزاد را نشان می‌دهد.', PLATE + 'a black lightning arrow and the text "4,5 m" between two triangles pointing at each other from top and bottom.'),
      n('UA99', 'Uheldskryds', 'تقاطع حادثه‌خیز', 'زیر تابلوی هشدار: در این تقاطع تصادف زیاد رخ می‌دهد. بسیار محتاط باشید.', PLATE + 'two black cars crashed into each other.')])
 
@@ -461,15 +461,15 @@ cat('UE', 'تابلوهای زیرین اطلاع‌رسانی', 'زیر تاب�
     [n('UE33.1', 'Før og efter tavlen', 'پارک قبل و بعد از تابلو', 'قاعده‌ی پارک **هم قبل و هم بعد** از تابلو اعتبار دارد.', PLATEB + 'a vertical white arrow with heads at both ends, on a tall narrow plate.'),
      n('UE33.2', 'Begynder ved tavlen', 'پارک از تابلو به بعد', 'قاعده‌ی پارک **از تابلو** شروع می‌شود.', PLATEB + 'a vertical white arrow pointing up, on a tall narrow plate.'),
      n('UE33.3', 'Ophæves ved tavlen', 'پارک تا تابلو', 'قاعده‌ی پارک **در تابلو** تمام می‌شود.', PLATEB + 'a vertical white arrow pointing down, on a tall narrow plate.'),
-     n('UE33.4', 'Reserveret til elbil', 'مخصوص خودروی برقی', 'جای پارک فقط برای خودروی برقی در حال شارژ.', PLATEB + 'a white electric plug with a zigzag cable.'),
+     n('UE33.4', 'Reserveret til elbil', 'مخصوص خودروی برقی', 'جای پارک فقط برای خودروهای برقی (که با برق بیرونی شارژ می‌شوند).', PLATEB + 'a white electric plug with a zigzag cable.'),
      n('UE34', 'Brandslukker og nødtelefon', 'کپسول آتش‌نشانی و تلفن اضطراری', 'در این محل توقف اضطراری کپسول آتش‌نشانی و تلفن اضطراری هست.', PLATEB + 'a white fire extinguisher and a white telephone handset.'),
-     n('UE80', 'Påbudt sele og kørelys', 'کمربند و چراغ الزامی', 'زیر تابلوی سرعت‌های عمومی در مرز: در دانمارک بستن **کمربند ایمنی** و روشن بودن **چراغ** در همه‌ی ساعت‌ها الزامی است.', PLATEB + 'a white car with belted passengers and a yellow beam of light in front of it.')])
+     n('UE80', 'Påbudt sele og kørelys', 'کمربند و چراغ الزامی', 'زیر تابلوی سرعت‌های عمومی در مرز: در دانمارک بستن **کمربند ایمنی**، استفاده از **وسایل ایمنی کودک** و روشن بودن **چراغ** در همه‌ی ساعت‌ها الزامی است.', PLATEB + 'a white car with belted passengers and a yellow beam of light in front of it.')])
 
 cat('US', 'علامت‌های تابلوهای زیرین', 'علامت وسایل نقلیه روی تابلوهای زیرین.',
     'این علامت‌ها روی تابلوهای زیرین می‌آیند و نوع وسیله‌ی نقلیه‌ای را که قاعده برایش هست (یا نیست) نشان می‌دهند.',
     'Four small flat white RECTANGULAR plates standing in a row on short grey posts, each with a thin black border and ONE simple black vehicle pictogram: a car, a lorry, a bus and a bicycle. They are NOT round signs: no red rings, no red bars, no circles.',
     [n('US1', 'Bil til og med 3.500 kg', 'خودرو تا ۳۵۰۰ کیلوگرم', 'خودروی سواری و وانت تا وزن کل ۳۵۰۰ کیلوگرم.', SYM + 'a car seen from the side.'),
-     n('US2', 'Lastbil', 'کامیون', 'کامیون (بیش از ۳۵۰۰ کیلوگرم) با یدکش.', SYM + 'a lorry seen from the side.'),
+     n('US2', 'Lastbil', 'کامیون', 'کامیون، با یا بدون یدک (تریلر).', SYM + 'a lorry seen from the side.'),
      n('US3', 'Bus', 'اتوبوس', 'خودروی بیش از ۳۵۰۰ کیلوگرم با بیش از ۸ صندلی مسافر.', SYM + 'a bus seen from the side.'),
      n('US4', 'Lastbilvogntog', 'کامیون با تریلر', 'کامیون با یدک یا تریلر.', SYM + 'a lorry with a trailer seen from the side.'),
      n('US5', 'Påhængskøretøj', 'یدک (تریلر)', 'یدک یا تریلر.', SYM + 'a small closed trailer seen from the side.'),
@@ -492,15 +492,15 @@ cat('V', 'نوشته‌ها و علامت‌های روی جاده', 'علامت
      n('V20', 'Løbehjulssymbol', 'علامت اسکوتر برقی', 'علامت اسکوتر برقی روی جاده، مثلاً در جای پارک اسکوتر.', ROAD + 'a white electric scooter symbol.'),
      n('V21', 'Cykelsymbol', 'علامت دوچرخه', 'خط یا مسیری که برای دوچرخه است.', ROAD + 'a white bicycle symbol painted on the lane.'),
      n('V23', 'Invalidesymbol', 'علامت معلولیت', 'جای پارک مخصوص افراد دارای کارت معلولیت.', ROAD + 'a white wheelchair symbol in a parking bay.'),
-     n('V33', 'Parkeringssymbol', 'علامت P روی جاده', 'محل پارک مجاز.', ROAD + 'a tall white letter "P" painted on the road.'),
+     n('V33', 'Parkeringssymbol', 'علامت P روی جاده', 'این سطح فقط برای پارک است، نه برای رانندگی.', ROAD + 'a tall white letter "P" painted on the road.'),
      'V42',
      n('V43', 'Symbol for letbanekøretøj', 'علامت تراموا', 'خطی که مخصوص تراموا است.', ROAD + 'a white tram symbol painted on the lane.'),
      n('V44', 'Taxisymbol', 'نوشته‌ی TAXI', 'خط یا محل توقف مخصوص تاکسی.', ROAD + 'the word "TAXI" painted in tall narrow white letters.'),
      n('V45', 'Taxisymbol for nulemissionsbil', 'TAXI سبز (تاکسی بدون آلایندگی)', 'محل مخصوص تاکسی‌های بدون آلایندگی (برقی).', 'a green rectangle painted on grey asphalt with the word "TAXI" in tall narrow white letters.'),
      n('V46', 'Bilsymbol for nulemissionsbil', 'علامت خودروی بدون آلایندگی', 'خط یا محل مخصوص خودروهای بدون آلایندگی (برقی).', 'a green rectangle painted on grey asphalt with a white car seen from the front.'),
      n('V50', 'Færdselstavlesymbol', 'تابلو روی جاده', 'تابلوی سرعت یا تابلوی دیگری که روی جاده تکرار شده است.', ROAD + 'a round red-bordered speed sign with "60" painted on the lane.'),
-     n('V60', 'Sikkerhedssymbol', 'علامت فاصله‌ی ایمنی', 'علامت‌های پیکان مانند روی جاده که برای حفظ فاصله‌ی کافی از خودروی جلو کمک می‌کنند.', ROAD + 'a long white chevron (arrow head) painted across the lane, pointing forward.'),
-     n('V61', 'Symbol for frakørselsnummer', 'شماره‌ی خروجی روی جاده', 'شماره‌ی خروجی روی خط بزرگراه.', ROAD + 'a white elongated hexagon outline with the number "59" inside, painted on the lane.'),
+     n('V60', 'Sikkerhedssymbol', 'علامت فاصله‌ی ایمنی', 'علامت‌های پیکان‌مانند روی جاده که فاصله‌ی ایمنیِ پیشنهادی را نشان می‌دهند: وقتی **دو علامت** بین شما و خودروی جلو باشد، حداقل فاصله را دارید.', ROAD + 'a long white chevron (arrow head) painted across the lane, pointing forward.'),
+     n('V61', 'Symbol for frakørselsnummer', 'شماره‌ی خروجی روی جاده', 'شماره‌ی خروجی روی خط بزرگراه: خطی را نشان می‌دهد که برای رسیدن به آن خروجی پیشنهاد می‌شود.', ROAD + 'a white elongated hexagon outline with the number "59" inside, painted on the lane.'),
      n('V62', 'Ruteidentifikationssymbol for supercykelsti', 'علامت سوپر مسیر دوچرخه', 'نشان سوپر مسیر دوچرخه روی مسیر.', 'the orange letter-C supercycle-path symbol painted on grey asphalt.')])
 
 # ---------------------------------------------------------------- X Y Z
@@ -515,8 +515,8 @@ cat('Y', 'چراغ‌های خط', 'چراغ‌های بالای هر خط.',
     ['Y17'])
 
 cat('Z', 'چراغ‌های چشمک‌زن', 'قرمز، زرد و آبی چشمک‌زن.',
-    'چراغ چشمک‌زن **قرمز** یعنی توقف کامل (مثلاً در گذرگاه راه‌آهن یا پل متحرک)، **زرد** یعنی احتیاط بیشتر و **آبی** یعنی احتیاط بیشتر، مثلاً کنار ایستگاه تراموا.',
+    'چراغ چشمک‌زن **قرمز** یعنی توقف کامل (مثلاً در گذرگاه راه‌آهن یا پل متحرک)، **زرد** یعنی احتیاط ویژه (مثلاً پلیس مدرسه یا کار جاده‌ای) و **آبی** یعنی احتیاط ویژه به‌خاطر **تصادف یا آتش‌سوزی** در پیش.',
     'Two round red flashing lights side by side on a black panel beside a yellow flashing light, on a grey post.',
-    [n('Z72.1', 'Rødt blinksignal', 'چراغ قرمز چشمک‌زن', 'دو چراغ قرمز که یکی‌درمیان چشمک می‌زنند: **باید بایستید**؛ مثلاً قبل از پل متحرک، خروجی آتش‌نشانی یا محل فرود هواپیما.', 'two large round red lights side by side on a black rectangular panel.'),
+    [n('Z72.1', 'Rødt blinksignal', 'چراغ قرمز چشمک‌زن', 'یک یا دو چراغ قرمز چشمک‌زن: **باید بایستید**، پشت خط ایست یا در فاصله‌ی امن قبل از چراغ؛ مثلاً قبل از پل متحرک، راه‌بند متحرک، خروجی خودروهای امدادی یا جایی که هواپیما در ارتفاع کم از روی جاده می‌گذرد. اگر وقتی چراغ روشن شد آن‌قدر نزدیک بودید که ایستادن خطرناک بود، لازم نیست بایستید.', 'two large round red lights side by side on a black rectangular panel.'),
      'Z72.2', 'Z93',
-     n('Z95', 'Blåt blinksignal', 'چراغ آبی چشمک‌زن', 'با احتیاط ویژه رانندگی کنید؛ مثلاً در محل عبور تراموا.', 'one round blue light on a black square panel.')])
+     n('Z95', 'Blåt blinksignal', 'چراغ آبی چشمک‌زن', 'چراغ آبی چشمک‌زن یا گردان که پلیس و نیروهای امدادی می‌گذارند: به‌خاطر **تصادف یا آتش‌سوزی** در پیش با احتیاط ویژه رانندگی کنید.', 'one round blue light on a black square panel.')])
