@@ -140,6 +140,14 @@ MUST NOT APPEAR: trains, other road users, text.
 
 
 # ---------- the lessons ----------
+# The step added after the check of «آزمون جدید»'s questions against the lessons (2026-10-23).
+picture('bd-faults', """
+An educational illustration for a Danish driving-theory app, seen from the driver's seat of our car: both hands hold the steering wheel firmly at its sides, and in the instrument panel behind the wheel one RED warning lamp is lit, the oil-can symbol for low oil pressure, next to a row of other symbols that are not lit; the small green right-indicator lamp is lit too. Through the windscreen, a straight two-lane country road in daylight, with a wide paved lay-by on the right a short way ahead where the car can stop safely.
+MUST BE CLEARLY VISIBLE: the firm grip of both hands on the wheel, the lit red warning lamp, the safe lay-by ahead on the right.
+MUST NOT APPEAR: other lit warning lamps, smoke, fire, other vehicles close by, people outside, text, letters, numbers, brand names, logos.
+Style: a clean, precise flat vector illustration for a Danish driving-theory app, NOT photorealistic and NOT a 3D render: simple shapes, flat colours, crisp edges, the lit lamps bright with a soft glow. No text, letters or numbers anywhere.
+""")
+
 EMERGENCY = lesson('emergency', 'EMERGENCY', ('خودروهای امدادی', 'Emergency vehicles', 'Udrykningskøretøjer'), 7, [
     intro(('خودروهای امدادی (udrykningskøretøjer)', 'Emergency vehicles (udrykningskøretøjer)', 'Udrykningskøretøjer'),
           ('آمبولانس، آتش‌نشانی و پلیسی که با چراغ آبی و آژیر می‌آیند، باید هر چه زودتر رد شوند. آزمون می‌پرسد چطور راه را باز کنید، پشت چراغ قرمز چه کنید و وقتی از روبه‌رو می‌آیند چه.',
@@ -326,6 +334,7 @@ BREAKDOWN = lesson('breakdown', 'BREAKDOWN', ('خرابی خودرو در جاد
           ('بیشتر خرابی‌ها اول هشدار می‌دهند. چراغ هشدار قرمز (مثلاً ترمز، فشار روغن، باتری یا دمای موتور) یعنی هر جا بی‌خطر شد بایستید و ببینید چه شده؛ چراغ زرد یا نارنجی یعنی به‌زودی بررسی‌اش کنید. اگر پدال ترمز نرم شد یا خودرو هنگام ترمز به یک طرف کشیده شد، آهسته و با احتیاط تا جای امنی بروید و پیش از ادامه‌ی راه خودرو را تعمیر کنید.',
            'Most faults give a warning first. A red warning light (for example brakes, oil pressure, battery or engine temperature) means stop as soon as it is safe and find out what is wrong; a yellow or orange one means get it checked soon. If the brake pedal goes soft or the car pulls to one side when you brake, drive slowly and carefully to a safe place and get the car repaired before you drive on.',
            'De fleste fejl giver et varsel først. En rød advarselslampe (fx bremser, olietryk, batteri eller motortemperatur) betyder, at du skal standse, så snart det kan ske sikkert, og finde ud af, hvad der er galt; en gul eller orange lampe betyder, at bilen snart skal efterses. Bliver bremsepedalen blød, eller trækker bilen til den ene side, når du bremser, så kør langsomt og forsigtigt til et sikkert sted, og få bilen repareret, før du kører videre.'),
+          art='bd-faults',
           rule=('چراغ هشدار قرمز: هر جا بی‌خطر شد بایستید. ترکیدن لاستیک: فرمان را محکم بگیرید و ترمز شدید نکنید.', 'Red warning light: stop where it is safe. Burst tyre: hold the wheel firmly and do not brake hard.', 'Rød advarselslampe: stands, hvor det er sikkert. Et dæk springer: hold fast i rattet, og brems ikke hårdt.'),
           law=law((67, 3)),
           points=[('ترکیدن لاستیک: فرمان را با دو دست محکم نگه دارید و ترمز شدید نکنید؛ پا را از گاز بردارید و وقتی سرعت کم شد کنار بزنید.', 'A tyre bursts: hold the wheel firmly with both hands and do not brake hard; ease off the accelerator and pull over when the car has slowed down.', 'Et dæk springer: hold rattet fast med begge hænder, og brems ikke hårdt; slip speederen, og hold ind, når farten er nede.'),

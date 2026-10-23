@@ -149,6 +149,7 @@ def main():
             tri(t)
     # the pictures' prompts
     used = {s['art'] for l in consts for s in l['steps'] if s.get('art')}
+    used |= {k for m in mods for k in getattr(m, 'OWN_ART', [])}   # course.ts's own lessons' new pictures (old.py)
     arts = json.load(open(ART_JSON))
     added = changed = 0
     for k, text in PROMPTS.items():
