@@ -160,8 +160,8 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
         </View>
         <Animated.View style={{ gap: 10, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
           <View style={{ alignItems: 'center', gap: 2, marginBottom: 6 }}>
-            <T style={{ fontSize: 20, lineHeight: 29, fontWeight: '700', textAlign: 'center' }}>{byMail ? 'ادامه با ایمیل' : 'سفرتان را با TeoriPrøve شروع کنید'}</T>
-            <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'آماده‌ی آزمون تئوری، مطمئن پشت فرمان.'}</T>
+            <T style={{ fontSize: 20, lineHeight: 29, fontWeight: '700', textAlign: 'center' }}>{byMail ? 'ادامه با ایمیل' : 'تضمین قبولی در آزمون تئوری رانندگی'}</T>
+            <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'آماده‌ی آزمون تئوری.'}</T>
           </View>
           {byMail ? <>
             <Wide light label="ورود" icon="login" onPress={() => onEmail('login')} />
