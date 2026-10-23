@@ -2,11 +2,11 @@
 # (6.2), anticipating others (4.5), road conditions (5.2), distance (7.8) and lights (7.19).
 # Rules: Færdselsloven §§ 4 stk. 2 (police directions are obeyed, before signs and signals), 21, 32 stk. 1 and 4 (horn only to prevent or
 # avert danger; a raised arm signals stopping), 33 stk. 3 and 5 (main beam; fog lamps only in fog or heavy precipitation), 35 stk. 1,
-# 36 stk. 1 (no parking lights needed on a road so well lit that the vehicle is clearly seen), 41 stk. 1, 56 stk. 1 (carry the licence and
-# show it to the police), 82 (persons and goods must not block the driver's view); BEK 425/2023: § 18 stk. 2 (a prohibition normally
-# ends at the next junction) and C 55 (a local speed limit applies regardless of § 18 stk. 2 until ended), E 39/E 40 (recommended speed),
-# D 55 (minimum speed is a round blue sign), A 46,1 (steep descent).
-# Guidance (not law): FDM — dip the lights when an animal is seen in the beam; dashboard lamps for airbag, tyre pressure, brakes and fuel.
+# 36 stk. 1 (no parking lights needed on a road so well lit that the vehicle is clearly seen), 41 stk. 1, 42 (the speed limit also
+# applies downhill), 56 stk. 1 (carry the licence and show it to the police), 82 (persons and goods must not block the driver's view);
+# BEK 425/2023: E 39/E 40 (recommended speed), D 55 (minimum speed is a round blue sign), A 46,1 (steep descent).
+# Guidance (not law): FDM — dip the lights when an animal is seen in the beam; dashboard lamps for airbag, tyre pressure, brakes and fuel;
+# the driver, not the cruise control, is responsible for the speed.
 from nq import Q, S, above, picture, town, view
 
 Q(5926, "7.6", view("""
@@ -235,33 +235,33 @@ MUST NOT APPEAR: other signs, any other text."""),
 )
 
 Q(5934, "7.3", view("""
-THE SCENE: a straight two-lane country road outside town; a little ahead a crossroads with side roads to the left and right, which we
-are about to drive straight through; beyond the crossroads the road continues straight with no signs.
-MUST BE CLEARLY VISIBLE: the crossroads ahead, the road continuing beyond it without signs.
-MUST NOT APPEAR: signs, text."""),
-  "For et stykke tid siden kørte du forbi en tavle med 70 km/t. Nu kører du ligeud gennem krydset foran dig. Efter krydset er der ingen "
-  "tavler. Hvad gælder for din fart efter krydset?",
-  "A while ago you passed a 70 km/h sign. Now you drive straight on through the crossroads ahead of you. There are no signs after the "
-  "crossroads. What applies to your speed after the crossroads?",
-  "مدتی پیش از کنار تابلوی ۷۰ کیلومتر در ساعت گذشتید. حالا مستقیم از تقاطعِ جلو عبور می‌کنید. بعد از تقاطع تابلویی نیست. بعد از تقاطع "
-  "درباره‌ی سرعت شما چه قاعده‌ای برقرار است؟",
-  S(True, "Grænsen på 70 km/t gælder stadig.", "The 70 km/h limit still applies.", "حد ۷۰ کیلومتر در ساعت همچنان برقرار است.",
-    "En lokal hastighedsbegrænsning gælder også efter et kryds, indtil den ophæves af en ophørstavle, en afstand på en undertavle eller en "
-    "anden hastighedsbegrænsning.", "A local speed limit also applies after a junction until it is ended by an end sign, a distance on a "
-    "plate or another speed limit.", "حد سرعت محلی بعد از تقاطع هم برقرار است، تا وقتی با تابلوی پایان، فاصله‌ی درج‌شده روی زیرتابلو یا "
-    "حد سرعت دیگری لغو شود."),
-  S(False, "Efter krydset gælder den generelle grænse på 80 km/t igen.", "After the crossroads the general 80 km/h limit applies again.",
-    "بعد از تقاطع دوباره حد عمومی ۸۰ کیلومتر در ساعت برقرار است.",
-    "Krydset ophæver ikke den lokale hastighedsbegrænsning.", "The crossroads does not end the local speed limit.",
-    "تقاطع حد سرعت محلی را لغو نمی‌کند."),
-  S(False, "Grænsen gælder kun den første kilometer efter tavlen.", "The limit only applies for the first kilometre after the sign.",
-    "این حد فقط تا یک کیلومتر بعد از تابلو برقرار است.",
-    "Kun hvis en undertavle angiver en afstand, gælder grænsen for en bestemt strækning.",
-    "Only if a plate gives a distance does the limit apply for a set stretch.", "فقط اگر زیرتابلو فاصله‌ای را نشان دهد، حد برای مسافت معینی است."),
-  S(False, "Grænsen ophørte ved krydset, fordi et forbud kun gælder frem til næste kryds.", "The limit ended at the crossroads because a "
-    "prohibition only applies up to the next junction.", "این حد در تقاطع تمام شد، چون ممنوعیت فقط تا تقاطع بعدی برقرار است.",
-    "Det gælder mange forbudstavler, men ikke en lokal hastighedsbegrænsning.", "That is true of many prohibition signs, but not of a local "
-    "speed limit.", "این درباره‌ی بسیاری از تابلوهای ممنوعیت درست است، ولی نه درباره‌ی حد سرعت محلی."),
+THE SCENE: a long, straight downhill stretch of a country road; at the right stands a round speed-limit sign 80; on the dashboard strip
+the cruise-control symbol is lit, and the speedometer needle points a little above 90 km/h; the road goes on down the hill ahead.
+MUST BE CLEARLY VISIBLE: the downhill road, the 80 sign, the lit cruise-control symbol, the speedometer a little above 90.
+MUST NOT APPEAR: other signs, any other text."""),
+  "Du kører med fartpiloten indstillet på 80 km/t. Ned ad en lang bakke stiger farten alligevel til over 90 km/t. Hvad gælder?",
+  "You are driving with the cruise control set to 80 km/h. Down a long hill the speed still rises to over 90 km/h. What applies?",
+  "با کروز کنترلِ تنظیم‌شده روی ۸۰ کیلومتر در ساعت می‌رانید. در یک سرازیری طولانی سرعت با این حال به بیش از ۹۰ کیلومتر در ساعت می‌رسد. "
+  "چه قاعده‌ای برقرار است؟",
+  S(True, "Jeg bremser, så farten kommer ned under grænsen.", "I brake so that the speed comes down below the limit.",
+    "ترمز می‌کنم تا سرعت به زیر حد مجاز برسد.",
+    "Det er altid føreren, der har ansvaret for farten, også når fartpiloten er slået til.",
+    "The driver is always responsible for the speed, also when the cruise control is switched on.",
+    "مسئولیت سرعت همیشه با راننده است، حتی وقتی کروز کنترل روشن است."),
+  S(False, "Fartpiloten sørger for, at jeg ikke kan komme til at køre for stærkt.",
+    "The cruise control makes sure that I cannot end up driving too fast.", "کروز کنترل مطمئن می‌شود که نتوانم بیش از حد تند بروم.",
+    "En almindelig fartpilot kan ikke altid holde farten nede ad bakke.", "An ordinary cruise control cannot always hold the speed down a "
+    "hill.", "کروز کنترل معمولی همیشه نمی‌تواند در سرازیری سرعت را پایین نگه دارد."),
+  S(False, "Ned ad bakke må jeg køre lidt over grænsen, fordi bilen selv tager fart.",
+    "Downhill I may drive a little above the limit because the car picks up speed by itself.",
+    "در سرازیری می‌توانم کمی بیشتر از حد مجاز بروم، چون خودرو خودبه‌خود سرعت می‌گیرد.",
+    "Hastighedsgrænsen gælder også ned ad bakke.", "The speed limit also applies downhill.", "حد سرعت در سرازیری هم برقرار است."),
+  S(False, "Bliver jeg målt, er det bilens fejl, fordi fartpiloten var slået til.",
+    "If I am caught by a speed check, it is the car's fault because the cruise control was on.",
+    "اگر سرعتم ثبت شود، تقصیر خودروست، چون کروز کنترل روشن بود.",
+    "Føreren har ansvaret for kørslen, uanset hvilke hjælpesystemer bilen har.",
+    "The driver is responsible for the driving, whatever assistance systems the car has.",
+    "راننده، صرف‌نظر از سیستم‌های کمکیِ خودرو، مسئول رانندگی است."),
 )
 
 Q(5935, "7.3", view("""
