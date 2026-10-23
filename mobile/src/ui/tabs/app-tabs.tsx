@@ -9,8 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { T, tap } from '../kit';
 import { Icon, type IconName } from '../icon';
-import { BarSurface, useBarLook, useBarShade } from '../glass-bar';
-import { BarLight } from '../bar-shade';
+import { BarSurface, useBarApart, useBarLook, useBarShade } from '../glass-bar';
+import { BarApart, BarLight } from '../bar-shade';
 import { TABS } from './tabs';
 
 const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
@@ -40,8 +40,8 @@ TabButton.displayName = 'TabButton';
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
 // The bar's shade (light, or grey over something dark: glass-bar.tsx) goes to the tabs through BarLight.
 const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>((props, ref) => {
-  const light = useBarShade();
-  return <BarLight.Provider value={light}><TabShell ref={ref} {...props} /></BarLight.Provider>;
+  const light = useBarShade(), apart = useBarApart();
+  return <BarLight.Provider value={light}><BarApart.Provider value={apart}><TabShell ref={ref} {...props} /></BarApart.Provider></BarLight.Provider>;
 });
 GlassTabBar.displayName = 'GlassTabBar';
 const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {

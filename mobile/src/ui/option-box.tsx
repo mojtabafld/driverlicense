@@ -10,6 +10,7 @@ import { Pressable, View } from 'react-native';
 import { Icon } from './icon';
 import { T } from './kit';
 import { ARC, radius, useColors, useIsDark } from './theme';
+import { useSurfaceUnder } from './bar-shade';
 
 // The rows report their text's own height; the group hands back the tallest so all rows match.
 const Group = createContext<{ min: number; report: (id: number, h: number) => void; drop: (id: number) => void } | null>(null);
@@ -23,10 +24,11 @@ export function OptionGroup({ children }: { children: React.ReactNode }) {
   const report = useCallback((id: number, h: number) => { if (heights.current.get(id) !== h) { heights.current.set(id, h); update(); } }, [update]);
   const drop = useCallback((id: number) => { heights.current.delete(id); update(); }, [update]);
   const value = useMemo(() => ({ min, report, drop }), [min, report, drop]);
+  const under = useSurfaceUnder(c.surface); // (in the apps: the bars see the answers under them)
   if (!ARC) return <>{children}</>;
   return (
     <Group.Provider value={value}>
-      <View style={{ backgroundColor: c.surface, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden' }}>{children}</View>
+      <View ref={under} style={{ backgroundColor: c.surface, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden' }}>{children}</View>
     </Group.Provider>
   );
 }
