@@ -215,8 +215,14 @@ async function imageOf(q) {
     return { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data } };
   } catch { return null; }
 }
-// A question written new (`rev` in the bank) gets its own cache keys, so no lesson made for its old text is shown.
-const qkey = q => `${q.id}${q.rev ? `r${q.rev}` : ''}`;
+// The admins' approved notes on questions (insights.js, store.meta.qNotes): { qid: { status, fa, en, v } }, set by the
+// server at start and on each decision. An approved note goes into the question's explanations (promptFor).
+let NOTES = {};
+const setNotes = n => { NOTES = n || {}; };
+const noteOf = q => { const n = NOTES[q.id]; return n && n.status === 'approved' ? n : null; };
+// A question written new (`rev` in the bank) gets its own cache keys, so no lesson made for its old text is shown; so
+// does a question whose approved note is new or changed (`n` and its version).
+const qkey = q => { const n = noteOf(q); return `${q.id}${q.rev ? `r${q.rev}` : ''}${n ? `n${n.v || 1}` : ''}`; };
 
 function promptFor(q, ticks, lang, ui = 'fa') {
   if (ui !== 'fa') return promptForX(q, ticks, lang);
@@ -238,6 +244,7 @@ function promptFor(q, ticks, lang, ui = 'fa') {
     topic && topic.lesson ? `نکته‌های مبحث:\n${topic.lesson.map(l => `- ${l}`).join('\n')}` : '',
     `سؤال: ${lang === 'en' && q.sen ? q.sen : q.sda}`,
     q.sfa ? `ترجمه‌ی سؤال: ${q.sfa}` : '',
+    noteOf(q) ? `نکته‌ی تأییدشده‌ی معلم درباره‌ی اشتباه رایج کاربران در این سؤال (در توضیح به کار ببرید): ${noteOf(q).fa}` : '',
     '',
     lines.join('\n\n'),
     known ? '' : '\n(پاسخ‌های کاربر برای این آزمون ثبت نشده؛ بخش «اشتباه شما» را با توضیح گزینه‌هایی که معمولاً اشتباه جواب داده می‌شوند پر کنید.)',
@@ -261,6 +268,7 @@ function promptForX(q, ticks, lang) {
   return [
     topic ? `Topic: ${topic.da}` : '',
     `Question: ${lang === 'en' && q.sen ? q.sen : q.sda}`,
+    noteOf(q) ? `A teacher's approved note on the usual mistake in this question (use it in the explanation): ${noteOf(q).en}` : '',
     '',
     lines.join('\n\n'),
     known ? '' : '\n(The user\'s answers were not recorded for this exam; fill the mistakes part with the statements that are commonly answered wrongly.)',
@@ -382,7 +390,10 @@ function isCurrentLesson(siteDir, qid, ref) {
 }
 function isCurrentSummary(siteDir, items, ref) {
   loadBank(siteDir);
-  return items.every(x => { const q = Q.get(+x.id); return !q || !q.rev || String(ref).includes(`.${qkey(q)}.`); });
+  return items.every(x => { const q = Q.get(+x.id); return !q || (!q.rev && !noteOf(q)) || String(ref).includes(`.${qkey(q)}.`); });
 }
 
-module.exports = { getLesson, getSummary, getTopic, lessonsAvailable: available, isCurrentLesson, isCurrentSummary, refUi, uiOf };
+// The question bank (for insights.js and coach.js): the questions by id and the topics.
+const bank = siteDir => { loadBank(siteDir); return { Q, topics: BANK.topics }; };
+
+module.exports = { bank, setNotes, getLesson, getSummary, getTopic, lessonsAvailable: available, isCurrentLesson, isCurrentSummary, refUi, uiOf };

@@ -97,7 +97,8 @@ Teoripro وابسته به اداره‌ی راهنمایی و رانندگی د
 
 ### Data safety
 
-- **Collected:** Name, Email address (account); App activity (answers, progress); Photos (an optional profile picture);
+- **Collected:** Name, Email address (account); App activity (answers, progress, app interactions: the pages opened, counted
+  per day without the account); Photos (an optional profile picture);
   App info and performance (crash reports, if any). Shared with third parties: No (processors only: hosting, email,
   payments, AI explanations – these count as service providers, not sharing).
 - **Purpose:** App functionality, Account management.
