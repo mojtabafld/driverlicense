@@ -162,17 +162,16 @@ export default function Settings() {
         {!PROVE_PICS && showPrem ? (
           <View style={{ marginTop: 6, borderTopWidth: 1, borderTopColor: c.line }}>{premRow}</View>
         ) : null}
-      </Card>
-      {/* «حالت مربی» (Mojtaba 2026-10-24): the AI coach, for premium accounts, on unless turned off here
-          (lib/coach-mode.ts); without premium the switch is faded and the line leads to the premium page. */}
-      {!PROVE_PICS && user && !guest ? (
-        <Card style={{ gap: 4 }}>
-          <Pressable disabled={coach.allowed} onPress={() => router.push('/premium')} accessibilityRole={coach.allowed ? undefined : 'button'}>
+        {/* «حالت مربی» (Mojtaba 2026-10-24): the AI coach, under «نسخه‌ی ویژه»; for premium accounts, on unless turned off
+            here (lib/coach-mode.ts); without premium the switch is faded and the line leads to the premium page. */}
+        {!PROVE_PICS && !guest ? (
+          <Pressable disabled={coach.allowed} onPress={() => router.push('/premium')} accessibilityRole={coach.allowed ? undefined : 'button'}
+            style={{ paddingTop: 8, borderTopWidth: 1, borderTopColor: c.line, marginTop: showPrem ? 0 : 6 }}>
             <Row title="حالت مربی" sub={coach.allowed ? 'با هوش مصنوعی، از روی آزمون‌ها و درس‌هایتان می‌گوید چه چیزی را تمرین کنید تا بهتر یاد بگیرید.' : 'با هوش مصنوعی به بهتر یاد گرفتن شما کمک می‌کند؛ با نسخه‌ی ویژه.'}
               right={<Toggle label="حالت مربی" value={coach.on} disabled={!coach.allowed} onChange={v => { setSettings({ coach: v }); }} />} />
           </Pressable>
-        </Card>
-      ) : null}
+        ) : null}
+      </Card>
       {/* /app: «نسخه‌ی ویژه» stays a card of its own. */}
       {PROVE_PICS && showPrem ? <Card style={{ gap: 4 }}>{premRow}</Card> : null}
       {/* One card: the look and the colour theme. */}
