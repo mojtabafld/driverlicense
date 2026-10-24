@@ -34,19 +34,19 @@ const SYSTEM = `شما معلم آزمون تئوری رانندگی دانما�
 
 قالب پاسخ دقیقاً این سه بخش است (عنوان‌ها همین باشند، هر بخش در خط جدا):
 ## این سؤال درباره‌ی چیست
-یک یا دو جمله‌ی ساده: آنچه در تصویر به‌وضوح دیده می‌شود و به سؤال مربوط است (مثلاً تابلو، خط‌کشی، چراغ، وسیله‌ها و افراد مهم، وضعیت جاده) و قانون یا اصل رانندگی که سؤال می‌سنجد.
+فقط یک جمله‌ی کوتاه: مهم‌ترین چیزی که در تصویر به سؤال مربوط است و قانونی که سؤال می‌سنجد.
 ## اشتباه شما
-فقط برای گزینه‌هایی که در داده «→ اشتباه» دارند، هر کدام یک خط که با «- » شروع شود: متن کوتاه گزینه در «»، اینکه کاربر آن را «انتخاب کردید» یا «انتخاب نکردید»، پاسخ درست آن و دلیلش.
+فقط برای گزینه‌هایی که در داده «→ اشتباه» دارند، هر کدام یک خط کوتاه (حداکثر حدود ۱۵ کلمه) که با «- » شروع شود: چند کلمه از گزینه در «»، «انتخاب کردید» یا «انتخاب نکردید»، و دلیل درست در چند کلمه.
 گزینه‌هایی را که «→ درست» دارند در این بخش نیاورید.
 برای پاسخ کاربر همیشه «انتخاب کردید / انتخاب نکردید» بنویسید، نه «تیک زدید / تیک نزدید».
 ## نکته برای دفعه‌ی بعد
-یک یا دو خط با «- »: قاعده‌ی عملی و قابل‌به‌خاطرسپاری برای سؤال‌های مشابه.
+فقط یک خط کوتاه با «- »: قاعده‌ی عملی و قابل‌به‌خاطرسپاری برای سؤال‌های مشابه.
 
 قواعد:
 - پاسخ درستِ هر گزینه همانی است که در داده آمده؛ آن را تغییر ندهید و با آن تناقض نگویید.
 ${LAW_RULES}
 ${IMAGE_RULES}
-- حداکثر حدود ۱۲۰ کلمه، ساده و روان، بدون مقدمه و بدون جمع‌بندی اضافه.
+- خیلی کوتاه و مختصر: کل پاسخ حداکثر حدود ۶۰ کلمه، ساده و روان، بدون مقدمه و بدون جمع‌بندی اضافه.
 - اصطلاح‌های دانمارکی مهم (مثل ubetinget vigepligt) را در صورت لزوم داخل پرانتز بیاورید.
 - نکته‌های مهم (قاعده‌ی اصلی، عدد یا شرط کلیدی، دلیل درست یا نادرست بودن) را با **دو ستاره** پررنگ کنید؛ در هر خط حداکثر یکی دو عبارت کوتاه، نه کل جمله.`;
 
@@ -160,16 +160,16 @@ ${DATA_NOTE}
 
 The answer has exactly these three parts (with these headings, each on its own line):
 ## ${o.about}
-One or two simple sentences: what the picture clearly shows that matters for the question (signs, markings, lights, important vehicles and people, the road) and the traffic rule the question tests.
+One short sentence only: the main thing in the picture that matters for the question, and the rule it tests.
 ## ${o.mistake}
-Only for the statements marked "→ wrong" in the data, one line each starting with "- ": the statement in short in quotes, whether "${o.did}" or "${o.didNot}" it, its correct answer and why.
+Only for the statements marked "→ wrong" in the data, one short line each (at most about 15 words) starting with "- ": a few words of the statement in quotes, whether "${o.did}" or "${o.didNot}" it, and the reason in a few words.
 Do not include statements marked "→ right" here.
 ## ${o.tip}
-One or two lines starting with "- ": a practical, memorable rule for similar questions.
+One short line starting with "- ": a practical, memorable rule for similar questions.
 
 Rules:
 ${common}
-- At most about 120 words, plain and simple, no introduction and no extra conclusion.`;
+- Very short and to the point: at most about 60 words in all, plain and simple, no introduction and no extra conclusion.`;
 };
 // The app's language the lesson is written in: 'fa' (as before, also /app), 'en' or 'da'.
 const uiOf = ui => (ui === 'en' || ui === 'da' ? ui : 'fa');
@@ -285,7 +285,7 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang, ui }) {
   const known = Array.isArray(ticks);
   const mask = known ? q.st.map((s, k) => ((!!ticks[k]) !== !!s.ok ? 1 : 0)).join('') : 'x';
   const allRight = known && !mask.includes('1');
-  const key = `lesson:v7:${qkey(q)}:${mask}:${lang}${ui === 'fa' ? '' : `:${ui}`}`; // v7: written strictly by Denmark's traffic rules (LAW_RULES)
+  const key = `lesson:v8:${qkey(q)}:${mask}:${lang}${ui === 'fa' ? '' : `:${ui}`}`; // v7: written strictly by Denmark's traffic rules (LAW_RULES); v8: shorter (Mojtaba 2026-10-24)
   if (store.meta[key]) return { ...store.meta[key], key };
   if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
   if (!inflight.has(key) && !allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
@@ -386,7 +386,8 @@ async function getTopic({ store, siteDir, username, qid, lang, ui }) {
 function isCurrentLesson(siteDir, qid, ref) {
   loadBank(siteDir);
   const q = Q.get(+qid);
-  return !q || String(ref).split(':')[2] === qkey(q);
+  // (and one written before the lessons were made shorter, v8, is made again)
+  return !q || (String(ref).startsWith('lesson:v8:') && String(ref).split(':')[2] === qkey(q));
 }
 function isCurrentSummary(siteDir, items, ref) {
   loadBank(siteDir);

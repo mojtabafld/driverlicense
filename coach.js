@@ -1,43 +1,26 @@
 // The personal coach, «مربی هوشمند» (Mojtaba 2026-10-24): Claude reads one user's own results (their tests, the topics and
-// questions they get wrong, how often they study; never their name or email) with what it advised them before and how
-// they did since, and the general patterns the daily report has learnt (insights.js, store.meta.aiMemory), and writes
-// short advice: a headline, a few points, the topics to work on and the page to go to next. Kept on the account
-// (user.coach, with the last advice given in user.coach.hist), made again after new tests (at most every 20 minutes)
-// or after 3 days. Shown in the app's chart view (mobile/src/ui/coach-card.tsx); premium, as the other AI features.
-// The coach page (mobile/src/app/coach.tsx, from the header button of «آموزش» and «آزمون»; Mojtaba 2026-10-24) has two
-// parts of its own (getPage), each kept apart in user.coaches: `learn`, short advice on what to study from the user's
-// tests and the course lessons done, with links to the learning pages the app lists (its `catalog`); `exam`, the
-// tests' mistakes summed up (by topic, figured here) with where to practise. Off when the user turns «حالت مربی»
-// off in the settings (settings.coach false).
+// questions they get wrong, how often they study, the course lessons done; never their name or email) with what it
+// advised them before and the general patterns the daily report has learnt (insights.js, store.meta.aiMemory). It
+// writes the coach page (mobile/src/app/coach.tsx), opened from the coach button in the head of «آموزش» or «آزمون»,
+// each with its own part, kept apart in user.coaches: `learn`, short advice on what to study with links to the
+// learning pages the app lists (its `catalog`); `exam`, the tests' mistakes summed up (by topic, figured here) with
+// where to practise. All in the app's language only (topic names too). Made again after new tests or lessons (at most
+// every 20 minutes) or after 3 days. Premium; off when «حالت مربی» is off in the settings (settings.coach false).
 'use strict';
 const insights = require('./insights');
 const { clipText } = insights;
 
-const NEXT = ['exam', 'mistakes', 'learn', 'signs', 'priority', 'course'];
 const LANG = { fa: 'Persian (simple, natural)', en: 'English', da: 'Danish' };
-const SCHEMA = {
-  type: 'object', additionalProperties: false, required: ['headline', 'points', 'focus', 'next', 'nextLabel'],
-  properties: {
-    headline: { type: 'string' },
-    points: { type: 'array', items: { type: 'string' } },
-    focus: { type: 'array', items: { type: 'string' } },
-    next: { type: 'string', enum: NEXT },
-    nextLabel: { type: 'string' },
-  },
-};
-const system = ui => `You are the personal coach inside Teoripro, an app for the Danish driving theory test (licence B).
-You get one learner's own results (anonymous), the advice you gave them before with how they did since, and general
-patterns seen across all learners. Write in ${LANG[ui] || LANG.fa}:
-- headline: one short encouraging sentence on where they stand (at most 10 words), honest about the figures.
-- points: 2 to 4 short, concrete points: what to do next and why, from their own figures (a topic they keep getting
-  wrong, tests to take, mistakes to practise). Build on your earlier advice: say what improved, change course if it did
-  not work. At most about 20 words each.
-- focus: up to 3 topic names (as given in the data) to work on now.
-- next: the one page to open now: exam (a timed test), mistakes (practise their mistakes), learn (lessons by topic),
-  signs (road signs), priority (right of way), course (the step-by-step course); nextLabel: its button text, 2 to 4 words.
-The real test: 25 pictures, at most 5 mistakes. Never invent figures or traffic rules; small numbers are not trends.`;
+// The topics' names in English: the app's own translations of their Persian names (mobile/src/lib/i18n/strings.json).
+let EN = null;
+function enOf(fa) {
+  if (!EN) { try { EN = require('./mobile/src/lib/i18n/strings.json'); } catch { EN = {}; } }
+  return EN[fa] && EN[fa][0];
+}
+// A topic's name in the app's language only.
+const topicName = (t, c, ui) => (ui === 'da' ? t.da : ui === 'en' ? enOf(t.fa) || t.da : t.fa || t.da) || String(c);
 
-function facts(u, { bank, scoreOf, FULL, PASS_MIN, dayKey }) {
+function facts(u, { bank, scoreOf, FULL, PASS_MIN, dayKey }, ui) {
   const now = Date.now(), DAY = 864e5, list = (u.attempts || []).slice(-60);
   const topics = {}, wrongQ = new Map();
   for (const a of list) for (const it of a.items) {
@@ -49,7 +32,7 @@ function facts(u, { bank, scoreOf, FULL, PASS_MIN, dayKey }) {
     if (!it.ok) { w.wrong++; w.rightAfter = 0; } else if (w.wrong) w.rightAfter++;
     wrongQ.set(it.id, w);
   }
-  const name = c => { const t = bank.topics[c] || {}; return t.fa ? `${t.fa} (${t.da})` : t.da || String(c); };
+  const name = c => topicName(bank.topics[c] || {}, c, ui);
   const pct = (a, b) => (b ? Math.round((a / b) * 100) : null);
   const study = new Set(u.study || []);
   return {
@@ -59,37 +42,12 @@ function facts(u, { bank, scoreOf, FULL, PASS_MIN, dayKey }) {
     topics: Object.entries(topics).filter(([, t]) => t.tries >= 3).map(([c, t]) => ({ topic: name(c), tries: t.tries, wrongPct: pct(t.wrong, t.tries),
       last14: t.tries14 ? { tries: t.tries14, wrongPct: pct(t.wrong14, t.tries14) } : undefined })).sort((a, b) => b.wrongPct - a.wrongPct).slice(0, 12),
     stillWrong: [...wrongQ.entries()].filter(([, w]) => w.wrong >= 2 && w.rightAfter < 2).slice(-8).map(([id]) => {
-      const q = bank.Q.get(id); return { topic: name(q.c), question: clipText(q.sfa || q.sda, 140) };
+      const q = bank.Q.get(id); return { topic: name(q.c), question: clipText(ui === 'fa' ? q.sfa || q.sda : ui === 'en' ? q.sen || q.sda : q.sda, 140) };
     }),
     studyDaysLast14: Array.from({ length: 14 }, (_, i) => dayKey(now - i * DAY)).filter(d => study.has(d)).length,
     studiedToday: study.has(dayKey(now)),
     savedQuestions: Array.isArray(u.saved) ? u.saved.length : 0,
   };
-}
-
-// The user's advice: kept, or made now. Returns { coach } or { few: true } (fewer than 2 tests).
-async function get(u, ui, deps) {
-  ui = LANG[ui] ? ui : 'fa';
-  const n = (u.attempts || []).length, c = u.coach, now = Date.now();
-  if (n < 2) return { few: true };
-  const fresh = c && c.ui === ui && ((c.n === n && now - c.at < 3 * 864e5) || now - c.at < 20 * 60e3);
-  if (fresh) return { coach: c };
-  const f = facts(u, deps);
-  const data = {
-    learner: f,
-    yourEarlierAdvice: ((c && c.hist) || []).slice(-3),
-    generalPatterns: ((deps.store.meta.aiMemory && deps.store.meta.aiMemory.notes) || []).slice(0, 20),
-  };
-  const { out } = await insights.ask({ system: system(ui), data, schema: SCHEMA, maxTokens: 8000, effort: 'low' });
-  const coach = { at: now, n, ui, headline: clipText(out.headline, 120), points: out.points.slice(0, 4).map(p => clipText(p, 240)),
-    focus: out.focus.slice(0, 3).map(x => clipText(x, 80)), next: NEXT.includes(out.next) ? out.next : 'exam', nextLabel: clipText(out.nextLabel, 40) };
-  // What it advised, with the figures then, for the next advice to build on.
-  const last = f.tests[f.tests.length - 1];
-  const hist = [...((c && c.hist) || []), { day: deps.dayKey(now), headline: coach.headline, focus: coach.focus, next: coach.next,
-    tests: n, lastScore: last ? `${last.right}/${last.of}` : undefined }].slice(-6);
-  u.coach = { ...coach, hist };
-  await deps.store.saveUser(u);
-  return { coach: u.coach };
 }
 
 // ---------- the coach page ----------
@@ -123,11 +81,12 @@ ${kind === 'learn' ? `This is the coach's «learning» page:
 - focus: up to 3 topic names (as given in the data) that need practice most.
 The real test: 25 pictures, at most 5 mistakes.`}
 Build on your earlier advice: say what improved, change course if it did not work. Never invent figures or traffic
-rules; small numbers are not trends.`;
+rules; small numbers are not trends. Write every word in ${LANG[ui] || LANG.fa} only: no words or terms in any other
+language (no Danish terms in brackets, no Persian), and the topic names as given in the data.`;
 
 // The tests' mistakes by topic and lately, figured here (shown on the page as they are, beside the AI's summary).
-function mistakeStats(u, deps) {
-  const f = facts(u, deps), list = (u.attempts || []).slice(-20);
+function mistakeStats(u, deps, ui) {
+  const f = facts(u, deps, ui), list = (u.attempts || []).slice(-20);
   const full = list.filter(a => a.items.length >= deps.FULL);
   return {
     tests: (u.attempts || []).length,
@@ -149,10 +108,11 @@ async function getPage(u, ui, deps, kind, catalog) {
   const doneN = cat.filter(x => x.done).length;
   const sig = kind === 'learn' ? `${n}.${doneN}` : `${n}`;
   const all = (u.coaches = u.coaches || {}), c = all[kind];
-  const stats = kind === 'exam' ? mistakeStats(u, deps) : undefined;
-  const fresh = c && c.ui === ui && ((c.sig === sig && now - c.at < 3 * 864e5) || now - c.at < 20 * 60e3);
+  const stats = kind === 'exam' ? mistakeStats(u, deps, ui) : undefined;
+  // (v 2: in the app's language only, Mojtaba 2026-10-24)
+  const fresh = c && c.v === 2 && c.ui === ui && ((c.sig === sig && now - c.at < 3 * 864e5) || now - c.at < 20 * 60e3);
   if (fresh) return { coach: c, stats };
-  const f = facts(u, deps);
+  const f = facts(u, deps, ui);
   const data = {
     learner: f,
     ...(kind === 'learn' ? { catalog: cat, courseLessonsDone: doneN } : { mistakes: stats }),
@@ -161,7 +121,7 @@ async function getPage(u, ui, deps, kind, catalog) {
   };
   const { out } = await insights.ask({ system: pageSystem(kind, ui), data, schema: PAGE_SCHEMA[kind], maxTokens: 8000, effort: 'low' });
   const ids = new Map(cat.map(x => [x.id, x.title]));
-  const coach = { at: now, sig, ui, headline: clipText(out.headline, 120), points: out.points.slice(0, 4).map(p => clipText(p, 240)),
+  const coach = { v: 2, at: now, sig, ui, headline: clipText(out.headline, 120), points: out.points.slice(0, 4).map(p => clipText(p, 240)),
     ...(kind === 'learn'
       ? { links: out.links.filter(l => ids.has(l.id)).slice(0, 4).map(l => ({ id: l.id, title: ids.get(l.id), why: clipText(l.why, 100) })) }
       : { focus: out.focus.slice(0, 3).map(x => clipText(x, 80)) }) };
@@ -172,4 +132,4 @@ async function getPage(u, ui, deps, kind, catalog) {
   return { coach: all[kind], stats };
 }
 
-module.exports = { get, getPage };
+module.exports = { getPage };
