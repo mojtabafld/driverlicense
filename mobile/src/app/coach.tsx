@@ -1,11 +1,11 @@
-// «مربی هوشمند», the coach page (Mojtaba 2026-10-24), opened from the coach button in the head of «آموزش» and «آزمون»
-// (ui/coach-card.tsx CoachButton) on that tab's part, the other a tap away:
+// «مربی هوشمند», the coach page (Mojtaba 2026-10-24), opened from the coach button in the head of «آموزش» or «آزمون»
+// (ui/coach-button.tsx), with that tab's part only:
 // - «آموزش»: the AI's short advice on what to study, from the user's tests and the course lessons done, with links to
 //   the learning pages that teach it (the app sends the pages it can open, the server's coach.js picks from them);
 // - «آزمون»: the tests' mistakes summed up: the figures (by topic) and the AI's summary of where to practise, with a
 //   button to practise the mistakes.
-// Premium («حالت مربی» in the settings, lib/coach-mode.ts); each part is asked once per visit of the app (the server
-// keeps it until there are new tests or lessons).
+// Premium («حالت مربی» in the settings, lib/coach-mode.ts); the server keeps each part until there are new tests or
+// lessons. Everything on it is in the app's language only (the AI writes in it, the topics come named in it).
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -18,7 +18,7 @@ import { UI_LANG, tr } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { ArcButton, Card, Segmented, T, tap } from '@/ui/kit';
+import { ArcButton, Card, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
@@ -36,13 +36,13 @@ const open = (id: string) => {
   if (kind === 'course') router.push({ pathname: '/course-lesson', params: { id: key } });
   else router.push(`/${key}` as never);
 };
-// Kept while the app runs, so going back and forth between the parts does not ask again.
+// Kept while the app runs, so opening the page again does not ask again at once.
 const kept: Partial<Record<Kind, Answer>> = {};
 
 export default function CoachPage() {
   const c = useColors();
   const p = useLocalSearchParams<{ from?: string }>();
-  const [kind, setKind] = useState<Kind>(p.from === 'learn' ? 'learn' : 'exam');
+  const kind: Kind = p.from === 'learn' ? 'learn' : 'exam';
   const { allowed, on } = useCoachMode();
   const { attempts } = useApp();
   const { done } = useCourseProgress();
@@ -64,7 +64,7 @@ export default function CoachPage() {
   }, [on, kind, n, catalog]);
 
   const a = ans[kind], k = a?.coach;
-  const icon = (name: 'sparkles' | 'learn' | 'exam') => (
+  const icon = (name: 'coach' | 'learn' | 'exam') => (
     <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
       <Icon name={name} size={19} color={c.text} weight="semibold" />
     </View>
@@ -92,7 +92,7 @@ export default function CoachPage() {
   if (!allowed) {
     body = (
       <Card style={{ gap: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>{icon('sparkles')}<T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>حالت مربی</T></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>{icon('coach')}<T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>حالت مربی</T></View>
         <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>با هوش مصنوعی به بهتر یاد گرفتن شما کمک می‌کند؛ با نسخه‌ی ویژه.</T>
         <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={() => router.push('/premium')} icon="lock" />
       </Card>
@@ -129,7 +129,7 @@ export default function CoachPage() {
                 <Icon name={l.id.startsWith('course:') ? 'learn' : l.id.includes('sign') ? 'sign' : l.id.includes('priority') ? 'priority' : 'rules'} size={17} color={c.link} />
               </View>
               <View style={{ flex: 1 }}>
-                <T raw style={{ fontWeight: '700', fontSize: 14.5, lineHeight: 22 }}>{l.title}</T>
+                <T raw style={{ fontWeight: '700', fontSize: 14.5, lineHeight: 22 }}>{catalog.find(x => x.id === l.id)?.title ?? l.title}</T>
                 <T raw style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{l.why}</T>
               </View>
               <Icon name="chevronLeft" size={16} color={c.muted} />
@@ -146,8 +146,8 @@ export default function CoachPage() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>{icon('exam')}<T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>اشتباهات آزمون‌ها</T></View>
           <View style={{ flexDirection: 'row' }}>
             {[['آزمون‌ها', faNum(s.tests)], ['میانگین', s.avgPct == null ? '–' : `${faNum(s.avgPct)}٪`], ['قبولی', `${faNum(s.passed)}/${faNum(s.full)}`], ['سؤال برای تمرین', faNum(s.stillWrong)]].map(([l, v]) => (
-              <View key={l} style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-                <T style={{ color: c.muted, fontSize: 11.5, textAlign: 'center' }} numberOfLines={1}>{l}</T>
+              <View key={l} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 2 }}>
+                <T style={{ color: c.muted, fontSize: 11.5, lineHeight: 16, textAlign: 'center' }} numberOfLines={2}>{l}</T>
                 <T style={{ fontSize: 17, fontWeight: '800', textAlign: 'center' }}>{v}</T>
               </View>
             ))}
@@ -170,7 +170,7 @@ export default function CoachPage() {
         </Card>
       ) : null}
       <Card style={{ gap: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>{icon('sparkles')}<T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>کجا تمرین لازم دارید؟</T></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>{icon('coach')}<T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>کجا تمرین لازم دارید؟</T></View>
         {advice}
         {k?.focus?.length ? (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -184,7 +184,6 @@ export default function CoachPage() {
 
   return (
     <SubPage title="مربی هوشمند" subtitle={kind === 'learn' ? 'پیشنهاد آموزش از روی آزمون‌ها و درس‌های شما' : 'خلاصه‌ی اشتباهات آزمون‌های شما'}>
-      {allowed && on ? <Segmented value={kind} onChange={setKind} options={[{ value: 'learn', label: 'آموزش' }, { value: 'exam', label: 'آزمون' }]} /> : null}
       {body}
     </SubPage>
   );

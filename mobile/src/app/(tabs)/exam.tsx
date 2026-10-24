@@ -14,7 +14,7 @@ import { t } from '@/lib/i18n';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { loadCheered, saveCheered } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
-import { CoachButton } from '@/ui/coach-card';
+import { CoachButton } from '@/ui/coach-button';
 import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
 import { SizeSlider } from '@/ui/size-slider';

@@ -17,7 +17,7 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
-import { CoachButton } from '@/ui/coach-card';
+import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { Card, Screen, T, physical } from '@/ui/kit';

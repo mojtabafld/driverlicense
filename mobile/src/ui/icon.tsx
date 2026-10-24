@@ -5,7 +5,7 @@
 // kept for callers but do not change the drawing.
 import {
   ArrowLeft, ArrowRight, ArrowRightLeft, Bell, BookOpen, Bookmark, Bug, Calendar, Car, ChartColumn, Check, ChevronDown, ChevronLeft, ChevronUp,
-  CircleCheck, CircleQuestionMark, CircleX, ClipboardList, Clock, Eye, EyeOff, Flame, Flashlight, Funnel, Gauge, House, IdCard, Info,
+  CircleCheck, CircleQuestionMark, CircleX, ClipboardList, Clock, Eye, EyeOff, Flame, Flashlight, Funnel, Gauge, GraduationCap, House, IdCard, Info,
   Languages, Lightbulb, List, ListChecks, Lock, LogIn, LogOut, Mail, Merge, Minus, Moon, Pencil, Play, Plus, Road, RotateCw, Ruler, Scale,
   Search, Send, Settings, ShieldCheck, Shuffle, Signpost, Smartphone, Sparkles, Square, SquareParking, StickyNote, Sun, Trash, TriangleAlert,
   User, UserPlus, Volume2, Wine, X, ZoomIn, type LucideIcon,
@@ -17,6 +17,7 @@ import type { IconName, IconProps } from './icon-names';
 export type { IconName } from './icon-names';
 
 const ICONS: Record<IconName, LucideIcon> = {
+  coach: GraduationCap,
   house: House, exam: CircleCheck, checkCircle: CircleCheck, learn: BookOpen, settings: Settings, moon: Moon, sun: Sun, check: Check,
   xCircle: CircleX, chevronLeft: ChevronLeft, chevronDown: ChevronDown, chevronUp: ChevronUp, sparkles: Sparkles, clipboard: ClipboardList,
   warning: TriangleAlert, arrowRight: ArrowRight, arrowLeft: ArrowLeft, bookmark: Bookmark, chart: ChartColumn, translate: Languages,
