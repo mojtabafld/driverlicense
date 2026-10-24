@@ -66,6 +66,18 @@ export function rememberDefault(id: unknown) {
   if (!valid(read(KEY)) && id !== PALETTE) reloadApp();
 }
 export const PALETTE: PaletteId = initial();
+// The server's default theme (DEFAULT_THEME, set in DigitalOcean), whatever this device has picked: on the web written
+// into the page, on a phone the one /api/config named last time; «آسمان» until known.
+export function defaultPalette(): PaletteId {
+  if (PROVE_PICS) return 'ocean';
+  const def = web ? (typeof window !== 'undefined' ? (window as any).__TP_THEME : null) : read(DEFAULT_KEY);
+  return valid(def) ? def : 'sky';
+}
+// That theme's accent in the dark theme, and the text on it (the welcome screen's night page; Mojtaba 2026-10-24).
+export function defaultAccentDark() {
+  const s = PALETTES.find(p => p.id === defaultPalette())!;
+  return { accent: s.accD, on: s.onD };
+}
 const SPEC = PALETTES.find(p => p.id === PALETTE)!;
 
 // Keep the theme and, when it changes, start the app again in it (lib/reload.ts).
