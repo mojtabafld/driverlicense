@@ -14,6 +14,7 @@ import { t } from '@/lib/i18n';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { loadCheered, saveCheered } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
+import { CoachButton } from '@/ui/coach-card';
 import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
 import { SizeSlider } from '@/ui/size-slider';
@@ -138,7 +139,7 @@ export default function Exam() {
   return (
     <View style={{ flex: 1 }}>
     <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
-      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} onScrollY={onScrollY}>
+      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />} onScrollY={onScrollY}>
       {own ? <NewTestCard test={test} /> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}

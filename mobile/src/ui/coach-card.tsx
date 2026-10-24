@@ -10,11 +10,12 @@ import { View } from 'react-native';
 import { api } from '@/lib/api';
 import { UI_LANG } from '@/lib/i18n';
 import { Icon } from './icon';
-import { ArcButton, Card, T } from './kit';
+import { useCoachMode } from '@/lib/coach-mode';
+import { ArcButton, Card, RoundIcon, T } from './kit';
 import { useColors } from './theme';
 
 type Coach = { headline: string; points: string[]; focus: string[]; next: string; nextLabel: string; at: number };
-type Answer = { coach?: Coach; locked?: boolean; few?: boolean; off?: boolean };
+type Answer = { coach?: Coach; locked?: boolean; few?: boolean; off?: boolean; disabled?: boolean };
 const HREF: Record<string, string> = { exam: '/exam', mistakes: '/mistakes', learn: '/learn', signs: '/signs', priority: '/priority', course: '/course' };
 
 export function CoachCard({ tests }: { tests: number }) {
@@ -27,7 +28,7 @@ export function CoachCard({ tests }: { tests: number }) {
     api<Answer>('POST', 'coach', { ui: UI_LANG }).then(a => { if (live) { setAns(a); setErr(''); } }).catch(e => { if (live) setErr(e.message); });
     return () => { live = false; };
   }, [tests]);
-  if (tests < 2 || ans?.off || ans?.few) return null;
+  if (tests < 2 || ans?.off || ans?.few || ans?.disabled) return null;
   const head = (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
       <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
@@ -72,4 +73,12 @@ export function CoachCard({ tests }: { tests: number }) {
       </>}
     </Card>
   );
+}
+
+// The coach's button in the head of «آموزش» and «آزمون», beside the calendar (Mojtaba 2026-10-24): opens the coach page
+// on its part for that tab; without premium it is there but faded and cannot be pressed; gone when «حالت مربی» is off.
+export function CoachButton({ from }: { from: 'learn' | 'exam' }) {
+  const { allowed, button } = useCoachMode();
+  if (!button) return null;
+  return <RoundIcon icon="sparkles" label="مربی هوشمند" disabled={!allowed} onPress={() => router.push({ pathname: '/coach', params: { from } })} />;
 }

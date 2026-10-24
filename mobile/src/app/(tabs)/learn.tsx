@@ -17,6 +17,7 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
+import { CoachButton } from '@/ui/coach-card';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { Card, Screen, T, physical } from '@/ui/kit';
@@ -118,7 +119,7 @@ export default function Learn() {
     // Main site: the five cards share the screen's height between the search box and the tab bar (taller on tall
     // phones, never shorter than their content; Mojtaba 2026-10-18).
     <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 16} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
-      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }}>
+      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="learn" />}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>
           <View style={{ flexDirection: 'row', gap: 12 }}>
