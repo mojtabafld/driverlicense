@@ -114,8 +114,10 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // lowest one still shows.
   const lo = ARC ? Math.max(0, Math.min(50, Math.floor((Math.min(...data.map(a => pctOf(a) * 100)) - 25) / 10) * 10)) : 0;
   const y = (v: number) => TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B);
-  // ARC: the bars' tops as far as they have grown.
-  const tops = data.map(a => (ARC ? y(lo) - (y(lo) - y(pctOf(a) * 100)) * draw : y(pctOf(a) * 100)));
+  // ARC: the bars' tops as far as they have grown; each at least MIN_BAR tall, so a test with no right answer (0%)
+  // still shows (a short bar in red; Mojtaba 2026-10-24).
+  const MIN_BAR = 8;
+  const tops = data.map(a => (ARC ? y(lo) - Math.max(MIN_BAR, y(lo) - y(pctOf(a) * 100)) * draw : y(pctOf(a) * 100)));
   // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge
   // (mirrored right to left with FLIP: the part drawn runs from the right end, `ahead` is a point not reached yet).
   const edge = Math.max(0, CW - VW) + (VW + DOT * 2 + 2) * draw;
@@ -175,7 +177,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   </G>}
                   {/* Each point shows once the line has reached it. */}
                   {ARC ? data.map((d, i) => (
-                    <Path key={i} d={bar(i)} fill={good(d) ? c.ok : i === sel ? c.faint : failBar(c.line, dark)} />))
+                    <Path key={i} d={bar(i)} fill={good(d) ? c.ok : scoreOf(d) === 0 ? c.bad : i === sel ? c.faint : failBar(c.line, dark)} />))
                   /* The pass line, thin, dashed and faint, over the bars. */
                   .concat(<Line key="pass" x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.4} strokeWidth={1} strokeDasharray="4 4" />)
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */

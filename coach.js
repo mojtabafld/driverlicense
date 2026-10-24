@@ -17,6 +17,9 @@ function enOf(fa) {
   if (!EN) { try { EN = require('./mobile/src/lib/i18n/strings.json'); } catch { EN = {}; } }
   return EN[fa] && EN[fa][0];
 }
+// A Persian or English text without the Danish words the bank adds in brackets («(krybespor)»), for the page that is
+// in the app's language only.
+const noDa = (t, ui) => (ui === 'da' ? t : String(t || '').replace(/\s*\((?=[^)]*[A-Za-zÆØÅæøå])[^()\u0600-\u06FF]{1,60}\)/g, ''));
 // A topic's name in the app's language only.
 const topicName = (t, c, ui) => (ui === 'da' ? t.da : ui === 'en' ? enOf(t.fa) || t.da : t.fa || t.da) || String(c);
 
@@ -125,7 +128,7 @@ function fixedList(u, bank, ui) {
   const f = (u.coachWatch && u.coachWatch.fixed) || {};
   const list = Object.entries(f).sort((a, b) => b[1] - a[1]).map(([id, at]) => ({ q: bank.Q.get(+id), at })).filter(x => x.q);
   return { total: list.length, list: list.slice(0, 10).map(({ q, at }) => ({ qid: q.id, at, topic: topicName(bank.topics[q.c] || {}, q.c, ui),
-    question: clipText(ui === 'fa' ? q.sfa || q.sda : ui === 'en' ? q.sen || q.sda : q.sda, 160) })) };
+    question: clipText(noDa(ui === 'fa' ? q.sfa || q.sda : ui === 'en' ? q.sen || q.sda : q.sda, ui), 160) })) };
 }
 
 // `catalog`: the learning pages the app can open, [{ id, title, done? }] (course lessons and pages), for `learn`.
