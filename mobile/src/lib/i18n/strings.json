@@ -1,4 +1,8 @@
 {
+"انتخاب روز":["Pick a day", "Vælg en dag"],
+"نمایش همه‌ی روزها":["Show all days", "Vis alle dage"],
+"روزهای نقطه‌دار آزمون دارند؛ روی یکی بزنید.":["Days with a dot have tests; tap one.", "Dage med en prik har prøver; tryk på en."],
+"# آزمون":["# tests", "# prøver"],
 "مثل آزمون واقعی، خودت را بسنج":["Like the real test, check yourself", "Som den rigtige prøve, test dig selv"],
 "مثل آزمون واقعی":["Like the real test", "Som den rigtige prøve"],
 "# اشتباه حل شد":["# mistakes fixed", "# fejl rettet"],
