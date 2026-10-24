@@ -21,6 +21,7 @@ import { failBar, ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { ChartButton, TestStats } from '@/ui/chart-view';
+import { CoachCard } from '@/ui/coach-card';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
@@ -377,6 +378,8 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }] }}>
           <TestStats attempts={exams} />
           <View ref={listBox}><ActivityList attempts={exams} limit={3} title="آخرین آزمون‌ها" allHref="/history" hint={hint} /></View>
+          {/* The AI's advice from the user's own results (ui/coach-card.tsx). */}
+          <CoachCard tests={attempts.length} />
         </Animated.View>
       ) : null}
     </Screen>

@@ -5,7 +5,7 @@
 // ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review),
 // LESSON_AI_MODEL (Claude model for those lessons, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
-// ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
+// INSIGHTS_HOUR / INSIGHTS_EMAIL / INSIGHTS_MODEL (the AI's daily report, insights.js), ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
 // PROMO_CODE / PROMO_DAYS (a free trial code) and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js),
 // RESEND_API_KEY, MAIL_FROM, REPORT_TO, RESEND_WEBHOOK_SECRET and FORWARD_TO (email, mail.js).
 // See README.md for all variables.
@@ -16,7 +16,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
-const { getLesson, getSummary, getTopic, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
+const { bank: lessonBank, setNotes, getLesson, getSummary, getTopic, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
 const { search: aiSearch, termPage: aiTermPage } = require('./search');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
@@ -28,6 +28,8 @@ const payments = require('./payments');
 const playbilling = require('./playbilling');
 const push = require('./push');
 const mail = require('./mail');
+const insights = require('./insights');
+const coach = require('./coach');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const PORT = +process.env.PORT || 3000;
@@ -402,6 +404,16 @@ const REPORTS_KEPT = 500, REPORTS_PER_HOUR = 10, reportTimes = new Map(); // bug
 const INBOX_KEPT = 200; // emails Resend received for the domain (mail.js), for the admin panel
 const FULL = 25, PASS_MIN = 20;
 const scoreOf = a => a.items.filter(x => x.ok).length;
+// What insights.js and coach.js read: the bank, the scoring, the day and, for the report's mail, where the panel is.
+const usageTimes = new Map();
+let lastInsightsRun = 0;
+const aiDeps = () => ({ store, bank: lessonBank(SITE), scoreOf, FULL, PASS_MIN, dayKey, visits,
+  onReport: r => (mail.available() && process.env.INSIGHTS_EMAIL !== '0' ? mail.sendInsights(r, `${(process.env.PUBLIC_URL || 'https://teori.bitlane.app').replace(/\/$/, '')}/admin`) : null) });
+// The AI's daily report, once a day from INSIGHTS_HOUR (default 6, Copenhagen), checked every 15 minutes.
+function insightsTick() {
+  if (!insights.available() || hourOf(Date.now()) < (+process.env.INSIGHTS_HOUR || 6)) return;
+  insights.run(aiDeps()).catch(e => console.error('insights', e.message));
+}
 function adminStats() {
   const now = Date.now(), today = dayKey(now), DAYS = 30;
   const keys = Array.from({ length: DAYS }, (_, i) => dayKey(now - (DAYS - 1 - i) * 864e5));
@@ -1236,6 +1248,7 @@ async function api(req, res, route) {
   // 2026-10-20), its question kept (user.freeAi), so that analysis opens again later and no other one does.
   if (req.method === 'POST' && route === 'lesson') {
     const b = await readBody(req);
+    insights.count('ai:lesson');
     const qid = +b.qid, att = attemptAt(b.at);
     const paid = !needsPremium(user), free = !paid && !user.guest && (!user.freeAi || user.freeAi.qid === qid);
     if (!paid && !free) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
@@ -1255,6 +1268,7 @@ async function api(req, res, route) {
   // The topic sheet's points for one reviewed question, written by AI (lesson.js getTopic): { qid, lang, ui }.
   if (req.method === 'POST' && route === 'topic') {
     const b = await readBody(req);
+    insights.count('ai:topic');
     try {
       return send(res, 200, { text: (await getTopic({ store, siteDir: SITE, username: user.username, qid: +b.qid, lang: b.lang, ui: b.ui })).text });
     } catch (e) {
@@ -1265,6 +1279,7 @@ async function api(req, res, route) {
   }
   // AI search of the learning pages (search.js): { q, ui, v } or, the first time / when the server asks (409), { q, ui, catalog }.
   if (req.method === 'POST' && route === 'coursesearch') {
+    insights.count('ai:search');
     if (needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
     const b = await readBody(req, 700e3);
     try {
@@ -1278,6 +1293,7 @@ async function api(req, res, route) {
   // «آموزش این واژه» in the glossary (search.js termPage): { term: { da, en, fa, cat }, v } or, the first time / when the
   // server asks (409), { term, catalog }. For every account: each term is asked about once, then kept.
   if (req.method === 'POST' && route === 'termpage') {
+    insights.count('ai:term');
     const b = await readBody(req, 700e3);
     try {
       return send(res, 200, await aiTermPage({ store, username: user.username, term: b.term, v: b.v, catalog: b.catalog }));
@@ -1290,6 +1306,7 @@ async function api(req, res, route) {
   // AI summary of the mistakes of a whole exam or lesson: [{ id, a }] of the wrongly answered questions.
   if (req.method === 'POST' && route === 'summary') {
     const b = await readBody(req);
+    insights.count('ai:summary');
     const items = Array.isArray(b.items) ? b.items.slice(0, 25).filter(x => x && Array.isArray(x.a)).map(x => ({ id: +x.id, a: x.a.slice(0, 4), n: +x.n || undefined })) : [];
     if (!items.length) return send(res, 400, { error: 'no mistakes' });
     const att = attemptAt(b.at), ref = att && att.ai && att.ai.s;
@@ -1464,6 +1481,7 @@ async function api(req, res, route) {
   // An AI analysis or summary read aloud in Persian: { text } (the text exactly as the server wrote it) → { id }.
   if (req.method === 'POST' && route === 'ttsai') {
     const b = await readBody(req);
+    insights.count('ai:read-aloud');
     try { return send(res, 200, { id: await tts.prepareAi({ store, text: b.text, username: user.username }) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
@@ -1540,6 +1558,54 @@ async function api(req, res, route) {
     if (b.on) marks[id] = { at: Date.now(), by: user.username, note: clip(b.note, 300) }; else delete marks[id];
     await store.saveMeta('consoleMarks', marks);
     return send(res, 200, { marks });
+  }
+  // The pages the app opened (mobile/src/lib/usage.ts): counted per day without the account (insights.js); at most once
+  // in 15 seconds from one account.
+  if (req.method === 'POST' && route === 'usage') {
+    const b = await readBody(req), now = Date.now();
+    if (now - (usageTimes.get(user.username) || 0) < 15e3) return send(res, 429, { error: 'too often' });
+    usageTimes.set(user.username, now);
+    return send(res, 200, { n: insights.track(b.screens) });
+  }
+  // The personal coach (coach.js): { ui } → { coach } | { few } | { locked } (premium, as the other AI features).
+  if (req.method === 'POST' && route === 'coach') {
+    const b = await readBody(req);
+    if (!insights.available()) return send(res, 200, { off: true });
+    if (needsPremium(user) || user.guest) return send(res, 200, { locked: true });
+    insights.count('ai:coach');
+    try { return send(res, 200, await coach.get(user, uiOf(b.ui), aiDeps())); }
+    catch (e) {
+      console.error('coach', e.status || '', e.message);
+      return send(res, 502, { error: 'مربی هوشمند الان در دسترس نیست.' });
+    }
+  }
+  // The AI's daily reports, its memory and the proposed question notes, for the admin panel; «now» makes a report at
+  // once; a decision on a note (approve with the text as edited, reject, remove).
+  if (req.method === 'GET' && route === 'insights') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const ins = store.meta.aiInsights || {}, bk = lessonBank(SITE);
+    const notes = Object.entries(store.meta.qNotes || {}).map(([id, n]) => { const q = bk.Q.get(+id) || {}; return { qid: +id, ...n, question: q.sda, questionFa: q.sfa, img: q.img }; })
+      .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.at - a.at);
+    return send(res, 200, { on: insights.available(), reports: (ins.reports || []).slice(-30).reverse(), failed: ins.failed || null, lastDay: ins.lastDay || null,
+      memory: store.meta.aiMemory || null, notes, usage: insights.collect(aiDeps()).usage.slice(0, 30) });
+  }
+  if (req.method === 'POST' && route === 'insightsrun') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!insights.available()) return send(res, 503, { error: 'ANTHROPIC_API_KEY تنظیم نشده.' });
+    if (Date.now() - lastInsightsRun < 5 * 60e3) return send(res, 429, { error: 'چند دقیقه‌ی دیگر دوباره امتحان کنید.' });
+    lastInsightsRun = Date.now();
+    try { const r = await insights.run(aiDeps(), { force: true, by: user.username }); return send(res, 200, { report: r }); }
+    catch (e) { console.error('insights run', e.message); return send(res, 502, { error: `گزارش ساخته نشد: ${e.message}` }); }
+  }
+  if (req.method === 'POST' && route === 'qnote') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const b = await readBody(req);
+    if (!['approve', 'reject', 'remove'].includes(b.action)) return send(res, 400, { error: 'bad action' });
+    const notes = insights.decide(+b.qid, b.action, { fa: typeof b.fa === 'string' ? b.fa.trim() : '', en: typeof b.en === 'string' ? b.en.trim() : '', by: user.username });
+    if (!notes) return send(res, 404, { error: 'not found' });
+    await store.saveMeta('qNotes', notes);
+    setNotes(notes);
+    return send(res, 200, { ok: true });
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
@@ -1730,6 +1796,10 @@ async function api(req, res, route) {
 
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
+  insights.init(store, dayKey);
+  setNotes(store.meta.qNotes);
+  setInterval(insightsTick, 15 * 60e3).unref();
+  setTimeout(insightsTick, 2 * 60e3).unref();
   // A deploy's first minutes, while the old server may still be answering (store.js catchUp).
   if (store.catchUp) {
     const t = setInterval(() => store.catchUp().catch(e => console.error('catch up', e.message)), 60e3);

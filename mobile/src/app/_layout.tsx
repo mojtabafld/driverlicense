@@ -10,6 +10,7 @@ import { RTL, UI_LANG, syncNativeDir, tr } from '@/lib/i18n';
 import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadOnboarded, saveOnboarded } from '@/lib/prefs';
 import { AppProvider, useApp } from '@/lib/store';
+import { useUsage } from '@/lib/usage';
 import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
 import { Backdrop, PageSkeleton, setWebTop } from '@/ui/kit';
 import { LangPick } from '@/ui/lang-pick';
@@ -60,6 +61,8 @@ function Root() {
   // The questions' language and the look: asked once per account, on its first sign-in (Mojtaba, 2026-10-16); an
   // account that already has its settings, from any device, is not asked again.
   const askLang = !!user && !settings.langChosen;
+  // The pages opened, counted (without the account) for the daily AI report (lib/usage.ts).
+  useUsage(!!user && !!onboarded);
   useEffect(() => { if (ready && fonts && onboarded !== null) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts, onboarded]);
   // On the web the page behind the app, and the browser's own bar (theme-color), take the top colour of the
   // background gradient, so the top of the screen runs into the page; over the intro and the language screen, their

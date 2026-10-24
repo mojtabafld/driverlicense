@@ -189,6 +189,20 @@ function sendReport(r) {
   return send(to, `گزارش ${kind}: ${first.length > 70 ? `${first.slice(0, 70)}…` : first}`, html, text, { replyTo: r.email });
 }
 
+// The AI's daily report (insights.js) to REPORT_TO: its summary, findings and suggestions, with a link to the panel.
+function sendInsights(rep, link) {
+  const to = reportTo();
+  if (!to.length) return Promise.resolve();
+  const SEV = { high: 'مهم', medium: 'متوسط', low: 'کم' };
+  const list = (title, items, tag) => (items.length ? `<h3 style="font-size:16px;margin:18px 0 6px">${esc(title)}</h3>${items.map(x => `<div style="margin:0 0 10px"><b>${esc(x.title)}</b> <span style="color:#6b7280;font-size:13px">(${esc(SEV[tag(x)] || tag(x))})</span><div>${esc(x.detail)}</div></div>`).join('')}` : '');
+  const html = `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:620px">
+<div style="white-space:pre-wrap;background:#f3f4f8;border-radius:12px;padding:14px 16px">${esc(rep.summary)}</div>
+${list('یافته‌ها', rep.findings, x => x.severity)}${list('پیشنهاد برای نسخه‌های بعدی', rep.suggestions, x => x.priority)}
+<p><a href="${esc(link)}" style="display:inline-block;background:#2f55d4;color:#fff;text-decoration:none;padding:10px 20px;border-radius:10px;font-weight:bold">داشبورد</a></p></div>`;
+  const text = [rep.summary, '', 'یافته‌ها:', ...rep.findings.map(x => `- ${x.title}: ${x.detail}`), '', 'پیشنهادها:', ...rep.suggestions.map(x => `- ${x.title}: ${x.detail}`), '', link].join('\n');
+  return send(to, `گزارش روزانه‌ی هوش مصنوعی Teoripro، ${rep.day}`, html, text);
+}
+
 // Resend's receiving webhook (Webhooks → the event email.received), signed as Svix does: the headers svix-id,
 // svix-timestamp and svix-signature («v1,<base64>», several apart by spaces) carry the HMAC-SHA256 of
 // «<id>.<timestamp>.<raw body>» with the key in RESEND_WEBHOOK_SECRET (whsec_<base64>), at most 5 minutes old.
@@ -254,4 +268,4 @@ async function send(to, subject, html, text, { replyTo } = {}) {
   }
 }
 
-module.exports = { available, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
+module.exports = { available, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, sendInsights, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
