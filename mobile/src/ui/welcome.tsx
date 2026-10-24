@@ -15,7 +15,8 @@ import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
 import { Icon, type IconName } from './icon';
 import { L, T, physical, physicalAlign, tap, useHeaderTop } from './kit';
-import { darkColors, useColors } from './theme';
+import { defaultAccentDark } from './palette';
+import { useColors } from './theme';
 import Svg, { Path } from 'react-native-svg';
 
 // «ادامه با اپل»: hidden until there is an Apple Developer account (Mojtaba 2026-10-21); what it still needs is in
@@ -43,8 +44,10 @@ function GoogleG({ size = 20 }: { size?: number }) {
 }
 
 // The night look's own colours, the same in the light and the dark theme; its accent (the tile, «pro», the first
-// button) is the colour theme's, as its dark theme has it (Mojtaba 2026-10-24: not a fixed amber).
-const N = { top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', accent: darkColors.accent, onAccent: darkColors.accentText,
+// button) is the colour theme set as the default in DigitalOcean (DEFAULT_THEME), as its dark theme has it, whatever
+// this device has picked (Mojtaba 2026-10-24: not a fixed amber).
+const DEF = defaultAccentDark();
+const N = { top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', accent: DEF.accent, onAccent: DEF.on,
   glass: 'rgba(255,255,255,0.08)', glassEdge: 'rgba(255,255,255,0.14)' };
 // The road white, unless the accent is nearly white itself («سیاه و سفید»): then in the accent's text colour.
 const ROAD = (() => { const h = N.accent.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return v.every(x => x > 215) ? N.onAccent : '#ffffff'; })();
