@@ -1,10 +1,12 @@
-// The sign-in page's first screen on the main site and /app (Mojtaba 2026-10-20, after the Saphe app's): the theme
-// switch at the top, the app's name, the intro's four subjects as slides (a flat icon in the theme's colour with a
-// short line under it, ui/welcome-art.tsx; they turn by themselves, with a swipe or a tap on their dots), then the ways
-// in and a link to go on as a guest. «ادامه با ایمیل» puts «ورود» and «ساخت حساب» in their place (Mojtaba 2026-10-22),
-// each opening the steps in that mode (app/login.tsx), with «گزینه‌های دیگر» to go back to the ways in.
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
+// The sign-in page's first screen on the main site and /app (Mojtaba 2026-10-24, the «night» look he picked of four, in
+// place of the one after the Saphe app's): on a night-blue page in every theme, the app's name, its symbol (the road bent
+// into a tick) on a glowing amber tile, a headline and a line, then the ways in (email first, in amber) and a link to go
+// on as a guest. «ادامه با ایمیل» puts «ورود» and «ساخت حساب» in their place (Mojtaba 2026-10-22), each opening the
+// steps in that mode (app/login.tsx), with «گزینه‌های دیگر» to go back to the ways in.
+import { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
+import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
@@ -13,8 +15,7 @@ import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
 import { Icon, type IconName } from './icon';
 import { L, T, physical, physicalAlign, tap } from './kit';
-import { useColors, useIsDark } from './theme';
-import { WelcomeAi, WelcomeBank, WelcomeExam, WelcomeProgress } from './welcome-art';
+import { useColors } from './theme';
 import Svg, { Path } from 'react-native-svg';
 
 // «ادامه با اپل»: hidden until there is an Apple Developer account (Mojtaba 2026-10-21); what it still needs is in
@@ -41,13 +42,19 @@ function GoogleG({ size = 20 }: { size?: number }) {
   );
 }
 
-const SLIDES = [
-  { Art: WelcomeBank, text: 'همه‌ی سؤال‌های آزمون تئوری با ترجمه‌ی فارسی، در جیب شما.' },
-  { Art: WelcomeExam, text: 'آزمون ۲۵ سؤالی با زمان‌سنج، درست مثل روز امتحان.' },
-  { Art: WelcomeAi, text: 'برای هر سؤال، توضیحی ساده با هوش مصنوعی بگیرید.' },
-  { Art: WelcomeProgress, text: 'پیشرفت و احتمال قبولی‌تان را ببینید.' },
-];
-const EVERY = 4500; // ms on each slide
+// The night look's own colours, the same in the light and the dark theme.
+const N = { top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', amber: '#f5a524', onAmber: '#111111',
+  glass: 'rgba(255,255,255,0.08)', glassEdge: 'rgba(255,255,255,0.14)' };
+// The app's symbol (assets/icon-src/symbol.svg): the road bent into a tick, its broken centre line in the tile's amber.
+function RoadTick({ size }: { size: number }) {
+  const d = 'M268 531 L432 695 L756 329';
+  return (
+    <Svg width={size} height={size} viewBox="0 0 1024 1024">
+      <Path d={d} fill="none" stroke="#ffffff" strokeWidth={184} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d={d} fill="none" stroke={N.amber} strokeWidth={26} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50 50" strokeDashoffset={-20} />
+    </Svg>
+  );
+}
 
 // A wide button with its icon at the reading side's edge and its label in the middle.
 // The app's language from the welcome screen (Mojtaba 2026-10-21), beside the theme button: a sheet of the three, each
@@ -58,8 +65,8 @@ function LangButton() {
   return (
     <>
       <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('زبان برنامه')}
-        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
-        <Icon name="translate" size={19} color={c.text} />
+        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: N.glass, borderWidth: 1, borderColor: N.glassEdge, opacity: pressed ? 0.75 : 1 })}>
+        <Icon name="translate" size={19} color={N.ink} />
       </Pressable>
       <Sheet open={open} onClose={() => setOpen(false)}>
         <View style={{ gap: 10, paddingHorizontal: 4 }}>
@@ -81,17 +88,17 @@ function LangButton() {
   );
 }
 
-// A wide button of the welcome screen; `light`: the first one, in the text's colour on the page (as the reference's
-// Apple button); `off`: shown but not usable yet, with «به‌زودی».
-function Wide({ label, icon, light, onPress, mark, off }: { label: string; icon?: IconName; light?: boolean; onPress?: () => void; mark?: (fg: string) => React.ReactNode; off?: boolean }) {
-  const c = useColors(), dark = useIsDark();
-  const fg = light ? c.bg : c.text;
+// A wide button of the welcome screen; `main`: the first one, amber with dark text, the others glass on the night page;
+// `off`: shown but not usable yet, with «به‌زودی».
+function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?: IconName; main?: boolean; onPress?: () => void; mark?: (fg: string) => React.ReactNode; off?: boolean }) {
+  const fg = main ? N.onAmber : N.ink;
   return (
     <Pressable onPress={() => { if (off || !onPress) return; tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled: !!off }}
-      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
-        backgroundColor: light ? c.text : dark ? c.surface2 : c.line, opacity: off ? 0.45 : pressed ? 0.85 : hovered ? 0.93 : 1, transform: [{ scale: pressed && !off ? 0.985 : 1 }] })}>
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ height: 54, borderRadius: 18, justifyContent: 'center', alignItems: 'center',
+        backgroundColor: main ? N.amber : N.glass, borderWidth: main ? 0 : 1, borderColor: N.glassEdge,
+        opacity: off ? 0.45 : pressed ? 0.85 : hovered ? 0.93 : 1, transform: [{ scale: pressed && !off ? 0.985 : 1 }] })}>
       <View style={{ position: 'absolute', top: 0, bottom: 0, ...physical(RTL ? { right: 18 } : { left: 18 }), justifyContent: 'center' }}>{mark ? mark(fg) : icon ? <Icon name={icon} size={21} color={fg} /> : null}</View>
-      <T style={{ fontSize: 16.5, fontWeight: '600', color: fg }}>{label}{off ? <T style={{ fontSize: 13, fontWeight: '500', color: fg }}>{`  · ${tr('به‌زودی')}`}</T> : null}</T>
+      <T style={{ fontSize: 16.5, fontWeight: main ? '700' : '600', color: fg }}>{label}{off ? <T style={{ fontSize: 13, fontWeight: '500', color: fg }}>{`  · ${tr('به‌زودی')}`}</T> : null}</T>
     </Pressable>
   );
 }
@@ -100,7 +107,7 @@ function Wide({ label, icon, light, onPress, mark, off }: { label: string; icon?
 // the server has it on; else off) and email (its two choices, then `onEmail` in that mode, ui/sign-steps.tsx), then the
 // guest link and the line on the privacy policy.
 export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { onEmail: (mode: 'login' | 'register') => void; mailFirst?: boolean; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
+  const c = useColors(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   // The email's choices in place of the ways in, with a short fade (`mailFirst`: back from their steps, they show again).
   const [byMail, setByMail] = useState(!!mailFirst);
   const [ways] = useState(() => new Animated.Value(1));
@@ -108,100 +115,68 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
     ways.setValue(0); setByMail(on);
     Animated.timing(ways, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
   };
-  const [i, setI] = useState(0);
-  const [fade] = useState(() => new Animated.Value(1));
-  const at = useRef(0);
-  useEffect(() => { at.current = i; }, [i]);
-  const go = (n: number) => {
-    const to = (n + SLIDES.length) % SLIDES.length;
-    if (to === at.current) return;
-    Animated.timing(fade, { toValue: 0, duration: 160, easing: Easing.out(Easing.quad), useNativeDriver: Platform.OS !== 'web' }).start(() => {
-      setI(to);
-      Animated.timing(fade, { toValue: 1, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
-    });
-  };
-  // Turns by itself; a swipe or a tap on the dots starts the wait again.
-  const [tick, setTick] = useState(0);
-  useEffect(() => { const t = setTimeout(() => go(at.current + 1), EVERY); return () => clearTimeout(t); }, [i, tick]); // eslint-disable-line react-hooks/exhaustive-deps
-  const startX = useRef<number | null>(null);
-  const onStart = (e: GestureResponderEvent) => { startX.current = e.nativeEvent.pageX; };
-  const onEnd = (e: GestureResponderEvent) => {
-    if (startX.current == null) return;
-    const dx = e.nativeEvent.pageX - startX.current; startX.current = null;
-    if (Math.abs(dx) < 40) return;
-    // On to the next slide with a swipe against the reading direction.
-    tap(); go(at.current + ((dx < 0) !== RTL ? 1 : -1)); setTick(t => t + 1);
-  };
-  const { Art, text } = SLIDES[i];
-  const art = Math.round(Math.min(width * 0.42, height * 0.14, 160));   // (three ways in under it now: a little smaller)
-  // The headline's size: the column's width (at most 440, less its 24 a side) over the text's width at 1 px, measured
-  // by its letters (bold Inter about 0.47 of the size each, Vazirmatn 0.42, measured; a little room kept).
-  const headline = byMail ? 'ادامه با ایمیل' : 'تضمین قبولی در آزمون تئوری رانندگی';
-  const head = Math.min(20, Math.floor((Math.min(width, 440) - 48) / (tr(headline).length * (UI_LANG === 'fa' ? 0.45 : 0.5))));
+  const tile = Math.round(Math.min(132, height * 0.16, width * 0.34));
+  // The headline's size: as large as the column lets it be on one line, at most 26 (bold Vazirmatn about 0.45 of the
+  // size a letter, Inter 0.5).
+  const headline = byMail ? 'ادامه با ایمیل' : 'راه قبولی در آزمون تئوری';
+  const head = Math.min(26, Math.floor((Math.min(width, 440) - 48) / (tr(headline).length * (UI_LANG === 'fa' ? 0.45 : 0.5))));
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
-      <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
-        {/* At the top right, as in the reference, in every language. */}
-        {/* The language only; the theme is the phone's here (ui/theme.ts useSystemTheme; Mojtaba 2026-10-21). */}
-        <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
-          <LangButton />
-        </View>
-        {/* The name as a logo (Mojtaba 2026-10-23): «Teori» large and bold in the text colour, «pro» on a pill of the
-            theme's colour, bold in its own text colour, upright (no tilt; Mojtaba 2026-10-23). Left to right in every language; read as one word. */}
-        <View accessible accessibilityRole="header" accessibilityLabel="Teoripro"
-          style={{ alignSelf: 'center', flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 6, marginTop: Math.min(24, height * 0.02) } as any}>
-          <L style={{ fontSize: 42, lineHeight: 52, fontWeight: '800', letterSpacing: -1.6, color: c.text }}>Teori</L>
-          <View style={{ backgroundColor: c.accent, borderRadius: 14, paddingHorizontal: 11, paddingTop: 1, paddingBottom: 3, marginTop: 4 }}>
-            <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -0.6, color: c.accentText }}>pro</L>
+    <View style={{ flex: 1 }}>
+      <StatusBar style="light" />
+      <LinearGradient pointerEvents="none" colors={[N.top, N.bottom, N.bottom]} locations={[0, 0.6, 1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
+        <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
+          {/* The language only, at the top; the theme is the phone's (ui/theme.ts useSystemTheme; Mojtaba 2026-10-21). */}
+          <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
+            <LangButton />
           </View>
-        </View>
-        {/* The slides, in the middle of what is left. */}
-        <View onTouchStart={onStart} onTouchEnd={onEnd} style={{ flex: 1, minHeight: art + 130, justifyContent: 'center', alignItems: 'center', gap: 18, paddingVertical: 10 }}>
-          <Animated.View style={{ opacity: fade, alignItems: 'center', gap: 22, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
-            <View style={{ width: art * 1.2, height: art }}><Art fg={c.accent} hole={dark ? c.bg : c.text} /></View>
-            <T style={{ textAlign: 'center', fontSize: 17, lineHeight: 28, color: c.text, maxWidth: 320, minHeight: 56 }}>{text}</T>
-          </Animated.View>
-          <View style={{ flexDirection: 'row', gap: 4, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 99, backgroundColor: c.surface2 }}>
-            {SLIDES.map((_, n) => (
-              <Pressable key={n} onPress={() => { tap(); go(n); setTick(t => t + 1); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: n === i }}
-                style={{ padding: 4 }}>
-                <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: n === i ? c.text : c.faint, opacity: n === i ? 1 : dark ? 0.55 : 0.45 }} />
+          {/* The name as a logo: «Teori» large and bold, «pro» on an amber pill; left to right in every language. */}
+          <View accessible accessibilityRole="header" accessibilityLabel="Teoripro"
+            style={{ alignSelf: 'center', flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 6, marginTop: Math.min(18, height * 0.015) } as any}>
+            <L style={{ fontSize: 42, lineHeight: 52, fontWeight: '800', letterSpacing: -1.6, color: N.ink }}>Teori</L>
+            <View style={{ backgroundColor: N.amber, borderRadius: 14, paddingHorizontal: 11, paddingTop: 1, paddingBottom: 3, marginTop: 4 }}>
+              <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -0.6, color: N.onAmber }}>pro</L>
+            </View>
+          </View>
+          {/* The symbol on its glowing tile, and the headline, in the middle of what is left. */}
+          <View style={{ flex: 1, minHeight: tile + 130, justifyContent: 'center', alignItems: 'center', paddingVertical: 16 }}>
+            <View style={{ width: tile, height: tile, borderRadius: tile * 0.27, backgroundColor: N.amber, alignItems: 'center', justifyContent: 'center',
+              shadowColor: N.amber, shadowOpacity: 0.45, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, elevation: 12 }}>
+              <RoadTick size={Math.round(tile * 0.85)} />
+            </View>
+          </View>
+          <Animated.View style={{ gap: 12, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
+            <View style={{ alignItems: 'center', gap: 2, marginBottom: 10 }}>
+              {/* On one line on every screen: the font as large as the column lets it be. */}
+              <T numberOfLines={1} style={{ fontSize: head, lineHeight: Math.round(head * 1.45), fontWeight: '800', textAlign: 'center', color: N.ink }}>{headline}</T>
+              <T style={{ fontSize: 14.5, lineHeight: 22, color: N.muted, textAlign: 'center' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'تمرین مثل آزمون واقعی، با توضیح فارسی'}</T>
+            </View>
+            {byMail ? <>
+              <Wide main label="ورود" icon="login" onPress={() => onEmail('login')} />
+              <Wide label="ساخت حساب" icon="personAdd" onPress={() => onEmail('register')} />
+              <Pressable onPress={() => { tap(); pick(false); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6, marginTop: 2 }}>
+                {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
+                  <T style={{ color: N.ink, fontSize: 15.5, fontWeight: '600', textDecorationLine: hovered ? 'underline' : 'none' }}>گزینه‌های دیگر</T>
+                )}
               </Pressable>
-            ))}
-          </View>
-        </View>
-        <Animated.View style={{ gap: 10, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
-          <View style={{ alignItems: 'center', gap: 2, marginBottom: 6 }}>
-            {/* On one line on every screen (Mojtaba 2026-10-23): the font as large as the column lets it be, at most 20. */}
-            <T numberOfLines={1} style={{ fontSize: head, lineHeight: Math.round(head * 1.45), fontWeight: '700', textAlign: 'center' }}>{headline}</T>
-            {/* «آماده‌ی آزمون تئوری.» under the headline is gone (Mojtaba 2026-10-23); the email step keeps its line. */}
-            {byMail ? <T style={{ fontSize: 14.5, lineHeight: 22, color: c.muted, textAlign: 'center' }}>وارد شوید یا یک حساب تازه بسازید</T> : null}
-          </View>
-          {byMail ? <>
-            <Wide light label="ورود" icon="login" onPress={() => onEmail('login')} />
-            <Wide label="ساخت حساب" icon="personAdd" onPress={() => onEmail('register')} />
-            <Pressable onPress={() => { tap(); pick(false); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6, marginTop: 2 }}>
+            </> : <>
+              <Wide main label="ادامه با ایمیل" icon="mail" onPress={() => pick(true)} />
+              {APPLE ? <Wide label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} /> : null}
+              <Wide label="ادامه با گوگل" mark={() => <GoogleG />} onPress={onGoogle} off={!onGoogle} />
+            </>}
+            {err && !byMail ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
+            {byMail ? null : <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
               {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
-                <T style={{ color: c.text, fontSize: 15.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>گزینه‌های دیگر</T>
+                <T style={{ color: '#cfd6df', fontSize: 15, fontWeight: '600', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
               )}
+            </Pressable>}
+            <Pressable onPress={() => { tap(); Linking.openURL(`${API_URL}/privacy?lang=${UI_LANG}`).catch(() => {}); }} accessibilityRole="link" style={{ alignSelf: 'center', marginTop: 2 }}>
+              <T style={{ color: N.faint, fontSize: 13, lineHeight: 20, textAlign: 'center' }}>با ادامه، این را می‌پذیرید:</T>
+              <T style={{ color: N.ink, fontSize: 13.5, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>سیاست حفظ حریم خصوصی</T>
             </Pressable>
-          </> : <>
-            {APPLE ? <Wide light label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} /> : null}
-            <Wide label="ادامه با گوگل" mark={() => <GoogleG />} onPress={onGoogle} off={!onGoogle} />
-            <Wide label="ادامه با ایمیل" icon="mail" onPress={() => pick(true)} />
-          </>}
-          {err && !byMail ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
-          {byMail ? null : <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
-            {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
-              <T style={{ color: c.muted, fontSize: 14.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
-            )}
-          </Pressable>}
-          <Pressable onPress={() => { tap(); Linking.openURL(`${API_URL}/privacy?lang=${UI_LANG}`).catch(() => {}); }} accessibilityRole="link" style={{ alignSelf: 'center', marginTop: 2 }}>
-            <T style={{ color: c.muted, fontSize: 13, lineHeight: 20, textAlign: 'center' }}>با ادامه، این را می‌پذیرید:</T>
-            <T style={{ color: c.text, fontSize: 13.5, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>سیاست حفظ حریم خصوصی</T>
-          </Pressable>
-        </Animated.View>
-      </View>
-    </ScrollView>
+          </Animated.View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
