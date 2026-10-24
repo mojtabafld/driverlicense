@@ -9,7 +9,7 @@ export default function History() {
   const { attempts } = useApp();
   return (
     <SubPage title="همه‌ی آزمون‌ها" subtitle={attempts.length ? `${faNum(attempts.length)} آزمون و درس، جدیدترین اول` : undefined}>
-      <ActivityList attempts={attempts} limit={Infinity} title="تاریخچه‌ی آزمون‌ها" clearable />
+      <ActivityList attempts={attempts} limit={Infinity} title="تاریخچه‌ی آزمون‌ها" clearable byDay />
     </SubPage>
   );
 }

@@ -172,7 +172,7 @@ export default function Exam() {
       </Card>
       )}
       {/* The arrow button in its head opens every exam on its own page (/history), like the mistakes card's. */}
-      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" hint={hint} />
+      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" hint={hint} byDay />
       {/* Main site: no mistakes card (Mojtaba 2026-10-19); the random test's card has the mistakes bar and its test. */}
       {own ? null : <MistakesCard />}
     </Screen>
