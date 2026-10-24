@@ -1,4 +1,7 @@
 {
+"روزهای نقطه‌دار آزمون دارند. یک روز، یا اول و آخر یک بازه را انتخاب کنید.":["Days with a dot have tests. Pick a day, or the first and last day of a range.", "Dage med en prik har prøver. Vælg en dag, eller den første og sidste dag i en periode."],
+"نمایش آزمون‌های این روز":["Show this day's tests", "Vis dagens prøver"],
+"نمایش آزمون‌های این بازه":["Show the tests in this range", "Vis prøverne i perioden"],
 "انتخاب روز":["Pick a day", "Vælg en dag"],
 "نمایش همه‌ی روزها":["Show all days", "Vis alle dage"],
 "روزهای نقطه‌دار آزمون دارند؛ روی یکی بزنید.":["Days with a dot have tests; tap one.", "Dage med en prik har prøver; tryk på en."],
