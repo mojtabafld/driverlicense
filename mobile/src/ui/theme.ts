@@ -131,6 +131,8 @@ export const ARC = STYLE === 'arc';
 // forest: the progress chart's green (forest green, a little lighter in the dark theme).
 // note: the AI text's panel, a soft neutral fill set apart from the white statement cards.
 export type Colors = typeof light;
+// The dark theme's colours whatever the theme in use (the welcome screen's night page takes its accent from them).
+export const darkColors: Colors = dark;
 // The theme in use (light or dark) and the mode it comes from (follow the system by default, or fixed); set by
 // ThemeModeProvider in src/ui/theme-mode.tsx.
 export const ThemeContext = createContext<{ theme: ThemeName; mode: ThemeMode; setMode: (m: ThemeMode) => void; followSystem: (on: boolean) => void }>({ theme: 'light', mode: 'system', setMode: () => {}, followSystem: () => {} });

@@ -1,6 +1,6 @@
 // The sign-in page's first screen on the main site and /app (Mojtaba 2026-10-24, the «night» look he picked of four, in
 // place of the one after the Saphe app's): on a night-blue page in every theme, the app's name, its symbol (the road bent
-// into a tick) on a glowing amber tile, a headline and a line, then the ways in (email first, in amber) and a link to go
+// into a tick) on a glowing tile in the colour theme's accent, a headline and a line, then the ways in (email first, in that accent) and a link to go
 // on as a guest. «ادامه با ایمیل» puts «ورود» and «ساخت حساب» in their place (Mojtaba 2026-10-22), each opening the
 // steps in that mode (app/login.tsx), with «گزینه‌های دیگر» to go back to the ways in.
 import { useState } from 'react';
@@ -14,8 +14,8 @@ import { RTL, UI_LANG, setUiLang, tr } from '@/lib/i18n';
 import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
 import { Icon, type IconName } from './icon';
-import { L, T, physical, physicalAlign, tap } from './kit';
-import { useColors } from './theme';
+import { L, T, physical, physicalAlign, tap, useHeaderTop } from './kit';
+import { darkColors, useColors } from './theme';
 import Svg, { Path } from 'react-native-svg';
 
 // «ادامه با اپل»: hidden until there is an Apple Developer account (Mojtaba 2026-10-21); what it still needs is in
@@ -42,16 +42,19 @@ function GoogleG({ size = 20 }: { size?: number }) {
   );
 }
 
-// The night look's own colours, the same in the light and the dark theme.
-const N = { top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', amber: '#f5a524', onAmber: '#111111',
+// The night look's own colours, the same in the light and the dark theme; its accent (the tile, «pro», the first
+// button) is the colour theme's, as its dark theme has it (Mojtaba 2026-10-24: not a fixed amber).
+const N = { top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', accent: darkColors.accent, onAccent: darkColors.accentText,
   glass: 'rgba(255,255,255,0.08)', glassEdge: 'rgba(255,255,255,0.14)' };
-// The app's symbol (assets/icon-src/symbol.svg): the road bent into a tick, its broken centre line in the tile's amber.
+// The road white, unless the accent is nearly white itself («سیاه و سفید»): then in the accent's text colour.
+const ROAD = (() => { const h = N.accent.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return v.every(x => x > 215) ? N.onAccent : '#ffffff'; })();
+// The app's symbol (assets/icon-src/symbol.svg): the road bent into a tick, its broken centre line in the tile's colour.
 function RoadTick({ size }: { size: number }) {
   const d = 'M268 531 L432 695 L756 329';
   return (
     <Svg width={size} height={size} viewBox="0 0 1024 1024">
-      <Path d={d} fill="none" stroke="#ffffff" strokeWidth={184} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d={d} fill="none" stroke={N.amber} strokeWidth={26} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50 50" strokeDashoffset={-20} />
+      <Path d={d} fill="none" stroke={ROAD} strokeWidth={184} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d={d} fill="none" stroke={N.accent} strokeWidth={26} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50 50" strokeDashoffset={-20} />
     </Svg>
   );
 }
@@ -88,14 +91,14 @@ function LangButton() {
   );
 }
 
-// A wide button of the welcome screen; `main`: the first one, amber with dark text, the others glass on the night page;
+// A wide button of the welcome screen; `main`: the first one, in the accent, the others glass on the night page;
 // `off`: shown but not usable yet, with «به‌زودی».
 function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?: IconName; main?: boolean; onPress?: () => void; mark?: (fg: string) => React.ReactNode; off?: boolean }) {
-  const fg = main ? N.onAmber : N.ink;
+  const fg = main ? N.onAccent : N.ink;
   return (
     <Pressable onPress={() => { if (off || !onPress) return; tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled: !!off }}
       style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ height: 54, borderRadius: 18, justifyContent: 'center', alignItems: 'center',
-        backgroundColor: main ? N.amber : N.glass, borderWidth: main ? 0 : 1, borderColor: N.glassEdge,
+        backgroundColor: main ? N.accent : N.glass, borderWidth: main ? 0 : 1, borderColor: N.glassEdge,
         opacity: off ? 0.45 : pressed ? 0.85 : hovered ? 0.93 : 1, transform: [{ scale: pressed && !off ? 0.985 : 1 }] })}>
       <View style={{ position: 'absolute', top: 0, bottom: 0, ...physical(RTL ? { right: 18 } : { left: 18 }), justifyContent: 'center' }}>{mark ? mark(fg) : icon ? <Icon name={icon} size={21} color={fg} /> : null}</View>
       <T style={{ fontSize: 16.5, fontWeight: main ? '700' : '600', color: fg }}>{label}{off ? <T style={{ fontSize: 13, fontWeight: '500', color: fg }}>{`  · ${tr('به‌زودی')}`}</T> : null}</T>
@@ -115,6 +118,8 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
     ways.setValue(0); setByMail(on);
     Animated.timing(ways, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
   };
+  // The browser's top (and the phone's status bar on the web) in the page's top colour.
+  useHeaderTop(N.top);
   const tile = Math.round(Math.min(132, height * 0.16, width * 0.34));
   // The headline's size: as large as the column lets it be on one line, at most 26 (bold Vazirmatn about 0.45 of the
   // size a letter, Inter 0.5).
@@ -130,18 +135,18 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
           <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
             <LangButton />
           </View>
-          {/* The name as a logo: «Teori» large and bold, «pro» on an amber pill; left to right in every language. */}
+          {/* The name as a logo: «Teori» large and bold, «pro» on a pill of the accent; left to right in every language. */}
           <View accessible accessibilityRole="header" accessibilityLabel="Teoripro"
             style={{ alignSelf: 'center', flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 6, marginTop: Math.min(18, height * 0.015) } as any}>
             <L style={{ fontSize: 42, lineHeight: 52, fontWeight: '800', letterSpacing: -1.6, color: N.ink }}>Teori</L>
-            <View style={{ backgroundColor: N.amber, borderRadius: 14, paddingHorizontal: 11, paddingTop: 1, paddingBottom: 3, marginTop: 4 }}>
-              <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -0.6, color: N.onAmber }}>pro</L>
+            <View style={{ backgroundColor: N.accent, borderRadius: 14, paddingHorizontal: 11, paddingTop: 1, paddingBottom: 3, marginTop: 4 }}>
+              <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -0.6, color: N.onAccent }}>pro</L>
             </View>
           </View>
           {/* The symbol on its glowing tile, and the headline, in the middle of what is left. */}
           <View style={{ flex: 1, minHeight: tile + 130, justifyContent: 'center', alignItems: 'center', paddingVertical: 16 }}>
-            <View style={{ width: tile, height: tile, borderRadius: tile * 0.27, backgroundColor: N.amber, alignItems: 'center', justifyContent: 'center',
-              shadowColor: N.amber, shadowOpacity: 0.45, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, elevation: 12 }}>
+            <View style={{ width: tile, height: tile, borderRadius: tile * 0.27, backgroundColor: N.accent, alignItems: 'center', justifyContent: 'center',
+              shadowColor: N.accent, shadowOpacity: 0.45, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, elevation: 12 }}>
               <RoadTick size={Math.round(tile * 0.85)} />
             </View>
           </View>
