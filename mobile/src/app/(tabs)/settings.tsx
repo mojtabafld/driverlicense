@@ -18,6 +18,7 @@ import { Card, OkTick, Screen, Segmented, T, physical, tap } from '@/ui/kit';
 import { useColors, useTheme } from '@/ui/theme';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
+import { useCoachMode } from '@/lib/coach-mode';
 import { PaletteRow } from '@/ui/palette-pick';
 import { NotifySettings } from '@/ui/notify-settings';
 
@@ -112,6 +113,7 @@ export default function Settings() {
   const c = useColors();
   const { user, settings, setSettings, logout, tts, pay, premium } = useApp();
   const { mode, setMode } = useTheme();
+  const coach = useCoachMode();
   // A guest account cannot be edited or deleted: no account page, no delete line.
   const guest = !!user?.guest;
   // Sign-out asks first, in the app's own dialog.
@@ -161,6 +163,16 @@ export default function Settings() {
           <View style={{ marginTop: 6, borderTopWidth: 1, borderTopColor: c.line }}>{premRow}</View>
         ) : null}
       </Card>
+      {/* «حالت مربی» (Mojtaba 2026-10-24): the AI coach, for premium accounts, on unless turned off here
+          (lib/coach-mode.ts); without premium the switch is faded and the line leads to the premium page. */}
+      {!PROVE_PICS && user && !guest ? (
+        <Card style={{ gap: 4 }}>
+          <Pressable disabled={coach.allowed} onPress={() => router.push('/premium')} accessibilityRole={coach.allowed ? undefined : 'button'}>
+            <Row title="حالت مربی" sub={coach.allowed ? 'با هوش مصنوعی، از روی آزمون‌ها و درس‌هایتان می‌گوید چه چیزی را تمرین کنید تا بهتر یاد بگیرید.' : 'با هوش مصنوعی به بهتر یاد گرفتن شما کمک می‌کند؛ با نسخه‌ی ویژه.'}
+              right={<Toggle label="حالت مربی" value={coach.on} disabled={!coach.allowed} onChange={v => { setSettings({ coach: v }); }} />} />
+          </Pressable>
+        </Card>
+      ) : null}
       {/* /app: «نسخه‌ی ویژه» stays a card of its own. */}
       {PROVE_PICS && showPrem ? <Card style={{ gap: 4 }}>{premRow}</Card> : null}
       {/* One card: the look and the colour theme. */}

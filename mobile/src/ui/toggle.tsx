@@ -11,7 +11,8 @@ import { ARC, useColors } from './theme';
 
 const W = 51, H = 31, PAD = 2, KNOB = H - PAD * 2;
 
-export function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label?: string }) {
+// `disabled`: shown faded and not to be changed (a premium setting without premium).
+export function Toggle({ value, onChange, label, disabled }: { value: boolean; onChange: (v: boolean) => void; label?: string; disabled?: boolean }) {
   const c = useColors();
   // In the theme's colour (Mojtaba 2026-10-20): on in its accent (in the dark theme too, where the main buttons are
   // white), off in a soft tint of it; /app's old look kept its own.
@@ -21,13 +22,13 @@ export function Toggle({ value, onChange, label }: { value: boolean; onChange: (
     Animated.timing(pos, { toValue: value ? 1 : 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
   }, [value, pos]);
   if (Platform.OS !== 'web') {
-    return <Switch value={value} onValueChange={v => { tap(); onChange(v); }} trackColor={{ false: off, true: on }} thumbColor="#fff" accessibilityLabel={label} />;
+    return <Switch value={value} disabled={disabled} onValueChange={v => { tap(); onChange(v); }} trackColor={{ false: off, true: on }} thumbColor="#fff" accessibilityLabel={label} />;
   }
   // (On is the knob at the right in English and Danish.)
   const left = pos.interpolate({ inputRange: [0, 1], outputRange: RTL ? [W - PAD - KNOB, PAD] : [PAD, W - PAD - KNOB] });
   const bg = pos.interpolate({ inputRange: [0, 1], outputRange: [off, on] });
   return (
-    <Pressable onPress={() => { tap(); onChange(!value); }} accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={label} hitSlop={6}>
+    <Pressable onPress={() => { if (disabled) return; tap(); onChange(!value); }} disabled={disabled} style={{ opacity: disabled ? 0.45 : 1 }} accessibilityRole="switch" accessibilityState={{ checked: value, disabled }} accessibilityLabel={label} hitSlop={6}>
       <Animated.View style={{ width: W, height: H, borderRadius: H / 2, backgroundColor: bg, direction: 'ltr' } as any}>
         <Animated.View style={{ position: 'absolute', top: PAD, left, width: KNOB, height: KNOB, borderRadius: KNOB / 2, backgroundColor: '#fff',
           shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 3, shadowOffset: { width: 0, height: 1 } }} />

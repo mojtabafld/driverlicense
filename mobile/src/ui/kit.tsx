@@ -151,11 +151,12 @@ export function Logo({ size = 28 }: { size?: number }) {
 // ui/chart-view.tsx): the theme's link colour on the blush-to-lavender wash (Mojtaba 2026-10-19: every page's header
 // buttons as the home page's). The plain headers' buttons, the inner pages' way back and light / dark switch, and the
 // settings page's light / dark switch.
-export function RoundIcon({ icon, label, onPress, size = 44 }: { icon: IconName; label: string; onPress: () => void; size?: number }) {
+// `disabled`: faded and not to be pressed (the coach's button without premium).
+export function RoundIcon({ icon, label, onPress, size = 44, disabled }: { icon: IconName; label: string; onPress: () => void; size?: number; disabled?: boolean }) {
   const c = useColors(), dark = useTheme().theme === 'dark';
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr(label)}
-      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
+    <Pressable onPress={() => { tap(); onPress(); }} disabled={disabled} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr(label)} accessibilityState={{ disabled }}
+      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: disabled ? 0.4 : pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
       <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name={icon} size={Math.round(size * 0.52)} color={c.link} weight="semibold" />

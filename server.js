@@ -1567,13 +1567,16 @@ async function api(req, res, route) {
     usageTimes.set(user.username, now);
     return send(res, 200, { n: insights.track(b.screens) });
   }
-  // The personal coach (coach.js): { ui } → { coach } | { few } | { locked } (premium, as the other AI features).
+  // The personal coach (coach.js): { ui, kind?, catalog? } → { coach, stats? } | { few } | { locked } (premium, as the
+  // other AI features) | { disabled } («حالت مربی» off). Without `kind`, home's card; `learn` / `exam`, the coach page's.
   if (req.method === 'POST' && route === 'coach') {
     const b = await readBody(req);
     if (!insights.available()) return send(res, 200, { off: true });
     if (needsPremium(user) || user.guest) return send(res, 200, { locked: true });
-    insights.count('ai:coach');
-    try { return send(res, 200, await coach.get(user, uiOf(b.ui), aiDeps())); }
+    if ((user.settings || {}).coach === false) return send(res, 200, { disabled: true });
+    const kind = b.kind === 'learn' || b.kind === 'exam' ? b.kind : null;
+    insights.count(kind ? `ai:coach-${kind}` : 'ai:coach');
+    try { return send(res, 200, kind ? await coach.getPage(user, uiOf(b.ui), aiDeps(), kind, b.catalog) : await coach.get(user, uiOf(b.ui), aiDeps())); }
     catch (e) {
       console.error('coach', e.status || '', e.message);
       return send(res, 502, { error: 'مربی هوشمند الان در دسترس نیست.' });
@@ -1787,7 +1790,9 @@ async function api(req, res, route) {
     const palette = THEMES.includes(b.palette) ? b.palette : (user.settings || {}).palette;
     // header: «هدر ساده» on or off (the pages' headers without their pictures), like the look, per account.
     const header = ['plain', 'pictures'].includes(b.header) ? b.header : (user.settings || {}).header;
-    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}), ...(ui ? { ui } : {}), ...(trans ? { trans } : {}), ...(mode ? { mode } : {}), ...(palette ? { palette } : {}), ...(header ? { header } : {}) };
+    // coach: «حالت مربی» (the AI coach, premium), on unless turned off; kept when a client that does not know it saves.
+    const coachOn = typeof b.coach === 'boolean' ? b.coach : (user.settings || {}).coach !== false;
+    user.settings = { showFa: !!b.showFa, timer: !!b.timer, ...(lang ? { lang } : {}), ...(langChosen ? { langChosen } : {}), ...(voice ? { voice } : {}), ...(ui ? { ui } : {}), ...(trans ? { trans } : {}), ...(mode ? { mode } : {}), ...(palette ? { palette } : {}), ...(header ? { header } : {}), ...(coachOn ? {} : { coach: false }) };
     await store.saveUser(user);
     return send(res, 200, { settings: user.settings });
   }
