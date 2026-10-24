@@ -80,8 +80,11 @@ export default function CoachPage() {
       <T raw style={{ fontWeight: '700', fontSize: 16, lineHeight: 25 }}>{k.headline}</T>
       <View style={{ gap: 6 }}>
         {k.points.map((pt, i) => (
-          <View key={i} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, marginTop: 9, backgroundColor: c.accent }} />
+          <View key={i} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
+            {/* A filled round tick in the theme's colour (Mojtaba 2026-10-24). */}
+            <View style={{ width: 20, height: 20, borderRadius: 10, marginTop: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent }}>
+              <Icon name="check" size={13} color={c.accentText} weight="bold" />
+            </View>
             <T raw style={{ flex: 1, fontSize: 14, lineHeight: 23 }}>{pt}</T>
           </View>
         ))}
