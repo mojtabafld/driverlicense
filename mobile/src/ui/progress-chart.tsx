@@ -18,8 +18,8 @@ import { Marquee } from './marquee';
 import { ArcButton, Button, T, tap, useCountUp } from './kit';
 import { ARC, useColors } from './theme';
 
-// The main site (ARC) draws it as bars (Mojtaba 2026-10-24, after a picture he sent): no percent scale, grid or pass
-// line, a bar with rounded top corners for each attempt, in a soft grey of the theme (its lines' colour) and green
+// The main site (ARC) draws it as bars (Mojtaba 2026-10-24, after a picture he sent): no percent scale or grid, the
+// thin pass line over them, a bar with rounded top corners for each attempt, in a soft grey of the theme (its lines' colour) and green
 // when it passed (or reached 80%); the picked one (by default the newest) has its percent above it and, when not
 // passed, a darker grey. The bars grow up from the bottom when the chart opens; dates below.
 const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
@@ -173,6 +173,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   {/* Each point shows once the line has reached it. */}
                   {ARC ? data.map((d, i) => (
                     <Path key={i} d={bar(i)} fill={good(d) ? c.ok : i === sel ? c.faint : c.line} />))
+                  /* The pass line, thin and solid, over the bars. */
+                  .concat(<Line key="pass" x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.6} strokeWidth={1} />)
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
                   : data.map((d, i) => ahead(i) ? null : (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
