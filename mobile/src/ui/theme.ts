@@ -105,10 +105,10 @@ const arcLight: typeof tealLight = {
   cta: '#2f55d4', ctaFg: '#ffffff',
   bgGradient: ['#f3f4f8', '#f3f4f8', '#f3f4f8'] as readonly [string, string, string],
 };
-// (2026-10-15, Mojtaba: the dark theme after a coaching app's screens: a blue-black page, navy cards with thin
+// (2026-10-15, Mojtaba: the dark theme after a coaching app's screens: a black page (as every theme's since 2026-10-24), navy cards with thin
 // lines, a blue accent for ticks and links, a navy highlight on the chosen row and white main buttons.)
 const arcDark: typeof tealLight = {
-  bg: '#07080f', surface: '#121524', surface2: '#1a1e31', line: '#232840',
+  bg: '#000000', surface: '#121524', surface2: '#1a1e31', line: '#232840',
   text: '#f3f4f8', muted: '#9a9fb8', faint: '#6e7491',
   accent: '#4a73f5', accentText: '#ffffff', accentSoft: 'rgba(74,115,245,0.18)', link: '#8ea8ff',
   forest: '#5b82ff', ok: '#4fd1a5', okSoft: '#0f2a26', bad: '#f2706e', badSoft: '#341620', warn: '#f5b84a', warnSoft: '#30260f', info: '#ffffff',
@@ -119,7 +119,7 @@ const arcDark: typeof tealLight = {
   strong: '#ffffff', strongFg: '#0b0d18',
   btn: '#ffffff', btnFg: '#0b0d18',
   cta: '#ffffff', ctaFg: '#0b0d18',
-  bgGradient: ['#07080f', '#07080f', '#07080f'] as readonly [string, string, string],
+  bgGradient: ['#000000', '#000000', '#000000'] as readonly [string, string, string],
 };
 // The main site's chosen colour theme (ui/palette.ts) replaces arc's own ocean colours.
 const PAL = STYLE === 'arc' ? paletteColors() : null;
