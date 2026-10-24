@@ -16,9 +16,9 @@ type Spec = {
   id: PaletteId; name: string;
   hue: number; nhue: number; nsat: number; asat?: number;
   accD: string; accD2: string; onD: string; accL: string; onL?: string; pickSoftD?: string;
-  // bgD: the dark theme's page colour, when not the made one (n(0.045)); cardD / card2D: its cards (and glass bars) and
-  // the fields and panels in them, when not the made ones.
-  bgD?: string; cardD?: string; card2D?: string;
+  // cardD / card2D: the dark theme's cards (and glass bars) and the fields and panels in them, when not the made ones.
+  // (Its page is black in every theme, as «سیاه و سفید»'s; Mojtaba 2026-10-24.)
+  cardD?: string; card2D?: string;
   // heroD: the dark theme's picture header band, when not the drawings' blue moved to the theme (px('#141c3d')).
   heroD?: string;
 };
@@ -38,7 +38,7 @@ export const PALETTES: Spec[] = [
   { id: 'orchid', name: 'بنفش یاسی', hue: 284, nhue: 280, nsat: 0.3, accD: '#c084fc', accD2: '#d8b4fe', onD: '#1e0b2e', accL: '#9333ea', pickSoftD: '#2a1838' },
   { id: 'gold', name: 'طلایی', hue: 46, nhue: 42, nsat: 0.12, accD: '#facc15', accD2: '#fde047', onD: '#1a1500', accL: '#a16207', pickSoftD: '#2b250c' },
   { id: 'slate', name: 'سنگی', hue: 215, nhue: 215, nsat: 0.3, asat: 0.35, accD: '#a3b3c8', accD2: '#cbd5e1', onD: '#0f172a', accL: '#475569', pickSoftD: '#1e2632' },
-  { id: 'mono', name: 'سیاه و سفید', hue: 226, nhue: 226, nsat: 0, asat: 0, accD: '#f2f2f2', accD2: '#d0d0d0', onD: '#111111', accL: '#151515', pickSoftD: '#262626', bgD: '#000000', cardD: '#1a1b20', card2D: '#222428', heroD: '#1a1b20' },
+  { id: 'mono', name: 'سیاه و سفید', hue: 226, nhue: 226, nsat: 0, asat: 0, accD: '#f2f2f2', accD2: '#d0d0d0', onD: '#111111', accL: '#151515', pickSoftD: '#262626', cardD: '#1a1b20', card2D: '#222428', heroD: '#1a1b20' },
 ];
 // KEY: the theme picked on this device (kept, whatever the default becomes). Until one is picked, the server's default
 // (DEFAULT_THEME on the server, «آسمان» unless set): on the web written into the page (window.__TP_THEME), on a phone
@@ -139,7 +139,7 @@ export function paletteColors() {
   const S = SPEC, NS = S.nsat, n = (l: number, sat = NS * 0.6) => fromHls(S.nhue, l, sat), nl = (l: number) => n(l, NS * 0.5);
   const aD = S.accD, aL = S.accL;
   const dark = {
-    bg: S.bgD ?? n(0.045), surface: S.cardD ?? n(0.09), surface2: S.card2D ?? n(0.12), line: n(0.16), text: n(0.96, 0.1 * Math.min(1, NS * 4)), muted: n(0.66, 0.08 * Math.min(1, NS * 4)), faint: n(0.48, 0.08 * Math.min(1, NS * 4)),
+    bg: '#000000', surface: S.cardD ?? n(0.09), surface2: S.card2D ?? n(0.12), line: n(0.16), text: n(0.96, 0.1 * Math.min(1, NS * 4)), muted: n(0.66, 0.08 * Math.min(1, NS * 4)), faint: n(0.48, 0.08 * Math.min(1, NS * 4)),
     accent: aD, accentText: S.onD, accentSoft: rgba(aD, 0.18), link: S.accD2, forest: aD,
     ok: '#4fd1a5', okSoft: '#0f2a26', bad: '#f2706e', badSoft: '#341620', warn: '#f5b84a', warnSoft: '#30260f', info: '#ffffff',
     note: S.card2D ?? n(0.12), submit: '#ffffff', checked: rgba(aD, 0.2), cardBorder: n(0.13), hairline: n(0.13),
