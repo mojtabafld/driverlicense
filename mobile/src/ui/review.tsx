@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { Icon, type IconName } from './icon';
 import { WASH_DARK, WASH_LIGHT } from './wash';
+import { useNearBar } from './bar-shade';
 import { Enter, L, SegPill, T, TransT, TranslateButton, physical, tap, useArcSeg } from './kit';
 import { SpeakButton } from './speak';
 import { ZoomableImage } from './zoom';
@@ -276,11 +277,14 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
     else setShown(next);
   };
   const { ref, panel, follow } = useReveal(shown);
+  const [nearBar, nearData] = useNearBar();
   return (
     <View ref={ref} style={{ marginTop: 14 }}>
       <AiButton title="تحلیل پاسخ شما" sub={locked && !text ? (user?.freeAi === true ? 'یک بار رایگان؛ بعد از آن مخصوص نسخه‌ی ویژه' : free ? 'با استفاده از هوش مصنوعی' : 'مخصوص نسخه‌ی ویژه') : 'با استفاده از هوش مصنوعی'} shown={shown} onPress={press} />
       {shown ? (
         <Animated.View style={fold.style}><View onLayout={fold.onLayout} style={{ paddingTop: 8 }}>
+        {/* (the bottom bar takes its colour off over this panel too: useNearBar) */}
+        <View ref={nearBar} {...({ dataSet: nearData } as object)}>
         <View ref={panel} style={{ paddingVertical: 16, paddingHorizontal: 18, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(31,42,68,0.07)' }}>
           {/* A soft wash from blush to lavender (Mojtaba 2026-10-18), and its deep counterpart in the dark theme. */}
           <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
@@ -290,6 +294,7 @@ function AiTips({ q, a, at, lang }: { q: Question; a?: number[]; at?: number; la
               {who ? <T style={{ fontWeight: '700', fontSize: 15, marginBottom: 6 }}>{fmt('{0}، این تحلیل پاسخ شماست:', who)}</T> : null}
               <Rich text={text} typing={typing} onGrow={follow} />
             </> : null}
+        </View>
         </View>
         </View></Animated.View>
       ) : null}

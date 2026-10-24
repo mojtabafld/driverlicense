@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { Platform, View, useWindowDimensions, type ViewProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ARC } from './theme';
+import { ARC, useColors } from './theme';
 
 const dark = new Set<View>();
 
@@ -66,6 +66,15 @@ export function useSurfaceUnder(color: string) {
   return setNode;
 }
 
+// A part of a page that counts as of the bar's own colour whatever it is painted with (the AI's answer panel, a soft
+// wash the page reads as see-through; Mojtaba 2026-10-24): the bar takes its colour two steps off over it too. Its
+// ref setter (the apps) and its dataSet (the web: data-barnear).
+const NEAR = { barnear: '1' };
+export function useNearBar(): [(v: View | null) => void, typeof NEAR] {
+  const c = useColors();
+  return [useSurfaceUnder(c.surface2), NEAR];
+}
+
 // A colour's brightness, 0–1, from #rrggbb or rgb()/rgba() (null for one too see-through to count).
 function bright(col: string): number | null {
   let r: number, g: number, b: number, a = 1;
@@ -80,10 +89,12 @@ const near = (a: number | null, b: number | null) => a != null && b != null && M
 
 // The colour under a point of the page (web): the first element under it with a colour of its own, the bar's own left
 // out; else the page's.
-function webUnder(x: number, y: number): number | null {
+// (`own`: the bar's, for a part marked as of its colour, useNearBar.)
+function webUnder(x: number, y: number, own: number | null): number | null {
   const d = (globalThis as any).document;
   for (const el of d.elementsFromPoint(x, y) as any[]) {
     if (el.closest('[data-bar]')) continue;
+    if (el.closest('[data-barnear]')) return own;
     const v = bright(getComputedStyle(el).backgroundColor);
     if (v != null) return v;
   }
@@ -103,7 +114,7 @@ export function useSimilarUnder(on: boolean, h: number, color: string) {
       if (Platform.OS === 'web') {
         // Just inside the bar's top edge (where what passes under it shows first) and across its middle.
         const xs = [0.2, 0.5, 0.8].map(f => left + (right - left) * f), ys = [top + 5, top + h / 2];
-        if (alive) setUnder(xs.some(x => ys.some(y => near(webUnder(x, y), own))));
+        if (alive) setUnder(xs.some(x => ys.some(y => near(webUnder(x, y, own), own))));
         return;
       }
       // In the apps: the smallest of the registered surfaces across the bar's top edge (an answer inside a card is the
