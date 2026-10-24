@@ -16,12 +16,15 @@ import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
 import { Marquee } from './marquee';
 import { ArcButton, Button, T, tap, useCountUp } from './kit';
-import { ARC, useColors } from './theme';
+import { mix } from './palette';
+import { ARC, useColors, useIsDark } from './theme';
 
 // The main site (ARC) draws it as bars (Mojtaba 2026-10-24, after a picture he sent): no percent scale or grid, the
 // thin dashed pass line over them, a bar with rounded top corners for each attempt, in a soft grey of the theme (its lines' colour) and green
 // when it passed (or reached 80%); the picked one (by default the newest) has its percent above it and, when not
 // passed, a darker grey. The bars grow up from the bottom when the chart opens; dates below.
+// A bar that did not pass: the theme's lines' colour, a step lighter in the dark theme (Mojtaba 2026-10-24).
+export const failBar = (line: string, dark: boolean) => (dark ? mix(line, '#ffffff', 0.08) : line);
 const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
 // The line drew itself in already since the app started.
 let drawnOnce = false;
@@ -35,7 +38,7 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 // `onBlank`: a tap on the chart off its points does this instead of clearing the pick (home: it opens or closes its chart
 // view, and the picked test stays picked; Mojtaba 2026-10-19).
 export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; onBlank?: () => void }) {
-  const c = useColors();
+  const c = useColors(), dark = useIsDark();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
@@ -172,7 +175,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   </G>}
                   {/* Each point shows once the line has reached it. */}
                   {ARC ? data.map((d, i) => (
-                    <Path key={i} d={bar(i)} fill={good(d) ? c.ok : i === sel ? c.faint : c.line} />))
+                    <Path key={i} d={bar(i)} fill={good(d) ? c.ok : i === sel ? c.faint : failBar(c.line, dark)} />))
                   /* The pass line, thin, dashed and faint, over the bars. */
                   .concat(<Line key="pass" x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.4} strokeWidth={1} strokeDasharray="4 4" />)
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */

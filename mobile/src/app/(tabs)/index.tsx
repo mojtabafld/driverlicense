@@ -17,13 +17,13 @@ import { Icon, type IconName } from '@/ui/icon';
 import { ArcButton, Button, Card, FitLine, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
-import { ProgressChart } from '@/ui/progress-chart';
+import { failBar, ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { ChartButton, TestStats } from '@/ui/chart-view';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
-import { ARC, useColors } from '@/ui/theme';
+import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { GreetIcon, type DayPart } from '@/ui/greet-icon';
 import { HomeLicenceArt } from '@/ui/header-art';
@@ -139,7 +139,7 @@ function StartCard({ compact }: { compact: boolean }) {
 const TURNS = ['تمرین امروز را شروع کنید.', 'یک آزمون تصادفی بدهید.', 'پیشرفت خودتان را بررسی کنید.'];
 
 export default function Home() {
-  const c = useColors();
+  const c = useColors(), dark = useIsDark();
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height, width } = useWindowDimensions();
@@ -355,7 +355,7 @@ export default function Home() {
             {/* Main site: the bars are green when passed and grey when not, the pass line thin, dashed and faint (Mojtaba 2026-10-24). */}
             {ARC ? <>
               <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c.ok }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
-              <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c.line, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
+              <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: failBar(c.line, dark), marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
               <View style={{ width: 14, borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: c.forest, opacity: 0.45, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
             </> : <>
               <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
