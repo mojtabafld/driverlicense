@@ -70,7 +70,8 @@ function Head({ title, c }: { title: string; c: Colors }) {
 
 // `allHref`: the arrow button in the card's head (ui/more-button.tsx) opens this page of all of them (as the mistakes card's «همه» does), in place of
 // «نمایش همه» under the list; `hint`: a new value plays its «نمایش همه» hint. `clearable`: the bin that deletes the whole history (only on that page, /history).
-export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref, clearable, hint }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string; clearable?: boolean; hint?: number }) {
+// `byDay`: the calendar button to show one day's tests (the exam tab's history and the history page, not home's list).
+export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref, clearable, hint, byDay }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string; clearable?: boolean; hint?: number; byDay?: boolean }) {
   const c = useColors();
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
@@ -94,10 +95,10 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, paddingBottom: 6 }}>
         <Head title={title} c={c} />
         {/* The calendar: pick a day to show its tests only; filled while a day is picked. */}
-        <Pressable onPress={() => { tap(); setPick(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('انتخاب روز')}
+        {byDay ? <Pressable onPress={() => { tap(); setPick(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('انتخاب روز')}
           style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: day ? c.accent : c.surface2, opacity: pressed ? 0.7 : 1 })}>
           <Icon name="calendar" size={18} color={day ? c.accentText : c.text} />
-        </Pressable>
+        </Pressable> : null}
         {allHref ? (
           <MoreButton onPress={() => router.push(allHref as any)} label={`همه‌ی ${faNum(rows.length)} آزمون`} hint={hint} />
         ) : null}
@@ -110,7 +111,7 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
       <Confirm open={ask} icon="trash" title="حذف تاریخچه؟" text={`همه‌ی ${faNum(rows.length)} آزمون و درس انجام‌شده و نتیجه‌هایشان پاک می‌شوند. این کار برگشت‌پذیر نیست.`}
         cancel="انصراف" ok="حذف همه" okIcon="trash" danger slide={{ label: 'برای حذف همه، بکشید', doneLabel: busy ? 'در حال حذف…' : 'حذف شد' }} onCancel={() => setAsk(false)}
         onOk={() => { if (busy) return; setBusy(true); clearAttempts().then(() => setAsk(false)).catch(() => {}).finally(() => setBusy(false)); }} />
-      <DatePick open={pick} onClose={() => setPick(false)} value={day} busy={days} onPick={setDay} />
+      {byDay ? <DatePick open={pick} onClose={() => setPick(false)} value={day} busy={days} onPick={setDay} /> : null}
       {day ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 8 }}>
           <Pressable onPress={() => { tap(); setDay(null); }} accessibilityRole="button" accessibilityLabel={tr('نمایش همه‌ی روزها')}
