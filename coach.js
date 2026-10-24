@@ -97,12 +97,47 @@ function mistakeStats(u, deps, ui) {
   };
 }
 
+// Mistakes the coach has seen (Mojtaba 2026-10-24): when advice is made, each question whose latest answer was wrong
+// is watched from then on (u.coachWatch.watch, qid → since); one answered right in a later test is fixed
+// (u.coachWatch.fixed, qid → when), and the page says so with a green tick. Wrong again: watched again.
+// (`now`: when the advice was made; the tests up to then count.)
+function watchMistakes(u, now) {
+  const w = (u.coachWatch = u.coachWatch || { watch: {}, fixed: {} }), last = new Map();
+  for (const a of u.attempts || []) if (a.at <= now) for (const it of a.items) last.set(it.id, it.ok);
+  for (const [id, ok] of last) if (!ok && !w.watch[id]) { w.watch[id] = now; delete w.fixed[id]; }
+  const ids = Object.keys(w.watch).sort((a, b) => w.watch[b] - w.watch[a]);
+  for (const id of ids.slice(300)) delete w.watch[id];
+}
+function checkFixed(u) {
+  const w = u.coachWatch;
+  if (!w) return false;
+  let changed = false;
+  for (const [id, since] of Object.entries(w.watch)) {
+    const hit = (u.attempts || []).find(a => a.at > since && a.items.some(it => it.id === +id && it.ok));
+    if (hit) { w.fixed[id] = hit.at; delete w.watch[id]; changed = true; }
+  }
+  const ids = Object.keys(w.fixed).sort((a, b) => w.fixed[b] - w.fixed[a]);
+  for (const id of ids.slice(100)) delete w.fixed[id];
+  return changed;
+}
+// The fixed ones, newest first (at most 10), with their topic and question in the app's language.
+function fixedList(u, bank, ui) {
+  const f = (u.coachWatch && u.coachWatch.fixed) || {};
+  const list = Object.entries(f).sort((a, b) => b[1] - a[1]).map(([id, at]) => ({ q: bank.Q.get(+id), at })).filter(x => x.q);
+  return { total: list.length, list: list.slice(0, 10).map(({ q, at }) => ({ qid: q.id, at, topic: topicName(bank.topics[q.c] || {}, q.c, ui),
+    question: clipText(ui === 'fa' ? q.sfa || q.sda : ui === 'en' ? q.sen || q.sda : q.sda, 160) })) };
+}
+
 // `catalog`: the learning pages the app can open, [{ id, title, done? }] (course lessons and pages), for `learn`.
 async function getPage(u, ui, deps, kind, catalog) {
   ui = LANG[ui] ? ui : 'fa';
   kind = kind === 'learn' ? 'learn' : 'exam';
   const n = (u.attempts || []).length, now = Date.now();
   if (n < 2 && kind === 'exam') return { few: true };
+  // Advice made before the mistakes were watched: watched from when it was made.
+  const made = Object.values(u.coaches || {}).map(x => x.at).filter(Boolean);
+  if (!u.coachWatch && made.length) watchMistakes(u, Math.min(...made));
+  const changed = checkFixed(u) || (!!u.coachWatch && made.length > 0);
   const cat = (Array.isArray(catalog) ? catalog : []).slice(0, 120)
     .map(x => ({ id: clipText(x && x.id, 80), title: clipText(x && x.title, 120), done: !!(x && x.done) || undefined })).filter(x => /^[a-z]+:[\w.-]+$/i.test(x.id) && x.title);
   const doneN = cat.filter(x => x.done).length;
@@ -111,7 +146,10 @@ async function getPage(u, ui, deps, kind, catalog) {
   const stats = kind === 'exam' ? mistakeStats(u, deps, ui) : undefined;
   // (v 2: in the app's language only, Mojtaba 2026-10-24)
   const fresh = c && c.v === 2 && c.ui === ui && ((c.sig === sig && now - c.at < 3 * 864e5) || now - c.at < 20 * 60e3);
-  if (fresh) return { coach: c, stats };
+  if (fresh) {
+    if (changed) await deps.store.saveUser(u);
+    return { coach: c, stats, fixed: fixedList(u, deps.bank, ui) };
+  }
   const f = facts(u, deps, ui);
   const data = {
     learner: f,
@@ -128,8 +166,9 @@ async function getPage(u, ui, deps, kind, catalog) {
   const hist = [...((c && c.hist) || []), { day: deps.dayKey(now), headline: coach.headline, tests: n,
     ...(kind === 'learn' ? { links: (coach.links || []).map(l => l.title), lessonsDone: doneN } : { focus: coach.focus, avgPct: stats.avgPct }) }].slice(-6);
   all[kind] = { ...coach, hist };
+  watchMistakes(u, now);
   await deps.store.saveUser(u);
-  return { coach: all[kind], stats };
+  return { coach: all[kind], stats, fixed: fixedList(u, deps.bank, ui) };
 }
 
 module.exports = { getPage };

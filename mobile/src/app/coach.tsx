@@ -26,7 +26,8 @@ type Kind = 'learn' | 'exam';
 type Link = { id: string; title: string; why: string };
 type Coach = { headline: string; points: string[]; links?: Link[]; focus?: string[]; at: number };
 type Stats = { tests: number; avgPct: number | null; passed: number; full: number; stillWrong: number; topics: { topic: string; wrongPct: number; tries: number }[] };
-type Answer = { coach?: Coach; stats?: Stats; few?: boolean; locked?: boolean; disabled?: boolean; off?: boolean };
+type Fixed = { total: number; list: { qid: number; at: number; topic: string; question: string }[] };
+type Answer = { coach?: Coach; stats?: Stats; fixed?: Fixed; few?: boolean; locked?: boolean; disabled?: boolean; off?: boolean };
 
 // The learning pages besides the course's lessons, for the coach to link to.
 const PAGES: [string, string][] = [['signs', 'تابلوها، خط‌کشی‌ها و چراغ‌ها'], ['priority', 'آموزش حق تقدم'], ['rules', 'قوانین'],
@@ -184,6 +185,29 @@ export default function CoachPage() {
 
   return (
     <SubPage title="مربی هوشمند" subtitle={kind === 'learn' ? 'پیشنهاد آموزش از روی آزمون‌ها و درس‌های شما' : 'خلاصه‌ی اشتباهات آزمون‌های شما'}>
+      {/* The mistakes answered right since the coach's advice (server's coach.js), each with a green tick. */}
+      {allowed && on && a?.fixed?.total ? (
+        <Card style={{ gap: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
+              <Icon name="check" size={20} color={c.ok} weight="bold" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <T style={{ fontWeight: '700', fontSize: 16 }}>{`${faNum(a.fixed.total)} اشتباه حل شد`}</T>
+              <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>این‌ها را بعد از پیشنهاد مربی درست جواب دادید.</T>
+            </View>
+          </View>
+          {a.fixed.list.map((f, i) => (
+            <View key={f.qid} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
+              <Icon name="checkCircle" size={22} color={c.ok} />
+              <View style={{ flex: 1 }}>
+                <T raw style={{ fontSize: 13.5, lineHeight: 21 }} numberOfLines={2}>{f.question}</T>
+                <T raw style={{ color: c.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={1}>{f.topic}</T>
+              </View>
+            </View>
+          ))}
+        </Card>
+      ) : null}
       {body}
     </SubPage>
   );

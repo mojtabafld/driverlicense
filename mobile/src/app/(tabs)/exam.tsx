@@ -138,7 +138,7 @@ export default function Exam() {
   };
   return (
     <View style={{ flex: 1 }}>
-    <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+    <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، با زمان و نمره" fitSubtitle hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />} onScrollY={onScrollY}>
       {own ? <NewTestCard test={test} /> : (
       <Card style={{ gap: 14 }}>
