@@ -11,7 +11,7 @@ import { modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Confirm } from './confirm';
-import { DatePick, dayLabel, dayOf } from './date-pick';
+import { DatePick, dayLabel, dayOf, inRange, type DayRange } from './date-pick';
 import { Icon } from './icon';
 import { MoreButton } from './more-button';
 import { Card, Enter, T, tap } from './kit';
@@ -70,15 +70,16 @@ function Head({ title, c }: { title: string; c: Colors }) {
 
 // `allHref`: the arrow button in the card's head (ui/more-button.tsx) opens this page of all of them (as the mistakes card's «همه» does), in place of
 // «نمایش همه» under the list; `hint`: a new value plays its «نمایش همه» hint. `clearable`: the bin that deletes the whole history (only on that page, /history).
-// `byDay`: the calendar button to show one day's tests (the exam tab's history and the history page, not home's list).
+// `byDay`: the calendar button to show a day's or a range's tests (the history page only).
 export function ActivityList({ attempts, limit = 10, title = 'آخرین فعالیت‌ها', allHref, clearable, hint, byDay }: { attempts: Attempt[]; limit?: number; title?: string; allHref?: string; clearable?: boolean; hint?: number; byDay?: boolean }) {
   const c = useColors();
   const { bank, clearAttempts } = useApp();
   const [all, setAll] = useState(false), [ask, setAsk] = useState(false), [busy, setBusy] = useState(false);
-  // A day picked with the calendar button (ui/date-pick.tsx; Mojtaba 2026-10-24): only that day's tests, all of them.
-  const [day, setDay] = useState<string | null>(null), [pick, setPick] = useState(false);
+  // A day or a range of days picked with the calendar button (ui/date-pick.tsx; Mojtaba 2026-10-24): only their tests,
+  // all of them.
+  const [day, setDay] = useState<DayRange | null>(null), [pick, setPick] = useState(false);
   const days = useMemo(() => new Set(attempts.map(a => dayOf(a.at))), [attempts]);
-  const rows = attempts.slice().reverse(), picked = day ? rows.filter(a => dayOf(a.at) === day) : rows;
+  const rows = attempts.slice().reverse(), picked = day ? rows.filter(a => inRange(dayOf(a.at), day)) : rows;
   const shown = day || all ? picked : picked.slice(0, limit);
   // Nothing done yet: the card stays, with a short line under its title on what will show here, so on every screen it
   // shows above the tab bar (Mojtaba 2026-10-21).
@@ -116,10 +117,14 @@ export function ActivityList({ attempts, limit = 10, title = 'آخرین فعا�
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingBottom: 8 }}>
           <Pressable onPress={() => { tap(); setDay(null); }} accessibilityRole="button" accessibilityLabel={tr('نمایش همه‌ی روزها')}
             style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 32, borderRadius: 16, backgroundColor: c.accentSoft, opacity: pressed ? 0.7 : 1 })}>
-            <T raw style={{ fontSize: 13, fontWeight: '700', color: c.link }}>{dayLabel(day, { weekday: 'long', day: 'numeric', month: 'long' })}</T>
+            <T raw style={{ fontSize: 13, fontWeight: '700', color: c.link }}>{day.from === day.to ? dayLabel(day.from, { weekday: 'long', day: 'numeric', month: 'long' })
+              : `${dayLabel(day.from, { day: 'numeric', month: 'short' })} – ${dayLabel(day.to, { day: 'numeric', month: 'short' })}`}</T>
             <Icon name="xmark" size={14} color={c.link} weight="bold" />
           </Pressable>
-          <T style={{ color: c.muted, fontSize: 12.5 }}>{`${faNum(picked.length)} آزمون`}</T>
+          {/* (the count in a capsule of its own) */}
+          <View style={{ paddingHorizontal: 12, height: 32, borderRadius: 16, justifyContent: 'center', backgroundColor: c.surface2 }}>
+            <T style={{ color: c.text, fontSize: 13, fontWeight: '600' }}>{`${faNum(picked.length)} آزمون`}</T>
+          </View>
         </View>
       ) : null}
       {shown.map((a, i) => <Enter key={a.at}><ActivityRow a={a} bank={bank} c={c} last={i === shown.length - 1} /></Enter>)}
