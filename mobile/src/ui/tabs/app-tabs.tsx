@@ -1,26 +1,26 @@
-// The tab bar on every platform (web, iOS, Android), drawn the same way: a floating capsule above the bottom edge
-// (BarSurface, glass-bar.tsx: Apple's own Liquid Glass on iOS 26 and later, flat in the cards' colour elsewhere), each
-// tab an icon over its label; the chosen tab sits on a capsule of its own, its icon filled and its label in the app's
-// colour. The pages keep room for it under their end (Screen).
-// Between «آموزش» and «آزمون» a round button that starts a random 25-question test at once (StartButton; Mojtaba
-// 2026-10-25).
+// The tab bar on every platform (web, iOS, Android): a floating capsule above the bottom edge in the theme's colour,
+// a soft gradient along it, the tabs' icons alone (no labels) in the colour on it; the chosen tab's icon on a round
+// disc of that colour, in the theme's (Mojtaba 2026-10-25, after a picture he sent). The pages keep room for it under
+// their end (Screen).
+// On the home page only, a round button of its own beside the bar, at its end (right in English and Danish, left in
+// Persian) starts a random 25-question test at once (StartButton; Mojtaba 2026-10-25).
+import { router, usePathname } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
-import { router } from 'expo-router';
-import { forwardRef, Fragment } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { forwardRef } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PROVE_BANK } from '@/lib/config';
 import { toPremium, useFree } from '@/lib/free';
+import { tr } from '@/lib/i18n';
 import { FULL, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
-import { tr } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
-import { T, tap } from '../kit';
-import { useColors } from '../theme';
+import { tap } from '../kit';
 import { Icon, type IconName } from '../icon';
-import { BarSurface, useBarApart, useBarLook, useBarShade } from '../glass-bar';
-import { BarApart, BarLight } from '../bar-shade';
+import { mix } from '../palette';
+import { useColors } from '../theme';
 import { TABS } from './tabs';
 
 const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
@@ -28,19 +28,13 @@ const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn
 export const TAB_BAR_H = 64;
 
 const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, onPress, ...props }, ref) => {
-  const look = useBarLook();
-  const color = isFocused ? look.green : look.fg;
+  const c = useColors(), d = TAB_BAR_H - 10;
   return (
-    <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1 }}
-      accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={label}>
-      {/* The chosen tab's capsule is a layer of its own under the icon, with its own round corners, and the tab's box
-          clips to the same shape (on Android a rounded background on the box itself could show square). */}
-      <View style={{ alignItems: 'center', justifyContent: 'center', gap: 2, height: TAB_BAR_H - 8, borderRadius: (TAB_BAR_H - 8) / 2, overflow: 'hidden' }}>
-        <View pointerEvents="none" style={[{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: (TAB_BAR_H - 8) / 2,
-          backgroundColor: isFocused ? look.capsule : 'transparent' },
-          Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null]} />
-        <Icon name={TAB_ICON[name]} size={24} color={color} filled={isFocused} contrast={look.contrast} />
-        <T style={{ fontSize: 11, lineHeight: 15, textAlign: 'center', fontWeight: '600', color }}>{label}</T>
+    <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+      accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={tr(label)}>
+      <View style={[{ width: d, height: d, borderRadius: d / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: isFocused ? c.accentText : 'transparent' },
+        Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null]}>
+        <Icon name={TAB_ICON[name]} size={24} color={isFocused ? c.accent : c.accentText} />
       </View>
     </Pressable>
   );
@@ -61,29 +55,31 @@ function StartButton() {
     session.plan = { mode: PROVE_BANK ? 'random' : 'new', ids: shuffle(src.questions.map(q => q.id)).slice(0, FULL), title: 'آزمون تصادفی' };
     router.push('/run');
   };
-  const d = TAB_BAR_H - 12;
+  const d = TAB_BAR_H;
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View>
       <Pressable onPress={start} accessibilityRole="button" accessibilityLabel={tr('شروع آزمون')} hitSlop={4}
         style={({ pressed }) => ({ width: d, height: d, borderRadius: d / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: c.cta, opacity: pressed ? 0.8 : 1 })}>
-        <Icon name="play" size={22} color={c.ctaFg} filled />
+        <Icon name="play" size={22} color={c.ctaFg} />
       </Pressable>
     </View>
   );
 }
 
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
-// The bar's shade (light, or grey over something dark: glass-bar.tsx) goes to the tabs through BarLight.
-const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>((props, ref) => {
-  const light = useBarShade(), apart = useBarApart();
-  return <BarLight.Provider value={light}><BarApart.Provider value={apart}><TabShell ref={ref} {...props} /></BarApart.Provider></BarLight.Provider>;
-});
-GlassTabBar.displayName = 'GlassTabBar';
 const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
-  const ins = useSafeAreaInsets();
+  const ins = useSafeAreaInsets(), c = useColors(), home = usePathname() === '/';
   return (
-    <View ref={ref} {...props} pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
-      <BarSurface style={{ flexDirection: 'row', width: '100%', maxWidth: 440, padding: 4 }}>{children}</BarSurface>
+    <View pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
+      <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 440 }}>
+        {/* (data-bar: left out when the page under the bar is read, bar-shade.tsx) */}
+        <View ref={ref} {...props} {...({ dataSet: { bar: '1' } } as any)} style={{ flex: 1, height: TAB_BAR_H, borderRadius: TAB_BAR_H / 2, overflow: 'hidden' }}>
+          <LinearGradient pointerEvents="none" colors={[c.accent, mix(c.accent, c.accentText, 0.22)]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+          <View style={{ flex: 1, flexDirection: 'row', padding: 5 }}>{children}</View>
+        </View>
+        {home ? <StartButton /> : null}
+      </View>
     </View>
   );
 });
@@ -94,16 +90,13 @@ export default function AppTabs() {
     <Tabs>
       <TabSlot style={{ flex: 1 }} />
       <TabList asChild>
-        <GlassTabBar>
+        <TabShell>
           {TABS.map(t => (
-            <Fragment key={t.name}>
-              {t.name === 'exam' ? <StartButton /> : null}
-              <TabTrigger name={t.name} href={t.href as any} asChild>
-                <TabButton name={t.name} label={t.label} />
-              </TabTrigger>
-            </Fragment>
+            <TabTrigger key={t.name} name={t.name} href={t.href as any} asChild>
+              <TabButton name={t.name} label={t.label} />
+            </TabTrigger>
           ))}
-        </GlassTabBar>
+        </TabShell>
       </TabList>
     </Tabs>
   );
