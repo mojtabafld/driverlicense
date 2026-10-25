@@ -6,7 +6,6 @@
 // Persian) starts a random 25-question test at once (StartButton; Mojtaba 2026-10-25).
 import { router, usePathname } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
-import { BlurView } from 'expo-blur';
 import { forwardRef } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +17,7 @@ import { FULL, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { tap } from '../kit';
+import { Frost } from '../glass-bar';
 import { Icon, type IconName } from '../icon';
 import { useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
@@ -40,17 +40,6 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
   );
 });
 TabButton.displayName = 'TabButton';
-
-// The bar's frosted ground, under its contents: what is under it blurred, white in the light theme and black in the
-// dark one (Android, where blur is not reliable: nearly solid).
-const ANDROID = Platform.OS === 'android';
-const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
-function Frost({ dark }: { dark: boolean }) {
-  return (<>
-    {ANDROID ? null : <BlurView pointerEvents="none" intensity={40} tint={dark ? 'dark' : 'light'} style={FILL} />}
-    <View pointerEvents="none" style={[FILL, { backgroundColor: dark ? `rgba(0,0,0,${ANDROID ? 0.92 : 0.6})` : `rgba(255,255,255,${ANDROID ? 0.94 : 0.66})` }]} />
-  </>);
-}
 
 // The start button: a random test of FULL questions from the whole bank (the exam tab's card's bank: the app's own on
 // the main site, prove.dk's at /app); without free tests left, the premium page, as the card's button.

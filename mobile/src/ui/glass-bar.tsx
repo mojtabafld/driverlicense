@@ -2,6 +2,7 @@
 // home page (ui/tabs/app-tabs.tsx): the same capsule above the bottom edge (BarSurface), each button an icon over its
 // label, the main one (hand in, check, «مطمئنم») on a capsule of its own in the app's colour. Left to right in the
 // questions' language (Danish / English): a button at each end and something in the middle (the position).
+import { BlurView } from 'expo-blur';
 import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -103,9 +104,27 @@ export function BarSurface({ children, style }: { children: React.ReactNode; sty
       </GlassView>
     );
   }
-  // (data-bar: left out when the page under the bar is read, bar-shade.tsx)
-  return <View {...({ dataSet: { bar: '1' } } as any)} style={[{ borderRadius: r, borderWidth: 1, backgroundColor: look.solid, borderColor: look.edge }, style]}>{children}</View>;
+  // Web, Android and older iPhones: frosted as the tab bar, white in the light theme and black in the dark one (Mojtaba
+  // 2026-10-25). (data-bar: left out when the page under the bar is read, bar-shade.tsx)
+  return (
+    <View {...({ dataSet: { bar: '1' } } as any)} style={[{ borderRadius: r, overflow: 'hidden', borderWidth: 1, borderColor: look.dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)' }, style]}>
+      <Frost dark={look.dark} />
+      {children}
+    </View>
+  );
 }
+
+// The bars' frosted ground (the tab bar's and these), under their contents: what is under it blurred, white in the light theme and black in the
+// dark one (Android, where blur is not reliable: nearly solid).
+const ANDROID = Platform.OS === 'android';
+const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
+export function Frost({ dark }: { dark: boolean }) {
+  return (<>
+    {ANDROID ? null : <BlurView pointerEvents="none" intensity={40} tint={dark ? 'dark' : 'light'} style={FILL} />}
+    <View pointerEvents="none" style={[FILL, { backgroundColor: dark ? `rgba(0,0,0,${ANDROID ? 0.92 : 0.6})` : `rgba(255,255,255,${ANDROID ? 0.94 : 0.66})` }]} />
+  </>);
+}
+
 
 // The capsule itself, floating above the bottom edge (the tab bar and GlassBar).
 export function BarShell({ children }: { children: React.ReactNode }) {
