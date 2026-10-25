@@ -265,8 +265,8 @@ export default function Home() {
   const mistakes = mistakeIds(attempts).length;
   // Average of the last 5 attempts and its change against the 5 before.
   const avg = (xs: Attempt[]) => (xs.length ? xs.reduce((s, a) => s + pctOf(a), 0) / xs.length : null);
-  const avg5 = avg(attempts.slice(-5)), prev5 = avg(attempts.slice(-10, -5));
-  const trend = avg5 != null && prev5 != null ? avg5 - prev5 : null;
+  // «میانگین»: the average of all tests (Mojtaba 2026-10-25; it was of the last 5, with their trend).
+  const avgAll = avg(attempts);
   const probColor = !est ? c.faint : est.prob >= 0.7 ? c.ok : est.prob >= 0.4 ? c.warn : c.bad;
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
@@ -304,15 +304,12 @@ export default function Home() {
         </View>
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter && !ARC ? 'none' : 'flex' }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>میانگین ۵ آزمون اخیر</FitLine>
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
-              <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avg5 != null ? pctText(avg5) : '–'}</T>
-              {trend != null ? <T style={{ fontSize: 11, fontWeight: '700', color: trend >= 0 ? c.ok : c.bad }}>{trend >= 0 ? '▲' : '▼'} {pctText(Math.abs(trend))}</T> : null}
-            </View>
+            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>میانگین</FitLine>
+            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avgAll != null ? pctText(avgAll) : '–'}</T>
           </View>
           <View style={{ width: 1, backgroundColor: c.line }} />
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>قبولی در آزمون کامل</FitLine>
+            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>آزمون‌های کامل</FitLine>
             <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–'}</T>
           </View>
         </View>
@@ -323,19 +320,19 @@ export default function Home() {
           the page fits itself around them (`fit`). */}
       {ARC ? (
         <Card style={{ flexDirection: 'row', padding: 0 }}>
-          <Stat bare dense={tighter} grow={share} onPress={() => (exams.length ? router.push('/history') : router.navigate('/exam'))} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
+          <Stat bare dense={tighter} grow={share} onPress={() => (exams.length ? router.push('/history') : router.navigate('/exam'))} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : undefined} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={lessonsDone / lessonsAll} />
+          <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
           {/* In English and Danish on narrower phones the mistakes line is one word («questions»), as «questions to
               practise» did not fit (Mojtaba 2026-10-20); Persian keeps its whole line. */}
-          <Stat bare dense={tighter} grow={share} onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? (UI_LANG !== 'fa' && width < 420 ? 'سؤال‌های تمرینی' : 'سؤال برای تمرین') : 'بدون اشتباه'} />
+          <Stat bare dense={tighter} grow={share} onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? (UI_LANG !== 'fa' && width < 420 ? 'سؤال‌های تمرینی' : 'سؤال برای تمرین') : undefined} />
         </Card>
       ) : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : 'آزمون نداده‌اید'} />
-        <Stat grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} progress={tighter ? undefined : lessonsDone / lessonsAll} />
-        <Stat grow={share} onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : 'بدون اشتباه'} />
+        <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : undefined} />
+        <Stat grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
+        <Stat grow={share} onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : undefined} />
       </View>
       )}
       </View>
