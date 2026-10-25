@@ -2,15 +2,14 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Animated, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
-import { EXAM_FOR, TRANS_DEFAULT, getTransLang, UI_LANG, setUiLang, t as fmt, type UiLang } from '@/lib/i18n';
+import { getTransLang, UI_LANG, t as fmt, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { faNum } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
 import { useApp } from '@/lib/store';
 import { Avatar, AvatarSheet } from '@/ui/avatar';
-import { Collapse, useOpening } from '@/ui/collapse';
 import { Confirm } from '@/ui/confirm';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
@@ -57,55 +56,25 @@ function LinkRow({ icon, title, sub, onPress, last, ok }: { icon: IconName; titl
   );
 }
 
-// «تنظیمات زبان» (Mojtaba 2026-10-23): the app's, the exam's and the translation's languages in a part that slides open
-// under one row (its icon, title and the app's language, an arrow on the other side turning with it) and shut again.
+// «تنظیمات زبان»: a row opening its own page (app/language.tsx; Mojtaba 2026-10-25), the app's language under it.
 const UI_NAME: Record<UiLang, string> = { fa: 'فارسی', en: 'English', da: 'Dansk' };
 function LangSettings() {
   const c = useColors();
-  const { settings, setSettings } = useApp();
-  const [open, setOpen] = useState(false);
-  const p = useOpening(open);
-  const turn = p.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] });
+  const { settings } = useApp();
   return (
-    <View>
-      <Pressable onPress={() => { tap(); setOpen(o => !o); }} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel="تنظیمات زبان"
-        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6, opacity: pressed ? 0.7 : 1 })}>
-        <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
-          <Icon name="translate" size={18} color={c.text} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <T style={{ fontWeight: '700' }}>تنظیمات زبان</T>
-          {/* (/app has only the exam's language) */}
-          {PROVE_PICS ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{(settings.lang ?? 'da') === 'en' ? 'انگلیسی' : 'دانمارکی'}</T>
-            : <T raw style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{UI_NAME[UI_LANG]}</T>}
-        </View>
-        <Animated.View style={{ transform: [{ rotate: turn }] }}>
-          <Icon name="chevronDown" size={16} color={c.faint} weight="semibold" />
-        </Animated.View>
-      </Pressable>
-      <Collapse p={p} open={open}>
-        <View style={{ gap: 10, paddingTop: 10, paddingBottom: 4 }}>
-          {!PROVE_PICS ? (
-            <>
-              <Row title="زبان برنامه" right={null} />
-              <Segmented value={UI_LANG} onChange={(ui: UiLang) => { if (ui === UI_LANG) return; setSettings({ ui, lang: EXAM_FOR[ui] }).catch(() => {}).finally(() => setUiLang(ui)); }}
-                options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'English' }, { value: 'da', label: 'Dansk' }]} />
-            </>
-          ) : null}
-          <Row title="زبان آزمون" right={null} />
-          <Segmented value={settings.lang ?? 'da'} onChange={lang => setSettings({ lang })} options={[{ value: 'da', label: 'دانمارکی' }, { value: 'en', label: 'انگلیسی' }]} />
-          {/* Main site: the translation's language, after the exam's again (Mojtaba 2026-10-22); left alone it follows the app's language (picked on first signing in).
-              The exam's own language shows no translation. */}
-          {!PROVE_PICS ? (
-            <>
-              <Row title="زبان ترجمه" right={null} />
-              <Segmented value={getTransLang()} onChange={(trans: 'fa' | 'en' | 'da') => setSettings({ trans: trans === TRANS_DEFAULT ? 'auto' : trans })}
-                options={[{ value: 'fa', label: 'فارسی', raw: true }, { value: 'en', label: 'انگلیسی' }, { value: 'da', label: 'دانمارکی' }]} />
-            </>
-          ) : null}
-        </View>
-      </Collapse>
-    </View>
+    <Pressable onPress={() => { tap(); router.push('/language'); }} accessibilityRole="button" accessibilityLabel="تنظیمات زبان"
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6, opacity: pressed ? 0.7 : 1 })}>
+      <View style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+        <Icon name="translate" size={18} color={c.text} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T style={{ fontWeight: '700' }}>تنظیمات زبان</T>
+        {/* (/app has only the exam's language) */}
+        {PROVE_PICS ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{(settings.lang ?? 'da') === 'en' ? 'انگلیسی' : 'دانمارکی'}</T>
+          : <T raw style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{UI_NAME[UI_LANG]}</T>}
+      </View>
+      <Icon name="chevronLeft" size={16} color={c.faint} weight="semibold" />
+    </Pressable>
   );
 }
 
