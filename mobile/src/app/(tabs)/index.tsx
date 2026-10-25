@@ -314,8 +314,7 @@ export default function Home() {
           <View style={{ width: 1, backgroundColor: c.line }} />
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>آزمون‌های کامل</FitLine>
-            {/* (green when every full test passed, the warning colour otherwise; Mojtaba 2026-10-25) */}
-            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center', color: fullN ? (passN === fullN ? c.ok : c.warn) : c.text }}>{fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–'}</T>
+            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–'}</T>
           </View>
         </View>
       </Card>
