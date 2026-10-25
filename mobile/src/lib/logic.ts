@@ -53,9 +53,10 @@ export function mistakeStats(attempts: Attempt[], has: (id: number) => boolean):
 }
 
 // ---- pass probability (beta-binomial, see site/app.js for the reasoning) ----
-// PASS_MAX_ANSWERS: how many of the latest answers count; the main site 50 (asked by the owner, so it follows recent
+// PASS_MAX_ANSWERS: how many of the latest answers count; the main site 25 (asked by the owner, so it follows recent
 // progress), the /app copy 200.
-const PASS_HALF_LIFE = 50, PASS_MAX_ANSWERS = PROVE_PICS ? 200 : 50, REPEAT_WEIGHT = 0.5;
+// (the main site: the last 25 answers, one test's worth; Mojtaba 2026-10-25)
+const PASS_HALF_LIFE = 50, PASS_MAX_ANSWERS = PROVE_PICS ? 200 : 25, REPEAT_WEIGHT = 0.5;
 function logGamma(x: number): number {
   const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
     12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
