@@ -47,7 +47,7 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
         <T style={{ flexShrink: 1, color: c.text, fontSize: narrow ? 12 : 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
       {/* (the number a little further from its label; Mojtaba 2026-10-25) */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: dense ? 3 : 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: dense ? 6 : 12 }}>
         <T style={{ flex: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : progress != null && tone === 'ok' ? c.ok : c.text }} numberOfLines={1}>
           {value}{extra ? <T style={{ color: progress != null && tone === 'ok' ? c.ok : c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
         </T>
@@ -322,7 +322,7 @@ export default function Home() {
           the page fits itself around them (`fit`). */}
       {ARC ? (
         <Card style={{ flexDirection: 'row', padding: 0 }}>
-          <Stat bare dense={tighter} grow={share} onPress={() => (exams.length ? router.push('/history') : router.navigate('/exam'))} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : undefined} />
+          <Stat bare dense={tighter} grow={share} onPress={() => (exams.length ? router.push('/history') : router.navigate('/exam'))} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
           <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
           <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
@@ -332,7 +332,7 @@ export default function Home() {
         </Card>
       ) : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} sub={fullN ? `${faNum(passN)} قبولی` : exams.length ? 'آزمون کامل نداده‌اید' : undefined} />
+        <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} />
         <Stat grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
         <Stat grow={share} onPress={() => router.push('/mistakes')} short={tight} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} sub={mistakes ? 'سؤال برای تمرین' : undefined} />
       </View>
