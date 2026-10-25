@@ -46,7 +46,8 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
         <Icon name={icon} size={narrow ? 18 : 20} color={fg} weight="semibold" />
         <T style={{ flexShrink: 1, color: c.text, fontSize: narrow ? 12 : 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+      {/* (the number a little further from its label; Mojtaba 2026-10-25) */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: dense ? 3 : 6 }}>
         <T style={{ flex: 1, fontSize: 22, lineHeight: 30, fontWeight: '800', color: tone === 'bad' ? c.bad : progress != null && tone === 'ok' ? c.ok : c.text }} numberOfLines={1}>
           {value}{extra ? <T style={{ color: progress != null && tone === 'ok' ? c.ok : c.muted, fontSize: 12, fontWeight: '600' }}>{extra}</T> : null}
         </T>
@@ -265,8 +266,9 @@ export default function Home() {
   const mistakes = mistakeIds(attempts).length;
   // Average of the last 5 attempts and its change against the 5 before.
   const avg = (xs: Attempt[]) => (xs.length ? xs.reduce((s, a) => s + pctOf(a), 0) / xs.length : null);
-  // «میانگین»: the average of all tests (Mojtaba 2026-10-25; it was of the last 5, with their trend).
-  const avgAll = avg(attempts);
+  // «میانگین»: the average of all tests (Mojtaba 2026-10-25; it was of the last 5, with their trend): every test the
+  // «آزمون‌ها» count counts and the chart view's statistics average (the course's lessons left out).
+  const avgAll = avg(exams);
   const probColor = !est ? c.faint : est.prob >= 0.7 ? c.ok : est.prob >= 0.4 ? c.warn : c.bad;
   const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
