@@ -181,7 +181,7 @@ export default function Home() {
   const [low, setLow] = useState(false);
   const fitEmpty = () => {
     if (exams.length || openTop.current == null || underH.current == null) return;
-    const room = Math.floor(height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) - openTop.current - gap - underH.current);
+    const room = Math.floor(height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - openTop.current - gap - underH.current);
     setGrow(g => (g && room < g[1] ? [g[0], Math.max(96, room)] : g));
     setLow(room < 140);
   };
@@ -201,7 +201,7 @@ export default function Home() {
         // Opened: the latest tests' «all» button shows «نمایش همه» for a moment, as on the exam page, once the page is
         // scrolled down to its end (Mojtaba 2026-10-20); at once when that card is already whole above the tab bar.
         if (finished && open) listBox.current?.measureInWindow((_x, y, _w, h) => {
-          if (h && y + h <= height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) + 1 && !atEnd.current) { atEnd.current = true; setHint(n => n + 1); }
+          if (h && y + h <= height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) + 1 && !atEnd.current) { atEnd.current = true; setHint(n => n + 1); }
         });
       });
   };
@@ -244,7 +244,7 @@ export default function Home() {
   const fit = () => {
     if (!ARC || level >= 3 || grow) return;
     chartBox.current?.measureInWindow((_x, top) => {
-      const room = height - (TAB_BAR_H + 8 + Math.max(16, ins.bottom)) - top;
+      const room = height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - top;
       if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
     });
   };
@@ -276,7 +276,7 @@ export default function Home() {
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
-      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? 8 : undefined}
+      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
       heroExtra={ARC ? <ChartButton on={view} t={t} onPress={toggle} /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
       <Animated.View pointerEvents={view ? 'none' : 'auto'} aria-hidden={view || undefined}
