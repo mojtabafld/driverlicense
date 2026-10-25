@@ -62,7 +62,8 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
         </View>
       ) : short ? null : <T style={{ color: c.muted, fontSize: 11, lineHeight: 16 }} numberOfLines={1}>{sub}</T>}
   </>);
-  const pad = { gap: dense ? 2 : 4, paddingVertical: (dense ? 6 : 10) + grow / 2, paddingHorizontal: narrow ? 8 : 10 };
+  // (a little lower than before: less room above and under; Mojtaba 2026-10-25)
+  const pad = { gap: dense ? 2 : 4, paddingVertical: (dense ? 4 : 6) + grow / 4, paddingHorizontal: narrow ? 8 : 10 };
   return bare ? (
     <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ flex: 1 }, pad, pressed && { opacity: 0.7 }]}>{body}</Pressable>
   ) : <Card onPress={onPress} style={{ flex: 1, ...pad }}>{body}</Card>;
