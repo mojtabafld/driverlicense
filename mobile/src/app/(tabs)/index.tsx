@@ -39,10 +39,13 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
   if (progress != null && progress >= 1) tone = 'ok';
   const bar = useCountUp(progress != null ? Math.min(1, Math.max(0, progress)) : 0); // the bar fills when the app opens
   const fg = tone === 'bad' ? c.bad : tone === 'ok' ? c.ok : c.link;
+  const soft = tone === 'bad' ? c.badSoft : tone === 'ok' ? c.okSoft : c.accentSoft;
   const body = (<>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: narrow ? 5 : 6 }}>
-        {/* A bare line icon in the card's colour, no tile behind it. */}
-        <Icon name={icon} size={narrow ? 18 : 20} color={fg} weight="semibold" />
+        {/* The line icon in the card's colour on a soft tile of that colour (the icon's size as before; Mojtaba 2026-10-25). */}
+        <View style={{ width: narrow ? 30 : 34, height: narrow ? 30 : 34, borderRadius: narrow ? 9 : 10, alignItems: 'center', justifyContent: 'center', backgroundColor: soft }}>
+          <Icon name={icon} size={narrow ? 18 : 20} color={fg} weight="semibold" />
+        </View>
         <T style={{ flexShrink: 1, color: c.text, fontSize: narrow ? 12 : 12.5, lineHeight: 20, fontWeight: '700' }} numberOfLines={1}>{label}</T>
       </View>
       {/* (the number a little further from its label; Mojtaba 2026-10-25) */}
