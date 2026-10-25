@@ -298,8 +298,7 @@ export default function Home() {
           {/* Main site: the title, the pill and the line centred on one another (the pill right under the title), Mojtaba asked. */}
           <View style={{ flex: ARC ? undefined : 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: ARC ? 'center' : 'flex-start' }}>
             <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
-            {/* Main site: «بر اساس ۵۰ تست اخیر» small, right under the title, Mojtaba asked. */}
-            {ARC && est && !tight ? <T style={{ color: c.muted, fontSize: 11, lineHeight: 16, textAlign: 'center', marginTop: compact ? -4 : -6 }}>{`بر اساس ${faNum(est.n)} تست اخیر`}</T> : null}
+            {/* (Main site: no «بر اساس … تست اخیر» line under the title any more; Mojtaba 2026-10-25.) */}
             <Pill text={probWord} fg={probColor} bg={probSoft} />
             {/* Main site: no line before the first exam. */}
             <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, textAlign: ARC ? 'center' : undefined, display: tight || tighter || ARC ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
