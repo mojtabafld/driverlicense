@@ -2,12 +2,22 @@
 // (BarSurface, glass-bar.tsx: Apple's own Liquid Glass on iOS 26 and later, flat in the cards' colour elsewhere), each
 // tab an icon over its label; the chosen tab sits on a capsule of its own, its icon filled and its label in the app's
 // colour. The pages keep room for it under their end (Screen).
+// Between «آموزش» and «آزمون» a round button that starts a random 25-question test at once (StartButton; Mojtaba
+// 2026-10-25).
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
-import { forwardRef } from 'react';
+import { router } from 'expo-router';
+import { forwardRef, Fragment } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PROVE_BANK } from '@/lib/config';
+import { toPremium, useFree } from '@/lib/free';
+import { FULL, shuffle } from '@/lib/logic';
+import { session } from '@/lib/session';
+import { tr } from '@/lib/i18n';
+import { useApp } from '@/lib/store';
 import { T, tap } from '../kit';
+import { useColors } from '../theme';
 import { Icon, type IconName } from '../icon';
 import { BarSurface, useBarApart, useBarLook, useBarShade } from '../glass-bar';
 import { BarApart, BarLight } from '../bar-shade';
@@ -37,6 +47,31 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
 });
 TabButton.displayName = 'TabButton';
 
+// The start button: a random test of FULL questions from the whole bank (the exam tab's card's bank: the app's own on
+// the main site, prove.dk's at /app); without free tests left, the premium page, as the card's button.
+function StartButton() {
+  const c = useColors();
+  const { newBank, bank } = useApp();
+  const src = PROVE_BANK ? bank : newBank;
+  const { randomLeft } = useFree();
+  const start = () => {
+    tap();
+    if (!randomLeft) { toPremium(); return; }
+    if (!src?.questions.length) return;
+    session.plan = { mode: PROVE_BANK ? 'random' : 'new', ids: shuffle(src.questions.map(q => q.id)).slice(0, FULL), title: 'آزمون تصادفی' };
+    router.push('/run');
+  };
+  const d = TAB_BAR_H - 12;
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Pressable onPress={start} accessibilityRole="button" accessibilityLabel={tr('شروع آزمون')} hitSlop={4}
+        style={({ pressed }) => ({ width: d, height: d, borderRadius: d / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: c.cta, opacity: pressed ? 0.8 : 1 })}>
+        <Icon name="play" size={22} color={c.ctaFg} filled />
+      </Pressable>
+    </View>
+  );
+}
+
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
 // The bar's shade (light, or grey over something dark: glass-bar.tsx) goes to the tabs through BarLight.
 const GlassTabBar = forwardRef<View, { children?: React.ReactNode }>((props, ref) => {
@@ -61,9 +96,12 @@ export default function AppTabs() {
       <TabList asChild>
         <GlassTabBar>
           {TABS.map(t => (
-            <TabTrigger key={t.name} name={t.name} href={t.href as any} asChild>
-              <TabButton name={t.name} label={t.label} />
-            </TabTrigger>
+            <Fragment key={t.name}>
+              {t.name === 'exam' ? <StartButton /> : null}
+              <TabTrigger name={t.name} href={t.href as any} asChild>
+                <TabButton name={t.name} label={t.label} />
+              </TabTrigger>
+            </Fragment>
           ))}
         </GlassTabBar>
       </TabList>
