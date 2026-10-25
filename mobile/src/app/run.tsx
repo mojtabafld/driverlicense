@@ -67,18 +67,13 @@ export default function Run() {
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
   const [flags, setFlags] = useState<number[]>([]);
   const [dialog, setDialog] = useState<'quit' | 'handin' | null>(null);
-  // The time the test took: only while it is on the screen (the app in front, the browser tab shown), so a test left
-  // open in the background (the phone locked, another app) does not count the hours away; it used to be the clock time
-  // from start to hand-in, e.g. «199:32» (Mojtaba 2026-10-25).
-  const [spent] = useState(() => ({ current: { ms: 0, since: Date.now() as number | null } })); // (a ref, started when the page opens)
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', st => {
-      const t = spent.current;
-      if (st === 'active') { if (t.since == null) t.since = Date.now(); }
-      else if (t.since != null) { t.ms += Date.now() - t.since; t.since = null; }
-    });
-    return () => sub.remove();
-  }, [spent]);
+  // The test's time: the clock time from its start, at most a minute a question (25 minutes for 25), as the real test.
+  // It runs on while the phone is locked or the app is away; when the time is up the test is handed in by itself, with
+  // the most time as its time, also when the user comes back to it later (it used to count the hours a test was left
+  // open, e.g. «199:32»; Mojtaba 2026-10-25).
+  const [started] = useState(() => Date.now());
+  const limit = qs.length * SECONDS_PER_Q;
+  const elapsed = () => Math.min(limit, Math.round((Date.now() - started) / 1000));
   const done = useRef(false);
   const lang = settings.lang === 'en' ? 'en' : 'da';
 
@@ -89,16 +84,23 @@ export default function Run() {
     if (done.current || !plan) return; done.current = true;
     // Marked questions are saved as such (m), so the result shows them.
     const items = qs.map((q, k) => { const g = grade(q, ticks[k]); return { id: g.id, ok: g.ok, w: g.w, a: g.a, ...(flags.includes(k) ? { m: 1 as const } : {}) }; });
-    const t = spent.current, secs = Math.round((t.ms + (t.since != null ? Date.now() - t.since : 0)) / 1000);
+    const secs = elapsed();
     const attempt = { secs, mode: plan.mode, ...(plan.lesson ? { lesson: plan.lesson } : {}), items };
     session.result = { at: Date.now(), ...attempt }; session.fresh = true;
     saveAttempt(attempt).catch(() => {});
     release(() => router.replace('/result'));
   };
+  // (the hand-in of the latest render, with the answers given so far; the timer's own `finish` would grade them as at
+  // the start)
+  const latest = useRef(finish);
+  useEffect(() => { latest.current = finish; });
+  // Each second, and at once when the app comes back to the front (its timers stand still in the background): the time
+  // left from the clock, and the hand-in when it is up (with the clock shown or not: settings.timer).
   useEffect(() => {
-    if (!settings.timer) return;
-    const t = setInterval(() => setLeft(s => { if (s <= 1) { clearInterval(t); finish(); return 0; } return s - 1; }), 1000);
-    return () => clearInterval(t);
+    const check = () => { const el = elapsed(); if (el >= limit) latest.current(); else if (settings.timer) setLeft(limit - el); };
+    const t = setInterval(check, 1000);
+    const sub = AppState.addEventListener('change', st => { if (st === 'active') check(); });
+    return () => { clearInterval(t); sub.remove(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // The phone's back button asks too, instead of leaving the exam at once.
