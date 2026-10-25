@@ -19,6 +19,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { tap } from '../kit';
 import { Icon, type IconName } from '../icon';
+import { rgba } from '../palette';
 import { useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
 
@@ -41,10 +42,22 @@ const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: 
 });
 TabButton.displayName = 'TabButton';
 
+// The bar's frosted ground, under its contents: what is under it blurred, white in the light theme and black in the
+// dark one (Android, where blur is not reliable: nearly solid); `tint` laid over it.
+const ANDROID = Platform.OS === 'android';
+const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
+function Frost({ dark, tint }: { dark: boolean; tint?: string }) {
+  return (<>
+    {ANDROID ? null : <BlurView pointerEvents="none" intensity={40} tint={dark ? 'dark' : 'light'} style={FILL} />}
+    <View pointerEvents="none" style={[FILL, { backgroundColor: dark ? `rgba(0,0,0,${ANDROID ? 0.92 : 0.6})` : `rgba(255,255,255,${ANDROID ? 0.94 : 0.66})` }]} />
+    {tint ? <View pointerEvents="none" style={[FILL, { backgroundColor: tint }]} /> : null}
+  </>);
+}
+
 // The start button: a random test of FULL questions from the whole bank (the exam tab's card's bank: the app's own on
 // the main site, prove.dk's at /app); without free tests left, the premium page, as the card's button.
 function StartButton() {
-  const c = useColors();
+  const c = useColors(), dark = useIsDark();
   const { newBank, bank } = useApp();
   const src = PROVE_BANK ? bank : newBank;
   const { randomLeft } = useFree();
@@ -55,30 +68,28 @@ function StartButton() {
     session.plan = { mode: PROVE_BANK ? 'random' : 'new', ids: shuffle(src.questions.map(q => q.id)).slice(0, FULL), title: 'آزمون تصادفی' };
     router.push('/run');
   };
+  // (frosted as the bar, tinted with the theme's colour, the icon in it; Mojtaba 2026-10-25)
   const d = TAB_BAR_H;
   return (
-    <View>
-      <Pressable onPress={start} accessibilityRole="button" accessibilityLabel={tr('شروع آزمون')} hitSlop={4}
-        style={({ pressed }) => ({ width: d, height: d, borderRadius: d / 2, alignItems: 'center', justifyContent: 'center', backgroundColor: c.cta, opacity: pressed ? 0.8 : 1 })}>
-        <Icon name="play" size={22} color={c.ctaFg} />
-      </Pressable>
-    </View>
+    <Pressable onPress={start} accessibilityRole="button" accessibilityLabel={tr('شروع آزمون')} hitSlop={4}
+      style={({ pressed }) => ({ width: d, height: d, borderRadius: d / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
+        borderWidth: 1, borderColor: rgba(c.accent, dark ? 0.45 : 0.3) })}>
+      <Frost dark={dark} tint={rgba(c.accent, dark ? 0.3 : 0.18)} />
+      <View>{/* (over the frosted layers) */}<Icon name="play" size={22} color={dark ? c.link : c.accent} /></View>
+    </Pressable>
   );
 }
 
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
 const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
   const ins = useSafeAreaInsets(), dark = useIsDark(), home = usePathname() === '/';
-  const android = Platform.OS === 'android';
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
       <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 440 }}>
         {/* (data-bar: left out when the page under the bar is read, bar-shade.tsx) */}
         <View ref={ref} {...props} {...({ dataSet: { bar: '1' } } as any)} style={{ flex: 1, height: TAB_BAR_H, borderRadius: TAB_BAR_H / 2, overflow: 'hidden',
           borderWidth: 1, borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)' }}>
-          {android ? null : <BlurView pointerEvents="none" intensity={40} tint={dark ? 'dark' : 'light'} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />}
-          <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: dark ? `rgba(0,0,0,${android ? 0.92 : 0.6})` : `rgba(255,255,255,${android ? 0.94 : 0.66})` }} />
+          <Frost dark={dark} />
           <View style={{ flex: 1, flexDirection: 'row', padding: PAD }}>{children}</View>
         </View>
         {home ? <StartButton /> : null}
