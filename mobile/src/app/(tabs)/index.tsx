@@ -165,7 +165,7 @@ export default function Home() {
   // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
   // screen growing to a comfortable one), and the statistics and the latest tests come in under it; closing, the page
   // goes back to its top and all of it moves back.
-  const { user, attempts, bank } = useApp();
+  const { user, attempts, bank, premium } = useApp();
   const exams = attempts.filter(a => a.mode !== 'lesson');
   const ins = useSafeAreaInsets(), chartBox = useRef<View>(null);
   const [view, setView] = useState(false), [grow, setGrow] = useState<[number, number] | null>(null), [hint, setHint] = useState(0);
@@ -278,7 +278,7 @@ export default function Home() {
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
-      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
+      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
       heroExtra={ARC ? <ChartButton on={view} t={t} onPress={toggle} /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
       <Animated.View pointerEvents={view ? 'none' : 'auto'} aria-hidden={view || undefined}

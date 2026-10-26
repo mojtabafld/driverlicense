@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { ActivityIndicator, Modal, PanResponder, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg';
 
 import { API_URL } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
@@ -22,9 +22,36 @@ import { WASH_DARK, WASH_LIGHT } from './wash';
 
 const COUNT = 10, OUT = 400; // made pictures to choose from; the saved photo's size in pixels
 
-export function Avatar({ size }: { size: number }) {
+// `premium` (the home page's header, Mojtaba 2026-10-26): a premium account's picture in a gold-to-pink gradient ring,
+// with a small crown badge at its lower corner; the picture shrinks a little inside the ring, the whole the same size.
+const PREMIUM = ['#FFD66B', '#FF9F43', '#F368E0'];
+export function Avatar({ size, premium }: { size: number; premium?: boolean }) {
   const c = useColors();
   const { user, avatarArt, token } = useApp();
+  if (premium) {
+    const ring = Math.max(2, size / 18), inner = size - ring * 2 - 4, badge = Math.round(size * 0.44), r = (size - ring) / 2;
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }} accessibilityLabel="Premium">
+        <Svg width={size} height={size} style={{ position: 'absolute' }}>
+          <Defs>
+            <SvgGradient id="premiumRing" x1="0" y1="0" x2="1" y2="1">
+              {PREMIUM.map((col, i) => <Stop key={col} offset={i / (PREMIUM.length - 1)} stopColor={col} />)}
+            </SvgGradient>
+          </Defs>
+          <Circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#premiumRing)" strokeWidth={ring} />
+        </Svg>
+        <Avatar size={inner} />
+        <View style={{ position: 'absolute', right: -2, bottom: -2, width: badge, height: badge, borderRadius: badge / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center',
+          borderWidth: 1.5, borderColor: c.surface }}>
+          <LinearGradient pointerEvents="none" colors={PREMIUM as unknown as [string, string, string]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+          {/* a crown (in a View: over the gradient on the web too) */}
+          <View><Svg width={badge * 0.6} height={badge * 0.6} viewBox="0 0 24 24">
+            <Path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 10H5L3 8z" fill="#ffffff" stroke="#ffffff" strokeWidth={1.2} strokeLinejoin="round" />
+          </Svg></View>
+        </View>
+      </View>
+    );
+  }
   const a = user?.avatar;
   const src = a?.photo ? imgSource({ uri: `${API_URL}/api/avatar`, v: `v=${a.photo}`, token })
     : a?.preset && avatarArt[a.preset] ? { uri: `${API_URL}/avatar-art/${a.preset}.png?v=${avatarArt[a.preset]}` } : null;
