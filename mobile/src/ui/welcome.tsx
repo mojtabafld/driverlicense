@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useColorScheme, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
@@ -15,7 +15,7 @@ import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
 import { Icon, type IconName } from './icon';
 import { L, T, physical, physicalAlign, tap, useHeaderTop } from './kit';
-import { defaultAccentDark } from './palette';
+import { defaultAccentDark, defaultAccentLight } from './palette';
 import { useColors } from './theme';
 import Svg, { Path } from 'react-native-svg';
 
@@ -43,20 +43,27 @@ function GoogleG({ size = 20 }: { size?: number }) {
   );
 }
 
-// The night look's own colours, the same in the light and the dark theme; its accent (the tile, «pro», the first
-// button) is the colour theme set as the default in DigitalOcean (DEFAULT_THEME), as its dark theme has it, whatever
-// this device has picked (Mojtaba 2026-10-24: not a fixed amber).
-const DEF = defaultAccentDark();
-export const N = { top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', accent: DEF.accent, onAccent: DEF.on,
-  glass: 'rgba(255,255,255,0.08)', glassEdge: 'rgba(255,255,255,0.14)' };
-// The road white, unless the accent is nearly white itself («سیاه و سفید»): then in the accent's text colour.
-const ROAD = (() => { const h = N.accent.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return v.every(x => x > 215) ? N.onAccent : '#ffffff'; })();
+// The welcome screen's own colours: the night look on a phone in the dark mode, and its day counterpart (light
+// blue-grey to white, dark text) in the light mode, as the phone is set, whatever the app's theme (Mojtaba 2026-10-26;
+// it was always the night look). Its accent (the tile, «pro», the first button) is the colour theme set as the default in
+// DigitalOcean (DEFAULT_THEME), in that theme's dark or light form, whatever this device has picked (Mojtaba 2026-10-24:
+// not a fixed amber).
+// `road`: the symbol's road white, unless the accent is nearly white itself («سیاه و سفید»): then in the accent's text
+// colour.
+const roadOn = (accent: string, on: string) => { const h = accent.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return v.every(x => x > 215) ? on : '#ffffff'; };
+const DARK = defaultAccentDark(), LIGHT = defaultAccentLight();
+const NIGHT = { dark: true, top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', soft: '#cfd6df', accent: DARK.accent, onAccent: DARK.on,
+  glass: 'rgba(255,255,255,0.08)', glassEdge: 'rgba(255,255,255,0.14)', road: roadOn(DARK.accent, DARK.on) };
+const DAY = { dark: false, top: '#dfe7f1', bottom: '#f7f9fc', ink: '#0f1722', muted: '#566273', faint: '#76808e', soft: '#334155', accent: LIGHT.accent, onAccent: LIGHT.on,
+  glass: 'rgba(15,23,34,0.05)', glassEdge: 'rgba(15,23,34,0.11)', road: roadOn(LIGHT.accent, LIGHT.on) };
+export function useN() { return useColorScheme() === 'dark' ? NIGHT : DAY; }
 // The app's symbol (assets/icon-src/symbol.svg): the road bent into a tick, its broken centre line in the tile's colour.
 export function RoadTick({ size }: { size: number }) {
+  const N = useN();
   const d = 'M268 531 L432 695 L756 329';
   return (
     <Svg width={size} height={size} viewBox="0 0 1024 1024">
-      <Path d={d} fill="none" stroke={ROAD} strokeWidth={184} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d={d} fill="none" stroke={N.road} strokeWidth={184} strokeLinecap="round" strokeLinejoin="round" />
       <Path d={d} fill="none" stroke={N.accent} strokeWidth={26} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50 50" strokeDashoffset={-20} />
     </Svg>
   );
@@ -66,7 +73,7 @@ export function RoadTick({ size }: { size: number }) {
 // The app's language from the welcome screen (Mojtaba 2026-10-21), beside the theme button: a sheet of the three, each
 // in its own language; another one loads the app again in it (lib/i18n.ts setUiLang).
 function LangButton() {
-  const c = useColors();
+  const c = useColors(), N = useN();
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -97,7 +104,7 @@ function LangButton() {
 // A wide button of the welcome screen; `main`: the first one, in the accent, the others glass on the night page;
 // `off`: shown but not usable yet, with «به‌زودی».
 function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?: IconName; main?: boolean; onPress?: () => void; mark?: (fg: string) => React.ReactNode; off?: boolean }) {
-  const fg = main ? N.onAccent : N.ink;
+  const N = useN(), fg = main ? N.onAccent : N.ink;
   return (
     <Pressable onPress={() => { if (off || !onPress) return; tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled: !!off }}
       style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ height: 54, borderRadius: 18, justifyContent: 'center', alignItems: 'center',
@@ -113,7 +120,7 @@ function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?:
 // the server has it on; else off) and email (its two choices, then `onEmail` in that mode, ui/sign-steps.tsx), then the
 // guest link and the line on the privacy policy.
 export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { onEmail: (mode: 'login' | 'register') => void; mailFirst?: boolean; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
-  const c = useColors(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
+  const c = useColors(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions(), N = useN();
   // The email's choices in place of the ways in, with a short fade (`mailFirst`: back from their steps, they show again).
   const [byMail, setByMail] = useState(!!mailFirst);
   const [ways] = useState(() => new Animated.Value(1));
@@ -130,7 +137,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
   const head = Math.min(26, Math.floor((Math.min(width, 440) - 48) / (tr(headline).length * (UI_LANG === 'fa' ? 0.45 : 0.5))));
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar style="light" />
+      <StatusBar style={N.dark ? 'light' : 'dark'} />
       <LinearGradient pointerEvents="none" colors={[N.top, N.bottom, N.bottom]} locations={[0, 0.6, 1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
@@ -175,7 +182,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
             {err && !byMail ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
             {byMail ? null : <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
               {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
-                <T style={{ color: '#cfd6df', fontSize: 15, fontWeight: '600', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
+                <T style={{ color: N.soft, fontSize: 15, fontWeight: '600', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
               )}
             </Pressable>}
             <Pressable onPress={() => { tap(); Linking.openURL(`${API_URL}/privacy?lang=${UI_LANG}`).catch(() => {}); }} accessibilityRole="link" style={{ alignSelf: 'center', marginTop: 2 }}>
