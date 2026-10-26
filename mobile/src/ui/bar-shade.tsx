@@ -134,7 +134,40 @@ export function useSimilarUnder(on: boolean, h: number, color: string) {
   }, [on, h, color, height, width, ins.bottom]);
   return on && under;
 }
-// Whether the bar has taken its colour two steps off (useSimilarUnder), handed to its items.
+// Whether a part of the page (a card, an answer, a button: anything painted in another colour than the page `bg`) lies
+// under a bar `h` tall floating above the bottom, looked at every 200 ms while `on`: the frosted bars then take a shade
+// one step off, so they stay apart from it (Mojtaba 2026-10-26). On the web read from the page as useSimilarUnder; in
+// the apps any of the registered surfaces (useSurfaceUnder) across the bar's top edge.
+export function useContentUnder(on: boolean, h: number, bg: string) {
+  const { height, width } = useWindowDimensions(), ins = useSafeAreaInsets();
+  const [under, setUnder] = useState(false);
+  useEffect(() => {
+    if (!on) return;
+    const bottom = height - Math.max(16, ins.bottom), top = bottom - h, left = 20, right = width - 20, page = bright(bg);
+    let alive = true;
+    const look = () => {
+      if (Platform.OS === 'web') {
+        const xs = [0.2, 0.5, 0.8].map(f => left + (right - left) * f), ys = [top + 5, top + h / 2];
+        if (alive) setUnder(xs.some(x => ys.some(y => { const v = webUnder(x, y, null); return v != null && page != null && Math.abs(v - page) > 0.01; })));
+        return;
+      }
+      const all = [...surfaces.keys()];
+      if (!all.length) { if (alive) setUnder(false); return; }
+      let todo = all.length, hit = false;
+      for (const v of all) {
+        v.measureInWindow((x, y, w, hh) => {
+          if (w > 0 && hh > 0 && y < bottom && y + hh > top && x < right && x + w > left) hit = true;
+          if (--todo === 0 && alive) setUnder(hit);
+        });
+      }
+    };
+    const first = setTimeout(look, 0), t = setInterval(look, 200);
+    return () => { alive = false; clearTimeout(first); clearInterval(t); };
+  }, [on, h, bg, height, width, ins.bottom]);
+  return on && under;
+}
+
+// Whether the bar has taken its colour off the page's (useContentUnder), handed to its items.
 export const BarApart = createContext(false);
 
 // The shade a bar hands its items: true while it is the light glass.
