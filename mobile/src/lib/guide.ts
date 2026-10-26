@@ -88,6 +88,7 @@ export const RULES: GuidePart[] = [
       'نور بالا را هنگام روبه‌رو شدن با خودروهای دیگر یا وقتی پشت خودرویی هستید، به نور پایین تغییر دهید.',
       'چراغ مه‌شکن (جلو و عقب) فقط در مه و بارش شدید مجاز است.',
       'اگر نور بالای خودروی روبه‌رو چشمتان را زد، به لبه‌ی راست جاده نگاه کنید و سرعت را کم کنید.',
+      'نور پایین باید جاده را دست‌کم تا ۳۰ متر و نور بالا دست‌کم تا ۱۰۰ متر جلو روشن کند؛ چراغ‌های عقب باید در تاریکی از ۳۰۰ متری دیده شوند، و چراغ ترمز پرنورتر از آن‌ها است تا در روز هم دیده شود.',
     ],
     topics: ['7.19', '7.20'],
   },
@@ -171,6 +172,7 @@ export const RULE_NUMBERS: RuleNumber[] = [
   { value: '۵۰', unit: 'km/h', label: 'داخل شهر', rule: 0 },
   { value: '۸۰', unit: 'km/h', label: 'خارج از شهر', rule: 0 },
   { value: '۱۳۰', unit: 'km/h', label: 'بزرگراه', rule: 0 },
+  { value: '۸۰', unit: 'km/h', label: 'جاده‌ی موتوری (motortrafikvej)', rule: 0 },
   { value: '۸۰', unit: 'km/h', label: 'خودرو با تریلر', rule: 0 },
   { value: '۴', unit: 'برابر', label: 'مسافت ترمز با دو برابر سرعت', rule: 0 },
   { value: '۲', unit: 'ثانیه', label: 'کمترین فاصله با خودروی جلو', rule: 1 },
@@ -182,12 +184,17 @@ export const RULE_NUMBERS: RuleNumber[] = [
   { value: '۱۰', unit: 'm', label: 'توقف ممنوع تا تقاطع', rule: 7 },
   { value: '۵', unit: 'm', label: 'توقف ممنوع پیش از گذرگاه', rule: 7 },
   { value: '۱۲', unit: 'm', label: 'توقف ممنوع کنار ایستگاه اتوبوس', rule: 7 },
+  { value: '۳۰', unit: 'm', label: 'نور پایین دست‌کم تا این فاصله', rule: 5 },
+  { value: '۱۰۰', unit: 'm', label: 'نور بالا دست‌کم تا این فاصله', rule: 5 },
+  { value: '۳۰۰', unit: 'm', label: 'دیده شدن چراغ عقب در تاریکی', rule: 5 },
   { value: '۳۰', unit: 'm', label: 'پارک ممنوع تا گذرگاه راه‌آهن', rule: 7 },
   { value: '۳', unit: 'دقیقه', label: 'توقف کوتاه‌تر از این، پارک نیست', rule: 7 },
   { value: '۵۰', unit: 'm', label: 'مثلث خطر پشت خودرو (بزرگراه ۱۰۰)', rule: 10 },
   { value: '۱٫۶', unit: 'mm', label: 'کمترین عمق آج لاستیک', rule: 10 },
   { value: '۳٬۵۰۰', unit: 'kg', label: 'وزن کل با گواهینامه‌ی B', rule: 10 },
   { value: '۷۵۰', unit: 'kg', label: 'تریلر با گواهینامه‌ی B', rule: 10 },
+  { value: '۳', unit: 'klip', label: 'نمره‌ی منفی در ۳ سال', rule: 10 },
+  { value: '۸', unit: 'نفر', label: 'بیشترین سرنشین با گواهینامه‌ی B', rule: 10 },
 ];
 
 // «راهنمای استفاده» in the settings: how the app works, part by part.
