@@ -78,6 +78,11 @@ export function defaultAccentDark() {
   const s = PALETTES.find(p => p.id === defaultPalette())!;
   return { accent: s.accD, on: s.onD };
 }
+// The same theme's accent in its light theme (the welcome screen on a phone in the light mode).
+export function defaultAccentLight() {
+  const s = PALETTES.find(p => p.id === defaultPalette())!;
+  return { accent: s.accL, on: s.onL ?? '#ffffff' };
+}
 const SPEC = PALETTES.find(p => p.id === PALETTE)!;
 
 // Keep the theme and, when it changes, start the app again in it (lib/reload.ts).

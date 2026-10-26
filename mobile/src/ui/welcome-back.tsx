@@ -1,5 +1,5 @@
 // The sign-in page after someone signed out on this device (Mojtaba 2026-10-20; the night look of the welcome screen
-// since 2026-10-24, ui/welcome.tsx, in the light and the dark theme alike): on the night-blue page, the app's name and
+// since 2026-10-24, ui/welcome.tsx, its day look on a phone in the light mode): on the night-blue (or light) page, the app's name and
 // its symbol on a glowing tile in the default theme's accent, then «خوش برگشتید» and the account signed out last
 // (lib/prefs LastUser) on a glass card with its profile picture, name and email; a tap on it asks only for the
 // password. «شما نیستید؟» forgets the account and shows the welcome screen.
@@ -14,10 +14,10 @@ import type { LastUser } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { L, T, tap, useHeaderTop } from './kit';
-import { N, RoadTick } from './welcome';
+import { RoadTick, useN } from './welcome';
 
 function Face({ u, size }: { u: LastUser; size: number }) {
-  const { avatarArt } = useApp();
+  const { avatarArt } = useApp(), N = useN();
   const uri = u.photo ?? (u.preset && avatarArt[u.preset] ? `${API_URL}/avatar-art/${u.preset}.png?v=${avatarArt[u.preset]}` : null);
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: N.glass }}>
@@ -27,13 +27,13 @@ function Face({ u, size }: { u: LastUser; size: number }) {
 }
 
 export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick: () => void; onNotYou: () => void }) {
-  const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
+  const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions(), N = useN();
   // The browser's top (and the phone's status bar on the web) in the page's top colour.
   useHeaderTop(N.top);
   const tile = Math.round(Math.min(116, height * 0.14, width * 0.3));
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar style="light" />
+      <StatusBar style={N.dark ? 'light' : 'dark'} />
       <LinearGradient pointerEvents="none" colors={[N.top, N.bottom, N.bottom]} locations={[0, 0.6, 1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 30 : 24), paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24, gap: 22 }}>
