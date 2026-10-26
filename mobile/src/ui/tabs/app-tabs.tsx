@@ -17,7 +17,7 @@ import { FULL, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { tap } from '../kit';
-import { Frost } from '../glass-bar';
+import { Frost, useBarApart } from '../glass-bar';
 import { Icon, type IconName } from '../icon';
 import { useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
@@ -58,7 +58,8 @@ function StartButton() {
   // (in the chosen tab's colours: the theme's colour, its icon in the colour on it; Mojtaba 2026-10-25)
   const d = TAB_BAR_H;
   return (
-    <Pressable onPress={start} accessibilityRole="button" accessibilityLabel={tr('شروع آزمون')} hitSlop={4}
+    // (data-bar: not a part of the page under the bars, bar-shade.tsx)
+    <Pressable {...({ dataSet: { bar: '1' } } as any)} onPress={start} accessibilityRole="button" accessibilityLabel={tr('شروع آزمون')} hitSlop={4}
       style={({ pressed }) => ({ width: d, height: d, borderRadius: d / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
         backgroundColor: c.accent })}>
       <Icon name="play" size={22} color={c.accentText} />
@@ -68,14 +69,14 @@ function StartButton() {
 
 // Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
 const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
-  const ins = useSafeAreaInsets(), dark = useIsDark(), home = usePathname() === '/';
+  const ins = useSafeAreaInsets(), dark = useIsDark(), home = usePathname() === '/', over = useBarApart();
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 20, alignItems: 'center' }}>
       <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, width: '100%', maxWidth: 440 }}>
         {/* (data-bar: left out when the page under the bar is read, bar-shade.tsx) */}
         <View ref={ref} {...props} {...({ dataSet: { bar: '1' } } as any)} style={{ flex: 1, height: TAB_BAR_H, borderRadius: TAB_BAR_H / 2, overflow: 'hidden',
           borderWidth: 1, borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)' }}>
-          <Frost dark={dark} />
+          <Frost dark={dark} over={over} />
           <View style={{ flex: 1, flexDirection: 'row', padding: PAD }}>{children}</View>
         </View>
         {home ? <StartButton /> : null}

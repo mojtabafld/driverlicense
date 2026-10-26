@@ -11,7 +11,7 @@ import { RTL } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { faNum } from '@/lib/logic';
 import { L, T, tap } from './kit';
-import { BarApart, BarLight, useBarLight, useDarkUnder, useSimilarUnder } from './bar-shade';
+import { BarApart, BarLight, useBarLight, useContentUnder, useDarkUnder } from './bar-shade';
 import { useContext } from 'react';
 import { ARC, useColors, useIsDark } from './theme';
 import { PALETTE, mix, px, pxa, rgba } from './palette';
@@ -77,10 +77,11 @@ export function useBarLook() {
 // The flat bar's colour: the theme's second surface, one step off the cards; `apart` (something of about that colour
 // under the bar: bar-shade.tsx useSimilarUnder) two steps further, lighter in the dark themes, darker in the light ones.
 const barBase = (surface2: string, dark: boolean, apart: boolean) => (apart ? mix(surface2, dark ? '#ffffff' : '#000000', dark ? 0.08 : 0.06) : surface2);
-// Whether the flat bars take it (never on Liquid Glass, which shows what is under it itself).
+// Whether the bars take it: while a part of the page lies under them (bar-shade.tsx useContentUnder; the frosted bars'
+// shade one step off, Frost `over`).
 export function useBarApart() {
   const c = useColors();
-  return useSimilarUnder(!NATIVE_GLASS, BAR_H, c.surface2);
+  return useContentUnder(true, BAR_H, c.bg);
 }
 
 // The shade both bars take: light on the main site's light theme; on Liquid Glass not while something dark lies under
@@ -96,7 +97,7 @@ export function useBarShade() {
 // 2026-10-04, again 2026-10-23): one step off the cards' colour, with a thin line around it; no see-through, blur, sheen or
 // shadow.
 export function BarSurface({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
-  const look = useBarLook(), r = BAR_H / 2;
+  const look = useBarLook(), over = useContext(BarApart), r = BAR_H / 2;
   if (NATIVE_GLASS) {
     return (
       <GlassView glassEffectStyle="regular" isInteractive tintColor={look.grey} colorScheme={look.scheme} style={[{ borderRadius: r, overflow: 'hidden' }, style]}>
@@ -108,20 +109,24 @@ export function BarSurface({ children, style }: { children: React.ReactNode; sty
   // 2026-10-25). (data-bar: left out when the page under the bar is read, bar-shade.tsx)
   return (
     <View {...({ dataSet: { bar: '1' } } as any)} style={[{ borderRadius: r, overflow: 'hidden', borderWidth: 1, borderColor: look.dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)' }, style]}>
-      <Frost dark={look.dark} />
+      <Frost dark={look.dark} over={over} />
       {children}
     </View>
   );
 }
 
-// The bars' frosted ground (the tab bar's and these), under their contents: what is under it blurred, white in the light theme and black in the
-// dark one (Android, where blur is not reliable: nearly solid).
+// The bars' frosted ground (the tab bar's and these), under their contents: what is under it blurred, white in the light
+// theme and black in the dark one (Android, where blur is not reliable: nearly solid). `over`: a part of the page lies
+// under it (useBarApart): one step off, a light grey in the light theme and a dark grey in the dark one, still blurred,
+// so the bar stays apart from a card or an answer under it (Mojtaba 2026-10-26).
 const ANDROID = Platform.OS === 'android';
 const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
-export function Frost({ dark }: { dark: boolean }) {
+export function Frost({ dark, over }: { dark: boolean; over?: boolean }) {
+  const a = ANDROID ? 0.94 : over ? 0.74 : 0.62;
+  const tint = dark ? (over ? `rgba(46,48,54,${a})` : `rgba(0,0,0,${a})`) : (over ? `rgba(226,230,236,${a})` : `rgba(255,255,255,${a})`);
   return (<>
     {ANDROID ? null : <BlurView pointerEvents="none" intensity={40} tint={dark ? 'dark' : 'light'} style={FILL} />}
-    <View pointerEvents="none" style={[FILL, { backgroundColor: dark ? `rgba(0,0,0,${ANDROID ? 0.92 : 0.6})` : `rgba(255,255,255,${ANDROID ? 0.94 : 0.66})` }]} />
+    <View pointerEvents="none" style={[FILL, { backgroundColor: tint }, Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '250ms' } as any) : null]} />
   </>);
 }
 
