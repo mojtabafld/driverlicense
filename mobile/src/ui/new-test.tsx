@@ -63,7 +63,8 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
   return (
     <>
     {/* The progress in a card of its own above the test's (Mojtaba 2026-10-29, after a picture he sent). */}
-    {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />}
+    {/* (before the first answer too: at 0%, all the bar grey; Mojtaba 2026-10-29) */}
+    <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
     <Card style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : undefined }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
