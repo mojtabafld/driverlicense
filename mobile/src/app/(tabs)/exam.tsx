@@ -103,28 +103,26 @@ function MistakesCard() {
   );
 }
 
-// In place of the tests' history (Mojtaba 2026-10-29): one card in two halves, the tests' history and the questions to
-// practise, each a button of the same size with a large icon, its name and its count.
+// In place of the tests' history (Mojtaba 2026-10-29): two cards side by side, the tests' history and the questions to
+// practise, each the same size with a large icon, its name and its count.
 function ShortcutsCard() {
   const c = useColors();
   const { attempts } = useApp();
   const tests = attempts.filter(a => a.mode !== 'lesson').length, wrong = mistakeIds(attempts).length;
   const half = (icon: IconName, label: string, count: string, href: '/history' | '/mistakes', tone?: string, soft?: string) => (
-    <Pressable onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 8, paddingVertical: 18, paddingHorizontal: 8, opacity: pressed ? 0.7 : 1 })}>
+    <Card onPress={() => router.push(href)} style={{ flex: 1, alignItems: 'center', gap: 8, paddingVertical: 18, paddingHorizontal: 8 }}>
       <View style={{ width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: soft ?? c.surface2 }}>
         <Icon name={icon} size={32} color={tone ?? c.text} weight="semibold" />
       </View>
       <T style={{ fontWeight: '700', fontSize: 15, textAlign: 'center' }} numberOfLines={1}>{label}</T>
       <T style={{ color: tone ?? c.muted, fontSize: 12.5, fontWeight: '600', textAlign: 'center' }} numberOfLines={1}>{count}</T>
-    </Pressable>
+    </Card>
   );
   return (
-    <Card style={{ flexDirection: 'row', padding: 0 }}>
+    <View style={{ flexDirection: 'row', gap: 12 }}>
       {half('clock', 'تاریخچه‌ی آزمون‌ها', t('{0} آزمون', faNum(tests)), '/history')}
-      <View style={{ width: 1, marginVertical: 16, backgroundColor: c.line }} />
       {half('warning', 'اشتباهات', t('{0} سؤال', faNum(wrong)), '/mistakes', wrong ? c.bad : undefined, wrong ? c.badSoft : undefined)}
-    </Card>
+    </View>
   );
 }
 
