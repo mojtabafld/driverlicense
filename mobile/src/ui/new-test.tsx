@@ -152,7 +152,8 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // In the style of a picture Mojtaba sent (2026-10-29): the title with this week's gain at its end, the percent large and
   // light with a pill of the questions left beside it, the bar in three rounded parts with gaps, and a dot for each under it.
   return (
-    <View style={{ gap: level >= 2 ? 8 : level ? 10 : 14 }}>
+    // (its rows straight in the card, so the card spreads all its rows at even gaps; Mojtaba 2026-10-29)
+    <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {done ? <Icon name="checkCircle" size={18} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
@@ -183,7 +184,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         {dot(wrongTone, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {left ? dot(rest, `${tr('جواب‌نداده')} ${faNum(left)}`) : null}
       </View>
-    </View>
+    </>
   );
 }
 
