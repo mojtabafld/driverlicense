@@ -105,7 +105,8 @@ function MistakesCard() {
   );
 }
 
-// In place of the tests' history (Mojtaba 2026-10-29): two buttons side by side in the calendar's «یادداشت سریع» look,
+// In place of the tests' history (Mojtaba 2026-10-29): two buttons side by side in the calendar's «یادداشت سریع» shape,
+// in the colours of the page's other cards,
 // the tests' history and the questions to practise: a round icon tile, the name over its count, and a ‹ at the end.
 // `level` 3 and up (the shortest screens): a little lower.
 function ShortcutsCard({ level = 0 }: { level?: number }) {
@@ -115,8 +116,8 @@ function ShortcutsCard({ level = 0 }: { level?: number }) {
   const half = (icon: IconName, label: string, count: string, href: '/history' | '/mistakes', tone?: string) => (
     <Pressable onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={label}
       style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: low ? 12 : 16, paddingHorizontal: 12, borderRadius: 20,
-        backgroundColor: c.surface2, opacity: pressed ? 0.8 : 1 })}>
-      <View style={{ width: low ? 38 : 44, height: low ? 38 : 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface }}>
+        backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder, opacity: pressed ? 0.8 : 1 })}>
+      <View style={{ width: low ? 38 : 44, height: low ? 38 : 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
         <Icon name={icon} size={low ? 18 : 21} color={tone ?? c.text} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
