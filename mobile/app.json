@@ -2,7 +2,7 @@
   "expo": {
     "name": "Teoripro",
     "slug": "teoriprove",
-    "version": "1.5",
+    "version": "1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "teoriprove",
