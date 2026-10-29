@@ -116,8 +116,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // ARC: the scale starts well under the lowest score (in tens, at most 50%), so the bars use the card's height and the
   // lowest one still shows.
   const lo = 0;
-  // ARC: the scale in questions, up to the longest test's count (in fives; in twos up to ten).
-  const maxN = Math.max(5, ...data.map(a => a.items.length)), step = maxN <= 10 ? 2 : 5, top = Math.ceil(maxN / step) * step;
+  // ARC: the scale in questions, up to the longest test's count.
+  const top = Math.max(5, ...data.map(a => a.items.length));
   const y = (v: number) => (ARC ? TOP + (1 - v / top) * (H - TOP - B) : TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B));
   // ARC: the bars' tops as far as they have grown; each at least MIN_BAR tall, so a test with no right answer (0%)
   // still shows (a short bar in red; Mojtaba 2026-10-24).
@@ -143,7 +143,14 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     return `M${l} ${b} L${l} ${t + k} Q${l} ${t} ${l + k} ${t} L${r - k} ${t} Q${r} ${t} ${r} ${t + k} L${r} ${b} Z`;
   };
   const every = ARC ? Math.max(1, Math.ceil(90 / slot)) : slot >= 26 ? 1 : 2;
-  const ticks = ARC ? (H < 110 ? [0, top] : H < 190 ? [0, Math.round(top / 2 / step) * step, top] : Array.from({ length: top / step + 1 }, (_, k) => k * step)) : H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
+  // ARC: the scale's marks are the question counts of the tests shown (5, 10, 15, 20, 25 when tests of those sizes were
+  // taken; Mojtaba 2026-10-29), and 0; one too close to the one above it (a short chart) is left out.
+  const arcTicks = () => {
+    const out: number[] = [];
+    for (const v of [...new Set([0, ...data.map(d => d.items.length)])].sort((p, q) => q - p)) if (!out.length || y(v) - y(out[out.length - 1]) >= 14) out.push(v);
+    return out;
+  };
+  const ticks = ARC ? arcTicks() : H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
   const font = RTL ? 'Vazirmatn-400' : 'Inter-400';
   const a = sel != null ? data[sel] : null;
   // The picked attempt's name under the chart: «آخرین آزمون» for the newest (picked by default), else its number.
