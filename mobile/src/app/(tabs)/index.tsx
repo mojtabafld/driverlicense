@@ -26,12 +26,6 @@ import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { GreetIcon, type DayPart } from '@/ui/greet-icon';
 import { HomeLicenceArt } from '@/ui/header-art';
-import { PALETTE, rgba } from '@/ui/palette';
-import { RTL } from '@/lib/i18n';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
-
-const PASS_ART_DARK = require('../../../assets/images/pass-road-dark.jpg'), PASS_ART_LIGHT = require('../../../assets/images/pass-road-light.jpg');
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
@@ -302,19 +296,7 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2, overflow: 'hidden' }}>
-        {/* «گرافیت»: a quiet road to a finish flag (made by the image model, Mojtaba 2026-10-29) at the card's end, the
-            side the ring leaves free (the left in Persian, mirrored there; the right in English and Danish), melting into
-            the card's colour toward its middle. */}
-        {ARC && PALETTE === 'graphite' ? (
-          // (a row's end, so the side follows the language on the web and in the apps alike)
-          <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'flex-end' }}>
-            <View style={{ width: '58%', height: '100%', transform: RTL ? [{ scaleX: -1 }] : undefined }}>
-              <Image source={dark ? PASS_ART_DARK : PASS_ART_LIGHT} style={{ width: '100%', height: '100%' }} contentFit="cover" contentPosition="top right" />
-              <LinearGradient colors={[c.surface, rgba(c.surface, 0)]} start={{ x: 0, y: 0.5 }} end={{ x: 0.5, y: 0.5 }} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />
-            </View>
-          </View>
-        ) : null}
+      <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
         {ARC ? <>
           {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
               title with its pill under it, as before; no average or mistakes in this card. */}
