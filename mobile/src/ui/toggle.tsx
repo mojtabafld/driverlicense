@@ -7,7 +7,8 @@ import { Animated, Easing, Platform, Pressable, Switch } from 'react-native';
 
 import { RTL } from '@/lib/i18n';
 import { tap } from './kit';
-import { ARC, useColors } from './theme';
+import { ARC, useColors, useIsDark } from './theme';
+import { graphiteCtl } from './palette';
 
 const W = 51, H = 31, PAD = 2, KNOB = H - PAD * 2;
 
@@ -16,7 +17,9 @@ export function Toggle({ value, onChange, label, disabled }: { value: boolean; o
   const c = useColors();
   // In the theme's colour (Mojtaba 2026-10-20): on in its accent (in the dark theme too, where the main buttons are
   // white), off in a soft tint of it; /app's old look kept its own.
-  const on = c.accent, off = ARC ? c.accentSoft : c.line;
+  // («گرافیت»: in its greys; Mojtaba 2026-10-29.)
+  const g = graphiteCtl(useIsDark());
+  const on = g?.on ?? c.accent, off = g?.off ?? (ARC ? c.accentSoft : c.line);
   const [pos] = useState(() => new Animated.Value(value ? 1 : 0));
   useEffect(() => {
     Animated.timing(pos, { toValue: value ? 1 : 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();

@@ -160,6 +160,13 @@ export const pxa = (hex: string, a: number) => rgba(px(hex), a);
 // The dark theme's picture header band (kit.tsx's HERO_BG).
 export const heroDark = (): string => SPEC.heroD ?? px('#141c3d');
 
+// «گرافیت»'s controls (Mojtaba 2026-10-29: in its greys, not white or black): the chosen tab, the start buttons (`fill`,
+// their icon and words `fg`) a step off the cards, and a switch's track when on and off. null in the other themes.
+export function graphiteCtl(dark: boolean) {
+  if (PALETTE !== 'graphite') return null;
+  return dark ? { fill: '#3d3d3d', fg: '#f5f5f5', on: '#8a8a8a', off: '#383838' } : { fill: '#e2e2e2', fg: '#151515', on: '#5c5c5c', off: '#e2e2e2' };
+}
+
 // The theme's colours for the light and dark themes (null for «اقیانوس», which keeps theme.ts's own values).
 export function paletteColors() {
   if (PALETTE === 'ocean') return null;

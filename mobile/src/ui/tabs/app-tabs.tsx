@@ -18,7 +18,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { tap } from '../kit';
 import { Frost, useBarApart } from '../glass-bar';
-import { PALETTE } from '../palette';
+import { graphiteCtl } from '../palette';
 import { Icon, type IconName } from '../icon';
 import { useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
@@ -26,8 +26,8 @@ import { TABS } from './tabs';
 // The chosen tab's capsule and the start button: the theme's colour with its text colour on it; «گرافیت»: a grey a
 // step off its cards (Mojtaba 2026-10-29), the icon in the text colour.
 function useTabOn() {
-  const c = useColors(), dark = useIsDark();
-  return PALETTE === 'graphite' ? { bg: dark ? '#3d3d3d' : '#e2e2e2', fg: c.text } : { bg: c.accent, fg: c.accentText };
+  const c = useColors(), g = graphiteCtl(useIsDark());
+  return g ? { bg: g.fill, fg: g.fg } : { bg: c.accent, fg: c.accentText };
 }
 
 const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };

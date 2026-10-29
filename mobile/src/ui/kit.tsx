@@ -18,7 +18,7 @@ import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
-import { heroDark, px } from './palette';
+import { graphiteCtl, heroDark, px } from './palette';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -704,8 +704,10 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
   // `accent`: a primary button in the theme's own colour in the dark theme too (where the primary is white), e.g. the
   // exam tab's start (Mojtaba 2026-10-20).
-  const accent = variant === 'accent', primary = variant === 'primary' || accent, fg = accent ? c.accentText : primary ? c.ctaFg : c.text;
-  const fill = accent ? c.accent : c.cta;
+  // («گرافیت»: the accent button in its grey, as the chosen tab; Mojtaba 2026-10-29.)
+  const g = graphiteCtl(useTheme().theme === 'dark');
+  const accent = variant === 'accent', primary = variant === 'primary' || accent, fg = accent ? g?.fg ?? c.accentText : primary ? c.ctaFg : c.text;
+  const fill = accent ? g?.fill ?? c.accent : c.cta;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));

@@ -144,8 +144,9 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
       <T style={{ color: c.muted, fontSize: 13, lineHeight: 20 }}>{text}</T>
     </View>
   );
-  // A segment of the bar: its share of the questions, never thinner than a short rounded piece while it has any.
-  const seg = (n: number, color: string) => (n ? <View style={{ flexGrow: n, flexBasis: 0, minWidth: 14, height: 12, borderRadius: 6, backgroundColor: color }} /> : null);
+  // A segment of the bar: its true share of the questions (Mojtaba 2026-10-29: 5 right and 35 wrong looked the same),
+  // only kept from vanishing (a dot) while it has any.
+  const seg = (n: number, color: string) => (n ? <View style={{ flexGrow: n, flexShrink: 1, flexBasis: 0, minWidth: 6, height: 12, borderRadius: 6, backgroundColor: color }} /> : null);
   // In the style of a picture Mojtaba sent (2026-10-29): the title with this week's gain at its end, the percent large and
   // light with a pill of the questions left beside it, the bar in three rounded parts with gaps, and a dot for each under it.
   return (
@@ -170,7 +171,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{done ? 'همه جواب داده شد' : t('{0} سؤال مانده', faNum(left))}</T>
         </Pressable>
       </View>
-      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 6 }}>
+      <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
         {seg(wrong, wrongTone)}
         {seg(left, rest)}
