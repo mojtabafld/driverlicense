@@ -10,6 +10,7 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { faNum, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
+import { tr } from '@/lib/i18n';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -69,25 +70,6 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
   return bare ? (
     <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ flex: 1 }, pad, pressed && { opacity: 0.7 }]}>{body}</Pressable>
   ) : <Card onPress={onPress} style={{ flex: 1, ...pad }}>{body}</Card>;
-}
-
-// The lessons finished, under the pass card's numbers: the icon and the word, a slim bar and the count; it opens
-// «آموزش» (Mojtaba 2026-10-29).
-function LessonsLine({ done, all, dense }: { done: number; all: number; dense?: boolean }) {
-  const c = useColors();
-  const share = Math.min(1, Math.max(0, done / Math.max(1, all))), bar = useCountUp(share), full = share >= 1;
-  return (
-    <Pressable onPress={() => { tap(); router.navigate('/learn'); }} accessibilityRole="button"
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: c.line, paddingTop: dense ? 6 : 10, opacity: pressed ? 0.7 : 1 })}>
-      <Icon name="learn" size={18} color={full ? c.ok : c.text} weight="semibold" />
-      <T style={{ fontSize: 13, fontWeight: '700' }}>درس‌ها</T>
-      <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
-        <View style={{ width: `${bar * 100}%`, borderRadius: 3, backgroundColor: full ? c.ok : c.accent }} />
-      </View>
-      <T style={{ fontSize: 13, fontWeight: '800', color: full ? c.ok : c.text }}>{faNum(done)}<T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{` / ${faNum(all)}`}</T></T>
-      <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
-    </Pressable>
-  );
 }
 
 // A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
@@ -310,20 +292,41 @@ export default function Home() {
         } : undefined}>
       <View style={{ gap }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
-        {/* Main site: the words at the card's start and a larger ring at its end (the left in Persian, the right in
-            English and Danish; Mojtaba 2026-10-29). */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 12 : 16 }}>
-          {ARC ? null : <View><Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} /></View>}
-          <View style={{ flex: 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
-            <T style={{ fontWeight: '800', fontSize: ARC ? 19 : 17 }}>احتمال قبولی</T>
-            {/* (Main site: no «بر اساس … تست اخیر» line under the title any more; Mojtaba 2026-10-25.) */}
+        {ARC ? <>
+          {/* Main site (Mojtaba 2026-10-29): the title and its pill on top; under them the larger ring at the card's
+              start (the right in Persian) and beside it the average and the questions to practise, one under the other. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <T style={{ fontWeight: '800', fontSize: 19 }}>احتمال قبولی</T>
             <Pill text={probWord} fg={probColor} bg={probSoft} />
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight || tighter || ARC ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
-          {ARC ? <View><Ring value={est ? est.prob : 0} size={tighter ? 70 : compact ? 100 : 120} stroke={tighter ? 8 : 11} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} /></View> : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : 18 }}>
+            <Ring value={est ? est.prob : 0} size={tighter ? 76 : compact ? 104 : 120} stroke={tighter ? 8 : 11} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: tighter ? 6 : 10 }}>
+                <Icon name="chart" size={18} color={c.muted} />
+                <T style={{ flex: 1, color: c.muted, fontSize: 13.5 }} numberOfLines={1}>میانگین</T>
+                <T style={{ fontWeight: '800', fontSize: 18 }}>{avgAll != null ? pctText(avgAll) : '–'}</T>
+              </View>
+              <View style={{ height: 1, backgroundColor: c.line }} />
+              <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button" accessibilityLabel={tr('اشتباهات')}
+                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: tighter ? 6 : 10, opacity: pressed ? 0.7 : 1 })}>
+                <Icon name="warning" size={18} color={mistakes ? c.bad : c.muted} />
+                <T style={{ flex: 1, color: c.muted, fontSize: 13.5 }} numberOfLines={1}>اشتباهات</T>
+                <T style={{ fontWeight: '800', fontSize: 18, color: mistakes ? c.bad : c.text }}>{faNum(mistakes)}</T>
+                <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
+              </Pressable>
+            </View>
+          </View>
+        </> : <>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <View><Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} /></View>
+          <View style={{ flex: 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
+            <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
+            <Pill text={probWord} fg={probColor} bg={probSoft} />
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight || tighter ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+          </View>
         </View>
-        {/* The average and the questions to practise (it was the full tests; Mojtaba 2026-10-29), then the lessons. */}
-        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter && !ARC ? 'none' : 'flex' }}>
+        <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter ? 'none' : 'flex' }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>میانگین</FitLine>
             <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avgAll != null ? pctText(avgAll) : '–'}</T>
@@ -334,7 +337,7 @@ export default function Home() {
             <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center', color: mistakes ? c.bad : c.text }}>{faNum(mistakes)}</T>
           </Pressable>
         </View>
-        <LessonsLine done={lessonsDone} all={lessonsAll} dense={tighter} />
+        </>}
       </Card>
       {/* Main site: the tests' statistics in place of the three counts (Mojtaba 2026-10-29); /app keeps its counts. */}
       {ARC ? <TestStats attempts={exams} dense={compact} noHead={tighter} /> : (
