@@ -62,7 +62,8 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         {/* Whole, as high as the card (never cropped top or bottom: smaller on a short card, Mojtaba 2026-10-22), pushed a
             little past the card's edge so the picture's plain margin on that side is cut away; the rest of the room in
             the picture's own background colour. */}
-        {v && boxH ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}` }} style={[{ position: 'absolute', top: 0, height: boxH, width: boxH * 1.5 }, physical(RTL ? { right: -0.15 * boxH * 1.5 } : { left: -0.15 * boxH * 1.5 })]} contentFit="contain" transition={250} />
+        {/* («-c2»: the pictures without their background, 2026-10-29; a new address, so no old copy is shown from a cache) */}
+        {v && boxH ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}-c2` }} style={[{ position: 'absolute', top: 0, height: boxH, width: boxH * 1.5 }, physical(RTL ? { right: -0.15 * boxH * 1.5 } : { left: -0.15 * boxH * 1.5 })]} contentFit="contain" transition={250} />
           : v ? null : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
       </View>
       {/* (the dark theme: no fade, the picture's charcoal is the card's own; Mojtaba 2026-10-29) */}
@@ -92,7 +93,7 @@ function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title
       {/* The picture, whole (never cropped), in the card's top, the rest of
           it in the picture's own background colour; the icon on a soft tile until the picture is made. */}
       <View style={{ height: short ? 96 : 120, backgroundColor: v ? 'transparent' : c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
-        {v ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="contain" transition={250} />
+        {v ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}-c2` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="contain" transition={250} />
           : <Icon name={icon} size={40} color={c.link} weight="semibold" />}
       </View>
       <View style={{ padding: 12, gap: 4 }}>
