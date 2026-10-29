@@ -50,12 +50,13 @@ function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
 
 // The «بررسی فوری» switch under the picture: a soft pill like a status tag, a green circled tick and its name in green
 // while on, the same in grey while off (after a picture Mojtaba sent).
-function CheckChip({ on, onPress }: { on: boolean; onPress: () => void }) {
+// Once on it stays on (the question is then checked and closed); before the question has an answer it waits, faded.
+function CheckChip({ on, onPress, disabled }: { on: boolean; onPress: () => void; disabled?: boolean }) {
   const c = useColors(), fg = on ? c.ok : c.muted;
   return (
-    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="switch" accessibilityState={{ checked: on }} accessibilityLabel={tr('بررسی فوری')}
+    <Pressable onPress={() => { if (on || disabled) return; tap(); onPress(); }} hitSlop={6} accessibilityRole="switch" accessibilityState={{ checked: on, disabled: !on && disabled }} accessibilityLabel={tr('بررسی فوری')}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 7, height: 38, paddingHorizontal: 13, borderRadius: 13,
-        backgroundColor: on ? c.okSoft : c.surface2, opacity: pressed ? 0.8 : 1 })}>
+        backgroundColor: on ? c.okSoft : c.surface2, opacity: !on && disabled ? 0.5 : pressed && !on ? 0.8 : 1 })}>
       <Icon name="checkCircle" size={19} color={fg} weight="semibold" />
       <T style={{ fontSize: 14, fontWeight: '700', color: fg }}>بررسی فوری</T>
     </Pressable>
@@ -93,9 +94,9 @@ export default function Run() {
   const [headH, setHeadH] = useState(0); // the glass top bar's height, the page's top padding
   // The Persian translation starts hidden in an exam; the button under the question shows it.
   const [showFa, setShowFa] = useState(false);
-  // «بررسی فوری» (Mojtaba 2026-10-29): while on, each statement shows at once whether the answer given is right, with its
-  // explanation; for each question on its own (the questions it is on), off by default, so a test stays a test unless
-  // the user asks.
+  // «بررسی فوری» (Mojtaba 2026-10-29): for each question on its own, once it has an answer: each statement then shows
+  // whether the answer given is right, with its explanation, and the question's answers can no longer be changed (so a
+  // check is not a way to the right answers). The questions checked.
   const [checked, setChecked] = useState<number[]>([]);
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
   const [flags, setFlags] = useState<number[]>([]);
@@ -145,7 +146,7 @@ export default function Run() {
 
   const q = qs[i], last = i === qs.length - 1;
   const answered = ticks.filter(t => t.some(Boolean)).length;
-  const toggle = (k: number) => { tap(); setTicks(t => t.map((row, r) => (r === i ? row.map((v, j) => (j === k ? !v : v)) : row))); };
+  const toggle = (k: number) => { if (checked.includes(i)) return; tap(); setTicks(t => t.map((row, r) => (r === i ? row.map((v, j) => (j === k ? !v : v)) : row))); };
   const empty = qs.length - answered;
   // Hand in opens a summary of every question (answered / not / marked) first; the exam ends from there.
   const handIn = () => { tap(); setDialog('handin'); };
@@ -215,7 +216,7 @@ export default function Run() {
           {/* Read the question and its statements aloud, beside the translation switch. */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
           <View style={{ flex: 1 }} />
-          <CheckChip on={checked.includes(i)} onPress={() => setChecked(v => (v.includes(i) ? v.filter(x => x !== i) : [...v, i]))} />
+          <CheckChip on={checked.includes(i)} disabled={!ticks[i].some(Boolean)} onPress={() => setChecked(v => (v.includes(i) ? v : [...v, i]))} />
         </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
@@ -224,11 +225,11 @@ export default function Run() {
         <OptionGroup key={`g-${i}`}>
         {q.st.map((s, k) => {
           // (checked once the question has an answer, so the right answers do not show before any is given)
-          const on = ticks[i][k], judge = checked.includes(i) && ticks[i].some(Boolean);
+          const on = ticks[i][k], judge = checked.includes(i);
           return (
             // Keyed by question too, so each new question's statements come in one after another.
             <Enter key={`${i}-${k}`}>
-              <OptionBox on={on} n={k} onPress={() => toggle(k)} mark={judge && (on ? 1 : 0) !== s.ok}
+              <OptionBox on={on} n={k} onPress={judge ? undefined : () => toggle(k)} mark={judge && (on ? 1 : 0) !== s.ok}
                 extra={judge ? <Verdict right={(on ? 1 : 0) === s.ok} why={lang === 'en' && s.een ? s.een : s.eda} whyFa={showFa ? s.efa : ''} /> : undefined}>
                 <L style={{ fontSize: 15.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                 {showFa && transText(lang, s) ? <TransT style={{ color: c.muted, fontSize: 14 }}>{transText(lang, s)}</TransT> : null}
