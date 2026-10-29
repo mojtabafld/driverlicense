@@ -762,27 +762,26 @@ const introBlob = async n => { const j = introNow()[n]; return j && j.blob ? blo
 // (lessons, rules, road signs, right of way, the test's glossary), 4:3 on its own soft background, as large as the card's top. Kept in
 // store.meta.learnArt and served at /learn-art/<n>.png; the app shows its icon tile until a picture is there.
 // Changing LEARN_SET makes new ones.
-const LEARN_SET = 'v1';
-// v2 (Mojtaba 2026-10-21/22): each picture fills its card from one end and melts into the card's colour (light or dark)
-// under the title, so the subject sits in the middle on its own soft colour. All five in the minimal 3D look (a realistic
-// set was tried first; Mojtaba chose this look for all of them).
-const LEARN_STYLE = 'Style: a modern, minimal 3D illustration like the cards of a premium mobile app: only a few simple objects, clean rounded geometric shapes, smooth matte materials with a soft clay look, soft studio light, subtle soft shadows, no clutter, no fine texture. The objects are centred, about half the picture\'s width, with generous empty space around them. Danish traffic signs follow their official design (shape and colours). No text, no letters, no numbers, no logos, no brand names, no watermarks, no people\'s faces.';
+const LEARN_SET = 'v2';
+// v2 (Mojtaba 2026-10-29: more modern, one element per card, in the app's graphite look): a single object per card,
+// a soft matte 3D render in white and graphite greys on the card's own colour, so the picture and the card read as one.
+const LEARN_STYLE = 'Style: a modern, premium, minimal 3D render like the feature cards of a high-end mobile app: exactly ONE single object, nothing else in the picture, no props, no small extra items, no ground objects. Clean rounded geometric shapes, smooth matte materials with a soft clay look, rendered in a monochrome palette of white, light grey and graphite grey (#2b2b2b to #f2f2f2) only, with soft studio light from the upper left, one gentle soft shadow under the object. The object is centred, about 45% of the picture\'s width, with generous empty space around it. No text, no letters, no numbers, no logos, no brand names, no watermarks, no people.';
+const LEARN_BG = 'Background: one plain, even, very light grey (#f4f4f4) filling the whole picture edge to edge, no gradient, no floor line, no vignette.';
 const LEARN_PROMPTS = [
   // 1: the course, lesson by lesson
-  'Background: one plain soft pale mint (#d9efe3) colour filling the whole picture, no gradient, no floor line. A small stack of three rounded theory books in white, mint green and periwinkle blue, the top one open with a tiny winding grey road with white dashes on its page; a small rounded coral car stands on the road; a pencil and a small green round badge with a white check mark lie beside the books.',
+  `${LEARN_BG} The single object: one open book, its two rounded pages curving up, standing slightly turned toward the viewer.`,
   // 2: rules
-  'Background: one plain soft warm peach (#f6e1d3) colour filling the whole picture, no gradient, no floor line. A balanced pair of rounded white justice scales in the centre; on one pan a tiny rounded coral car, on the other a small round speed-limit sign (white with a red ring, blank in the middle); a small rounded seat-belt buckle and a tiny traffic cone stand beside the scales.',
+  `${LEARN_BG} The single object: one balanced pair of justice scales with two round shallow pans on a rounded column.`,
   // 3: road signs
-  'Background: one plain soft lavender (#e3e1f5) colour filling the whole picture, no gradient, no floor line. A small group of rounded road signs on short grey poles at slightly different heights: a white inverted triangular give-way sign with a red border, a round white sign with a red ring, a round blue sign with a white arrow, and a round red no-entry sign with a white bar; a short piece of grey road with a white broken line lies in front of them.',
+  `${LEARN_BG} The single object: one triangular road warning sign (a rounded triangle, point up, with a thick border and an empty middle) on one short round pole.`,
   // 4: right of way
-  'Background: one plain soft sky blue (#d8e8f6) colour filling the whole picture, no gradient, no floor line. A small rounded crossroads seen from above at an isometric angle, grey roads with white markings and white shark-teeth triangles at one side; two small rounded cars (coral and periwinkle blue) wait at the junction while a third (mint green) drives through; a white inverted give-way triangle sign with a red border and a yellow diamond priority-road sign stand at the corners.',
+  `${LEARN_BG} The single object: one rounded square tile of a road crossroads seen from above at an isometric angle, two roads crossing with soft white dashes, like a small game piece.`,
   // 5: the test's glossary (the Danish words of the theory test with their meaning)
-  'Background: one plain soft butter yellow (#f5ebcf) colour filling the whole picture, no gradient, no floor line. A small rounded dictionary book standing half open in white and butter yellow, its pages blank with a few soft grey lines; two rounded speech bubbles rise from it, one coral and one periwinkle blue, each with three small white dots instead of words; a tiny rounded Danish flag on a short stick (red with a white Nordic cross) leans against the book, and a small rounded coral car stands in front of it.',
+  `${LEARN_BG} The single object: one rounded speech bubble with three soft round dots inside it, slightly turned toward the viewer.`,
 ];
-// 6–10: the dark theme's versions of 1–5 (Mojtaba 2026-10-22), redrawn from them: the same drawing in the same style on
-// a dark background that is still clearly its card's colour (Mojtaba 2026-10-22: the near-black ones were too faint).
-const LEARN_DARK = (name, hex) => ({ style: '', prompt: `Redraw this exact picture for a dark theme. Keep every object exactly as it is: the same objects, shapes, sizes, positions, angles, colours, materials and composition, nothing added, removed or moved. Change only the background: the light pastel background becomes one plain, even, dark ${name} (${hex}): clearly ${name}, not black or grey, but dark enough for a dark theme, from edge to edge, with no gradient, no floor line, no vignette and no frame. Keep the objects' own bright colours, matte clay look and soft studio light exactly as in the original; only add a gentle rim light so they stand out on the dark background, and make their soft shadows darker to suit it. No text, no letters, no numbers, no logos, no watermarks.` });
-const LEARN_DARKS = [LEARN_DARK('mint green', '#1d3a2e'), LEARN_DARK('peach', '#3d281c'), LEARN_DARK('lavender', '#29264a'), LEARN_DARK('sky blue', '#1a3249'), LEARN_DARK('butter yellow', '#3b331a')];
+// 6–10: the dark theme's versions of 1–5, redrawn from them on the dark card's own charcoal.
+const LEARN_DARK = () => ({ style: '', prompt: 'Redraw this exact picture for a dark theme. Keep the object exactly as it is: the same shape, size, position, angle, materials and composition, nothing added, removed or moved; keep it in its white and grey tones. Change only the background: the light grey background becomes one plain, even, dark charcoal grey (#262626) from edge to edge, with no gradient, no floor line, no vignette and no frame. Add a gentle soft rim light so the object stands out on the dark background, and make its soft shadow darker to suit it. No text, no letters, no numbers, no logos, no watermarks.' });
+const LEARN_DARKS = [1, 2, 3, 4, 5].map(LEARN_DARK);
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
 // pictures; each has start (on server start), poll (in the poll round), versions (for /api/config) and blob.
