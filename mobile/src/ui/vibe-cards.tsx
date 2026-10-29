@@ -1,5 +1,6 @@
 // The welcome screen's and the welcome-back screen's three cards (Mojtaba 2026-10-29, after a picture he sent): a
-// playful mascot each (made by the image model, light and dark versions on their card's own colour; assets/images/vibe-*),
+// playful mascot each (made by the image model, light and dark versions, their background cut away so they sit on the
+// card's own colour; assets/images/vibe-*),
 // a tag and two or three lines on what the app does, side by side with the next ones peeking in at the edges. A swipe
 // (or every few seconds by itself, until touched) brings the next one to the middle: the cards on the sides shrink, tilt
 // and fade a little, and the middle one's mascot floats gently.
@@ -12,10 +13,10 @@ import { T, tap } from './kit';
 import { useN } from './welcome';
 
 const ART = {
-  light: [require('../../assets/images/vibe-1-light.jpg'), require('../../assets/images/vibe-2-light.jpg'), require('../../assets/images/vibe-3-light.jpg')],
-  dark: [require('../../assets/images/vibe-1-dark.jpg'), require('../../assets/images/vibe-2-dark.jpg'), require('../../assets/images/vibe-3-dark.jpg')],
+  light: [require('../../assets/images/vibe-1-light.webp'), require('../../assets/images/vibe-2-light.webp'), require('../../assets/images/vibe-3-light.webp')],
+  dark: [require('../../assets/images/vibe-1-dark.webp'), require('../../assets/images/vibe-2-dark.webp'), require('../../assets/images/vibe-3-dark.webp')],
 };
-// Each card's colour: the picture's own background (sampled from it), so picture and card are one.
+// Each card's colour (the colour its picture was drawn on).
 const BG = { light: ['#fae1d5', '#e7e4fb', '#dfeddf'], dark: ['#402920', '#282543', '#223022'] };
 const CARDS = [
   { tag: 'تمرین', text: '۱۱۰۰ سؤال، درست مثل آزمون واقعی. هر روز کمی، تا روز آزمون.' },
