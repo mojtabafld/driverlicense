@@ -26,7 +26,7 @@ the pictures are made on the server and do not show in a local build.
 **Fuld beskrivelse:**
 Teoripro hjælper dig med at blive klar til teoriprøven til almindelig bil (kategori B).
 
-• Over 2.000 øvespørgsmål i samme form som teoriprøven: et billede og flere spørgsmål, du svarer ja eller nej til
+• 1.100 øvespørgsmål i samme form som teoriprøven: et billede og flere spørgsmål, du svarer ja eller nej til
 • Prøver på tid med 25 billeder – højst 5 fejl, som til den rigtige prøve
 • Forklaring på hvert svar, så du forstår hvorfor
 • Persisk og engelsk oversættelse af spørgsmål og forklaringer
@@ -45,7 +45,7 @@ Practise for the Danish driving theory test, in Persian and English too.
 **Full description:**
 Teoripro gets you ready for the Danish driving theory test for a car (category B).
 
-• Over 2,000 practice questions in the test's own form: a picture and several questions you answer yes or no
+• 1,100 practice questions in the test's own form: a picture and several questions you answer yes or no
 • Timed tests of 25 pictures – at most 5 mistakes, as in the real test
 • An explanation for every answer, so you understand why
 • Persian and English translation of the questions and explanations
@@ -65,7 +65,7 @@ Danish Road Traffic Act and the regulation on road signs and markings.
 **توضیح کامل:**
 Teoripro شما را برای آزمون تئوری گواهینامه‌ی خودرو (B) در دانمارک آماده می‌کند.
 
-• بیش از ۲۰۰۰ سؤال تمرینی به شکل خود آزمون: یک تصویر و چند سؤال بله/خیر
+• ۱۱۰۰ سؤال تمرینی به شکل خود آزمون: یک تصویر و چند سؤال بله/خیر
 • آزمون زمان‌دار با ۲۵ تصویر؛ حداکثر ۵ اشتباه، مثل آزمون واقعی
 • توضیح برای هر پاسخ، تا بدانید چرا
 • ترجمه‌ی فارسی و انگلیسی سؤال‌ها و توضیح‌ها
