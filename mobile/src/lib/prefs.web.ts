@@ -57,6 +57,10 @@ export const savePromoSeen = async (keys: string[]) => { try { localStorage.setI
 const NEWS_SEEN = 'tp.newsSeen';
 export const loadNewsSeen = async (): Promise<number> => { try { return +(localStorage.getItem(NEWS_SEEN) || 0) || 0; } catch { return 0; } };
 export const saveNewsSeen = async (at: number) => { try { localStorage.setItem(NEWS_SEEN, String(at)); } catch {} };
+// The messages cleared on this device (prefs.ts).
+const NEWS_HIDE = 'tp_news_hide';
+export const loadNewsHide = async (): Promise<number> => { try { return +(localStorage.getItem(NEWS_HIDE) || 0) || 0; } catch { return 0; } };
+export const saveNewsHide = async (at: number) => { try { localStorage.setItem(NEWS_HIDE, String(at)); } catch {} };
 const CHEERED = 'tp.cheered';
 export const loadCheered = async (): Promise<string[]> => {
   try { const v = JSON.parse(localStorage.getItem(CHEERED) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }

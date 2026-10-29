@@ -67,16 +67,9 @@ tr.u:hover td{background:var(--surface2)}
 .reports .r{border-bottom:1px solid var(--line);padding:10px 0}
 .reports .r:last-child{border:0}
 .err{color:var(--bad);font-size:13px;min-height:1.2em}
-.ai .sec{border-top:1px solid var(--line);padding-top:10px;margin-top:12px}
-.ai .it{margin:0 0 10px}
-.ai .it b{font-weight:700}
-.ai .sum{white-space:pre-wrap;background:var(--surface2);border-radius:12px;padding:12px 14px}
 .tag.high{background:var(--badSoft);color:var(--bad)}.tag.medium{background:var(--warnSoft);color:var(--warn)}.tag.low{background:var(--surface2);color:var(--muted)}
-.note{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
 .news input,.news textarea{width:100%;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--surface);color:var(--text);margin-top:6px}
 .news textarea{min-height:80px}
-.note textarea{width:100%;font:inherit;font-size:13.5px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--text);min-height:58px;margin-top:6px}
-.note img{width:120px;border-radius:8px;float:left;margin-right:10px}
 details summary{cursor:pointer;font-weight:700}
 .login{max-width:360px;margin:12vh auto 0;display:flex;flex-direction:column;gap:10px}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
@@ -127,54 +120,6 @@ details summary{cursor:pointer;font-weight:700}
   const MODE = { random: 'تصادفی', mistakes: 'اشتباهات', top: 'پرتکرار', lesson: 'درس', sections: 'بخش‌ها' };
   const UI = { fa: 'فارسی', en: 'English', da: 'Dansk' };
   const state = { q: '', filter: 'all', sort: 'lastActive', dir: -1, open: null, data: null, ai: null, aiMsg: '' };
-  const SEV = { high: 'مهم', medium: 'متوسط', low: 'کم' };
-  const AREA = { content: 'محتوا', ux: 'تجربه‌ی کاربر', feature: 'امکان تازه', bug: 'خطا', growth: 'رشد', ai: 'هوش مصنوعی' };
-  const NOTE = { pending: 'در انتظار تأیید', approved: 'تأییدشده', rejected: 'ردشده' };
-  // The AI's part: the newest report in full, older ones folded, its memory, the pages used and the question notes.
-  function aiCard() {
-    const a = state.ai;
-    if (!a) return '<div class="card ai" id="ai" style="margin-bottom:16px"><h2>هوش مصنوعی</h2><p class="muted">' + (state.aiMsg ? esc(state.aiMsg) : 'در حال بارگذاری…') + '</p></div>';
-    const r = a.reports[0];
-    const items = (list, tag, names) => list.map(x => `<div class="it"><span class="tag ${tag(x)}">${esc(names[tag(x)] || tag(x))}</span>${x.area ? ` <span class="tag free">${esc(AREA[x.area] || x.area)}</span>` : ''} <b>${esc(x.title)}</b><div>${esc(x.detail)}</div></div>`).join('');
-    const report = rep => `<div class="sum">${esc(rep.summary)}</div>
-      ${rep.findings.length ? `<div class="sec"><h2>یافته‌ها</h2>${items(rep.findings, x => x.severity, SEV)}</div>` : ''}
-      ${rep.suggestions.length ? `<div class="sec"><h2>پیشنهاد برای نسخه‌های بعدی</h2>${items(rep.suggestions, x => x.priority, SEV)}</div>` : ''}`;
-    const notes = a.notes.map(n => `<div class="note" data-q="${n.qid}">
-      ${n.img ? `<img src="${esc(/^(\/|https?:)/.test(n.img) ? n.img : '/' + n.img)}" alt="">` : ''}
-      <div><span class="tag ${n.status === 'approved' ? 'premium' : n.status === 'rejected' ? 'expired' : 'trial'}">${NOTE[n.status]}</span> <b>سؤال ${fa(n.qid)}</b> <span class="muted" style="font-size:12px">${when(n.at)}</span></div>
-      <div class="muted" style="font-size:13px">${esc(n.questionFa || n.question || '')}</div>
-      <textarea data-k="fa" dir="rtl">${esc(n.fa)}</textarea><textarea data-k="en" dir="ltr">${esc(n.en)}</textarea>
-      <div class="toolbar" style="margin:6px 0 0;clear:both"><button class="btn" data-a="approve">${n.status === 'approved' ? 'ذخیره' : 'تأیید'}</button><button class="btn soft" data-a="reject">رد</button><button class="btn soft" data-a="remove">حذف</button></div></div>`).join('');
-    const use = (a.usage || []).map(u => `<div class="b"><span class="ltr" style="font-size:12px">${esc(u.name)}</span><div class="t"><span style="width:${u.last7 / Math.max(1, a.usage[0].last7) * 100}%"></span></div><span>${fa(u.last7)}</span></div>`).join('');
-    return `<div class="card ai" id="ai" style="margin-bottom:16px">
-      <div class="head" style="margin-bottom:6px"><h2 class="grow" style="margin:0">هوش مصنوعی: گزارش روزانه</h2>
-        ${r ? `<span class="muted" style="font-size:12.5px">${when(r.at)}</span>` : ''}<button class="btn soft" id="airun"${a.on ? '' : ' disabled'}>گزارش تازه</button></div>
-      <p class="muted" style="font-size:12.5px;margin:0 0 8px">${a.on ? 'هر روز صبح از روی آمار ناشناس و جمع‌شده‌ی برنامه ساخته می‌شود، با حافظه‌ی روزهای قبل؛ به ایمیل گزارش‌ها هم فرستاده می‌شود.' : 'خاموش است: ANTHROPIC_API_KEY تنظیم نشده.'}${a.failed ? ` <span style="color:var(--bad)">آخرین تلاش ناموفق: ${esc(a.failed.error)}</span>` : ''}</p>
-      <div class="err">${esc(state.aiMsg)}</div>
-      ${r ? report(r) : '<p class="muted">هنوز گزارشی ساخته نشده.</p>'}
-      ${a.notes.length ? `<div class="sec"><h2>نکته‌های پیشنهادی برای سؤال‌ها</h2><p class="muted" style="font-size:12.5px;margin:0 0 8px">برای سؤال‌هایی که بیشتر اشتباه جواب داده می‌شوند. نکته‌ی تأییدشده در همه‌ی تحلیل‌های هوش مصنوعی آن سؤال به کار می‌رود.</p>${notes}</div>` : ''}
-      ${use ? `<div class="sec"><details><summary>صفحه‌ها و امکانات، ۷ روز اخیر</summary><div class="bars" style="margin-top:8px">${use}</div></details></div>` : ''}
-      ${a.memory && a.memory.notes.length ? `<div class="sec"><details><summary>حافظه‌ی هوش مصنوعی (${fa(a.memory.notes.length)} نکته)</summary><ul class="ltr" style="font-size:13px;text-align:left">${a.memory.notes.map(m => `<li>${esc(m)}</li>`).join('')}</ul></details></div>` : ''}
-      ${a.reports.length > 1 ? `<div class="sec"><details><summary>گزارش‌های قبلی</summary>${a.reports.slice(1).map(x => `<details style="margin:8px 0"><summary>${day(x.at)}</summary>${report(x)}</details>`).join('')}</details></div>` : ''}
-    </div>`;
-  }
-  function wireAi() {
-    const box = document.getElementById('ai'); if (!box) return;
-    const redraw = () => { box.outerHTML = aiCard(); wireAi(); };
-    const run = document.getElementById('airun');
-    if (run) run.onclick = async () => {
-      run.disabled = true; run.textContent = 'در حال ساخت… (یکی دو دقیقه)';
-      try { await api('POST', 'insightsrun'); state.aiMsg = ''; } catch (e) { state.aiMsg = e.message; }
-      await loadAi(); redraw();
-    };
-    box.querySelectorAll('.note [data-a]').forEach(b => b.onclick = async () => {
-      const n = b.closest('.note'), get = k => n.querySelector(`[data-k="${k}"]`).value;
-      try { await api('POST', 'qnote', { qid: +n.dataset.q, action: b.dataset.a, fa: get('fa'), en: get('en') }); state.aiMsg = ''; } catch (e) { state.aiMsg = e.message; }
-      await loadAi(); redraw();
-    });
-  }
-  async function loadAi() { try { state.ai = await api('GET', 'insights'); } catch (e) { state.ai = null; state.aiMsg = e.message; } }
-
   // The last 30 days: exams as bars, active users as a line, new users as dots under each bar.
   function chart(days) {
     const W = 720, H = 220, P = { l: 30, r: 8, t: 10, b: 26 }, n = days.length;
@@ -275,11 +220,11 @@ details summary{cursor:pointer;font-weight:700}
         ${tile(fa(t.unverified), 'ایمیل تأییدنشده')}
         ${tile(fa(t.visitsToday), 'بازدید امروز', `${fa(t.visitorsToday)} بازدیدکننده، ${fa(t.visits7)} در ۷ روز`)}
       </div>
-      ${aiCard()}
       <div class="card reports news" style="margin-bottom:16px" id="news"><h2>پیام برای همه‌ی کاربران</h2>
         <p class="muted" style="font-size:12.5px;margin:0 0 4px">اطلاعات کلی، به‌روزرسانی‌ها یا راهنمایی‌های تازه. در برنامه پشت دکمه‌ی زنگ صفحه‌ی اصلی نشان داده می‌شود و تا کاربر آن را ندیده، نقطه‌ی قرمزی کنار زنگ است.</p>
         <input id="nt" maxlength="140" placeholder="عنوان">
         <textarea id="nx" maxlength="4000" placeholder="متن پیام"></textarea>
+        <label style="display:flex;gap:6px;align-items:center;margin-top:8px;font-size:13px"><input type="checkbox" id="nn" checked style="width:auto;margin:0"> اعلان هم فرستاده شود (برای کاربرانی که اعلان را روشن کرده‌اند)</label>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn" id="ns">ارسال برای همه</button><span class="muted" id="nm" style="font-size:12.5px"></span></div>
         <div id="nl">${newsList()}</div></div>
       <div class="card reports news" style="margin-bottom:16px" id="pk"><h2>کلید Google Play</h2>
@@ -306,7 +251,6 @@ details summary{cursor:pointer;font-weight:700}
     document.getElementById('re').onclick = view;
     document.getElementById('out').onclick = async () => { await api('POST', 'logout').catch(() => {}); login(); };
     wireUsers();
-    wireAi();
     wireNews();
     wirePlayKey();
   }
@@ -338,7 +282,8 @@ details summary{cursor:pointer;font-weight:700}
     const refresh = async () => { try { state.news = (await api('GET', 'news')).items; } catch (e) { msg(e.message); } document.getElementById('nl').innerHTML = newsList(); wireNews(); };
     document.getElementById('ns').onclick = async () => {
       const title = document.getElementById('nt').value, text = document.getElementById('nx').value;
-      try { await api('POST', 'news', { title, text }); document.getElementById('nt').value = ''; document.getElementById('nx').value = ''; msg('فرستاده شد.'); refresh(); } catch (e) { msg(e.message); }
+      const notify = document.getElementById('nn').checked;
+      try { await api('POST', 'news', { title, text, notify }); document.getElementById('nt').value = ''; document.getElementById('nx').value = ''; msg(notify ? 'فرستاده شد؛ اعلان‌ها در حال ارسال است.' : 'فرستاده شد (بدون اعلان).'); refresh(); } catch (e) { msg(e.message); }
     };
     box.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (!confirm('این پیام حذف شود؟')) return; try { await api('DELETE', 'news?id=' + encodeURIComponent(b.dataset.del)); refresh(); } catch (e) { msg(e.message); } });
   }
@@ -352,7 +297,7 @@ details summary{cursor:pointer;font-weight:700}
   }
 
   async function view() {
-    try { state.data = await api('GET', 'adminstats'); state.news = (await api('GET', 'news').catch(() => ({ items: [] }))).items; render(); loadAi().then(() => { const box = document.getElementById('ai'); if (box) { box.outerHTML = aiCard(); wireAi(); } }); }
+    try { state.data = await api('GET', 'adminstats'); state.news = (await api('GET', 'news').catch(() => ({ items: [] }))).items; render(); }
     catch (e) { return login(e.status === 401 || e.status === 403 ? '' : e.message); }
   }
   view();

@@ -120,4 +120,4 @@ async function verify() {
   return { ok: true, products: found, missing };
 }
 
-module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify };
+module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify, serviceAccount: () => account() };
