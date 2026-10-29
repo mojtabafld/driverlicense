@@ -71,6 +71,12 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
   ) : <Card onPress={onPress} style={{ flex: 1, ...pad }}>{body}</Card>;
 }
 
+// The chance of passing as a large number, counting up as the ring fills; «–» before there is an estimate.
+function PassPct({ value, size }: { value: number | null; size: number }) {
+  const shown = useCountUp(value ?? 0, 1800);
+  return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontWeight: '800' }}>{value == null ? '–' : pctText(shown)}</T>;
+}
+
 // A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
 // dusk and before dawn, so a bright summer evening at 20:00 is still «عصر» and a dark winter afternoon at 17:00 is
 // «شب»); otherwise morning before 12, noon 12–15 and afternoon after.
@@ -295,9 +301,13 @@ export default function Home() {
           {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
               title with its pill under it, as before; no average or mistakes in this card. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : 18 }}>
-            <Ring value={est ? est.prob : 0} size={tighter ? 76 : compact ? 104 : 120} stroke={tighter ? 8 : 11} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
-            <View style={{ flex: 1, gap: compact ? 6 : 8, alignItems: 'flex-start' }}>
+            {/* In the ring a flame in the text colour; its percent between the title and the pill (Mojtaba 2026-10-29). */}
+            <Ring value={est ? est.prob : 0} size={tighter ? 76 : compact ? 104 : 120} stroke={tighter ? 8 : 11} color={probColor}>
+              <Icon name="flame" size={Math.round((tighter ? 76 : compact ? 104 : 120) * 0.3)} color={c.text} weight="semibold" />
+            </Ring>
+            <View style={{ flex: 1, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
+              <PassPct value={est ? est.prob : null} size={tighter ? 26 : 32} />
               <Pill text={probWord} fg={probColor} bg={probSoft} />
             </View>
           </View>
