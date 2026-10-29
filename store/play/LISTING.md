@@ -9,10 +9,12 @@ graphics. Character limits: name 30, short description 80, full description 4000
 |---|---|---|
 | App icon | `app-icon-512.png` | 512 × 512 |
 | Feature graphic | `feature-graphic-1024x500.png` | 1024 × 500 |
-| Phone screenshots | `screenshot-1-welcome.png` … `screenshot-5-glossary.png` | 1080 × 2160 (2:1, within Play's limits) |
+| Phone screenshots | `screenshot-01-progress.png` … `screenshot-07-right-of-way.png` | 1080 × 1920 (9:16) |
+| Promo video | `promo-video-1080x1920.mp4` (23 s) | Play takes a YouTube link: upload it there (unlisted is fine) and paste the link |
 
-Screenshots with the questions' pictures (an exam, a sign) are best taken on a phone from the live app, signed in:
-the pictures are made on the server and do not show in a local build.
+The screenshots show the app in its graphite theme, in English, with a sample account's progress; the exam's motorway
+picture (the Danish «Motorvej» sign, E 42) was made for them with the image model. The same set at 1290 × 2796 for the
+App Store, and the video, are in the store-assets zip made with them.
 
 ## Store listing
 
