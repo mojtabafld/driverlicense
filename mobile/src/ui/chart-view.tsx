@@ -3,9 +3,8 @@
 // that one); pressed, the cards above the chart fold away and the chart glides to the top of the page, and the user's
 // test statistics come in under it, then the latest tests, each opening its own page (its result and review). Pressed
 // again, all goes back.
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
 import { RTL, tr } from '@/lib/i18n';
@@ -13,24 +12,19 @@ import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
 import { Card, FitLine, T, tap } from './kit';
-import { useColors, useIsDark } from './theme';
-import { WASH_DARK, WASH_LIGHT } from './wash';
+import { useColors } from './theme';
 
 // `t`: how far the chart view is open (0 to 1); the button fills with the accent as it opens.
 export function ChartButton({ size = 44, on, t, onPress }: { size?: number; on: boolean; t: Animated.Value; onPress: () => void }) {
-  const c = useColors(), dark = useIsDark();
+  const c = useColors();
   const g = Math.round(size * 0.52); // the icon, about as large as the profile picture's outline beside it
   return (
     <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('نمودار و آمار آزمون‌ها')}
       accessibilityState={{ expanded: on }}
-      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
-      <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
-      <View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}>
-        <Icon name="chart" size={g} color={c.link} />
-      </View>
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', backgroundColor: c.accent, opacity: t }]}>
-        <Icon name="chart" size={g} color={c.accentText} />
-      </Animated.View>
+      style={({ pressed }) => ({ width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
+      {/* The icon alone, no round background (Mojtaba 2026-10-29); open, a short line under it in the theme's colour. */}
+      <Icon name="chart" size={g} color={c.link} />
+      <Animated.View pointerEvents="none" style={{ position: 'absolute', bottom: 2, width: 16, height: 2.5, borderRadius: 2, backgroundColor: c.link, opacity: t }} />
     </Pressable>
   );
 }
@@ -80,19 +74,21 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
   );
 }
 
-export function TestStats({ attempts }: { attempts: Attempt[] }) {
+// `dense`: the home page on a short screen: less room, and no line of facts under the numbers.
+// `noHead`: the shortest screens: the numbers alone, without the card's title.
+export function TestStats({ attempts, dense, noHead }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean }) {
   const c = useColors();
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
   const ok = attempts.filter(passed).length;
   const qs = attempts.reduce((s, a) => s + a.items.length, 0), secs = attempts.reduce((s, a) => s + (a.secs || 0), 0);
   const cell = (label: string, value: string, color?: string) => (
-    <View style={{ flex: 1, alignItems: 'center', gap: 2, paddingVertical: 12, paddingHorizontal: 4 }}>
+    <View style={{ flex: 1, alignItems: 'center', gap: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
       <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '800', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
   );
-  const rule = <View style={{ width: 1, marginVertical: 12, backgroundColor: c.line }} />;
+  const rule = <View style={{ width: 1, marginVertical: dense ? 6 : 12, backgroundColor: c.line }} />;
   const fact = (icon: IconName, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <Icon name={icon} size={15} color={c.muted} />
@@ -101,12 +97,12 @@ export function TestStats({ attempts }: { attempts: Attempt[] }) {
   );
   return (
     <Card style={{ padding: 0, paddingHorizontal: 6 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingTop: 14, paddingBottom: 2 }}>
+      {noHead ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 10, paddingTop: dense ? 8 : 14, paddingBottom: 2 }}>
         <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
           <Icon name="chart" size={19} color={c.text} weight="semibold" />
         </View>
         <T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>آمار آزمون‌ها</T>
-      </View>
+      </View>}
       <View style={{ flexDirection: 'row' }}>
         {cell('آزمون‌ها', faNum(n))}
         {rule}
@@ -117,7 +113,7 @@ export function TestStats({ attempts }: { attempts: Attempt[] }) {
         {/* Every test passed (e.g. 5 of 5): green; any not: the warning colour (Mojtaba 2026-10-20). */}
         {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined)}
       </View>
-      {n ? (
+      {n && !dense ? (
         // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).
         <View style={{ paddingHorizontal: 10, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
           <GlideRow height={19}>

@@ -2,10 +2,10 @@
 // with a note, before the first one). On the main site the random exam is the app's own questions (ui/new-test.tsx,
 // Mojtaba 2026-10-19: it took the old card's place and name); the /app copy keeps the old bank's random exam.
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { FULL, SECONDS_PER_Q, SIZES, faNum, passMin, randomIds } from '@/lib/logic';
+import { FULL, SECONDS_PER_Q, SIZES, faNum, mistakeIds, passMin, randomIds } from '@/lib/logic';
 import { topicFa, topicName } from '@/lib/names';
 import { topicPracticeIds, weakTopics } from '@/lib/practice';
 import { session } from '@/lib/session';
@@ -15,10 +15,9 @@ import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { loadCheered, saveCheered } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { CoachButton } from '@/ui/coach-button';
-import { ActivityList } from '@/ui/activity';
 import { SizeSegment } from '@/ui/size-segment';
 import { SizeSlider } from '@/ui/size-slider';
-import { Icon } from '@/ui/icon';
+import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { MoreButton } from '@/ui/more-button';
 import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
@@ -104,9 +103,34 @@ function MistakesCard() {
   );
 }
 
+// In place of the tests' history (Mojtaba 2026-10-29): one card in two halves, the tests' history and the questions to
+// practise, each a button of the same size with a large icon, its name and its count.
+function ShortcutsCard() {
+  const c = useColors();
+  const { attempts } = useApp();
+  const tests = attempts.filter(a => a.mode !== 'lesson').length, wrong = mistakeIds(attempts).length;
+  const half = (icon: IconName, label: string, count: string, href: '/history' | '/mistakes', tone?: string, soft?: string) => (
+    <Pressable onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={label}
+      style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 8, paddingVertical: 18, paddingHorizontal: 8, opacity: pressed ? 0.7 : 1 })}>
+      <View style={{ width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: soft ?? c.surface2 }}>
+        <Icon name={icon} size={32} color={tone ?? c.text} weight="semibold" />
+      </View>
+      <T style={{ fontWeight: '700', fontSize: 15, textAlign: 'center' }} numberOfLines={1}>{label}</T>
+      <T style={{ color: tone ?? c.muted, fontSize: 12.5, fontWeight: '600', textAlign: 'center' }} numberOfLines={1}>{count}</T>
+    </Pressable>
+  );
+  return (
+    <Card style={{ flexDirection: 'row', padding: 0 }}>
+      {half('clock', 'تاریخچه‌ی آزمون‌ها', t('{0} آزمون', faNum(tests)), '/history')}
+      <View style={{ width: 1, marginVertical: 16, backgroundColor: c.line }} />
+      {half('warning', 'اشتباهات', t('{0} سؤال', faNum(wrong)), '/mistakes', wrong ? c.bad : undefined, wrong ? c.badSoft : undefined)}
+    </Card>
+  );
+}
+
 export default function Exam() {
   const c = useColors();
-  const { bank, attempts, premium, user } = useApp();
+  const { bank, premium, user } = useApp();
   const [size, setSize] = useState(FULL);
   // Without premium, FREE_RANDOM random exams (lib/free.ts); then the button opens the premium page.
   const { limited, randomLeft } = useFree();
@@ -131,15 +155,10 @@ export default function Exam() {
   }, [allDone]); // eslint-disable-line react-hooks/exhaustive-deps
   // Scrolled down to the page's end, where the history card is: its arrow button shows «نمایش همه» for a moment, once
   // each time the end is reached (Mojtaba 2026-10-20).
-  const [hint, setHint] = useState(0), atEnd = useRef(false);
-  const onScrollY = (_y: number, end: boolean) => {
-    if (end && !atEnd.current) setHint(h => h + 1);
-    atEnd.current = end;
-  };
   return (
     <View style={{ flex: 1 }}>
     <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
-      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />} onScrollY={onScrollY}>
+      heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />}>
       {own ? <NewTestCard test={test} /> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
@@ -171,8 +190,7 @@ export default function Exam() {
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
       )}
-      {/* The arrow button in its head opens every exam on its own page (/history), like the mistakes card's. */}
-      <ActivityList attempts={attempts} limit={3} title="تاریخچه‌ی آزمون‌ها" allHref="/history" hint={hint} />
+      <ShortcutsCard />
       {/* Main site: no mistakes card (Mojtaba 2026-10-19); the random test's card has the mistakes bar and its test. */}
       {own ? null : <MistakesCard />}
     </Screen>

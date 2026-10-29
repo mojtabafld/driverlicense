@@ -19,7 +19,6 @@ import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 import { heroDark, px } from './palette';
-import { WASH_DARK, WASH_LIGHT } from './wash';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -153,11 +152,11 @@ export function Logo({ size = 28 }: { size?: number }) {
 // settings page's light / dark switch.
 // `disabled`: faded and not to be pressed (the coach's button without premium).
 export function RoundIcon({ icon, label, onPress, size = 44, disabled }: { icon: IconName; label: string; onPress: () => void; size?: number; disabled?: boolean }) {
-  const c = useColors(), dark = useTheme().theme === 'dark';
+  const c = useColors();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} disabled={disabled} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr(label)} accessibilityState={{ disabled }}
-      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: c.surface, opacity: disabled ? 0.4 : pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
-      <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={StyleSheet.absoluteFill} />
+      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', opacity: disabled ? 0.4 : pressed ? 0.6 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
+      {/* (the icon alone, in the theme's colour, no round background; Mojtaba 2026-10-29) */}
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Icon name={icon} size={Math.round(size * 0.52)} color={c.link} weight="semibold" />
       </View>
@@ -229,7 +228,8 @@ const BAR_ROOM = 64 + 30;
 // header's height; it gets the theme (light) to colour itself.
 // The plain header («هدر ساده») keeps the picture header's colour band and its fade into the page when this is on; off
 // (Mojtaba 2026-10-18, to try it on the site) it is flat, in the page's own colour. Flip it back to bring the band back.
-const PLAIN_GRADIENT = true;
+// Off since 2026-10-29: the header in the page's own colour, no gradient (Mojtaba).
+const PLAIN_GRADIENT = false;
 // The headers' title in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts): the picture headers and the
 // plain one (Hero), and the settings page's title (Screen without a picture), so they all match.
 const HEAD_BOLD = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Inter-700, Vazirmatn-700, sans-serif' : 'Inter-700', fontWeight: 'normal' as const };

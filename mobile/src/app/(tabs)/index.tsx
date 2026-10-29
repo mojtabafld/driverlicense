@@ -9,7 +9,7 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
-import { faNum, isFull, isPass, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
+import { faNum, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -69,6 +69,25 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
   return bare ? (
     <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ flex: 1 }, pad, pressed && { opacity: 0.7 }]}>{body}</Pressable>
   ) : <Card onPress={onPress} style={{ flex: 1, ...pad }}>{body}</Card>;
+}
+
+// The lessons finished, under the pass card's numbers: the icon and the word, a slim bar and the count; it opens
+// «آموزش» (Mojtaba 2026-10-29).
+function LessonsLine({ done, all, dense }: { done: number; all: number; dense?: boolean }) {
+  const c = useColors();
+  const share = Math.min(1, Math.max(0, done / Math.max(1, all))), bar = useCountUp(share), full = share >= 1;
+  return (
+    <Pressable onPress={() => { tap(); router.navigate('/learn'); }} accessibilityRole="button"
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: c.line, paddingTop: dense ? 6 : 10, opacity: pressed ? 0.7 : 1 })}>
+      <Icon name="learn" size={18} color={full ? c.ok : c.text} weight="semibold" />
+      <T style={{ fontSize: 13, fontWeight: '700' }}>درس‌ها</T>
+      <View style={{ flex: 1, height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden', flexDirection: 'row' }}>
+        <View style={{ width: `${bar * 100}%`, borderRadius: 3, backgroundColor: full ? c.ok : c.accent }} />
+      </View>
+      <T style={{ fontSize: 13, fontWeight: '800', color: full ? c.ok : c.text }}>{faNum(done)}<T style={{ color: c.muted, fontSize: 12, fontWeight: '600' }}>{` / ${faNum(all)}`}</T></T>
+      <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
+    </Pressable>
+  );
 }
 
 // A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
@@ -260,7 +279,6 @@ export default function Home() {
   const part = useDayPart(), hello = GREET[part];
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
-  const fullN = attempts.filter(isFull).length, passN = attempts.filter(isPass).length;
   // Main site: the step-by-step course's lessons (lib/course.ts) finished out of those written; /app: prove.dk's lessons tried.
   const { done } = useCourseProgress();
   const ready = COURSE.flatMap(ch => ch.lessons);
@@ -278,7 +296,7 @@ export default function Home() {
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
-      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
+      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} bare />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
       heroExtra={ARC ? <ChartButton on={view} t={t} onPress={toggle} /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
       <Animated.View pointerEvents={view ? 'none' : 'auto'} aria-hidden={view || undefined}
@@ -292,47 +310,34 @@ export default function Home() {
         } : undefined}>
       <View style={{ gap }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
-        {/* Main site: the ring and its words close together, the pair in the middle of the card, Mojtaba asked. */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 12 : 16, justifyContent: ARC ? 'center' : undefined }}>
-          <View>
-            <Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
-          </View>
-          {/* Main site: the title, the pill and the line centred on one another (the pill right under the title), Mojtaba asked. */}
-          <View style={{ flex: ARC ? undefined : 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: ARC ? 'center' : 'flex-start' }}>
-            <T style={{ fontWeight: '800', fontSize: 17 }}>احتمال قبولی</T>
+        {/* Main site: the words at the card's start and a larger ring at its end (the left in Persian, the right in
+            English and Danish; Mojtaba 2026-10-29). */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: ARC ? 12 : 16 }}>
+          {ARC ? null : <View><Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} /></View>}
+          <View style={{ flex: 1, flexShrink: 1, gap: compact ? 4 : 6, alignItems: 'flex-start' }}>
+            <T style={{ fontWeight: '800', fontSize: ARC ? 19 : 17 }}>احتمال قبولی</T>
             {/* (Main site: no «بر اساس … تست اخیر» line under the title any more; Mojtaba 2026-10-25.) */}
             <Pill text={probWord} fg={probColor} bg={probSoft} />
-            {/* Main site: no line before the first exam. */}
-            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, textAlign: ARC ? 'center' : undefined, display: tight || tighter || ARC ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: tight || tighter || ARC ? 'none' : 'flex' }}>{est ? `بر اساس ${faNum(est.n)} پاسخ اخیر شما در آزمون‌های تصادفی` : 'بعد از اولین آزمون، تخمین زده می‌شود.'}</T>
           </View>
+          {ARC ? <View><Ring value={est ? est.prob : 0} size={tighter ? 70 : compact ? 100 : 120} stroke={tighter ? 8 : 11} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} /></View> : null}
         </View>
+        {/* The average and the questions to practise (it was the full tests; Mojtaba 2026-10-29), then the lessons. */}
         <View style={{ flexDirection: 'row', borderTopWidth: 1, borderTopColor: c.line, paddingTop: tighter ? 6 : compact ? 8 : 12, display: tighter && !ARC ? 'none' : 'flex' }}>
           <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
             <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>میانگین</FitLine>
             <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{avgAll != null ? pctText(avgAll) : '–'}</T>
           </View>
           <View style={{ width: 1, backgroundColor: c.line }} />
-          <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
-            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>آزمون‌های کامل</FitLine>
-            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center' }}>{fullN ? `${faNum(passN)} از ${faNum(fullN)}` : '–'}</T>
-          </View>
+          <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button" style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 2, opacity: pressed ? 0.7 : 1 })}>
+            <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>اشتباهات</FitLine>
+            <T style={{ fontWeight: '800', fontSize: 17, textAlign: 'center', color: mistakes ? c.bad : c.text }}>{faNum(mistakes)}</T>
+          </Pressable>
         </View>
+        <LessonsLine done={lessonsDone} all={lessonsAll} dense={tighter} />
       </Card>
-      {/* Main site: the three counts share one card, split by thin vertical lines, Mojtaba asked. */}
-      {/* The tests' count opens «همه‌ی آزمون‌ها» (/history), or the exam tab before the first test (Mojtaba 2026-10-20). */}
-      {/* Main site: each count keeps its line under it (the lessons their bar) on every screen, Mojtaba asked (2026-10-20);
-          the page fits itself around them (`fit`). */}
-      {ARC ? (
-        <Card style={{ flexDirection: 'row', padding: 0 }}>
-          <Stat bare dense={tighter} grow={share} onPress={() => (exams.length ? router.push('/history') : router.navigate('/exam'))} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} />
-          <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          <Stat bare dense={tighter} grow={share} onPress={() => router.navigate('/learn')} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
-          <View style={{ width: 1, marginVertical: 10, backgroundColor: c.line }} />
-          {/* In English and Danish on narrower phones the mistakes line is one word («questions»), as «questions to
-              practise» did not fit (Mojtaba 2026-10-20); Persian keeps its whole line. */}
-          <Stat bare dense={tighter} grow={share} onPress={() => router.push('/mistakes')} icon="warning" label="اشتباهات" value={faNum(mistakes)} tone={mistakes ? 'bad' : 'ok'} />
-        </Card>
-      ) : (
+      {/* Main site: the tests' statistics in place of the three counts (Mojtaba 2026-10-29); /app keeps its counts. */}
+      {ARC ? <TestStats attempts={exams} dense={compact} noHead={tighter} /> : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} />
         <Stat grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
