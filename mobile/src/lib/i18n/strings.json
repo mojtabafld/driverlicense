@@ -1,4 +1,8 @@
 {
+"جواب‌نداده":["Unanswered", "Ubesvaret"],
+"{0} سؤال مانده":["{0} questions left", "{0} spørgsmål tilbage"],
+"همه جواب داده شد":["All answered", "Alle besvaret"],
+"{0} در ۷ روز گذشته":["{0} in the last 7 days", "{0} de sidste 7 dage"],
 "{0} آزمون":["{0} tests", "{0} prøver"],
 "{0} سؤال":["{0} questions", "{0} spørgsmål"],
 "گرافیت":["Graphite","Grafit"],
