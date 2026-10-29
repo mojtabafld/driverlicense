@@ -25,7 +25,9 @@ import { ARC, useColors, useIsDark } from './theme';
 // passed, a darker grey. The bars grow up from the bottom when the chart opens; dates below.
 // A bar that did not pass: the theme's lines' colour, a step lighter in the dark theme (Mojtaba 2026-10-24).
 export const failBar = (line: string, dark: boolean) => (dark ? mix(line, '#ffffff', 0.08) : line);
-const L = ARC ? 0 : 38, R = ARC ? 0 : 12, TOP = ARC ? 22 : 14, B = 24, FILL_MIN = 120;
+// (ARC since 2026-10-29, after another picture: a scale of question counts at the left, two bars a test: its questions
+// in a pale tint and its right answers in full, the picked test's count in a dark bubble above it; a legend under it.)
+const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 34 : 14, B = 24, FILL_MIN = 120;
 // The line drew itself in already since the app started.
 let drawnOnce = false;
 // (The app's own random exam, mode 'new', is «آزمون تصادفی» too since it took the old one's place; Mojtaba 2026-10-19.)
@@ -103,7 +105,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
   const VIEW = 10, VW = Math.max(0, W - L - R);
   const slot = VW / Math.min(VIEW, data.length);
-  const CW = slot * data.length, bw = ARC ? Math.max(4, Math.min(72, slot * 0.8)) : Math.max(4, Math.min(34, slot * 0.66));
+  const CW = slot * data.length, bw = ARC ? Math.max(4, Math.min(26, slot * 0.3)) : Math.max(4, Math.min(34, slot * 0.66));
   const DOT = 5;   // the points' radius (10 across), with a ring in the card's colour
   const x0 = (i: number) => slot * (i + 0.5);
   // In every language the chart runs left to right, the oldest at the left and the newest at the right edge, where it
@@ -112,12 +114,15 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const x = (i: number) => (FLIP ? CW - x0(i) : x0(i));
   // ARC: the scale starts well under the lowest score (in tens, at most 50%), so the bars use the card's height and the
   // lowest one still shows.
-  const lo = ARC ? Math.max(0, Math.min(50, Math.floor((Math.min(...data.map(a => pctOf(a) * 100)) - 25) / 10) * 10)) : 0;
-  const y = (v: number) => TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B);
+  const lo = 0;
+  // ARC: the scale in questions, up to the longest test's count (in fives; in twos up to ten).
+  const maxN = Math.max(5, ...data.map(a => a.items.length)), step = maxN <= 10 ? 2 : 5, top = Math.ceil(maxN / step) * step;
+  const y = (v: number) => (ARC ? TOP + (1 - v / top) * (H - TOP - B) : TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B));
   // ARC: the bars' tops as far as they have grown; each at least MIN_BAR tall, so a test with no right answer (0%)
   // still shows (a short bar in red; Mojtaba 2026-10-24).
   const MIN_BAR = 8;
-  const tops = data.map(a => (ARC ? y(lo) - Math.max(MIN_BAR, y(lo) - y(pctOf(a) * 100)) * draw : y(pctOf(a) * 100)));
+  const tops = data.map(a => (ARC ? y(0) - Math.max(MIN_BAR, y(0) - y(scoreOf(a))) * draw : y(pctOf(a) * 100)));
+  const totals = data.map(a => y(0) - Math.max(MIN_BAR, y(0) - y(a.items.length)) * draw);
   // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge
   // (mirrored right to left with FLIP: the part drawn runs from the right end, `ahead` is a point not reached yet).
   const edge = Math.max(0, CW - VW) + (VW + DOT * 2 + 2) * draw;
@@ -131,12 +136,13 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const line = data.map((_, i) => (i === 0 ? `M${x(0)} ${tops[0]}` : `C${(x(i - 1) + x(i)) / 2} ${tops[i - 1]} ${(x(i - 1) + x(i)) / 2} ${tops[i]} ${x(i)} ${tops[i]}`)).join(' ');
   const area = `${line} L${x(data.length - 1)} ${y(lo)} L${x(0)} ${y(lo)} Z`;
   // ARC: a bar from the bottom to its top, its top corners rounded.
-  const bar = (i: number) => {
-    const l = x(i) - bw / 2, r = x(i) + bw / 2, b = y(lo), t = tops[i], k = Math.min(6, bw / 4, b - t);
+  // ARC: `dx` its offset from the test's middle, `t` its top; fully rounded tops, as the picture's.
+  const bar = (i: number, dx = 0, t = tops[i]) => {
+    const l = x(i) + dx - bw / 2, r = x(i) + dx + bw / 2, b = y(0), k = Math.min(bw / 2, b - t);
     return `M${l} ${b} L${l} ${t + k} Q${l} ${t} ${l + k} ${t} L${r - k} ${t} Q${r} ${t} ${r} ${t + k} L${r} ${b} Z`;
   };
   const every = ARC ? Math.max(1, Math.ceil(90 / slot)) : slot >= 26 ? 1 : 2;
-  const ticks = H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
+  const ticks = ARC ? (H < 110 ? [0, top] : H < 190 ? [0, Math.round(top / 2 / step) * step, top] : Array.from({ length: top / step + 1 }, (_, k) => k * step)) : H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
   const font = RTL ? 'Vazirmatn-400' : 'Inter-400';
   const a = sel != null ? data[sel] : null;
   // The picked attempt's name under the chart: «آخرین آزمون» for the newest (picked by default), else its number.
@@ -150,9 +156,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           /* Main site: laid over the box, so the box (and the chart's height) can also shrink when the home page gets denser. */
           <View style={abs ? { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row', direction: 'ltr' } as any : { flex: 1, flexDirection: 'row', direction: 'ltr' } as any}>
             {/* The percent scale stays put on the left. */}
-            {ARC ? null : <Svg width={L} height={H} pointerEvents="none">
+            {<Svg width={L} height={H} pointerEvents="none">
               {ticks.map(v => (
-                <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{`${faNum(v)}${RTL ? '٪' : '%'}`}</SvgText>
+                <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{ARC ? faNum(v) : `${faNum(v)}${RTL ? '٪' : '%'}`}</SvgText>
               ))}
             </Svg>}
             <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
@@ -162,7 +168,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                 {/* A tap between the bars clears the pick. */}
                 <Pressable onPress={() => { if (onBlank) onBlank(); else setSel(null); }} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
                 <Svg width={CW} height={H} pointerEvents="none">
-                  {ARC ? null : ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />)}
+                  {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} strokeOpacity={ARC ? 0.7 : 1} />)}
                   <Defs>
                     <LinearGradient id="pcArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(ARC ? lo : 0))} gradientUnits="userSpaceOnUse">
                       <Stop offset="0" stopColor={c.forest} stopOpacity={ARC ? 0.38 : 0.32} />
@@ -176,31 +182,45 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                     <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
                   </G>}
                   {/* Each point shows once the line has reached it. */}
-                  {ARC ? data.map((d, i) => (
-                    <Path key={i} d={bar(i)} fill={good(d) ? c.ok : scoreOf(d) === 0 ? c.bad : i === sel ? c.faint : failBar(c.line, dark)} />))
-                  /* The pass line, thin, dashed and faint, over the bars. */
-                  .concat(<Line key="pass" x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.4} strokeWidth={1} strokeDasharray="4 4" />)
+                  {ARC ? data.map((d, i) => {
+                    // A test's two bars: its questions in a pale tint, its right answers in full (green when it passed, coral when
+                    // not); the others than the picked one a little lighter.
+                    const col = good(d) ? c.ok : c.bad, on = i === sel;
+                    return (<G key={i} opacity={on ? 1 : 0.78}>
+                      <Path d={bar(i, -(bw / 2 + 2), totals[i])} fill={col} fillOpacity={dark ? 0.28 : 0.22} />
+                      <Path d={bar(i, bw / 2 + 2)} fill={col} />
+                    </G>);
+                  })
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
                   : data.map((d, i) => ahead(i) ? null : (
                     <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
                       stroke={c.surface} strokeWidth={2} fillOpacity={sel == null || sel === i ? 1 : 0.4} />
                   ))}
                   {/* The picked point's percent above it, kept inside the chart at its ends. */}
-                  {sel != null && data[sel] ? (
-                    <SvgText x={Math.min(CW - 16, Math.max(16, x(sel)))} y={Math.max(11, tops[sel] - (ARC ? 8 : DOT + 8))} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
+                  {sel != null && data[sel] && ARC ? (() => {
+                    // ARC: the picked test's right answers in a dark rounded bubble over its bars (a second tap on it opens its review;
+                    // the line under the chart with «مرور» is gone, as in the picture).
+                    const label = `${faNum(scoreOf(data[sel]))}/${faNum(data[sel].items.length)}`, w = 22 + label.length * 7.5, h = 24;
+                    const cx = Math.min(CW - w / 2 - 2, Math.max(w / 2 + 2, x(sel))), cy = Math.max(2, Math.min(totals[sel], tops[sel]) - h - 6);
+                    return (<G>
+                      <Rect x={cx - w / 2} y={cy} width={w} height={h} rx={9} fill={c.text} />
+                      <SvgText x={cx} y={cy + 16.5} fill={c.bg} fontSize={12} fontWeight="700" fontFamily={RTL ? 'Vazirmatn-700' : 'Inter-700'} textAnchor="middle">{label}</SvgText>
+                    </G>);
+                  })() : sel != null && data[sel] ? (
+                    <SvgText x={Math.min(CW - 16, Math.max(16, x(sel)))} y={Math.max(11, tops[sel] - (DOT + 8))} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
                       {`${faNum(Math.round(pctOf(data[sel]) * 100))}${RTL ? '٪' : '%'}`}
                     </SvgText>
                   ) : null}
                   {ARC ? null : <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />}
                   {/* ARC: dates under the line, the newest at the right edge and the oldest in view at the left (mirrored with FLIP). */}
                   {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && Math.abs(x(i) - (FLIP ? VW : CW - VW)) < 36)
-                    ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={c.muted} fontSize={11} fontFamily={font}
+                    ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={ARC && i === sel ? c.text : c.muted} fontSize={11} fontFamily={ARC && i === sel ? (RTL ? 'Vazirmatn-700' : 'Inter-700') : font}
                         textAnchor="middle">{ARC ? fmtDate(d.at) : faNum(i + 1 + offset)}</SvgText>
                     : null))}
                 </Svg>
                 {/* A tap on an attempt's column (around its point) picks it (a drag scrolls instead). */}
                 {data.map((_, i) => (
-                  <Pressable key={`p${i}`} onPress={() => { tap(); setSel(sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
+                  <Pressable key={`p${i}`} onPress={() => { tap(); if (ARC && sel === i) onOpen(data[i]); else setSel(sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
                     style={{ position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
                 ))}
               </View>
@@ -209,7 +229,14 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           </View>
         ) : null}
       </View>
-      {fill && noHint && !a ? null : fill ? (
+      {ARC ? (
+        // The legend, as the picture's: a pale square for the questions, a full one for the right answers.
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: c.ok, opacity: dark ? 0.32 : 0.26 }} /><T style={{ color: c.muted, fontSize: 12.5 }}>سؤال‌ها</T></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: c.ok }} /><T style={{ color: c.muted, fontSize: 12.5 }}>پاسخ درست</T></View>
+        </View>
+      ) : null}
+      {ARC && fill ? null : fill && noHint && !a ? null : fill ? (
         // Fitted to the screen: one fixed line, so the chart keeps its height when an attempt is picked.
         <View style={{ height: 40, justifyContent: 'center' }}>
           {a ? (

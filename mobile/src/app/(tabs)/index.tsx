@@ -9,21 +9,22 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
-import { faNum, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
+import { faNum, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf } from '@/lib/logic';
+import { RTL } from '@/lib/i18n';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { ArcButton, Button, Card, FitLine, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
-import { failBar, ProgressChart } from '@/ui/progress-chart';
+import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { TestStats } from '@/ui/chart-view';
 import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
-import { ARC, useColors, useIsDark } from '@/ui/theme';
+import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { GreetIcon, type DayPart } from '@/ui/greet-icon';
 import { HomeLicenceArt } from '@/ui/header-art';
@@ -150,7 +151,7 @@ function StartCard({ compact }: { compact: boolean }) {
 const TURNS = ['تمرین امروز را شروع کنید.', 'یک آزمون تصادفی بدهید.', 'پیشرفت خودتان را بررسی کنید.'];
 
 export default function Home() {
-  const c = useColors(), dark = useIsDark();
+  const c = useColors();
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height, width } = useWindowDimensions();
@@ -353,21 +354,41 @@ export default function Home() {
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={() => { if (Date.now() - swiped.current < 400) return; if (ARC) toggle(); else setPicked(null); }} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
+        {ARC ? (() => {
+          // As the picture's head (Mojtaba 2026-10-29): the title over a short line at its start; at its end the latest
+          // test's right answers large, and under them how its percent moved from the test before (green up, red down).
+          const last = exams[exams.length - 1], prev = exams[exams.length - 2];
+          const diff = last && prev ? Math.round((pctOf(last) - pctOf(prev)) * 100) : null;
+          return (
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <T style={{ fontWeight: '700', fontSize: 18 }}>نمودار پیشرفت</T>
+                <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>
+              </View>
+              {last ? (
+                <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                  <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
+                  {diff != null && diff !== 0 ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <View style={{ width: 0, height: 0, borderLeftWidth: 5, borderRightWidth: 5, borderLeftColor: 'transparent', borderRightColor: 'transparent',
+                        ...(diff > 0 ? { borderBottomWidth: 8, borderBottomColor: c.ok } : { borderTopWidth: 8, borderTopColor: c.bad }) }} />
+                      <T raw style={{ fontSize: 13, fontWeight: '600', color: diff > 0 ? c.ok : c.bad }}>{`${faNum(Math.abs(diff))}${RTL ? '٪' : '%'}`}</T>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+          );
+        })() : (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            {/* Main site: the bars are green when passed and grey when not, the pass line thin, dashed and faint (Mojtaba 2026-10-24). */}
-            {ARC ? <>
-              <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: c.ok }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
-              <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: failBar(c.line, dark), marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
-              <View style={{ width: 14, borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: c.forest, opacity: 0.45, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
-            </> : <>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
-              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.faint, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
-              <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.forest, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
-            </>}
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.forest }} /><T style={{ color: c.muted, fontSize: 12 }}>قبولی</T>
+            <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.faint, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>مردودی</T>
+            <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.forest, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
+        )}
         <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => { if (Date.now() - swiped.current >= 400) toggle(); } : undefined} />
       </Card>
       </Pressable>
