@@ -13,6 +13,7 @@ import { API_URL } from '@/lib/config';
 import { RTL, UI_LANG, setUiLang, tr } from '@/lib/i18n';
 import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
+import { VibeCards } from './vibe-cards';
 import { Icon, type IconName } from './icon';
 import { L, T, physical, physicalAlign, tap, useHeaderTop } from './kit';
 import { defaultAccentDark, defaultAccentLight, defaultPalette } from './palette';
@@ -132,7 +133,6 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
   };
   // The browser's top (and the phone's status bar on the web) in the page's top colour.
   useHeaderTop(N.top);
-  const tile = Math.round(Math.min(132, height * 0.16, width * 0.34));
   // The headline's size: as large as the column lets it be on one line, at most 26 (bold Vazirmatn about 0.45 of the
   // size a letter, Inter 0.5).
   const headline = byMail ? 'ادامه با ایمیل' : 'راه قبولی در آزمون تئوری';
@@ -155,18 +155,16 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
               <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -0.6, color: N.onAccent }}>pro</L>
             </View>
           </View>
-          {/* The symbol on its glowing tile, and the headline, in the middle of what is left. */}
-          <View style={{ flex: 1, minHeight: tile + 130, justifyContent: 'center', alignItems: 'center', paddingVertical: 16 }}>
-            <View style={{ width: tile, height: tile, borderRadius: tile * 0.27, backgroundColor: N.accent, alignItems: 'center', justifyContent: 'center',
-              shadowColor: N.accent, shadowOpacity: 0.45, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, elevation: 12 }}>
-              <RoadTick size={Math.round(tile * 0.85)} />
-            </View>
+          {/* The three cards of what the app does, in the middle of what is left (Mojtaba 2026-10-29; it was the symbol
+              on its glowing tile). */}
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12, marginHorizontal: -24 }}>
+            <VibeCards room={Math.max(200, height - ins.top - ins.bottom - (byMail ? 420 : 500))} />
           </View>
           <Animated.View style={{ gap: 12, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
             <View style={{ alignItems: 'center', gap: 2, marginBottom: 10 }}>
               {/* On one line on every screen: the font as large as the column lets it be. */}
               <T numberOfLines={1} style={{ fontSize: head, lineHeight: Math.round(head * 1.45), fontWeight: '800', textAlign: 'center', color: N.ink }}>{headline}</T>
-              <T style={{ fontSize: 14.5, lineHeight: 22, color: N.muted, textAlign: 'center' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'تمرین مثل آزمون واقعی، با توضیح فارسی'}</T>
+              <T style={{ fontSize: 14.5, lineHeight: 22, color: N.muted, textAlign: 'center', display: height < 720 ? 'none' : 'flex' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'تمرین مثل آزمون واقعی، با توضیح فارسی'}</T>
             </View>
             {byMail ? <>
               <Wide main label="ورود" icon="login" onPress={() => onEmail('login')} />
