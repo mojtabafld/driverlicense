@@ -317,9 +317,9 @@ export default function Home() {
           {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
               title with its pill under it, as before; no average or mistakes in this card. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : 18 }}>
-            {/* In the ring a trophy in the text colour (it was a flame); its percent between the title and the pill (Mojtaba 2026-10-29). */}
+            {/* In the ring a seal with a tick in the text colour (it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
             <Ring value={est ? est.prob : 0} size={tighter ? 76 : compact ? 104 : 120} stroke={tighter ? 8 : 11} color={probColor}>
-              <Icon name="trophy" size={Math.round((tighter ? 76 : compact ? 104 : 120) * 0.3)} color={c.text} weight="semibold" />
+              <Icon name="passed" size={Math.round((tighter ? 76 : compact ? 104 : 120) * 0.32)} color={c.text} weight="semibold" />
             </Ring>
             <View style={{ flex: 1, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
