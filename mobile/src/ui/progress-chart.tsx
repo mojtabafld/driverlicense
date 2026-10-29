@@ -39,7 +39,8 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 // `noNote`: the empty chart without its line under it (home's chart view on a very short screen, Mojtaba 2026-10-19).
 // `onBlank`: a tap on the chart off its points does this instead of clearing the pick (home: it opens or closes its chart
 // view, and the picked test stays picked; Mojtaba 2026-10-19).
-export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; onBlank?: () => void }) {
+// `noLegend`: ARC, without the legend under the chart (the smallest phones).
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, noLegend, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; noLegend?: boolean; onBlank?: () => void }) {
   const c = useColors(), dark = useIsDark();
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
@@ -229,7 +230,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           </View>
         ) : null}
       </View>
-      {ARC ? (
+      {ARC && !noLegend ? (
         // The legend, as the picture's: a pale square for the questions, a full one for the right answers.
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: c.ok, opacity: dark ? 0.32 : 0.26 }} /><T style={{ color: c.muted, fontSize: 12.5 }}>سؤال‌ها</T></View>
