@@ -10,7 +10,6 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { faNum, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds } from '@/lib/logic';
-import { tr } from '@/lib/i18n';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -293,28 +292,13 @@ export default function Home() {
       <View style={{ gap }}>
       <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
         {ARC ? <>
-          {/* Main site (Mojtaba 2026-10-29): the title and its pill on top; under them the larger ring at the card's
-              start (the right in Persian) and beside it the average and the questions to practise, one under the other. */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-            <T style={{ fontWeight: '800', fontSize: 19 }}>احتمال قبولی</T>
-            <Pill text={probWord} fg={probColor} bg={probSoft} />
-          </View>
+          {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
+              title with its pill under it, as before; no average or mistakes in this card. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : 18 }}>
             <Ring value={est ? est.prob : 0} size={tighter ? 76 : compact ? 104 : 120} stroke={tighter ? 8 : 11} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: tighter ? 6 : 10 }}>
-                <Icon name="chart" size={18} color={c.muted} />
-                <T style={{ flex: 1, color: c.muted, fontSize: 13.5 }} numberOfLines={1}>میانگین</T>
-                <T style={{ fontWeight: '800', fontSize: 18 }}>{avgAll != null ? pctText(avgAll) : '–'}</T>
-              </View>
-              <View style={{ height: 1, backgroundColor: c.line }} />
-              <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button" accessibilityLabel={tr('اشتباهات')}
-                style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: tighter ? 6 : 10, opacity: pressed ? 0.7 : 1 })}>
-                <Icon name="warning" size={18} color={mistakes ? c.bad : c.muted} />
-                <T style={{ flex: 1, color: c.muted, fontSize: 13.5 }} numberOfLines={1}>اشتباهات</T>
-                <T style={{ fontWeight: '800', fontSize: 18, color: mistakes ? c.bad : c.text }}>{faNum(mistakes)}</T>
-                <Icon name="chevronLeft" size={14} color={c.faint} weight="semibold" />
-              </Pressable>
+            <View style={{ flex: 1, gap: compact ? 6 : 8, alignItems: 'flex-start' }}>
+              <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
+              <Pill text={probWord} fg={probColor} bg={probSoft} />
             </View>
           </View>
         </> : <>
