@@ -10,6 +10,16 @@ REPO=${REPO:-https://github.com/mojtabafld/driverlicense.git}
 [ "$(id -u)" = 0 ] || { echo "Run it with sudo."; exit 1; }
 . /etc/os-release; [ "$ID" = ubuntu ] || { echo "This script is for Ubuntu (this server: $ID)."; exit 1; }
 
+# Something else on the server (e.g. a web page of Containerlab, or another proxy) already on the ports Caddy and the app
+# need: stop here and say which, rather than break it (FORCE=1 to go on anyway).
+busy=$(ss -ltnpH 2>/dev/null | awk '$4 ~ /:(80|443|3000)$/' | grep -v -e '"caddy"' -e '"node"' || true)
+if [ -n "$busy" ] && [ "${FORCE:-}" != 1 ]; then
+  echo "These ports are in use by another program (Teoripro needs 80 and 443 for HTTPS, and 3000):"
+  echo "$busy"
+  echo "Free them, or run again with FORCE=1 if you know they will not clash."
+  exit 1
+fi
+
 echo "== packages"
 apt-get update -q
 apt-get install -y -q git curl ca-certificates gnupg debian-keyring debian-archive-keyring apt-transport-https iptables-persistent
