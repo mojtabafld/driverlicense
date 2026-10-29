@@ -73,6 +73,8 @@ tr.u:hover td{background:var(--surface2)}
 .ai .sum{white-space:pre-wrap;background:var(--surface2);border-radius:12px;padding:12px 14px}
 .tag.high{background:var(--badSoft);color:var(--bad)}.tag.medium{background:var(--warnSoft);color:var(--warn)}.tag.low{background:var(--surface2);color:var(--muted)}
 .note{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.news input,.news textarea{width:100%;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--surface);color:var(--text);margin-top:6px}
+.news textarea{min-height:80px}
 .note textarea{width:100%;font:inherit;font-size:13.5px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--text);min-height:58px;margin-top:6px}
 .note img{width:120px;border-radius:8px;float:left;margin-right:10px}
 details summary{cursor:pointer;font-weight:700}
@@ -274,6 +276,12 @@ details summary{cursor:pointer;font-weight:700}
         ${tile(fa(t.visitsToday), 'بازدید امروز', `${fa(t.visitorsToday)} بازدیدکننده، ${fa(t.visits7)} در ۷ روز`)}
       </div>
       ${aiCard()}
+      <div class="card reports news" style="margin-bottom:16px" id="news"><h2>پیام برای همه‌ی کاربران</h2>
+        <p class="muted" style="font-size:12.5px;margin:0 0 4px">اطلاعات کلی، به‌روزرسانی‌ها یا راهنمایی‌های تازه. در برنامه پشت دکمه‌ی زنگ صفحه‌ی اصلی نشان داده می‌شود و تا کاربر آن را ندیده، نقطه‌ی قرمزی کنار زنگ است.</p>
+        <input id="nt" maxlength="140" placeholder="عنوان">
+        <textarea id="nx" maxlength="4000" placeholder="متن پیام"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn" id="ns">ارسال برای همه</button><span class="muted" id="nm" style="font-size:12.5px"></span></div>
+        <div id="nl">${newsList()}</div></div>
       <div class="row2">
         <div class="card chart"><h2>۳۰ روز اخیر</h2>${chart(d.days)}</div>
         <div class="card"><h2>زبان برنامه</h2>${bars(t.ui, UI)}<h2 style="margin-top:16px">نوع آزمون‌ها</h2>${bars(t.modes, MODE)}</div>
@@ -295,6 +303,22 @@ details summary{cursor:pointer;font-weight:700}
     document.getElementById('out').onclick = async () => { await api('POST', 'logout').catch(() => {}); login(); };
     wireUsers();
     wireAi();
+    wireNews();
+  }
+  function newsList() {
+    const n = state.news || [];
+    return n.length ? n.map(x => `<div class="r"><div><b>${esc(x.title || '')}</b> <span class="muted" style="font-size:12px">${when(x.at)}</span> <button class="btn soft" data-del="${esc(x.id)}" style="padding:3px 10px;font-size:12px">حذف</button></div>
+      ${x.text ? `<div style="white-space:pre-wrap">${esc(x.text)}</div>` : ''}</div>`).join('') : '<p class="muted">پیامی فرستاده نشده است.</p>';
+  }
+  function wireNews() {
+    const box = document.getElementById('news'); if (!box) return;
+    const msg = t => { document.getElementById('nm').textContent = t; };
+    const refresh = async () => { try { state.news = (await api('GET', 'news')).items; } catch (e) { msg(e.message); } document.getElementById('nl').innerHTML = newsList(); wireNews(); };
+    document.getElementById('ns').onclick = async () => {
+      const title = document.getElementById('nt').value, text = document.getElementById('nx').value;
+      try { await api('POST', 'news', { title, text }); document.getElementById('nt').value = ''; document.getElementById('nx').value = ''; msg('فرستاده شد.'); refresh(); } catch (e) { msg(e.message); }
+    };
+    box.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (!confirm('این پیام حذف شود؟')) return; try { await api('DELETE', 'news?id=' + encodeURIComponent(b.dataset.del)); refresh(); } catch (e) { msg(e.message); } });
   }
   function wireUsers() {
     const box = document.getElementById('users');
@@ -306,7 +330,7 @@ details summary{cursor:pointer;font-weight:700}
   }
 
   async function view() {
-    try { state.data = await api('GET', 'adminstats'); render(); loadAi().then(() => { const box = document.getElementById('ai'); if (box) { box.outerHTML = aiCard(); wireAi(); } }); }
+    try { state.data = await api('GET', 'adminstats'); state.news = (await api('GET', 'news').catch(() => ({ items: [] }))).items; render(); loadAi().then(() => { const box = document.getElementById('ai'); if (box) { box.outerHTML = aiCard(); wireAi(); } }); }
     catch (e) { return login(e.status === 401 || e.status === 403 ? '' : e.message); }
   }
   view();

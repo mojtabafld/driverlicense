@@ -53,6 +53,10 @@ export const loadPromoSeen = async (): Promise<string[]> => {
   try { const v = JSON.parse(localStorage.getItem(PROMO_SEEN) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
 };
 export const savePromoSeen = async (keys: string[]) => { try { localStorage.setItem(PROMO_SEEN, JSON.stringify(keys)); } catch {} };
+// When the news (the bell on the home page) was last looked at on this device.
+const NEWS_SEEN = 'tp.newsSeen';
+export const loadNewsSeen = async (): Promise<number> => { try { return +(localStorage.getItem(NEWS_SEEN) || 0) || 0; } catch { return 0; } };
+export const saveNewsSeen = async (at: number) => { try { localStorage.setItem(NEWS_SEEN, String(at)); } catch {} };
 const CHEERED = 'tp.cheered';
 export const loadCheered = async (): Promise<string[]> => {
   try { const v = JSON.parse(localStorage.getItem(CHEERED) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }

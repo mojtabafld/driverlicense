@@ -1,4 +1,8 @@
 {
+"پیام‌ها":["Messages", "Beskeder"],
+"پیام‌ها، پیام تازه":["Messages, new message", "Beskeder, ny besked"],
+"خبرها، به‌روزرسانی‌ها و راهنمایی‌های تازه":["News, updates and new tips", "Nyheder, opdateringer og nye tips"],
+"هنوز پیامی نیست.":["No messages yet.", "Ingen beskeder endnu."],
 "تاریخچه":["Test history","Prøvehistorik"],
 "۱۱۰۰ سؤال، درست مثل آزمون واقعی. هر روز کمی، تا روز آزمون.":["1100 questions, just like the real test. A little every day, until test day.", "1100 spørgsmål, præcis som den rigtige prøve. Lidt hver dag, frem til prøvedagen."],
 "اشتباه کردی؟ مربی هوشمند توضیح می‌دهد چرا، به زبان خودت.":["Got one wrong? The AI coach explains why, in your own language.", "Svarede du forkert? AI-coachen forklarer hvorfor, på dit eget sprog."],

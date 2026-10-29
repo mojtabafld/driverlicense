@@ -56,6 +56,10 @@ export const loadPromoSeen = async (): Promise<string[]> => {
   try { const v = JSON.parse((await SecureStore.getItemAsync(PROMO_SEEN)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
 };
 export const savePromoSeen = (keys: string[]) => SecureStore.setItemAsync(PROMO_SEEN, JSON.stringify(keys)).catch(() => {});
+// When the news (the bell on the home page) was last looked at on this device.
+const NEWS_SEEN = 'tp_news_seen';
+export const loadNewsSeen = async (): Promise<number> => { try { return +((await SecureStore.getItemAsync(NEWS_SEEN)) || 0) || 0; } catch { return 0; } };
+export const saveNewsSeen = (at: number) => SecureStore.setItemAsync(NEWS_SEEN, String(at)).catch(() => {});
 const CHEERED = 'tp_cheered';
 export const loadCheered = async (): Promise<string[]> => {
   try { const v = JSON.parse((await SecureStore.getItemAsync(CHEERED)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
