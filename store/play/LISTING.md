@@ -125,8 +125,8 @@ Turning it on, once the app is uploaded to a testing track:
    Keys → Add key → JSON. Enable the «Google Play Android Developer API» in the same project. Then Play Console →
    Users and permissions → Invite new users → the service account's email → app permissions for Teoripro: «View
    financial data» and «Manage orders and subscriptions».
-4. **Server**: DigitalOcean → the app → Settings → Environment Variables → `GOOGLE_PLAY_SERVICE_ACCOUNT` = the whole
-   JSON file's content (or the file in base64), encrypted; redeploy. Keep the file private; it is never put in the
+4. **Server**: in `/etc/teoripro/env` on the server, `GOOGLE_PLAY_SERVICE_ACCOUNT` = the whole
+   JSON file's content (or the file in base64); then restart the service. Keep the file private; it is never put in the
    repository or sent anywhere else.
 5. **Testing**: Play Console → Settings → License testing → your Gmail address. Your test purchases then cost nothing.
    Install the app from the internal testing link (not the APK from GitHub: Play Billing works only in a copy installed
