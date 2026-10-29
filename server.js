@@ -24,6 +24,7 @@ const consolepics = require('./consolepics');
 const consoleprompts = require('./consoleprompts');
 const tts = require('./tts');
 const webpic = require('./webpic');
+const png = require('./png');
 const payments = require('./payments');
 const playbilling = require('./playbilling');
 const push = require('./push');
@@ -204,6 +205,18 @@ async function keepRemoved(u, list) {
 // that it had the free trial (so the trial cannot be had again with the address), and its bought pass (given back when
 // the address signs up again while it lasts; its purchases go with it either way, so the payments' sync, which finds
 // accounts by address too, never counts them again for the new account).
+// A picture's plain background cut away (png.cutout from its edge colour), halved until at most `max` px wide; the
+// picture as it was when it cannot be read.
+function cutBackground(b, max) {
+  try {
+    let im;
+    if (b.mime === 'image/png') im = png.decode(b.data);
+    else { const j = require('jpeg-js').decode(b.data, { useTArray: true, formatAsRGBA: false, maxMemoryUsageInMB: 1024 }); im = { w: j.width, h: j.height, ch: 3, px: Buffer.from(j.data) }; }
+    if (!im || im.ch < 3) return b;
+    while (im.w > max) im = png.half(im);
+    return { mime: 'image/png', data: png.encode(png.cutout(im, png.edgeColour(im), 8, 30)) };
+  } catch (e) { console.error('cut background', e.message); return b; }
+}
 const mailKey = e => tokenHash(`mail:${mail.normal(e)}`);
 const gone = () => { const g = (store.meta.gone = store.meta.gone || { trial: {}, pass: {} }); g.ai = g.ai || {}; return g; };
 async function rememberGone(u) {
@@ -643,7 +656,10 @@ function serveStatic(req, res) {
     // Sent smaller and kept in memory (webpic.js) when the picture's version is known; the others as they are.
     const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]] : lg ? imagegen.loginVersions()[lg[1]]
       : cm ? imagegen.courseVersions()[cm[1]] : nm ? imagegen.newqVersions()[nm[1]] : undefined;   // (/guide-art has its own sizes and store: guideref.webBlob)
-    return (ver ? webpic.get(`${p}:${ver}`, load, im ? 1280 : undefined) : load()).then(b => {
+    // The «آموزش» cards' pictures with their plain background cut away (Mojtaba 2026-10-29: in the dark theme the
+    // picture's own background showed on the card), at most 720 px wide, as a transparent PNG.
+    const loadCut = () => load().then(b => (b ? cutBackground(b, 720) : b));
+    return (ver ? webpic.get(`${p}:${ver}${lm ? ':cut2' : ''}`, lm ? loadCut : load, im ? 1280 : undefined) : load()).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       // (A sign chosen from prove.dk can be SVG: shown as a picture only, nothing in it runs.)
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff',

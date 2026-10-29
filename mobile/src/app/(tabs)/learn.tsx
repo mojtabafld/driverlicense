@@ -36,7 +36,7 @@ const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).
 // (light or dark) under the title and its short line, with the round ‹ at the card's end.
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
-  const { learnArt, learnBg } = useApp();
+  const { learnArt } = useApp();
   // The dark theme draws the card's own dark picture (6–10: the same drawing on a dark tint of its colour; Mojtaba
   // 2026-10-22) once the server has made it, with the light theme's fade; until then the light one.
   const dark = useIsDark(), pn = dark && learnArt[n + 5] ? n + 5 : n, v = learnArt[pn];
@@ -57,7 +57,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   );
   return (
     <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: tiny ? 52 : short ? 62 : 92 }}>
-      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: dark && v ? c.surface : (v && learnBg[pn]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
+      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: v ? 'transparent' : c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
         onLayout={e => setBoxH(Math.round(e.nativeEvent.layout.height))}>
         {/* Whole, as high as the card (never cropped top or bottom: smaller on a short card, Mojtaba 2026-10-22), pushed a
             little past the card's edge so the picture's plain margin on that side is cut away; the rest of the room in
@@ -83,7 +83,7 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
 // /app (prove.dk's copy) keeps its cards two by two, each with its picture on top.
 function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title: string; note?: string; href: Href }) {
   const c = useColors();
-  const { learnArt, learnBg } = useApp();
+  const { learnArt } = useApp();
   const short = useWindowDimensions().height < 700; // less text on short screens
   // The dark theme's own pictures (6–10) here too (Mojtaba 2026-10-22), as on the main site's cards.
   const pn = useIsDark() && learnArt[n + 5] ? n + 5 : n, v = learnArt[pn];
@@ -91,7 +91,7 @@ function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title
     <Card onPress={() => router.push(href)} style={{ flex: 1, padding: 0, overflow: 'hidden' }}>
       {/* The picture, whole (never cropped), in the card's top, the rest of
           it in the picture's own background colour; the icon on a soft tile until the picture is made. */}
-      <View style={{ height: short ? 96 : 120, backgroundColor: (v && learnBg[pn]) || c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ height: short ? 96 : 120, backgroundColor: v ? 'transparent' : c.accentSoft, alignItems: 'center', justifyContent: 'center' }}>
         {v ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}` }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} contentFit="contain" transition={250} />
           : <Icon name={icon} size={40} color={c.link} weight="semibold" />}
       </View>
