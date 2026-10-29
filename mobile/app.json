@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "info.mintcloud.teoriprove",
+      "bundleIdentifier": "app.bitlane.teoripro",
       "supportsTablet": true
     },
     "android": {
@@ -20,7 +20,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "info.mintcloud.teoriprove"
+      "package": "app.bitlane.teoripro"
     },
     "web": {
       "output": "single",

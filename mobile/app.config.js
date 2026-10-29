@@ -7,8 +7,8 @@ module.exports = ({ config }) => {
   let c = process.env.WEB_BASE ? { ...config, experiments: { ...config.experiments, baseUrl: process.env.WEB_BASE } } : config;
   if (process.env.EXPO_PUBLIC_PROVE === '1') {
     c = { ...c, name: 'Teoripro Prove', slug: c.slug, scheme: 'teoriprove-prove',
-      android: { ...c.android, package: 'info.mintcloud.teoriprove.prove' },
-      ios: { ...c.ios, bundleIdentifier: 'info.mintcloud.teoriprove.prove' } };
+      android: { ...c.android, package: 'app.bitlane.teoripro.app' },
+      ios: { ...c.ios, bundleIdentifier: 'app.bitlane.teoripro.app' } };
   }
   return c;
 };

@@ -1061,7 +1061,7 @@ async function api(req, res, route) {
     const ui = u && ['fa', 'en', 'da'].includes((u.settings || {}).ui) ? `&ui=${u.settings.ui}` : '';
     const web = `/?verified=${ok ? 1 : 0}${ui}`, ua = String(req.headers['user-agent'] || '');
     const app = /Android/i.test(ua) && !/; wv\)/.test(ua)
-      ? `intent://verified?ok=${ok ? 1 : 0}#Intent;scheme=teoriprove;package=info.mintcloud.teoriprove;S.browser_fallback_url=${encodeURIComponent(originOf(req) + web)};end`
+      ? `intent://verified?ok=${ok ? 1 : 0}#Intent;scheme=teoriprove;package=app.bitlane.teoripro;S.browser_fallback_url=${encodeURIComponent(originOf(req) + web)};end`
       : null;
     res.writeHead(302, { Location: app || web, 'Cache-Control': 'no-store' });
     return res.end();
