@@ -762,25 +762,27 @@ const introBlob = async n => { const j = introNow()[n]; return j && j.blob ? blo
 // (lessons, rules, road signs, right of way, the test's glossary), 4:3 on its own soft background, as large as the card's top. Kept in
 // store.meta.learnArt and served at /learn-art/<n>.png; the app shows its icon tile until a picture is there.
 // Changing LEARN_SET makes new ones.
-const LEARN_SET = 'v3';
-// v3 (Mojtaba 2026-10-29): a single object per card, as v2, now in colour: a soft matte 3D render with a few clear,
-// friendly colours, on a plain neutral background that is the card's own (light grey; the dark ones charcoal).
-const LEARN_STYLE = 'Style: a modern, premium, minimal 3D render like the feature cards of a high-end mobile app: exactly ONE single object, nothing else in the picture, no props, no small extra items, no ground objects. Clean rounded geometric shapes, smooth matte materials with a soft clay look, in a few clear, friendly, saturated colours as described, soft studio light from the upper left, one gentle soft shadow under the object. The object is centred, about 45% of the picture\'s width, with generous empty space around it. No text, no letters, no numbers, no logos, no brand names, no watermarks, no people.';
-const LEARN_BG = 'Background: one plain, even, very light neutral grey (#f4f4f4) filling the whole picture edge to edge, no gradient, no floor line, no vignette.';
+const LEARN_SET = 'v4';
+// v4 (Mojtaba 2026-10-29: minimal, simple and modern): flat vector pictures, one subject each made of a few simple
+// geometric shapes in two or three soft colours, no 3D, no shading; the plain background is cut away when sent
+// (server.js), so they sit on the card's own colour.
+const LEARN_STYLE = 'Style: a minimal, simple, modern flat vector illustration like a premium app\'s feature icon: ONE subject only, built from a few clean geometric shapes with rounded corners, two or three soft harmonious colours plus white, flat colour fills only, no outlines, no gradients, no shadows, no 3D, no texture, no noise. Generous negative space. The subject is centred, about 45% of the picture\'s width. No text, no letters, no numbers, no logos, no watermarks, no people.';
+// (a mid grey, well apart from the white parts, so cutting it away never takes them too)
+const LEARN_BG = 'Background: one plain, flat, even medium-light neutral grey (#d8d8d8) filling the whole picture edge to edge, nothing else on it.';
 const LEARN_PROMPTS = [
   // 1: the course, lesson by lesson
-  `${LEARN_BG} The single object: one open book with an emerald green (#22b07d) cover and cream white pages curving up, standing slightly turned toward the viewer.`,
+  `${LEARN_BG} The subject: an open book seen from the front, two simple white page shapes on a soft emerald green (#2fb383) cover, with a small rounded bookmark ribbon in warm yellow (#f6c544).`,
   // 2: rules
-  `${LEARN_BG} The single object: one balanced pair of justice scales in warm golden yellow (#f2b632) with two round shallow pans on a rounded column.`,
+  `${LEARN_BG} The subject: a simple balanced scale made of a slim upright, a straight beam and two half-circle pans, in warm golden yellow (#f2b632) with a small white circle at the top.`,
   // 3: road signs
-  `${LEARN_BG} The single object: one Danish triangular road warning sign, a rounded triangle point up with a thick bright red (#e5322d) border and a white middle, on one short round light grey pole.`,
+  `${LEARN_BG} The subject: a Danish triangular warning sign, a rounded triangle point up with a thick coral red (#ef4a3c) border and a white middle, on a slim soft grey pole.`,
   // 4: right of way
-  `${LEARN_BG} The single object: one rounded square tile of a road crossroads seen from above at an isometric angle: dark grey roads with white dashes crossing, the four corners soft fresh green grass (#7ccf6b), like a small game piece.`,
+  `${LEARN_BG} The subject: a crossroads seen straight from above as a simple plus shape of two soft charcoal (#3a3d44) roads with short white dashes, in a rounded square of fresh green (#7ccf6b).`,
   // 5: the test's glossary (the Danish words of the theory test with their meaning)
-  `${LEARN_BG} The single object: one rounded speech bubble in periwinkle blue (#6b7cff) with three soft white round dots inside it, slightly turned toward the viewer.`,
+  `${LEARN_BG} The subject: two overlapping rounded speech bubbles, the front one periwinkle blue (#6b7cff) with three white dots, the one behind soft lavender (#c9cdfd).`,
 ];
 // 6–10: the dark theme's versions of 1–5, redrawn from them on the dark card's own charcoal.
-const LEARN_DARK = () => ({ style: '', prompt: 'Redraw this exact picture for a dark theme. Keep the object exactly as it is: the same shape, size, position, angle, colours, materials and composition, nothing added, removed or moved. Change only the background: the light grey background becomes one plain, even, dark charcoal grey (#262626) from edge to edge, with no gradient, no floor line, no vignette and no frame. Add a gentle soft rim light so the object stands out on the dark background, and make its soft shadow darker to suit it. No text, no letters, no numbers, no logos, no watermarks.' });
+const LEARN_DARK = () => ({ style: '', prompt: 'Redraw this exact picture for a dark theme. Keep the subject exactly as it is: the same flat shapes, size, position, colours and composition, nothing added, removed or moved, still flat with no shading. Change only the background: it becomes one plain, flat, even dark charcoal grey (#262626) from edge to edge, with no gradient, no vignette and no frame. No text, no letters, no numbers, no logos, no watermarks.' });
 const LEARN_DARKS = [1, 2, 3, 4, 5].map(LEARN_DARK);
 // A set of pictures made once by the image model (`prompts`, `style`, `aspect`), kept in store.meta[metaKey] and in
 // blobs `<prefix>-<set>-<n>`; a new `set` replaces the old pictures. Used by the «آموزش» cards and the profile
