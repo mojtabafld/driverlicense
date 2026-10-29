@@ -52,12 +52,13 @@ function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
 // while on, the same in grey while off (after a picture Mojtaba sent).
 // Once on it stays on (the question is then checked and closed); before the question has an answer it waits, faded.
 function CheckChip({ on, onPress, disabled }: { on: boolean; onPress: () => void; disabled?: boolean }) {
-  const c = useColors(), fg = on ? c.ok : c.muted;
+  // (off, once the question has an answer: only its icon green, to say it can be checked now; Mojtaba 2026-10-30)
+  const c = useColors(), fg = on ? c.ok : c.muted, iconFg = on || !disabled ? c.ok : c.muted;
   return (
     <Pressable onPress={() => { if (on || disabled) return; tap(); onPress(); }} hitSlop={6} accessibilityRole="switch" accessibilityState={{ checked: on, disabled: !on && disabled }} accessibilityLabel={tr('بررسی فوری')}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 7, height: 38, paddingHorizontal: 13, borderRadius: 13,
         backgroundColor: on ? c.okSoft : c.surface2, opacity: !on && disabled ? 0.5 : pressed && !on ? 0.8 : 1 })}>
-      <Icon name="checkCircle" size={19} color={fg} weight="semibold" />
+      <Icon name="checkCircle" size={19} color={iconFg} weight="semibold" />
       <T style={{ fontSize: 14, fontWeight: '700', color: fg }}>بررسی فوری</T>
     </Pressable>
   );
