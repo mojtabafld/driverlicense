@@ -2,7 +2,7 @@
 // the chart takes the height left, and on shorter screens the cards get more compact.
 // Main site: the chart button beside the profile picture opens the chart view (ui/chart-view.tsx): the chart glides to
 // the top and the test statistics and latest tests come in under it (then the page scrolls).
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
@@ -164,9 +164,14 @@ export default function Home() {
   // the chart may be lower; the averages row stays, Mojtaba asked), so the chart's card ends just above the tab bar
   // without the page scrolling; a new screen height starts over.
   const [more, setMore] = useState(0);
-  useEffect(() => setMore(0), [height]);
-  const level = Math.min(3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? more : 0));
-  const compact = level >= 1, tight = level >= 2, tighter = level >= 3;
+  // (measured only while home is in view, and from the full layout each time it comes into view: a hidden or sliding
+  // page reads a wrong place; as the exam tab, Mojtaba 2026-10-29)
+  const focused = useIsFocused();
+  useEffect(() => { if (focused) setMore(0); }, [height, focused]); // eslint-disable-line react-hooks/set-state-in-effect
+  // (4, main site only: the smallest phones, e.g. the first iPhone SE: the statistics without their line of facts and
+  // the chart without its legend)
+  const level = Math.min(ARC ? 4 : 3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? more : 0));
+  const compact = level >= 1, tight = level >= 2, tighter = level >= 3, tiniest = level >= 4;
   const gap = tighter ? 8 : compact ? 10 : 14; // between the page's cards
   // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
   // chart card's height from and to while it is shown or moving (null when closed: the card takes the height left).
@@ -248,11 +253,15 @@ export default function Home() {
   const chartMin = tighter ? (ARC ? 52 : 84) : 120;
   // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
   const noHint = ARC && tighter;
-  const chartNeed = (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
+  // (ARC: the card's padding and edge, its head (a title over a line; one short row at the densest level), the chart and
+  // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
+  const chartNeed = ARC
+    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (tighter ? 30 : 56) + (compact ? 8 : 12) + chartMin + (tiniest ? 0 : 8 + 20)
+    : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
   const fit = () => {
-    if (!ARC || level >= 3 || grow) return;
+    if (!ARC || level >= 4 || grow || !focused) return;
     chartBox.current?.measureInWindow((_x, top) => {
       const room = height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - top;
       if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
@@ -261,7 +270,7 @@ export default function Home() {
   // On the web the box's layout event does not fire when only its top moves (the cards above it filling in), so look
   // again a little after each change.
   useEffect(() => {
-    const ts = [300, 1000, 2500].map(ms => setTimeout(fit, ms));
+    const ts = [500, 1200, 2500].map(ms => setTimeout(fit, ms));
     return () => ts.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
@@ -336,7 +345,7 @@ export default function Home() {
         </>}
       </Card>
       {/* Main site: the tests' statistics in place of the three counts (Mojtaba 2026-10-29); /app keeps its counts. */}
-      {ARC ? <TestStats attempts={exams} dense={compact} noHead={tighter} /> : (
+      {ARC ? <TestStats attempts={exams} dense={compact} noHead={tighter} noFacts={tiniest} /> : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} />
         <Stat grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
@@ -362,13 +371,13 @@ export default function Home() {
           return (
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
               <View style={{ flex: 1, gap: 2 }}>
-                <T style={{ fontWeight: '700', fontSize: 18 }}>نمودار پیشرفت</T>
-                <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>
+                <T style={{ fontWeight: '700', fontSize: tighter ? 16 : 18 }}>نمودار پیشرفت</T>
+                {tighter ? null : <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>}
               </View>
               {last ? (
                 <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                  <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
-                  {diff != null && diff !== 0 ? (
+                  <T style={{ fontSize: tighter ? 17 : 22, lineHeight: tighter ? 24 : 30, fontWeight: '700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
+                  {diff != null && diff !== 0 && !tighter ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <View style={{ width: 0, height: 0, borderLeftWidth: 5, borderRightWidth: 5, borderLeftColor: 'transparent', borderRightColor: 'transparent',
                         ...(diff > 0 ? { borderBottomWidth: 8, borderBottomColor: c.ok } : { borderTopWidth: 8, borderTopColor: c.bad }) }} />
@@ -389,7 +398,7 @@ export default function Home() {
           </View>
         </View>
         )}
-        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => { if (Date.now() - swiped.current >= 400) toggle(); } : undefined} />
+        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} noLegend={tiniest} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => { if (Date.now() - swiped.current >= 400) toggle(); } : undefined} />
       </Card>
       </Pressable>
       </View>
