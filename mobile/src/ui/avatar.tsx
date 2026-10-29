@@ -25,7 +25,8 @@ const COUNT = 10, OUT = 400; // made pictures to choose from; the saved photo's 
 // `premium` (the home page's header, Mojtaba 2026-10-26): a premium account's picture in a gold-to-pink gradient ring,
 // with a small crown badge at its lower corner; the picture shrinks a little inside the ring, the whole the same size.
 const PREMIUM = ['#FFD66B', '#FF9F43', '#F368E0'];
-export function Avatar({ size, premium }: { size: number; premium?: boolean }) {
+// `bare`: no picture chosen, the outline alone with no round background (the home page's header; Mojtaba 2026-10-29).
+export function Avatar({ size, premium, bare }: { size: number; premium?: boolean; bare?: boolean }) {
   const c = useColors();
   const { user, avatarArt, token } = useApp();
   if (premium) {
@@ -40,7 +41,7 @@ export function Avatar({ size, premium }: { size: number; premium?: boolean }) {
           </Defs>
           <Circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="url(#premiumRing)" strokeWidth={ring} />
         </Svg>
-        <Avatar size={inner} />
+        <Avatar size={inner} bare={bare} />
         <View style={{ position: 'absolute', right: -2, bottom: -2, width: badge, height: badge, borderRadius: badge / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center',
           borderWidth: 1.5, borderColor: c.surface }}>
           <LinearGradient pointerEvents="none" colors={PREMIUM as unknown as [string, string, string]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
@@ -56,21 +57,21 @@ export function Avatar({ size, premium }: { size: number; premium?: boolean }) {
   const src = a?.photo ? imgSource({ uri: `${API_URL}/api/avatar`, v: `v=${a.photo}`, token })
     : a?.preset && avatarArt[a.preset] ? { uri: `${API_URL}/avatar-art/${a.preset}.png?v=${avatarArt[a.preset]}` } : null;
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: src ? c.strong : c.surface }}>
+    <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: src ? c.strong : bare ? 'transparent' : c.surface }}>
       {src ? <Image source={src} style={{ width: size, height: size }} contentFit="cover" transition={150} />
-        : <DefaultFace size={size} />}
+        : <DefaultFace size={size} bare={bare} />}
     </View>
   );
 }
 
 // No picture chosen: a plain outline of a person in the theme's accent on its soft tint (over the card's colour, so it
 // reads the same on a header), Mojtaba 2026-10-18.
-function DefaultFace({ size }: { size: number }) {
+function DefaultFace({ size, bare }: { size: number; bare?: boolean }) {
   const c = useColors(), dark = useIsDark(), w = Math.max(1.4, size / 26);
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       {/* On the blush-to-lavender wash (ui/wash.ts), as the AI answer's panel; Mojtaba 2026-10-18. */}
-      <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      {bare ? null : <LinearGradient pointerEvents="none" colors={dark ? WASH_DARK : WASH_LIGHT} start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />}
 <View>
       <Svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24">
         <Circle cx={12} cy={9} r={3.8} fill="none" stroke={c.link} strokeWidth={w * 24 / (size * 0.6)} />
