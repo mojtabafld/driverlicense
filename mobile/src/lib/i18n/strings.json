@@ -1,4 +1,12 @@
 {
+"این ماه":["This month", "Denne måned"],
+"این هفته":["This week", "Denne uge"],
+"هفته":["Week", "Uge"],
+"قدم‌های کوچک، هدف‌های بزرگ.":["Small steps. Big goals.", "Små skridt. Store mål."],
+"ویرایش یادداشت این روز":["Edit this day's note", "Rediger dagens note"],
+"افزودن یادداشت برای این روز":["Add a note for this day", "Tilføj en note til denne dag"],
+"یادداشت سریع":["Quick note", "Hurtig note"],
+"فکرهایتان را اینجا بنویسید…":["Capture your thoughts…", "Skriv dine tanker her…"],
 "شروع {0} روز رایگان":["Start {0}-day free trial", "Start {0} dages gratis prøve"],
 "{0} روز رایگان":["{0} days free", "{0} dage gratis"],
 "در حال فعال کردن…":["Activating…", "Aktiverer…"],

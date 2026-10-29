@@ -7,7 +7,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Platform, Pressable, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Attempt } from '@/lib/bank';
 import { lessonById } from '@/lib/course';
@@ -22,7 +21,8 @@ import { Icon, type IconName } from '@/ui/icon';
 import { ArcButton, physical, T, tap } from '@/ui/kit';
 import { Sheet } from '@/ui/sheet';
 import { SubPage } from '@/ui/sub-page';
-import { useColors, type Colors } from '@/ui/theme';
+import { rgba } from '@/ui/palette';
+import { useColors, useIsDark, type Colors } from '@/ui/theme';
 
 const DAY = 864e5;
 const keyOf = (t: number) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Copenhagen', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(t));
@@ -32,24 +32,35 @@ const weekday = (k: string) => (new Date(noon(k)).getUTCDay() + 6) % 7;   // Mon
 const label = (k: string, o: Intl.DateTimeFormatOptions) => new Date(noon(k)).toLocaleDateString(DATE_LOCALE, { timeZone: 'UTC', ...o });
 const clock = (t: number) => new Date(t).toLocaleTimeString(DATE_LOCALE, { timeZone: 'Europe/Copenhagen', hour: '2-digit', minute: '2-digit' });
 
-type Item = { key: string; at: number; icon: IconName; title: string; sub: string; tone?: 'ok' | 'bad'; open: () => void };
+// `kind`: the card's colour (a passed test green, a failed one coral, a lesson blue); `type`: its kind in words under the
+// title; `secs`: how long it took (the card's time range ends at `at`).
+type Kind = 'pass' | 'fail' | 'lesson';
+type Item = { key: string; at: number; icon: IconName; title: string; type: string; secs: number; kind: Kind; open: () => void };
 
 function itemsOf(day: string, attempts: Attempt[], done: Record<string, number>, bank: Parameters<typeof modeName>[1]): Item[] {
   const out: Item[] = [];
   for (const a of attempts) {
     if (keyOf(a.at) !== day) continue;
-    const n = a.items.length, s = scoreOf(a), ok = n ? s / n >= 0.8 : false;
-    out.push({ key: `a:${a.at}`, at: a.at, icon: a.mode === 'lesson' ? 'learn' : 'exam', title: modeName(a, bank), tone: ok ? 'ok' : 'bad', open: () => openAttempt(a),
-      sub: [a.mode === 'lesson' ? tr('درس') : tr('آزمون'), fmt('{0} از {1} درست', faNum(s), faNum(n)), a.secs ? fmt('{0} دقیقه', faNum(Math.max(1, Math.round(a.secs / 60)))) : ''].filter(Boolean).join(' · ') });
+    const n = a.items.length, s = scoreOf(a), ok = n ? s / n >= 0.8 : false, lesson = a.mode === 'lesson';
+    out.push({ key: `a:${a.at}`, at: a.at, icon: lesson ? 'learn' : 'exam', title: modeName(a, bank), kind: lesson ? 'lesson' : ok ? 'pass' : 'fail', open: () => openAttempt(a),
+      secs: a.secs || 0, type: [lesson ? tr('درس') : tr('آزمون'), fmt('{0} از {1} درست', faNum(s), faNum(n))].join(' · ') });
   }
   for (const [id, at] of Object.entries(done)) {
     if (keyOf(at) !== day) continue;
     const f = lessonById(id);
     if (!f) continue;
-    out.push({ key: `c:${id}`, at, icon: 'learn', title: f.lesson.title, open: () => router.push({ pathname: '/course-lesson', params: { id } }),
-      sub: [tr('آموزش گام‌به‌گام'), fmt('فصل {0}', faNum(f.chapter.n)), fmt('{0} دقیقه', faNum(f.lesson.minutes))].join(' · ') });
+    out.push({ key: `c:${id}`, at, icon: 'learn', title: f.lesson.title, kind: 'lesson', secs: f.lesson.minutes * 60, open: () => router.push({ pathname: '/course-lesson', params: { id } }),
+      type: [tr('آموزش گام‌به‌گام'), fmt('فصل {0}', faNum(f.chapter.n))].join(' · ') });
   }
   return out.sort((x, y) => x.at - y.at);
+}
+
+// The cards' colours by kind, in the light and dark themes (Mojtaba 2026-10-29, after a planner's day view): a soft tint
+// for the card, a stronger one for its icon's round tile and its edge, the full colour for the icon.
+function tone(kind: Kind, c: Colors, dark: boolean) {
+  const blue = dark ? '#7aa7ff' : '#2f6fdf';
+  const full = kind === 'pass' ? c.ok : kind === 'fail' ? (dark ? '#ff8a73' : '#e2583e') : blue;
+  return { full, card: rgba(full, dark ? 0.12 : 0.09), tile: rgba(full, dark ? 0.2 : 0.14) };
 }
 
 // (Titles in Persian, as the app's other lists: T shows them in the app's language.)
@@ -58,10 +69,10 @@ function DayCell({ k, on, today, busy, dim, onPress, c, head }: { k: string; on:
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={label(k, { weekday: 'long', day: 'numeric', month: 'long' })}
       style={({ pressed }) => ({ flex: 1, alignItems: 'center', opacity: pressed ? 0.7 : dim ? 0.35 : 1 })}>
-      <View style={{ width: '100%', maxWidth: 46, alignItems: 'center', gap: 4, paddingVertical: head ? 9 : 7, borderRadius: 14, backgroundColor: on ? c.cta : 'transparent' }}>
-        {head ? <T raw style={{ fontSize: 11.5, lineHeight: 16, color: on ? c.ctaFg : c.faint }}>{head}</T> : null}
-        <T raw style={{ fontSize: 15.5, lineHeight: 22, fontWeight: on || today ? '700' : '500', color: on ? c.ctaFg : today ? c.link : c.text }}>{label(k, { day: 'numeric' })}</T>
-        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: busy ? (on ? c.ctaFg : c.link) : 'transparent' }} />
+      <View style={{ width: '100%', maxWidth: 50, alignItems: 'center', gap: 4, paddingVertical: head ? 10 : 7, borderRadius: 14, backgroundColor: on ? c.strong : 'transparent' }}>
+        {head ? <T raw numberOfLines={1} style={{ fontSize: RTL ? 10 : 11.5, lineHeight: 16, color: on ? c.strongFg : c.faint }}>{head}</T> : null}
+        <T raw style={{ fontSize: 15.5, lineHeight: 22, fontWeight: on || today ? '700' : '500', color: on ? c.strongFg : today ? c.link : c.text }}>{label(k, { day: 'numeric' })}</T>
+        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: busy ? (on ? c.strongFg : c.faint) : 'transparent' }} />
       </View>
     </Pressable>
   );
@@ -75,7 +86,7 @@ const Round = ({ icon, onPress, label: a11y, c, flip }: { icon: IconName; onPres
 );
 
 export default function Calendar() {
-  const c = useColors(), ins = useSafeAreaInsets();
+  const c = useColors(), dark = useIsDark();
   const { attempts, bank } = useApp();
   const { done } = useCourseProgress();
   const { notes, save } = useNotes();
@@ -111,28 +122,43 @@ export default function Calendar() {
     setBusy(false);
   };
 
+  const range = `${label(week[0], { day: 'numeric', month: 'short' })} – ${label(week[6], { day: 'numeric', month: 'short' })}`;
+  const dayTitle = label(day, { weekday: 'long', day: 'numeric', month: 'long' });
+  const dayNoteOpen = () => note(`d:${day}`, dayTitle);
   return (
     <View style={{ flex: 1 }}>
-      <SubPage title="تقویم" subtitle="آزمون‌ها، درس‌ها و یادداشت‌های هر روز" gap={18}>
-        <View style={{ gap: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <SubPage title="تقویم" gap={18}>
+        {/* The head (Mojtaba 2026-10-29, after a planner's): the week (or month) in small words over its dates, which
+            unfold the month, a short line under them, and at the end a dark square «+» for the day's note. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <T style={{ fontSize: 14, color: c.muted }}>{month ? 'این ماه' : day === today || week.includes(today) ? 'این هفته' : 'هفته'}</T>
             <Pressable onPress={() => { tap(); setMonth(m => !m); }} accessibilityRole="button" accessibilityState={{ expanded: month }} hitSlop={6}
-              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, opacity: pressed ? 0.7 : 1 })}>
-              <T raw style={{ fontSize: 21, lineHeight: 30, fontWeight: '700' }}>{label(day, { month: 'long', year: 'numeric' })}</T>
-              <View style={month ? { transform: [{ rotate: '180deg' }] } : null}><Icon name="chevronDown" size={16} color={c.muted} weight="semibold" /></View>
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', opacity: pressed ? 0.7 : 1 })}>
+              <T raw style={{ fontSize: 22, lineHeight: 32, fontWeight: '700' }}>{month ? label(day, { month: 'long', year: 'numeric' }) : range}</T>
+              <View style={month ? { transform: [{ rotate: '180deg' }] } : null}><Icon name="chevronDown" size={18} color={c.text} weight="semibold" /></View>
             </Pressable>
-            <View style={{ flex: 1 }} />
-            {day !== today ? (
-              <Pressable onPress={() => { tap(); setDay(today); }} accessibilityRole="button" hitSlop={6}
-                style={({ pressed }) => ({ paddingHorizontal: 12, height: 32, borderRadius: 16, justifyContent: 'center', backgroundColor: c.accentSoft, opacity: pressed ? 0.7 : 1 })}>
-                <T style={{ fontSize: 13, fontWeight: '600', color: c.link }}>امروز</T>
-              </Pressable>
-            ) : null}
-            <Round icon="chevronLeft" flip label={month ? 'ماه قبل' : 'هفته‌ی قبل'} onPress={() => shift(-1)} c={c} />
-            <Round icon="chevronLeft" label={month ? 'ماه بعد' : 'هفته‌ی بعد'} onPress={() => shift(1)} c={c} />
+            <T style={{ fontSize: 13.5, color: c.muted }}>قدم‌های کوچک، هدف‌های بزرگ.</T>
           </View>
+          <Pressable onPress={() => { tap(); dayNoteOpen(); }} accessibilityRole="button" accessibilityLabel={tr('یادداشت این روز')}
+            style={({ pressed }) => ({ width: 50, height: 50, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: c.strong, opacity: pressed ? 0.85 : 1 })}>
+            <Icon name={dayNote ? 'edit' : 'plus'} size={22} color={c.strongFg} weight="semibold" />
+          </Pressable>
+        </View>
+        {/* The week (or the month) in a card of its own; the arrows step a week or a month. */}
+        <View style={{ padding: 10, gap: 6, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder }}>
           {month ? (
-            <View style={{ gap: 2 }}>
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
+                <Round icon="chevronLeft" flip label="ماه قبل" onPress={() => shift(-1)} c={c} />
+                {day !== today ? (
+                  <Pressable onPress={() => { tap(); setDay(today); }} accessibilityRole="button" hitSlop={6}
+                    style={({ pressed }) => ({ paddingHorizontal: 12, height: 30, borderRadius: 15, justifyContent: 'center', backgroundColor: c.surface2, opacity: pressed ? 0.7 : 1 })}>
+                    <T style={{ fontSize: 13, fontWeight: '600' }}>امروز</T>
+                  </Pressable>
+                ) : null}
+                <Round icon="chevronLeft" label="ماه بعد" onPress={() => shift(1)} c={c} />
+              </View>
               <View style={{ flexDirection: 'row' }}>
                 {heads.map((h, i) => <T key={i} raw style={{ flex: 1, textAlign: 'center', fontSize: 11.5, color: c.faint }}>{h}</T>)}
               </View>
@@ -142,83 +168,87 @@ export default function Calendar() {
                     onPress={() => setDay(k)} />)}
                 </View>
               ))}
-            </View>
+            </>
           ) : (
             <View style={{ flexDirection: 'row' }}>
               {week.map((k, i) => <DayCell key={k} k={k} head={heads[i]} on={k === day} today={k === today} busy={busyDays.has(k)} c={c} onPress={() => setDay(k)} />)}
             </View>
           )}
         </View>
-        <View style={{ height: 1, backgroundColor: c.line }} />
-        {dayNote ? (
-          <Pressable onPress={() => { tap(); note(`d:${day}`, label(day, { weekday: 'long', day: 'numeric', month: 'long' })); }} accessibilityRole="button"
-            style={({ pressed }) => ({ flexDirection: 'row', gap: 12, padding: 14, borderRadius: 18, backgroundColor: c.accentSoft, opacity: pressed ? 0.85 : 1 })}>
-            <Icon name="note" size={19} color={c.link} />
-            <View style={{ flex: 1, gap: 3 }}>
-              <T style={{ fontSize: 12.5, fontWeight: '700', color: c.link }}>یادداشت این روز</T>
-              <T raw keepDa style={{ fontSize: 14.5, lineHeight: 23 }}>{dayNote.text}</T>
-            </View>
+        {/* The chosen day, with «امروز» at its end (green on today; on another day a tap goes back to today). */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <T raw style={{ flex: 1, fontSize: 18, lineHeight: 27, fontWeight: '700' }}>{dayTitle}</T>
+          <Pressable disabled={day === today} onPress={() => { tap(); setDay(today); }} accessibilityRole="button"
+            style={({ pressed }) => ({ paddingHorizontal: 14, height: 32, borderRadius: 16, justifyContent: 'center', backgroundColor: day === today ? c.okSoft : c.surface2, opacity: pressed ? 0.7 : 1 })}>
+            <T style={{ fontSize: 13.5, fontWeight: '600', color: day === today ? c.ok : c.text }}>امروز</T>
           </Pressable>
-        ) : null}
-        {items.length ? (
-          <View style={{ gap: 12 }}>
-            {/* The day's rail between the hours and the cards: one rounded line in the theme's colour, a ringed dot at each
-                hour (Mojtaba 2026-10-22). Rows: hour 50, gap 8, rail 14, gap 8, card; the line runs down the rail's middle. */}
-            <View pointerEvents="none" style={{ position: 'absolute', top: 12, bottom: 12, width: 3, borderRadius: 2, backgroundColor: c.accent, opacity: 0.35,
-              ...physical(RTL ? { right: 50 + 8 + 5.5 } : { left: 50 + 8 + 5.5 }) }} />
-            {items.map(it => {
-              const n = notes[it.key];
-              return (
-                <View key={it.key} style={{ flexDirection: 'row', gap: 8 }}>
-                  <T raw style={{ width: 50, paddingTop: 16, fontSize: 12.5, color: c.muted }}>{clock(it.at)}</T>
-                  <View style={{ width: 14, alignItems: 'center', paddingTop: 19 }}>
-                    <View style={{ width: 12, height: 12, borderRadius: 6, borderWidth: 3, borderColor: c.accent, backgroundColor: c.bg }} />
-                  </View>
-                  <View style={{ flex: 1, borderRadius: 18, backgroundColor: n ? c.accentSoft : c.surface, borderWidth: n ? 0 : 1, borderColor: c.line, overflow: 'hidden' }}>
-                    <Pressable onPress={() => { tap(); it.open(); }} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, opacity: pressed ? 0.75 : 1 })}>
-                      <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: n ? c.surface : c.surface2 }}>
-                        <Icon name={it.icon} size={19} color={c.text} />
+        </View>
+        {/* The day: each exam and lesson at its time on a card tinted by its kind, a coloured edge at its start; then a
+            dashed card that adds the day's note. */}
+        <View style={{ gap: 14 }}>
+          {items.map(it => {
+            const n = notes[it.key], tn = tone(it.kind, c, dark);
+            const from = it.secs ? it.at - it.secs * 1000 : it.at;
+            return (
+              <View key={it.key} style={{ flexDirection: 'row', gap: 12 }}>
+                <T raw style={{ width: 50, paddingTop: 14, fontSize: 16, lineHeight: 22, color: c.muted }}>{clock(from)}</T>
+                <View style={[{ flex: 1, borderRadius: 18, backgroundColor: tn.card, overflow: 'hidden' }, physical(RTL ? { borderRightWidth: 3, borderRightColor: tn.full } : { borderLeftWidth: 3, borderLeftColor: tn.full })]}>
+                  <Pressable onPress={() => { tap(); it.open(); }} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', gap: 12, padding: 14, opacity: pressed ? 0.75 : 1 })}>
+                    <View style={{ width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: tn.tile }}>
+                      <Icon name={it.icon} size={20} color={tn.full} weight="semibold" />
+                    </View>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <T numberOfLines={1} style={{ fontSize: 16, fontWeight: '700' }}>{it.title}</T>
+                      <T raw numberOfLines={1} style={{ fontSize: 13, color: c.muted }}>{it.type}</T>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                        <Icon name="clock" size={15} color={c.text} />
+                        <T raw style={{ flex: 1, fontSize: 13.5 }}>{it.secs ? `${clock(from)} – ${clock(it.at)}` : clock(it.at)}</T>
+                        <Icon name="chevronLeft" size={15} color={c.muted} weight="semibold" />
                       </View>
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-                          {it.tone ? <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: it.tone === 'ok' ? c.ok : c.bad }} /> : null}
-                          <T numberOfLines={1} style={{ flex: 1, fontSize: 15, fontWeight: '700' }}>{it.title}</T>
-                        </View>
-                        <T raw numberOfLines={1} style={{ fontSize: 12.5, lineHeight: 19, color: c.muted }}>{it.sub}</T>
-                      </View>
-                      <Pressable onPress={() => { tap(); note(it.key, it.title); }} accessibilityRole="button" accessibilityLabel={tr(n ? 'ویرایش یادداشت' : 'افزودن یادداشت')} hitSlop={6}
-                        style={({ pressed }) => ({ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: n ? c.surface : c.surface2, opacity: pressed ? 0.7 : 1 })}>
-                        <Icon name={n ? 'edit' : 'note'} size={16} color={n ? c.link : c.muted} />
-                      </Pressable>
+                    </View>
+                    <Pressable onPress={() => { tap(); note(it.key, it.title); }} accessibilityRole="button" accessibilityLabel={tr(n ? 'ویرایش یادداشت' : 'افزودن یادداشت')} hitSlop={8}
+                      style={({ pressed }) => ({ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}>
+                      <Icon name={n ? 'edit' : 'note'} size={18} color={tn.full} />
                     </Pressable>
-                    {n ? (
-                      <View style={{ marginHorizontal: 12, marginBottom: 12, padding: 11, borderRadius: 12, backgroundColor: c.surface }}>
-                        <T raw keepDa style={{ fontSize: 13.5, lineHeight: 22, color: c.text }}>{n.text}</T>
-                      </View>
-                    ) : null}
-                  </View>
+                  </Pressable>
+                  {n ? (
+                    <View style={{ marginHorizontal: 14, marginBottom: 14, padding: 11, borderRadius: 12, backgroundColor: c.surface }}>
+                      <T raw keepDa style={{ fontSize: 13.5, lineHeight: 22, color: c.text }}>{n.text}</T>
+                    </View>
+                  ) : null}
                 </View>
-              );
-            })}
+              </View>
+            );
+          })}
+          {!items.length ? (
+            <T style={{ fontSize: 13.5, lineHeight: 22, color: c.muted, textAlign: 'center', paddingVertical: 6 }}>{day > today ? 'این روز هنوز نیامده است.' : 'در این روز آزمون یا درسی ثبت نشده است.'}</T>
+          ) : null}
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <View style={{ width: 50 }} />
+            <Pressable onPress={() => { tap(); dayNoteOpen(); }} accessibilityRole="button"
+              style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: c.line, opacity: pressed ? 0.7 : 1 })}>
+              <View style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+                <Icon name="plus" size={18} color={c.muted} />
+              </View>
+              <T style={{ fontSize: 14.5, color: c.muted }}>{dayNote ? 'ویرایش یادداشت این روز' : 'افزودن یادداشت برای این روز'}</T>
+            </Pressable>
           </View>
-        ) : (
-          <View style={{ alignItems: 'center', gap: 10, paddingVertical: 30 }}>
-            <View style={{ width: 54, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
-              <Icon name="calendar" size={26} color={c.muted} />
-            </View>
-            <T style={{ fontSize: 15, fontWeight: '600' }}>{day > today ? 'این روز هنوز نیامده است.' : 'در این روز آزمون یا درسی ثبت نشده است.'}</T>
-            <T style={{ fontSize: 13, lineHeight: 21, color: c.muted, textAlign: 'center' }}>با دکمه‌ی + برای این روز یادداشت بگذارید.</T>
+        </View>
+        {/* «یادداشت سریع»: the day's note, or an invitation to write one. */}
+        <Pressable onPress={() => { tap(); dayNoteOpen(); }} accessibilityRole="button"
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, backgroundColor: c.surface2, opacity: pressed ? 0.8 : 1 })}>
+          <View style={{ width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface }}>
+            <Icon name="bulbCircle" size={22} color={c.text} />
           </View>
-        )}
-        <View style={{ height: 70 }} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <T style={{ fontSize: 15, fontWeight: '700' }}>یادداشت سریع</T>
+            {dayNote ? <T raw keepDa numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 21, color: c.muted }}>{dayNote.text}</T>
+              : <T style={{ fontSize: 13.5, color: c.muted }}>فکرهایتان را اینجا بنویسید…</T>}
+          </View>
+          <Icon name="chevronLeft" size={16} color={c.muted} weight="semibold" />
+        </Pressable>
+        <View style={{ height: 20 }} />
       </SubPage>
-      {/* The day's note, as the planner's round «+». */}
-      <Pressable onPress={() => { tap(); note(`d:${day}`, label(day, { weekday: 'long', day: 'numeric', month: 'long' })); }} accessibilityRole="button"
-        accessibilityLabel={tr('یادداشت این روز')}
-        style={({ pressed }) => ({ position: 'absolute', bottom: ins.bottom + 22, [RTL ? 'left' : 'right']: 22, width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: c.cta, opacity: pressed ? 0.85 : 1, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 5 })}>
-        <Icon name={dayNote ? 'edit' : 'plus'} size={24} color={c.ctaFg} weight="semibold" />
-      </Pressable>
       <Sheet open={!!edit} onClose={() => { if (!busy) setEdit(null); }} maxHeight="80%">
         {edit ? (
           <View style={{ gap: 10, paddingHorizontal: 4 }}>
