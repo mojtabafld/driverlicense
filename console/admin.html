@@ -316,7 +316,7 @@ details summary{cursor:pointer;font-weight:700}
     const show = (d, note) => {
       const c = d.check;
       st.innerHTML = (d.set ? `کلید: <span dir="ltr">${esc(d.email)}</span> (${d.from === 'env' ? 'از متغیرهای سرور' : 'بارگذاری‌شده'})` : 'کلیدی نیست؛ خرید در اپ اندروید خاموش است.')
-        + (c ? `<br>${c.ok ? `✅ گوگل پاسخ داد. محصولات: <span dir="ltr">${esc((c.products || []).join(', ') || '—')}</span>` : `❌ ${esc(c.step === 'play' ? 'دسترسی به اپ در Play Console: ' : '')}${esc(c.error || '')}`}` : '')
+        + (c ? `<br>${c.ok ? `✅ گوگل پاسخ داد. محصولات: <span dir="ltr">${esc((c.products || []).join(', ') || '—')}</span>${(c.missing || []).length ? `<br>⚠️ ساخته نشده: <span dir="ltr">${esc(c.missing.join(', '))}</span>` : ''}` : `❌ ${esc(c.step === 'play' ? 'دسترسی به اپ در Play Console: ' : '')}${esc(c.error || '')}`}` : '')
         + (note ? `<br>${esc(note)}` : '');
     };
     api('GET', 'playkey').then(d => show(d)).catch(e => { st.textContent = e.message; });
