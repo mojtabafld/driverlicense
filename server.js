@@ -214,7 +214,13 @@ function cutBackground(b, max) {
     else { const j = require('jpeg-js').decode(b.data, { useTArray: true, formatAsRGBA: false, maxMemoryUsageInMB: 1024 }); im = { w: j.width, h: j.height, ch: 3, px: Buffer.from(j.data) }; }
     if (!im || im.ch < 3) return b;
     while (im.w > max) im = png.half(im);
-    return { mime: 'image/png', data: png.encode(png.cutout(im, png.edgeColour(im), 8, 30)) };
+    const bg = png.edgeColour(im), B = [1, 3, 5].map(i => parseInt(bg.slice(i, i + 2), 16)), out = png.cutout(im, bg, 8, 30);
+    // (also the background's own colour where it is closed in by the picture, e.g. between a scale's chains)
+    for (let i = 0; i < im.w * im.h; i++) {
+      const o = i * im.ch;
+      if (Math.max(Math.abs(im.px[o] - B[0]), Math.abs(im.px[o + 1] - B[1]), Math.abs(im.px[o + 2] - B[2])) <= 6) out.px[i * 4 + 3] = 0;
+    }
+    return { mime: 'image/png', data: png.encode(out) };
   } catch (e) { console.error('cut background', e.message); return b; }
 }
 const mailKey = e => tokenHash(`mail:${mail.normal(e)}`);
@@ -659,7 +665,7 @@ function serveStatic(req, res) {
     // The «آموزش» cards' pictures with their plain background cut away (Mojtaba 2026-10-29: in the dark theme the
     // picture's own background showed on the card), at most 720 px wide, as a transparent PNG.
     const loadCut = () => load().then(b => (b ? cutBackground(b, 720) : b));
-    return (ver ? webpic.get(`${p}:${ver}${lm ? ':cut2' : ''}`, lm ? loadCut : load, im ? 1280 : undefined) : load()).then(b => {
+    return (ver ? webpic.get(`${p}:${ver}${lm ? ':cut3' : ''}`, lm ? loadCut : load, im ? 1280 : undefined) : load()).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       // (A sign chosen from prove.dk can be SVG: shown as a picture only, nothing in it runs.)
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'public, max-age=2592000', 'X-Content-Type-Options': 'nosniff',
