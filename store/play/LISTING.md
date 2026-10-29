@@ -119,8 +119,8 @@ Turning it on, once the app is uploaded to a testing track:
 1. **Payments profile**: Play Console → Settings → Payments profile (name, address, bank account).
 2. **Products**: Monetize → Products → One-time products → Create, three of them, each «Active»:
    - `pass_week` – Teoripro Premium, 1 uge – 49 kr.
-   - `pass_month` – Teoripro Premium, 1 måned – 79 kr.
-   - `pass_quarter` – Teoripro Premium, 3 måneder – 149 kr.
+   - `pass_month` – Teoripro Premium, 1 måned – 99 kr.
+   - `pass_quarter` – Teoripro Premium, 3 måneder – 199 kr.
 
    (The ids must be exactly these; prices and names are free, set per country.)
 3. **Service account**: Google Cloud Console → a project → IAM → Service accounts → Create (no role needed there) →
