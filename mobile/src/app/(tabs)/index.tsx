@@ -9,7 +9,7 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
-import { faNum, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf } from '@/lib/logic';
+import { faNum, fmtDate, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf } from '@/lib/logic';
 import { RTL } from '@/lib/i18n';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
@@ -242,7 +242,8 @@ export default function Home() {
   // Android: the page's scroll takes over a drag once it moves a few points (the chart view's page scrolls), and the touch
   // is cancelled there instead of ending; so in the chart view, at the page's top, a drag down cancelled that way
   // closes it too (Mojtaba 2026-10-21: it did not close on Android).
-  const swipe = ARC ? {
+  // (Since 2026-10-30 the chart card no longer opens the view, by a tap or a swipe up; Mojtaba asked.)
+  const swipe = ARC && view ? {
     onTouchStart: (e: GestureResponderEvent) => { touch.current = !view || scrollY.current <= 0 ? at(e) : null; },
     onTouchEnd: (e: GestureResponderEvent) => {
       const from = touch.current, to = at(e); touch.current = null;
@@ -370,12 +371,14 @@ export default function Home() {
       <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1 }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
-      <Pressable onPress={() => { if (Date.now() - swiped.current < 400) return; if (ARC) toggle(); else setPicked(null); }} style={{ flex: 1 }} accessible={false}>
+      <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         {ARC ? (() => {
-          // As the picture's head (Mojtaba 2026-10-29): the title over a short line at its start; at its end the latest
-          // test's right answers large, and under them how its percent moved from the test before (green up, red down).
-          const last = exams[exams.length - 1], prev = exams[exams.length - 2];
+          // As the picture's head (Mojtaba 2026-10-29): the title over a short line at its start; at its end the picked
+          // test's right answers large (the latest until one is tapped; 2026-10-30, in place of the bubble over its bars),
+          // and under them its date and how its percent moved from the test before (green up, red down).
+          const shown = attempts.slice(-200), at = picked != null && picked < shown.length ? picked : shown.length - 1;
+          const last = shown[at], prev = at > 0 ? shown[at - 1] : undefined;
           const diff = last && prev ? Math.round((pctOf(last) - pctOf(prev)) * 100) : null;
           return (
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
@@ -386,13 +389,16 @@ export default function Home() {
               {last ? (
                 <View style={{ alignItems: 'flex-end', gap: 2 }}>
                   <T style={{ fontSize: slim ? 17 : 22, lineHeight: slim ? 24 : 30, fontWeight: '700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
-                  {diff != null && diff !== 0 && !slim ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <View style={{ width: 0, height: 0, borderLeftWidth: 5, borderRightWidth: 5, borderLeftColor: 'transparent', borderRightColor: 'transparent',
-                        ...(diff > 0 ? { borderBottomWidth: 8, borderBottomColor: c.ok } : { borderTopWidth: 8, borderTopColor: c.bad }) }} />
-                      <T raw style={{ fontSize: 13, fontWeight: '600', color: diff > 0 ? c.ok : c.bad }}>{`${faNum(Math.abs(diff))}${RTL ? '٪' : '%'}`}</T>
-                    </View>
-                  ) : null}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <T raw style={{ fontSize: 12.5, color: c.muted }}>{fmtDate(last.at)}</T>
+                    {diff != null && diff !== 0 && !slim ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <View style={{ width: 0, height: 0, borderLeftWidth: 5, borderRightWidth: 5, borderLeftColor: 'transparent', borderRightColor: 'transparent',
+                          ...(diff > 0 ? { borderBottomWidth: 8, borderBottomColor: c.ok } : { borderTopWidth: 8, borderTopColor: c.bad }) }} />
+                        <T raw style={{ fontSize: 13, fontWeight: '600', color: diff > 0 ? c.ok : c.bad }}>{`${faNum(Math.abs(diff))}${RTL ? '٪' : '%'}`}</T>
+                      </View>
+                    ) : null}
+                  </View>
                 </View>
               ) : null}
             </View>
@@ -407,7 +413,7 @@ export default function Home() {
           </View>
         </View>
         )}
-        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} noLegend={tiniest} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => { if (Date.now() - swiped.current >= 400) toggle(); } : undefined} />
+        <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} noLegend={tiniest} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => {} : undefined} />
       </Card>
       </Pressable>
       </View>

@@ -68,13 +68,12 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
       <View style={{ height: 1, backgroundColor: c.line }} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
-          <Icon name="shuffle" size={19} color={c.text} weight="semibold" />
+        {/* (no «آزمون تصادفی» title since 2026-10-30: the line under it in its place, in its font, beside a smaller icon) */}
+        <View style={{ width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
+          <Icon name="shuffle" size={15} color={c.text} weight="semibold" />
         </View>
         <View style={{ flex: 1 }}>
-          <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
-          {/* (it was «۱۱۰۰ سؤال تازه»; Mojtaba 2026-10-29) */}
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>انتخاب تعداد سؤال‌های آزمون</T>
+          <T style={{ fontWeight: '700', fontSize: 18 }}>انتخاب تعداد سؤال‌های آزمون</T>
         </View>
       </View>
       {/* The progress first, under the title, then the choice of the number of questions and the start (Mojtaba
