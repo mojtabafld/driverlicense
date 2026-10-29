@@ -474,7 +474,19 @@ function adminStats() {
 
 // Behind App Platform the client address is in DO-Connecting-IP, which its edge sets itself. X-Forwarded-For is not
 // used: its first entry is whatever the client sent, so trusting it let anyone dodge the sign-in rate limit.
-const clientIp = req => String(req.headers['do-connecting-ip'] || '').trim() || req.socket.remoteAddress;
+// On a server of our own (Oracle Cloud, deploy/oracle) behind a proxy on the same machine, every request comes from
+// 127.0.0.1: CLIENT_IP_HEADER names the header that proxy sets with the visitor's address (cf-connecting-ip behind a
+// Cloudflare Tunnel, x-forwarded-for behind Caddy: its last entry, the one Caddy added), read only for requests from
+// this machine itself, so nobody can set it from outside (Mojtaba 2026-10-29).
+const IP_HEADER = String(process.env.CLIENT_IP_HEADER || '').trim().toLowerCase();
+const fromHere = a => /^(127\.|::1$|::ffff:127\.)/.test(a || '');
+const clientIp = req => {
+  const d = String(req.headers['do-connecting-ip'] || '').trim();
+  if (d) return d;
+  const r = req.socket.remoteAddress;
+  if (IP_HEADER && fromHere(r)) { const v = String(req.headers[IP_HEADER] || '').split(',').pop().trim(); if (v) return v; }
+  return r;
+};
 
 // Simple rate limit per IP: 10 failures / 10 minutes (login and invite code).
 const fails = new Map();
