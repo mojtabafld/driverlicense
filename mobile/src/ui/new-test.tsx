@@ -49,7 +49,8 @@ export function useNewTest() {
   return { ready: ids.length > 0, ids, last, missed, week, unseen, size, setSize, fresh, setFresh, count, start, randomLeft };
 }
 
-export function NewTestCard({ test }: { test: NewTest }) {
+// `level` (0–3): denser on shorter screens, so the exam tab's cards all end above the tab bar (Mojtaba 2026-10-29).
+export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number }) {
   const c = useColors();
   const { limited } = useFree();
   const { premium } = useApp();
@@ -62,25 +63,25 @@ export function NewTestCard({ test }: { test: NewTest }) {
   return (
     <>
     {/* The progress in a card of its own above the test's (Mojtaba 2026-10-29, after a picture he sent). */}
-    {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} />}
-    <Card style={{ gap: tight ? 11 : 14 }}>
+    {tight ? null : <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />}
+    <Card style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : undefined }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
           <Icon name="shuffle" size={19} color={c.text} weight="semibold" />
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه`}</T>
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: level >= 2 ? 'none' : 'flex' }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه`}</T>
         </View>
       </View>
       {/* The progress first, under the title, then the choice of the number of questions and the start (Mojtaba
           2026-10-22; it was at the card's foot). */}
-      {tight ? null : <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>}
+      {tight || level ? null : <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>}
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{`${faNum(unseen.length)} سؤال هنوز جواب داده نشده`}</T>
+          {level >= 3 ? null : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{`${faNum(unseen.length)} سؤال هنوز جواب داده نشده`}</T>}
         </View>
         <Toggle label="بدون سؤال تکراری" value={fresh} onChange={setFresh} />
       </View>
@@ -125,7 +126,7 @@ function mix(a: string, b: string, t: number): string | null {
   return `#${x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('')}`;
 }
 
-function Progress({ answered, total, right, wrong, week }: { answered: number; total: number; right: number; wrong: number; week: number }) {
+function Progress({ answered, total, right, wrong, week, level = 0 }: { answered: number; total: number; right: number; wrong: number; week: number; level?: number }) {
   const c = useColors();
   const share = total ? answered / total : 0;
   const big = useCountUp(share, 1100);
@@ -136,7 +137,7 @@ function Progress({ answered, total, right, wrong, week }: { answered: number; t
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
   const soft = (x: string) => (dark ? x : mix(x, c.surface, 0.2) ?? x);
   const rightTone = soft(c.ok), wrongTone = soft(c.bad), rest = dark ? mix(c.line, '#ffffff', 0.08) ?? c.line : mix(c.line, '#000000', 0.04) ?? c.line;
-  const weekPct = total ? week / total : 0;
+  const weekPct = total ? week / total : 0, big2 = [60, 48, 40, 34][level] ?? 34;
   const dot = (color: string, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color }} />
@@ -148,7 +149,7 @@ function Progress({ answered, total, right, wrong, week }: { answered: number; t
   // In the style of a picture Mojtaba sent (2026-10-29): the title with this week's gain at its end, the percent large and
   // light with a pill of the questions left beside it, the bar in three rounded parts with gaps, and a dot for each under it.
   return (
-    <Card style={{ gap: 14, paddingVertical: 20, paddingHorizontal: 20 }}>
+    <Card style={{ gap: level >= 2 ? 8 : level ? 10 : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {done ? <Icon name="checkCircle" size={18} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
@@ -162,9 +163,9 @@ function Progress({ answered, total, right, wrong, week }: { answered: number; t
         ) : null}
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
-        <T raw style={{ fontSize: 60, lineHeight: 68, fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
+        <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
         <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
-          style={({ pressed }) => ({ marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+          style={({ pressed }) => ({ marginBottom: level >= 2 ? 4 : 8, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
           <Icon name={done ? 'checkCircle' : 'exam'} size={16} color={c.link} weight="semibold" />
           <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{done ? 'همه جواب داده شد' : t('{0} سؤال مانده', faNum(left))}</T>
         </Pressable>
@@ -174,7 +175,7 @@ function Progress({ answered, total, right, wrong, week }: { answered: number; t
         {seg(wrong, wrongTone)}
         {seg(left, rest)}
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 2 }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 2, display: level >= 3 ? 'none' : 'flex' }}>
         {dot(rightTone, `${tr('درست')} ${faNum(right)}`)}
         {dot(wrongTone, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {left ? dot(rest, `${tr('جواب‌نداده')} ${faNum(left)}`) : null}

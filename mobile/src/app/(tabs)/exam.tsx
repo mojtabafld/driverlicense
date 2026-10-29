@@ -2,8 +2,9 @@
 // with a note, before the first one). On the main site the random exam is the app's own questions (ui/new-test.tsx,
 // Mojtaba 2026-10-19: it took the old card's place and name); the /app copy keeps the old bank's random exam.
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FULL, SECONDS_PER_Q, SIZES, faNum, mistakeIds, passMin, randomIds } from '@/lib/logic';
 import { topicFa, topicName } from '@/lib/names';
@@ -23,6 +24,7 @@ import { MoreButton } from '@/ui/more-button';
 import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 import { ExamWheelArt } from '@/ui/header-art';
+import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { NewTestCard, useNewTest } from '@/ui/new-test';
 import { Confetti } from '@/ui/confetti';
 
@@ -105,18 +107,22 @@ function MistakesCard() {
 
 // In place of the tests' history (Mojtaba 2026-10-29): one card in two halves, the tests' history and the questions to
 // practise, each a button of the same size with a large icon, its name and its count.
-function ShortcutsCard() {
+function ShortcutsCard({ level = 0 }: { level?: number }) {
   const c = useColors();
   const { attempts } = useApp();
-  const tests = attempts.filter(a => a.mode !== 'lesson').length, wrong = mistakeIds(attempts).length;
+  const tests = attempts.filter(a => a.mode !== 'lesson').length, wrong = mistakeIds(attempts).length, tile = [64, 52, 44, 40, 36][level] ?? 36;
+  // The shortest screens (level 4): each half's icon beside its words.
+  const row = level >= 4;
   const half = (icon: IconName, label: string, count: string, href: '/history' | '/mistakes', tone?: string, soft?: string) => (
     <Pressable onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 8, paddingVertical: 18, paddingHorizontal: 8, opacity: pressed ? 0.7 : 1 })}>
-      <View style={{ width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: soft ?? c.surface2 }}>
-        <Icon name={icon} size={32} color={tone ?? c.text} weight="semibold" />
+      style={({ pressed }) => ({ flex: 1, flexDirection: row ? 'row' : 'column', alignItems: 'center', justifyContent: 'center', gap: row ? 8 : level >= 2 ? 4 : level ? 6 : 8, paddingVertical: row ? 10 : level >= 2 ? 10 : level ? 14 : 18, paddingHorizontal: 8, opacity: pressed ? 0.7 : 1 })}>
+      <View style={{ width: tile, height: tile, borderRadius: Math.round(tile * 0.31), alignItems: 'center', justifyContent: 'center', backgroundColor: soft ?? c.surface2 }}>
+        <Icon name={icon} size={Math.round(tile / 2)} color={tone ?? c.text} weight="semibold" />
       </View>
-      <T style={{ fontWeight: '700', fontSize: 15, textAlign: 'center' }} numberOfLines={1}>{label}</T>
-      <T style={{ color: tone ?? c.muted, fontSize: 12.5, fontWeight: '600', textAlign: 'center' }} numberOfLines={1}>{count}</T>
+      <View style={{ flexShrink: 1, alignItems: row ? 'flex-start' : 'center', gap: row ? 0 : level >= 2 ? 4 : level ? 6 : 8 }}>
+        <T style={{ fontWeight: '700', fontSize: row ? 13.5 : 15, textAlign: row ? undefined : 'center' }} numberOfLines={1}>{label}</T>
+        <T style={{ color: tone ?? c.muted, fontSize: 12.5, fontWeight: '600', textAlign: row ? undefined : 'center' }} numberOfLines={1}>{count}</T>
+      </View>
     </Pressable>
   );
   return (
@@ -155,11 +161,26 @@ export default function Exam() {
   }, [allDone]); // eslint-disable-line react-hooks/exhaustive-deps
   // Scrolled down to the page's end, where the history card is: its arrow button shows «نمایش همه» for a moment, once
   // each time the end is reached (Mojtaba 2026-10-20).
+  // Fitted to the screen (Mojtaba 2026-10-29): while the last card runs under the tab bar, a denser level (up to 4),
+  // starting over on a new screen height.
+  const { height } = useWindowDimensions(), ins = useSafeAreaInsets(), lastBox = useRef<View>(null);
+  const [level, setLevel] = useState(0);
+  useEffect(() => setLevel(0), [height]); // eslint-disable-line react-hooks/set-state-in-effect
+  const fit = () => {
+    if (level >= 4) return;
+    lastBox.current?.measureInWindow((_x, top, _w, h) => {
+      if (h && top + h > height - (TAB_BAR_H + 12 + Math.max(16, ins.bottom)) + 1) setLevel(l => Math.min(4, l + 1));
+    });
+  };
+  useEffect(() => {
+    const ts = [300, 1000, 2500].map(ms => setTimeout(fit, ms));
+    return () => ts.forEach(clearTimeout);
+  });
   return (
     <View style={{ flex: 1 }}>
-    <Screen lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+    <Screen gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />}>
-      {own ? <NewTestCard test={test} /> : (
+      {own ? <NewTestCard test={test} level={level} /> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -190,7 +211,7 @@ export default function Exam() {
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
       )}
-      <ShortcutsCard />
+      <View ref={lastBox} onLayout={fit}><ShortcutsCard level={level} /></View>
       {/* Main site: no mistakes card (Mojtaba 2026-10-19); the random test's card has the mistakes bar and its test. */}
       {own ? null : <MistakesCard />}
     </Screen>

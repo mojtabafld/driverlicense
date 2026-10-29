@@ -804,7 +804,8 @@ export function useCountUp(target: number, ms = 900) {
 }
 
 // `format`: the label from the ring's value as it fills (so the number counts up with it); else the fixed `label`.
-export function Ring({ value, size = 76, stroke = 8, color, label, format }: { value: number; size?: number; stroke?: number; color?: string; label?: string; format?: (v: number) => string }) {
+// `children`: drawn in the middle instead of the label (the home page's icon; Mojtaba 2026-10-29).
+export function Ring({ value, size = 76, stroke = 8, color, label, format, children }: { value: number; size?: number; stroke?: number; color?: string; label?: string; format?: (v: number) => string; children?: React.ReactNode }) {
   const c = useColors(), r = (size - stroke) / 2, C = 2 * Math.PI * r;
   const shown = useCountUp(Math.max(0, Math.min(1, value)), 1800);
   return (
@@ -814,7 +815,7 @@ export function Ring({ value, size = 76, stroke = 8, color, label, format }: { v
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={color ?? c.accent} strokeWidth={stroke} fill="none" strokeLinecap="round"
           strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - shown)} />
       </Svg>
-      <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{format ? format(shown) : label}</T>
+      {children ?? <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{format ? format(shown) : label}</T>}
     </View>
   );
 }
