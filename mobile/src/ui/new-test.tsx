@@ -12,7 +12,7 @@ import { Pressable, View } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
-import { RTL, t, tr } from '@/lib/i18n';
+import { t, tr } from '@/lib/i18n';
 import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
@@ -92,7 +92,8 @@ export function NewTestCard({ test }: { test: NewTest }) {
             : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
         </View>
       ) : null}
-      {limited ? (
+      {/* The free tests' notice: only without premium (Mojtaba 2026-10-29). */}
+      {limited && !premium ? (
         <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
           <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
           {/* The free tests left: always one line, shorter and smaller on a narrow screen (Mojtaba 2026-10-22). */}
@@ -103,26 +104,7 @@ export function NewTestCard({ test }: { test: NewTest }) {
           ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
         </View>
       ) : null}
-      {/* Premium (Mojtaba 2026-10-22): in the free notice's place, how many of the bank's questions they have been tested on. */}
-      {!limited && premium ? (() => {
-        // Every question answered: in green, and says so (Mojtaba 2026-10-22; the exam tab plays the confetti once).
-        const all = answered >= total, ink = all ? c.ok : c.text;
-        return (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: all ? c.okSoft : c.warnSoft }}>
-          <Icon name="listCheck" size={17} color={all ? c.ok : c.warn} />
-          {/* The free notice's colours; its numbers a step bolder than the site's 500 (Mojtaba 2026-10-22). */}
-          {/* Always one line, smaller on a narrow screen (Mojtaba 2026-10-22). */}
-          <View style={{ flex: 1 }}>
-            {all ? <FitLine size={13} min={10} style={{ lineHeight: 21, color: ink, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600' }}>{t('شما به همه‌ی سؤال‌ها پاسخ داده‌اید.')}</FitLine>
-              // None answered yet: says so rather than «۰ از ۳۰۰» (Mojtaba 2026-10-22).
-              : !answered ? <FitLine size={13} min={10} style={{ lineHeight: 21, color: ink }}>{t('هنوز هیچ آزمونی نداده‌اید.')}</FitLine>
-              : <FitLine size={13} min={10} style={{ lineHeight: 21, color: ink }} id={`${answered}/${total}`}>{fs =>
-                t('تا حالا {0} سؤال از {1} سؤال را آزمون داده‌اید.', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((x, i) =>
-                  x === '\u0001' || x === '\u0002' ? <T raw key={i} style={{ fontSize: fs, lineHeight: 21, fontFamily: RTL ? 'Vazirmatn-600' : 'Inter-600', color: ink }}>{t('{0}', faNum(x === '\u0001' ? answered : total))}</T> : x)}</FitLine>}
-          </View>
-        </View>
-        );
-      })() : null}
+      {/* (Premium: no «tested on … of … questions» line here any more; the progress card above says it. Mojtaba 2026-10-29) */}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
         : count ? (ARC ? <ArcButton label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
