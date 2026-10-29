@@ -31,6 +31,10 @@ on:
         description: "Also build teoriprove.aab for Google Play (all phones; needs the signing key in the repository secrets)"
         type: boolean
         default: false
+      upload:
+        description: "Also upload the bundle to Google Play's internal testing (needs «play» and the PLAY_SERVICE_ACCOUNT_JSON secret)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -164,6 +168,19 @@ jobs:
           cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/out/$APK"
           if [ "${{ inputs.play }}" = "true" ]; then cp android/app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/out/${APK%.apk}.aab"; fi
           ls -la "$RUNNER_TEMP/out"
+
+      # Google Play (input «upload», 2026-10-29): the bundle straight to the internal testing track, rolled out to its
+      # testers, with the Play service account's JSON key in the PLAY_SERVICE_ACCOUNT_JSON secret (its user in Play
+      # Console has «Release to testing tracks» for the app). The main app only.
+      - name: Upload to Google Play (internal testing)
+        if: inputs.play && inputs.upload && inputs.copy != 'prove'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: app.bitlane.teoripro
+          releaseFiles: ${{ runner.temp }}/out/teoriprove.aab
+          track: internal
+          status: completed
 
       # A copy for the run page only; the release below is what counts, so a full artifact storage quota does not stop it.
       - uses: actions/upload-artifact@v4
