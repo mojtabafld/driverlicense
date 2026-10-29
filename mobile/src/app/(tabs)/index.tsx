@@ -170,7 +170,10 @@ export default function Home() {
   useEffect(() => { if (focused) setMore(0); }, [height, focused]); // eslint-disable-line react-hooks/set-state-in-effect
   // (4, main site only: the smallest phones, e.g. the first iPhone SE: the statistics without their line of facts and
   // the chart without its legend)
-  const level = Math.min(ARC ? 4 : 3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? more : 0));
+  // (Main site: the first two steps only lower the chart (`shrink`: its least height, then its head in one row), so the
+  // pass card and the statistics keep their lines on small phones; only then the denser levels; Mojtaba 2026-10-29.)
+  const shrink = ARC ? Math.min(more, 2) : 0;
+  const level = Math.min(ARC ? 4 : 3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? Math.max(0, more - 2) : 0));
   const compact = level >= 1, tight = level >= 2, tighter = level >= 3, tiniest = level >= 4;
   const gap = tighter ? 8 : compact ? 10 : 14; // between the page's cards
   // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
@@ -250,13 +253,15 @@ export default function Home() {
       if (dy > 4 && dy > Math.abs(dx) * 2) { swiped.current = Date.now(); toggle(); }
     },
   } : null;
-  const chartMin = tighter ? (ARC ? 52 : 84) : 120;
+  const chartMin = tighter ? (ARC ? 52 : 84) : ARC ? [compact ? 100 : 120, 76, 56][shrink] : 120;
+  // The chart's head in one short row (no line under the title, no change under the score).
+  const slim = tighter || shrink >= 2;
   // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
   const noHint = ARC && tighter;
   // (ARC: the card's padding and edge, its head (a title over a line; one short row at the densest level), the chart and
   // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
   const chartNeed = ARC
-    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (tighter ? 30 : 56) + (compact ? 8 : 12) + chartMin + (tiniest ? 0 : 8 + 20)
+    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (slim ? 30 : 56) + (compact ? 8 : 12) + chartMin + (tiniest ? 0 : 8 + 20)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
@@ -371,13 +376,13 @@ export default function Home() {
           return (
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
               <View style={{ flex: 1, gap: 2 }}>
-                <T style={{ fontWeight: '700', fontSize: tighter ? 16 : 18 }}>نمودار پیشرفت</T>
-                {tighter ? null : <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>}
+                <T style={{ fontWeight: '700', fontSize: slim ? 16 : 18 }}>نمودار پیشرفت</T>
+                {slim ? null : <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>}
               </View>
               {last ? (
                 <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                  <T style={{ fontSize: tighter ? 17 : 22, lineHeight: tighter ? 24 : 30, fontWeight: '700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
-                  {diff != null && diff !== 0 && !tighter ? (
+                  <T style={{ fontSize: slim ? 17 : 22, lineHeight: slim ? 24 : 30, fontWeight: '700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
+                  {diff != null && diff !== 0 && !slim ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <View style={{ width: 0, height: 0, borderLeftWidth: 5, borderRightWidth: 5, borderLeftColor: 'transparent', borderRightColor: 'transparent',
                         ...(diff > 0 ? { borderBottomWidth: 8, borderBottomColor: c.ok } : { borderTopWidth: 8, borderTopColor: c.bad }) }} />
