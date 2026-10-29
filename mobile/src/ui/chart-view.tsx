@@ -74,7 +74,7 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
   );
 }
 
-// `dense`: the home page on a short screen: less room, and no line of facts under the numbers.
+// `dense`: the home page on a short screen: less room (the line of facts under the numbers stays; Mojtaba 2026-10-29).
 // `noHead`: the shortest screens: the numbers alone, without the card's title.
 export function TestStats({ attempts, dense, noHead }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean }) {
   const c = useColors();
@@ -113,9 +113,9 @@ export function TestStats({ attempts, dense, noHead }: { attempts: Attempt[]; de
         {/* Every test passed (e.g. 5 of 5): green; any not: the warning colour (Mojtaba 2026-10-20). */}
         {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined)}
       </View>
-      {n && !dense ? (
+      {n ? (
         // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).
-        <View style={{ paddingHorizontal: 10, paddingVertical: 12, borderTopWidth: 1, borderTopColor: c.line }}>
+        <View style={{ paddingHorizontal: 10, paddingVertical: dense ? 8 : 12, borderTopWidth: 1, borderTopColor: c.line }}>
           <GlideRow height={19}>
             {fact('exam', `${faNum(qs)} سؤال جواب داده‌اید`)}
             {secs ? fact('clock', spent(secs)) : null}
