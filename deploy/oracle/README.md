@@ -36,6 +36,25 @@
    فعلی اضافه می‌شود و یک نسخه‌ی قبلی (`Caddyfile.before-teoripro`) کنارش نگه داشته می‌شود؛ سایت‌های دیگر دست نمی‌خورند.
    اگر برنامه‌ی دیگری (نه Caddy) پورت ۸۰، ۴۴۳ یا ۳۰۰۰ را گرفته باشد، اسکریپت پیش از هر کاری می‌ایستد و می‌گوید کدام.
 
+### اگر سایت‌های سرور از راه Cloudflare Tunnel باز می‌شوند
+
+(سرور Mojtaba: پورت‌های ۸۰ و ۴۴۳ از بیرون بسته‌اند و Containerlab از راه Cloudflare باز می‌شود.)
+در این حالت پورتی باز نمی‌شود و Caddy دست نمی‌خورد؛ Cloudflare خودش HTTPS را می‌دهد:
+
+1. قدم ۲-۱ (Security List) را **انجام ندهید**.
+2. اسکریپت را با کلمه‌ی `tunnel` در آخر اجرا کنید:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/mojtabafld/driverlicense/main/deploy/oracle/setup.sh | sudo bash -s teori.bitlane.app tunnel
+   ```
+3. در Cloudflare: **Zero Trust → Networks → Tunnels →** (تونل همین سرور) **→ Public hostnames → Add**:
+   Subdomain `teori`، Domain `bitlane.app`، Service: **HTTP** و `localhost:3000`.
+   (دامنه‌ی `bitlane.app` باید در همین حساب Cloudflare باشد؛ اگر نیست، اول آن را به Cloudflare اضافه کنید.
+   اگر تونل با فایل `config.yml` روی سرور تنظیم شده، به‌جای داشبورد یک خط `ingress` با
+   `hostname: teori.bitlane.app` و `service: http://localhost:3000` پیش از خط آخر آن اضافه کنید.)
+   این کار رکورد DNS را هم خودش می‌سازد؛ پس آن را **بعد از قدم ۵** انجام دهید، چون همان لحظه سایت به سرور جدید می‌رود
+   (قدم ۶ همین است).
+4. در `/etc/teoripro/env` مقدار `CLIENT_IP_HEADER=cf-connecting-ip` از قبل گذاشته شده است.
+
 ## ۳. تنظیمات
 
 ```bash
