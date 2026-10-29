@@ -48,8 +48,24 @@ cp deploy/oracle/teoripro.service deploy/oracle/teoripro-update.service deploy/o
 systemctl daemon-reload
 systemctl enable -q teoripro teoripro-update.timer
 systemctl start teoripro-update.timer
-sed "s/^DOMAIN {/$DOMAIN {/" deploy/oracle/Caddyfile > /etc/caddy/Caddyfile
-systemctl reload caddy || systemctl restart caddy
+# Caddy may be there already, serving other sites (Mojtaba's server: a Containerlab page): Teoripro's site is added to
+# the Caddyfile it runs with, never written over it; a copy is kept first, and it goes back if Caddy refuses the new one.
+CF=$(ps -o args= -C caddy 2>/dev/null | grep -o -- '--config [^ ]*' | head -1 | cut -d' ' -f2 || true)
+CF=${CF:-/etc/caddy/Caddyfile}
+if [ -f "$CF" ] && grep -q "^$DOMAIN\b" "$CF"; then
+  echo "Caddy: $DOMAIN is in $CF already."
+elif [ -f "$CF" ] || [ ! -e "$CF" ]; then
+  [ -f "$CF" ] && cp "$CF" "$CF.before-teoripro"
+  { [ -s "$CF" ] && echo; sed "s/^DOMAIN {/$DOMAIN {/" deploy/oracle/Caddyfile; } >> "$CF"
+  if caddy validate --config "$CF" --adapter caddyfile >/dev/null 2>&1; then
+    if systemctl is-active -q caddy; then systemctl reload caddy; else caddy reload --config "$CF" --adapter caddyfile || systemctl restart caddy; fi
+    echo "Caddy: $DOMAIN added to $CF (the old one: $CF.before-teoripro)."
+  else
+    [ -f "$CF.before-teoripro" ] && mv "$CF.before-teoripro" "$CF"
+    echo "Caddy did not take the new site; $CF is back as it was. Add this to Caddy's settings yourself:"
+    sed "s/^DOMAIN {/$DOMAIN {/" deploy/oracle/Caddyfile
+  fi
+fi
 
 echo "== firewall (the server's own; the cloud's Security List is opened in the console)"
 for p in 80 443; do
