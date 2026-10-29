@@ -70,14 +70,16 @@ function Root() {
   // the new account waits for its email link (the verify page is shown instead), and marked as seen only once it has
   // really been on screen a moment or is closed: a reload right after signing up (the account's theme) or the verify
   // page used to mark it seen unseen.
-  const markPromo = () => { if (user) loadPromoSeen().then(seen => { if (!seen.includes(user.username)) savePromoSeen([...seen, user.username].slice(-20)); }); };
+  // (keyed by the account and when it was made: an account deleted and made again with the same name is new again)
+  const promoKey = user ? `${user.username}:${user.created || 0}` : '';
+  const markPromo = () => { if (promoKey) loadPromoSeen().then(seen => { if (!seen.includes(promoKey)) savePromoSeen([...seen, promoKey].slice(-20)); }); };
   useEffect(() => {
     const fresh = !!user && !user.guest && !user.verify && Date.now() - (user.created || 0) < 24 * 3600e3;
     if (!onboarded || !user || !fresh || askLang || premium || !pay || PROVE_PICS) return;
     let live = true;
-    loadPromoSeen().then(seen => { if (live && !seen.includes(user.username)) setPromo(true); });
+    loadPromoSeen().then(seen => { if (live && !seen.includes(promoKey)) setPromo(true); });
     return () => { live = false; };
-  }, [onboarded, user?.username, user?.verify, askLang, premium, !!pay]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onboarded, promoKey, user?.verify, askLang, premium, !!pay]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!promo) return;
     const id = setTimeout(markPromo, 2500);
