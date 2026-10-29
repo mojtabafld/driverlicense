@@ -80,7 +80,7 @@ Teoripro وابسته به اداره‌ی راهنمایی و رانندگی د
 رانندگی دانمارک و آیین‌نامه‌ی علائم است.
 
 **Category:** Education · **Tags:** Education, Test preparation (if offered)
-**Contact email:** support@teori.bitlane.app · **Website:** https://teori.bitlane.app
+**Contact email:** support@bitlane.app · **Website:** https://teori.bitlane.app
 
 ## App content (Policy → App content)
 
