@@ -63,11 +63,13 @@ function Root() {
   // The questions' language and the look: asked once per account, on its first sign-in (Mojtaba, 2026-10-16); an
   // account that already has its settings, from any device, is not asked again.
   const askLang = !!user && !settings.langChosen;
-  const { premium, pay, play } = useApp();
+  const { premium, pay } = useApp();
   const [promo, setPromo] = useState(false);
-  const canBuy = Platform.OS === 'web' ? !!pay : Platform.OS === 'android' && !!play;
+  // Right after an account is made (made in the last half hour; not a guest's), never again on this device (Mojtaba
+  // 2026-10-29). It offers the free trial, so it needs only the server's premium on (pay), on every platform.
   useEffect(() => {
-    if (!onboarded || !user || askLang || premium || !canBuy || PROVE_PICS) return;
+    const fresh = !!user && !user.guest && Date.now() - (user.created || 0) < 30 * 60e3;
+    if (!onboarded || !user || !fresh || askLang || premium || !pay || PROVE_PICS) return;
     let live = true;
     loadPromoSeen().then(seen => {
       if (!live || seen.includes(user.username)) return;
@@ -75,7 +77,7 @@ function Root() {
       setPromo(true);
     });
     return () => { live = false; };
-  }, [onboarded, user?.username, askLang, premium, canBuy]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onboarded, user?.username, askLang, premium, !!pay]); // eslint-disable-line react-hooks/exhaustive-deps
   // The pages opened, counted (without the account) for the daily AI report (lib/usage.ts).
   useUsage(!!user && !!onboarded);
   useEffect(() => { if (ready && fonts && onboarded !== null) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts, onboarded]);
@@ -144,8 +146,8 @@ function Root() {
         // After the intro and signing in: the questions' language (once per account, and once on each phone).
         <View style={StyleSheet.absoluteFill}><LangPick /></View>
       ) : null}
-      {/* The first premium page: once per account on this device, to a user without premium, after the intro and the
-          language screen, where a pass can be bought (the web, or Android selling through Google Play; Mojtaba 2026-10-29). */}
+      {/* The first premium page: right after signing up, to a user without premium, after the intro and the language
+          screen (Mojtaba 2026-10-29). */}
       {promo ? <View style={StyleSheet.absoluteFill}><ProPromo onClose={() => setPromo(false)} /></View> : null}
       {/* A newer Android app is out: asks once per start to install it (after the intro and the language screen). */}
       {onboarded && user && !askLang ? <UpdatePrompt /> : null}

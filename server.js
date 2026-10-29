@@ -718,7 +718,7 @@ async function api(req, res, route) {
     return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, google: googleOn() || undefined, theme: defaultTheme(), version: VERSION, app: latestApp(), aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
-        promo: payments.promoCodes().length ? payments.promoDays() : undefined } : undefined,
+        promo: payments.promoCodes().length ? payments.promoDays() : undefined, trial: payments.promoDays() } : undefined,
       // Premium can be bought in the Android app with Google Play (GOOGLE_PLAY_SERVICE_ACCOUNT): its product ids.
       play: playbilling.available() ? { products: playbilling.products() } : undefined,
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
@@ -1135,6 +1135,21 @@ async function api(req, res, route) {
     }
     // Consumed once counted (again if a first try failed); the days stay either way.
     try { await playbilling.consume(product, token); } catch (e) { if (e.status !== 404 && e.status !== 400) console.error('play consume', e.message); }
+    return send(res, 200, { user: publicUser(user) });
+  }
+  // POST trial: the same free trial (PROMO_DAYS days, 3 unless set) without a code, for every account once (Mojtaba
+  // 2026-10-29: the first premium page offers it); the code's rules otherwise: not for guest accounts and, with email on,
+  // only for a confirmed address, one trial per address.
+  if (req.method === 'POST' && route === 'trial') {
+    if (!payFor(user)) return send(res, 404, { error: 'دوره‌ی رایگان فعال نیست.' });
+    if (user.guest) return send(res, 403, { error: 'برای دوره‌ی رایگان، اول با نام کاربری خودتان حساب بسازید.' });
+    if (mail.available()) {
+      if (!user.email || !user.emailOk) return send(res, 403, { error: 'برای دوره‌ی رایگان، اول ایمیل خود را در «حساب کاربری» ثبت و تأیید کنید.' });
+      if (gone().trial[mailKey(user.email)] || Object.values(store.users).some(x => x !== user && ((x.premium && x.premium.promo && x.premium.promo.email === user.email) || (x.promoEmail && x.promoEmail === user.email)))) return send(res, 409, { error: 'شما قبلاً از دوره‌ی رایگان استفاده کرده‌اید.' });
+    }
+    if (!payments.grantPromo(user, 'TRIAL', user.emailOk ? user.email : undefined)) return send(res, 409, { error: 'شما قبلاً از دوره‌ی رایگان استفاده کرده‌اید.' });
+    await store.saveUser(user);
+    console.log('premium trial (no code)', user.username);
     return send(res, 200, { user: publicUser(user) });
   }
   // POST promo { code }: a free trial of PROMO_DAYS days with one of the PROMO_CODE codes, once per account (not for guest

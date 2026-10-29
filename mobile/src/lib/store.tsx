@@ -38,6 +38,8 @@ type Ctx = {
   syncPremium: () => Promise<void>;
   // A free trial code (the server refuses a wrong one, or a second trial on this account).
   redeemPromo: (code: string) => Promise<void>;
+  // The free trial without a code (POST trial), once per account.
+  startTrial: () => Promise<void>;
   // The intro's pictures that the server has made: slide number → version, and → the picture's background colour.
   intro: Record<string, string>; introBg: Record<string, string>;
   // The «آموزش» cards' pictures that the server has made: card number → version.
@@ -95,7 +97,7 @@ type Ctx = {
 };
 export type Plan = { id: 'week' | 'month' | 'quarter'; days: number; price: number };
 // promo: the free trial's days when a trial code can be entered.
-export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean; promo?: number };
+export type Pay = { plans: Plan[]; gate?: boolean; test?: boolean; promo?: number; trial?: number };
 // Back from Google on the web (server.js google/callback): its one-time code or its error, read once from the address,
 // which is then cleaned.
 const GOOGLE_FAILED = 'ورود با گوگل کامل نشد؛ دوباره امتحان کنید.';
@@ -245,6 +247,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     pay: PROVE_PICS ? null : pay, play: PROVE_PICS ? null : play, premium, locked,
     redeemPromo: async code => {
       const d = await api<{ user: User }>('POST', 'promo', { code });
+      setMe(m => (m ? { ...m, user: d.user } : m));
+    },
+    startTrial: async () => {
+      const d = await api<{ user: User }>('POST', 'trial');
       setMe(m => (m ? { ...m, user: d.user } : m));
     },
     confirmPremium: async id => {

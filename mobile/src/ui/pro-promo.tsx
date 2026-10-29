@@ -1,8 +1,9 @@
 // The premium page shown once per account on this device, the first time a signed-in user without premium reaches the
 // app (after the intro and the questions' language), in the look of a picture Mojtaba sent (2026-10-29): three fanned
 // cards of what premium opens, each with a glowing tile and its icon, the middle one locked; a «PRO» badge, a large
-// two-line title and a line under it; the month pass with its price; a pale gradient button to the premium page; and
-// the privacy policy at the foot. «رد کردن» (Skip) and the back arrow close it.
+// two-line title and a line under it; the month pass with its price (it opens the premium page); a pale gradient button
+// that starts the free trial without a code (POST trial; the premium page once the account has had a trial); and the
+// privacy policy at the foot. «رد کردن» (Skip) and the back arrow close it.
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
@@ -61,8 +62,11 @@ function FeatureCard({ w, icon, orb, title, line, lock }: { w: number; icon: Ico
 
 export function ProPromo({ onClose }: { onClose: () => void }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
-  const { pay } = useApp();
-  const month = pay?.plans.find(p => p.id === 'month');
+  const { pay, user, startTrial } = useApp();
+  const trialDays = pay?.trial && !user?.promoUsed && !user?.premium?.promo ? pay.trial : 0;
+  const [busy, setBusy] = useState(false), [err, setErr] = useState('');
+  // (No price in the iPhone app, which sells nothing; Android's Play price may differ, so there too only on the web.)
+  const month = Platform.OS === 'web' ? pay?.plans.find(p => p.id === 'month') : undefined;
   // The cards come in: the middle one rising, the side ones fanning out from behind it.
   const [inn] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -78,7 +82,13 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
     ],
   });
   const close = () => { tap(); onClose(); };
-  const buy = () => { tap(); onClose(); router.push('/premium'); };
+  const toPremium = () => { tap(); onClose(); router.push('/premium'); };
+  // The trial on at once, then into the app; anything in the way (e.g. an email still to confirm) is said under the button.
+  const buy = () => {
+    if (!trialDays) { toPremium(); return; }
+    tap(); setBusy(true); setErr('');
+    startTrial().then(onClose, (e: any) => { setErr(e?.message || tr('فعال نشد؛ دوباره امتحان کنید.')); setBusy(false); });
+  };
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: ins.top + 8, paddingBottom: Math.max(16, ins.bottom) }}>
       <View style={{ flex: 1, width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 20 }}>
@@ -121,7 +131,7 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
         </View>
         {/* the pass, the button and the policy */}
         <View style={{ gap: 14, marginTop: short ? 14 : 24 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16, paddingHorizontal: 20, borderRadius: 24, backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder }}>
+          <Pressable onPress={toPremium} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16, paddingHorizontal: 20, borderRadius: 24, backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder, opacity: pressed ? 0.8 : 1 })}>
             <View style={{ flex: 1, gap: 2 }}>
               <T style={{ fontSize: 17, fontWeight: '700' }}>نسخه‌ی ویژه</T>
               <T style={{ color: c.muted, fontSize: 13 }} numberOfLines={1}>دسترسی به همه‌ی امکانات</T>
@@ -129,14 +139,15 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
             {month ? (
               <T style={{ fontSize: 18, fontWeight: '700' }}>{t('{0} کرون', faNum(month.price))}<T style={{ color: c.muted, fontSize: 15, fontWeight: '500' }}>{` / ${tr('ماه')}`}</T></T>
             ) : null}
-          </View>
-          <Pressable onPress={buy} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+          </Pressable>
+          <Pressable onPress={buy} disabled={busy} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
             <LinearGradient colors={['#f6e7c8', '#dfe3dc', '#bcd3ea']} start={{ x: RTL ? 1 : 0, y: 0 }} end={{ x: RTL ? 0 : 1, y: 0 }}
               style={{ height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <T style={{ color: '#151515', fontSize: 17, fontWeight: '800' }}>فعال کردن نسخه‌ی ویژه</T>
+              <T style={{ color: '#151515', fontSize: 17, fontWeight: '800' }}>{busy ? tr('در حال فعال کردن…') : trialDays ? t('شروع {0} روز رایگان', faNum(trialDays)) : tr('فعال کردن نسخه‌ی ویژه')}</T>
               <Icon name="chevronLeft" size={18} color="#151515" weight="semibold" />
             </LinearGradient>
           </Pressable>
+          {err ? <T style={{ color: c.bad, fontSize: 13, lineHeight: 20, textAlign: 'center' }}>{err}</T> : null}
           <Pressable onPress={() => { tap(); Linking.openURL(`${API_URL}/privacy?lang=${UI_LANG}`).catch(() => {}); }} accessibilityRole="link" style={{ alignSelf: 'center' }}>
             <T style={{ color: c.muted, fontSize: 14 }}>سیاست حفظ حریم خصوصی</T>
           </Pressable>
