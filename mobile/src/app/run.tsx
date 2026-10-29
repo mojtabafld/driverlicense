@@ -50,7 +50,7 @@ function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
 
 // The «بررسی فوری» switch under the picture: a soft pill like a status tag, a green circled tick and its name in green
 // while on, the same in grey while off (after a picture Mojtaba sent).
-// Once on it stays on (the question is then checked and closed); before the question has an answer it waits, faded.
+// Once on it stays on (the question is then checked and closed); always at hand, its icon green while off.
 function CheckChip({ on, onPress, disabled }: { on: boolean; onPress: () => void; disabled?: boolean }) {
   // (off, once the question has an answer: only its icon green, to say it can be checked now; Mojtaba 2026-10-30)
   const c = useColors(), fg = on ? c.ok : c.muted, iconFg = on || !disabled ? c.ok : c.muted;
@@ -217,7 +217,8 @@ export default function Run() {
           {/* Read the question and its statements aloud, beside the translation switch. */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
           <View style={{ flex: 1 }} />
-          <CheckChip on={checked.includes(i)} disabled={!ticks[i].some(Boolean)} onPress={() => setChecked(v => (v.includes(i) ? v : [...v, i]))} />
+          {/* (always on hand: a question's right answer may be ticking none; Mojtaba 2026-10-30) */}
+          <CheckChip on={checked.includes(i)} onPress={() => setChecked(v => (v.includes(i) ? v : [...v, i]))} />
         </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
