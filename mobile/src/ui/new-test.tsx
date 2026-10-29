@@ -65,7 +65,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
     {/* The progress in a card of its own above the test's (Mojtaba 2026-10-29, after a picture he sent). */}
     {/* (before the first answer too: at 0%, all the bar grey; Mojtaba 2026-10-29) */}
     <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
-    <Card style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : undefined }}>
+    <Card style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : undefined, flexGrow: 1, justifyContent: 'space-between' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
           <Icon name="shuffle" size={19} color={c.text} weight="semibold" />
@@ -151,7 +151,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // In the style of a picture Mojtaba sent (2026-10-29): the title with this week's gain at its end, the percent large and
   // light with a pill of the questions left beside it, the bar in three rounded parts with gaps, and a dot for each under it.
   return (
-    <Card style={{ gap: level >= 2 ? 8 : level ? 10 : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }}>
+    <Card style={{ gap: level >= 2 ? 8 : level ? 10 : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20, flexGrow: 1, justifyContent: 'space-between' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {done ? <Icon name="checkCircle" size={18} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
