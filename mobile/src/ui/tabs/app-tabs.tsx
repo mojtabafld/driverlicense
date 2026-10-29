@@ -36,11 +36,13 @@ export const TAB_BAR_H = 64;
 const PAD = 4; // the room between the bar's edge and the chosen tab's capsule
 
 const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, onPress, ...props }, ref) => {
-  const c = useColors(), on = useTabOn(), r = (TAB_BAR_H - 2 - 2 * PAD) / 2; // (inside the bar's edge and padding: its corners follow the bar's)
+  // (inside the bar's edge and padding: its corners follow the bar's). Its own height and margins, not stretched into the
+  // row's padding: on Android the stretched capsule filled the whole tab to the bar's edge, square (Mojtaba 2026-10-30).
+  const c = useColors(), on = useTabOn(), h = TAB_BAR_H - 2 - 2 * PAD;
   return (
-    <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1, flexDirection: 'row' }}
+    <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
       accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={tr(label)}>
-      <View style={[{ alignSelf: 'stretch', flex: 1, borderRadius: r, alignItems: 'center', justifyContent: 'center', backgroundColor: isFocused ? on.bg : 'transparent' },
+      <View style={[{ flex: 1, height: h, borderRadius: h / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: isFocused ? on.bg : 'transparent' },
         Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null]}>
         <Icon name={TAB_ICON[name]} size={24} color={isFocused ? on.fg : c.text} />
       </View>
@@ -85,7 +87,7 @@ const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, .
         <View ref={ref} {...props} {...({ dataSet: { bar: '1' } } as any)} style={{ flex: 1, height: TAB_BAR_H, borderRadius: TAB_BAR_H / 2, overflow: 'hidden',
           borderWidth: 1, borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)' }}>
           <Frost dark={dark} over={over} />
-          <View style={{ flex: 1, flexDirection: 'row', padding: PAD }}>{children}</View>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: PAD }}>{children}</View>
         </View>
         {home ? <StartButton /> : null}
       </View>
