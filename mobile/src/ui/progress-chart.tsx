@@ -207,8 +207,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   ))}
                   {/* The picked point's percent above it, kept inside the chart at its ends. */}
                   {sel != null && data[sel] && ARC ? (() => {
-                    // ARC: the picked test's right answers in a dark rounded bubble over its bars (a second tap on it opens its review;
-                    // the line under the chart with «مرور» is gone, as in the picture).
+                    // ARC: the picked test's right answers in a dark rounded bubble over its bars (a tap only picks a test, it
+                    // no longer opens its review, Mojtaba 2026-10-29; the line under the chart with «مرور» is gone, as in the picture).
                     const label = `${faNum(scoreOf(data[sel]))}/${faNum(data[sel].items.length)}`, w = 22 + label.length * 7.5, h = 24;
                     const cx = Math.min(CW - w / 2 - 2, Math.max(w / 2 + 2, x(sel))), cy = Math.max(2, Math.min(totals[sel], tops[sel]) - h - 6);
                     return (<G>
@@ -229,7 +229,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                 </Svg>
                 {/* A tap on an attempt's column (around its point) picks it (a drag scrolls instead). */}
                 {data.map((_, i) => (
-                  <Pressable key={`p${i}`} onPress={() => { tap(); if (ARC && sel === i) onOpen(data[i]); else setSel(sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
+                  <Pressable key={`p${i}`} onPress={() => { tap(); setSel(ARC ? i : sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
                     style={{ position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
                 ))}
               </View>
