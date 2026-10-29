@@ -62,7 +62,7 @@ function PlanOption({ plan, on, best, onPress, pad = 14, priceText }: { plan: Pl
 
 export default function Premium() {
   const c = useColors();
-  const { user, pay, premium, confirmPremium, syncPremium, redeemPromo, refresh, logout } = useApp();
+  const { user, pay, premium, confirmPremium, syncPremium, redeemPromo, startTrial, refresh, logout } = useApp();
   const guest = !!user?.guest;
   const { paid, canceled } = useLocalSearchParams<{ paid?: string; canceled?: string }>();
   const [busy, setBusy] = useState<'buy' | 'check' | null>(paid ? 'check' : null);
@@ -72,6 +72,15 @@ export default function Premium() {
   const [code, setCode] = useState(''), [redeeming, setRedeeming] = useState(false);
   const until = user?.premium?.until ?? 0;
   const showCode = !!pay?.promo && !guest && !user?.premium?.promo && !user?.promoUsed;
+  // The free trial without a code (Mojtaba 2026-10-29), until this account has had a trial.
+  const showTrial = !!pay?.trial && !premium && !guest && !user?.premium?.promo && !user?.promoUsed;
+  const [trialing, setTrialing] = useState(false);
+  const trial = async () => {
+    setTrialing(true); setMsg(null);
+    try { await startTrial(); setMsg({ ok: true, text: t('نسخه‌ی ویژه {0} روز رایگان برای شما فعال شد.', faNum(pay?.trial ?? 3)) }); }
+    catch (e: any) { setMsg({ ok: false, text: e?.message || t('فعال نشد؛ دوباره امتحان کنید.') }); }
+    finally { setTrialing(false); }
+  };
   // Fitted to the screen (Mojtaba 2026-10-18): while the page is taller than the room under its header, it steps to a
   // denser layout (1: less space, lower plan rows; 2: the four perks smaller, a smaller buy button; 3: the active
   // pass on one line, without the line on how a renewal adds up), so it needs no
@@ -164,6 +173,14 @@ export default function Premium() {
         </Card>
       ) : until ? (
         <Card><T style={{ color: c.muted, textAlign: 'center' }}>{t('نسخه‌ی ویژه‌ی شما {0} تمام شد.', fmtDay(until))}</T></Card>
+      ) : null}
+      {showTrial ? (
+        <Card style={{ gap: 10, alignItems: 'center', paddingVertical: 18 }}>
+          <Icon name="sparkles" size={28} color={c.text} />
+          <T style={{ fontWeight: '700', fontSize: 16, textAlign: 'center' }}>{t('{0} روز رایگان', faNum(pay?.trial ?? 3))}</T>
+          <T style={{ color: c.muted, fontSize: 13, lineHeight: 21, textAlign: 'center' }}>همه‌ی امکانات نسخه‌ی ویژه، بی‌پرداخت و بی‌کد؛ برای هر حساب یک بار.</T>
+          <Button big icon="sparkles" label={trialing ? 'در حال فعال کردن…' : t('شروع {0} روز رایگان', faNum(pay?.trial ?? 3))} onPress={trial} disabled={trialing} style={{ alignSelf: 'stretch', marginTop: 4 }} />
+        </Card>
       ) : null}
       {guest && !premium ? (
         // A guest buys nothing and enters no code: the pass would go with the browser's session. They make an account.
