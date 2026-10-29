@@ -18,9 +18,17 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { tap } from '../kit';
 import { Frost, useBarApart } from '../glass-bar';
+import { PALETTE } from '../palette';
 import { Icon, type IconName } from '../icon';
 import { useColors, useIsDark } from '../theme';
 import { TABS } from './tabs';
+
+// The chosen tab's capsule and the start button: the theme's colour with its text colour on it; «گرافیت»: a grey a
+// step off its cards (Mojtaba 2026-10-29), the icon in the text colour.
+function useTabOn() {
+  const c = useColors(), dark = useIsDark();
+  return PALETTE === 'graphite' ? { bg: dark ? '#3d3d3d' : '#e2e2e2', fg: c.text } : { bg: c.accent, fg: c.accentText };
+}
 
 const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
 // The bar's height (also the room the pages keep for it, with the gap under it: kit.tsx).
@@ -28,13 +36,13 @@ export const TAB_BAR_H = 64;
 const PAD = 4; // the room between the bar's edge and the chosen tab's capsule
 
 const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, onPress, ...props }, ref) => {
-  const c = useColors(), r = (TAB_BAR_H - 2 - 2 * PAD) / 2; // (inside the bar's edge and padding: its corners follow the bar's)
+  const c = useColors(), on = useTabOn(), r = (TAB_BAR_H - 2 - 2 * PAD) / 2; // (inside the bar's edge and padding: its corners follow the bar's)
   return (
     <Pressable ref={ref} {...props} onPress={e => { if (!isFocused) tap(); onPress?.(e); }} style={{ flex: 1, flexDirection: 'row' }}
       accessibilityRole="tab" accessibilityState={{ selected: isFocused }} accessibilityLabel={tr(label)}>
-      <View style={[{ alignSelf: 'stretch', flex: 1, borderRadius: r, alignItems: 'center', justifyContent: 'center', backgroundColor: isFocused ? c.accent : 'transparent' },
+      <View style={[{ alignSelf: 'stretch', flex: 1, borderRadius: r, alignItems: 'center', justifyContent: 'center', backgroundColor: isFocused ? on.bg : 'transparent' },
         Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '200ms' } as any) : null]}>
-        <Icon name={TAB_ICON[name]} size={24} color={isFocused ? c.accentText : c.text} />
+        <Icon name={TAB_ICON[name]} size={24} color={isFocused ? on.fg : c.text} />
       </View>
     </Pressable>
   );
@@ -44,7 +52,7 @@ TabButton.displayName = 'TabButton';
 // The start button: a random test of FULL questions from the whole bank (the exam tab's card's bank: the app's own on
 // the main site, prove.dk's at /app); without free tests left, the premium page, as the card's button.
 function StartButton() {
-  const c = useColors();
+  const on = useTabOn();
   const { newBank, bank } = useApp();
   const src = PROVE_BANK ? bank : newBank;
   const { randomLeft } = useFree();
@@ -61,8 +69,8 @@ function StartButton() {
     // (data-bar: not a part of the page under the bars, bar-shade.tsx)
     <Pressable {...({ dataSet: { bar: '1' } } as any)} onPress={start} accessibilityRole="button" accessibilityLabel={tr('شروع آزمون')} hitSlop={4}
       style={({ pressed }) => ({ width: d, height: d, borderRadius: d / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
-        backgroundColor: c.accent })}>
-      <Icon name="play" size={22} color={c.accentText} />
+        backgroundColor: on.bg })}>
+      <Icon name="play" size={22} color={on.fg} />
     </Pressable>
   );
 }
