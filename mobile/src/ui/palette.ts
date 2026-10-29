@@ -51,7 +51,7 @@ export const PALETTES: Spec[] = [
   { id: 'mono', name: 'سیاه و سفید', hue: 226, nhue: 226, nsat: 0, asat: 0, accD: '#f2f2f2', accD2: '#d0d0d0', onD: '#111111', accL: '#151515', pickSoftD: '#262626', cardD: '#1a1b20', card2D: '#222428', heroD: '#1a1b20' },
 ];
 // KEY: the theme picked on this device (kept, whatever the default becomes). Until one is picked, the server's default
-// (DEFAULT_THEME on the server, «آسمان» unless set): on the web written into the page (window.__TP_THEME), on a phone
+// (DEFAULT_THEME on the server, «گرافیت» unless set): on the web written into the page (window.__TP_THEME), on a phone
 // the one /api/config named last time (DEFAULT_KEY; a change there shows from the next start, with no new app build).
 const KEY = 'tp.palette', DEFAULT_KEY = 'tp.paletteDefault';
 const valid = (v: unknown): v is PaletteId => PALETTES.some(p => p.id === v);
@@ -66,10 +66,10 @@ function initial(): PaletteId {
   if (PROVE_PICS) return 'ocean';
   const picked = read(KEY); if (valid(picked)) return picked;
   const def = web ? (typeof window !== 'undefined' ? (window as any).__TP_THEME : null) : read(DEFAULT_KEY);
-  return valid(def) ? def : 'sky';
+  return valid(def) ? def : 'graphite';
 }
 // The default /api/config names, kept on a phone. With no theme picked on the phone and a default other than the one
-// in use (a phone's first start shows «آسمان» before it has asked), the app reloads in it.
+// in use (a phone's first start shows «گرافیت» before it has asked), the app reloads in it.
 export function rememberDefault(id: unknown) {
   if (web || PROVE_PICS || !valid(id)) return;
   write(DEFAULT_KEY, id);
@@ -77,11 +77,11 @@ export function rememberDefault(id: unknown) {
 }
 export const PALETTE: PaletteId = initial();
 // The server's default theme (DEFAULT_THEME, set in DigitalOcean), whatever this device has picked: on the web written
-// into the page, on a phone the one /api/config named last time; «آسمان» until known.
+// into the page, on a phone the one /api/config named last time; «گرافیت» until known.
 export function defaultPalette(): PaletteId {
   if (PROVE_PICS) return 'ocean';
   const def = web ? (typeof window !== 'undefined' ? (window as any).__TP_THEME : null) : read(DEFAULT_KEY);
-  return valid(def) ? def : 'sky';
+  return valid(def) ? def : 'graphite';
 }
 // That theme's accent in the dark theme, and the text on it (the welcome screen's night page; Mojtaba 2026-10-24).
 export function defaultAccentDark() {
@@ -114,7 +114,7 @@ export function forgetPalette(): boolean {
   if (PROVE_PICS) return false;
   try { if (web) localStorage.removeItem(KEY); else require('expo-secure-store').deleteItemAsync(KEY).catch(() => {}); } catch {}
   const def = web ? (typeof window !== 'undefined' ? (window as any).__TP_THEME : null) : read(DEFAULT_KEY);
-  return (valid(def) ? def : 'sky') !== PALETTE;
+  return (valid(def) ? def : 'graphite') !== PALETTE;
 }
 
 // Colour arithmetic (HSL), as Python's colorsys.
