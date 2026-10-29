@@ -175,7 +175,11 @@ export default function Home() {
   const shrink = ARC ? Math.min(more, 2) : 0;
   const level = Math.min(ARC ? 4 : 3, (height < 680 ? 2 : height < 900 ? 1 : 0) + (ARC ? Math.max(0, more - 2) : 0));
   const compact = level >= 1, tight = level >= 2, tighter = level >= 3, tiniest = level >= 4;
-  const gap = tighter ? 8 : compact ? 10 : 14; // between the page's cards
+  // (Main site, phones under 760 points: the pass card's ring and percent a little smaller and the cards a little closer,
+  // so the chart card is taller; Mojtaba 2026-10-30.)
+  const small = ARC && height < 760;
+  const gap = tighter || small ? 8 : compact ? 10 : 14; // between the page's cards
+  const ringSize = tighter ? 76 : small ? 88 : compact ? 104 : 120;
   // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
   // chart card's height from and to while it is shown or moving (null when closed: the card takes the height left).
   // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
@@ -316,14 +320,14 @@ export default function Home() {
         {ARC ? <>
           {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
               title with its pill under it, as before; no average or mistakes in this card. */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : 18 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : small ? 14 : 18 }}>
             {/* In the ring a seal with a tick in the text colour (it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
-            <Ring value={est ? est.prob : 0} size={tighter ? 76 : compact ? 104 : 120} stroke={tighter ? 8 : 11} color={probColor}>
-              <Icon name="passed" size={Math.round((tighter ? 76 : compact ? 104 : 120) * 0.32)} color={c.text} weight="semibold" />
+            <Ring value={est ? est.prob : 0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
+              <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.text} weight="semibold" />
             </Ring>
             <View style={{ flex: 1, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
-              <PassPct value={est ? est.prob : null} size={tighter ? 26 : 32} />
+              <PassPct value={est ? est.prob : null} size={tighter ? 26 : small ? 28 : 32} />
               <Pill text={probWord} fg={probColor} bg={probSoft} />
             </View>
           </View>
