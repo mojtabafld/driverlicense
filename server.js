@@ -27,6 +27,7 @@ const webpic = require('./webpic');
 const png = require('./png');
 const payments = require('./payments');
 const playbilling = require('./playbilling');
+playbilling.setKeyFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'play-service-account.json'));
 const push = require('./push');
 const mail = require('./mail');
 const insights = require('./insights');
@@ -1683,6 +1684,18 @@ async function api(req, res, route) {
     store.meta.news = news;
     await store.saveMeta('news', news);
     return send(res, 200, { ok: true });
+  }
+  // The Google Play key card in the dashboard: GET its state (the account's email, never the key), POST { key } a new one
+  // (the JSON file's text), POST playkeycheck to ask Google whether it works.
+  if (route === 'playkey' || route === 'playkeycheck') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (req.method === 'GET' && route === 'playkey') return send(res, 200, playbilling.info());
+    if (req.method === 'POST' && route === 'playkey') {
+      const b = await readBody(req, 64e3);
+      try { playbilling.saveKey(b.key); } catch (e) { return send(res, e.status || 500, { error: e.message }); }
+      return send(res, 200, { ...playbilling.info(), check: await playbilling.verify().catch(e => ({ ok: false, error: e.message })) });
+    }
+    if (req.method === 'POST' && route === 'playkeycheck') return send(res, 200, { ...playbilling.info(), check: await playbilling.verify().catch(e => ({ ok: false, error: e.message })) });
   }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
