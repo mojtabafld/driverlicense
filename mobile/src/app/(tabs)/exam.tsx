@@ -179,7 +179,8 @@ export default function Exam() {
   });
   return (
     <View style={{ flex: 1 }}>
-    <Screen gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+    {/* (fill: the two cards above grow so the last ones end just above the tab bar on every screen; Mojtaba 2026-10-29) */}
+    <Screen fill barGap={12} gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />}>
       {own ? <NewTestCard test={test} level={level} /> : (
       <Card style={{ gap: 14 }}>
