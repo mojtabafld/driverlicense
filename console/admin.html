@@ -282,6 +282,10 @@ details summary{cursor:pointer;font-weight:700}
         <textarea id="nx" maxlength="4000" placeholder="متن پیام"></textarea>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn" id="ns">ارسال برای همه</button><span class="muted" id="nm" style="font-size:12.5px"></span></div>
         <div id="nl">${newsList()}</div></div>
+      <div class="card reports news" style="margin-bottom:16px" id="pk"><h2>کلید Google Play</h2>
+        <p class="muted" style="font-size:12.5px;margin:0 0 4px">فایل JSON کلید service account (برای تأیید خریدهای اپ اندروید). روی سرور ذخیره می‌شود و فقط ایمیل حسابش این‌جا نشان داده می‌شود.</p>
+        <div id="pks" class="muted" style="font-size:13px">…</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><input type="file" id="pkf" accept=".json,application/json" style="width:auto;border:0;padding:0"><button class="btn" id="pku">بارگذاری</button><button class="btn soft" id="pkc">بررسی</button></div></div>
       <div class="row2">
         <div class="card chart"><h2>۳۰ روز اخیر</h2>${chart(d.days)}</div>
         <div class="card"><h2>زبان برنامه</h2>${bars(t.ui, UI)}<h2 style="margin-top:16px">نوع آزمون‌ها</h2>${bars(t.modes, MODE)}</div>
@@ -304,6 +308,24 @@ details summary{cursor:pointer;font-weight:700}
     wireUsers();
     wireAi();
     wireNews();
+    wirePlayKey();
+  }
+  // The Google Play key card: its state, a JSON file sent from this device, a check with Google.
+  function wirePlayKey() {
+    const st = document.getElementById('pks'); if (!st) return;
+    const show = (d, note) => {
+      const c = d.check;
+      st.innerHTML = (d.set ? `کلید: <span dir="ltr">${esc(d.email)}</span> (${d.from === 'env' ? 'از متغیرهای سرور' : 'بارگذاری‌شده'})` : 'کلیدی نیست؛ خرید در اپ اندروید خاموش است.')
+        + (c ? `<br>${c.ok ? `✅ گوگل پاسخ داد. محصولات: <span dir="ltr">${esc((c.products || []).join(', ') || '—')}</span>` : `❌ ${esc(c.step === 'play' ? 'دسترسی به اپ در Play Console: ' : '')}${esc(c.error || '')}`}` : '')
+        + (note ? `<br>${esc(note)}` : '');
+    };
+    api('GET', 'playkey').then(d => show(d)).catch(e => { st.textContent = e.message; });
+    document.getElementById('pku').onclick = async () => {
+      const f = document.getElementById('pkf').files[0]; if (!f) { st.textContent = 'اول فایل JSON را انتخاب کنید.'; return; }
+      st.textContent = 'در حال بارگذاری…';
+      try { show(await api('POST', 'playkey', { key: await f.text() }), 'ذخیره شد.'); document.getElementById('pkf').value = ''; } catch (e) { st.textContent = e.message; }
+    };
+    document.getElementById('pkc').onclick = async () => { st.textContent = 'در حال بررسی…'; try { show(await api('POST', 'playkeycheck')); } catch (e) { st.textContent = e.message; } };
   }
   function newsList() {
     const n = state.news || [];

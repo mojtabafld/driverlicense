@@ -1,5 +1,6 @@
 node_modules/
 data/db.json
+data/play-service-account.json
 data/db.json.tmp
 data/imglist.txt
 .DS_Store

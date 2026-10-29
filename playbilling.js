@@ -17,10 +17,16 @@ const pkg = () => (process.env.GOOGLE_PLAY_PACKAGE || 'app.bitlane.teoripro').tr
 const api = () => (process.env.GOOGLE_PLAY_API_BASE || 'https://androidpublisher.googleapis.com').replace(/\/$/, '');
 const oauth = () => process.env.GOOGLE_OAUTH_URL || 'https://oauth2.googleapis.com/token';
 
-// The service account's key: its JSON, given as it is or in base64; null when missing or unreadable.
+// The service account's key: its JSON, given as it is or in base64; null when missing or unreadable. From the env, else
+// from the file the admin dashboard saved it in (Mojtaba 2026-10-29: put there from a phone, with no computer at hand;
+// beside the database, readable by the service only).
+const fs = require('node:fs');
+let keyFile = null;
+const setKeyFile = f => { keyFile = f; };
+const fileKey = () => { try { return keyFile ? fs.readFileSync(keyFile, 'utf8').trim() : ''; } catch { return ''; } };
 let keyCache = null, keySrc = null;
 function account() {
-  const raw = (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT || '').trim();
+  const raw = (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT || '').trim() || fileKey();
   if (!raw) return null;
   if (raw === keySrc) return keyCache;
   keySrc = raw; keyCache = null;
@@ -80,4 +86,35 @@ async function check(product, token, username) {
 // Consumed once its days are on the account: Google then keeps it (no refund after 3 days) and it can be bought again.
 const consume = (product, token) => call('POST', `${tokenPath(product, token)}:consume`);
 
-module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS) };
+// The dashboard's key card: which key is in use (its account's email only), saving a new one, and asking Google whether it
+// works (a token, then the app's in-app products, which needs the account's access to the app in Play Console).
+const parseKey = text => {
+  for (const t of [String(text || '').trim(), Buffer.from(String(text || '').trim(), 'base64').toString('utf8')]) {
+    try { const k = JSON.parse(t); if (k && k.type === 'service_account' && k.client_email && k.private_key) return k; } catch {}
+  }
+  return null;
+};
+function info() {
+  const k = account();
+  return { set: !!k, email: k ? k.client_email : null, from: (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT || '').trim() ? 'env' : k ? 'file' : null, pkg: pkg() };
+}
+function saveKey(text) {
+  const k = parseKey(text);
+  if (!k) throw Object.assign(new Error('این فایل کلید JSON یک service account نیست.'), { status: 400 });
+  if (!keyFile) throw Object.assign(new Error('no key file'), { status: 500 });
+  fs.writeFileSync(keyFile, JSON.stringify(k), { mode: 0o600 });
+  try { fs.chmodSync(keyFile, 0o600); } catch {}
+  keySrc = null; tok = null;
+  return info();
+}
+async function verify() {
+  if (!account()) return { ok: false, step: 'key', error: 'کلیدی نیست.' };
+  try { await accessToken(); } catch (e) { return { ok: false, step: 'token', error: String(e.detail || e.message) }; }
+  const r = await fetch(`${api()}/androidpublisher/v3/applications/${encodeURIComponent(pkg())}/inappproducts`, { headers: { Authorization: `Bearer ${await accessToken()}` } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) return { ok: false, step: 'play', error: (d.error && d.error.message) || `Google Play ${r.status}` };
+  const found = (d.inappproduct || []).map(p => `${p.sku}${p.status && p.status !== 'active' ? ` (${p.status})` : ''}`);
+  return { ok: true, products: found };
+}
+
+module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify };
