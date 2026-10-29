@@ -47,6 +47,12 @@ export const loadLastUser = async (): Promise<LastUser | null> => {
 export const saveLastUser = async (u: LastUser | null) => { try { if (u) localStorage.setItem(LAST_USER, JSON.stringify(u)); else localStorage.removeItem(LAST_USER); } catch {} };
 
 // The accounts (and banks) that have seen the confetti for answering every question of the random test, so it plays once.
+// The accounts the first premium page (ui/pro-promo.tsx) was shown to on this device.
+const PROMO_SEEN = 'tp.promoSeen';
+export const loadPromoSeen = async (): Promise<string[]> => {
+  try { const v = JSON.parse(localStorage.getItem(PROMO_SEEN) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
+};
+export const savePromoSeen = async (keys: string[]) => { try { localStorage.setItem(PROMO_SEEN, JSON.stringify(keys)); } catch {} };
 const CHEERED = 'tp.cheered';
 export const loadCheered = async (): Promise<string[]> => {
   try { const v = JSON.parse(localStorage.getItem(CHEERED) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }

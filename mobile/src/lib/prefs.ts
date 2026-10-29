@@ -50,6 +50,12 @@ export const loadLastUser = async (): Promise<LastUser | null> => {
 export const saveLastUser = (u: LastUser | null) => (u ? SecureStore.setItemAsync(LAST_USER, JSON.stringify({ ...u, photo: undefined })) : SecureStore.deleteItemAsync(LAST_USER)).catch(() => {});
 
 // The accounts (and banks) that have seen the confetti for answering every question of the random test, so it plays once.
+// The accounts the first premium page (ui/pro-promo.tsx) was shown to on this device.
+const PROMO_SEEN = 'tp_promo_seen';
+export const loadPromoSeen = async (): Promise<string[]> => {
+  try { const v = JSON.parse((await SecureStore.getItemAsync(PROMO_SEEN)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
+};
+export const savePromoSeen = (keys: string[]) => SecureStore.setItemAsync(PROMO_SEEN, JSON.stringify(keys)).catch(() => {});
 const CHEERED = 'tp_cheered';
 export const loadCheered = async (): Promise<string[]> => {
   try { const v = JSON.parse((await SecureStore.getItemAsync(CHEERED)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
