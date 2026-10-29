@@ -110,11 +110,14 @@ function saveKey(text) {
 async function verify() {
   if (!account()) return { ok: false, step: 'key', error: 'کلیدی نیست.' };
   try { await accessToken(); } catch (e) { return { ok: false, step: 'token', error: String(e.detail || e.message) }; }
-  const r = await fetch(`${api()}/androidpublisher/v3/applications/${encodeURIComponent(pkg())}/inappproducts`, { headers: { Authorization: `Bearer ${await accessToken()}` } });
+  // (Play Console's one-time products since 2025: the monetization API's oneTimeProducts; the old inappproducts list
+  // answers «Please migrate to the new publishing API» for them.)
+  const r = await fetch(`${api()}/androidpublisher/v3/applications/${encodeURIComponent(pkg())}/oneTimeProducts`, { headers: { Authorization: `Bearer ${await accessToken()}` } });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) return { ok: false, step: 'play', error: (d.error && d.error.message) || `Google Play ${r.status}` };
-  const found = (d.inappproduct || []).map(p => `${p.sku}${p.status && p.status !== 'active' ? ` (${p.status})` : ''}`);
-  return { ok: true, products: found };
+  const found = (d.oneTimeProducts || []).map(p => p.productId);
+  const missing = Object.keys(PRODUCTS).filter(id => !found.includes(id));
+  return { ok: true, products: found, missing };
 }
 
 module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify };
