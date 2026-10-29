@@ -99,6 +99,13 @@ it replaces the whole variable list and would delete the secrets that were added
 | `DATABASE_SSL` | Not needed | Set to `false` to connect to PostgreSQL without SSL (e.g. a local database). |
 | `DB_FILE` | Not needed | Path of the JSON account file when there is no database (default `data/db.json`). |
 
+## Deploy to Oracle Cloud (Ampere server + Autonomous Database)
+
+Set `ORACLE_CONNECT_STRING`, `ORACLE_USER` and `ORACLE_PASSWORD` (and `ORACLE_WALLET_DIR` / `ORACLE_WALLET_PASSWORD` for
+mutual TLS) and the server keeps its data in Oracle Database instead of PostgreSQL (`store.js`, node-oracledb in Thin
+mode: no Oracle client to install). `scripts/pg-to-oracle.js` copies everything over from PostgreSQL once.
+The server's setup, its services, its updates from GitHub and the steps of the move: `deploy/oracle/` (README in Persian).
+
 ## Rebuilding the question data
 
 `build.py` turns `data/raw.json` (+ `data/cats.json`, `data/fa_fix.json`, and `data/en.json` with the English

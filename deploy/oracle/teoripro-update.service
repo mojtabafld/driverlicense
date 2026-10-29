@@ -1,0 +1,7 @@
+# Takes in what was merged on GitHub (update.sh): run every two minutes by teoripro-update.timer.
+[Unit]
+Description=Teoripro update from GitHub
+
+[Service]
+Type=oneshot
+ExecStart=/opt/teoripro/deploy/oracle/update.sh
