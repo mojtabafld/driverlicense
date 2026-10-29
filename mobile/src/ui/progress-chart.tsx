@@ -193,9 +193,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   {/* Each point shows once the line has reached it. */}
                   {ARC ? data.map((d, i) => {
                     // A test's two bars: its questions in a pale tint, its right answers in full (green when it passed, coral when
-                    // not); the others than the picked one a little lighter.
+                    // not); the others than the picked one faded (Mojtaba 2026-10-30).
                     const col = good(d) ? c.ok : c.bad, on = i === sel;
-                    return (<G key={i} opacity={on ? 1 : 0.78}>
+                    return (<G key={i} opacity={on ? 1 : 0.4}>
                       <Path d={bar(i, -(bw / 2 + 2), totals[i])} fill={col} fillOpacity={dark ? 0.28 : 0.22} />
                       <Path d={bar(i, bw / 2 + 2)} fill={col} />
                     </G>);
@@ -206,16 +206,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                       stroke={c.surface} strokeWidth={2} fillOpacity={sel == null || sel === i ? 1 : 0.4} />
                   ))}
                   {/* The picked point's percent above it, kept inside the chart at its ends. */}
-                  {sel != null && data[sel] && ARC ? (() => {
-                    // ARC: the picked test's right answers in a dark rounded bubble over its bars (a tap only picks a test, it
-                    // no longer opens its review, Mojtaba 2026-10-29; the line under the chart with «مرور» is gone, as in the picture).
-                    const label = `${faNum(scoreOf(data[sel]))}/${faNum(data[sel].items.length)}`, w = 22 + label.length * 7.5, h = 24;
-                    const cx = Math.min(CW - w / 2 - 2, Math.max(w / 2 + 2, x(sel))), cy = Math.max(2, Math.min(totals[sel], tops[sel]) - h - 6);
-                    return (<G>
-                      <Rect x={cx - w / 2} y={cy} width={w} height={h} rx={9} fill={c.text} />
-                      <SvgText x={cx} y={cy + 16.5} fill={c.bg} fontSize={12} fontWeight="700" fontFamily={RTL ? 'Vazirmatn-700' : 'Inter-700'} textAnchor="middle">{label}</SvgText>
-                    </G>);
-                  })() : sel != null && data[sel] ? (
+                  {/* (ARC: no bubble over the picked test since 2026-10-30; home's chart head shows its score, date and change) */}
+                  {sel != null && data[sel] && !ARC ? (
                     <SvgText x={Math.min(CW - 16, Math.max(16, x(sel)))} y={Math.max(11, tops[sel] - (DOT + 8))} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
                       {`${faNum(Math.round(pctOf(data[sel]) * 100))}${RTL ? '٪' : '%'}`}
                     </SvgText>
@@ -227,9 +219,10 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                         textAnchor="middle">{ARC ? fmtDate(d.at) : faNum(i + 1 + offset)}</SvgText>
                     : null))}
                 </Svg>
-                {/* A tap on an attempt's column (around its point) picks it (a drag scrolls instead). */}
+                {/* A tap on an attempt's column (around its point) picks it, a second tap opens its review (main site, Mojtaba
+                    2026-10-30; a drag scrolls instead). */}
                 {data.map((_, i) => (
-                  <Pressable key={`p${i}`} onPress={() => { tap(); setSel(ARC ? i : sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
+                  <Pressable key={`p${i}`} onPress={() => { tap(); if (ARC && chosen === i) onOpen(data[i]); else setSel(ARC ? i : sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
                     style={{ position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
                 ))}
               </View>
