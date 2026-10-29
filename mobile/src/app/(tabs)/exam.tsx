@@ -107,7 +107,8 @@ function MistakesCard() {
 
 // In place of the tests' history (Mojtaba 2026-10-29): two buttons side by side in the calendar's «یادداشت سریع» shape,
 // in the colours of the page's other cards,
-// the tests' history and the questions to practise: a round icon tile, the name over its count, and a ‹ at the end.
+// the tests' history and the questions to practise: a round icon tile, the name over its count (the number alone;
+// Mojtaba 2026-10-29), and a ‹ at the end.
 // `level` 3 and up (the shortest screens): a little lower.
 function ShortcutsCard({ level = 0 }: { level?: number }) {
   const c = useColors();
@@ -122,15 +123,15 @@ function ShortcutsCard({ level = 0 }: { level?: number }) {
       </View>
       <View style={{ flex: 1, gap: 2 }}>
         <FitLine size={14.5} min={11} style={{ fontWeight: '700' }}>{label}</FitLine>
-        <T style={{ fontSize: 12.5, color: tone ?? c.muted }} numberOfLines={1}>{count}</T>
+        <T style={{ fontSize: 16, lineHeight: 22, fontWeight: '700', color: tone ?? c.muted }} numberOfLines={1}>{count}</T>
       </View>
       <Icon name="chevronLeft" size={14} color={c.muted} weight="semibold" />
     </Pressable>
   );
   return (
     <View style={{ flexDirection: 'row', gap: 10 }}>
-      {half('clock', 'تاریخچه', t('{0} آزمون', faNum(tests)), '/history')}
-      {half('warning', 'اشتباهات', t('{0} سؤال', faNum(wrong)), '/mistakes', wrong ? c.bad : undefined)}
+      {half('clock', 'تاریخچه', faNum(tests), '/history')}
+      {half('warning', 'اشتباهات', faNum(wrong), '/mistakes', wrong ? c.bad : undefined)}
     </View>
   );
 }
