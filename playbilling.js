@@ -6,14 +6,14 @@
 // and consumes it, so the same pass can be bought again later.
 // Env: GOOGLE_PLAY_SERVICE_ACCOUNT, the service account's JSON key (as it is, or in base64), with access to the app in
 // Play Console (Users and permissions → the service account → «View financial data» and «Manage orders»); without it
-// nothing is sold in the app. GOOGLE_PLAY_PACKAGE, the app's package (default info.mintcloud.teoriprove).
+// nothing is sold in the app. GOOGLE_PLAY_PACKAGE, the app's package (default app.bitlane.teoripro).
 // Google is called over its REST API with fetch and a signed JWT (no SDK). GOOGLE_PLAY_API_BASE / GOOGLE_OAUTH_URL only
 // point the calls elsewhere for tests.
 'use strict';
 const crypto = require('node:crypto');
 
 const PRODUCTS = { pass_week: 'week', pass_month: 'month', pass_quarter: 'quarter' };
-const pkg = () => (process.env.GOOGLE_PLAY_PACKAGE || 'info.mintcloud.teoriprove').trim();
+const pkg = () => (process.env.GOOGLE_PLAY_PACKAGE || 'app.bitlane.teoripro').trim();
 const api = () => (process.env.GOOGLE_PLAY_API_BASE || 'https://androidpublisher.googleapis.com').replace(/\/$/, '');
 const oauth = () => process.env.GOOGLE_OAUTH_URL || 'https://oauth2.googleapis.com/token';
 
