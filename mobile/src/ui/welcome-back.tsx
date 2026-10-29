@@ -14,7 +14,8 @@ import type { LastUser } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { L, T, tap, useHeaderTop } from './kit';
-import { RoadTick, useN } from './welcome';
+import { VibeCards } from './vibe-cards';
+import { useN } from './welcome';
 
 function Face({ u, size }: { u: LastUser; size: number }) {
   const { avatarArt } = useApp(), N = useN();
@@ -27,10 +28,9 @@ function Face({ u, size }: { u: LastUser; size: number }) {
 }
 
 export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick: () => void; onNotYou: () => void }) {
-  const ins = useSafeAreaInsets(), { width, height } = useWindowDimensions(), N = useN();
+  const ins = useSafeAreaInsets(), { height } = useWindowDimensions(), N = useN();
   // The browser's top (and the phone's status bar on the web) in the page's top colour.
   useHeaderTop(N.top);
-  const tile = Math.round(Math.min(116, height * 0.14, width * 0.3));
   return (
     <View style={{ flex: 1 }}>
       <StatusBar style={N.dark ? 'light' : 'dark'} />
@@ -44,12 +44,9 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
               <L style={{ fontSize: 28, lineHeight: 36, fontWeight: '800', letterSpacing: -0.6, color: N.onAccent }}>pro</L>
             </View>
           </View>
-          {/* The symbol on its glowing tile, in the room left above the account. */}
-          <View style={{ flex: 1, minHeight: tile + 60, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={{ width: tile, height: tile, borderRadius: tile * 0.27, backgroundColor: N.accent, alignItems: 'center', justifyContent: 'center',
-              shadowColor: N.accent, shadowOpacity: 0.45, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, elevation: 12 }}>
-              <RoadTick size={Math.round(tile * 0.85)} />
-            </View>
+          {/* The three cards of what the app does, in the room left above the account (Mojtaba 2026-10-29). */}
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -24 }}>
+            <VibeCards room={Math.max(200, height - ins.top - ins.bottom - 450)} />
           </View>
           <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '800', textAlign: 'center', color: N.ink }}>خوش برگشتید</T>
           <Pressable onPress={() => { tap(); onPick(); }} accessibilityRole="button" accessibilityLabel={last.name}
