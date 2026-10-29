@@ -11,7 +11,7 @@ import { PROVE_PICS } from '@/lib/config';
 import { reloadApp } from '@/lib/reload';
 
 export type PaletteId = 'ocean' | 'violet' | 'lime' | 'coral' | 'amber' | 'emerald' | 'forest' | 'rose' | 'sky' | 'mono'
-  | 'teal' | 'indigo' | 'orchid' | 'gold' | 'slate';
+  | 'teal' | 'indigo' | 'orchid' | 'gold' | 'slate' | 'graphite';
 type Spec = {
   id: PaletteId; name: string;
   hue: number; nhue: number; nsat: number; asat?: number;
@@ -21,6 +21,8 @@ type Spec = {
   cardD?: string; card2D?: string;
   // heroD: the dark theme's picture header band, when not the drawings' blue moved to the theme (px('#141c3d')).
   heroD?: string;
+  // dark / light: any of the made colours set by hand (graphite's page, which is not black).
+  dark?: Record<string, string>; light?: Record<string, string>;
 };
 // name: Persian (translated through strings.json like every other text).
 export const PALETTES: Spec[] = [
@@ -38,6 +40,14 @@ export const PALETTES: Spec[] = [
   { id: 'orchid', name: 'بنفش یاسی', hue: 284, nhue: 280, nsat: 0.3, accD: '#c084fc', accD2: '#d8b4fe', onD: '#1e0b2e', accL: '#9333ea', pickSoftD: '#2a1838' },
   { id: 'gold', name: 'طلایی', hue: 46, nhue: 42, nsat: 0.12, accD: '#facc15', accD2: '#fde047', onD: '#1a1500', accL: '#a16207', pickSoftD: '#2b250c' },
   { id: 'slate', name: 'سنگی', hue: 215, nhue: 215, nsat: 0.3, asat: 0.35, accD: '#a3b3c8', accD2: '#cbd5e1', onD: '#0f172a', accL: '#475569', pickSoftD: '#1e2632' },
+  // «گرافیت»: soft charcoal greys, no tint, a near-white accent in the dark theme and a near-black one in the light
+  // (Mojtaba 2026-10-29, after a picture he sent: a #1b1b1b page, #262626 cards, grey icon tiles, white bold titles).
+  { id: 'graphite', name: 'گرافیت', hue: 0, nhue: 0, nsat: 0, asat: 0, accD: '#f5f5f5', accD2: '#d4d4d4', onD: '#151515', accL: '#1b1b1b', onL: '#ffffff',
+    pickSoftD: '#3a3a3a', cardD: '#262626', card2D: '#303030', heroD: '#262626',
+    dark: { bg: '#1b1b1b', line: '#383838', cardBorder: '#2e2e2e', hairline: '#2e2e2e', glassBorder: '#383838', text: '#f5f5f5', muted: '#a3a3a3', faint: '#737373',
+      note: '#303030', nav: '#303030', navOff: '#262626', strongFg: '#151515', btnFg: '#151515', ctaFg: '#151515', accentSoft: 'rgba(245,245,245,0.12)', checked: 'rgba(245,245,245,0.14)' },
+    light: { bg: '#efefef', surface: '#ffffff', surface2: '#f5f5f5', line: '#e2e2e2', cardBorder: '#e6e6e6', hairline: '#ececec', glassBorder: '#e2e2e2',
+      text: '#151515', muted: '#6b6b6b', faint: '#8f8f8f', note: '#ececec', pickSoft: '#e6e6e6', nav: '#e6e6e6', navOff: '#f5f5f5' } },
   { id: 'mono', name: 'سیاه و سفید', hue: 226, nhue: 226, nsat: 0, asat: 0, accD: '#f2f2f2', accD2: '#d0d0d0', onD: '#111111', accL: '#151515', pickSoftD: '#262626', cardD: '#1a1b20', card2D: '#222428', heroD: '#1a1b20' },
 ];
 // KEY: the theme picked on this device (kept, whatever the default becomes). Until one is picked, the server's default
@@ -177,10 +187,11 @@ export function paletteColors() {
     nav: nl(0.935), navFg: n(0.05), navOff: nl(0.972), navNum: n(0.38, 0.1),
     strong: n(0.1), strongFg: '#ffffff', btn: n(0.1), btnFg: '#ffffff', cta: aL, ctaFg: S.onL ?? '#ffffff',
   };
+  Object.assign(dark, S.dark); Object.assign(light, S.light);
   return {
     dark: { ...dark, bgGradient: [dark.bg, dark.bg, dark.bg] as readonly [string, string, string] },
     light: { ...light, bgGradient: [light.bg, light.bg, light.bg] as readonly [string, string, string] },
   };
 }
 // A swatch for the picker: the theme's page and accent in the dark theme.
-export const swatch = (s: Spec) => ({ accent: s.accD, accentL: s.accL, bg: s.id === 'ocean' ? '#121524' : fromHls(s.nhue, 0.09, s.nsat * 0.6) });
+export const swatch = (s: Spec) => ({ accent: s.accD, accentL: s.accL, bg: s.dark?.bg ?? (s.id === 'ocean' ? '#121524' : fromHls(s.nhue, 0.09, s.nsat * 0.6)) });
