@@ -16,8 +16,8 @@ const gated = () => available() && process.env.PREMIUM_GATE !== '0';
 const kr = (v, d) => { const n = Math.round(+v); return Number.isFinite(n) && n >= 5 && n <= 10000 ? n : d; };
 const PLANS = {
   week: { days: 7, price: () => kr(process.env.PREMIUM_PRICE_WEEK, 49), name: 'Teoripro Premium – 1 uge' },
-  month: { days: 30, price: () => kr(process.env.PREMIUM_PRICE_MONTH, 79), name: 'Teoripro Premium – 1 måned' },
-  quarter: { days: 90, price: () => kr(process.env.PREMIUM_PRICE_QUARTER, 149), name: 'Teoripro Premium – 3 måneder' },
+  month: { days: 30, price: () => kr(process.env.PREMIUM_PRICE_MONTH, 99), name: 'Teoripro Premium – 1 måned' },
+  quarter: { days: 90, price: () => kr(process.env.PREMIUM_PRICE_QUARTER, 199), name: 'Teoripro Premium – 3 måneder' },
 };
 const plans = () => Object.entries(PLANS).map(([id, p]) => ({ id, days: p.days, price: p.price() }));
 const base = () => (process.env.STRIPE_API_BASE || 'https://api.stripe.com').replace(/\/$/, '');
