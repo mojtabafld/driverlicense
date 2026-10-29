@@ -426,14 +426,7 @@ const FULL = 25, PASS_MIN = 20;
 const scoreOf = a => a.items.filter(x => x.ok).length;
 // What insights.js and coach.js read: the bank, the scoring, the day and, for the report's mail, where the panel is.
 const usageTimes = new Map();
-let lastInsightsRun = 0;
-const aiDeps = () => ({ store, bank: lessonBank(SITE), scoreOf, FULL, PASS_MIN, dayKey, visits,
-  onReport: r => (mail.available() && process.env.INSIGHTS_EMAIL !== '0' ? mail.sendInsights(r, `${(process.env.PUBLIC_URL || 'https://teori.bitlane.app').replace(/\/$/, '')}/admin`) : null) });
-// The AI's daily report, once a day from INSIGHTS_HOUR (default 6, Copenhagen), checked every 15 minutes.
-function insightsTick() {
-  if (!insights.available() || hourOf(Date.now()) < (+process.env.INSIGHTS_HOUR || 6)) return;
-  insights.run(aiDeps()).catch(e => console.error('insights', e.message));
-}
+const aiDeps = () => ({ store, bank: lessonBank(SITE), scoreOf, FULL, PASS_MIN, dayKey, visits });
 function adminStats() {
   const now = Date.now(), today = dayKey(now), DAYS = 30;
   const keys = Array.from({ length: DAYS }, (_, i) => dayKey(now - (DAYS - 1 - i) * 864e5));
@@ -1482,7 +1475,16 @@ async function api(req, res, route) {
     return send(res, 200, { key: push.key(), notify: push.settingsOf(user), devices: (user.push || []).length });
   }
   if (req.method === 'POST' && route === 'pushsub') {
-    const b = await readBody(req), moved = push.subscribe(Object.values(store.users), user, b.sub, b.tz);
+    const b = await readBody(req);
+    // The Android app: its device token for the server's notifications (fcm.js), beside the phone's own reminders.
+    if (b.fcm) {
+      const moved = push.subscribeFcm(Object.values(store.users), user, b.fcm);
+      if (!moved) return send(res, 400, { error: 'bad token' });
+      for (const u of moved) await store.saveUser(u);
+      await store.saveUser(user);
+      return send(res, 200, { ok: true });
+    }
+    const moved = push.subscribe(Object.values(store.users), user, b.sub, b.tz);
     if (!moved) return send(res, 400, { error: 'bad subscription' });
     for (const u of moved) await store.saveUser(u);
     await store.saveUser(user);
@@ -1490,7 +1492,7 @@ async function api(req, res, route) {
   }
   if (req.method === 'POST' && route === 'pushunsub') {
     const b = await readBody(req);
-    if (push.unsubscribe(user, String(b.endpoint || ''))) await store.saveUser(user);
+    if (b.fcm ? push.unsubscribeFcm(user, String(b.fcm)) : push.unsubscribe(user, String(b.endpoint || ''))) await store.saveUser(user);
     return send(res, 200, { ok: true });
   }
   if (req.method === 'POST' && route === 'pushtest') {
@@ -1632,24 +1634,8 @@ async function api(req, res, route) {
       return send(res, 502, { error: 'مربی هوشمند الان در دسترس نیست.' });
     }
   }
-  // The AI's daily reports, its memory and the proposed question notes, for the admin panel; «now» makes a report at
-  // once; a decision on a note (approve with the text as edited, reject, remove).
-  if (req.method === 'GET' && route === 'insights') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    const ins = store.meta.aiInsights || {}, bk = lessonBank(SITE);
-    const notes = Object.entries(store.meta.qNotes || {}).map(([id, n]) => { const q = bk.Q.get(+id) || {}; return { qid: +id, ...n, question: q.sda, questionFa: q.sfa, img: q.img }; })
-      .sort((a, b) => (a.status === 'pending' ? 0 : 1) - (b.status === 'pending' ? 0 : 1) || b.at - a.at);
-    return send(res, 200, { on: insights.available(), reports: (ins.reports || []).slice(-30).reverse(), failed: ins.failed || null, lastDay: ins.lastDay || null,
-      memory: store.meta.aiMemory || null, notes, usage: insights.collect(aiDeps()).usage.slice(0, 30) });
-  }
-  if (req.method === 'POST' && route === 'insightsrun') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    if (!insights.available()) return send(res, 503, { error: 'ANTHROPIC_API_KEY تنظیم نشده.' });
-    if (Date.now() - lastInsightsRun < 5 * 60e3) return send(res, 429, { error: 'چند دقیقه‌ی دیگر دوباره امتحان کنید.' });
-    lastInsightsRun = Date.now();
-    try { const r = await insights.run(aiDeps(), { force: true, by: user.username }); return send(res, 200, { report: r }); }
-    catch (e) { console.error('insights run', e.message); return send(res, 502, { error: `گزارش ساخته نشد: ${e.message}` }); }
-  }
+  // (The AI's daily report and its card in the dashboard were removed, Mojtaba 2026-10-30; the question notes already
+  // approved still go into the AI's analyses.)
   if (req.method === 'POST' && route === 'qnote') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req);
@@ -1675,7 +1661,9 @@ async function api(req, res, route) {
     const news = [...(store.meta.news || []), item].slice(-100);
     store.meta.news = news;
     await store.saveMeta('news', news);
-    return send(res, 200, { item });
+    // and a notification to everyone with notifications on, unless the admin turned it off (in the background)
+    if (b.notify !== false) push.broadcast(store, item).then(n => console.log('news push', item.id, n)).catch(e => console.error('news push', e.message));
+    return send(res, 200, { item, notify: b.notify !== false });
   }
   if (req.method === 'DELETE' && route === 'news') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
@@ -1890,8 +1878,6 @@ async function main() {
   store = await openStore({ dbFile: DB_FILE });
   insights.init(store, dayKey);
   setNotes(store.meta.qNotes);
-  setInterval(insightsTick, 15 * 60e3).unref();
-  setTimeout(insightsTick, 2 * 60e3).unref();
   // A deploy's first minutes, while the old server may still be answering (store.js catchUp).
   if (store.catchUp) {
     const t = setInterval(() => store.catchUp().catch(e => console.error('catch up', e.message)), 60e3);

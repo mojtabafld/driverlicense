@@ -60,6 +60,11 @@ export const savePromoSeen = (keys: string[]) => SecureStore.setItemAsync(PROMO_
 const NEWS_SEEN = 'tp_news_seen';
 export const loadNewsSeen = async (): Promise<number> => { try { return +((await SecureStore.getItemAsync(NEWS_SEEN)) || 0) || 0; } catch { return 0; } };
 export const saveNewsSeen = (at: number) => SecureStore.setItemAsync(NEWS_SEEN, String(at)).catch(() => {});
+// The messages cleared on this device: those up to this time are hidden (the news page's «پاکسازی»; «بازسازی» sets it
+// back seven days).
+const NEWS_HIDE = 'tp_news_hide';
+export const loadNewsHide = async (): Promise<number> => { try { return +((await SecureStore.getItemAsync(NEWS_HIDE)) || 0) || 0; } catch { return 0; } };
+export const saveNewsHide = (at: number) => SecureStore.setItemAsync(NEWS_HIDE, String(at)).catch(() => {});
 const CHEERED = 'tp_cheered';
 export const loadCheered = async (): Promise<string[]> => {
   try { const v = JSON.parse((await SecureStore.getItemAsync(CHEERED)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }

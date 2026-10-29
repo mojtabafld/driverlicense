@@ -6,6 +6,7 @@
 // come from VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY, or are made once and kept in the store (meta 'vapid').
 const crypto = require('crypto');
 const webpush = require('web-push');
+const fcm = require('./fcm');
 
 let publicKey = null;
 
@@ -150,7 +151,8 @@ async function sendTo(user, msg) {
   // (The iPhone adds a «from Teoripro» line under the title of a Home Screen web app's notification whatever the
   // title is; with the app's name as the title it was still there, so the title stays what the message is, 2026-10-21.)
   const kind = msg.tag === 'tp-remind' ? 'remind' : msg.tag === 'tp-test' ? 'test' : 'daily';
-  const payload = JSON.stringify({ title: TEXT[l].titles[kind], body: msg.body, url: msg.url || '/', tag: msg.tag || 'tp', lang: l, dir: dirOf(l) });
+  // (`msg.title`: a message with its own title, the admin's news)
+  const payload = JSON.stringify({ title: msg.title || TEXT[l].titles[kind], body: msg.body, url: msg.url || '/', tag: msg.tag || 'tp', lang: l, dir: dirOf(l) });
   let sent = 0, changed = false;
   for (const sub of [...(user.push || [])]) {
     try {
@@ -161,7 +163,42 @@ async function sendTo(user, msg) {
       else console.error('push', user.username, e && (e.statusCode || e.message));
     }
   }
+  // The Android app's devices (fcm.js), for a message with its own title (the news; the app makes its reminders itself).
+  if (msg.title && fcm.available()) {
+    for (const d of [...(user.fcm || [])]) {
+      const r = await fcm.send(d.token, { title: msg.title, body: msg.body, url: msg.url }).catch(e => { console.error('fcm', e.message); return 'error'; });
+      if (r === 'ok') sent++;
+      else if (r === 'gone') { user.fcm = user.fcm.filter(x => x.token !== d.token); changed = true; }
+    }
+  }
   return { sent, changed };
+}
+// The Android app's device token (fcm.js), on this account only; up to 5 per account.
+function subscribeFcm(users, user, token) {
+  if (typeof token !== 'string' || token.length < 20 || token.length > 4096) return false;
+  const changed = [];
+  for (const u of users) {
+    if (u === user || !u.fcm || !u.fcm.some(x => x.token === token)) continue;
+    u.fcm = u.fcm.filter(x => x.token !== token); changed.push(u);
+  }
+  user.fcm = [...(user.fcm || []).filter(x => x.token !== token), { token, at: Date.now() }].slice(-5);
+  return changed;
+}
+function unsubscribeFcm(user, token) {
+  const before = (user.fcm || []).length;
+  user.fcm = (user.fcm || []).filter(x => x.token !== token);
+  return user.fcm.length !== before;
+}
+// The admin's news to every account with notifications on (web push, and the Android app through FCM), one after
+// another in the background. Resolves to the number of devices reached.
+async function broadcast(store, news) {
+  const msg = { title: news.title || 'Teoripro', body: (news.text || news.title || '').slice(0, 240), url: '/news', tag: `tp-news-${news.id}` };
+  let n = 0;
+  for (const user of Object.values(store.users)) {
+    if (!(user.push || []).length && !(user.fcm || []).length) continue;
+    try { const r = await sendTo(user, msg); n += r.sent; if (r.changed) await store.saveUser(user); } catch (e) { console.error('news push', e.message); }
+  }
+  return n;
 }
 const testMessage = user => ({ body: TEXT[langOf(user)].test, url: '/settings', tag: 'tp-test' });
 
@@ -204,4 +241,4 @@ async function tick(store, h) {
   }
 }
 
-module.exports = { init, key, subscribe, unsubscribe, settingsOf, setSettings, sendTo, testMessage, tick, localNow, dailyMinute, dailyMessage };
+module.exports = { init, key, subscribe, unsubscribe, subscribeFcm, unsubscribeFcm, broadcast, settingsOf, setSettings, sendTo, testMessage, tick, localNow, dailyMinute, dailyMessage };

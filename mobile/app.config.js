@@ -10,5 +10,9 @@ module.exports = ({ config }) => {
       android: { ...c.android, package: 'app.bitlane.teoripro.app' },
       ios: { ...c.ios, bundleIdentifier: 'app.bitlane.teoripro.app' } };
   }
+  // Android: Firebase's config for the server's notifications (fcm.js, lib/push.native.ts), when it is in the folder
+  // (Firebase console → the project → the Android app app.bitlane.teoripro → google-services.json; Mojtaba 2026-10-30).
+  const gs = require('path').join(__dirname, 'google-services.json');
+  if (process.env.EXPO_PUBLIC_PROVE !== '1' && require('fs').existsSync(gs)) c = { ...c, android: { ...c.android, googleServicesFile: './google-services.json' } };
   return c;
 };

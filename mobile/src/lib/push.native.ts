@@ -30,6 +30,27 @@ const setOn = (v: boolean) => { try { SecureStore.setItem(KEY, v ? '1' : '0'); }
 async function channel() {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(CHANNEL, { name: tr('یادآوری‌ها'), importance: Notifications.AndroidImportance.DEFAULT });
+  // (the admin's news, sent by the server through Firebase: fcm.js)
+  await Notifications.setNotificationChannelAsync('news', { name: tr('پیام‌ها'), importance: Notifications.AndroidImportance.HIGH });
+}
+// Android: the device's Firebase token, given to the server so it can send the admin's news (Mojtaba 2026-10-30). A
+// build without google-services.json has none: then only the phone's own reminders come.
+let fcmToken: string | null = null;
+async function registerFcm() {
+  if (Platform.OS !== 'android') return;
+  try {
+    const t = await Notifications.getDevicePushTokenAsync();
+    if (typeof t.data !== 'string' || !t.data) return;
+    fcmToken = t.data;
+    await api('POST', 'pushsub', { fcm: t.data });
+  } catch {}
+}
+async function unregisterFcm(token?: string) {
+  if (Platform.OS !== 'android') return;
+  try {
+    const t = fcmToken ?? (await Notifications.getDevicePushTokenAsync()).data;
+    if (typeof t === 'string' && t) await api('POST', 'pushunsub', { fcm: t }, token);
+  } catch {}
 }
 async function allowed() {
   const p = await Notifications.getPermissionsAsync();
@@ -78,11 +99,13 @@ export async function enablePush(_key?: string): Promise<PushState> {
   if (!ok) return p.canAskAgain === false ? 'denied' : 'off';
   setOn(true);
   await schedule(await readNotify());
+  await registerFcm();
   return 'on';
 }
 export async function disablePush(): Promise<PushState> {
   setOn(false);
   await Notifications.cancelAllScheduledNotificationsAsync();
+  await unregisterFcm();
   return pushState();
 }
 // On start (signed in): the week ahead scheduled again with the account's choices. `user` keeps each account's
@@ -91,14 +114,16 @@ export async function syncPush(user?: string): Promise<void> {
   if (user) seed = user;
   if (!isOn() || !(await allowed()).ok) return;
   await schedule(await readNotify());
+  await registerFcm();
 }
 // A choice changed (ui/notify-settings.tsx).
 export async function applyNotify(n: Notify): Promise<void> {
   if (isOn() && (await allowed()).ok) await schedule(n);
 }
 // Signing out: nothing more for this account on this phone (the next account's choices come on its sign-in).
-export async function forgetPush(_token?: string): Promise<void> {
+export async function forgetPush(token?: string): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
+  await unregisterFcm(token);
 }
 // «ارسال اعلان آزمایشی»: one now.
 export async function testPush(): Promise<number> {
