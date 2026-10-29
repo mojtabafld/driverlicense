@@ -71,7 +71,6 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19, display: level >= 2 ? 'none' : 'flex' }}>{PROVE_BANK ? `${faNum(total)} سؤال از بانک سؤالات prove.dk` : `${faNum(total)} سؤال تازه`}</T>
         </View>
       </View>
       {/* The progress first, under the title, then the choice of the number of questions and the start (Mojtaba
@@ -81,7 +80,6 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
-          {level >= 3 ? null : <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{`${faNum(unseen.length)} سؤال هنوز جواب داده نشده`}</T>}
         </View>
         <Toggle label="بدون سؤال تکراری" value={fresh} onChange={setFresh} />
       </View>
