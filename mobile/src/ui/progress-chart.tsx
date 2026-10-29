@@ -132,6 +132,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // while its points came in (Mojtaba 2026-10-18); the phones get a new clip, by its id, at each step instead.
   const clipId = Platform.OS === 'web' ? 'pcDraw' : `pcDraw${Math.round(edge)}`;
   const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
+  const legendCol = sel != null && data[sel] && !good(data[sel]) ? c.bad : c.ok;
   // The line through the points, smooth: each step a curve leaving and reaching its points level, so it never swings
   // above or below them; the area under it down to 0%.
   const line = data.map((_, i) => (i === 0 ? `M${x(0)} ${tops[0]}` : `C${(x(i - 1) + x(i)) / 2} ${tops[i - 1]} ${(x(i - 1) + x(i)) / 2} ${tops[i]} ${x(i)} ${tops[i]}`)).join(' ');
@@ -238,10 +239,11 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
         ) : null}
       </View>
       {ARC && !noLegend ? (
-        // The legend, as the picture's: a pale square for the questions, a full one for the right answers.
+        // The legend, as the picture's: a pale square for the questions, a full one for the right answers, in the picked
+        // test's colour (green when it passed, coral when not), so it matches the bars with the bubble (Mojtaba 2026-10-29).
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: c.ok, opacity: dark ? 0.32 : 0.26 }} /><T style={{ color: c.muted, fontSize: 12.5 }}>سؤال‌ها</T></View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: c.ok }} /><T style={{ color: c.muted, fontSize: 12.5 }}>پاسخ درست</T></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol, opacity: dark ? 0.32 : 0.26 }} /><T style={{ color: c.muted, fontSize: 12.5 }}>سؤال‌ها</T></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol }} /><T style={{ color: c.muted, fontSize: 12.5 }}>پاسخ درست</T></View>
         </View>
       ) : null}
       {ARC && fill ? null : fill && noHint && !a ? null : fill ? (
