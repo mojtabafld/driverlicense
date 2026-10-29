@@ -20,26 +20,7 @@ App Store, and the video, are in the store-assets zip made with them.
 
 **App name:** Teoripro
 
-### Dansk (default language)
-
-**Kort beskrivelse** (≤ 80):
-Øv til teoriprøven til kørekort B – med persisk og engelsk oversættelse.
-
-**Fuld beskrivelse:**
-Teoripro hjælper dig med at blive klar til teoriprøven til almindelig bil (kategori B).
-
-• 1.100 øvespørgsmål i samme form som teoriprøven: et billede og flere spørgsmål, du svarer ja eller nej til
-• Prøver på tid med 25 billeder – højst 5 fejl, som til den rigtige prøve
-• Forklaring på hvert svar, så du forstår hvorfor
-• Persisk og engelsk oversættelse af spørgsmål og forklaringer
-• Lektioner kapitel for kapitel, færdselsregler, alle skilte og afmærkninger, vigepligt i trafikken
-• Ordbog over prøvens danske ord, med betydning på persisk og engelsk
-• Gentag dine fejl, til du kan dem
-• Lyst og mørkt tema og mange farver
-
-Teoripro er ikke tilknyttet Færdselsstyrelsen. Indholdet bygger på færdselsloven og bekendtgørelsen om vejafmærkning.
-
-### English
+### English (default language, en-US)
 
 **Short description** (≤ 80):
 Practise for the Danish driving theory test, in Persian and English too.
@@ -59,7 +40,26 @@ Teoripro gets you ready for the Danish driving theory test for a car (category B
 Teoripro is not affiliated with the Danish Road Traffic Authority (Færdselsstyrelsen). The content is based on the
 Danish Road Traffic Act and the regulation on road signs and markings.
 
-### فارسی (Persian)
+### Dansk (translation, da-DK)
+
+**Kort beskrivelse** (≤ 80):
+Øv til teoriprøven til kørekort B – med persisk og engelsk oversættelse.
+
+**Fuld beskrivelse:**
+Teoripro hjælper dig med at blive klar til teoriprøven til almindelig bil (kategori B).
+
+• 1.100 øvespørgsmål i samme form som teoriprøven: et billede og flere spørgsmål, du svarer ja eller nej til
+• Prøver på tid med 25 billeder – højst 5 fejl, som til den rigtige prøve
+• Forklaring på hvert svar, så du forstår hvorfor
+• Persisk og engelsk oversættelse af spørgsmål og forklaringer
+• Lektioner kapitel for kapitel, færdselsregler, alle skilte og afmærkninger, vigepligt i trafikken
+• Ordbog over prøvens danske ord, med betydning på persisk og engelsk
+• Gentag dine fejl, til du kan dem
+• Lyst og mørkt tema og mange farver
+
+Teoripro er ikke tilknyttet Færdselsstyrelsen. Indholdet bygger på færdselsloven og bekendtgørelsen om vejafmærkning.
+
+### فارسی (Persian, translation, fa)
 
 **توضیح کوتاه** (≤ ۸۰):
 تمرین آزمون تئوری گواهینامه‌ی دانمارک، با ترجمه‌ی فارسی و انگلیسی.
