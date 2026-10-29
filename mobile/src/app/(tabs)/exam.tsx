@@ -1,7 +1,7 @@
 // Exams: a random exam like the real one, an exam of your mistakes, and the latest exams and lessons (the card stays,
 // with a note, before the first one). On the main site the random exam is the app's own questions (ui/new-test.tsx,
 // Mojtaba 2026-10-19: it took the old card's place and name); the /app copy keeps the old bank's random exam.
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -166,15 +166,19 @@ export default function Exam() {
   // starting over on a new screen height.
   const { height } = useWindowDimensions(), ins = useSafeAreaInsets(), lastBox = useRef<View>(null);
   const [level, setLevel] = useState(0);
-  useEffect(() => setLevel(0), [height]); // eslint-disable-line react-hooks/set-state-in-effect
+  // Measured only while the tab is in view: a hidden tab (or one sliding in) reads a wrong place and stepped to a
+  // denser level for nothing, hiding the legend and shrinking the percent after moving between pages (Mojtaba
+  // 2026-10-29). Each time the tab comes into view it starts over from the full layout.
+  const focused = useIsFocused();
+  useEffect(() => { if (focused) setLevel(0); }, [height, focused]); // eslint-disable-line react-hooks/set-state-in-effect
   const fit = () => {
-    if (level >= 4) return;
+    if (level >= 4 || !focused) return;
     lastBox.current?.measureInWindow((_x, top, _w, h) => {
       if (h && top + h > height - (TAB_BAR_H + 12 + Math.max(16, ins.bottom)) + 1) setLevel(l => Math.min(4, l + 1));
     });
   };
   useEffect(() => {
-    const ts = [300, 1000, 2500].map(ms => setTimeout(fit, ms));
+    const ts = [500, 1200, 2500].map(ms => setTimeout(fit, ms));
     return () => ts.forEach(clearTimeout);
   });
   return (
