@@ -771,7 +771,7 @@ const LEARN_STYLE = 'Style: a minimal, simple, modern flat vector illustration l
 const LEARN_BG = 'Background: one plain, flat, even medium-light neutral grey (#d8d8d8) filling the whole picture edge to edge, nothing else on it.';
 const LEARN_PROMPTS = [
   // 1: the course, lesson by lesson
-  `${LEARN_BG} The subject: an open book seen from the front, two simple white page shapes on a soft emerald green (#2fb383) cover, with a small rounded bookmark ribbon in warm yellow (#f6c544).`,
+  `${LEARN_BG} The subject: an open book seen from the front, two simple page shapes in pale warm cream (#f6ecd6), each with three short soft tan (#d9c9a6) text lines, on a soft emerald green (#2fb383) cover, with a small rounded bookmark ribbon in warm yellow (#f6c544).`,
   // 2: rules
   `${LEARN_BG} The subject: a simple balanced scale made of a slim upright, a straight beam and two half-circle pans, in warm golden yellow (#f2b632) with a small white circle at the top.`,
   // 3: road signs

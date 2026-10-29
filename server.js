@@ -1659,6 +1659,31 @@ async function api(req, res, route) {
     setNotes(notes);
     return send(res, 200, { ok: true });
   }
+  // News for every user (Mojtaba 2026-10-29): short messages the admin writes in the dashboard (general information,
+  // updates, new tips), newest first; the app shows them behind the bell on the home page, with a red dot while one is
+  // newer than the last the device has seen. store.meta.news: [{ id, at, title, text, by }], at most 100 kept.
+  if (req.method === 'GET' && route === 'news') {
+    return send(res, 200, { items: (store.meta.news || []).slice().reverse().slice(0, 50).map(({ id, at, title, text }) => ({ id, at, title, text })) });
+  }
+  if (req.method === 'POST' && route === 'news') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const b = await readBody(req);
+    const title = String(b.title || '').trim().slice(0, 140), text = String(b.text || '').trim().slice(0, 4000);
+    if (!title && !text) return send(res, 400, { error: 'عنوان یا متن پیام را بنویسید.' });
+    const item = { id: crypto.randomBytes(6).toString('hex'), at: Date.now(), title, text, by: user.username };
+    const news = [...(store.meta.news || []), item].slice(-100);
+    store.meta.news = news;
+    await store.saveMeta('news', news);
+    return send(res, 200, { item });
+  }
+  if (req.method === 'DELETE' && route === 'news') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const id = new URL(req.url, 'http://x').searchParams.get('id') || '';
+    const news = (store.meta.news || []).filter(x => x.id !== id);
+    store.meta.news = news;
+    await store.saveMeta('news', news);
+    return send(res, 200, { ok: true });
+  }
   if (req.method === 'GET' && route === 'adminstats') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse(), clientErrors: (store.meta.clientErrors || []).slice().reverse(), inbox: (store.meta.inbox || []).slice().reverse(),

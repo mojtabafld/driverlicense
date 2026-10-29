@@ -143,6 +143,7 @@ function Root() {
           <Stack.Screen name="help" />
           <Stack.Screen name="report" />
           <Stack.Screen name="premium" />
+          <Stack.Screen name="news" />
         </Stack.Protected>
         <Stack.Protected guard={!user}>
           <Stack.Screen name="login" />

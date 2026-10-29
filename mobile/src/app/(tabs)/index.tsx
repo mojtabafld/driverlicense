@@ -19,7 +19,8 @@ import { useCourseProgress } from '@/lib/course-progress';
 import { failBar, ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
-import { ChartButton, TestStats } from '@/ui/chart-view';
+import { TestStats } from '@/ui/chart-view';
+import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
@@ -284,7 +285,7 @@ export default function Home() {
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen lead={<GreetIcon part={part} size={plain ? 28 : 22} />} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined} subtitle={tight && !ARC ? undefined : 'آماده‌ی تمرین امروز هستید؟'} subtitleAfter={TURNS}
       hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} bare />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
-      heroExtra={ARC ? <ChartButton on={view} t={t} onPress={toggle} /> : undefined}>
+      heroExtra={ARC ? <BellButton /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
       <Animated.View pointerEvents={view ? 'none' : 'auto'} aria-hidden={view || undefined}
         onLayout={e => { if (!grow) topH.current = e.nativeEvent.layout.height; }}
@@ -301,9 +302,9 @@ export default function Home() {
           {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
               title with its pill under it, as before; no average or mistakes in this card. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : 18 }}>
-            {/* In the ring a flame in the text colour; its percent between the title and the pill (Mojtaba 2026-10-29). */}
+            {/* In the ring a trophy in the text colour (it was a flame); its percent between the title and the pill (Mojtaba 2026-10-29). */}
             <Ring value={est ? est.prob : 0} size={tighter ? 76 : compact ? 104 : 120} stroke={tighter ? 8 : 11} color={probColor}>
-              <Icon name="flame" size={Math.round((tighter ? 76 : compact ? 104 : 120) * 0.3)} color={c.text} weight="semibold" />
+              <Icon name="trophy" size={Math.round((tighter ? 76 : compact ? 104 : 120) * 0.3)} color={c.text} weight="semibold" />
             </Ring>
             <View style={{ flex: 1, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
