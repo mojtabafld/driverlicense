@@ -94,8 +94,9 @@ export default function Run() {
   // The Persian translation starts hidden in an exam; the button under the question shows it.
   const [showFa, setShowFa] = useState(false);
   // «بررسی فوری» (Mojtaba 2026-10-29): while on, each statement shows at once whether the answer given is right, with its
-  // explanation; off by default, so a test stays a test unless the user asks.
-  const [check, setCheck] = useState(false);
+  // explanation; for each question on its own (the questions it is on), off by default, so a test stays a test unless
+  // the user asks.
+  const [checked, setChecked] = useState<number[]>([]);
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
   const [flags, setFlags] = useState<number[]>([]);
   const [dialog, setDialog] = useState<'quit' | 'handin' | null>(null);
@@ -214,7 +215,7 @@ export default function Run() {
           {/* Read the question and its statements aloud, beside the translation switch. */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
           <View style={{ flex: 1 }} />
-          <CheckChip on={check} onPress={() => setCheck(v => !v)} />
+          <CheckChip on={checked.includes(i)} onPress={() => setChecked(v => (v.includes(i) ? v.filter(x => x !== i) : [...v, i]))} />
         </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
@@ -223,7 +224,7 @@ export default function Run() {
         <OptionGroup key={`g-${i}`}>
         {q.st.map((s, k) => {
           // (checked once the question has an answer, so the right answers do not show before any is given)
-          const on = ticks[i][k], judge = check && ticks[i].some(Boolean);
+          const on = ticks[i][k], judge = checked.includes(i) && ticks[i].some(Boolean);
           return (
             // Keyed by question too, so each new question's statements come in one after another.
             <Enter key={`${i}-${k}`}>
