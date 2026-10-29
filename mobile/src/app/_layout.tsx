@@ -65,19 +65,24 @@ function Root() {
   const askLang = !!user && !settings.langChosen;
   const { premium, pay } = useApp();
   const [promo, setPromo] = useState(false);
-  // Right after an account is made (made in the last half hour; not a guest's), never again on this device (Mojtaba
-  // 2026-10-29). It offers the free trial, so it needs only the server's premium on (pay), on every platform.
+  // Right after an account is made (made in the last day; not a guest's), never again on this device (Mojtaba
+  // 2026-10-29). It offers the free trial, so it needs only the server's premium on (pay), on every platform. Not while
+  // the new account waits for its email link (the verify page is shown instead), and marked as seen only once it has
+  // really been on screen a moment or is closed: a reload right after signing up (the account's theme) or the verify
+  // page used to mark it seen unseen.
+  const markPromo = () => { if (user) loadPromoSeen().then(seen => { if (!seen.includes(user.username)) savePromoSeen([...seen, user.username].slice(-20)); }); };
   useEffect(() => {
-    const fresh = !!user && !user.guest && Date.now() - (user.created || 0) < 30 * 60e3;
+    const fresh = !!user && !user.guest && !user.verify && Date.now() - (user.created || 0) < 24 * 3600e3;
     if (!onboarded || !user || !fresh || askLang || premium || !pay || PROVE_PICS) return;
     let live = true;
-    loadPromoSeen().then(seen => {
-      if (!live || seen.includes(user.username)) return;
-      savePromoSeen([...seen, user.username].slice(-20));
-      setPromo(true);
-    });
+    loadPromoSeen().then(seen => { if (live && !seen.includes(user.username)) setPromo(true); });
     return () => { live = false; };
-  }, [onboarded, user?.username, askLang, premium, !!pay]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onboarded, user?.username, user?.verify, askLang, premium, !!pay]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!promo) return;
+    const id = setTimeout(markPromo, 2500);
+    return () => clearTimeout(id);
+  }, [promo]); // eslint-disable-line react-hooks/exhaustive-deps
   // The pages opened, counted (without the account) for the daily AI report (lib/usage.ts).
   useUsage(!!user && !!onboarded);
   useEffect(() => { if (ready && fonts && onboarded !== null) SplashScreen.hideAsync().catch(() => {}); }, [ready, fonts, onboarded]);
@@ -148,7 +153,7 @@ function Root() {
       ) : null}
       {/* The first premium page: right after signing up, to a user without premium, after the intro and the language
           screen (Mojtaba 2026-10-29). */}
-      {promo ? <View style={StyleSheet.absoluteFill}><ProPromo onClose={() => setPromo(false)} /></View> : null}
+      {promo ? <View style={StyleSheet.absoluteFill}><ProPromo onClose={() => { markPromo(); setPromo(false); }} /></View> : null}
       {/* A newer Android app is out: asks once per start to install it (after the intro and the language screen). */}
       {onboarded && user && !askLang ? <UpdatePrompt /> : null}
     </ThemeProvider>
