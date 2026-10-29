@@ -71,11 +71,13 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
         </View>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700', fontSize: 18 }}>آزمون تصادفی</T>
+          {/* (it was «۱۱۰۰ سؤال تازه»; Mojtaba 2026-10-29) */}
+          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>انتخاب تعداد سؤال‌های آزمون</T>
         </View>
       </View>
       {/* The progress first, under the title, then the choice of the number of questions and the start (Mojtaba
           2026-10-22; it was at the card's foot). */}
-      {tight || level ? null : <T style={{ color: c.muted, fontSize: 13.5, lineHeight: 22 }}>تعداد سؤال‌ها را انتخاب کنید.</T>}
+      {/* (no «تعداد سؤال‌ها را انتخاب کنید.» line: the title's line says it) */}
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
