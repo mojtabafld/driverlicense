@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, AppState, BackHandler, Easing, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { transText } from '@/lib/i18n';
+import { RTL, tr, transText } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade, isExamMode } from '@/lib/logic';
@@ -48,6 +48,35 @@ function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
   return <Animated.View style={{ opacity: o }}><Icon name="clock" size={17} color={color} weight="semibold" /></Animated.View>;
 }
 
+// The «بررسی فوری» switch under the picture: a soft pill like a status tag, a green circled tick and its name in green
+// while on, the same in grey while off (after a picture Mojtaba sent).
+function CheckChip({ on, onPress }: { on: boolean; onPress: () => void }) {
+  const c = useColors(), fg = on ? c.ok : c.muted;
+  return (
+    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="switch" accessibilityState={{ checked: on }} accessibilityLabel={tr('بررسی فوری')}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 7, height: 38, paddingHorizontal: 13, borderRadius: 13,
+        backgroundColor: on ? c.okSoft : c.surface2, opacity: pressed ? 0.8 : 1 })}>
+      <Icon name="checkCircle" size={19} color={fg} weight="semibold" />
+      <T style={{ fontSize: 14, fontWeight: '700', color: fg }}>بررسی فوری</T>
+    </Pressable>
+  );
+}
+
+// Under a statement while «بررسی فوری» is on: whether the answer given (ticked or not) is right, and why.
+function Verdict({ right, why, whyFa }: { right: boolean; why?: string; whyFa?: string }) {
+  const c = useColors(), fg = right ? c.ok : c.bad;
+  return (
+    <View style={{ gap: 4 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 9, backgroundColor: right ? c.okSoft : c.badSoft, direction: RTL ? 'rtl' : 'ltr' } as any}>
+        <Icon name={right ? 'checkCircle' : 'xCircle'} size={15} color={fg} weight="semibold" />
+        <T style={{ fontSize: 12.5, fontWeight: '700', color: fg, writingDirection: RTL ? 'rtl' : 'ltr' }}>{right ? 'درست' : 'نادرست'}</T>
+      </View>
+      {why ? <L style={{ fontSize: 13.5, lineHeight: 20, color: c.muted }}>{why}</L> : null}
+      {whyFa ? <TransT style={{ color: c.muted, fontSize: 13 }}>{whyFa}</TransT> : null}
+    </View>
+  );
+}
+
 export default function Run() {
   const c = useColors(), ins = useSafeAreaInsets(), dark = useIsDark();
   const { Q, settings, saveAttempt } = useApp();
@@ -64,6 +93,9 @@ export default function Run() {
   const [headH, setHeadH] = useState(0); // the glass top bar's height, the page's top padding
   // The Persian translation starts hidden in an exam; the button under the question shows it.
   const [showFa, setShowFa] = useState(false);
+  // «بررسی فوری» (Mojtaba 2026-10-29): while on, each statement shows at once whether the answer given is right, with its
+  // explanation; off by default, so a test stays a test unless the user asks.
+  const [check, setCheck] = useState(false);
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
   const [flags, setFlags] = useState<number[]>([]);
   const [dialog, setDialog] = useState<'quit' | 'handin' | null>(null);
@@ -181,6 +213,8 @@ export default function Run() {
           <TranslateButton on={showFa} onPress={() => setShowFa(!showFa)} lang={lang} />
           {/* Read the question and its statements aloud, beside the translation switch. */}
           <SpeakButton key={q.id} qid={q.id} lang={lang} />
+          <View style={{ flex: 1 }} />
+          <CheckChip on={check} onPress={() => setCheck(v => !v)} />
         </View>
         <View style={{ gap: 4 }}>
           <L style={{ fontSize: 18, fontWeight: '600', lineHeight: 25 }}>{lang === 'en' && q.sen ? q.sen : q.sda}</L>
@@ -188,11 +222,13 @@ export default function Run() {
         </View>
         <OptionGroup key={`g-${i}`}>
         {q.st.map((s, k) => {
-          const on = ticks[i][k];
+          // (checked once the question has an answer, so the right answers do not show before any is given)
+          const on = ticks[i][k], judge = check && ticks[i].some(Boolean);
           return (
             // Keyed by question too, so each new question's statements come in one after another.
             <Enter key={`${i}-${k}`}>
-              <OptionBox on={on} n={k} onPress={() => toggle(k)}>
+              <OptionBox on={on} n={k} onPress={() => toggle(k)} mark={judge && (on ? 1 : 0) !== s.ok}
+                extra={judge ? <Verdict right={(on ? 1 : 0) === s.ok} why={lang === 'en' && s.een ? s.een : s.eda} whyFa={showFa ? s.efa : ''} /> : undefined}>
                 <L style={{ fontSize: 15.5, lineHeight: 22 }}>{lang === 'en' && s.en ? s.en : s.da}</L>
                 {showFa && transText(lang, s) ? <TransT style={{ color: c.muted, fontSize: 14 }}>{transText(lang, s)}</TransT> : null}
               </OptionBox>
