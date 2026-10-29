@@ -15,7 +15,7 @@ import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
 import { Icon, type IconName } from './icon';
 import { L, T, physical, physicalAlign, tap, useHeaderTop } from './kit';
-import { defaultAccentDark, defaultAccentLight } from './palette';
+import { defaultAccentDark, defaultAccentLight, defaultPalette } from './palette';
 import { useColors } from './theme';
 import Svg, { Path } from 'react-native-svg';
 
@@ -51,10 +51,12 @@ function GoogleG({ size = 20 }: { size?: number }) {
 // `road`: the symbol's road white, unless the accent is nearly white itself («سیاه و سفید»): then in the accent's text
 // colour.
 const roadOn = (accent: string, on: string) => { const h = accent.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return v.every(x => x > 215) ? on : '#ffffff'; };
-const DARK = defaultAccentDark(), LIGHT = defaultAccentLight();
-const NIGHT = { dark: true, top: '#1b2a3f', bottom: '#0a0f17', ink: '#ffffff', muted: '#9aa6b6', faint: '#7d8896', soft: '#cfd6df', accent: DARK.accent, onAccent: DARK.on,
+// (With «گرافیت» the default, its plain charcoal and light greys instead of the blue-greys.)
+const DARK = defaultAccentDark(), LIGHT = defaultAccentLight(), GREY = defaultPalette() === 'graphite';
+const NIGHT = { dark: true, top: GREY ? '#2a2a2a' : '#1b2a3f', bottom: GREY ? '#141414' : '#0a0f17', ink: '#ffffff', muted: GREY ? '#a3a3a3' : '#9aa6b6', faint: GREY ? '#808080' : '#7d8896', soft: GREY ? '#d4d4d4' : '#cfd6df', accent: DARK.accent, onAccent: DARK.on,
   glass: 'rgba(255,255,255,0.08)', glassEdge: 'rgba(255,255,255,0.14)', road: roadOn(DARK.accent, DARK.on) };
-const DAY = { dark: false, top: '#dfe7f1', bottom: '#f7f9fc', ink: '#0f1722', muted: '#566273', faint: '#76808e', soft: '#334155', accent: LIGHT.accent, onAccent: LIGHT.on,
+const DAY = { dark: false, top: GREY ? '#e4e4e4' : '#dfe7f1', bottom: GREY ? '#f7f7f7' : '#f7f9fc', ink: GREY ? '#151515' : '#0f1722', muted: GREY ? '#5f5f5f' : '#566273',
+  faint: GREY ? '#808080' : '#76808e', soft: GREY ? '#333333' : '#334155', accent: LIGHT.accent, onAccent: LIGHT.on,
   glass: 'rgba(15,23,34,0.05)', glassEdge: 'rgba(15,23,34,0.11)', road: roadOn(LIGHT.accent, LIGHT.on) };
 export function useN() { return useColorScheme() === 'dark' ? NIGHT : DAY; }
 // The app's symbol (assets/icon-src/symbol.svg): the road bent into a tick, its broken centre line in the tile's colour.

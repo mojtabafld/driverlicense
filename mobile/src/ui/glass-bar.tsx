@@ -34,7 +34,7 @@ const NATIVE_GLASS = Platform.OS === 'ios' && (() => { try { return isLiquidGlas
 // 2026-10-23), with their edge; the chosen item on a capsule a little lighter than the bar in the dark theme, tinted with
 // the theme's colour in the light one.
 // `scheme`: the glass's own light or dark.
-const MONO = PALETTE === 'mono';
+const GRAPHITE = PALETTE === 'graphite', MONO = PALETTE === 'mono' || GRAPHITE;
 export function useBarLook() {
   const dark = useIsDark(), light = useBarLight(), apart = useContext(BarApart), c = useColors();
   if (!NATIVE_GLASS) {
@@ -123,7 +123,8 @@ const ANDROID = Platform.OS === 'android';
 const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
 export function Frost({ dark, over }: { dark: boolean; over?: boolean }) {
   const a = ANDROID ? 0.94 : over ? 0.74 : 0.62;
-  const tint = dark ? (over ? `rgba(46,48,54,${a})` : `rgba(0,0,0,${a})`) : (over ? `rgba(226,230,236,${a})` : `rgba(255,255,255,${a})`);
+  // («گرافیت»: charcoal, not black, as its page.)
+  const tint = dark ? (over ? (GRAPHITE ? `rgba(62,62,62,${a})` : `rgba(46,48,54,${a})`) : GRAPHITE ? `rgba(38,38,38,${a})` : `rgba(0,0,0,${a})`) : (over ? `rgba(226,230,236,${a})` : `rgba(255,255,255,${a})`);
   return (<>
     {ANDROID ? null : <BlurView pointerEvents="none" intensity={40} tint={dark ? 'dark' : 'light'} style={FILL} />}
     <View pointerEvents="none" style={[FILL, { backgroundColor: tint }, Platform.OS === 'web' ? ({ transitionProperty: 'background-color', transitionDuration: '250ms' } as any) : null]} />
