@@ -127,7 +127,11 @@ jobs:
       - name: Version and signing in the Gradle project
         run: |
           cd android/app
-          sed -i -E "s/versionCode [0-9]+/versionCode ${GITHUB_RUN_NUMBER}/; s/versionName \"([^\"]+)\"/versionName \"\1 (${RELEASE_N})\"/" build.gradle
+          # (A Google Play build keeps the app's own version as its name, e.g. «1.0», as the store shows it; an APK adds
+          # its release number.)
+          if [ "${{ inputs.play }}" = "true" ]; then SUFFIX=""; else SUFFIX=" (${RELEASE_N})"; fi
+          sed -i -E "s/versionCode [0-9]+/versionCode ${GITHUB_RUN_NUMBER}/; s/versionName \"([^\"]+)\"/versionName \"\1${SUFFIX}\"/" build.gradle
+          echo "APP_VERSION=$(node -p "require('../../app.json').expo.version")" >> "$GITHUB_ENV"
           cat >> build.gradle <<GRADLE
 
           android {
@@ -181,6 +185,7 @@ jobs:
           releaseFiles: ${{ runner.temp }}/out/teoriprove.aab
           track: internal
           status: completed
+          releaseName: ${{ env.APP_VERSION }}
 
       # A copy for the run page only; the release below is what counts, so a full artifact storage quota does not stop it.
       - uses: actions/upload-artifact@v4
