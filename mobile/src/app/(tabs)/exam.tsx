@@ -21,7 +21,7 @@ import { SizeSlider } from '@/ui/size-slider';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { MoreButton } from '@/ui/more-button';
-import { ArcButton, Button, Card, Screen, T, tap } from '@/ui/kit';
+import { ArcButton, Button, Card, FitLine, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 import { ExamWheelArt } from '@/ui/header-art';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
@@ -105,32 +105,32 @@ function MistakesCard() {
   );
 }
 
-// In place of the tests' history (Mojtaba 2026-10-29): one card in two halves, the tests' history and the questions to
-// practise, each a button of the same size with a large icon, its name and its count.
+// In place of the tests' history (Mojtaba 2026-10-29): two buttons side by side in the calendar's «یادداشت سریع» look,
+// the tests' history and the questions to practise: a round icon tile, the name over its count, and a ‹ at the end.
+// `level` 3 and up (the shortest screens): a little lower.
 function ShortcutsCard({ level = 0 }: { level?: number }) {
   const c = useColors();
   const { attempts } = useApp();
-  const tests = attempts.filter(a => a.mode !== 'lesson').length, wrong = mistakeIds(attempts).length, tile = [64, 52, 44, 40, 36][level] ?? 36;
-  // The shortest screens (level 4): each half's icon beside its words.
-  const row = level >= 4;
-  const half = (icon: IconName, label: string, count: string, href: '/history' | '/mistakes', tone?: string, soft?: string) => (
+  const tests = attempts.filter(a => a.mode !== 'lesson').length, wrong = mistakeIds(attempts).length, low = level >= 3;
+  const half = (icon: IconName, label: string, count: string, href: '/history' | '/mistakes', tone?: string) => (
     <Pressable onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => ({ flex: 1, flexDirection: row ? 'row' : 'column', alignItems: 'center', justifyContent: 'center', gap: row ? 8 : level >= 2 ? 4 : level ? 6 : 8, paddingVertical: row ? 10 : level >= 2 ? 10 : level ? 14 : 18, paddingHorizontal: 8, opacity: pressed ? 0.7 : 1 })}>
-      <View style={{ width: tile, height: tile, borderRadius: Math.round(tile * 0.31), alignItems: 'center', justifyContent: 'center', backgroundColor: soft ?? c.surface2 }}>
-        <Icon name={icon} size={Math.round(tile / 2)} color={tone ?? c.text} weight="semibold" />
+      style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: low ? 12 : 16, paddingHorizontal: 12, borderRadius: 20,
+        backgroundColor: c.surface2, opacity: pressed ? 0.8 : 1 })}>
+      <View style={{ width: low ? 38 : 44, height: low ? 38 : 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface }}>
+        <Icon name={icon} size={low ? 18 : 21} color={tone ?? c.text} />
       </View>
-      <View style={{ flexShrink: 1, alignItems: row ? 'flex-start' : 'center', gap: row ? 0 : level >= 2 ? 4 : level ? 6 : 8 }}>
-        <T style={{ fontWeight: '700', fontSize: row ? 13.5 : 15, textAlign: row ? undefined : 'center' }} numberOfLines={1}>{label}</T>
-        <T style={{ color: tone ?? c.muted, fontSize: 12.5, fontWeight: '600', textAlign: row ? undefined : 'center' }} numberOfLines={1}>{count}</T>
+      <View style={{ flex: 1, gap: 2 }}>
+        <FitLine size={14.5} min={11} style={{ fontWeight: '700' }}>{label}</FitLine>
+        <T style={{ fontSize: 12.5, color: tone ?? c.muted }} numberOfLines={1}>{count}</T>
       </View>
+      <Icon name="chevronLeft" size={14} color={c.muted} weight="semibold" />
     </Pressable>
   );
   return (
-    <Card style={{ flexDirection: 'row', padding: 0 }}>
-      {half('clock', 'تاریخچه‌ی آزمون‌ها', t('{0} آزمون', faNum(tests)), '/history')}
-      <View style={{ width: 1, marginVertical: 16, backgroundColor: c.line }} />
-      {half('warning', 'اشتباهات', t('{0} سؤال', faNum(wrong)), '/mistakes', wrong ? c.bad : undefined, wrong ? c.badSoft : undefined)}
-    </Card>
+    <View style={{ flexDirection: 'row', gap: 10 }}>
+      {half('clock', 'تاریخچه', t('{0} آزمون', faNum(tests)), '/history')}
+      {half('warning', 'اشتباهات', t('{0} سؤال', faNum(wrong)), '/mistakes', wrong ? c.bad : undefined)}
+    </View>
   );
 }
 
