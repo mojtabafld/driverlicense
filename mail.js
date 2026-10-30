@@ -28,7 +28,8 @@ function smtp() {
   return smtpCache.host && smtpCache.user && smtpCache.pass ? { ...smtpCache, from: 'file' } : null;
 }
 function saveSmtp({ host, port, user, pass }) {
-  host = String(host || '').trim(); user = String(user || '').trim(); pass = String(pass || ''); port = +port || 587;
+  // (trimmed: a phone's paste brought a space before the password, and Oracle refused it; Mojtaba 2026-10-30)
+  host = String(host || '').trim(); user = String(user || '').trim(); pass = String(pass || '').trim(); port = +port || 587;
   if (!/^[a-z0-9.-]{3,253}$/i.test(host) || !user || user.length > 400 || (!pass && !(smtpCache && smtpCache.pass)) || pass.length > 400)
     throw Object.assign(new Error('آدرس سرور، نام کاربری و رمز را بنویسید.'), { status: 400 });
   const kept = smtp();
