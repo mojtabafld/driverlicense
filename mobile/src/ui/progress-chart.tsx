@@ -16,7 +16,6 @@ import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
 import { Marquee } from './marquee';
 import { ArcButton, Button, T, tap, useCountUp } from './kit';
-import { FirstSteps } from './first-steps';
 import { mix } from './palette';
 import { ARC, useColors, useIsDark } from './theme';
 
@@ -81,10 +80,8 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
     return (
       <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
-        <View pointerEvents="box-none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
-          <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
-          {/* No test yet (a first visit): «start learning» and, under it, «first test», each opening its tab. */}
-          {attempts.length ? null : <FirstSteps />}
+        <View pointerEvents="none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
+          <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
         </View>
         {/* Where the dates go once there are attempts (not with `noNote`). */}
         {noNote ? null : <T numberOfLines={1} style={{ color: c.muted, fontSize: 12, lineHeight: 19, textAlign: 'center' }}>نمودار بعد از حداقل دو آزمون به‌روز می‌شود.</T>}
