@@ -7,7 +7,7 @@
      (its receiving webhook, /api/inbound). At the top, the AI's daily report (insights.js, /api/insights): what it found,
      what it suggests for the next updates, its memory, the pages used, and the notes it proposes for the questions most
      answered wrongly, each approved (as edited) or rejected here (/api/qnote); «گزارش تازه» makes one now
-     (/api/insightsrun). It talks to /api/login, /api/logout, /api/adminstats and those. -->
+     (/api/insightsrun). «ایجاد تصاویر» opens the picture page (/admin/images, console/images.html). It talks to /api/login, /api/logout, /api/adminstats and those. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -207,7 +207,7 @@ details summary{cursor:pointer;font-weight:700}
     $app.innerHTML = `
       <div class="head"><h1 class="grow">داشبورد Teoripro</h1>
         <span class="muted" style="font-size:12.5px">به‌روز: ${when(Date.now())}</span>
-        <button class="btn soft" id="re">تازه کردن</button><button class="btn soft" id="out">خروج</button></div>
+        <a class="btn" href="/admin/images" style="text-decoration:none">ایجاد تصاویر</a><button class="btn soft" id="re">تازه کردن</button><button class="btn soft" id="out">خروج</button></div>
       <div class="tiles">
         ${tile(fa(t.users), 'کاربران', `${fa(t.newToday)} تازه امروز، ${fa(t.new7)} این هفته`)}
         ${tile(fa(t.activeToday), 'فعال امروز', `${fa(t.active7)} در ۷ روز`)}
