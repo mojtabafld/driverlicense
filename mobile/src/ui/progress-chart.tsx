@@ -7,7 +7,7 @@
 // at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
 import { RTL, tr } from '@/lib/i18n';
@@ -15,7 +15,8 @@ import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
 import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
 import { Marquee } from './marquee';
-import { ArcButton, Button, T, tap, useCountUp, useHeaderNameSettled } from './kit';
+import { ArcButton, Button, T, tap, useCountUp } from './kit';
+import { FirstSteps } from './first-steps';
 import { mix } from './palette';
 import { ARC, useColors, useIsDark } from './theme';
 
@@ -32,47 +33,6 @@ const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 34 : 14, B = 24, FILL_MIN
 let drawnOnce = false;
 // (The app's own random exam, mode 'new', is «آزمون تصادفی» too since it took the old one's place; Mojtaba 2026-10-19.)
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : a.mode === 'demo' ? 'آزمون آزمایشی' : 'آزمون تصادفی');
-
-// The empty chart's two buttons (no test yet): «شروع آموزش» and «اولین آزمون», apart and the same size, their corners only
-// a little round; their icons give a small hop in turn, first the learning one, then the test's, once the home header's
-// name has settled and again every few seconds (none with «reduce motion»; Mojtaba 2026-10-30).
-function FirstSteps() {
-  const c = useColors(), go = useHeaderNameSettled();
-  const [hop] = useState(() => [new Animated.Value(0), new Animated.Value(0)]);
-  useEffect(() => {
-    if (!go) return;
-    let loop: Animated.CompositeAnimation | null = null, live = true;
-    const one = (v: Animated.Value) => Animated.sequence([
-      Animated.timing(v, { toValue: 1, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: Platform.OS !== 'web' }),
-      Animated.timing(v, { toValue: 0, duration: 420, easing: Easing.bounce, useNativeDriver: Platform.OS !== 'web' }),
-    ]);
-    AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then(reduce => {
-      if (!live || reduce) return;
-      loop = Animated.loop(Animated.sequence([Animated.delay(500), one(hop[0]), Animated.delay(120), one(hop[1]), Animated.delay(3200)]));
-      loop.start();
-    });
-    return () => { live = false; loop?.stop(); };
-  }, [go, hop]);
-  const btn = (n: 0 | 1, icon: 'learn' | 'exam', label: string, to: '/learn' | '/exam') => (
-    <Pressable onPress={() => { tap(); router.navigate(to); }} accessibilityRole="button" accessibilityLabel={tr(label)}
-      style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 10, height: 42,
-        borderRadius: 8, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface, opacity: pressed ? 0.7 : 1 })}>
-      <Animated.View style={{ transform: [{ translateY: hop[n].interpolate({ inputRange: [0, 1], outputRange: [0, -5] }) },
-        { scale: hop[n].interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) }] }}>
-        <Icon name={icon} size={17} color={c.text} />
-      </Animated.View>
-      <T numberOfLines={1} style={{ fontSize: 13.5, fontWeight: '600', color: c.text, flexShrink: 1 }}>{label}</T>
-    </Pressable>
-  );
-  return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: 12 }}>
-      <View style={{ flexDirection: 'row', gap: 10, width: '100%', maxWidth: 340 }}>
-        {btn(0, 'learn', 'شروع آموزش', '/learn')}
-        {btn(1, 'exam', 'اولین آزمون', '/exam')}
-      </View>
-    </View>
-  );
-}
 
 // `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
 // `minH`: with `fill`, the chart's least height (FILL_MIN unless given).
@@ -123,8 +83,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
       <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
         <View pointerEvents="box-none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
           <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
-          {/* No test yet (a first visit): two buttons in the middle, «start learning» and «first test», each opening its
-              tab (Mojtaba 2026-10-30). */}
+          {/* No test yet (a first visit): «start learning» and, under it, «first test», each opening its tab. */}
           {attempts.length ? null : <FirstSteps />}
         </View>
         {/* Where the dates go once there are attempts (not with `noNote`). */}
