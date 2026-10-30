@@ -101,7 +101,7 @@ function grantPlay(u, { token, plan, orderId, test }) {
 }
 // The free trial codes (upper case) and its length in days.
 const promoCodes = () => (process.env.PROMO_CODE || '').split(',').map(c => c.trim().toUpperCase()).filter(Boolean);
-const promoDays = () => { const n = Math.round(+process.env.PROMO_DAYS); return Number.isFinite(n) && n >= 1 && n <= 90 ? n : 3; };
+const promoDays = () => { const n = Math.round(+process.env.PROMO_DAYS); return Number.isFinite(n) && n >= 1 && n <= 90 ? n : 1; };
 // A trial with `code`: its days added after the current pass (or from now), once per account. Returns false when the
 // account has had its trial already.
 function grantPromo(u, code, email) {
