@@ -210,7 +210,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (d.user.verify) return;
     if (!bank) setBank(await fetchBank<Bank>());
     // (the main site only; none is fine: the new test then waits)
-    if (!PROVE_BANK && !newBank) fetchBank<NewBank>('newq.js').then(setNewBank).catch(() => {});
+    // A question the admin took out of the bank (x) is never picked for a new test, but stays known for the tests
+    // already taken with it (newBank.gone).
+    if (!PROVE_BANK && !newBank) fetchBank<NewBank>('newq.js').then(d => setNewBank({ questions: d.questions.filter(q => !q.x), gone: d.questions.filter(q => q.x) })).catch(() => {});
   }, [bank, newBank]);
 
   // The intro comes before signing in, so the pictures it can show are read at start too.
@@ -278,7 +280,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try { await api('PUT', 'terms', { terms: next }); }
       catch (e) { setMe(m => (m ? { ...m, terms: before } : m)); throw e; }
     },
-    Q: new Map([...(bank?.questions || []), ...(newBank?.questions || [])].map(q => [q.id, q])),
+    Q: new Map([...(bank?.questions || []), ...(newBank?.questions || []), ...(newBank?.gone || [])].map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
     register: async (name, username, password, email, exam) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password, email, lang: UI_LANG, exam }); await signedIn(d.token); },
     mail,
