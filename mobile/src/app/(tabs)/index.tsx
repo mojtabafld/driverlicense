@@ -11,6 +11,7 @@ import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { faNum, fmtDate, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf, shuffle } from '@/lib/logic';
 import { RTL, tr } from '@/lib/i18n';
+import { loadPromoSeen, savePromoSeen } from '@/lib/prefs';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -296,6 +297,21 @@ export default function Home() {
     session.plan = { mode: 'demo', ids: shuffle(newBank.questions.map(q => q.id)).slice(0, 5), title: 'آزمون آزمایشی' };
     router.push('/run');
   };
+  // The warm-up (app/warmup.tsx; Mojtaba 2026-10-30): three questions asked in a lighter way, right after the first
+  // sign-in, before any test, once per account (kept beside the premium page's «seen», as `w:` keys), so home is not
+  // empty afterwards.
+  const { ready: loaded } = useApp();
+  useEffect(() => {
+    if (!tryout || !loaded || !user || user.verify) return;
+    const key = `w:${user.username}:${user.created || 0}`;
+    let live = true;
+    loadPromoSeen().then(seen => {
+      if (!live || seen.includes(key)) return;
+      savePromoSeen([...seen, key].slice(-20));
+      router.push('/warmup');
+    });
+    return () => { live = false; };
+  }, [tryout, loaded, user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
   // Main site: the step-by-step course's lessons (lib/course.ts) finished out of those written; /app: prove.dk's lessons tried.
   const { done } = useCourseProgress();
   const ready = COURSE.flatMap(ch => ch.lessons);
