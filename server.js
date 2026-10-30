@@ -1573,24 +1573,27 @@ async function api(req, res, route) {
       }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
-  // The admin's picture page (/admin/images): the step-by-step course's pictures by lesson (each with its version, and a
-  // new one on its way or failed), a picture's prompt, and a new picture from an edited prompt.
+  // The admin's picture page (/admin/images): the step-by-step course's pictures by lesson and «آزمون جدید»'s by topic
+  // (?set=course|newq), each with its version, and a new one on its way or failed; a picture's prompt; and a new
+  // picture from an edited prompt.
   if (route === 'courseart' || route === 'courseprompt' || route === 'coursegen') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const q = new URL(req.url, 'http://x').searchParams;
     try {
       if (req.method === 'GET' && route === 'courseart') {
-        const v = imagegen.courseVersions();
-        const item = ({ key, name }) => { const j = imagegen.oneOff(`course-${key}`); return { key, name, v: v[key] || null, making: j && !j.done ? j.state : null, failed: j && j.done && !j.blob && j.error ? j.error : null }; };
-        return send(res, 200, { groups: consolepics.courseGroups(imagegen.courseKeys()).map(g => ({ title: g.title, items: g.items.map(item) })) });
+        const set = q.get('set') === 'newq' ? 'newq' : 'course', v = imagegen.artVersions(set);
+        const item = ({ key, name, da }) => { const j = imagegen.oneOff(`${set}-${key}`); return { key, name, da, v: v[key] || null, making: j && !j.done ? j.state : null, failed: j && j.done && !j.blob && j.error ? j.error : null }; };
+        const groups = set === 'newq' ? consolepics.newqGroups() : consolepics.courseGroups(imagegen.artKeys('course'));
+        return send(res, 200, { groups: groups.map(g => ({ title: g.title, items: g.items.map(item) })) });
       }
       if (req.method === 'GET' && route === 'courseprompt') {
-        const key = String(new URL(req.url, 'http://x').searchParams.get('key') || ''), j = imagegen.oneOff(`course-${key}`), prompt = imagegen.coursePrompt(key);
+        const set = q.get('set') === 'newq' ? 'newq' : 'course', key = String(q.get('key') || ''), j = imagegen.oneOff(`${set}-${key}`), prompt = imagegen.artPrompt(set, key);
         if (prompt == null) return send(res, 404, { error: 'این تصویر پیدا نشد.' });
         return send(res, 200, { key, prompt: j && !j.done ? j.prompt : prompt });
       }
       if (req.method === 'POST' && route === 'coursegen') {
         const b = await readBody(req);
-        return send(res, 200, { job: await imagegen.courseGen(String(b.key || ''), b.prompt) });
+        return send(res, 200, { job: await imagegen.artGen(b.set === 'newq' ? 'newq' : 'course', String(b.key || ''), b.prompt) });
       }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
