@@ -297,7 +297,7 @@ export default function Home() {
     session.plan = { mode: 'demo', ids: shuffle(newBank.questions.map(q => q.id)).slice(0, 5), title: 'آزمون آزمایشی' };
     router.push('/run');
   };
-  // The warm-up (app/warmup.tsx; Mojtaba 2026-10-30): three questions asked in a lighter way, right after the first
+  // The warm-up (app/warmup.tsx; Mojtaba 2026-10-30): five questions asked in a lighter way, right after the first
   // sign-in, before any test, once per account (kept beside the premium page's «seen», as `w:` keys), so home is not
   // empty afterwards.
   const { ready: loaded } = useApp();
