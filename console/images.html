@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <!-- The admin's picture page at teori.bitlane.app/admin/images, opened from the dashboard's «ایجاد تصاویر» (an admin
-     account, signed in on the dashboard). Four parts: the questions' pictures (by lesson), the step-by-step course's
-     («آموزش», by lesson), the signs' and right of way's (by their groups). A part's group and then one of its pictures are
-     chosen from two lists; the picture is shown with its prompt, which may be edited, and «ساخت تصویر جدید» makes a new
-     picture from it. A question's new picture is shown in the app once chosen («نمایش در برنامه»); a course, sign or
-     right-of-way picture takes the old one's place once made. It talks to /api/consolepics, /api/imggenstart,
-     /api/imggenset, /api/imggendraft, /api/guideref, /api/guidegen, /api/guidedraft, /api/consoleprompt and
-     /api/courseart, /api/courseprompt, /api/coursegen. -->
+     account, signed in on the dashboard). Four parts: «سؤالات», the app's own 1100 questions («آزمون جدید», by topic),
+     «آموزش», the step-by-step course's pictures (by lesson), and the signs' and right of way's (by their groups). A part's
+     group and then one of its pictures are chosen from two lists («فقط تصاویر ساخته‌نشده» lists only those not made yet,
+     with each group's count); the picture is shown with its prompt, which may be edited, and «ساخت تصویر جدید» makes a
+     new picture from it, which the app shows once made. It talks to /api/courseart, /api/courseprompt, /api/coursegen
+     (?set=newq|course), /api/guideref, /api/guidegen, /api/guidedraft and /api/consoleprompt. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -51,6 +50,7 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
 .state{font-size:13px;color:var(--accent);font-weight:700}
 .fail{font-size:13px;color:var(--bad)}
+.chk{flex-direction:row;align-items:center;gap:6px;font-size:14px;color:var(--text);cursor:pointer}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;font-size:14px;z-index:9}
 </style>
 </head>
@@ -81,19 +81,17 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
   ];
   // part, group and item chosen (kept in the address, so a reload stays on the same picture)
   const h = new URLSearchParams(location.hash.slice(1));
-  const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, data: {}, prompt: null, promptFor: '', saved: '' };
-  const remember = () => history.replaceState(null, '', `#p=${st.part}&g=${st.g}&i=${st.i}`);
+  const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, missing: h.get('m') === '1', data: {}, prompt: null, promptFor: '', saved: '' };
+  const remember = () => history.replaceState(null, '', `#p=${st.part}&g=${st.g}&i=${st.i}${st.missing ? '&m=1' : ''}`);
 
   // A part's groups, each { title, items: [{ id, label, … }] }, in one shape for the page.
   async function load(part, fresh) {
     if (st.data[part] && !fresh) return st.data[part];
     let groups;
-    if (part === 'q') {
-      const d = await api('GET', 'consolepics?kind=lessons');
-      groups = d.groups.map(g => ({ title: g.title, items: g.items.map((x, n) => ({ ...x, pid: `q:${x.id}`, label: `${faNum(n + 1)}. ${cut(x.text, 70)}` })) }));
-    } else if (part === 'course') {
-      const d = await api('GET', 'courseart');
-      groups = d.groups.map(g => ({ title: g.title, items: g.items.map((x, n) => ({ ...x, pid: `c:${x.key}`, label: `${faNum(n + 1)}. ${cut(x.name || x.key, 70)}` })) }));
+    if (part === 'q' || part === 'course') {
+      // the app's own 1100 questions (by topic) or the course's pictures (by lesson)
+      const set = part === 'q' ? 'newq' : 'course', d = await api('GET', `courseart?set=${set}`);
+      groups = d.groups.map(g => ({ title: g.title, items: g.items.map((x, n) => ({ ...x, set, pid: `${set}:${x.key}`, label: `${faNum(n + 1)}. ${cut(x.name || x.key, 70)}` })) }));
     } else {
       const d = await api('GET', 'guideref');
       groups = d.groups.filter(g => g.kind === part).map(g => ({ title: g.title, items: g.items.map(x => ({ ...x, pid: `g:${x.key}`, label: `${x.sub ? `${x.sub} · ` : ''}${x.label}`,
@@ -102,33 +100,29 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
     return (st.data[part] = groups);
   }
   const current = () => {
-    const groups = st.data[st.part] || [], g = groups[Math.min(st.g, groups.length - 1)];
-    return { groups, g, x: g && g.items[Math.min(st.i, g.items.length - 1)] };
+    const groups = st.data[st.part] || [], g = groups[Math.min(st.g, groups.length - 1)], items = g ? shown(g) : [];
+    return { groups, g, items, x: items[Math.min(st.i, items.length - 1)] };
   };
 
+  // «فقط تصاویر ساخته‌نشده»: a picture not made yet (a sign or right of way: no AI picture)
+  const made = x => !!(x.pid[0] === 'g' ? x.ai : x.v);
+  const shown = g => (st.missing ? g.items.filter(x => !made(x)) : g.items);
   async function promptOf(x) {
-    if (x.pid[0] === 'c') return (await api('GET', `courseprompt?key=${encodeURIComponent(x.key)}`)).prompt;
+    if (x.set) return (await api('GET', `courseprompt?set=${x.set}&key=${encodeURIComponent(x.key)}`)).prompt;
     return (await api('GET', `consoleprompt?id=${encodeURIComponent(x.pid)}`)).prompt;
   }
 
   function pictures(x) {
     const fig = (src, cap, on, act) => `<figure class="${on ? 'on' : ''}">${src ? `<a href="${esc(src)}" target="_blank" rel="noopener"><img src="${esc(src)}" alt="" loading="lazy"></a>` : `<div class="none">${esc(act || 'ساخته نشده')}</div>`}
       <figcaption>${cap}</figcaption></figure>`;
-    if (st.part === 'q') {
-      const made = x.made.slice().sort((a, b) => a.at - b.at), now = x.active || '';
-      const choose = (job, on) => (on ? '<span class="on-tag">✓ در برنامه نمایش داده می‌شود</span>' : `<button class="btn soft" data-show="${esc(job)}">نمایش در برنامه</button>`);
-      return fig(`/img/q${x.id}.jpg?orig=1`, `<b>تصویر اصلی (prove.dk)</b> ${choose('', !now)}`, !now)
-        + (made.length ? made.map((j, n) => fig(`/img/gen/${x.id}/${encodeURIComponent(j.id)}`, `<b>تصویر AI ${made.length > 1 ? faNum(n + 1) : ''}</b> ${choose(j.id, now === j.id)}`, now === j.id)).join('')
-          : fig('', '<b>تصویر AI</b>', false, 'هنوز ساخته نشده'));
-    }
-    if (st.part === 'course') return fig(x.v ? `/course-art/${encodeURIComponent(x.key)}.png?v=${encodeURIComponent(x.v)}` : '', '<b>تصویر فعلی</b>', false, 'هنوز ساخته نشده');
+    if (x.set) return fig(x.v ? `/${x.set === 'newq' ? 'newq' : 'course'}-art/${encodeURIComponent(x.key)}.png?v=${encodeURIComponent(x.v)}` : '', '<b>تصویر فعلی</b>', false, 'هنوز ساخته نشده');
     const ref = (kind, v) => `/img/guideref/${kind}/${encodeURIComponent(x.key)}?v=${encodeURIComponent(String(v || ''))}`;
     return fig(x.ai ? ref('ai', x.ai) : '', `<b>تصویر AI</b>${x.choice === 'official' ? ' <span class="muted">(در برنامه طرح رسمی نمایش داده می‌شود)</span>' : ''}`, false)
       + fig(x.prove ? ref('prove', '') : '', '<b>prove.dk</b> <span class="muted">(برای مقایسه)</span>', false, x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')
       + (x.canOfficial ? fig(x.official ? ref('official', '') : '', '<b>طرح رسمی</b>', false, 'دریافت نشده') : '');
   }
 
-  const EMPTY = 'هنوز پرامپتی برای این تصویر ذخیره نشده؛ بنویسید یا «نوشتن پرامپت با هوش مصنوعی» را بزنید.';
+  const EMPTY = 'هنوز پرامپتی برای این تصویر ذخیره نشده؛ آن را بنویسید.';
   let pollT = null;
   async function view(fresh) {
     clearTimeout(pollT);
@@ -137,23 +131,27 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
       if (e.status === 401 || e.status === 403) { $app.innerHTML = '<div class="card"><p>برای این صفحه ابتدا در داشبورد با حساب مدیر وارد شوید.</p><a class="btn" href="/admin">رفتن به داشبورد</a></div>'; return; }
       $app.innerHTML = `<div class="card fail">${esc(e.message)}</div>`; return;
     }
-    const { groups, g, x } = current();
+    const { groups, g, items, x } = current();
     if (x && st.promptFor !== x.pid) {
       st.prompt = null; st.promptFor = x.pid;
       promptOf(x).then(p => { if (st.promptFor === x.pid) { st.prompt = st.saved = p || ''; const ta = document.getElementById('pr'); if (ta) { ta.value = st.prompt; ta.disabled = false; ta.placeholder = EMPTY; } } })
         .catch(e => toast(e.message));
     }
-    const draftable = x && st.part !== 'course';
+    const draftable = x && !x.set;
+    const all = groups.flatMap(y => y.items), done = all.filter(made).length;
     $app.innerHTML = `
       <div class="head"><h1>ایجاد تصاویر</h1><span class="sp"></span><a class="btn soft" href="/admin">بازگشت به داشبورد</a></div>
       <div class="tabs">${PARTS.map(p => `<button class="tab ${p.id === st.part ? 'on' : ''}" data-part="${p.id}">${p.title}</button>`).join('')}</div>
       <div class="card">
         <div class="pick">
-          <label>دسته‌بندی<select id="g">${groups.map((y, n) => `<option value="${n}" ${y === g ? 'selected' : ''}>${esc(y.title)} (${faNum(y.items.length)})</option>`).join('')}</select></label>
-          <label>تصویر<select id="i">${g ? g.items.map((y, n) => `<option value="${n}" ${y === x ? 'selected' : ''}>${esc(y.label)}${y.making ? ' ⏳' : ''}</option>`).join('') : ''}</select></label>
+          <label>دسته‌بندی<select id="g">${groups.map((y, n) => { const left = y.items.filter(z => !made(z)).length;
+            return `<option value="${n}" ${y === g ? 'selected' : ''}>${esc(y.title)} (${st.missing ? `${faNum(left)} ساخته‌نشده` : `${faNum(y.items.length - left)} از ${faNum(y.items.length)} ساخته شده`})</option>`; }).join('')}</select></label>
+          <label>تصویر<select id="i">${g ? items.map((y, n) => `<option value="${n}" ${y === x ? 'selected' : ''}>${made(y) ? '✓ ' : ''}${esc(y.label)}${y.making ? ' ⏳' : ''}</option>`).join('') : ''}</select></label>
         </div>
+        <div class="row" style="margin:0 0 10px"><label class="chk"><input type="checkbox" id="miss" ${st.missing ? 'checked' : ''}> فقط تصاویر ساخته‌نشده</label>
+          <span class="muted" style="font-size:13px">در این بخش ${faNum(done)} از ${faNum(all.length)} تصویر ساخته شده؛ ${faNum(all.length - done)} مانده.</span></div>
         ${x ? `
-          ${st.part === 'q' ? `<p class="q">${esc(x.text)}</p>${x.da && x.da !== x.text ? `<div class="da muted">${esc(x.da)}</div>` : ''}` : ''}
+          ${st.part === 'q' ? `<p class="q">${esc(x.name)}</p>${x.da && x.da !== x.name ? `<div class="da muted">${esc(x.da)}</div>` : ''}` : ''}
           <div class="pics">${pictures(x)}</div>
           <label>پرامپت<textarea id="pr" ${st.prompt == null ? 'disabled' : ''} placeholder="${st.prompt == null ? 'در حال بارگذاری…' : EMPTY}">${esc(st.prompt == null ? '' : st.prompt)}</textarea></label>
           <div class="row">
@@ -163,12 +161,13 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
             ${x.making ? `<span class="state">در حال ساخت تصویر… (${esc(x.making)})</span>` : ''}
             ${x.failed ? `<span class="fail">ساخت تصویر ناموفق بود: ${esc(x.failed)}</span>` : ''}
           </div>
-          <p class="muted" style="font-size:12.5px;margin:8px 0 0">${st.part === 'q' ? 'تصویر تازه کنار بقیه می‌آید و تا «نمایش در برنامه» را نزنید، در برنامه نشان داده نمی‌شود.'
-            : 'تصویر تازه پس از ساخته شدن جای تصویر فعلی را در برنامه می‌گیرد.'} ساخت هر تصویر چند دقیقه طول می‌کشد.</p>` : '<p class="muted">موردی نیست.</p>'}
+          <p class="muted" style="font-size:12.5px;margin:8px 0 0">تصویر تازه پس از ساخته شدن در برنامه نشان داده می‌شود (به‌جای تصویر فعلی، اگر باشد). ساخت هر تصویر چند دقیقه طول می‌کشد.</p>`
+          : `<p class="muted">${st.missing ? 'همه‌ی تصاویر این دسته ساخته شده‌اند.' : 'موردی نیست.'}</p>`}
       </div>`;
     document.querySelectorAll('[data-part]').forEach(b => { b.onclick = () => { st.part = b.dataset.part; st.g = 0; st.i = 0; remember(); view(); }; });
     document.getElementById('g').onchange = e => { st.g = +e.target.value; st.i = 0; remember(); view(); };
     const si = document.getElementById('i'); if (si) si.onchange = e => { st.i = +e.target.value; remember(); view(); };
+    document.getElementById('miss').onchange = e => { st.missing = e.target.checked; st.i = 0; remember(); view(); };
     if (!x) return;
     const ta = document.getElementById('pr');
     ta.oninput = () => { st.prompt = ta.value; };
@@ -176,7 +175,7 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
     const dr = document.getElementById('draft');
     if (dr) dr.onclick = async () => {
       dr.disabled = true; dr.textContent = 'در حال نوشتن…';
-      try { const d = st.part === 'q' ? await api('POST', 'imggendraft', { qid: x.id, part: 'lessons' }) : await api('POST', 'guidedraft', { key: x.key }); st.prompt = st.saved = ta.value = d.prompt; toast('پرامپت تازه نوشته شد'); }
+      try { const d = await api('POST', 'guidedraft', { key: x.key }); st.prompt = st.saved = ta.value = d.prompt; toast('پرامپت تازه نوشته شد'); }
       catch (e) { toast(e.message); }
       dr.disabled = false; dr.textContent = 'نوشتن پرامپت با هوش مصنوعی';
     };
@@ -185,17 +184,12 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
       if (!prompt) return toast('پرامپت خالی است.');
       if (!confirm('با این پرامپت تصویر تازه ساخته شود؟')) return;
       try {
-        if (st.part === 'q') await api('POST', 'imggenstart', { qid: x.id, model: 'sunburst', prompt, pick: true });
-        else if (st.part === 'course') await api('POST', 'coursegen', { key: x.key, prompt });
+        if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt });
         else await api('POST', 'guidegen', { key: x.key, prompt });
         st.saved = prompt; toast('ساخت تصویر شروع شد');
       } catch (e) { return toast(e.message); }
       view(true);
     };
-    document.querySelectorAll('[data-show]').forEach(b => { b.onclick = async () => {
-      try { await api('POST', 'imggenset', { qid: x.id, job: b.dataset.show || null }); toast('تصویر برنامه عوض شد'); } catch (e) { return toast(e.message); }
-      view(true);
-    }; });
     // while a picture is being made, look again every 6 seconds (not while the prompt is being edited)
     if (g.items.some(y => y.making)) {
       const again = () => { if (document.activeElement === ta) pollT = setTimeout(again, 6000); else view(true); };

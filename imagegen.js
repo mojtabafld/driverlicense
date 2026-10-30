@@ -986,17 +986,6 @@ const COURSE_ART = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'cour
 const COURSE = artSet({ metaKey: 'courseArt', set: 'v1', prompts: COURSE_ART, aspect: '4:3', prefix: 'course',
   allow: new Set(Object.keys(COURSE_ART).filter(k => COURSE_ART[k].order !== false)) });
 const courseVersions = COURSE.versions, courseBlob = COURSE.blob;
-// The admin's picture page (console/images.html): a course picture's prompt, and a new picture from an edited one, which
-// takes the old one's place once made (a one-off job `course-<key>`, like the teaching pictures').
-const courseKeys = () => Object.keys(COURSE_ART);
-const coursePrompt = key => (COURSE_ART[key] ? COURSE.promptOf(key) : null);
-function courseGen(key, prompt) {
-  if (!COURSE_ART[key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
-  prompt = String(prompt || '').trim().slice(0, 20000);
-  if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
-  return startOneOff(`course-${key}`, { prompt, aspect: COURSE_ART[key].aspect || '4:3', target: `course:${key}` });
-}
-
 // ---------- «آزمون جدید»'s question pictures (data/newq-art.json, keyed by the question's number) ----------
 // Written by data/newq-src/build.py; one with "order": false is not made until the admin orders it (the image model's
 // credit); at most 10 are made at a time.
@@ -1004,6 +993,21 @@ const NEWQ_ART = (() => { try { return JSON.parse(fs.readFileSync(path.join(__di
 const NEWQ = artSet({ metaKey: 'newqArt', set: 'v1', prompts: NEWQ_ART, aspect: '4:3', prefix: 'newq', limit: 10,
   allow: new Set(Object.keys(NEWQ_ART).filter(k => NEWQ_ART[k].order !== false)) });
 const newqVersions = NEWQ.versions, newqBlob = NEWQ.blob;
+
+// The admin's picture page (console/images.html): the course's (data/course-art.json) and «آزمون جدید»'s
+// (data/newq-art.json) pictures: a picture's prompt, and a new picture from an edited one, which takes the old one's
+// place (or is the first) once made: a one-off job `<set>-<key>`, like the teaching pictures'.
+const ART_SETS = { course: [COURSE, COURSE_ART], newq: [NEWQ, NEWQ_ART] };
+const artKeys = set => Object.keys((ART_SETS[set] || [, {}])[1]);
+const artVersions = set => (ART_SETS[set] ? ART_SETS[set][0].versions() : {});
+const artPrompt = (set, key) => { const a = ART_SETS[set]; return a && a[1][key] ? a[0].promptOf(key) : null; };
+function artGen(set, key, prompt) {
+  const a = ART_SETS[set];
+  if (!a || !a[1][key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
+  prompt = String(prompt || '').trim().slice(0, 20000);
+  if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
+  return startOneOff(`${set}-${key}`, { prompt, aspect: a[1][key].aspect || '4:3', target: `${set}:${key}` });
+}
 
 // ---------- profile pictures to choose from in the settings ----------
 // Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
@@ -1207,7 +1211,7 @@ async function pollOneOff() {
         job.blob = `oneoff-${id}`;
         await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
         Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36) });
-        const tset = job.target && { guide: GUIDE, course: COURSE }[job.target.split(':')[0]];
+        const tset = job.target && { guide: GUIDE, course: COURSE, newq: NEWQ }[job.target.split(':')[0]];
         if (tset) {
           await tset.put(job.target.slice(job.target.indexOf(':') + 1), { mime: sm.mime, data: sm.buf }, job.prompt);
           await store.deleteBlob(job.blob).catch(() => {}); cache.delete(job.blob);
@@ -1252,6 +1256,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { courseKeys, coursePrompt, courseGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };

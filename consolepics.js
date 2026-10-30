@@ -90,4 +90,21 @@ function courseGroups(keys) {
   return COURSE_GROUPS;
 }
 
-module.exports = { init, list, detail, courseGroups };
+// «آزمون جدید»'s 1100 questions (site/newq.js) for the admin's picture page, by their topic (its code and name from the
+// bank's topics), in the topics' order.
+let NEWQ_GROUPS = null;
+function newqGroups() {
+  if (NEWQ_GROUPS) return NEWQ_GROUPS;
+  let qs = [];
+  try { const js = fs.readFileSync(path.join(__dirname, 'site', 'newq.js'), 'utf8'); qs = JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, '')).questions; }
+  catch (e) { console.error('console pictures: new questions', e.message); }
+  const by = new Map();
+  for (const q of qs) { if (!by.has(q.c)) by.set(q.c, []); by.get(q.c).push({ key: String(q.id), name: q.sfa || q.sda || '', da: q.sda || '' }); }
+  const num = c => String(c).split('.').map(Number);
+  const topics = BANK.topics || {};
+  NEWQ_GROUPS = [...by].sort((x, y) => { const a = num(x[0]), b = num(y[0]); return a[0] - b[0] || a[1] - b[1]; })
+    .map(([c, items]) => ({ title: `${c} · ${(topics[c] || {}).fa || 'سایر'}`, items }));
+  return NEWQ_GROUPS;
+}
+
+module.exports = { init, list, detail, courseGroups, newqGroups };
