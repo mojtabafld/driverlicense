@@ -118,9 +118,10 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
   // «فقط تصاویر ساخته‌نشده»: a picture not made yet (a sign or right of way: no AI picture)
   const made = x => !!(x.pid[0] === 'g' ? x.ai : x.v);
   const shown = g => (st.missing ? g.items.filter(x => !made(x) || x.pid === st.pid) : g.items);
+  // { prompt, style }: the saved prompt and the style the picture was last made in here (none before)
   async function promptOf(x) {
-    if (x.set) return (await api('GET', `courseprompt?set=${x.set}&key=${encodeURIComponent(x.key)}`)).prompt;
-    return (await api('GET', `consoleprompt?id=${encodeURIComponent(x.pid)}`)).prompt;
+    if (x.set) return api('GET', `courseprompt?set=${x.set}&key=${encodeURIComponent(x.key)}`);
+    return api('GET', `consoleprompt?id=${encodeURIComponent(x.pid)}`);
   }
 
   // A sign's or right-of-way item's pictures: a click on one makes it the picture the app shows (its «تصویر اصلی»).
@@ -161,7 +162,7 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
     const { groups, g, items, x } = current();
     if (x && st.promptFor !== x.pid) {
       st.prompt = null; st.promptFor = x.pid; st.style = null;
-      promptOf(x).then(p => { if (st.promptFor === x.pid) { st.prompt = st.saved = p || ''; st.style = st.base = styleOf(st.saved); view(); } })
+      promptOf(x).then(d => { if (st.promptFor === x.pid) { st.prompt = st.saved = d.prompt || ''; st.style = st.base = (STYLES.some(([k]) => k === d.style) && d.style) || styleOf(st.saved); view(); } })
         .catch(e => toast(e.message));
     }
     const draftable = x && !x.set;
@@ -227,9 +228,9 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
       if (!prompt) return toast('پرامپت خالی است.');
       if (!confirm('با این پرامپت تصویر تازه ساخته شود؟')) return;
       try {
-        if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt });
-        else await api('POST', 'guidegen', { key: x.key, prompt });
-        st.saved = prompt; st.style = st.base = styleOf(prompt); toast('ساخت تصویر شروع شد');
+        if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt, style: st.style });
+        else await api('POST', 'guidegen', { key: x.key, prompt, style: st.style });
+        st.saved = prompt; st.base = st.style; toast('ساخت تصویر شروع شد');
       } catch (e) { return toast(e.message); }
       view(true);
     };

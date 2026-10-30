@@ -80,6 +80,17 @@ const PRIVACY_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'privacy.html
 const DELETE_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'delete-account.html'));
 const ADMIN_HTML = fs.readFileSync(path.join(__dirname, 'console', 'admin.html'));
 const IMAGES_HTML = fs.readFileSync(path.join(__dirname, 'console', 'images.html'));
+// The style each picture was last made in on the admin's picture page (its «سبک تصویر»), so the page opens on it again:
+// store.meta.picStyles = { ['newq:<id>' | 'course:<key>' | 'g:<key>']: style }.
+const PIC_STYLES = new Set(['flat', 'sim', 'realistic', 'semi', '3d', 'cartoon']);
+const picStyle = id => ((store.meta.picStyles || {})[id]) || null;
+async function setPicStyle(id, style) {
+  if (!PIC_STYLES.has(style)) return;
+  const m = store.meta.picStyles = store.meta.picStyles || {};
+  if (m[id] === style) return;
+  m[id] = style;
+  await store.saveMeta('picStyles', m);
+}
 
 let store; // set in main()
 
@@ -1569,6 +1580,7 @@ async function api(req, res, route) {
       if (req.method === 'POST' && route === 'guidegen') {
         const b = await readBody(req), job = await guideref.generate(String(b.key || ''), b.prompt);
         await consoleprompts.made(`g:${String(b.key || '')}`, job.prompt);
+        await setPicStyle(`g:${String(b.key || '')}`, b.style);
         return send(res, 200, { job });
       }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
@@ -1596,11 +1608,13 @@ async function api(req, res, route) {
       if (req.method === 'GET' && route === 'courseprompt') {
         const set = q.get('set') === 'newq' ? 'newq' : 'course', key = String(q.get('key') || ''), j = imagegen.oneOff(`${set}-${key}`), prompt = imagegen.artPrompt(set, key);
         if (prompt == null) return send(res, 404, { error: 'این تصویر پیدا نشد.' });
-        return send(res, 200, { key, prompt: j && !j.done ? j.prompt : prompt });
+        return send(res, 200, { key, prompt: j && !j.done ? j.prompt : prompt, style: picStyle(`${set}:${key}`) });
       }
       if (req.method === 'POST' && route === 'coursegen') {
         const b = await readBody(req);
-        return send(res, 200, { job: await imagegen.artGen(b.set === 'newq' ? 'newq' : 'course', String(b.key || ''), b.prompt) });
+        const set = b.set === 'newq' ? 'newq' : 'course', job = await imagegen.artGen(set, String(b.key || ''), b.prompt);
+        await setPicStyle(`${set}:${String(b.key || '')}`, b.style);
+        return send(res, 200, { job });
       }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
@@ -1614,7 +1628,7 @@ async function api(req, res, route) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
-    return send(res, 200, consoleprompts.get(id));
+    return send(res, 200, { ...consoleprompts.get(id), style: picStyle(id) });
   }
   // «اصلاح بخش‌هایی از تصویر» (consoleprompts.region): { id, part, mode, marked, regions: [{ box, message, crop }] } —
   // the pictures as JPEG data URLs drawn by the console; the API changes the saved prompt for the marked parts only,
