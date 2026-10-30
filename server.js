@@ -1576,6 +1576,13 @@ async function api(req, res, route) {
   // The admin's picture page (/admin/images): the step-by-step course's pictures by lesson and «آزمون جدید»'s by topic
   // (?set=course|newq), each with its version, and a new one on its way or failed; a picture's prompt; and a new
   // picture from an edited prompt.
+  // …and a prompt rewritten for the style chosen there (imagegen.restyle): { prompt, style } → { prompt }.
+  if (req.method === 'POST' && route === 'restyle') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const b = await readBody(req);
+    try { return send(res, 200, { prompt: await imagegen.restyle(b.prompt, String(b.style || '')) }); }
+    catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error('restyle', e.message); return send(res, 502, { error: 'تغییر سبک پرامپت ممکن نشد؛ دوباره امتحان کنید.' }); }
+  }
   if (route === 'courseart' || route === 'courseprompt' || route === 'coursegen') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const q = new URL(req.url, 'http://x').searchParams;

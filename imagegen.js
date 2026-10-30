@@ -1244,6 +1244,28 @@ function questionPrompt(qid) {
   return (j && j.prompt) || '';
 }
 // A short text from Claude (e.g. a picture's prompt written for the console), with an optional picture to look at.
+// The admin's picture page: a picture's prompt rewritten for another look, chosen when making it (Mojtaba 2026-10-30):
+// the same scene and every detail it must show, only the style changed.
+const STYLES = {
+  realistic: 'photorealistic: a realistic, high-quality photograph of the scene taken with a good camera in natural daylight, real materials and lighting, sharp focus, true-to-life colours and proportions; it must still read clearly as a teaching picture (the important signs, markings and road users large, sharp and unmistakable)',
+  '3d': 'a modern, clean 3D render like a premium mobile app\'s illustrations: soft rounded shapes, soft studio light and gentle shadows, a calm, limited palette; every sign and marking in its correct official Danish design',
+  cartoon: 'a friendly, colourful cartoon illustration with clear dark outlines, simple shapes and flat bright colours, like a modern children\'s traffic-safety book, while every sign, marking and road user stays correct and clearly readable',
+  flat: 'a clean, precise flat vector illustration: simple shapes, flat colours, no gradients or textures, NOT photorealistic and NOT a 3D render',
+};
+const RESTYLE = `You rewrite prompts for an image model that draws the pictures of a Danish driving-theory app (category B).
+You get a prompt and the style the picture must now have. Rewrite the prompt so the picture is drawn in that style:
+- keep the scene and every fact in it exactly: the viewpoint, the road layout, every sign (with its code and official Danish design), marking, signal, vehicle, person, position, direction and colour, and everything that must or must not appear;
+- remove or change every word about the old style (e.g. "flat vector", "NOT photorealistic", "3D render", "illustration", a "Style:" line) that contradicts the new one, and end with one line "Style: …" describing the new style in detail;
+- keep it in English, in the same format and about the same length.
+Answer with the prompt only.`;
+async function restyle(prompt, style) {
+  const want = STYLES[style];
+  if (!want) throw Object.assign(new Error('این سبک شناخته نشد.'), { status: 400 });
+  prompt = String(prompt || '').trim().slice(0, 20000);
+  if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
+  return writeText(RESTYLE, `The new style: ${want}\n\nThe prompt:\n${prompt}`, null, 3000);
+}
+
 async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
@@ -1256,6 +1278,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { restyle, artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
