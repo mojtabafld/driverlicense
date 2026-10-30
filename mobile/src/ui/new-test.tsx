@@ -13,11 +13,11 @@ import { Pressable, View } from 'react-native';
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { RTL, t, tr } from '@/lib/i18n';
-import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
+import { FULL, SIZES, faNum, mistakeIds, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { pctText } from './activity';
-import { Icon } from './icon';
+import { Icon, type IconName } from './icon';
 import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
@@ -136,6 +136,16 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const pct = answered >= total ? 1 : Math.min(0.99, Math.max(answered ? 0.01 : 0, share));
   const shown = answered >= total ? 1 : Math.min(pct, big);
   const done = total > 0 && answered >= total, left = total - answered, dark = useIsDark();
+  const { attempts } = useApp();
+  const tests = attempts.filter(a => a.mode !== 'lesson').length, mistakes = mistakeIds(attempts).length;
+  // A pill: an icon in its colour and its words, a tap opening its page.
+  const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
+    <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 11, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+      <Icon name={icon} size={15} color={color} weight="semibold" />
+      <T style={{ color, fontSize: 13, fontWeight: '700' }} numberOfLines={1}>{text}</T>
+    </Pressable>
+  );
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
   const soft = (x: string) => (dark ? x : mix(x, c.surface, 0.2) ?? x);
   const rightTone = soft(c.ok), wrongTone = soft(c.bad), rest = dark ? mix(c.line, '#ffffff', 0.08) ?? c.line : mix(c.line, '#000000', 0.04) ?? c.line;
@@ -165,21 +175,20 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           <Icon name="more" size={20} color={c.text} weight="semibold" />
         </Pressable>
       </View>
-      {/* The percent large, with the questions left right after it (back there, 2026-10-30). */}
+      {/* The percent large, and after it its pills: the questions left (or, all answered, only a green circled tick), and
+          the tests' history and the mistakes, each opening its page, their icons in their own colours (Mojtaba
+          2026-10-30: they were two cards under this one). */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
-        {/* (all answered: only a green circled tick, no words; Mojtaba 2026-10-30) */}
-        {done ? (
-          <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
-            <Icon name="checkCircle" size={24} color={c.ok} weight="semibold" />
-          </View>
-        ) : (
-          <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
-            <Icon name="exam" size={16} color={c.link} weight="semibold" />
-            <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{t('{0} سؤال مانده', faNum(left))}</T>
-          </Pressable>
-        )}
+        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+          {done ? (
+            <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
+              <Icon name="checkCircle" size={22} color={c.ok} weight="semibold" />
+            </View>
+          ) : tag('exam', c.link, t('{0} سؤال مانده', faNum(left)), wrong ? () => router.push('/mistakes') : undefined)}
+          {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
+          {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
+        </View>
       </View>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}

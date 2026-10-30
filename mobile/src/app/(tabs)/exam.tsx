@@ -187,7 +187,8 @@ export default function Exam() {
     {/* (fill: the two cards above grow so the last ones end just above the tab bar on every screen; Mojtaba 2026-10-29) */}
     <Screen fill barGap={12} gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />}>
-      {own ? <NewTestCard test={test} level={level} /> : (
+      {/* (main site: the history and the mistakes are pills in this card; the screen is fitted by it, the last card) */}
+      {own ? <View ref={lastBox} onLayout={fit} style={{ flexGrow: 1, gap: level >= 2 ? 10 : 14 }}><NewTestCard test={test} level={level} /></View> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -218,7 +219,7 @@ export default function Exam() {
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
       )}
-      <View ref={lastBox} onLayout={fit}><ShortcutsCard level={level} /></View>
+      {own ? null : <View ref={lastBox} onLayout={fit}><ShortcutsCard level={level} /></View>}
       {/* Main site: no mistakes card (Mojtaba 2026-10-19); the random test's card has the mistakes bar and its test. */}
       {own ? null : <MistakesCard />}
     </Screen>
