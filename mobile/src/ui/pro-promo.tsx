@@ -60,6 +60,13 @@ function FeatureCard({ w, icon, orb, title, line, lock }: { w: number; icon: Ico
   );
 }
 
+// The three cards, from the start side to the end side (the middle one in front at first).
+const CARDS: { icon: IconName; orb: [string, string, string]; title: string; line: string; lock?: boolean }[] = [
+  { icon: 'coach', orb: ['#ff8a3d', '#e2342b', '#7a1020'], title: 'مربی هوشمند', line: 'اشتباه‌هایتان را تحلیل می‌کند' },
+  { icon: 'exam', orb: ['#ff7ad9', '#5b3bff', '#1a1aff'], title: 'آزمون‌های نامحدود', line: 'مثل آزمون واقعی', lock: true },
+  { icon: 'learn', orb: ['#9cf27a', '#2fb35a', '#0d4a2a'], title: 'درس‌ها و توضیح‌ها', line: 'توضیح کامل هر سؤال' },
+];
+
 export function ProPromo({ onClose }: { onClose: () => void }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions();
   const { pay, user, startTrial } = useApp();
@@ -73,14 +80,33 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
     Animated.timing(inn, { toValue: 1, duration: 700, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
   }, [inn]);
   const W = Math.min(width, 480), short = height < 720;
-  const mid = Math.round(Math.min(W * 0.48, short ? 150 : 220)), side = Math.round(mid * 0.84), heroH = Math.round(mid * 1.5);
-  const fan = (dir: -1 | 1) => ({
-    position: 'absolute' as const, top: Math.round(mid * 0.16), opacity: inn.interpolate({ inputRange: [0, 1], outputRange: [0, dark ? 0.55 : 0.7] }),
-    transform: [
-      { translateX: inn.interpolate({ inputRange: [0, 1], outputRange: [0, dir * mid * 0.5] }) },
-      { rotate: inn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${dir * 10}deg`] }) },
-    ],
-  });
+  const mid = Math.round(Math.min(W * 0.48, short ? 150 : 220)), heroH = Math.round(mid * 1.5);
+  // The three cards' places (-1 the start side, 0 the middle in front, 1 the end side); a tap on a side card brings it to
+  // the front, the front one taking its place (Mojtaba 2026-10-30). Each card glides between places.
+  const [pos, setPos] = useState<number[]>([-1, 0, 1]);
+  const [anim] = useState(() => [-1, 0, 1].map(v => new Animated.Value(v)));
+  useEffect(() => {
+    pos.forEach((v, i) => Animated.spring(anim[i], { toValue: v, useNativeDriver: Platform.OS !== 'web', friction: 8, tension: 60 }).start());
+  }, [pos, anim]);
+  const toFront = (i: number) => {
+    if (pos[i] === 0) return;
+    tap();
+    setPos(p => p.map((v, k) => (k === i ? 0 : v === 0 ? p[i] : v)));
+  };
+  const place = (i: number) => {
+    const a = anim[i], dir = RTL ? -1 : 1, side = 0.84;
+    const pin = { inputRange: [-1, 0, 1], extrapolate: 'clamp' as const };
+    return {
+      position: 'absolute' as const, top: 0, zIndex: pos[i] === 0 ? 3 : 1,
+      opacity: Animated.multiply(inn, a.interpolate({ ...pin, outputRange: [dark ? 0.55 : 0.7, 1, dark ? 0.55 : 0.7] })),
+      transform: [
+        { translateX: Animated.multiply(inn, a.interpolate({ ...pin, outputRange: [-dir * mid * 0.5, 0, dir * mid * 0.5] })) },
+        { translateY: a.interpolate({ ...pin, outputRange: [mid * 0.16, 0, mid * 0.16] }) },
+        { rotate: a.interpolate({ ...pin, outputRange: [`${-dir * 10}deg`, '0deg', `${dir * 10}deg`] }) },
+        { scale: a.interpolate({ ...pin, outputRange: [side, 1, side] }) },
+      ],
+    };
+  };
   const close = () => { tap(); onClose(); };
   const toPremium = () => { tap(); onClose(); router.push('/premium'); };
   // The trial on at once, then into the app; anything in the way (e.g. an email still to confirm) is said under the button.
@@ -105,15 +131,13 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
         {/* the three cards */}
         <View style={{ flex: 1, minHeight: heroH, alignItems: 'center', justifyContent: 'center' }}>
           <View style={{ width: mid, height: heroH, alignItems: 'center' }}>
-            <Animated.View style={fan(RTL ? 1 : -1)}>
-              <FeatureCard w={side} icon="coach" orb={['#ff8a3d', '#e2342b', '#7a1020']} title="مربی هوشمند" line="اشتباه‌هایتان را تحلیل می‌کند" />
-            </Animated.View>
-            <Animated.View style={fan(RTL ? -1 : 1)}>
-              <FeatureCard w={side} icon="learn" orb={['#9cf27a', '#2fb35a', '#0d4a2a']} title="درس‌ها و توضیح‌ها" line="توضیح کامل هر سؤال" />
-            </Animated.View>
-            <Animated.View style={{ opacity: inn, transform: [{ translateY: inn.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
-              <FeatureCard w={mid} icon="exam" orb={['#ff7ad9', '#5b3bff', '#1a1aff']} title="آزمون‌های نامحدود" line="مثل آزمون واقعی" lock />
-            </Animated.View>
+            {CARDS.map((card, i) => (
+              <Animated.View key={card.icon} style={place(i)}>
+                <Pressable onPress={() => toFront(i)} disabled={pos[i] === 0} accessibilityRole="button" accessibilityLabel={tr(card.title)}>
+                  <FeatureCard w={mid} icon={card.icon} orb={card.orb} title={card.title} line={card.line} lock={card.lock} />
+                </Pressable>
+              </Animated.View>
+            ))}
           </View>
         </View>
         {/* the badge, the title and its line */}
