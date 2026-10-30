@@ -223,7 +223,10 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                     2026-10-30; a drag scrolls instead). */}
                 {data.map((_, i) => (
                   <Pressable key={`p${i}`} onPress={() => { tap(); if (ARC && chosen === i) onOpen(data[i]); else setSel(ARC ? i : sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
-                    style={{ position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
+                    // (ARC: the test's whole column, so a tap on either of its bars, the questions' or the right answers', picks
+                    // it; it covered only around the right answers' bar, Mojtaba 2026-10-30)
+                    style={ARC ? { position: 'absolute', left: x(i) - slot / 2, top: 0, width: slot, height: H }
+                      : { position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
                 ))}
               </View>
             </ScrollView>
