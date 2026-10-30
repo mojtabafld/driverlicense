@@ -12,7 +12,7 @@ import { Pressable, View } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
-import { t, tr } from '@/lib/i18n';
+import { RTL, t, tr } from '@/lib/i18n';
 import { FULL, SIZES, faNum, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
@@ -167,7 +167,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
       </View>
       {/* The percent large, with the questions left right after it (back there, 2026-10-30). */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-        <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
+        <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
         {/* (all answered: only a green circled tick, no words; Mojtaba 2026-10-30) */}
         {done ? (
           <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
