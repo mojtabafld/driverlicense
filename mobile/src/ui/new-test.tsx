@@ -155,7 +155,6 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          {done ? <Icon name="checkCircle" size={18} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
           <T style={{ fontSize: 17, fontWeight: '700' }}>پیشرفت شما</T>
         </View>
         {/* (a «…» button at the title's end: the card opens to more on the progress, each part's count and share;
@@ -168,11 +167,18 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
       {/* The percent large, with the questions left right after it (back there, 2026-10-30). */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
-        <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
-          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
-          <Icon name={done ? 'checkCircle' : 'exam'} size={16} color={c.link} weight="semibold" />
-          <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{done ? 'همه جواب داده شد' : t('{0} سؤال مانده', faNum(left))}</T>
-        </Pressable>
+        {/* (all answered: only a green circled tick, no words; Mojtaba 2026-10-30) */}
+        {done ? (
+          <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
+            <Icon name="checkCircle" size={24} color={c.ok} weight="semibold" />
+          </View>
+        ) : (
+          <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+            <Icon name="exam" size={16} color={c.link} weight="semibold" />
+            <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{t('{0} سؤال مانده', faNum(left))}</T>
+          </Pressable>
+        )}
       </View>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
