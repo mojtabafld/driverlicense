@@ -1,11 +1,10 @@
-// «گرم‌کردن»: right after the first sign-in (no test yet), five questions of the app's own bank (Mojtaba 2026-10-30: to gauge
-// the user and show how the app and its tests work), asked in a lighter way
-// than the exam (Mojtaba 2026-10-30): one statement at a time, answered with two large buttons («درست است» / «نادرست
-// است»), each answer judged at once (the card turns green with a pop or red with a shake, and the explanation slides
-// in), a running count of right answers, confetti for a question answered all right, and at the end a ring with the
-// share of right answers. Each question is saved as its own short tryout (mode 'demo', not a free test), so home's
-// chance of passing, test statistics and chart are not empty afterwards. «بعداً» leaves it; it is offered once per
-// account ((tabs)/index.tsx).
+// «گرم‌کردن»: right after the first sign-in (no test yet), five pictures of the app's own bank, one statement each
+// (Mojtaba 2026-10-30: to gauge the user and show how the app and its tests work, without too many questions), asked in
+// a lighter way than the exam: two large buttons («درست است» / «نادرست است»), each answer judged at once (the card turns
+// green with a pop or red with a shake, and the explanation slides in), a running count of right answers, and at the end
+// a ring with the share of right answers. Each picture is saved as its own short tryout (mode 'demo', not a free test;
+// its other statements as answered right), so home's chance of passing, test statistics and chart are not empty
+// afterwards. «بعداً» leaves it; it is offered once per account ((tabs)/index.tsx).
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { Redirect, router } from 'expo-router';
@@ -34,35 +33,36 @@ export default function Warmup() {
   const { newBank, newqArt, settings, saveAttempt } = useApp();
   const pic = useQuestionImage();
   const lang = settings.lang === 'en' ? 'en' : 'da';
-  // Five questions of two to four statements, those with a picture first.
+  // Five questions, those with a picture first, and one of each one's statements.
   const [qs] = useState<Question[]>(() => {
-    const all = shuffle((newBank?.questions ?? []).filter(q => q.st.length >= 2 && q.st.length <= 4));
+    const all = shuffle((newBank?.questions ?? []).filter(q => q.st.length >= 2));
     return [...all.filter(q => newqArt[q.id]), ...all.filter(q => !newqArt[q.id])].slice(0, COUNT);
   });
-  const [i, setI] = useState(0), [k, setK] = useState(0);
-  const [answers, setAnswers] = useState<(0 | 1 | null)[][]>(() => qs.map(q => q.st.map(() => null)));
-  const [right, setRight] = useState(0), [party, setParty] = useState(0), [done, setDone] = useState(false);
+  const [ks] = useState(() => qs.map(q => Math.floor(Math.random() * q.st.length)));
+  const [i, setI] = useState(0);
+  const [answers, setAnswers] = useState<(0 | 1 | null)[]>(() => qs.map(() => null));
+  const [right, setRight] = useState(0), [done, setDone] = useState(false);
   const started = useRef(0), scroll = useRef<ScrollView>(null);
   useEffect(() => { started.current = now(); }, []);
   const q = qs[i];
 
-  // the card of each question comes in from the side; each statement from below
+  // the card of each question comes in from the side, its statement from below
   const [enter] = useState(() => new Animated.Value(0)), [rise] = useState(() => new Animated.Value(0));
   const [bump] = useState(() => new Animated.Value(1)), [shake] = useState(() => new Animated.Value(0)), [pop] = useState(() => new Animated.Value(0));
   const [bar] = useState(() => new Animated.Value(0));
   useEffect(() => { enter.setValue(0); Animated.timing(enter, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start(); }, [i, enter]);
-  useEffect(() => { rise.setValue(0); pop.setValue(0); Animated.timing(rise, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start(); }, [i, k, rise, pop]);
-  useEffect(() => { Animated.timing(bar, { toValue: done ? COUNT : i + (q && answers[i].every(a => a != null) ? 1 : 0), duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [i, done, answers, q, bar]);
+  useEffect(() => { rise.setValue(0); pop.setValue(0); Animated.timing(rise, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start(); }, [i, rise, pop]);
+  useEffect(() => { Animated.timing(bar, { toValue: done ? qs.length : i + (answers[i] != null ? 1 : 0), duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [i, done, answers, qs.length, bar]);
 
   const leave = () => { if (router.canGoBack()) router.back(); else router.replace('/'); };
   if (!q) return <Redirect href="/" />;
 
-  const given = answers[i][k], st = q.st[k], all = answers[i].every(a => a != null);
+  const k = ks[i], given = answers[i], st = q.st[k];
   const answer = (a: 0 | 1) => {
     if (given != null) return;
     const ok = a === st.ok;
     buzz(ok);
-    setAnswers(prev => prev.map((row, n) => (n === i ? row.map((x, m) => (m === k ? a : x)) : row)));
+    setAnswers(prev => prev.map((x, n) => (n === i ? a : x)));
     if (ok) {
       setRight(n => n + 1);
       bump.setValue(1.35); Animated.spring(bump, { toValue: 1, friction: 4, useNativeDriver: native }).start();
@@ -73,25 +73,19 @@ export default function Warmup() {
     }
     // (the explanation and the next button into view, on a short screen)
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 120);
-    // the question done: saved at once as a short tryout, with confetti when every statement was right
-    if (answers[i].filter(x => x == null).length === 1) {
-      const ticks = q.st.map((_, m) => (m === k ? a : answers[i][m]) === 1);
-      const g = grade(q, ticks);
-      saveAttempt({ secs: Math.max(1, Math.round((now() - started.current) / 1000)), mode: 'demo', items: [{ id: g.id, ok: g.ok, w: g.w, a: g.a }] }).catch(() => {});
-      started.current = now();
-      if (g.ok) setParty(n => n + 1);
-    }
+    // saved at once as a short tryout of this picture (its other statements as answered right)
+    const g = grade(q, q.st.map((s, m) => (m === k ? a : s.ok) === 1));
+    saveAttempt({ secs: Math.max(1, Math.round((now() - started.current) / 1000)), mode: 'demo', items: [{ id: g.id, ok: g.ok, w: g.w, a: g.a }] }).catch(() => {});
+    started.current = now();
   };
   const next = () => {
     tap();
-    if (!all) { setK(k + 1); return; }
     scroll.current?.scrollTo({ y: 0, animated: false });
-    if (i + 1 < qs.length) { setI(i + 1); setK(0); return; }
+    if (i + 1 < qs.length) { setI(i + 1); return; }
     setDone(true);
   };
 
-  const total = qs.reduce((n, x) => n + x.st.length, 0);
-  const qRight = answers[i].filter((a, m) => a === q.st[m].ok).length;
+  const total = qs.length;
   const src = pic(q);
   const main = (x: { da: string; en: string }) => (lang === 'en' ? x.en : x.da);
   const why = (x: { eda: string; een: string; efa: string }) => (RTL ? x.efa : lang === 'en' ? x.een : x.eda);
@@ -113,7 +107,6 @@ export default function Warmup() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      {party ? <Confetti key={party} /> : null}
       {/* top: leave, the questions' progress, the right answers so far */}
       <View style={{ paddingTop: ins.top + 10, paddingHorizontal: 16, gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -141,19 +134,19 @@ export default function Warmup() {
           </View>
         </Animated.View>
 
-        {/* at the very start, how it works: as in the real test, each statement on its own */}
-        {i === 0 && k === 0 && given == null ? (
+        {/* at the very start, how it works, and how the real test differs */}
+        {i === 0 && given == null ? (
           <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
             <Icon name="info" size={18} color={c.muted} />
-            <T style={{ flex: 1, color: c.muted, fontSize: 13.5, lineHeight: 22 }}>هر گزینه را بخوانید و بگویید درست است یا نادرست. در آزمون اصلی هم هر سؤال چند گزینه دارد و باید همه‌ی گزینه‌های درست را علامت بزنید؛ این ۵ سؤال سطح شما را هم می‌سنجد.</T>
+            <T style={{ flex: 1, color: c.muted, fontSize: 13.5, lineHeight: 22 }}>برای هر تصویر یک گزینه آمده است؛ بگویید درست است یا نادرست. در آزمون اصلی هر سؤال چند گزینه دارد و باید همه‌ی گزینه‌های درست را علامت بزنید. این ۵ سؤال سطح شما را هم می‌سنجد.</T>
           </View>
         ) : null}
-        {/* the statement in turn, with its two answers */}
+        {/* the picture's statement, with its two answers */}
         <Animated.View style={{ opacity: rise, transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { translateX: shake }] }}>
           <View style={{ borderRadius: 18, borderWidth: 2, padding: 16, gap: 14,
             borderColor: given == null ? c.line : given === st.ok ? c.ok : c.bad, backgroundColor: given == null ? c.surface : given === st.ok ? c.okSoft : c.badSoft }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <T style={{ color: c.muted, fontSize: 12.5 }}>{t('گزینه‌ی {0} از {1}', k + 1, q.st.length)}</T>
+              <T style={{ color: c.muted, fontSize: 12.5 }}>درست است یا نادرست؟</T>
               <View style={{ flex: 1 }} />
               {given != null ? (
                 <Animated.View style={{ transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }] }}>
@@ -185,12 +178,7 @@ export default function Warmup() {
 
         {given != null ? (
           <View style={{ gap: 10 }}>
-            {all ? (
-              <T style={{ textAlign: 'center', fontWeight: '700', fontSize: 15, color: qRight === q.st.length ? c.ok : c.text }}>
-                {qRight === q.st.length ? 'آفرین! همه‌ی گزینه‌های این سؤال را درست جواب دادید.' : t('{0} از {1} گزینه‌ی این سؤال درست بود.', qRight, q.st.length)}
-              </T>
-            ) : null}
-            <ArcButton big label={!all ? 'گزینه‌ی بعد' : i + 1 < qs.length ? 'سؤال بعد' : 'دیدن نتیجه'} icon="arrowLeft" onPress={next} />
+            <ArcButton big label={i + 1 < qs.length ? 'سؤال بعد' : 'دیدن نتیجه'} icon="arrowLeft" onPress={next} />
           </View>
         ) : null}
       </ScrollView>
