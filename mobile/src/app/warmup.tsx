@@ -1,4 +1,5 @@
-// «گرم‌کردن»: right after the first sign-in (no test yet), three questions of the app's own bank, asked in a lighter way
+// «گرم‌کردن»: right after the first sign-in (no test yet), five questions of the app's own bank (Mojtaba 2026-10-30: to gauge
+// the user and show how the app and its tests work), asked in a lighter way
 // than the exam (Mojtaba 2026-10-30): one statement at a time, answered with two large buttons («درست است» / «نادرست
 // است»), each answer judged at once (the card turns green with a pop or red with a shake, and the explanation slides
 // in), a running count of right answers, confetti for a question answered all right, and at the end a ring with the
@@ -23,7 +24,7 @@ import { Icon } from '@/ui/icon';
 import { ArcButton, Ring, T, tap } from '@/ui/kit';
 import { useColors } from '@/ui/theme';
 
-const COUNT = 3;
+const COUNT = 5;
 const now = () => Date.now();
 const native = Platform.OS !== 'web';
 const buzz = (ok: boolean) => { if (native) Haptics.notificationAsync(ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {}); };
@@ -33,7 +34,7 @@ export default function Warmup() {
   const { newBank, newqArt, settings, saveAttempt } = useApp();
   const pic = useQuestionImage();
   const lang = settings.lang === 'en' ? 'en' : 'da';
-  // Three questions of two to four statements, those with a picture first.
+  // Five questions of two to four statements, those with a picture first.
   const [qs] = useState<Question[]>(() => {
     const all = shuffle((newBank?.questions ?? []).filter(q => q.st.length >= 2 && q.st.length <= 4));
     return [...all.filter(q => newqArt[q.id]), ...all.filter(q => !newqArt[q.id])].slice(0, COUNT);
@@ -113,7 +114,7 @@ export default function Warmup() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       {party ? <Confetti key={party} /> : null}
-      {/* top: leave, the three questions' progress, the right answers so far */}
+      {/* top: leave, the questions' progress, the right answers so far */}
       <View style={{ paddingTop: ins.top + 10, paddingHorizontal: 16, gap: 10 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <Pressable onPress={() => { tap(); leave(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('بعداً')}>
@@ -140,6 +141,13 @@ export default function Warmup() {
           </View>
         </Animated.View>
 
+        {/* at the very start, how it works: as in the real test, each statement on its own */}
+        {i === 0 && k === 0 && given == null ? (
+          <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', padding: 12, borderRadius: 14, backgroundColor: c.surface2 }}>
+            <Icon name="info" size={18} color={c.muted} />
+            <T style={{ flex: 1, color: c.muted, fontSize: 13.5, lineHeight: 22 }}>هر گزینه را بخوانید و بگویید درست است یا نادرست. در آزمون اصلی هم هر سؤال چند گزینه دارد و باید همه‌ی گزینه‌های درست را علامت بزنید؛ این ۵ سؤال سطح شما را هم می‌سنجد.</T>
+          </View>
+        ) : null}
         {/* the statement in turn, with its two answers */}
         <Animated.View style={{ opacity: rise, transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { translateX: shake }] }}>
           <View style={{ borderRadius: 18, borderWidth: 2, padding: 16, gap: 14,

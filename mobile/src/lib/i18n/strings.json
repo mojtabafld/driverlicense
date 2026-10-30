@@ -1,4 +1,5 @@
 {
+"هر گزینه را بخوانید و بگویید درست است یا نادرست. در آزمون اصلی هم هر سؤال چند گزینه دارد و باید همه‌ی گزینه‌های درست را علامت بزنید؛ این ۵ سؤال سطح شما را هم می‌سنجد.":["Read each statement and say whether it is true or false. In the real test, too, each question has several statements and you tick all the true ones; these 5 questions also gauge your level.", "Læs hvert udsagn og sig, om det er rigtigt eller forkert. Også i den rigtige prøve har hvert spørgsmål flere udsagn, og du markerer alle de rigtige; de 5 spørgsmål viser også dit niveau."],
 "گرم‌کردن · سؤال {0} از {1}":["Warm-up · question {0} of {1}", "Opvarmning · spørgsmål {0} af {1}"],
 "گزینه‌ی {0} از {1}":["Statement {0} of {1}", "Udsagn {0} af {1}"],
 "نادرست است":["False", "Forkert"],
