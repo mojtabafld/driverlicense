@@ -1251,6 +1251,9 @@ const STYLES = {
   '3d': 'a modern, clean 3D render like a premium mobile app\'s illustrations: soft rounded shapes, soft studio light and gentle shadows, a calm, limited palette; every sign and marking in its correct official Danish design',
   cartoon: 'a friendly, colourful cartoon illustration with clear dark outlines, simple shapes and flat bright colours, like a modern children\'s traffic-safety book, while every sign, marking and road user stays correct and clearly readable',
   flat: 'a clean, precise flat vector illustration: simple shapes, flat colours, no gradients or textures, NOT photorealistic and NOT a 3D render',
+  // like the official theory test's own pictures: a driving simulator's rendered scene
+  sim: 'a realistic driving-simulator render, like the pictures of the official Danish theory test: a computer-rendered 3D road scene in a game-engine look, clean asphalt, crisp road markings, simple realistic buildings and trees, even daylight, no film grain; when seen from the driver\'s seat, the car\'s dashboard and mirrors as in a simulator',
+  semi: 'a semi-realistic digital painting: realistic proportions, light and perspective, painted with clean, smooth brush work and slightly simplified detail, calm natural colours, so the scene looks real but stays clear and uncluttered',
 };
 const RESTYLE = `You rewrite prompts for an image model that draws the pictures of a Danish driving-theory app (category B).
 You get a prompt and the style the picture must now have. Rewrite the prompt so the picture is drawn in that style:
