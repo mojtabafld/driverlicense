@@ -11,6 +11,22 @@
 // See README.md for all variables.
 'use strict';
 process.env.TZ = 'Europe/Copenhagen'; // server-side dates (logs, day buckets) in Copenhagen time
+// The secret keys from Oracle Cloud Vault (vault.js; Mojtaba 2026-10-30): with TP_VAULT_SECRET (the secret's OCID) set,
+// the secret's KEY=value lines are read first, before any module reads its settings, and take the place of those in
+// /etc/teoripro/env. Should the vault not answer (20 seconds), the server goes on with what the env file has.
+if (process.env.TP_VAULT_SECRET) {
+  try {
+    const text = require('node:child_process').execFileSync(process.execPath, [require('node:path').join(__dirname, 'vault.js'), process.env.TP_VAULT_SECRET],
+      { encoding: 'utf8', timeout: 20e3, stdio: ['ignore', 'pipe', 'pipe'] });
+    let n = 0;
+    for (const line of text.split(/\r?\n/)) {
+      const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
+      if (!m || line.trim().startsWith('#')) continue;
+      process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2'); n++;
+    }
+    console.log(`Secrets: ${n} keys from Oracle Cloud Vault`);
+  } catch (e) { console.error('Secrets: Oracle Cloud Vault not read, the env file\'s keys are used:', String(e.stderr || e.message).trim()); }
+}
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
