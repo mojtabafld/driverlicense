@@ -1,7 +1,8 @@
 // «گرم‌کردن»: right after the first sign-in (no test yet), five pictures of the app's own bank, one statement each
 // (Mojtaba 2026-10-30: to gauge the user and show how the app and its tests work, without too many questions), asked in
 // a lighter, game-like way than the exam:
-// - a short start: a big ۳ ۲ ۱ (no page of words before it since 2026-10-30);
+// - a short start: «آماده‌اید؟» growing in and fading, then a big ۳ ۲ ۱ (no page of words before it since
+//   2026-10-30);
 // - each picture comes in in steps (the picture, the question, the statement), quiet and minimal, and the one answered
 //   leaves lifting and fading;
 // - ten seconds for each statement (Mojtaba 2026-10-30; it was five), on a ring that drains and turns from green to
@@ -73,7 +74,8 @@ export default function Warmup() {
   const [ks] = useState(() => qs.map(q => Math.floor(Math.random() * q.st.length)));
   // stage: the start's ۳ ۲ ۱, the questions, the end
   const [stage, setStage] = useState<'count' | 'play' | 'done'>('count');
-  const [three, setThree] = useState(3);
+  // (4: the «آماده‌اید؟» before the numbers)
+  const [three, setThree] = useState(4);
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<(0 | 1 | null)[]>(() => qs.map(() => null));
   const [late, setLate] = useState<boolean[]>(() => qs.map(() => false));
@@ -98,15 +100,16 @@ export default function Warmup() {
   // (the latest answer for the seconds' end, which is set up before it)
   const late$ = useRef<(a: 0 | 1 | null) => void>(() => {});
 
-  // ۳ ۲ ۱: each number grows in and fades, then the first picture
+  // «آماده‌اید؟», then ۳ ۲ ۱: each grows in and fades (the words held a little longer), then the first picture
   useEffect(() => {
     if (stage !== 'count') return;
     big.setValue(0);
     const a = Animated.sequence([
       Animated.timing(big, { toValue: 1, duration: 260, easing: Easing.out(Easing.back(2)), useNativeDriver: native }),
+      Animated.delay(three > 3 ? 450 : 0),
       Animated.timing(big, { toValue: 2, duration: 420, easing: Easing.in(Easing.quad), useNativeDriver: native }),
     ]);
-    tick();
+    if (three <= 3) tick();
     a.start(({ finished }) => {
       if (!finished) return;
       if (three > 1) setThree(three - 1);
@@ -194,9 +197,9 @@ export default function Warmup() {
           <T style={{ color: c.muted, fontSize: 14 }}>بعداً</T>
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          <Animated.Text style={{ fontSize: 120, lineHeight: 150, fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: c.text,
+          <Animated.Text style={{ fontSize: three > 3 ? 44 : 120, lineHeight: three > 3 ? 64 : 150, textAlign: 'center', fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: c.text,
             opacity: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] }),
-            transform: [{ scale: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0.4, 1, 1.5] }) }] }}>{faNum(three)}</Animated.Text>
+            transform: [{ scale: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0.4, 1, 1.5] }) }] }}>{three > 3 ? tr('آماده‌اید؟') : faNum(three)}</Animated.Text>
         </View>
       </View>
     );
