@@ -4,7 +4,7 @@
 // lucide.dev and check that it is in the installed package (.claude/skills/lucide-icons). `weight` and `contrast` are
 // kept for callers but do not change the drawing.
 import {
-  ArrowLeft, ArrowRight, ArrowRightLeft, BadgeCheck, Bell, BookOpen, Bookmark, Bug, Calendar, Car, ChartColumn, Check, ChevronDown, ChevronLeft, ChevronUp,
+  ArrowLeft, ArrowRight, ArrowRightLeft, BadgeCheck, Bell, Ellipsis, BookOpen, Bookmark, Bug, Calendar, Car, ChartColumn, Check, ChevronDown, ChevronLeft, ChevronUp,
   CircleCheck, CircleQuestionMark, CircleX, ClipboardList, Clock, Eye, EyeOff, Flame, Flashlight, Funnel, Gauge, GraduationCap, House, IdCard, Info,
   Languages, Lightbulb, List, ListChecks, Lock, LogIn, LogOut, Mail, Merge, Minus, Moon, Pencil, Play, Plus, Road, RotateCw, Ruler, Scale,
   Search, Send, Settings, ShieldCheck, Shuffle, Signpost, Smartphone, Sparkles, Square, SquareParking, StickyNote, Sun, Trash, TriangleAlert, Trophy,
@@ -26,7 +26,7 @@ const ICONS: Record<IconName, LucideIcon> = {
   search: Search, flame: Flame, speaker: Volume2, stop: Square, rules: Scale, sign: Signpost, priority: Merge, help: CircleQuestionMark,
   bug: Bug, info: Info, send: Send, bulbCircle: Lightbulb, gauge: Gauge, distance: Ruler, glass: Wine, seatbelt: ShieldCheck,
   phone: Smartphone, headlight: Flashlight, car: Car, parking: SquareParking, road: Road, lanes: ArrowRightLeft, idCard: IdCard,
-  trophy: Trophy, passed: BadgeCheck, bell: Bell, plus: Plus, minus: Minus, calendar: Calendar, note: StickyNote, mail: Mail,
+  trophy: Trophy, passed: BadgeCheck, more: Ellipsis, bell: Bell, plus: Plus, minus: Minus, calendar: Calendar, note: StickyNote, mail: Mail,
 };
 
 export function Icon({ name, size = 24, color, filled = false }: IconProps) {

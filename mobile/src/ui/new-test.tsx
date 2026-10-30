@@ -128,7 +128,7 @@ function mix(a: string, b: string, t: number): string | null {
 }
 
 function Progress({ answered, total, right, wrong, week, level = 0 }: { answered: number; total: number; right: number; wrong: number; week: number; level?: number }) {
-  const c = useColors();
+  const c = useColors(), [open, setOpen] = useState(false);
   const share = total ? answered / total : 0;
   const big = useCountUp(share, 1100);
   // A whole percent: never 0 once a question is answered, never 100 before all of them are.
@@ -148,8 +148,8 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // A segment of the bar: its true share of the questions (Mojtaba 2026-10-29: 5 right and 35 wrong looked the same),
   // only kept from vanishing (a dot) while it has any.
   const seg = (n: number, color: string) => (n ? <View style={{ flexGrow: n, flexShrink: 1, flexBasis: 0, minWidth: 6, height: 12, borderRadius: 6, backgroundColor: color }} /> : null);
-  // In the style of a picture Mojtaba sent (2026-10-29): the title with a pill of the questions left at its end (it was
-  // this week's gain, 2026-10-30), the percent large and light under it, the bar in three rounded parts with gaps, and a dot for each under it.
+  // In the style of a picture Mojtaba sent (2026-10-29): the title with a «…» button at its end (it was this week's gain;
+  // 2026-10-30), the percent large and light with a pill of the questions left beside it, the bar in three rounded parts with gaps, and a dot for each under it.
   return (
     // (its rows straight in the card, so the card spreads all its rows at even gaps; Mojtaba 2026-10-29)
     <>
@@ -158,20 +158,46 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           {done ? <Icon name="checkCircle" size={18} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
           <T style={{ fontSize: 17, fontWeight: '700' }}>پیشرفت شما</T>
         </View>
-        {/* (the questions left at the title's end, in place of this week's gain; Mojtaba 2026-10-30) */}
+        {/* (a «…» button at the title's end: the card opens to more on the progress, each part's count and share;
+            Mojtaba 2026-10-30) */}
+        <Pressable onPress={() => { tap(); setOpen(o => !o); }} hitSlop={8} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={tr('جزئیات پیشرفت')}
+          style={({ pressed }) => ({ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: open ? c.surface2 : 'transparent', opacity: pressed ? 0.7 : 1 })}>
+          <Icon name="more" size={20} color={c.text} weight="semibold" />
+        </Pressable>
+      </View>
+      {/* The percent large, with the questions left beside it (back there, 2026-10-30). */}
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
+        <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
         <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
-          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+          style={({ pressed }) => ({ marginBottom: level >= 2 ? 4 : 8, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
           <Icon name={done ? 'checkCircle' : 'exam'} size={16} color={c.link} weight="semibold" />
           <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{done ? 'همه جواب داده شد' : t('{0} سؤال مانده', faNum(left))}</T>
         </Pressable>
       </View>
-      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
         {seg(wrong, wrongTone)}
         {seg(left, rest)}
       </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 2, display: level >= 3 ? 'none' : 'flex' }}>
+      {open ? (
+        // Opened: each part on its own row, its count and its share of all the questions, with a thin bar.
+        <View style={{ gap: 10 }}>
+          {([['درست', right, rightTone], ['اشتباه', wrong, wrongTone], ['جواب‌نداده', left, rest]] as const).map(([label, n, color]) => (
+            <View key={label} style={{ gap: 5 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color }} />
+                <T style={{ flex: 1, fontSize: 14 }}>{label}</T>
+                <T raw style={{ fontSize: 14, fontWeight: '700' }}>{faNum(n)}</T>
+                <T raw style={{ width: 52, textAlign: 'right', fontSize: 13, color: c.muted }}>{pctText(total ? n / total : 0)}</T>
+              </View>
+              <View style={{ height: 6, borderRadius: 3, backgroundColor: c.surface2, overflow: 'hidden' }}>
+                <View style={{ width: `${total ? (n / total) * 100 : 0}%`, minWidth: n ? 6 : 0, height: 6, borderRadius: 3, backgroundColor: color }} />
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 2, display: level >= 3 || open ? 'none' : 'flex' }}>
         {dot(rightTone, `${tr('درست')} ${faNum(right)}`)}
         {dot(wrongTone, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {left ? dot(rest, `${tr('جواب‌نداده')} ${faNum(left)}`) : null}

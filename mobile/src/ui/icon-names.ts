@@ -7,6 +7,6 @@ export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' 
   | 'play' | 'personAdd' | 'chevronUp' | 'xmark' | 'edit' | 'shuffle' | 'list' | 'listCheck' | 'zoom' | 'search' | 'flame' | 'speaker' | 'stop'
   | 'rules' | 'sign' | 'priority' | 'help' | 'bug' | 'info' | 'send' | 'bulbCircle'
   | 'gauge' | 'distance' | 'glass' | 'seatbelt' | 'phone' | 'headlight' | 'car' | 'parking' | 'road' | 'lanes' | 'idCard'
-  | 'bell' | 'plus' | 'minus' | 'calendar' | 'note' | 'mail' | 'coach' | 'trophy' | 'passed';
+  | 'bell' | 'plus' | 'minus' | 'calendar' | 'note' | 'mail' | 'coach' | 'trophy' | 'passed' | 'more';
 
 export type IconProps = { name: IconName; size?: number; color: string; filled?: boolean; weight?: SymbolWeight; contrast?: string };
