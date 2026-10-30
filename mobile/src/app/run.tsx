@@ -48,18 +48,18 @@ function ClockIcon({ color, pulse }: { color: string; pulse: boolean }) {
   return <Animated.View style={{ opacity: o }}><Icon name="clock" size={17} color={color} weight="semibold" /></Animated.View>;
 }
 
-// The «بررسی فوری» switch under the picture: a soft pill like a status tag, a green circled tick and its name in green
+// The «بررسی» («Check», once «بررسی فوری»; Mojtaba 2026-10-30) switch under the picture: a soft pill like a status tag, a green circled tick and its name in green
 // while on, the same in grey while off (after a picture Mojtaba sent).
 // Once on it stays on (the question is then checked and closed); always at hand, its icon green while off.
 function CheckChip({ on, onPress, disabled }: { on: boolean; onPress: () => void; disabled?: boolean }) {
   // (off, once the question has an answer: only its icon green, to say it can be checked now; Mojtaba 2026-10-30)
   const c = useColors(), fg = on ? c.ok : c.muted, iconFg = on || !disabled ? c.ok : c.muted;
   return (
-    <Pressable onPress={() => { if (on || disabled) return; tap(); onPress(); }} hitSlop={6} accessibilityRole="switch" accessibilityState={{ checked: on, disabled: !on && disabled }} accessibilityLabel={tr('بررسی فوری')}
+    <Pressable onPress={() => { if (on || disabled) return; tap(); onPress(); }} hitSlop={6} accessibilityRole="switch" accessibilityState={{ checked: on, disabled: !on && disabled }} accessibilityLabel={tr('بررسی')}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 7, height: 38, paddingHorizontal: 13, borderRadius: 13,
         backgroundColor: on ? c.okSoft : c.surface2, opacity: !on && disabled ? 0.5 : pressed && !on ? 0.8 : 1 })}>
       <Icon name="checkCircle" size={19} color={iconFg} weight="semibold" />
-      <T style={{ fontSize: 14, fontWeight: '700', color: fg }}>بررسی فوری</T>
+      <T style={{ fontSize: 14, fontWeight: '700', color: fg }}>بررسی</T>
     </Pressable>
   );
 }
