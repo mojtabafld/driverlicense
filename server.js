@@ -252,6 +252,11 @@ async function welcomeBack(u, e) {
   console.log('premium pass given back', u.username, new Date(p.until).toISOString());
   return p.until;
 }
+// A new account's own message on the news page: the welcome email's words (deleted with the account; Mojtaba 2026-10-30).
+function welcomeInbox(u, lang, restored) {
+  const m = mail.welcomeNews(u.name, ['fa', 'en', 'da'].includes(lang) ? lang : 'fa', restored);
+  u.inbox = [{ id: `w${u.created}`, at: u.created, title: m.title, text: m.text }];
+}
 // The emails after signing up and after buying the pass (mail.js sendWelcome / sendPremium), not waited for.
 const appLink = req => `${req ? originOf(req) : 'https://teori.bitlane.app'}/`;
 function premiumMail(u, req) {
@@ -850,6 +855,7 @@ async function api(req, res, route) {
         u = { username: e, name: String(c.given_name || c.name || e.split('@')[0]).trim().slice(0, 40) || e, salt, hash: await hashPw(crypto.randomBytes(24).toString('hex'), salt),
           created: now, attempts: [], settings: { header: 'plain' }, email: e, emailOk: now, okOnce: now, google: String(c.sub || '') };
         const restored = await welcomeBack(u, e);
+        welcomeInbox(u, st.lang, restored);
         store.users[e] = u;
         await store.saveUser(u);
         console.log('account made with Google', e.replace(/^(.{2}).*@/, '$1…@'));
@@ -931,6 +937,7 @@ async function api(req, res, route) {
       u = { username: e, name: String(name || e.split('@')[0]).trim().slice(0, 40) || e, salt, hash: await hashPw(crypto.randomBytes(24).toString('hex'), salt),
         created: now, attempts: [], settings: { header: 'plain', ...(exam === 'da' || exam === 'en' ? { lang: exam, langChosen: true } : {}) }, email: e, emailOk: now, okOnce: now };
       const back = await welcomeBack(u, e);
+      welcomeInbox(u, b.lang, back);
       store.users[e] = u;
       await store.saveUser(u);
       console.log('account made with a code', e.replace(/^(.{2}).*@/, '$1…@'));
@@ -1651,7 +1658,10 @@ async function api(req, res, route) {
   // updates, new tips), newest first; the app shows them behind the bell on the home page, with a red dot while one is
   // newer than the last the device has seen. store.meta.news: [{ id, at, title, text, by }], at most 100 kept.
   if (req.method === 'GET' && route === 'news') {
-    return send(res, 200, { items: (store.meta.news || []).slice().reverse().slice(0, 50).map(({ id, at, title, text }) => ({ id, at, title, text })) });
+    // (only the messages since the account was made, and its own ones, e.g. its welcome; Mojtaba 2026-10-30)
+    const since = user.created || 0;
+    const items = [...(store.meta.news || []).filter(x => x.at >= since), ...(user.inbox || [])].sort((a, b) => b.at - a.at).slice(0, 50);
+    return send(res, 200, { items: items.map(({ id, at, title, text }) => ({ id, at, title, text })) });
   }
   if (req.method === 'POST' && route === 'news') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });

@@ -55,12 +55,12 @@ export const loadPromoSeen = async (): Promise<string[]> => {
 export const savePromoSeen = async (keys: string[]) => { try { localStorage.setItem(PROMO_SEEN, JSON.stringify(keys)); } catch {} };
 // When the news (the bell on the home page) was last looked at on this device.
 const NEWS_SEEN = 'tp.newsSeen';
-export const loadNewsSeen = async (): Promise<number> => { try { return +(localStorage.getItem(NEWS_SEEN) || 0) || 0; } catch { return 0; } };
-export const saveNewsSeen = async (at: number) => { try { localStorage.setItem(NEWS_SEEN, String(at)); } catch {} };
+export const loadNewsSeen = async (who = ''): Promise<number> => { try { return +(localStorage.getItem(NEWS_SEEN + who) || 0) || 0; } catch { return 0; } };
+export const saveNewsSeen = async (at: number, who = '') => { try { localStorage.setItem(NEWS_SEEN + who, String(at)); } catch {} };
 // The messages cleared on this device (prefs.ts).
 const NEWS_HIDE = 'tp_news_hide';
-export const loadNewsHide = async (): Promise<number> => { try { return +(localStorage.getItem(NEWS_HIDE) || 0) || 0; } catch { return 0; } };
-export const saveNewsHide = async (at: number) => { try { localStorage.setItem(NEWS_HIDE, String(at)); } catch {} };
+export const loadNewsHide = async (who = ''): Promise<number> => { try { return +(localStorage.getItem(NEWS_HIDE + who) || 0) || 0; } catch { return 0; } };
+export const saveNewsHide = async (at: number, who = '') => { try { localStorage.setItem(NEWS_HIDE + who, String(at)); } catch {} };
 const CHEERED = 'tp.cheered';
 export const loadCheered = async (): Promise<string[]> => {
   try { const v = JSON.parse(localStorage.getItem(CHEERED) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
