@@ -144,10 +144,12 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const { width: winW } = useWindowDimensions(), tight = winW < 345 ? 2 : winW < 380 ? 1 : 0;
   const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
     <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
-      style={({ pressed }) => ({ flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: [5, 4, 3][tight], paddingVertical: 7, paddingHorizontal: [10, 8, 6][tight],
-        borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
-      <Icon name={icon} size={[15, 14, 12][tight]} color={color} weight="semibold" />
-      <View style={{ flexShrink: 1, minWidth: 0 }}><FitLine size={[13, 12.5, 11.5][tight]} min={8} style={{ color, fontWeight: '700' }}>{text}</FitLine></View>
+      // (together as wide as the progress bar under them, each grown from its own width; a little larger: Mojtaba 2026-10-30)
+      style={({ pressed }) => ({ flexGrow: 1, flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: [5, 4, 3][tight],
+        paddingVertical: [10, 9, 8][tight], paddingHorizontal: [10, 8, 6][tight], borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+      <Icon name={icon} size={[16, 15, 13][tight]} color={color} weight="semibold" />
+      {/* (one size for each width of screen; English and Danish, longer, a step smaller) */}
+      <T style={{ flexShrink: 1, color, fontWeight: '700', fontSize: [13, 12, 11, 10.5][tight + (RTL ? 0 : 1)] }} numberOfLines={1}>{text}</T>
     </Pressable>
   );
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
