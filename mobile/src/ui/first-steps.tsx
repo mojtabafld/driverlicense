@@ -77,7 +77,8 @@ export function FirstSteps() {
     </Pressable>
   );
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: 12 }}>
+    // (just under the chart's dashed pass line, which is 30% down: Mojtaba 2026-10-30)
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, top: '30%', bottom: 0, alignItems: 'center', paddingTop: 14, paddingHorizontal: 12 }}>
       <View style={{ gap: 8, width: '100%', maxWidth: 220 }}>
         {btn(bookIcon, 'شروع آموزش', '/learn')}
         {btn(tickIcon, 'اولین آزمون', '/exam')}
