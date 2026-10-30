@@ -8,7 +8,7 @@
 // through it and its mistakes (Mojtaba 2026-10-20).
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
@@ -138,12 +138,16 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const done = total > 0 && answered >= total, left = total - answered, dark = useIsDark();
   const { attempts } = useApp();
   const tests = attempts.filter(a => a.mode !== 'lesson').length, mistakes = mistakeIds(attempts).length;
-  // A pill: an icon in its colour and its words, a tap opening its page.
+  // A pill: an icon in its colour and its words, a tap opening its page. The three share one line on every screen: on a
+  // narrow one they give up room and their words get smaller (FitLine; Mojtaba 2026-10-30).
+  // (narrower phones: smaller icons, room and words, so nothing is cut off)
+  const { width: winW } = useWindowDimensions(), tight = winW < 345 ? 2 : winW < 380 ? 1 : 0;
   const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
     <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 7, paddingHorizontal: 11, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
-      <Icon name={icon} size={15} color={color} weight="semibold" />
-      <T style={{ color, fontSize: 13, fontWeight: '700' }} numberOfLines={1}>{text}</T>
+      style={({ pressed }) => ({ flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: [5, 4, 3][tight], paddingVertical: 7, paddingHorizontal: [10, 8, 6][tight],
+        borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+      <Icon name={icon} size={[15, 14, 12][tight]} color={color} weight="semibold" />
+      <View style={{ flexShrink: 1, minWidth: 0 }}><FitLine size={[13, 12.5, 11.5][tight]} min={8} style={{ color, fontWeight: '700' }}>{text}</FitLine></View>
     </Pressable>
   );
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
@@ -175,20 +179,16 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           <Icon name="more" size={20} color={c.text} weight="semibold" />
         </Pressable>
       </View>
-      {/* The percent large, and after it its pills: the questions left (or, all answered, only a green circled tick), and
-          the tests' history and the mistakes, each opening its page, their icons in their own colours (Mojtaba
-          2026-10-30: they were two cards under this one). */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-        <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
-        {/* (the questions left beside the percent; the tests beside the mistakes on a line of their own under it, so
-            they stay side by side on a narrow phone too; Mojtaba 2026-10-30) */}
+      {/* The percent large, and under it its pills in one line: the questions left (or, all answered, only a green
+          circled tick), the tests' history and the mistakes, each opening its page, their icons in their own colours
+          (Mojtaba 2026-10-30: the history and the mistakes were two cards under this one). */}
+      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         {done ? (
-          <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
-            <Icon name="checkCircle" size={22} color={c.ok} weight="semibold" />
+          <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
+            <Icon name="checkCircle" size={20} color={c.ok} weight="semibold" />
           </View>
         ) : tag('exam', c.link, t('{0} سؤال مانده', faNum(left)), wrong ? () => router.push('/mistakes') : undefined)}
-      </View>
-      <View style={{ flexDirection: 'row', gap: 6 }}>
         {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
         {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
       </View>
