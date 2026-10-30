@@ -76,7 +76,8 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
 // The chance of passing as a large number, counting up as the ring fills; «–» before there is an estimate.
 function PassPct({ value, size }: { value: number | null; size: number }) {
   const shown = useCountUp(value ?? 0, 1800);
-  return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontWeight: '800' }}>{value == null ? '–' : pctText(shown)}</T>;
+  // (bold by its own family: the main site draws every heavier weight as 500; Mojtaba 2026-10-30)
+  return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700' }}>{value == null ? '–' : pctText(shown)}</T>;
 }
 
 // A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
