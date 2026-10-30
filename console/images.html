@@ -4,7 +4,8 @@
      «آموزش», the step-by-step course's pictures (by lesson), and the signs' and right of way's (by their groups). A part's
      group and then one of its pictures are chosen from two lists («فقط تصاویر ساخته‌نشده» lists only those not made yet,
      with each group's count); the picture is shown with its prompt, which may be edited, and «ساخت تصویر جدید» makes a
-     new picture from it, which the app shows once made. For a sign or right of way, a click on its made picture,
+     new picture from it, which the app shows once made. «سبک تصویر» has the API rewrite the prompt for another look
+     (realistic, 3D, cartoon, flat; /api/restyle), the scene kept. For a sign or right of way, a click on its made picture,
      prove.dk's or the official drawing makes it the one the app shows (/api/guiderefchoose). It talks to /api/courseart, /api/courseprompt, /api/coursegen
      (?set=newq|course), /api/guideref, /api/guidegen, /api/guidedraft and /api/consoleprompt. -->
 <html lang="fa" dir="rtl">
@@ -134,6 +135,7 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
       + (x.canOfficial ? fig(x.official ? ref('official', '') : '', '<b>طرح رسمی</b>', c === 'official', 'دریافت نشده', 'official') : '');
   }
 
+  const STYLES = [['current', 'حالت فعلی'], ['realistic', 'واقع‌گرایانه (عکس)'], ['3d', 'سه‌بعدی مدرن'], ['cartoon', 'کارتونی'], ['flat', 'تصویرسازی تخت (وکتور)']];
   const EMPTY = 'هنوز پرامپتی برای این تصویر ذخیره نشده؛ آن را بنویسید.';
   let pollT = null;
   async function view(fresh) {
@@ -145,8 +147,8 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
     }
     const { groups, g, items, x } = current();
     if (x && st.promptFor !== x.pid) {
-      st.prompt = null; st.promptFor = x.pid;
-      promptOf(x).then(p => { if (st.promptFor === x.pid) { st.prompt = st.saved = p || ''; const ta = document.getElementById('pr'); if (ta) { ta.value = st.prompt; ta.disabled = false; ta.placeholder = EMPTY; } } })
+      st.prompt = null; st.promptFor = x.pid; st.style = 'current';
+      promptOf(x).then(p => { if (st.promptFor === x.pid) { st.prompt = st.saved = p || ''; const ta = document.getElementById('pr'); if (ta) { ta.value = st.prompt; ta.disabled = false; ta.placeholder = EMPTY; } const sy = document.getElementById('sty'); if (sy) sy.disabled = false; } })
         .catch(e => toast(e.message));
     }
     const draftable = x && !x.set;
@@ -165,6 +167,10 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
         ${x ? `
           ${st.part === 'q' ? `<p class="q">${esc(x.name)}</p>${x.da && x.da !== x.name ? `<div class="da muted">${esc(x.da)}</div>` : ''}` : ''}
           <div class="pics">${pictures(x)}</div>
+          <div class="row" style="margin:0 0 8px">
+            <label class="chk">سبک تصویر:<select id="sty" style="width:auto" ${st.prompt == null || st.restyling ? 'disabled' : ''}>${STYLES.map(([k, t]) => `<option value="${k}" ${k === (st.restyling || st.style) ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+            ${st.restyling ? '<span class="state">در حال نوشتن پرامپت برای این سبک…</span>' : '<span class="muted" style="font-size:12.5px">با انتخاب سبک، پرامپت برای همان صحنه در آن سبک بازنویسی می‌شود.</span>'}
+          </div>
           <label>پرامپت<textarea id="pr" ${st.prompt == null ? 'disabled' : ''} placeholder="${st.prompt == null ? 'در حال بارگذاری…' : EMPTY}">${esc(st.prompt == null ? '' : st.prompt)}</textarea></label>
           <div class="row">
             <button class="btn" id="gen" ${x.making ? 'disabled' : ''}>ساخت تصویر جدید با این پرامپت</button>
@@ -183,7 +189,19 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
     if (!x) return;
     const ta = document.getElementById('pr');
     ta.oninput = () => { st.prompt = ta.value; };
-    document.getElementById('undo').onclick = () => { st.prompt = ta.value = st.saved; };
+    document.getElementById('undo').onclick = () => { st.prompt = ta.value = st.saved; st.style = 'current'; view(); };
+    document.getElementById('sty').onchange = async e => {
+      const style = e.target.value, pid = x.pid;
+      // from the prompt as it is in the current style (with any edits), else from the saved one
+      const from = st.style === 'current' ? ta.value : st.saved;
+      if (style === 'current') { st.style = style; st.prompt = st.saved; return view(); }
+      st.restyling = style; view();
+      try {
+        const d = await api('POST', 'restyle', { prompt: from, style });
+        if (st.promptFor === pid) { st.style = style; st.prompt = d.prompt; }
+      } catch (er) { toast(er.message); }
+      st.restyling = null; view();
+    };
     const dr = document.getElementById('draft');
     if (dr) dr.onclick = async () => {
       dr.disabled = true; dr.textContent = 'در حال نوشتن…';
@@ -198,7 +216,7 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
       try {
         if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt });
         else await api('POST', 'guidegen', { key: x.key, prompt });
-        st.saved = prompt; toast('ساخت تصویر شروع شد');
+        st.saved = prompt; st.style = 'current'; toast('ساخت تصویر شروع شد');
       } catch (e) { return toast(e.message); }
       view(true);
     };
