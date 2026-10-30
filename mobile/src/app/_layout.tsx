@@ -148,6 +148,9 @@ function Root() {
         <Stack.Protected guard={!user}>
           <Stack.Screen name="login" />
         </Stack.Protected>
+        {/* the links that open the app (Google sign-in's return, the email link) only go on to it, with no slide */}
+        <Stack.Screen name="google" options={{ animation: 'none' }} />
+        <Stack.Screen name="verified" options={{ animation: 'none' }} />
       </Stack>
       )}
       {onboarded && askLang ? (
