@@ -25,6 +25,7 @@ import { TestStats } from '@/ui/chart-view';
 import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
+import { mix } from '@/ui/palette';
 import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { type DayPart } from '@/ui/greet-icon';
@@ -324,7 +325,8 @@ export default function Home() {
   // «آزمون‌ها» count counts and the chart view's statistics average (the course's lessons left out).
   const avgAll = avg(exams);
   const probColor = !est ? c.faint : est.prob >= 0.7 ? c.ok : est.prob >= 0.4 ? c.warn : c.bad;
-  const probSoft = !est ? c.surface2 : est.prob >= 0.7 ? c.okSoft : est.prob >= 0.4 ? c.warnSoft : c.badSoft;
+  // (the pill's background a clear tint of its colour, so it always shows on the card; Mojtaba 2026-10-30)
+  const probSoft = mix(!est ? c.muted : probColor, c.surface, 0.8);
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.

@@ -57,6 +57,7 @@ export function mistakeStats(attempts: Attempt[], has: (id: number) => boolean):
 // progress), the /app copy 200.
 // (the main site: the last 25 answers, one test's worth; Mojtaba 2026-10-25)
 const PASS_HALF_LIFE = 50, PASS_MAX_ANSWERS = PROVE_PICS ? 200 : 25, REPEAT_WEIGHT = 0.5;
+const PRIOR_N = 20, PRIOR_P = 0.6, PRIOR_FADE = 150;
 function logGamma(x: number): number {
   const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
     12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
@@ -84,7 +85,10 @@ export function passEstimate(attempts: Attempt[]) {
   recent.forEach(x => { for (const k in newer) if (+k < x.exam) newer[k]++; newer[x.exam] = newer[x.exam] || 0; });
   let good = 0, bad = 0;
   recent.forEach(x => { const w = 0.5 ** (newer[x.exam] / PASS_HALF_LIFE) * (x.repeat ? REPEAT_WEIGHT : 1); if (x.ok) good += w; else bad += w; });
-  const a = 1 + good, b = 1 + bad;
+  // A new learner's starting point (Mojtaba 2026-10-30: a few right answers alone must not make it «close to passing»):
+  // as if PRIOR_N answers at PRIOR_P were already given, fading out over the first PRIOR_FADE answers ever given.
+  const n0 = PRIOR_N * Math.max(0, 1 - any.length / PRIOR_FADE);
+  const a = 1 + good + n0 * PRIOR_P, b = 1 + bad + n0 * (1 - PRIOR_P);
   return { p: a / (a + b), prob: betaBinomTailAtLeast(FULL, passMin(FULL), a, b), n: recent.length };
 }
 

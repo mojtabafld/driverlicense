@@ -2,9 +2,10 @@
 // (Mojtaba 2026-10-30: to gauge the user and show how the app and its tests work, without too many questions), asked in
 // a lighter way than the exam: two large buttons («درست است» / «نادرست است»), each answer judged at once (the card turns
 // green with a pop or red with a shake, and the explanation slides in), a running count of right answers, and at the end
-// a ring with the share of right answers. Each picture is saved as its own short tryout (mode 'demo', not a free test;
-// its other statements as answered right), so home's chance of passing, test statistics and chart are not empty
-// afterwards. «بعداً» leaves it; it is offered once per account ((tabs)/index.tsx).
+// a ring with the share of right answers. The five are saved together as one short tryout (mode 'demo', not a free test;
+// each picture's other statements as answered right; Mojtaba 2026-10-30), so home's chance of passing, test statistics
+// and chart are not empty afterwards; «بعداً» leaves it, saving the pictures answered so far. It is offered once per
+// account ((tabs)/index.tsx).
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { Redirect, router } from 'expo-router';
@@ -12,7 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { Question } from '@/lib/bank';
+import type { Item, Question } from '@/lib/bank';
 import { RTL, t, tr } from '@/lib/i18n';
 import { imgSource } from '@/lib/img-source';
 import { faNum, grade, shuffle } from '@/lib/logic';
@@ -44,6 +45,13 @@ export default function Warmup() {
   const [right, setRight] = useState(0), [done, setDone] = useState(false);
   const started = useRef(0), scroll = useRef<ScrollView>(null);
   useEffect(() => { started.current = now(); }, []);
+  // the pictures answered, saved as one test once the last is answered (or on leaving early)
+  const items = useRef<Item[]>([]), saved = useRef(false);
+  const save = () => {
+    if (saved.current || !items.current.length) return;
+    saved.current = true;
+    saveAttempt({ secs: Math.max(1, Math.round((now() - started.current) / 1000)), mode: 'demo', items: items.current }).catch(() => {});
+  };
   const q = qs[i];
 
   // the card of each question comes in from the side, its statement from below
@@ -54,7 +62,7 @@ export default function Warmup() {
   useEffect(() => { rise.setValue(0); pop.setValue(0); Animated.timing(rise, { toValue: 1, duration: 320, easing: Easing.out(Easing.cubic), useNativeDriver: native }).start(); }, [i, rise, pop]);
   useEffect(() => { Animated.timing(bar, { toValue: done ? qs.length : i + (answers[i] != null ? 1 : 0), duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [i, done, answers, qs.length, bar]);
 
-  const leave = () => { if (router.canGoBack()) router.back(); else router.replace('/'); };
+  const leave = () => { save(); if (router.canGoBack()) router.back(); else router.replace('/'); };
   if (!q) return <Redirect href="/" />;
 
   const k = ks[i], given = answers[i], st = q.st[k];
@@ -73,10 +81,10 @@ export default function Warmup() {
     }
     // (the explanation and the next button into view, on a short screen)
     setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 120);
-    // saved at once as a short tryout of this picture (its other statements as answered right)
+    // this picture's item (its other statements as answered right); the test saved with the last one
     const g = grade(q, q.st.map((s, m) => (m === k ? a : s.ok) === 1));
-    saveAttempt({ secs: Math.max(1, Math.round((now() - started.current) / 1000)), mode: 'demo', items: [{ id: g.id, ok: g.ok, w: g.w, a: g.a }] }).catch(() => {});
-    started.current = now();
+    items.current = [...items.current, { id: g.id, ok: g.ok, w: g.w, a: g.a }];
+    if (i + 1 >= qs.length) save();
   };
   const next = () => {
     tap();
