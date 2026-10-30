@@ -13,7 +13,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
     "jpeg-js": "^0.4.4",
-    "nodemailer": "^6.10.1",
+    "nodemailer": "^10.3.1",
     "oracledb": "^6.10.0",
     "pg": "^8.13.0",
     "web-push": "^3.6.7"
