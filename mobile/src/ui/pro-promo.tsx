@@ -65,8 +65,8 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
   const { pay, user, startTrial } = useApp();
   const trialDays = pay?.trial && !user?.promoUsed && !user?.premium?.promo ? pay.trial : 0;
   const [busy, setBusy] = useState(false), [err, setErr] = useState('');
-  // (No price in the iPhone app, which sells nothing; Android's Play price may differ, so there too only on the web.)
-  const month = Platform.OS === 'web' ? pay?.plans.find(p => p.id === 'month') : undefined;
+  // (No price in the iPhone app, which sells nothing; on Android the same as Play's, set to the site's.)
+  const month = Platform.OS !== 'ios' ? pay?.plans.find(p => p.id === 'month') : undefined;
   // The cards come in: the middle one rising, the side ones fanning out from behind it.
   const [inn] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -134,11 +134,10 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
           <Pressable onPress={toPremium} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16, paddingHorizontal: 20, borderRadius: 24, backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder, opacity: pressed ? 0.8 : 1 })}>
             <View style={{ flex: 1, gap: 2 }}>
               <T style={{ fontSize: 17, fontWeight: '700' }}>نسخه‌ی ویژه</T>
-              <T style={{ color: c.muted, fontSize: 13 }} numberOfLines={1}>دسترسی به همه‌ی امکانات</T>
+              {/* (the most popular pass, the month's, and its price; Mojtaba 2026-10-30) */}
+              <T style={{ color: c.muted, fontSize: 13 }} numberOfLines={1}>{month ? t('محبوب‌ترین: یک‌ماهه، {0} کرون', faNum(month.price)) : tr('دسترسی به همه‌ی امکانات')}</T>
             </View>
-            {month ? (
-              <T style={{ fontSize: 18, fontWeight: '700' }}>{t('{0} کرون', faNum(month.price))}<T style={{ color: c.muted, fontSize: 15, fontWeight: '500' }}>{` / ${tr('ماه')}`}</T></T>
-            ) : null}
+            <Icon name="chevronLeft" size={18} color={c.muted} />
           </Pressable>
           <Pressable onPress={buy} disabled={busy} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
             <LinearGradient colors={['#f6e7c8', '#dfe3dc', '#bcd3ea']} start={{ x: RTL ? 1 : 0, y: 0 }} end={{ x: RTL ? 0 : 1, y: 0 }}
