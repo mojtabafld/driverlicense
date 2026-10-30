@@ -79,13 +79,14 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       {/* The progress first, under the title, then the choice of the number of questions and the start (Mojtaba
           2026-10-22; it was at the card's foot). */}
       {/* (no «تعداد سؤال‌ها را انتخاب کنید.» line: the title's line says it) */}
-      {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
+      {/* «بدون سؤال تکراری» right under the title, then the number of questions (Mojtaba 2026-10-30). */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
         </View>
         <Toggle label="بدون سؤال تکراری" value={fresh} onChange={setFresh} />
       </View>
+      {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       {fresh && unseen.length < size && !(unseen.length === 0 && premium && !limited) ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
           <Icon name="info" size={17} color={c.muted} />
