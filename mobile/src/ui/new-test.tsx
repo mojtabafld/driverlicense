@@ -181,19 +181,10 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           <Icon name="more" size={20} color={c.text} weight="semibold" />
         </Pressable>
       </View>
-      {/* The percent large, and under it its pills in one line: the questions left (or, all answered, only a green
-          circled tick), the tests' history and the mistakes, each opening its page, their icons in their own colours
-          (Mojtaba 2026-10-30: the history and the mistakes were two cards under this one). */}
+      {/* The percent large; the pills (in one line at the end, under the counts): the questions left (or, all answered,
+          only a green circled tick), the tests' history and the mistakes, each opening its page, their icons in their
+          own colours (Mojtaba 2026-10-30: the history and the mistakes were two cards under this one). */}
       <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        {done ? (
-          <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
-            <Icon name="checkCircle" size={20} color={c.ok} weight="semibold" />
-          </View>
-        ) : tag('exam', c.link, t('{0} سؤال مانده', faNum(left)), wrong ? () => router.push('/mistakes') : undefined)}
-        {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
-        {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
-      </View>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
         {seg(wrong, wrongTone)}
@@ -221,6 +212,16 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         {dot(rightTone, `${tr('درست')} ${faNum(right)}`)}
         {dot(wrongTone, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {left ? dot(rest, `${tr('جواب‌نداده')} ${faNum(left)}`) : null}
+      </View>
+      {/* (the pills under the counts of right, wrong and unanswered; Mojtaba 2026-10-30) */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {done ? (
+          <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
+            <Icon name="checkCircle" size={20} color={c.ok} weight="semibold" />
+          </View>
+        ) : tag('exam', c.link, t('{0} سؤال مانده', faNum(left)), wrong ? () => router.push('/mistakes') : undefined)}
+        {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
+        {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
       </View>
     </>
   );
