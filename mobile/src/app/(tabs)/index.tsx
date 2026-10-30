@@ -339,7 +339,7 @@ export default function Home() {
             {tryout ? (
               <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
                 <Ring value={0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
-                  <TryoutBadge size={Math.round(ringSize * 0.4)} color={c.ok} edge={c.ok} />
+                  <TryoutBadge size={Math.round(ringSize * 0.36)} color={c.ok} rest={c.text} />
                 </Ring>
               </Pressable>
             ) : (

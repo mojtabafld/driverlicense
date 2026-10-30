@@ -287,6 +287,21 @@ export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () 
 // later, it fades and shrinks away and the greeting and the line under it glide over to the header's edge (Mojtaba
 // 2026-10-18). Once per app start: after that the header shows the text alone.
 let leadGone = false;
+// Whether the home header's name has come in and settled (at once when there is no opening to play); others may wait
+// for it (the pass ring's tryout badge, Mojtaba 2026-10-30).
+let nameSettled = false;
+const nameWaiters = new Set<() => void>();
+const settleName = () => { if (nameSettled) return; nameSettled = true; nameWaiters.forEach(f => f()); nameWaiters.clear(); };
+export function useHeaderNameSettled() {
+  const [done, setDone] = useState(nameSettled);
+  useEffect(() => {
+    if (nameSettled) return;
+    const f = () => setDone(true);
+    nameWaiters.add(f);
+    return () => { nameWaiters.delete(f); };
+  }, []);
+  return done || nameSettled;
+}
 const LEAD_W = 38; // the drawing (28) and the space after it (10)
 function FadingLead({ children, onDone }: { children: React.ReactNode; onDone?: () => void }) {
   const [gone, setGone] = useState(leadGone);
@@ -364,9 +379,11 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const [nameIn] = useState(() => new Animated.Value(leadGone || !lead ? 1 : 0));
   const [nameClip, setNameClip] = useState(!(leadGone || !lead));
   const [nameW, setNameW] = useState(0);
+  // (home's opening played already: the name is there at once)
+  useEffect(() => { if (lead && leadGone) settleName(); }, [lead]);
   const openSub = () => {
     Animated.timing(nameIn, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: false })
-      .start(({ finished }) => { if (finished) setNameClip(false); });
+      .start(({ finished }) => { if (finished) setNameClip(false); settleName(); });
     Animated.sequence([Animated.delay(480), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
       .start(({ finished }) => { if (finished) setTimeout(() => setAfter(true), 2200); });
   };
