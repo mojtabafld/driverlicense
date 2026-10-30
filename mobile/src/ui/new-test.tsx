@@ -180,14 +180,17 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           2026-10-30: they were two cards under this one). */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
-        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+        {/* (the questions left on one line, the tests beside the mistakes on the next; Mojtaba 2026-10-30) */}
+        <View style={{ flex: 1, gap: 6, alignItems: 'flex-start' }}>
           {done ? (
             <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
               <Icon name="checkCircle" size={22} color={c.ok} weight="semibold" />
             </View>
           ) : tag('exam', c.link, t('{0} سؤال مانده', faNum(left)), wrong ? () => router.push('/mistakes') : undefined)}
-          {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
-          {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+            {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
+            {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
+          </View>
         </View>
       </View>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
