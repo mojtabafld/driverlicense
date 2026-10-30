@@ -165,11 +165,11 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           <Icon name="more" size={20} color={c.text} weight="semibold" />
         </Pressable>
       </View>
-      {/* The percent large, with the questions left beside it (back there, 2026-10-30). */}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
+      {/* The percent large, with the questions left right after it (back there, 2026-10-30). */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
         <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
-          style={({ pressed }) => ({ marginBottom: level >= 2 ? 4 : 8, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
           <Icon name={done ? 'checkCircle' : 'exam'} size={16} color={c.link} weight="semibold" />
           <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{done ? 'همه جواب داده شد' : t('{0} سؤال مانده', faNum(left))}</T>
         </Pressable>
