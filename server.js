@@ -27,6 +27,7 @@ const webpic = require('./webpic');
 const png = require('./png');
 const payments = require('./payments');
 const playbilling = require('./playbilling');
+mail.setSmtpFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'smtp.json'));
 playbilling.setKeyFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'play-service-account.json'));
 const push = require('./push');
 const mail = require('./mail');
@@ -1675,6 +1676,22 @@ async function api(req, res, route) {
   }
   // The Google Play key card in the dashboard: GET its state (the account's email, never the key), POST { key } a new one
   // (the JSON file's text), POST playkeycheck to ask Google whether it works.
+  // The SMTP card in the dashboard: GET its settings (never the password), POST { host, port, user, pass } saves them
+  // (an empty password keeps the saved one), DELETE removes them (back to Resend), POST smtptest { to } sends a test.
+  if (route === 'smtp' || route === 'smtptest') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (req.method === 'GET' && route === 'smtp') return send(res, 200, mail.smtpInfo());
+    if (req.method === 'DELETE' && route === 'smtp') { mail.clearSmtp(); return send(res, 200, mail.smtpInfo()); }
+    if (req.method === 'POST' && route === 'smtp') {
+      try { mail.saveSmtp(await readBody(req)); } catch (e) { return send(res, e.status || 500, { error: e.message }); }
+      return send(res, 200, mail.smtpInfo());
+    }
+    if (req.method === 'POST' && route === 'smtptest') {
+      const b = await readBody(req), to = mail.normal(b.to || user.email);
+      if (!mail.EMAIL_RE.test(to)) return send(res, 400, { error: 'یک ایمیل درست بنویسید.' });
+      try { await mail.sendTest(to); return send(res, 200, { ok: true }); } catch (e) { return send(res, 502, { error: e.detail || e.message }); }
+    }
+  }
   if (route === 'playkey' || route === 'playkeycheck') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     if (req.method === 'GET' && route === 'playkey') return send(res, 200, playbilling.info());

@@ -227,6 +227,15 @@ details summary{cursor:pointer;font-weight:700}
         <label style="display:flex;gap:6px;align-items:center;margin-top:8px;font-size:13px"><input type="checkbox" id="nn" checked style="width:auto;margin:0"> اعلان هم فرستاده شود (برای کاربرانی که اعلان را روشن کرده‌اند)</label>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn" id="ns">ارسال برای همه</button><span class="muted" id="nm" style="font-size:12.5px"></span></div>
         <div id="nl">${newsList()}</div></div>
+      <div class="card reports news" style="margin-bottom:16px" id="sm"><h2>ارسال ایمیل (SMTP)</h2>
+        <p class="muted" style="font-size:12.5px;margin:0 0 4px">با تنظیم این‌جا همه‌ی ایمیل‌های سایت از این سرور فرستاده می‌شود (مثلاً Oracle Email Delivery)؛ بدون آن از Resend. رمز روی سرور ذخیره می‌شود و این‌جا نشان داده نمی‌شود.</p>
+        <div id="sms" class="muted" style="font-size:13px">…</div>
+        <input id="smh" placeholder="Host" dir="ltr" value="smtp.email.eu-frankfurt-1.oci.oraclecloud.com">
+        <input id="smp" placeholder="Port" dir="ltr" value="587" inputmode="numeric">
+        <input id="smu" placeholder="Username" dir="ltr" autocomplete="off">
+        <input id="smw" placeholder="Password" dir="ltr" type="password" autocomplete="new-password">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button class="btn" id="smsave">ذخیره</button>
+          <input id="smt" placeholder="ایمیل آزمایشی به…" dir="ltr" style="flex:1;min-width:160px;margin-top:0"><button class="btn soft" id="smtest">ارسال آزمایشی</button><button class="btn soft" id="smdel">حذف (بازگشت به Resend)</button></div></div>
       <div class="card reports news" style="margin-bottom:16px" id="pk"><h2>کلید Google Play</h2>
         <p class="muted" style="font-size:12.5px;margin:0 0 4px">فایل JSON کلید service account (برای تأیید خریدهای اپ اندروید). روی سرور ذخیره می‌شود و فقط ایمیل حسابش این‌جا نشان داده می‌شود.</p>
         <div id="pks" class="muted" style="font-size:13px">…</div>
@@ -253,6 +262,25 @@ details summary{cursor:pointer;font-weight:700}
     wireUsers();
     wireNews();
     wirePlayKey();
+    wireSmtp();
+  }
+  // The SMTP card: its settings (no password), saving them, a test email, back to Resend.
+  function wireSmtp() {
+    const st = document.getElementById('sms'); if (!st) return;
+    const $ = id => document.getElementById(id);
+    const show = (d, note) => {
+      st.innerHTML = (d.set ? `فعال: <span dir="ltr">${esc(d.user)} @ ${esc(d.host)}:${esc(d.port)}</span>${d.from === 'env' ? ' (از متغیرهای سرور)' : ''}` : `خاموش؛ ایمیل‌ها ${d.resend ? 'با Resend' : 'فرستاده نمی‌شوند'}.`) + (note ? `<br>${esc(note)}` : '');
+      if (d.set) { $('smh').value = d.host; $('smp').value = d.port; $('smu').value = d.user; }
+    };
+    api('GET', 'smtp').then(d => show(d)).catch(e => { st.textContent = e.message; });
+    $('smsave').onclick = async () => {
+      try { show(await api('POST', 'smtp', { host: $('smh').value, port: $('smp').value, user: $('smu').value, pass: $('smw').value }), 'ذخیره شد. یک ایمیل آزمایشی بفرستید.'); $('smw').value = ''; } catch (e) { st.textContent = e.message; }
+    };
+    $('smtest').onclick = async () => {
+      st.textContent = 'در حال ارسال…';
+      try { await api('POST', 'smtptest', { to: $('smt').value }); show(await api('GET', 'smtp'), 'ایمیل آزمایشی فرستاده شد.'); } catch (e) { show(await api('GET', 'smtp').catch(() => ({})), '❌ ' + e.message); }
+    };
+    $('smdel').onclick = async () => { if (!confirm('تنظیم SMTP حذف شود؟')) return; try { show(await api('DELETE', 'smtp'), 'حذف شد.'); } catch (e) { st.textContent = e.message; } };
   }
   // The Google Play key card: its state, a JSON file sent from this device, a check with Google.
   function wirePlayKey() {

@@ -12,7 +12,35 @@
 const crypto = require('crypto');
 
 const key = () => (process.env.RESEND_API_KEY || '').trim();
-const available = () => /^re_[A-Za-z0-9_]{8,}$/.test(key());
+// Sending over SMTP instead of Resend's API (Mojtaba 2026-10-30: Oracle Cloud's Email Delivery): its host, port, user
+// and password saved from the admin dashboard in a file beside the database (mode 600), or SMTP_HOST / SMTP_PORT /
+// SMTP_USER / SMTP_PASS in the env. While it is set, every email goes through it; Resend still receives the domain's mail.
+const fs = require('fs');
+let smtpFile = null, smtpCache = null, smtpAt = 0, transport = null, transportKey = '';
+const setSmtpFile = f => { smtpFile = f; smtpCache = null; };
+function smtp() {
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS)
+    return { host: process.env.SMTP_HOST.trim(), port: +process.env.SMTP_PORT || 587, user: process.env.SMTP_USER.trim(), pass: process.env.SMTP_PASS, from: 'env' };
+  if (!smtpCache || Date.now() - smtpAt > 30e3) {
+    smtpAt = Date.now();
+    try { smtpCache = smtpFile ? JSON.parse(fs.readFileSync(smtpFile, 'utf8')) : {}; } catch { smtpCache = {}; }
+  }
+  return smtpCache.host && smtpCache.user && smtpCache.pass ? { ...smtpCache, from: 'file' } : null;
+}
+function saveSmtp({ host, port, user, pass }) {
+  host = String(host || '').trim(); user = String(user || '').trim(); pass = String(pass || ''); port = +port || 587;
+  if (!/^[a-z0-9.-]{3,253}$/i.test(host) || !user || user.length > 400 || (!pass && !(smtpCache && smtpCache.pass)) || pass.length > 400)
+    throw Object.assign(new Error('آدرس سرور، نام کاربری و رمز را بنویسید.'), { status: 400 });
+  const kept = smtp();
+  const v = { host, port, user, pass: pass || (kept && kept.pass) };
+  fs.writeFileSync(smtpFile, JSON.stringify(v), { mode: 0o600 });
+  try { fs.chmodSync(smtpFile, 0o600); } catch {}
+  smtpCache = null; transport = null;
+}
+function clearSmtp() { try { fs.unlinkSync(smtpFile); } catch {} smtpCache = null; transport = null; }
+// What the dashboard shows: never the password.
+const smtpInfo = () => { const s = smtp(); return { set: !!s, host: s ? s.host : null, port: s ? s.port : null, user: s ? s.user : null, from: s ? s.from : null, resend: /^re_[A-Za-z0-9_]{8,}$/.test(key()) }; };
+const available = () => !!smtp() || /^re_[A-Za-z0-9_]{8,}$/.test(key());
 const from = () => (process.env.MAIL_FROM || 'Teoripro <no-reply@teori.bitlane.app>').trim();
 const EMAIL_RE = /^[^\s@<>"',;]{1,64}@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 const normal = e => String(e || '').trim().toLowerCase().slice(0, 254);
@@ -253,6 +281,21 @@ function forward(e, text) {
 }
 
 async function send(to, subject, html, text, { replyTo } = {}) {
+  const sm = smtp();
+  if (sm) {
+    const k = `${sm.host}|${sm.port}|${sm.user}|${sm.pass}`;
+    if (!transport || transportKey !== k) {
+      transport = require('nodemailer').createTransport({ host: sm.host, port: sm.port, secure: sm.port === 465, requireTLS: sm.port !== 465, auth: { user: sm.user, pass: sm.pass } });
+      transportKey = k;
+    }
+    try {
+      await transport.sendMail({ from: from(), to: Array.isArray(to) ? to : [to], subject, html, text, ...(replyTo ? { replyTo } : {}) });
+      return;
+    } catch (e) {
+      console.error('smtp', e.responseCode || '', e.message);
+      throw Object.assign(new Error('ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.'), { status: 502, detail: e.message });
+    }
+  }
   const body = { from: from(), to: Array.isArray(to) ? to : [to], subject, html, text };
   if (replyTo) body.reply_to = replyTo;
   const res = await fetch(`${base()}/emails`, {
@@ -268,4 +311,7 @@ async function send(to, subject, html, text, { replyTo } = {}) {
   }
 }
 
-module.exports = { available, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, sendInsights, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
+// A test email from the dashboard's card.
+const sendTest = to => send([to], 'Teoripro: test email', '<p>This is a test email from Teoripro.</p>', 'This is a test email from Teoripro.');
+
+module.exports = { available, setSmtpFile, saveSmtp, clearSmtp, smtpInfo, sendTest, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, sendInsights, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
