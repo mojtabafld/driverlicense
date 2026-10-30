@@ -30,6 +30,9 @@ export const failBar = (line: string, dark: boolean) => (dark ? mix(line, '#ffff
 const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 34 : 14, B = 24, FILL_MIN = 120;
 // The line drew itself in already since the app started.
 let drawnOnce = false;
+// The tests the chart needs: the main site's bars from the first test on (Mojtaba 2026-10-30: the warm-up's test shows
+// at once), /app's line from the second.
+const MIN_TESTS = ARC ? 1 : 2;
 // (The app's own random exam, mode 'new', is «آزمون تصادفی» too since it took the old one's place; Mojtaba 2026-10-19.)
 const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : a.mode === 'demo' ? 'آزمون آزمایشی' : 'آزمون تصادفی');
 
@@ -61,7 +64,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // already (Mojtaba 2026-10-18: no animation in the Android app).
   const [instant] = useState(() => drawnOnce);
   const [go, setGo] = useState(false);
-  const shown = W > 0 && attempts.length >= 2;
+  const shown = W > 0 && attempts.length >= MIN_TESTS;
   useEffect(() => {
     if (!shown || go) return;
     const t = setTimeout(() => { setGo(true); drawnOnce = true; }, Platform.OS === 'web' ? 0 : 350);
@@ -76,7 +79,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     if (width <= 0) return;
     setW(width); if (fill) setFillH(height);
   };
-  if (attempts.length < 2 && ARC && fill) {
+  if (attempts.length < MIN_TESTS && ARC && fill) {
     // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
     return (
       <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
@@ -84,11 +87,11 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
           <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
         </View>
         {/* Where the dates go once there are attempts (not with `noNote`). */}
-        {noNote ? null : <T numberOfLines={1} style={{ color: c.muted, fontSize: 12, lineHeight: 19, textAlign: 'center' }}>نمودار بعد از حداقل دو آزمون به‌روز می‌شود.</T>}
+        {noNote ? null : <T numberOfLines={1} style={{ color: c.muted, fontSize: 12, lineHeight: 19, textAlign: 'center' }}>نمودار بعد از اولین آزمون نمایش داده می‌شود.</T>}
       </View>
     );
   }
-  if (attempts.length < 2) {
+  if (attempts.length < MIN_TESTS) {
     // Nothing to draw yet: say so, with a button to the exam tab.
     return (
       <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 14, paddingVertical: 20 }, fill && { flex: 1 }]}>
