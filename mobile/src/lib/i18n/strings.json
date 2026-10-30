@@ -1,4 +1,7 @@
 {
+"آزمون آزمایشی":["Tryout test", "Prøvetest"],
+"آزمون آزمایشی ۵ سؤالی":["5-question tryout test", "Prøvetest med 5 spørgsmål"],
+"این یک آزمون کوتاه ۵ سؤالی است تا با صفحه‌ی آزمون و نحوه‌ی پاسخ دادن آشنا شوید. در جزء آزمون‌های رایگان شما حساب نمی‌شود.":["This is a short 5-question test to get to know the test page and how to answer. It does not count as one of your free tests.", "Dette er en kort test med 5 spørgsmål, så du lærer testsiden at kende, og hvordan du svarer. Den tæller ikke som en af dine gratis tests."],
 "شروع {0} روز استفاده‌ی رایگان":["Start {0}-day free trial","Start {0} dages gratis prøve"],
 "محبوب‌ترین: یک‌ماهه، {0} کرون":["Most popular: 1 month, {0} kr","Mest populære: 1 måned, {0} kr"],
 "جزئیات پیشرفت":["Progress details","Fremgang i detaljer"],

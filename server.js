@@ -54,7 +54,7 @@ const INVITE_PAUSED = true;
 const INVITE_CODE = INVITE_PAUSED ? '' : (process.env.INVITE_CODE || '').trim();
 const SESSION_DAYS = 60;
 const MAX_ATTEMPTS = 500;
-const MODES = ['random', 'mistakes', 'top', 'lesson', 'sections', 'new']; // lesson: one of prove.dk's 44 tests, in its order; sections: random questions from chosen official sections; new: «آزمون جدید», the app's own questions (site/newq.js)
+const MODES = ['random', 'mistakes', 'top', 'lesson', 'sections', 'new', 'demo']; // lesson: one of prove.dk's 44 tests, in its order; sections: random questions from chosen official sections; new: «آزمون جدید», the app's own questions (site/newq.js); demo: the 5-question tryout from home's pass ring (not a free test)
 const lessonOf = b => (b.mode === 'lesson' && Number.isInteger(+b.lesson) && +b.lesson > 0 ? { lesson: +b.lesson } : {});
 const MAX_WORDS = 3000;
 const MAX_TERMS = 500; // bookmarked glossary terms per user
