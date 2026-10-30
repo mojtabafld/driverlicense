@@ -2,11 +2,10 @@
 // months; one payment each, no automatic renewal) and the way to buy one with Stripe Checkout. Stripe sends the user back here with ?paid=<session> (the server checks the
 // session and turns premium on) or ?canceled=1. With a trial code (PROMO_CODE on the server) an account gets premium free
 // for a few days, once.
-import * as Haptics from 'expo-haptics';
 import * as Linking from 'expo-linking';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Platform, Pressable, TextInput, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { api } from '@/lib/api';
@@ -62,16 +61,14 @@ function PlanOption({ plan, on, best, onPress, pad = 14, priceText }: { plan: Pl
 
 export default function Premium() {
   const c = useColors();
-  const { user, pay, premium, confirmPremium, syncPremium, redeemPromo, startTrial, refresh, logout } = useApp();
+  const { user, pay, premium, confirmPremium, syncPremium, startTrial, refresh, logout } = useApp();
   const guest = !!user?.guest;
   const { paid, canceled } = useLocalSearchParams<{ paid?: string; canceled?: string }>();
   const [busy, setBusy] = useState<'buy' | 'check' | null>(paid ? 'check' : null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(canceled ? { ok: false, text: 'پرداخت لغو شد؛ پولی از حساب شما کم نشد.' } : null);
   const checked = useRef(false);
   const [plan, setPlan] = useState<Plan['id']>('month');
-  const [code, setCode] = useState(''), [redeeming, setRedeeming] = useState(false);
   const until = user?.premium?.until ?? 0;
-  const showCode = !!pay?.promo && !guest && !user?.premium?.promo && !user?.promoUsed;
   // The free trial without a code (Mojtaba 2026-10-29), until this account has had a trial.
   const showTrial = !!pay?.trial && !premium && !guest && !user?.premium?.promo && !user?.promoUsed;
   const [trialing, setTrialing] = useState(false);
@@ -84,13 +81,13 @@ export default function Premium() {
   // Fitted to the screen (Mojtaba 2026-10-18): while the page is taller than the room under its header, it steps to a
   // denser layout (1: less space, lower plan rows; 2: the four perks smaller, a smaller buy button; 3: the active
   // pass on one line, without the line on how a renewal adds up), so it needs no
-  // scrolling; with the trial-code card still there it may scroll. A new screen height starts over.
+  // scrolling. A new screen height starts over. (The trial-code card was removed, Mojtaba 2026-10-30.)
   const { height: winH } = useWindowDimensions(), ins = useSafeAreaInsets();
   const [level, setLevel] = useState(0);
-  useEffect(() => setLevel(0), [winH, showCode]);
+  useEffect(() => setLevel(0), [winH]);
   const box = useRef<View>(null);
   const fit = () => {
-    if (showCode || level >= 3) return;
+    if (level >= 3) return;
     box.current?.measureInWindow((_x, top, _w, h) => { if (top > 0 && top + h > winH - ins.bottom - 12) setLevel(l => Math.min(3, l + 1)); });
   };
   const gap = level ? 10 : 14, planPad = level >= 2 ? 8 : level ? 10 : 14;
@@ -124,23 +121,6 @@ export default function Premium() {
       setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'پرداخت الان در دسترس نیست؛ کمی بعد دوباره امتحان کنید.' });
     }
     setBusy(null);
-  };
-  // A wrong code: the field turns red and gives a short shake side to side, as iOS does (Mojtaba 2026-10-20), until
-  // the code is changed.
-  const [bad, setBad] = useState(false);
-  const [shake] = useState(() => new Animated.Value(0));
-  const nudge = () => {
-    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-    shake.setValue(0);
-    const step = (to: number, ms: number) => Animated.timing(shake, { toValue: to, duration: ms, easing: Easing.out(Easing.quad), useNativeDriver: Platform.OS !== 'web' });
-    Animated.sequence([step(-10, 50), step(10, 70), step(-7, 60), step(6, 55), step(-3, 50), step(0, 45)]).start();
-  };
-  const redeem = async () => {
-    if (!code.trim()) return;
-    setRedeeming(true); setMsg(null); setBad(false);
-    try { await redeemPromo(code.trim()); setCode(''); setMsg({ ok: true, text: t('کد تخفیف ثبت شد و نسخه‌ی ویژه {0} روز رایگان برای شما فعال است.', faNum(pay?.promo ?? 3)) }); }
-    catch (e) { setBad(true); nudge(); setMsg({ ok: false, text: e instanceof Error && e.message ? e.message : 'کد تخفیف ثبت نشد؛ دوباره امتحان کنید.' }); }
-    setRedeeming(false);
   };
   const gp = usePlayBilling(setMsg);
   const check = async () => { setBusy('check'); try { await syncPremium(); } catch { try { await refresh(); } catch {} } setBusy(null); };
@@ -223,21 +203,6 @@ export default function Premium() {
           <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>پرداخت امن با Stripe: کارت بانکی، Apple Pay یا Google Pay.</T>
           {pay.test ? <T style={{ color: c.bad, fontSize: 12.5, lineHeight: 20, textAlign: 'center' }}>حالت آزمایشی: با کارت 4242 4242 4242 4242 پرداخت کنید؛ پولی کم نمی‌شود.</T> : null}
           {Platform.OS !== 'web' ? <Button kind="glass" icon="refresh" label="پرداخت کردم؛ بررسی دوباره" onPress={check} disabled={!!busy} /> : null}
-        </Card>
-      ) : null}
-      {/* A trial code, until this account has used one. */}
-      {showCode && pay ? (
-        <Card style={{ gap: 10 }}>
-          <T style={{ fontWeight: '700', fontSize: 16 }}>کد تخفیف</T>
-          <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{t('با کد تخفیف، نسخه‌ی ویژه {0} روز رایگان برای شما فعال می‌شود (برای هر حساب یک بار).', faNum(pay.promo ?? 3))}</T>
-          <View style={{ gap: 10 }}>
-            <Animated.View style={{ transform: [{ translateX: shake }] }}>
-              <TextInput value={code} onChangeText={v => { setCode(v); if (bad) { setBad(false); setMsg(null); } }} onSubmitEditing={redeem} autoCapitalize="characters" autoCorrect={false} maxLength={64}
-                placeholder={t('کد تخفیف')} placeholderTextColor={c.faint} accessibilityLabel={t('کد تخفیف')}
-                style={{ height: 48, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5, borderColor: bad ? c.bad : c.line, backgroundColor: bad ? c.badSoft : c.surface, color: bad ? c.bad : c.text, fontSize: 16, fontFamily: 'Inter-600', letterSpacing: 1, textAlign: 'center' }} />
-            </Animated.View>
-            <Button label={redeeming ? 'در حال ثبت…' : 'ثبت کد'} onPress={redeem} disabled={redeeming || !code.trim()} />
-          </View>
         </Card>
       ) : null}
       {!pay && !premium && !gp.on ? (
