@@ -1,11 +1,11 @@
 // «گرم‌کردن»: right after the first sign-in (no test yet), five pictures of the app's own bank, one statement each
 // (Mojtaba 2026-10-30: to gauge the user and show how the app and its tests work, without too many questions), asked in
 // a lighter, game-like way than the exam:
-// - a short start: how it works, then «شروع» and a big ۳ ۲ ۱;
+// - a short start: a big ۳ ۲ ۱ (no page of words before it since 2026-10-30);
 // - each picture comes in in steps (the picture, the question, the statement), quiet and minimal, and the one answered
 //   leaves lifting and fading;
-// - five seconds for each statement, on a ring that drains and turns from green to amber to red, its number popping each
-//   second (and the phone ticking in the last three); time up counts as a wrong answer;
+// - ten seconds for each statement (Mojtaba 2026-10-30; it was five), on a ring that drains and turns from green to
+//   amber to red, its number popping each second (and the phone ticking in the last three); time up counts as a wrong answer;
 // - each answer judged at once: right, the card turns green with a popping tick, a ripple and a «+۱» rising from the
 //   count; wrong (or too late), it turns red and shakes; the explanation follows;
 // - five segments at the top fill green or red as the pictures are answered;
@@ -32,7 +32,7 @@ import { Icon } from '@/ui/icon';
 import { ArcButton, Ring, T, tap } from '@/ui/kit';
 import { useColors } from '@/ui/theme';
 
-const COUNT = 5, SECONDS = 5;
+const COUNT = 5, SECONDS = 10;
 const now = () => Date.now();
 const native = Platform.OS !== 'web';
 const buzz = (ok: boolean) => { if (native) Haptics.notificationAsync(ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {}); };
@@ -40,7 +40,7 @@ const tick = () => { if (native) Haptics.impactAsync(Haptics.ImpactFeedbackStyle
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const spring = (v: Animated.Value, to = 1) => Animated.spring(v, { toValue: to, friction: 7, tension: 70, useNativeDriver: native });
 
-// The five seconds: a ring draining from full, its colour from green through amber to red, the seconds left in it.
+// The ten seconds: a ring draining from full, its colour from green through amber to red, the seconds left in it.
 function Countdown({ run, left, colors }: { run: Animated.Value; left: number; colors: [string, string, string, string] }) {
   const S = 46, W = 4, r = (S - W) / 2, C = 2 * Math.PI * r;
   const [pop] = useState(() => new Animated.Value(1));
@@ -71,8 +71,8 @@ export default function Warmup() {
     return [...all.filter(q => newqArt[q.id]), ...all.filter(q => !newqArt[q.id])].slice(0, COUNT);
   });
   const [ks] = useState(() => qs.map(q => Math.floor(Math.random() * q.st.length)));
-  // stage: the start's words, its ۳ ۲ ۱, the questions, the end
-  const [stage, setStage] = useState<'intro' | 'count' | 'play' | 'done'>('intro');
+  // stage: the start's ۳ ۲ ۱, the questions, the end
+  const [stage, setStage] = useState<'count' | 'play' | 'done'>('count');
   const [three, setThree] = useState(3);
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState<(0 | 1 | null)[]>(() => qs.map(() => null));
@@ -87,7 +87,7 @@ export default function Warmup() {
     saveAttempt({ secs: Math.max(1, Math.round((now() - started.current) / 1000)), mode: 'demo', items: items.current }).catch(() => {});
   };
 
-  // the steps each picture comes in by, the way it leaves, the five seconds, the answer's effects
+  // the steps each picture comes in by, the way it leaves, its seconds, the answer's effects
   const [inPic] = useState(() => new Animated.Value(0)), [inQ] = useState(() => new Animated.Value(0)), [inSt] = useState(() => new Animated.Value(0));
   const [out] = useState(() => new Animated.Value(0)), [run] = useState(() => new Animated.Value(0));
   const [bump] = useState(() => new Animated.Value(1)), [plus] = useState(() => new Animated.Value(0)), [shake] = useState(() => new Animated.Value(0));
@@ -95,7 +95,7 @@ export default function Warmup() {
   const timer = useRef<Animated.CompositeAnimation | null>(null), secs = useRef<ReturnType<typeof setInterval> | null>(null);
   const stopClock = () => { timer.current?.stop(); timer.current = null; if (secs.current) clearInterval(secs.current); secs.current = null; };
   useEffect(() => stopClock, []);
-  // (the latest answer for the five seconds' end, which is set up before it)
+  // (the latest answer for the seconds' end, which is set up before it)
   const late$ = useRef<(a: 0 | 1 | null) => void>(() => {});
 
   // ۳ ۲ ۱: each number grows in and fades, then the first picture
@@ -115,7 +115,7 @@ export default function Warmup() {
     return () => a.stop();
   }, [stage, three, big]);
 
-  // a picture in: its steps one after another, then its five seconds start
+  // a picture in: its steps one after another, then its seconds start
   useEffect(() => {
     if (stage !== 'play') return;
     [inPic, inQ, inSt, out, pop, ripple, run].forEach(v => v.setValue(0));
@@ -138,7 +138,7 @@ export default function Warmup() {
   if (!q) return <Redirect href="/" />;
   const k = ks[i], given = answers[i], st = q.st[k];
 
-  // An answer (null: the five seconds ran out, a wrong answer).
+  // An answer (null: the time ran out, a wrong answer).
   function answer(a: 0 | 1 | null) {
     if (answers[i] != null) return;
     stopClock();
@@ -187,26 +187,17 @@ export default function Warmup() {
   const isRight = given != null && given === st.ok && !late[i];
   const stIn = step(inSt, 18);
 
-  if (stage === 'intro' || stage === 'count') {
+  if (stage === 'count') {
     return (
       <View style={{ flex: 1, backgroundColor: c.bg, paddingTop: ins.top + 12, paddingBottom: ins.bottom + 20, paddingHorizontal: 24 }}>
         <Pressable onPress={() => { tap(); leave(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('بعداً')} style={{ alignSelf: 'flex-start' }}>
           <T style={{ color: c.muted, fontSize: 14 }}>بعداً</T>
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          {stage === 'count' ? (
-            <Animated.Text style={{ fontSize: 120, lineHeight: 150, fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: c.text,
-              opacity: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] }),
-              transform: [{ scale: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0.4, 1, 1.5] }) }] }}>{faNum(three)}</Animated.Text>
-          ) : <>
-            <View style={{ width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
-              <Icon name="clock" size={34} color={c.text} />
-            </View>
-            <T style={{ fontSize: 24, lineHeight: 34, fontWeight: '800', textAlign: 'center' }}>{t('{0} سؤال، هر کدام {1} ثانیه', COUNT, SECONDS)}</T>
-            <T style={{ color: c.muted, fontSize: 14.5, lineHeight: 24, textAlign: 'center', maxWidth: 340 }}>برای هر تصویر یک گزینه آمده است؛ بگویید درست است یا نادرست. در آزمون اصلی هر سؤال چند گزینه دارد و باید همه‌ی گزینه‌های درست را علامت بزنید. این ۵ سؤال سطح شما را هم می‌سنجد.</T>
-          </>}
+          <Animated.Text style={{ fontSize: 120, lineHeight: 150, fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: c.text,
+            opacity: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] }),
+            transform: [{ scale: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0.4, 1, 1.5] }) }] }}>{faNum(three)}</Animated.Text>
         </View>
-        {stage === 'intro' ? <ArcButton big label="شروع" icon="play" onPress={() => { tap(); setThree(3); setStage('count'); }} /> : <View style={{ height: 56 }} />}
       </View>
     );
   }
@@ -268,7 +259,7 @@ export default function Warmup() {
             {RTL ? <T raw keepDa style={{ color: c.muted, fontSize: 13, lineHeight: 20, writingDirection: 'ltr', textAlign: 'left' }}>{main({ da: q.sda, en: q.sen })}</T> : null}
           </Animated.View>
 
-          {/* the picture's statement, its five seconds, its two answers */}
+          {/* the picture's statement, its seconds, its two answers */}
           <Animated.View style={{ opacity: stIn.opacity, transform: [...stIn.transform, { translateX: shake }] }}>
             <View style={{ borderRadius: 20, borderWidth: 1.5, padding: 16, gap: 14,
               borderColor: given == null ? c.line : isRight ? c.ok : c.bad, backgroundColor: given == null ? c.surface : isRight ? c.okSoft : c.badSoft }}>
