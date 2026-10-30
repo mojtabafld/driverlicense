@@ -138,7 +138,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
   const soft = (x: string) => (dark ? x : mix(x, c.surface, 0.2) ?? x);
   const rightTone = soft(c.ok), wrongTone = soft(c.bad), rest = dark ? mix(c.line, '#ffffff', 0.08) ?? c.line : mix(c.line, '#000000', 0.04) ?? c.line;
-  const weekPct = total ? week / total : 0, big2 = [60, 48, 40, 34][level] ?? 34;
+  const big2 = [60, 48, 40, 34][level] ?? 34;
   const dot = (color: string, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color }} />
@@ -148,8 +148,8 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // A segment of the bar: its true share of the questions (Mojtaba 2026-10-29: 5 right and 35 wrong looked the same),
   // only kept from vanishing (a dot) while it has any.
   const seg = (n: number, color: string) => (n ? <View style={{ flexGrow: n, flexShrink: 1, flexBasis: 0, minWidth: 6, height: 12, borderRadius: 6, backgroundColor: color }} /> : null);
-  // In the style of a picture Mojtaba sent (2026-10-29): the title with this week's gain at its end, the percent large and
-  // light with a pill of the questions left beside it, the bar in three rounded parts with gaps, and a dot for each under it.
+  // In the style of a picture Mojtaba sent (2026-10-29): the title with a pill of the questions left at its end (it was
+  // this week's gain, 2026-10-30), the percent large and light under it, the bar in three rounded parts with gaps, and a dot for each under it.
   return (
     // (its rows straight in the card, so the card spreads all its rows at even gaps; Mojtaba 2026-10-29)
     <>
@@ -158,21 +158,14 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           {done ? <Icon name="checkCircle" size={18} color={c.ok} contrast={c.okSoft} weight="semibold" /> : null}
           <T style={{ fontSize: 17, fontWeight: '700' }}>پیشرفت شما</T>
         </View>
-        {week ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }} accessibilityLabel={t('{0} در ۷ روز گذشته', pctText(Math.max(0.01, weekPct)))}>
-            <View style={{ width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderBottomWidth: 9, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: c.ok }} />
-            <T raw style={{ color: c.ok, fontSize: 15, fontWeight: '700' }}>{pctText(Math.max(0.01, weekPct))}</T>
-          </View>
-        ) : null}
-      </View>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
-        <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
+        {/* (the questions left at the title's end, in place of this week's gain; Mojtaba 2026-10-30) */}
         <Pressable disabled={!wrong} onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole={wrong ? 'button' : undefined}
-          style={({ pressed }) => ({ marginBottom: level >= 2 ? 4 : 8, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12, borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
           <Icon name={done ? 'checkCircle' : 'exam'} size={16} color={c.link} weight="semibold" />
           <T style={{ color: c.link, fontSize: 13.5, fontWeight: '700' }} numberOfLines={1}>{done ? 'همه جواب داده شد' : t('{0} سؤال مانده', faNum(left))}</T>
         </Pressable>
       </View>
+      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontWeight: '300', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
         {seg(wrong, wrongTone)}
