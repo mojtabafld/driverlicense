@@ -55,4 +55,39 @@ function detail(id, images = {}) {
     making: last && !last.done ? last.state : null, failed: last && last.done && !last.blob ? last.error || 'failed' : null };
 }
 
-module.exports = { init, list, detail };
+
+// The step-by-step course's pictures (data/course-art.json) for the admin's picture page, by the lesson they are in:
+// read from the course's files in mobile/src/lib (a lesson's `id` and `title`, then each `art` in it; the drills'
+// extra questions under their lesson's id). A picture in no lesson is listed under «سایر».
+let COURSE_GROUPS = null;
+function courseGroups(keys) {
+  if (COURSE_GROUPS) return COURSE_GROUPS;
+  const dir = path.join(__dirname, 'mobile', 'src', 'lib'), titles = new Map(), groups = new Map(), seen = new Set();
+  // and each picture's name: its step's title (a teaching step) or its question (a test's), from the text around it
+  const names = {};
+  const nameAt = (ts, at) => {
+    const back = ts.slice(Math.max(0, at - 300), at), t = /title: '([^'\n]+)',?\s*$/.exec(back);
+    if (t) return t[1];
+    const f = /\bfa: '([^'\n]+)'/.exec(ts.slice(at, at + 1500));
+    return f ? f[1] : '';
+  };
+  const add = (title, key, name) => { if (seen.has(key) || !keys.includes(key)) return; seen.add(key); names[key] = name; if (!groups.has(title)) groups.set(title, []); groups.get(title).push(key); };
+  for (const f of ['course.ts', 'course-more.ts']) {
+    let ts = ''; try { ts = fs.readFileSync(path.join(dir, f), 'utf8'); } catch { continue; }
+    let cur = null;
+    for (const m of ts.matchAll(/\bid: '([a-z0-9-]+)',\s*\n\s*title: '([^'\n]+)'|\bart: '([a-z0-9-]+)'/g)) {
+      if (m[1]) { cur = m[2]; titles.set(m[1], m[2]); } else if (cur) add(cur, m[3], nameAt(ts, m.index));
+    }
+  }
+  try {
+    const ts = fs.readFileSync(path.join(dir, 'drill.ts'), 'utf8');
+    let cur = null;
+    for (const m of ts.matchAll(/^ {2}'?([a-z0-9-]+)'?: \[$|\bart: '([a-z0-9-]+)'/gm)) { if (m[1]) cur = titles.get(m[1]) || null; else if (cur) add(cur, m[2], nameAt(ts, m.index)); }
+  } catch {}
+  const rest = keys.filter(k => !seen.has(k));
+  COURSE_GROUPS = [...groups].map(([title, items]) => ({ title, items: items.map(key => ({ key, name: names[key] || '' })) }));
+  if (rest.length) COURSE_GROUPS.push({ title: 'سایر', items: rest.map(key => ({ key, name: '' })) });
+  return COURSE_GROUPS;
+}
+
+module.exports = { init, list, detail, courseGroups };

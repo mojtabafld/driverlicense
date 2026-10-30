@@ -986,6 +986,16 @@ const COURSE_ART = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'cour
 const COURSE = artSet({ metaKey: 'courseArt', set: 'v1', prompts: COURSE_ART, aspect: '4:3', prefix: 'course',
   allow: new Set(Object.keys(COURSE_ART).filter(k => COURSE_ART[k].order !== false)) });
 const courseVersions = COURSE.versions, courseBlob = COURSE.blob;
+// The admin's picture page (console/images.html): a course picture's prompt, and a new picture from an edited one, which
+// takes the old one's place once made (a one-off job `course-<key>`, like the teaching pictures').
+const courseKeys = () => Object.keys(COURSE_ART);
+const coursePrompt = key => (COURSE_ART[key] ? COURSE.promptOf(key) : null);
+function courseGen(key, prompt) {
+  if (!COURSE_ART[key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
+  prompt = String(prompt || '').trim().slice(0, 20000);
+  if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
+  return startOneOff(`course-${key}`, { prompt, aspect: COURSE_ART[key].aspect || '4:3', target: `course:${key}` });
+}
 
 // ---------- «آزمون جدید»'s question pictures (data/newq-art.json, keyed by the question's number) ----------
 // Written by data/newq-src/build.py; one with "order": false is not made until the admin orders it (the image model's
@@ -1197,8 +1207,9 @@ async function pollOneOff() {
         job.blob = `oneoff-${id}`;
         await store.saveBlob(job.blob, sm.mime, sm.buf); cache.delete(job.blob);
         Object.assign(job, { state: 'done', done: true, v: Date.now().toString(36) });
-        if (job.target && job.target.startsWith('guide:')) {
-          await GUIDE.put(job.target.slice(6), { mime: sm.mime, data: sm.buf }, job.prompt);
+        const tset = job.target && { guide: GUIDE, course: COURSE }[job.target.split(':')[0]];
+        if (tset) {
+          await tset.put(job.target.slice(job.target.indexOf(':') + 1), { mime: sm.mime, data: sm.buf }, job.prompt);
           await store.deleteBlob(job.blob).catch(() => {}); cache.delete(job.blob);
           delete oneOffs()[id];
         }
@@ -1241,6 +1252,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { courseKeys, coursePrompt, courseGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
