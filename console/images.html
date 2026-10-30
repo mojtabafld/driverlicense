@@ -85,7 +85,7 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
   ];
   // part, group and item chosen (kept in the address, so a reload stays on the same picture)
   const h = new URLSearchParams(location.hash.slice(1));
-  const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, missing: h.get('m') === '1', data: {}, prompt: null, promptFor: '', saved: '' };
+  const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, missing: h.get('m') === '1', pid: null, data: {}, prompt: null, promptFor: '', saved: '' };
   const remember = () => history.replaceState(null, '', `#p=${st.part}&g=${st.g}&i=${st.i}${st.missing ? '&m=1' : ''}`);
 
   // A part's groups, each { title, items: [{ id, label, … }] }, in one shape for the page.
@@ -105,12 +105,17 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
   }
   const current = () => {
     const groups = st.data[st.part] || [], g = groups[Math.min(st.g, groups.length - 1)], items = g ? shown(g) : [];
-    return { groups, g, items, x: items[Math.min(st.i, items.length - 1)] };
+    // the picture being looked at stays on screen (e.g. once made it is no longer «not made yet», and the lists are read
+    // again while it is being made): found by its id first, by its place only when another one was chosen
+    let x = st.pid ? items.find(y => y.pid === st.pid) : null;
+    if (!x) x = items[Math.min(st.i, items.length - 1)];
+    if (x) { st.i = items.indexOf(x); st.pid = x.pid; remember(); }
+    return { groups, g, items, x };
   };
 
   // «فقط تصاویر ساخته‌نشده»: a picture not made yet (a sign or right of way: no AI picture)
   const made = x => !!(x.pid[0] === 'g' ? x.ai : x.v);
-  const shown = g => (st.missing ? g.items.filter(x => !made(x)) : g.items);
+  const shown = g => (st.missing ? g.items.filter(x => !made(x) || x.pid === st.pid) : g.items);
   async function promptOf(x) {
     if (x.set) return (await api('GET', `courseprompt?set=${x.set}&key=${encodeURIComponent(x.key)}`)).prompt;
     return (await api('GET', `consoleprompt?id=${encodeURIComponent(x.pid)}`)).prompt;
@@ -171,10 +176,10 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
           <p class="muted" style="font-size:12.5px;margin:8px 0 0">تصویر تازه پس از ساخته شدن در برنامه نشان داده می‌شود (به‌جای تصویر فعلی، اگر باشد). ساخت هر تصویر چند دقیقه طول می‌کشد.</p>`
           : `<p class="muted">${st.missing ? 'همه‌ی تصاویر این دسته ساخته شده‌اند.' : 'موردی نیست.'}</p>`}
       </div>`;
-    document.querySelectorAll('[data-part]').forEach(b => { b.onclick = () => { st.part = b.dataset.part; st.g = 0; st.i = 0; remember(); view(); }; });
-    document.getElementById('g').onchange = e => { st.g = +e.target.value; st.i = 0; remember(); view(); };
-    const si = document.getElementById('i'); if (si) si.onchange = e => { st.i = +e.target.value; remember(); view(); };
-    document.getElementById('miss').onchange = e => { st.missing = e.target.checked; st.i = 0; remember(); view(); };
+    document.querySelectorAll('[data-part]').forEach(b => { b.onclick = () => { st.part = b.dataset.part; st.g = 0; st.i = 0; st.pid = null; remember(); view(); }; });
+    document.getElementById('g').onchange = e => { st.g = +e.target.value; st.i = 0; st.pid = null; remember(); view(); };
+    const si = document.getElementById('i'); if (si) si.onchange = e => { st.i = +e.target.value; st.pid = null; remember(); view(); };
+    document.getElementById('miss').onchange = e => { st.missing = e.target.checked; st.i = 0; st.pid = null; remember(); view(); };
     if (!x) return;
     const ta = document.getElementById('pr');
     ta.oninput = () => { st.prompt = ta.value; };
