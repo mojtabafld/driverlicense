@@ -80,8 +80,27 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
     return (
       <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
-        <View pointerEvents="none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
-          <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
+        <View pointerEvents="box-none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
+          <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
+          {/* No test yet (a first visit): a tag in the middle, «start learning» or «first test», each opening its tab;
+              its corners only a little round (Mojtaba 2026-10-30). */}
+          {attempts.length ? null : (
+            <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 8, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface, paddingHorizontal: 4, paddingVertical: 3, maxWidth: '100%' }}>
+                <Pressable onPress={() => { tap(); router.navigate('/learn'); }} accessibilityRole="button" accessibilityLabel={tr('شروع آموزش')} hitSlop={6}
+                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6, opacity: pressed ? 0.6 : 1 })}>
+                  <Icon name="learn" size={16} color={c.text} />
+                  <T numberOfLines={1} style={{ fontSize: 13, fontWeight: '600', color: c.text }}>شروع آموزش</T>
+                </Pressable>
+                <T style={{ fontSize: 12.5, color: c.muted }}>یا</T>
+                <Pressable onPress={() => { tap(); router.navigate('/exam'); }} accessibilityRole="button" accessibilityLabel={tr('اولین آزمون')} hitSlop={6}
+                  style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6, opacity: pressed ? 0.6 : 1 })}>
+                  <Icon name="exam" size={16} color={c.text} />
+                  <T numberOfLines={1} style={{ fontSize: 13, fontWeight: '600', color: c.text }}>اولین آزمون</T>
+                </Pressable>
+              </View>
+            </View>
+          )}
         </View>
         {/* Where the dates go once there are attempts (not with `noNote`). */}
         {noNote ? null : <T numberOfLines={1} style={{ color: c.muted, fontSize: 12, lineHeight: 19, textAlign: 'center' }}>نمودار بعد از حداقل دو آزمون به‌روز می‌شود.</T>}
