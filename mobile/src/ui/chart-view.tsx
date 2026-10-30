@@ -11,8 +11,9 @@ import { RTL, tr } from '@/lib/i18n';
 import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
+import { FirstTest } from './first-steps';
 import { Card, FitLine, T, tap } from './kit';
-import { useColors } from './theme';
+import { ARC, useColors } from './theme';
 
 // `t`: how far the chart view is open (0 to 1); the button fills with the accent as it opens.
 export function ChartButton({ size = 44, on, t, onPress }: { size?: number; on: boolean; t: Animated.Value; onPress: () => void }) {
@@ -104,7 +105,8 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
         </View>
         <T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>آمار آزمون‌ها</T>
       </View>}
-      <View style={{ flexDirection: 'row' }}>
+      {/* Before any test (ARC, home): no numbers yet, the button to the first test in their place (Mojtaba 2026-10-30). */}
+      {!n && ARC ? <View style={{ paddingHorizontal: 10, paddingTop: dense ? 8 : 12, paddingBottom: dense ? 10 : 14 }}><FirstTest dense={dense} /></View> : <View style={{ flexDirection: 'row' }}>
         {cell('آزمون‌ها', faNum(n))}
         {rule}
         {cell('میانگین', avg != null ? pctText(avg) : '–')}
@@ -113,7 +115,7 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
         {rule}
         {/* Every test passed (e.g. 5 of 5): green; any not: the warning colour (Mojtaba 2026-10-20). */}
         {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined)}
-      </View>
+      </View>}
       {n && !noFacts ? (
         // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).
         <View style={{ paddingHorizontal: 10, paddingVertical: dense ? 8 : 12, borderTopWidth: 1, borderTopColor: c.line }}>
