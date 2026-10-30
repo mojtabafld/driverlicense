@@ -9,8 +9,8 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
-import { faNum, fmtDate, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf } from '@/lib/logic';
-import { RTL } from '@/lib/i18n';
+import { faNum, fmtDate, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf, shuffle } from '@/lib/logic';
+import { RTL, tr } from '@/lib/i18n';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -22,6 +22,7 @@ import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { TestStats } from '@/ui/chart-view';
 import { BellButton } from '@/ui/bell-button';
+import { TryoutBadge } from '@/ui/tryout-badge';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
 import { ARC, useColors } from '@/ui/theme';
@@ -288,6 +289,15 @@ export default function Home() {
   const part = useDayPart(), hello = GREET[part];
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
+  // The tryout: before the first test, five random questions of the app's own (not one of the free tests).
+  const { newBank } = useApp();
+  const tryout = ARC && !PROVE_BANK && !exams.length && !!newBank?.questions.length;
+  const startTryout = () => {
+    if (!newBank?.questions.length) return;
+    tap();
+    session.plan = { mode: 'demo', ids: shuffle(newBank.questions.map(q => q.id)).slice(0, 5), title: 'آزمون آزمایشی' };
+    router.push('/run');
+  };
   // Main site: the step-by-step course's lessons (lib/course.ts) finished out of those written; /app: prove.dk's lessons tried.
   const { done } = useCourseProgress();
   const ready = COURSE.flatMap(ch => ch.lessons);
@@ -324,9 +334,19 @@ export default function Home() {
               title with its pill under it, as before; no average or mistakes in this card. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : small ? 14 : 18 }}>
             {/* In the ring a seal with a tick in the chance's colour (green, amber, red; 2026-10-30; it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
-            <Ring value={est ? est.prob : 0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
-              <Icon name="passed" size={Math.round(ringSize * 0.32)} color={est ? probColor : c.muted} weight="semibold" />
-            </Ring>
+            {/* Before the first test the seal moves (its tick drawn in green, its edge turning) and a tap on the ring starts
+                a 5-question tryout of the test page (Mojtaba 2026-10-30). */}
+            {tryout ? (
+              <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+                <Ring value={0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
+                  <TryoutBadge size={Math.round(ringSize * 0.4)} color={c.ok} edge={c.ok} />
+                </Ring>
+              </Pressable>
+            ) : (
+              <Ring value={est ? est.prob : 0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
+                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={est ? probColor : c.muted} weight="semibold" />
+              </Ring>
+            )}
             <View style={{ flex: 1, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
               <PassPct value={est ? est.prob : null} size={tighter ? 26 : small ? 28 : 32} />

@@ -102,11 +102,14 @@ export default function Run() {
   // Questions marked for a second look before handing in, and the open question (exit / hand in).
   const [flags, setFlags] = useState<number[]>([]);
   const [dialog, setDialog] = useState<'quit' | 'handin' | null>(null);
+  // The tryout from home's pass ring: first a word on what it is for (Mojtaba 2026-10-30).
+  const [intro, setIntro] = useState(() => session.plan?.mode === 'demo');
   // The test's time: the clock time from its start, at most a minute a question (25 minutes for 25), as the real test.
   // It runs on while the phone is locked or the app is away; when the time is up the test is handed in by itself, with
   // the most time as its time, also when the user comes back to it later (it used to count the hours a test was left
   // open, e.g. «199:32»; Mojtaba 2026-10-25).
-  const [started] = useState(() => Date.now());
+  // (the tryout's clock starts once its word on what it is for is closed)
+  const [started, setStarted] = useState(() => Date.now());
   const limit = qs.length * SECONDS_PER_Q;
   const elapsed = () => Math.min(limit, Math.round((Date.now() - started) / 1000));
   const done = useRef(false);
@@ -249,6 +252,8 @@ export default function Run() {
         // handed in from any question, not only the last.
         middle={<ListButton n={i + 1} of={qs.length} exam={isExamMode(plan.mode)} onPress={handIn} />}
         end={last ? <FootBtn label={ui.handin} icon="check" submit onPress={handIn} /> : <FootBtn label={ui.next} icon={arrow.next} onPress={() => setI(i + 1)} />} />
+      <Confirm open={intro} icon="info" title="آزمون آزمایشی" text="این یک آزمون کوتاه ۵ سؤالی است تا با صفحه‌ی آزمون و نحوه‌ی پاسخ دادن آشنا شوید. در جزء آزمون‌های رایگان شما حساب نمی‌شود."
+        cancel="بعداً" ok="شروع" cancelIcon="xmark" okIcon="play" onCancel={() => { setIntro(false); motion.leave(() => release(() => router.back())); }} onOk={() => { setIntro(false); setStarted(Date.now()); }} />
       <Confirm open={dialog === 'quit'} icon="exit" title="خروج از آزمون؟" text="پاسخ‌های این آزمون ذخیره نمی‌شوند."
         cancel="ادامه" ok="خروج" cancelIcon="play" okIcon="exit" danger onCancel={() => setDialog(null)} onOk={() => { setDialog(null); motion.leave(() => release(() => router.back())); }} />
       <Sheet open={dialog === 'handin'} onClose={() => setDialog(null)} maxHeight="88%">

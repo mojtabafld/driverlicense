@@ -13,7 +13,7 @@ export const isFull = (a: Attempt) => a.items.length >= FULL;
 export const isPass = (a: Attempt) => isFull(a) && scoreOf(a) >= passMin(a.items.length);
 export const pctOf = (a: Attempt) => scoreOf(a) / Math.max(1, a.items.length);
 // An exam like the real one (the random exam and «آزمون جدید»), not a lesson or a practice.
-export const isExamMode = (mode: string) => mode === 'random' || mode === 'new';
+export const isExamMode = (mode: string) => mode === 'random' || mode === 'new' || mode === 'demo';
 
 export function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
