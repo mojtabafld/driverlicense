@@ -22,7 +22,6 @@ import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { TestStats } from '@/ui/chart-view';
 import { BellButton } from '@/ui/bell-button';
-import { TryoutBadge } from '@/ui/tryout-badge';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
 import { ARC, useColors } from '@/ui/theme';
@@ -333,12 +332,12 @@ export default function Home() {
               title with its pill under it, as before; no average or mistakes in this card. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : small ? 14 : 18 }}>
             {/* In the ring a seal with a tick in the chance's colour (green, amber, red; 2026-10-30; it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
-            {/* Before the first test the seal moves (its tick drawn in green, its edge turning) and a tap on the ring starts
-                a 5-question tryout of the test page (Mojtaba 2026-10-30). */}
+            {/* Before the first test a tap on the ring starts a 5-question tryout of the test page (Mojtaba 2026-10-30;
+                its seal still, no longer animated). */}
             {tryout ? (
               <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
                 <Ring value={0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
-                  <TryoutBadge size={Math.round(ringSize * 0.36)} color={c.ok} rest={c.text} />
+                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.text} weight="semibold" />
                 </Ring>
               </Pressable>
             ) : (
