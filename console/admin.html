@@ -227,6 +227,10 @@ details summary{cursor:pointer;font-weight:700}
         <label style="display:flex;gap:6px;align-items:center;margin-top:8px;font-size:13px"><input type="checkbox" id="nn" checked style="width:auto;margin:0"> اعلان هم فرستاده شود (برای کاربرانی که اعلان را روشن کرده‌اند)</label>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><button class="btn" id="ns">ارسال برای همه</button><span class="muted" id="nm" style="font-size:12.5px"></span></div>
         <div id="nl">${newsList()}</div></div>
+      <div class="card reports news" style="margin-bottom:16px" id="rt"><h2>بازنشانی دوره‌ی رایگان</h2>
+        <p class="muted" style="font-size:12.5px;margin:0 0 4px">یک ایمیل را دوباره «تازه» می‌کند: دوره‌ی رایگان یک‌روزه و تحلیل رایگان دوباره برایش در دسترس است (حتی اگر حسابش قبلاً حذف شده باشد). فقط برای استثنا یا آزمایش.</p>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="rte" placeholder="ایمیل" dir="ltr" style="flex:1;min-width:180px;margin-top:0"><button class="btn" id="rtb">بازنشانی</button></div>
+        <div id="rtm" class="muted" style="font-size:13px;margin-top:6px"></div></div>
       <div class="card reports news" style="margin-bottom:16px" id="sm"><h2>ارسال ایمیل (SMTP)</h2>
         <p class="muted" style="font-size:12.5px;margin:0 0 4px">با تنظیم این‌جا همه‌ی ایمیل‌های سایت از این سرور فرستاده می‌شود (مثلاً Oracle Email Delivery)؛ بدون آن از Resend. رمز روی سرور ذخیره می‌شود و این‌جا نشان داده نمی‌شود.</p>
         <div id="sms" class="muted" style="font-size:13px">…</div>
@@ -263,6 +267,12 @@ details summary{cursor:pointer;font-weight:700}
     wireNews();
     wirePlayKey();
     wireSmtp();
+    const rtb = document.getElementById('rtb');
+    if (rtb) rtb.onclick = async () => {
+      const m = document.getElementById('rtm'), email = document.getElementById('rte').value;
+      if (!confirm('دوره‌ی رایگان برای ' + email + ' بازنشانی شود؟')) return;
+      try { const d = await api('POST', 'resettrial', { email }); m.textContent = `انجام شد (${d.accounts} حساب${d.records ? '، سابقه‌ی حساب حذف‌شده هم پاک شد' : ''}).`; } catch (e) { m.textContent = e.message; }
+    };
   }
   // The SMTP card: its settings (no password), saving them, a test email, back to Resend.
   function wireSmtp() {

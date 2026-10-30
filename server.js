@@ -1692,6 +1692,29 @@ async function api(req, res, route) {
       try { await mail.sendTest(to); return send(res, 200, { ok: true }); } catch (e) { return send(res, 502, { error: e.detail || e.message }); }
     }
   }
+  // POST resettrial { email }: an address made new again for the free trial and the one free analysis (an admin's
+  // exception, e.g. for testing; Mojtaba 2026-10-30): its deleted accounts' records go, and on its account(s) the trial
+  // marks and a trial-only pass.
+  if (req.method === 'POST' && route === 'resettrial') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const e = mail.normal((await readBody(req)).email);
+    if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست بنویسید.' });
+    const g = gone(), k = mailKey(e);
+    const had = !!(g.trial[k] || g.ai[k]);
+    delete g.trial[k]; delete g.ai[k];
+    await store.saveMeta('gone', g);
+    let accounts = 0;
+    for (const u of Object.values(store.users)) {
+      const ue = mail.normal(u.email || (String(u.username).includes('@') ? u.username : ''));
+      if (ue !== e && mail.normal(u.promoEmail || '') !== e) continue;
+      delete u.promoUsed; delete u.promoEmail; delete u.freeAi;
+      if (u.premium && u.premium.promo && !(u.premium.buys || []).some(b => !b.refunded)) delete u.premium;
+      else if (u.premium) delete u.premium.promo;
+      await store.saveUser(u); accounts++;
+    }
+    console.log('trial reset by', user.username, accounts, had);
+    return send(res, 200, { ok: true, accounts, records: had });
+  }
   if (route === 'playkey' || route === 'playkeycheck') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     if (req.method === 'GET' && route === 'playkey') return send(res, 200, playbilling.info());
