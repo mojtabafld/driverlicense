@@ -129,8 +129,9 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const tests = attempts.filter(a => a.mode !== 'lesson').length, mistakes = mistakeIds(attempts).length;
   // A pill: an icon in its colour and its words, a tap opening its page. The three share one line on every screen: on a
   // narrow one they give up room and their words get smaller (FitLine; Mojtaba 2026-10-30).
-  // (narrower phones: smaller icons, room and words, so nothing is cut off)
-  const { width: winW } = useWindowDimensions(), tight = winW < 345 ? 2 : winW < 380 ? 1 : 0;
+  // (narrower phones: smaller icons, room and words, so nothing is cut off; a step smaller still on small ones,
+  // Mojtaba 2026-10-30)
+  const { width: winW } = useWindowDimensions(), tight = winW < 345 ? 2 : winW < 400 ? 1 : 0;
   const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
     <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
       // (together as wide as the progress bar under them, each grown from its own width; a little larger: Mojtaba 2026-10-30)
@@ -138,7 +139,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         paddingVertical: [10, 9, 8][tight], paddingHorizontal: [10, 8, 6][tight], borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
       <Icon name={icon} size={[16, 15, 13][tight]} color={color} weight="semibold" />
       {/* (one size for each width of screen; English and Danish, longer, a step smaller) */}
-      <T style={{ flexShrink: 1, color, fontWeight: '700', fontSize: [13, 12, 11, 10.5][tight + (RTL ? 0 : 1)] }} numberOfLines={1}>{text}</T>
+      <T style={{ flexShrink: 1, color, fontWeight: '700', fontSize: [13, 11.5, 10.5, 10][tight + (RTL ? 0 : 1)] }} numberOfLines={1} maxFontSizeMultiplier={1.1}>{text}</T>
     </Pressable>
   );
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
