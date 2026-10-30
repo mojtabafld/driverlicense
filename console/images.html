@@ -6,7 +6,8 @@
      with each group's count); the picture is shown with its prompt, which may be edited, and «ساخت تصویر جدید» makes a
      new picture from it, which the app shows once made. «سبک تصویر» has the API rewrite the prompt for another look
      (flat, driving simulator, realistic, digital painting, 3D, cartoon; /api/restyle), the scene kept; the list
-     starts on the style the saved prompt is in, marked «سبک فعلی». For a sign or right of way, a click on its made picture,
+     starts on the style the saved prompt is in, marked «سبک فعلی». A question can be bookmarked, taken out of the bank or
+     rewritten by the AI on the admin's instruction (a proposal, applied on «اعمال»; /api/newq*, newqadmin.js). For a sign or right of way, a click on its made picture,
      prove.dk's or the official drawing makes it the one the app shows (/api/guiderefchoose). It talks to /api/courseart, /api/courseprompt, /api/coursegen
      (?set=newq|course), /api/guideref, /api/guidegen, /api/guidedraft and /api/consoleprompt. -->
 <html lang="fa" dir="rtl">
@@ -57,6 +58,21 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
 .state{font-size:13px;color:var(--accent);font-weight:700}
 .fail{font-size:13px;color:var(--bad)}
 .chk{flex-direction:row;align-items:center;gap:6px;font-size:14px;color:var(--text);cursor:pointer}
+.qbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.qbox.gone{border-color:var(--bad)}
+.sts{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sts li{display:flex;gap:8px;font-size:14px}
+.sts .mk{font-weight:800;width:16px;flex:none}
+.sts li > span:last-child{flex:1;min-width:0}
+.sts li.ok .mk{color:var(--ok)}
+.sts li.no .mk{color:var(--bad)}
+.sts .da,.sts .why{display:block;font-size:12.5px}
+.sts .why{color:var(--muted)}
+.tag{font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+.tag.bad{color:var(--bad);border-color:var(--bad)}
+.aibox{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+textarea.fa{direction:rtl;text-align:right;min-height:80px}
+.prop{margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;font-size:14px;z-index:9}
 </style>
 </head>
@@ -87,8 +103,8 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
   ];
   // part, group and item chosen (kept in the address, so a reload stays on the same picture)
   const h = new URLSearchParams(location.hash.slice(1));
-  const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, missing: h.get('m') === '1', pid: null, data: {}, prompt: null, promptFor: '', saved: '' };
-  const remember = () => history.replaceState(null, '', `#p=${st.part}&g=${st.g}&i=${st.i}${st.missing ? '&m=1' : ''}`);
+  const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, filter: ({ 1: 'missing' })[h.get('m')] || h.get('m') || 'all', pid: null, qd: null, qfor: '', ai: null, data: {}, prompt: null, promptFor: '', saved: '' };
+  const remember = () => history.replaceState(null, '', `#p=${st.part}&g=${st.g}&i=${st.i}${st.filter !== 'all' ? `&m=${st.filter}` : ''}`);
 
   // A part's groups, each { title, items: [{ id, label, … }] }, in one shape for the page.
   async function load(part, fresh) {
@@ -117,7 +133,10 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
 
   // «فقط تصاویر ساخته‌نشده»: a picture not made yet (a sign or right of way: no AI picture)
   const made = x => !!(x.pid[0] === 'g' ? x.ai : x.v);
-  const shown = g => (st.missing ? g.items.filter(x => !made(x) || x.pid === st.pid) : g.items);
+  // What the lists show: every picture, those not made yet, or (questions) the bookmarked, removed or AI-edited ones.
+  const FILTERS = [['all', 'همه'], ['missing', 'فقط تصاویر ساخته‌نشده'], ['marked', '🔖 نشان‌شده‌ها', 1], ['edited', '✎ ویرایش‌شده‌ها', 1], ['removed', '✕ حذف‌شده‌ها از بانک', 1]];
+  const pass = x => ({ all: true, missing: !made(x), marked: !!x.marked, edited: !!x.edited, removed: !!x.removed })[st.filter] ?? true;
+  const shown = g => (st.filter === 'all' ? g.items : g.items.filter(x => pass(x) || x.pid === st.pid));
   // { prompt, style }: the saved prompt and the style the picture was last made in here (none before)
   async function promptOf(x) {
     if (x.set) return api('GET', `courseprompt?set=${x.set}&key=${encodeURIComponent(x.key)}`);
@@ -150,6 +169,60 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
     if (/\b3d\b/.test(w)) return '3d';
     return 'flat';
   }
+  // A question (the 1100 of «آزمون جدید»): its text and statements, and the admin's bookmark, removal from the bank and
+  // AI edit (a proposal shown first, applied only on «اعمال»).
+  const stList = q => `<ul class="sts">${q.st.map(t => `<li class="${t.ok ? 'ok' : 'no'}"><span class="mk">${t.ok ? '✓' : '✗'}</span><span>${esc(t.fa)}
+    <span class="da muted">${esc(t.da)}</span><span class="why">${esc(t.efa)}</span></span></li>`).join('')}</ul>`;
+  function questionPanel(x) {
+    const d = st.qd;
+    if (!d) return `<p class="q">${esc(x.name)}</p><p class="muted" style="font-size:13px">در حال بارگذاری سؤال…</p>`;
+    const q = d.q, a = st.ai;
+    return `<div class="qbox ${d.removed ? 'gone' : ''}">
+      <div class="row" style="margin:0 0 6px">${d.marked ? '<span class="tag">🔖 نشان‌شده</span>' : ''}${d.removed ? '<span class="tag bad">✕ حذف‌شده از بانک (در آزمون‌های تازه نمی‌آید)</span>' : ''}${d.edited ? `<span class="tag">✎ ویرایش‌شده</span>` : ''}</div>
+      <p class="q">${esc(q.sfa)}</p><div class="da muted">${esc(q.sda)}</div>
+      ${stList(q)}
+      <div class="row">
+        <button class="btn soft" id="qmark">${d.marked ? 'برداشتن نشان' : '🔖 نشان کردن برای بعد'}</button>
+        <button class="btn soft" id="qrm">${d.removed ? 'بازگرداندن به بانک' : '✕ حذف از بانک سؤال‌ها'}</button>
+        <button class="btn soft" id="qai">✎ ویرایش با هوش مصنوعی</button>
+        ${d.edited ? '<button class="btn soft" id="qrev">بازگرداندن نسخه‌ی اصلی</button>' : ''}
+      </div>
+      ${a ? `<div class="aibox">
+        <label>چه چیزی تغییر کند؟<textarea id="qins" class="fa" placeholder="مثلاً: گزینه‌ی دوم را دقیق‌تر کن، یا ترجمه‌ی فارسی را روان‌تر بنویس">${esc(a.ins || '')}</textarea></label>
+        <div class="row"><button class="btn" id="qsend" ${a.busy ? 'disabled' : ''}>${a.busy ? 'در حال ویرایش…' : 'ارسال به هوش مصنوعی'}</button><button class="btn soft" id="qcancel">بستن</button></div>
+        ${a.p ? `<div class="prop"><b>پیشنهاد هوش مصنوعی</b>${a.note ? `<p class="muted" style="margin:2px 0 6px;font-size:13px">${esc(a.note)}</p>` : ''}
+          <p class="q">${esc(a.p.sfa)}</p><div class="da muted">${esc(a.p.sda)}</div>${stList(a.p)}
+          <div class="row"><button class="btn" id="qapply">اعمال این ویرایش</button><span class="muted" style="font-size:12.5px">تا «اعمال» را نزنید چیزی عوض نمی‌شود.</span></div></div>` : ''}
+      </div>` : ''}
+    </div>`;
+  }
+  // after a change: the question and its flags in the lists
+  function setQ(x, d) {
+    st.qd = d; Object.assign(x, { marked: d.marked, removed: d.removed, edited: !!d.edited, name: d.q.sfa });
+    x.label = x.label.replace(/^([۰-۹]+\. ).*$/, (m0, n) => n + cut(d.q.sfa, 70));
+  }
+  function questionWire(x) {
+    const on = (id, f) => { const el = document.getElementById(id); if (el) el.onclick = f; };
+    const act = async (route, body, msg) => { try { setQ(x, await api('POST', route, { id: x.key, ...body })); toast(msg); } catch (e) { toast(e.message); } view(); };
+    on('qmark', () => act('newqmark', { on: !st.qd.marked }, st.qd.marked ? 'نشان برداشته شد' : 'نشان شد'));
+    on('qrm', () => { if (!st.qd.removed && !confirm('این سؤال از بانک حذف شود؟ دیگر در آزمون‌های تازه نمی‌آید (آزمون‌های قبلی کاربران با آن می‌مانند).')) return; act('newqremove', { on: !st.qd.removed }, st.qd.removed ? 'به بانک برگشت' : 'از بانک حذف شد'); });
+    on('qrev', () => { if (confirm('ویرایش کنار گذاشته شود و نسخه‌ی اصلی برگردد؟')) act('newqrevert', {}, 'نسخه‌ی اصلی برگشت'); });
+    on('qai', () => { st.ai = st.ai || {}; view(); });
+    on('qcancel', () => { st.ai = null; view(); });
+    const ins = document.getElementById('qins'); if (ins) ins.oninput = () => { st.ai.ins = ins.value; };
+    on('qsend', async () => {
+      const a = st.ai, pid = x.pid;
+      if (!String(a.ins || '').trim()) return toast('بنویسید چه چیزی باید تغییر کند.');
+      a.busy = true; view();
+      try { const d = await api('POST', 'newqai', { id: x.key, instruction: a.ins }); if (st.qfor === pid) Object.assign(a, { p: d.q, note: d.note }); } catch (e) { toast(e.message); }
+      a.busy = false; view();
+    });
+    on('qapply', async () => {
+      if (!confirm('این ویرایش در برنامه اعمال شود؟')) return;
+      try { setQ(x, await api('POST', 'newqapply', { id: x.key, q: st.ai.p })); st.ai = null; toast('ویرایش اعمال شد'); } catch (e) { toast(e.message); }
+      view();
+    });
+  }
   const EMPTY = 'هنوز پرامپتی برای این تصویر ذخیره نشده؛ آن را بنویسید.';
   let pollT = null;
   async function view(fresh) {
@@ -160,6 +233,11 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
       $app.innerHTML = `<div class="card fail">${esc(e.message)}</div>`; return;
     }
     const { groups, g, items, x } = current();
+    if (st.part !== 'q' && FILTERS.some(f => f[0] === st.filter && f[2])) st.filter = 'all';
+    if (x && st.part === 'q' && st.qfor !== x.pid) {
+      st.qd = null; st.qfor = x.pid; st.ai = null;
+      api('GET', `newqitem?id=${x.key}`).then(d => { if (st.qfor === x.pid) { st.qd = d; view(); } }).catch(e => toast(e.message));
+    }
     if (x && st.promptFor !== x.pid) {
       st.prompt = null; st.promptFor = x.pid; st.style = null;
       promptOf(x).then(d => { if (st.promptFor === x.pid) { st.prompt = st.saved = d.prompt || ''; st.style = st.base = (STYLES.some(([k]) => k === d.style) && d.style) || styleOf(st.saved); view(); } })
@@ -173,13 +251,14 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
       <div class="card">
         <div class="pick">
           <label>دسته‌بندی<select id="g">${groups.map((y, n) => { const left = y.items.filter(z => !made(z)).length;
-            return `<option value="${n}" ${y === g ? 'selected' : ''}>${esc(y.title)} (${st.missing ? `${faNum(left)} ساخته‌نشده` : `${faNum(y.items.length - left)} از ${faNum(y.items.length)} ساخته شده`})</option>`; }).join('')}</select></label>
-          <label>تصویر<select id="i">${g ? items.map((y, n) => `<option value="${n}" ${y === x ? 'selected' : ''}>${made(y) ? '✓ ' : ''}${esc(y.label)}${y.making ? ' ⏳' : ''}</option>`).join('') : ''}</select></label>
+            const cnt = st.filter === 'all' ? `${faNum(y.items.length - left)} از ${faNum(y.items.length)} ساخته شده` : st.filter === 'missing' ? `${faNum(left)} ساخته‌نشده` : faNum(y.items.filter(pass).length);
+            return `<option value="${n}" ${y === g ? 'selected' : ''}>${esc(y.title)} (${cnt})</option>`; }).join('')}</select></label>
+          <label>تصویر<select id="i">${g ? items.map((y, n) => `<option value="${n}" ${y === x ? 'selected' : ''}>${made(y) ? '✓ ' : ''}${y.marked ? '🔖 ' : ''}${y.removed ? '✕ ' : ''}${y.edited ? '✎ ' : ''}${esc(y.label)}${y.making ? ' ⏳' : ''}</option>`).join('') : ''}</select></label>
         </div>
-        <div class="row" style="margin:0 0 10px"><label class="chk"><input type="checkbox" id="miss" ${st.missing ? 'checked' : ''}> فقط تصاویر ساخته‌نشده</label>
+        <div class="row" style="margin:0 0 10px"><label class="chk">نمایش:<select id="flt" style="width:auto">${FILTERS.filter(f => !f[2] || st.part === 'q').map(([k, t]) => `<option value="${k}" ${k === st.filter ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
           <span class="muted" style="font-size:13px">در این بخش ${faNum(done)} از ${faNum(all.length)} تصویر ساخته شده؛ ${faNum(all.length - done)} مانده.</span></div>
         ${x ? `
-          ${st.part === 'q' ? `<p class="q">${esc(x.name)}</p>${x.da && x.da !== x.name ? `<div class="da muted">${esc(x.da)}</div>` : ''}` : ''}
+          ${st.part === 'q' ? questionPanel(x) : ''}
           <div class="pics">${pictures(x)}</div>
           <div class="row" style="margin:0 0 8px">
             <label class="chk">سبک تصویر:<select id="sty" style="width:auto" ${st.prompt == null || st.restyling ? 'disabled' : ''}>${STYLES.map(([k, t]) => `<option value="${k}" ${k === (st.restyling || st.style) ? 'selected' : ''}>${t}${k === st.base ? ' · سبک فعلی' : ''}</option>`).join('')}</select></label>
@@ -194,13 +273,14 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
             ${x.failed ? `<span class="fail">ساخت تصویر ناموفق بود: ${esc(x.failed)}</span>` : ''}
           </div>
           <p class="muted" style="font-size:12.5px;margin:8px 0 0">تصویر تازه پس از ساخته شدن در برنامه نشان داده می‌شود (به‌جای تصویر فعلی، اگر باشد). ساخت هر تصویر چند دقیقه طول می‌کشد.</p>`
-          : `<p class="muted">${st.missing ? 'همه‌ی تصاویر این دسته ساخته شده‌اند.' : 'موردی نیست.'}</p>`}
+          : `<p class="muted">${st.filter === 'missing' ? 'همه‌ی تصاویر این دسته ساخته شده‌اند.' : st.filter !== 'all' ? 'در این دسته موردی نیست.' : 'موردی نیست.'}</p>`}
       </div>`;
     document.querySelectorAll('[data-part]').forEach(b => { b.onclick = () => { st.part = b.dataset.part; st.g = 0; st.i = 0; st.pid = null; remember(); view(); }; });
     document.getElementById('g').onchange = e => { st.g = +e.target.value; st.i = 0; st.pid = null; remember(); view(); };
     const si = document.getElementById('i'); if (si) si.onchange = e => { st.i = +e.target.value; st.pid = null; remember(); view(); };
-    document.getElementById('miss').onchange = e => { st.missing = e.target.checked; st.i = 0; st.pid = null; remember(); view(); };
+    document.getElementById('flt').onchange = e => { st.filter = e.target.value; st.i = 0; st.pid = null; remember(); view(); };
     if (!x) return;
+    if (st.part === 'q') questionWire(x);
     const ta = document.getElementById('pr');
     ta.oninput = () => { st.prompt = ta.value; };
     document.getElementById('undo').onclick = () => { st.prompt = ta.value = st.saved; st.style = st.base; view(); };

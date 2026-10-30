@@ -22,6 +22,7 @@ const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
 const consoleprompts = require('./consoleprompts');
+const newqadmin = require('./newqadmin');
 const tts = require('./tts');
 const webpic = require('./webpic');
 const png = require('./png');
@@ -691,6 +692,12 @@ function serveStatic(req, res) {
     }).catch(() => { res.writeHead(500); res.end(); });
   }
   if (isProtected(p) && !sessionUser(req)) { res.writeHead(401, { 'Cache-Control': 'no-store' }); return res.end('Sign in first'); }
+  // «آزمون جدید»'s questions with the admin's edits and removals (newqadmin.js).
+  if (p === '/newq.js') {
+    const b = newqadmin.js();
+    res.writeHead(200, { 'Content-Type': MIME['.js'], 'Content-Length': b.length, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+    return res.end(req.method === 'HEAD' ? undefined : b);
+  }
   // The fixed copy of the app at /app (?frozen=app): its question bank (the questions and the 44 lessons) and the
   // questions' original pictures as they were when it was fixed (frozen/app/), so later changes do not reach it.
   if ((p === '/data.js' || /^\/img\/q\d+\.jpg$/.test(p)) && new URL(req.url, 'http://x').searchParams.get('frozen') === 'app') return serveFile(req, res, p, FROZEN_APP);
@@ -1588,6 +1595,21 @@ async function api(req, res, route) {
   // The admin's picture page (/admin/images): the step-by-step course's pictures by lesson and «آزمون جدید»'s by topic
   // (?set=course|newq), each with its version, and a new one on its way or failed; a picture's prompt; and a new
   // picture from an edited prompt.
+  // …and its questions' bookmarks, removal from the bank and AI edits (newqadmin.js): newqitem?id, and POST newqmark
+  // { id, on }, newqremove { id, on }, newqai { id, instruction } (a proposal), newqapply { id, q }, newqrevert { id }.
+  if (route.startsWith('newq') && ['newqitem', 'newqmark', 'newqremove', 'newqai', 'newqapply', 'newqrevert'].includes(route)) {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    try {
+      if (req.method === 'GET' && route === 'newqitem') return send(res, 200, newqadmin.item(new URL(req.url, 'http://x').searchParams.get('id')));
+      if (req.method !== 'POST') return send(res, 405, { error: 'method' });
+      const b = await readBody(req, 2e5);
+      if (route === 'newqmark') return send(res, 200, await newqadmin.mark(b.id, !!b.on));
+      if (route === 'newqremove') return send(res, 200, await newqadmin.remove(b.id, !!b.on));
+      if (route === 'newqai') return send(res, 200, await newqadmin.aiEdit(b.id, b.instruction));
+      if (route === 'newqapply') return send(res, 200, await newqadmin.applyEdit(b.id, b.q, user.username));
+      if (route === 'newqrevert') return send(res, 200, await newqadmin.revert(b.id));
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error(route, e.message); return send(res, 502, { error: 'انجام نشد؛ دوباره امتحان کنید.' }); }
+  }
   // …and a prompt rewritten for the style chosen there (imagegen.restyle): { prompt, style } → { prompt }.
   if (req.method === 'POST' && route === 'restyle') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
@@ -1603,7 +1625,10 @@ async function api(req, res, route) {
         const set = q.get('set') === 'newq' ? 'newq' : 'course', v = imagegen.artVersions(set);
         const item = ({ key, name, da }) => { const j = imagegen.oneOff(`${set}-${key}`); return { key, name, da, v: v[key] || null, making: j && !j.done ? j.state : null, failed: j && j.done && !j.blob && j.error ? j.error : null }; };
         const groups = set === 'newq' ? consolepics.newqGroups() : consolepics.courseGroups(imagegen.artKeys('course'));
-        return send(res, 200, { groups: groups.map(g => ({ title: g.title, items: g.items.map(item) })) });
+        // (a question's bookmark, removal and AI edit: newqadmin.js)
+        const fl = set === 'newq' ? newqadmin.flags() : {};
+        const more = x => { const f = fl[x.key]; return f ? { ...x, name: f.name || x.name, marked: !!f.m, removed: !!f.x, edited: !!f.e } : x; };
+        return send(res, 200, { groups: groups.map(g => ({ title: g.title, items: g.items.map(x => more(item(x))) })) });
       }
       if (req.method === 'GET' && route === 'courseprompt') {
         const set = q.get('set') === 'newq' ? 'newq' : 'course', key = String(q.get('key') || ''), j = imagegen.oneOff(`${set}-${key}`), prompt = imagegen.artPrompt(set, key);
@@ -2131,6 +2156,7 @@ async function main() {
   imagegen.init(store, SITE);
   guideref.init(store, imagegen);
   consolepics.init(SITE);
+  newqadmin.init(store, imagegen, SITE);
   setTimeout(() => imagegen.learnColours(), 3000);   // the «آموزش» pictures' colours ready for the first visits
   consoleprompts.init(store, imagegen, guideref, consolepics);
   webpic.init(store);
