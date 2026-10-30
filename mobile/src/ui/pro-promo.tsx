@@ -166,7 +166,7 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
           <Pressable onPress={buy} disabled={busy} accessibilityRole="button" style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
             <LinearGradient colors={['#f6e7c8', '#dfe3dc', '#bcd3ea']} start={{ x: RTL ? 1 : 0, y: 0 }} end={{ x: RTL ? 0 : 1, y: 0 }}
               style={{ height: 60, borderRadius: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <T style={{ color: '#151515', fontSize: 17, fontWeight: '800' }}>{busy ? tr('در حال فعال کردن…') : trialDays ? t('شروع {0} روز رایگان', faNum(trialDays)) : tr('فعال کردن نسخه‌ی ویژه')}</T>
+              <T style={{ color: '#151515', fontSize: 17, fontWeight: '800' }}>{busy ? tr('در حال فعال کردن…') : trialDays ? t('شروع {0} روز استفاده‌ی رایگان', faNum(trialDays)) : tr('فعال کردن نسخه‌ی ویژه')}</T>
               <Icon name="chevronLeft" size={18} color="#151515" weight="semibold" />
             </LinearGradient>
           </Pressable>

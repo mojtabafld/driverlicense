@@ -77,7 +77,7 @@ export default function Premium() {
   const [trialing, setTrialing] = useState(false);
   const trial = async () => {
     setTrialing(true); setMsg(null);
-    try { await startTrial(); setMsg({ ok: true, text: t('نسخه‌ی ویژه {0} روز رایگان برای شما فعال شد.', faNum(pay?.trial ?? 3)) }); }
+    try { await startTrial(); setMsg({ ok: true, text: t('نسخه‌ی ویژه {0} روز رایگان برای شما فعال شد.', faNum(pay?.trial ?? 1)) }); }
     catch (e: any) { setMsg({ ok: false, text: e?.message || t('فعال نشد؛ دوباره امتحان کنید.') }); }
     finally { setTrialing(false); }
   };
@@ -177,9 +177,9 @@ export default function Premium() {
       {showTrial ? (
         <Card style={{ gap: 10, alignItems: 'center', paddingVertical: 18 }}>
           <Icon name="sparkles" size={28} color={c.text} />
-          <T style={{ fontWeight: '700', fontSize: 16, textAlign: 'center' }}>{t('{0} روز رایگان', faNum(pay?.trial ?? 3))}</T>
+          <T style={{ fontWeight: '700', fontSize: 16, textAlign: 'center' }}>{t('{0} روز رایگان', faNum(pay?.trial ?? 1))}</T>
           <T style={{ color: c.muted, fontSize: 13, lineHeight: 21, textAlign: 'center' }}>همه‌ی امکانات نسخه‌ی ویژه، بی‌پرداخت و بی‌کد؛ برای هر حساب یک بار.</T>
-          <Button big icon="sparkles" label={trialing ? 'در حال فعال کردن…' : t('شروع {0} روز رایگان', faNum(pay?.trial ?? 3))} onPress={trial} disabled={trialing} style={{ alignSelf: 'stretch', marginTop: 4 }} />
+          <Button big icon="sparkles" label={trialing ? 'در حال فعال کردن…' : t('شروع {0} روز استفاده‌ی رایگان', faNum(pay?.trial ?? 1))} onPress={trial} disabled={trialing} style={{ alignSelf: 'stretch', marginTop: 4 }} />
         </Card>
       ) : null}
       {guest && !premium ? (
