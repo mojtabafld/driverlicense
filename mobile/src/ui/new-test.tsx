@@ -73,7 +73,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
           <Icon name="shuffle" size={15} color={c.text} weight="semibold" />
         </View>
         <View style={{ flex: 1 }}>
-          <T style={{ fontWeight: '700', fontSize: 18 }}>انتخاب تعداد سؤال‌های آزمون</T>
+          <T style={{ fontWeight: '600', fontSize: 15 }}>انتخاب تعداد سؤال‌های آزمون</T>
         </View>
       </View>
       {/* The progress first, under the title, then the choice of the number of questions and the start (Mojtaba
