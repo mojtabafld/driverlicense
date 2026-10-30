@@ -376,17 +376,27 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   // The name beside the greeting (home): not there at first; once the drawing has gone and the greeting has settled at
   // the edge, it slides out from behind the greeting as it fades in, and then the line under them opens (Mojtaba
   // 2026-10-19). Clipped at its own edge only while it comes in. Later the header shows it at once, as the rest.
-  const [nameIn] = useState(() => new Animated.Value(leadGone || !lead ? 1 : 0));
-  const [nameClip, setNameClip] = useState(!(leadGone || !lead));
+  // Home now has no drawing and no line under the greeting (Mojtaba 2026-10-30): the greeting stands still and the
+  // name slides in beside it a moment after the app opens, once per app start.
+  // Home has no drawing and no line under the greeting now (Mojtaba 2026-10-30): the greeting stands still and the name
+  // slides in beside it a moment after the app opens, once per app start.
+  const plainHead = usePlainHeader(), intro = !!name && !leadGone && plainHead && !tall;
+  const [nameIn] = useState(() => new Animated.Value(intro ? 0 : 1));
+  const [nameClip, setNameClip] = useState(intro);
   const [nameW, setNameW] = useState(0);
-  // (home's opening played already: the name is there at once)
-  useEffect(() => { if (lead && leadGone) settleName(); }, [lead]);
   const openSub = () => {
     Animated.timing(nameIn, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: false })
       .start(({ finished }) => { if (finished) setNameClip(false); settleName(); });
     Animated.sequence([Animated.delay(480), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
       .start(({ finished }) => { if (finished) setTimeout(() => setAfter(true), 2200); });
   };
+  useEffect(() => {
+    if (!name) return;
+    if (!intro) { leadGone = true; settleName(); return; }
+    const t = setTimeout(() => { leadGone = true; openSub(); }, 450);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
   // page, only the picture or drawing goes, and the title may take the whole width.
