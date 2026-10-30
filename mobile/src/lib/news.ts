@@ -21,29 +21,34 @@ const tell = () => {
 };
 const subscribe = (f: () => void) => { listeners.add(f); return () => { listeners.delete(f); }; };
 
-async function refresh() {
+// (what was seen and cleared is kept per account and its making, so a new account starts with nothing read or cleared;
+// the server shows an account only the messages since it was made, and its own welcome; Mojtaba 2026-10-30)
+let who = '';
+async function refresh(account: string) {
+  if (account !== who) { who = account; cache = null; seenAt = null; hideBefore = 0; tell(); }
   try { cache = (await api<{ items: News[] }>('GET', 'news')).items; } catch { if (cache == null) return; }
-  if (seenAt == null) { seenAt = await loadNewsSeen(); hideBefore = await loadNewsHide(); }
+  if (seenAt == null) { seenAt = await loadNewsSeen(who); hideBefore = await loadNewsHide(who); }
   tell();
 }
 
 // «پاکسازی»: every message so far hidden on this device; «بازسازی»: those of the last seven days back.
 const WEEK = 7 * 864e5;
-export function clearNews() { hideBefore = Date.now(); saveNewsHide(hideBefore); tell(); }
-export function restoreNews() { hideBefore = Math.min(hideBefore, Date.now() - WEEK); saveNewsHide(hideBefore); tell(); }
+export function clearNews() { hideBefore = Date.now(); saveNewsHide(hideBefore, who); tell(); }
+export function restoreNews() { hideBefore = Math.min(hideBefore, Date.now() - WEEK); saveNewsHide(hideBefore, who); tell(); }
 // Whether «بازسازی» would bring any back (a hidden message from the last seven days).
 function canRestore(all: News[], before: number) { return all.some(x => x.at <= before && x.at > Date.now() - WEEK); }
 
 export function markNewsSeen() {
   const at = cache?.[0]?.at ?? Date.now();
-  seenAt = at; saveNewsSeen(at); tell();
+  seenAt = at; saveNewsSeen(at, who); tell();
 }
 
 export function useNews() {
   const now = useSyncExternalStore(subscribe, () => snap, () => snap);
   // (read once signed in, and again each time the page comes into view)
-  const { token } = useApp();
-  useFocusEffect(useCallback(() => { if (token) refresh(); }, [token]));
+  const { token, user } = useApp();
+  const account = user ? `.${String(user.username).replace(/[^A-Za-z0-9._-]/g, '_')}.${user.created || 0}` : '';
+  useFocusEffect(useCallback(() => { if (token && account) refresh(account); }, [token, account]));
   return { items: now.items, loaded: now.loaded, unread: now.seenAt != null && now.items.some(x => x.at > (now.seenAt ?? 0)),
     restorable: now.restorable };
 }

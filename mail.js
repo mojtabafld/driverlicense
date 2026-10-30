@@ -148,6 +148,12 @@ function featureMail(t, lang, name, intro, list, link) {
 <p>${esc(t.end)}</p></div>`;
   return { html, text: `${t.hi(name)}\n\n${intro.join('\n\n')}\n\n${list.map(x => `- ${x}`).join('\n')}\n\n${link}\n\n${t.end}` };
 }
+// The welcome email's words as the account's first message on the news page (Mojtaba 2026-10-30).
+function welcomeNews(name, lang, restored) {
+  const l = WELCOME[lang] ? lang : 'fa', t = WELCOME[l];
+  const text = [t.hi(name), t.body, FEATURES[l].map(x => `• ${x}`).join('\n'), ...(restored ? [t.restored(day(restored, l))] : []), t.end].join('\n\n');
+  return { title: t.subject, text };
+}
 function sendWelcome(to, name, lang, link, restored) {
   const l = WELCOME[lang] ? lang : 'fa', t = WELCOME[l];
   const m = featureMail(t, l, name, [t.body], FEATURES[l], link);
@@ -315,4 +321,4 @@ async function send(to, subject, html, text, { replyTo } = {}) {
 // A test email from the dashboard's card.
 const sendTest = to => send([to], 'Teoripro: test email', '<p>This is a test email from Teoripro.</p>', 'This is a test email from Teoripro.');
 
-module.exports = { available, setSmtpFile, saveSmtp, clearSmtp, smtpInfo, sendTest, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, sendInsights, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
+module.exports = { welcomeNews, available, setSmtpFile, saveSmtp, clearSmtp, smtpInfo, sendTest, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, sendInsights, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
