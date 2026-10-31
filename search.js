@@ -9,6 +9,7 @@
 'use strict';
 const crypto = require('node:crypto');
 const ai = require('./aigateway');
+const rag = require('./rag');
 
 const MODEL = process.env.SEARCH_AI_MODEL || process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
 const PER_USER_PER_HOUR = 40, ALL_PER_HOUR = 600;
@@ -28,6 +29,7 @@ function addCatalog(text) {
   if (!text || text.length > MAX_CATALOG) return null;
   const v = hashOf(text), ids = new Set(text.split('\n').map(l => l.split('\t')[0]).filter(Boolean));
   catalogs.delete(v); catalogs.set(v, { text, ids });
+  rag.catalog(v, text);   // its entries' meaning vectors, for the RAG search (rag.js)
   while (catalogs.size > 5) catalogs.delete(catalogs.keys().next().value);
   return v;
 }
@@ -56,6 +58,12 @@ CATALOGUE:
   { type: 'text', text: catalog, cache_control: { type: 'ephemeral', ttl: '1h' } },
 ];
 
+// The same task with only the retrieved entries, and the app's own questions on the topic as background.
+const ragSystem = (entries, questions) => [
+  system(entries)[0],
+  { type: 'text', text: `${entries}\n\nBACKGROUND (the app's own practice questions on the topic, with their correct answers and explanations; use them to write the answer, but return only catalogue ids):\n${questions || '(none)'}` },
+];
+
 const SCHEMA = {
   type: 'object',
   properties: { answer: { type: 'string' }, results: { type: 'array', items: { type: 'string' } } },
@@ -78,13 +86,22 @@ async function search({ username, q, v, catalog, ui }) {
   if (inflight.has(key)) return { ...(await inflight.get(key)), v };
   if (!allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
   const job = (async () => {
+    // RAG (rag.js): only the entries closest in meaning to the query, and the questions that explain it; the whole
+    // catalogue (as before) until its vectors are made or when the embeddings fail.
+    let sys = system(cat.text);
+    if (rag.ready(v)) {
+      try {
+        const got = await rag.retrieve(q, v);
+        sys = ragSystem(got.entries.map(e => e.line).join('\n'), got.questions.map(x => x.text).join('\n\n'));
+      } catch (e) { console.error('RAG search', e.message); }
+    }
     const response = await ai.call('search', {
       model: MODEL,
       max_tokens: 2000,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
-      system: system(cat.text),
+      system: sys,
       messages: [{ role: 'user', content: `Answer language: ${LANG[ui]}\nQuery: ${q}` }],
     });
     if (response.stop_reason === 'refusal') throw Object.assign(new Error('جستجو انجام نشد.'), { status: 502 });
