@@ -123,7 +123,7 @@ function wrap(store) {
   async function move(from) {
     if (!(await ready())) return;
     const keys = await from.blobKeys('');
-    if (!keys.length) return console.log('Files: all in the bucket');
+    if (!keys.length) { console.log('Files: all in the bucket'); return sizes(); }
     console.log(`Files: moving ${keys.length} files from the database into the bucket`);
     let n = 0, bytes = 0;
     for (const key of keys) {
@@ -141,6 +141,17 @@ function wrap(store) {
       await new Promise(r => setTimeout(r, 150));
     }
     console.log(`Files: ${n} files (${Math.round(bytes / 1e6)} MB) moved into the bucket`);
+    await sizes();
+  }
+  // How much the database and the bucket hold, in the log once the move is done.
+  async function sizes() {
+    try {
+      const objs = await list(''), mb = b => (b / 1e6).toFixed(1);
+      const used = objs.reduce((n, o) => n + (+o.size || 0), 0);
+      if (store.releaseBlobs && !(await db.blobKeys('')).length && await store.releaseBlobs().catch(e => { console.error('Files: release', e.message); return false; })) console.log('Files: the database\'s files table emptied and its space given back');
+      const d = store.size ? await store.size() : null;
+      console.log(`Sizes: bucket ${objs.length} files, ${mb(used)} MB${d ? `; database ${mb(d.all)} MB (files table ${mb(d.blobs)} MB)` : ''}`);
+    } catch (e) { console.error('Sizes', e.message); }
   }
 }
 
