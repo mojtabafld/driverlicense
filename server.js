@@ -104,7 +104,7 @@ const ADMIN_HTML = fs.readFileSync(path.join(__dirname, 'console', 'admin.html')
 const IMAGES_HTML = fs.readFileSync(path.join(__dirname, 'console', 'images.html'));
 // The style each picture was last made in on the admin's picture page (its «سبک تصویر»), so the page opens on it again:
 // store.meta.picStyles = { ['newq:<id>' | 'course:<key>' | 'g:<key>']: style }.
-const PIC_STYLES = new Set(['flat', 'sim', 'realistic', 'semi', '3d', 'cartoon']);
+const PIC_STYLES = new Set(['flat', 'sim', 'realistic', 'semi', '3d', 'cartoon', 'signs']);
 const picStyle = id => ((store.meta.picStyles || {})[id]) || null;
 async function setPicStyle(id, style) {
   if (!PIC_STYLES.has(style)) return;

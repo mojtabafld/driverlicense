@@ -1318,6 +1318,13 @@ You get a prompt and the style the picture must now have. Rewrite the prompt so 
 - keep it in English, in the same format and about the same length.
 Answer with the prompt only.`;
 async function restyle(prompt, style) {
+  // «سبک تابلوها و علائم»: the very style line (and DETAILS) the app's sign pictures were made with (data/art-style.json),
+  // put in place of the prompt's own, word for word (Mojtaba 2026-10-31)
+  if (style === 'signs') {
+    prompt = String(prompt || '').trim().slice(0, 20000);
+    if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
+    return withHouseStyle(prompt, 'signs');
+  }
   const want = STYLES[style];
   if (!want) throw Object.assign(new Error('این سبک شناخته نشد.'), { status: 400 });
   prompt = String(prompt || '').trim().slice(0, 20000);

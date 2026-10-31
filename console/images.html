@@ -167,12 +167,13 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       + (x.canOfficial ? fig(x.official ? ref('official', '') : '', '<b>طرح رسمی</b>', c === 'official', 'دریافت نشده', 'official') : '');
   }
 
-  const STYLES = [['flat', 'تصویرسازی تخت (وکتور)'], ['sim', 'شبیه‌ساز رانندگی (مثل آزمون رسمی)'], ['realistic', 'واقع‌گرایانه (عکس)'],
+  const STYLES = [['signs', 'سبک تابلوها و علائم (مثل تصاویر قبلی)'], ['flat', 'تصویرسازی تخت (وکتور)'], ['sim', 'شبیه‌ساز رانندگی (مثل آزمون رسمی)'], ['realistic', 'واقع‌گرایانه (عکس)'],
     ['semi', 'نقاشی دیجیتال نیمه‌واقع‌گرا'], ['3d', 'سه‌بعدی مدرن'], ['cartoon', 'کارتونی']];
   // The style a prompt is written in, from its words (its «Style:» line first); the «NOT …» words do not count.
   function styleOf(p) {
     const t = String(p || ''), line = (/(^|\n)\s*Style\s*:([^\n]*)/i.exec(t) || [])[2];
     const w = (line || t.slice(0, 600)).toLowerCase().replace(/\bnot (a |an )?(photo-?realistic|3d render|3d|photograph)\w*/g, '');
+    if (/style as the app's road-sign pictures/.test(w)) return 'signs';
     if (/driving[- ]simulator|game[- ]engine/.test(w)) return 'sim';
     if (/digital painting|semi-realistic/.test(w)) return 'semi';
     if (/cartoon/.test(w)) return 'cartoon';
