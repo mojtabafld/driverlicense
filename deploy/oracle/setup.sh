@@ -54,6 +54,8 @@ chown -R root:teoripro /etc/teoripro && chmod 750 /etc/teoripro /etc/teoripro/wa
 
 echo "== services"
 cp deploy/oracle/teoripro.service deploy/oracle/teoripro-update.service deploy/oracle/teoripro-update.timer /etc/systemd/system/
+# (the service fenced in: what it may write and its share of the machine; teoripro-hardening.conf)
+mkdir -p /etc/systemd/system/teoripro.service.d && cp deploy/oracle/teoripro-hardening.conf /etc/systemd/system/teoripro.service.d/hardening.conf
 systemctl daemon-reload
 systemctl enable -q teoripro teoripro-update.timer
 systemctl start teoripro-update.timer
