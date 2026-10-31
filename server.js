@@ -38,7 +38,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { openStore } = require('./store');
 const { bank: lessonBank, setNotes, getLesson, getSummary, getTopic, lessonsAvailable, isCurrentLesson, isCurrentSummary, refUi, uiOf } = require('./lesson');
-const { search: aiSearch, termPage: aiTermPage } = require('./search');
+const { search: aiSearch, termPage: aiTermPage, ask: aiAsk } = require('./search');
 const imagegen = require('./imagegen');
 const guideref = require('./guideref');
 const consolepics = require('./consolepics');
@@ -1153,6 +1153,12 @@ async function api(req, res, route) {
     });
   }
   // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
+  // The admin's list of «آزمون جدید»'s questions that say nearly the same (rag.js duplicates), for the «سامانه» page.
+  if (req.method === 'GET' && route === 'ragdupes') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const min = Math.min(0.99, Math.max(0.85, +new URL(req.url, 'http://x').searchParams.get('min') || 0.93));
+    return send(res, 200, require('./rag').duplicates({ min }) || { pending: true });
+  }
   if (req.method === 'GET' && route === 'aiusage') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...require('./aigateway').report(), rag: require('./rag').info() });
@@ -1433,6 +1439,30 @@ async function api(req, res, route) {
       if (e.status) return send(res, e.status, { error: e.message });
       throw e;
     }
+  }
+  // «از مربی بپرس» (search.js ask): { q, ui, v, history: [{ q, a }] } or, the first time / when the server asks (409),
+  // { q, ui, catalog, history }. Premium, as the coach.
+  if (req.method === 'POST' && route === 'ask') {
+    insights.count('ai:ask');
+    if (needsPremium(user)) return send(res, 402, { error: PREMIUM_NEEDED, premium: true });
+    const b = await readBody(req, 700e3);
+    try {
+      return send(res, 200, await aiAsk({ username: user.username, q: b.q, v: b.v, catalog: b.catalog, ui: b.ui, history: b.history }));
+    } catch (e) {
+      if (e instanceof Anthropic.APIError) { console.error('ask API error', e.status, e.message); return send(res, 502, { error: 'مربی الان در دسترس نیست.' }); }
+      if (e.status) return send(res, e.status, { error: e.message });
+      throw e;
+    }
+  }
+  // «سؤال‌های مشابه» after a test (rag.js similar): { ids } of the questions answered wrongly → { ids } of «آزمون جدید»'s
+  // questions closest to them (none taken out by the admin). [] when the meaning vectors are not there.
+  if (req.method === 'POST' && route === 'similar') {
+    const b = await readBody(req), Q = lessonBank(SITE).Q;
+    const qs = (Array.isArray(b.ids) ? b.ids : []).slice(0, 25).map(id => Q.get(+id)).filter(Boolean);
+    try {
+      const ids = (await require('./rag').similar(qs)).filter(id => { const q = Q.get(id); return q && !q.x; });
+      return send(res, 200, { ids });
+    } catch (e) { console.error('similar', e.message); return send(res, 200, { ids: [] }); }
   }
   // «آموزش این واژه» in the glossary (search.js termPage): { term: { da, en, fa, cat }, v } or, the first time / when the
   // server asks (409), { term, catalog }. For every account: each term is asked about once, then kept.

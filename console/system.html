@@ -2,7 +2,7 @@
 <!-- The admin's «سامانه» page at /admin/system (Mojtaba 2026-10-31): the architecture page's picture of the system
      (scratchpad's «معماری تئوری‌پرو»), with the server's live numbers from /api/system: the machine's CPU, memory and
      network and the app's own over 24 hours (monitor.js), the disk, the files bucket and the database, the AI's use
-     today and over 14 days (aigateway.js), RAG (rag.js), the backups (backup.js), the version running. Read again
+     today and over 14 days (aigateway.js), RAG (rag.js) and the new bank's near-duplicate questions, the backups (backup.js), the version running. Read again
      every minute. In Persian or English (the «English / فارسی» button, kept in this browser). Signed in as an admin
      (the dashboard's sign-in); otherwise back to /admin. -->
 <html lang="fa" dir="rtl">
@@ -134,6 +134,18 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
   const f1 = v => (Math.round(v * 10) / 10).toString();
   const meter = (label, used, total, text) => `<div class="bar"><div class="row"><span>${label}</span><span>${text} · ${pct(used, total)}%</span></div><div class="meter"><i style="width:${Math.max(0.5, Math.min(100, pct(used, total)))}%"></i></div></div>`;
 
+  // «آزمون جدید»'s questions that say nearly the same (rag.js duplicates; /api/ragdupes), asked for once with the page.
+  let DUP = null;
+  function dupesHtml() {
+    if (!DUP) return `<p class="note">${L('در حال بررسی…', 'Checking…')}</p>`;
+    if (DUP.pending) return `<p class="note">${L('بردارهای معنایی سؤال‌ها هنوز آماده نیست.', "The questions' meaning vectors are not ready yet.")}</p>`;
+    if (!DUP.list.length) return `<p class="note">${L('هیچ دو سؤالی تقریباً یکسان نیستند.', 'No two questions are nearly the same.')}</p>`;
+    return `<div class="mhead"><h3>${L(`${fa(DUP.total)} جفت با شباهت ۹۳٪ یا بیشتر`, `${fa(DUP.total)} pairs at 93% similarity or more`)}</h3><span class="mstat">${L('شبیه‌ترین‌ها اول', 'closest first')}</span></div>
+      <div class="tblw" style="border:0;padding:0"><table><thead><tr><th>${L('شباهت', 'Similarity')}</th><th>${L('سؤال', 'Question')}</th><th>${L('سؤال مشابه', 'Similar question')}</th></tr></thead><tbody>
+      ${DUP.list.slice(0, 25).map(x => `<tr><td class="num">${Math.round(x.s * 100)}%</td><td><span class="num">#${x.a}</span> <span dir="auto">${esc(x.ta)}</span></td><td><span class="num">#${x.b}</span> <span dir="auto">${esc(x.tb)}</span></td></tr>`).join('')}
+      </tbody></table></div>${DUP.list.length > 25 ? `<p class="note">${L(`و ${fa(DUP.list.length - 25)} جفت دیگر.`, `and ${fa(DUP.list.length - 25)} more pairs.`)}</p>` : ''}`;
+  }
+
   let D = null;
   function render() {
     const d = D, m = d.monitor, pts = m.points || [], s = m.sizes || {}, host = m.host || {};
@@ -203,6 +215,9 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
           ${(d.backups || []).length ? `<table>${d.backups.slice(0, 5).map(b => `<tr><td class="num">${esc(b.name)}</td><td class="num">${(b.size / 1e3).toFixed(0)} kB</td></tr>`).join('')}</table>` : `<p class="note">${L('هنوز پشتیبانی نیست.', 'No backups yet.')}</p>`}</div>
       </div>
 
+      <h2 class="sec">${L('سؤال‌های تکراری در بانک «آزمون جدید»', 'Near-duplicate questions in the new bank')}</h2>
+      <div class="mcard">${dupesHtml()}</div>
+
       <h2 class="sec">${L('امنیت و نگهداری', 'Security and upkeep')}</h2>
       <div class="ops">
         <div class="box"><span class="tag">${L('کلیدها', 'Keys')}</span><h3>Oracle Vault</h3><p>${L('هر کلید یک secret جدا · فقط همین فهرست خوانده می‌شود · سرور فقط اجازه‌ی خواندن دارد', 'One secret per key · only this list is read · the server can only read')}</p></div>
@@ -250,7 +265,10 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
     };
   }
   async function load() {
-    try { D = await api('system'); render(); }
+    try {
+      D = await api('system'); render();
+      if (!DUP || DUP.pending) api('ragdupes').then(x => { DUP = x; render(); }).catch(() => {});
+    }
     catch (e) { if (e.message !== 'sign in') $app.innerHTML = `<p class="lead">${L('خطا', 'Error')}: ${esc(e.message)}</p>`; }
   }
   load();

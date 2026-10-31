@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 
 import type { Attempt, Item } from '@/lib/bank';
+import { api } from '@/lib/api';
 import { PROVE_PICS } from '@/lib/config';
 import { RTL } from '@/lib/i18n';
 import { faNum, fmtDate, isExamMode, isFull, passMin, scoreOf, shuffle } from '@/lib/logic';
@@ -102,6 +103,18 @@ export default function Result() {
   const [fresh, setFresh] = useState(() => session.fresh);
   const n = a?.items.length ?? 0, right = a ? scoreOf(a) : 0, wrongN = n - right;
   const [filter, setFilter] = useState<Filter>(() => (fresh || wrongN ? 'wrong' : 'all'));
+  // «سؤال‌های مشابه» (Mojtaba 2026-10-31): after a test with mistakes, «آزمون جدید»'s questions closest in meaning to the
+  // ones answered wrongly (the server's rag.js similar), to practise the same points in other words. None when the
+  // server has no meaning vectors or is out of reach (the button is then not shown).
+  const [similar, setSimilar] = useState<number[]>([]);
+  const [justIn] = useState(fresh), wrongIds = a && justIn ? a.items.filter(it => !it.ok).map(it => it.id).join(',') : '';
+  useEffect(() => {
+    if (!wrongIds) return;
+    let live = true;
+    api<{ ids: number[] }>('POST', 'similar', { ids: wrongIds.split(',').map(Number) })
+      .then(r => { if (live) setSimilar((r.ids || []).filter(id => Q.has(id))); }).catch(() => {});
+    return () => { live = false; };
+  }, [wrongIds, Q]);
   const [k, setK] = useState(0);
   const [listOpen, setListOpen] = useState(false); // the sheet of the questions, from the glass bar
   const [headH, setHeadH] = useState(0); // the glass top bar's height, the review's top padding
@@ -210,6 +223,7 @@ export default function Result() {
 
   // ---- Just handed in: result card and the review list ----
   const retry = () => { session.plan = { mode: 'mistakes', ids: shuffle(a.items.filter(it => !it.ok).map(it => it.id)), title: 'تمرین اشتباهات' }; router.replace('/run'); };
+  const practiseSimilar = () => { tap(); session.plan = { mode: 'mistakes', ids: shuffle(similar), title: 'سؤال‌های مشابه' }; router.replace('/run'); };
   const li = isLesson && bank ? bank.tests.findIndex(t => t.id === a.lesson) : -1;
   const nextLesson = li >= 0 && bank && bank.tests[li + 1] ? bank.tests[li + 1] : null;
   const startNext = () => {
@@ -274,6 +288,7 @@ export default function Result() {
           <View style={{ width: '100%', gap: 10, marginTop: 4 }}>
             <Button label="بازبینی آزمون" icon="eye" onPress={reviewWrong} />
             {wrongN ? <Button kind="glass" label="تمرین اشتباهات" icon="refresh" onPress={retry} /> : null}
+            {similar.length ? <Button kind="glass" label={`سؤال‌های مشابه (${faNum(similar.length)})`} icon="sparkles" onPress={practiseSimilar} /> : null}
             {isLesson && nextLesson ? <Button kind="glass" label="درس بعدی" icon="arrowLeft" onPress={startNext} /> : null}
           </View>
         </Card>

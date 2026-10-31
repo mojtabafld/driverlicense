@@ -72,6 +72,19 @@ export async function aiTermPage(term: { da: string; en: string; fa: string; cat
   return r.id ? BY_ID.get(r.id) ?? null : null;
 }
 
+// «از مربی بپرس» (app/ask.tsx; Mojtaba 2026-10-31): the user's own question answered by the server's AI from the app's
+// own material (search.js ask, with rag.js), with up to 3 entries to read more; the talk's last turns go with it.
+// The catalogue as for aiTermPage (its hash, the catalogue itself when the server asks). Throws an ApiError (402: premium).
+export type AskTurn = { q: string; a: string; sources: SearchItem[] };
+export async function aiAsk(q: string, history: AskTurn[]): Promise<{ answer: string; sources: SearchItem[] }> {
+  const prev = history.slice(-3).map(t => ({ q: t.q, a: t.a }));
+  const ask = (full: boolean) => api<{ answer: string; sources: string[]; v: string }>('POST', 'ask', { q, ui: UI_LANG, history: prev, ...(full ? { catalog: AI_CATALOG } : { v: catalogV }) });
+  let r: { answer: string; sources: string[]; v: string };
+  try { r = await ask(!catalogV); } catch (e) { if (!(e instanceof ApiError) || e.status !== 409) throw e; r = await ask(true); }
+  catalogV = r.v;
+  return { answer: r.answer, sources: r.sources.map(id => BY_ID.get(id)).filter((x): x is SearchItem => !!x) };
+}
+
 // Persian / Arabic letters written alike, zero-width joiners, diacritics and Persian / Arabic digits made one form,
 // and letters folded to lower case without accents (ø, å and æ kept as Danish writes them), so «تابلو ایست»,
 // «تابلوي ايست» and «B13» / «b 13» all match.
