@@ -781,6 +781,13 @@ let lastKiePoll = 0;
 async function api(req, res, route) {
   const ip = clientIp(req);
   if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
+  // For the uptime check (.github/workflows/uptime.yml): the server answers and its database too.
+  if (req.method === 'GET' && route === 'health') {
+    let db = false;
+    try { db = store.exists ? (await Promise.race([store.exists('__health__'), new Promise((_, no) => setTimeout(() => no(new Error('slow')), 8e3))]), true) : true; } catch {}
+    const files = store.files ? await store.files.ready() : null;
+    return send(res, db ? 200 : 503, { ok: db, db, files, up: Math.round(process.uptime()), mem: Math.round(process.memoryUsage().rss / 1e6) });
+  }
   if (req.method === 'GET' && route === 'config') {
     return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, google: googleOn() || undefined, theme: defaultTheme(), version: VERSION, app: latestApp(), aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
@@ -1119,6 +1126,14 @@ async function api(req, res, route) {
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
   const user = s.user;
+  // The admin's backups (backup.js): the list, and one made now.
+  if (route === 'backups' || route === 'backupnow') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    try {
+      if (req.method === 'POST' && route === 'backupnow') return send(res, 200, { made: await require('./backup').backup(true), list: await require('./backup').list() });
+      if (req.method === 'GET' && route === 'backups') return send(res, 200, { list: await require('./backup').list(), bucket: !!store.files });
+    } catch (e) { console.error('backup', e.message); return send(res, 502, { error: e.message }); }
+  }
   await touch(user);
   // POST verifysend { email?, lang }: the confirmation link again, or to a new address (which then needs confirming).
   if (req.method === 'POST' && route === 'verifysend') {
@@ -2039,6 +2054,10 @@ async function api(req, res, route) {
 
 async function main() {
   store = await openStore({ dbFile: DB_FILE });
+  // The pictures and other files in Oracle Cloud Object Storage when OCI_BUCKET is set (objstore.js), and a daily
+  // backup of the database's data there (backup.js).
+  store = require('./objstore').wrap(store);
+  require('./backup').start(store);
   insights.init(store, dayKey);
   setNotes(store.meta.qNotes);
   // A deploy's first minutes, while the old server may still be answering (store.js catchUp).

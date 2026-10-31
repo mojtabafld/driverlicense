@@ -1,0 +1,25 @@
+# Uptime check (Mojtaba 2026-10-31): every 15 minutes the site's /api/health is asked, through Cloudflare as a visitor
+# would. When it does not answer, or its database does not, three times a minute apart, the run fails and GitHub
+# emails the repository's owner (Settings → Notifications → Actions: failed workflows). Server-side alarms (memory,
+# CPU) are set in Oracle Cloud's Monitoring (deploy/oracle/alarms.sh).
+name: Uptime
+
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: The site and its database answer
+        run: |
+          for i in 1 2 3; do
+            out=$(curl -sS --max-time 20 -w ' HTTP %{http_code}' https://teori.bitlane.app/api/health) && echo "$out" | grep -q '"db":true' && { echo "OK: $out"; exit 0; }
+            echo "Try $i failed: $out"; sleep 60
+          done
+          echo "::error::teori.bitlane.app does not answer (or its database does not)"; exit 1
