@@ -18,6 +18,7 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
+import { DailyTestsChart } from './daily-tests-chart';
 import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
 import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
@@ -203,6 +204,9 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         {dot(wrongTone, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {left ? dot(rest, `${tr('جواب‌نداده')} ${faNum(left)}`) : null}
       </View>
+      {/* The tests taken on each of the last seven days, under the counts (Mojtaba 2026-10-31); smaller on shorter
+          screens, left out on the shortest. */}
+      {level >= 4 ? null : <DailyTestsChart height={[130, 112, 96, 80][level] ?? 80} />}
       {/* (the pills under the counts of right, wrong and unanswered; Mojtaba 2026-10-30) */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         {done ? (
