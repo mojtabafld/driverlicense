@@ -102,6 +102,7 @@ const PRIVACY_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'privacy.html
 const DELETE_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'delete-account.html'));
 const ADMIN_HTML = fs.readFileSync(path.join(__dirname, 'console', 'admin.html'));
 const IMAGES_HTML = fs.readFileSync(path.join(__dirname, 'console', 'images.html'));
+const SYSTEM_HTML = fs.readFileSync(path.join(__dirname, 'console', 'system.html'));
 // The style each picture was last made in on the admin's picture page (its «سبک تصویر»), so the page opens on it again:
 // store.meta.picStyles = { ['newq:<id>' | 'course:<key>' | 'g:<key>']: style }.
 const PIC_STYLES = new Set(['flat', 'sim', 'realistic', 'semi', '3d', 'cartoon', 'signs']);
@@ -692,6 +693,11 @@ function serveStatic(req, res) {
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Robots-Tag': 'noindex', ...PAGE_HEADERS });
     return res.end(req.method === 'HEAD' ? undefined : IMAGES_HTML);
   }
+  // The admin's «سامانه» page: the architecture with the server's live numbers (console/system.html, /api/system).
+  if (p === '/admin/system') {
+    res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'X-Robots-Tag': 'noindex', ...PAGE_HEADERS });
+    return res.end(req.method === 'HEAD' ? undefined : SYSTEM_HTML);
+  }
   // The app's fixed copy with prove.dk's pictures at /app/.
   if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
   if (p.startsWith('/app/')) return serveAppWeb(req, res, p.slice(4), WEBS.app);
@@ -1132,6 +1138,20 @@ async function api(req, res, route) {
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
   const user = s.user;
+  // The «سامانه» page's numbers (console/system.html): the machine and the app over 24 hours (monitor.js), the sizes,
+  // the AI's use, RAG, the backups, the version running.
+  if (req.method === 'GET' && route === 'system') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    let head = '';
+    try { const h = fs.readFileSync(path.join(__dirname, '.git', 'HEAD'), 'utf8').trim(); head = h.startsWith('ref: ') ? fs.readFileSync(path.join(__dirname, '.git', h.slice(5)), 'utf8').trim() : h; } catch {}
+    const ai = require('./aigateway').report();
+    return send(res, 200, {
+      at: Date.now(), up: Math.round(process.uptime()), node: process.version, version: VERSION, commit: head.slice(0, 7),
+      users: Object.keys(store.users).length, storage: store.kind || 'file', files: store.files ? await store.files.ready() : null,
+      monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models },
+      rag: require('./rag').info(), backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
+    });
+  }
   // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
   if (req.method === 'GET' && route === 'aiusage') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
@@ -2070,6 +2090,8 @@ async function main() {
   store = require('./objstore').wrap(store);
   // Every Claude call's model, use, cost and the daily budget (aigateway.js).
   require('./aigateway').init(store);
+  // The machine's and the app's numbers, once a minute, for the «سامانه» page (monitor.js).
+  require('./monitor').start(store);
   require('./backup').start(store);
   insights.init(store, dayKey);
   setNotes(store.meta.qNotes);
