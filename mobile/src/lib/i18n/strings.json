@@ -75,6 +75,8 @@
 "همه جواب داده شد":["All answered", "Alle besvaret"],
 "{0} در ۷ روز گذشته":["{0} in the last 7 days", "{0} de sidste 7 dage"],
 "{0} آزمون":["{0} tests", "{0} prøver"],
+"آزمون‌های روزانه":["Daily tests", "Daglige prøver"],
+"میانگین {0} در روز":["Avg. {0} a day", "Gns. {0} om dagen"],
 "{0} سؤال":["{0} questions", "{0} spørgsmål"],
 "گرافیت":["Graphite","Grafit"],
 "۱۰۰":["100","100"],
