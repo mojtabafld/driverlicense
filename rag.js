@@ -22,7 +22,7 @@ const vecs = new Map();          // hash → Float32Array (normalised)
 const questions = [];            // { id: 'q:5001', text, h }
 const catalogs = new Map();      // catalogue version → { entries: [{ id, line, h }], ready }
 const queries = new Map();       // query text → Float32Array (the newest 500)
-let qReady = false, persisted = false;
+let qReady = false, persisted = false, kept = 0;
 
 const norm = v => { let s = 0; for (const x of v) s += x * x; s = Math.sqrt(s) || 1; const o = new Float32Array(v.length); for (let i = 0; i < v.length; i++) o[i] = v[i] / s; return o; };
 const dot = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
@@ -44,7 +44,7 @@ async function ensure(items) {
   if (!need.length) return;
   const made = await embed(need.map(x => x.text));
   const rows = need.map((x, i) => { vecs.set(x.h, made[i]); return { k: x.h, emb: made[i] }; });
-  if (persisted) await store.vectors.put(rows).catch(e => console.error('RAG: keep vectors', e.message));
+  if (persisted) await store.vectors.put(rows).then(() => { kept += rows.length; }, e => console.error('RAG: keep vectors', e.message));
 }
 
 async function init(s, siteDir) {
@@ -66,7 +66,7 @@ async function init(s, siteDir) {
       }
       await ensure(questions);
       qReady = true;
-      console.log(`RAG: ${questions.length} questions, ${vecs.size} vectors (${persisted ? 'kept in the database' : 'in memory'})`);
+      console.log(`RAG: ${questions.length} questions, ${vecs.size} vectors (${persisted ? `the database's VECTOR table, ${kept} new kept now` : 'in memory'})`);
     } catch (e) { console.error('RAG: questions not embedded:', e.message); }
   }, 60e3).unref();
 }

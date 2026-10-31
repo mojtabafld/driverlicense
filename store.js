@@ -275,6 +275,9 @@ async function openOracle(mem) {
         await this.table();
         const c = await pool.getConnection();
         try {
+          // (Autonomous Database writes in parallel, and a parallel MERGE cannot be followed by another in the same
+          // transaction: ORA-12838. This session's writes here run serially.)
+          await c.execute('ALTER SESSION DISABLE PARALLEL DML');
           await c.executeMany(`MERGE INTO tp_vectors t USING (SELECT :k AS k FROM dual) s ON (t.k = s.k)
              WHEN NOT MATCHED THEN INSERT (k, emb) VALUES (:k, :emb)`,
             list.map(x => ({ k: x.k, emb: x.emb })), { autoCommit: true, bindDefs: { k: { type: oracledb.STRING, maxSize: 64 }, emb: { type: oracledb.DB_TYPE_VECTOR } } });

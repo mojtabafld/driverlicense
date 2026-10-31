@@ -1,0 +1,46 @@
+# The capacity test (Mojtaba 2026-10-31): by hand only (Actions → Load test → Run workflow), at a quiet hour, as it
+# loads the live site. Needs the repository secret LOADTEST_TOKEN, the same value as the server's (the vault's
+# LOADTEST_TOKEN), so its requests, all from one address, pass the server's per-address limit. The result (requests,
+# failures, response times) is in the run's summary.
+name: Load test
+
+on:
+  workflow_dispatch:
+    inputs:
+      users:
+        description: "Visitors at once"
+        default: "1000"
+      minutes:
+        description: "Minutes in all (a third ramping up, half holding, the rest ramping down)"
+        default: "6"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: loadtest
+  cancel-in-progress: false
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: grafana/setup-k6-action@v1
+      - name: The token is set
+        env: { LOADTEST_TOKEN: "${{ secrets.LOADTEST_TOKEN }}" }
+        run: '[ ${#LOADTEST_TOKEN} -ge 16 ] || { echo "::error::Set the repository secret LOADTEST_TOKEN (16 characters or more), the same as the server''s"; exit 1; }'
+      - name: Run
+        env:
+          LOADTEST_TOKEN: ${{ secrets.LOADTEST_TOKEN }}
+          USERS: ${{ inputs.users }}
+          MINUTES: ${{ inputs.minutes }}
+        run: k6 run --summary-export summary.json loadtest/k6.js | tee k6.txt
+      - name: Summary
+        if: always()
+        run: |
+          { echo '## Load test: ${{ inputs.users }} visitors, ${{ inputs.minutes }} minutes'; echo '```'; sed -n '/checks/,$p' k6.txt | head -60; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: k6-result, path: "summary.json\nk6.txt" }
