@@ -527,6 +527,8 @@
 "اشتباه قبول می‌شوید.":["mistakes.","fejl."],
 "اشتباه قبول می‌شوید؛ این‌جا هم مثل آزمون واقعی، هر گزینه‌ی غلط یک اشتباه است.":["mistakes; here too, just like the real test, every wrong option counts as one mistake.","fejl; her tæller hver forkert svarmulighed også som én fejl, ligesom til den rigtige prøve."],
 "اشتباه می‌کنید؛ حد قبولی حداکثر":["mistakes; the pass mark is at most","fejl; grænsen for at bestå er højst"],
+"این گزینه درست است و باید انتخاب می‌شد.":["This option is correct and should have been selected.","Denne mulighed er rigtig og skulle have været valgt."],
+"این گزینه نادرست است و نباید انتخاب می‌شد.":["This option is incorrect and should not have been selected.","Denne mulighed er forkert og skulle ikke have været valgt."],
 "اشتباه؛ این گزینه درست است و باید انتخاب می‌شد.":["Wrong; this option is correct and should have been selected.","Forkert; denne mulighed er rigtig og skulle have været valgt."],
 "اشتباه؛ این گزینه نادرست است و نباید انتخاب می‌شد.":["Wrong; this option is incorrect and should not have been selected.","Forkert; denne mulighed er forkert og skulle ikke have været valgt."],
 "اشتباهات":["Mistakes","Fejl"],
