@@ -29,7 +29,13 @@ const NAME = /^[A-Z][A-Z0-9_]*$/;
   // the base alone (the server must not stay down for one of them)
   try {
     const base = (await vaults.getSecret({ secretId: id })).secret;
-    const own = (await vaults.listAllSecrets({ compartmentId: base.compartmentId, vaultId: base.vaultId }))
+    const all = [];
+    for (let page; ;) {
+      const r = await vaults.listSecrets({ compartmentId: base.compartmentId, vaultId: base.vaultId, limit: 100, page });
+      all.push(...r.items);
+      if (!(page = r.opcNextPage)) break;
+    }
+    const own = all
       .filter(s => s.id !== id && s.lifecycleState === 'ACTIVE' && NAME.test(s.secretName))
       .sort((a, b) => a.secretName.localeCompare(b.secretName));
     for (const s of own) {
