@@ -50,9 +50,15 @@ async function call(task, params, { stream = false } = {}) {
   if (budget() && !ADMIN_TASKS.has(task) && todayCost() >= budget()) throw Object.assign(new Error('سقف روزانه‌ی هوش مصنوعی پر شده است؛ فردا دوباره امتحان کنید.'), { status: 429 });
   client = client || new Anthropic({ timeout: 300e3, maxRetries: 2 });
   const model = process.env[`AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`] || params.model;
+  // Claude Haiku has no server-side refusal fallback: for it the callers' `fallbacks` and its beta are left out.
+  const req = { ...params, model };
+  if (/haiku/.test(model)) {
+    delete req.fallbacks;
+    if (req.betas) { req.betas = req.betas.filter(x => !/^server-side-fallback/.test(x)); if (!req.betas.length) delete req.betas; }
+  }
   const t0 = Date.now();
   try {
-    const res = stream ? await client.beta.messages.stream({ ...params, model }).finalMessage() : await client.beta.messages.create({ ...params, model });
+    const res = stream ? await client.beta.messages.stream(req).finalMessage() : await client.beta.messages.create(req);
     const u = res.usage || {}, [pi, po, pc] = priceOf(res.model || model);
     const e = { model: res.model || model, in: u.input_tokens || 0, out: u.output_tokens || 0, cacheRead: u.cache_read_input_tokens || 0, cacheWrite: u.cache_creation_input_tokens || 0 };
     e.usd = (e.in * pi + e.out * po + e.cacheRead * pc + e.cacheWrite * pi * 1.25) / 1e6;
