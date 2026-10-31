@@ -8,6 +8,8 @@
 // text: store.vectors), so a restart or a new catalogue version embeds only what is new; the search itself runs in
 // memory (a few thousand vectors, a few milliseconds). Without an OpenAI key, or until the vectors are made, the
 // search works as before (search.js).
+// The same vectors serve «از مربی بپرس» (search.js ask: a free question answered from the app's own material),
+// «سؤال‌های مشابه» after a test (similar) and the admin's list of questions that say nearly the same (duplicates).
 'use strict';
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -47,16 +49,18 @@ async function ensure(items) {
   if (persisted) await store.vectors.put(rows).then(() => { kept += rows.length; }, e => console.error('RAG: keep vectors', e.message));
 }
 
+// A question as it is embedded: its situation (English, or Danish), the Persian, and its statements with their answers.
+function qText(q) {
+  const st = (q.st || []).map(x => `- ${x.ok ? 'TRUE' : 'FALSE'}: ${x.en || x.da} — ${x.een || x.eda || ''}`).join('\n');
+  return `${q.sen || q.sda}\n${q.sfa || ''}\n${st}`.slice(0, 4000);
+}
+
 async function init(s, siteDir) {
   store = s;
   if (!key()) return;
   try {
     const js = fs.readFileSync(path.join(siteDir, 'newq.js'), 'utf8'), d = JSON.parse(js.slice(js.indexOf('=') + 1).trim().replace(/;$/, ''));
-    for (const q of d.questions) {
-      const st = (q.st || []).map(x => `- ${x.ok ? 'TRUE' : 'FALSE'}: ${x.en || x.da} — ${x.een || x.eda || ''}`).join('\n');
-      const text = `${q.sen || q.sda}\n${q.sfa || ''}\n${st}`.slice(0, 4000);
-      questions.push({ id: `q:${q.id}`, text, h: hash(text) });
-    }
+    for (const q of d.questions) { const text = qText(q); questions.push({ id: `q:${q.id}`, n: q.id, text, h: hash(text) }); }
   } catch (e) { console.error('RAG: questions', e.message); }
   setTimeout(async () => {
     try {
@@ -96,5 +100,36 @@ async function retrieve(q, v, { n = 20, m = 6 } = {}) {
   return { entries: scored.map(x => x.e), questions: qs.map(x => x.x) };
 }
 
+// «سؤال‌های مشابه» after a test (Mojtaba 2026-10-31): for the questions answered wrongly (any bank's; a question of the
+// older bank is embedded once, then kept like the others), «آزمون جدید»'s questions closest in meaning, `per` for each,
+// the closest first, at most `n` in all, without the questions given. [] until the questions' vectors are made.
+async function similar(qs, { n = 10, per = 3, min = 0.5 } = {}) {
+  if (!qReady || !qs.length) return [];
+  const src = qs.map(q => { const text = qText(q); return { id: q.id, text, h: hash(text) }; });
+  await ensure(src);
+  const skip = new Set(qs.map(q => q.id)), lists = src.map(x => {
+    const v = vecs.get(x.h);
+    return questions.filter(y => !skip.has(y.n)).map(y => ({ id: y.n, s: dot(v, vecs.get(y.h)) })).filter(y => y.s >= min).sort((a, b) => b.s - a.s).slice(0, per);
+  });
+  const out = [], seen = new Set();
+  for (let k = 0; k < per && out.length < n; k++) for (const l of lists) { const y = l[k]; if (y && !seen.has(y.id) && out.length < n) { seen.add(y.id); out.push(y.id); } }
+  return out;
+}
+
+// For the admin: «آزمون جدید»'s questions that say nearly the same (cosine ≥ `min`), the closest pairs first; worked out
+// once (about a second for 1,100 questions) and kept until the questions change.
+let dupes = null;
+function duplicates({ min = 0.93, max = 80 } = {}) {
+  if (!qReady) return null;
+  if (dupes && dupes.min === min) return dupes.out;
+  const V = questions.map(x => vecs.get(x.h)), pairs = [];
+  for (let i = 0; i < V.length; i++) for (let j = i + 1; j < V.length; j++) { const s = dot(V[i], V[j]); if (s >= min) pairs.push([i, j, s]); }
+  const first = t => t.split('\n')[0].slice(0, 220);
+  const list = pairs.sort((a, b) => b[2] - a[2]).slice(0, max)
+    .map(([i, j, s]) => ({ a: questions[i].n, b: questions[j].n, s: Math.round(s * 1000) / 1000, ta: first(questions[i].text), tb: first(questions[j].text) }));
+  dupes = { min, out: { total: pairs.length, list } };
+  return dupes.out;
+}
+
 const info = () => ({ model: MODEL, questions: qReady ? questions.length : 0, vectors: vecs.size, persisted, catalogs: [...catalogs].map(([v, c]) => ({ v, entries: c.entries.length, ready: c.ready })) });
-module.exports = { init, catalog, ready, retrieve, info };
+module.exports = { init, catalog, ready, retrieve, similar, duplicates, info };

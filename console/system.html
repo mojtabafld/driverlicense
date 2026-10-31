@@ -2,8 +2,9 @@
 <!-- The admin's «سامانه» page at /admin/system (Mojtaba 2026-10-31): the architecture page's picture of the system
      (scratchpad's «معماری تئوری‌پرو»), with the server's live numbers from /api/system: the machine's CPU, memory and
      network and the app's own over 24 hours (monitor.js), the disk, the files bucket and the database, the AI's use
-     today and over 14 days (aigateway.js), RAG (rag.js), the backups (backup.js), the version running. Read again
-     every minute. Signed in as an admin (the dashboard's sign-in); otherwise back to /admin. -->
+     today and over 14 days (aigateway.js), RAG (rag.js) and the new bank's near-duplicate questions, the backups (backup.js), the version running. Read again
+     every minute. In Persian or English (the «English / فارسی» button, kept in this browser). Signed in as an admin
+     (the dashboard's sign-in); otherwise back to /admin. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -77,18 +78,27 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
 <script>
 (() => {
   const $app = document.getElementById('app');
+  // The language (Mojtaba 2026-10-31): Persian or English, the «English / فارسی» button; kept in this browser.
+  let lang = 'fa';
+  try { if (localStorage.getItem('sysLang') === 'en') lang = 'en'; } catch {}
+  const L = (f, e) => (lang === 'en' ? e : f);
+  function setLang() {
+    document.documentElement.lang = lang; document.documentElement.dir = L('rtl', 'ltr');
+    document.title = `Teoripro · ${L('سامانه', 'System')}`;
+  }
+  setLang();
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const fa = n => Number(n).toLocaleString('fa-IR');
+  const fa = n => Number(n).toLocaleString(L('fa-IR', 'en-US'));
   const mb = b => b == null ? '–' : b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${(b / 1e6).toFixed(1)} MB`;
   const pct = (a, b) => (a && b ? Math.round(a / b * 1000) / 10 : 0);
   const usd = v => `$${(+v || 0).toFixed((+v || 0) < 1 ? 3 : 2)}`;
   const hhmm = t => new Date(t).toLocaleTimeString('en-GB', { timeZone: 'Europe/Copenhagen', hour: '2-digit', minute: '2-digit' });
-  const dur = s => s < 3600 ? `${fa(Math.round(s / 60))} دقیقه` : s < 86400 ? `${fa(Math.round(s / 3600))} ساعت` : `${fa(Math.round(s / 86400))} روز`;
+  const dur = s => s < 3600 ? `${fa(Math.round(s / 60))} ${L('دقیقه', 'min')}` : s < 86400 ? `${fa(Math.round(s / 3600))} ${L('ساعت', 'h')}` : `${fa(Math.round(s / 86400))} ${L('روز', 'days')}`;
   async function api(route) {
     const r = await fetch('/api/' + route, { credentials: 'same-origin' });
     if (r.status === 401 || r.status === 403) { location.href = '/admin'; throw new Error('sign in'); }
     const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.error || 'خطا');
+    if (!r.ok) throw new Error(d.error || L('خطا', 'Error'));
     return d;
   }
 
@@ -97,16 +107,16 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
   const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
   const nice = m => [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 5000, 10000].find(x => m <= x) || Math.ceil(m / 1e4) * 1e4;
   function draw(box, series, unit, fixedTop) {
-    const W = box.clientWidth || 320, H = box.clientHeight || 120, L = 40, R = 6, T = 6, B = 18;
+    const W = box.clientWidth || 320, H = box.clientHeight || 120, L0 = 40, R = 6, T = 6, B = 18;
     const n = series[0].data.length;
-    if (n < 2) { box.innerHTML = '<p class="note" style="text-align:center;padding-top:40px">داده‌ی کافی هنوز جمع نشده؛ سرور هر دقیقه یک نمونه ثبت می‌کند.</p>'; return; }
+    if (n < 2) { box.innerHTML = `<p class="note" style="text-align:center;padding-top:40px">${L('داده‌ی کافی هنوز جمع نشده؛ سرور هر دقیقه یک نمونه ثبت می‌کند.', 'Not enough data yet; the server records a sample every minute.')}</p>`; return; }
     const max = fixedTop || nice(Math.max(1, ...series.flatMap(s => s.data.map(p => p[1]))));
     const t0 = series[0].data[0][0], t1 = series[0].data[n - 1][0];
-    const x = t => L + (W - L - R) * (t - t0) / Math.max(1, t1 - t0), y = v => T + (H - T - B) * (1 - Math.min(v, max) / max);
+    const x = t => L0 + (W - L0 - R) * (t - t0) / Math.max(1, t1 - t0), y = v => T + (H - T - B) * (1 - Math.min(v, max) / max);
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img' });
     [0, max / 2, max].forEach(v => {
-      svg.appendChild(el('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: 'var(--line)', 'stroke-dasharray': v ? '3 4' : '' }));
-      const t = el('text', { x: L - 6, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 10.5, fill: 'var(--muted)', 'font-family': 'JetBrains Mono, monospace' });
+      svg.appendChild(el('line', { x1: L0, x2: W - R, y1: y(v), y2: y(v), stroke: 'var(--line)', 'stroke-dasharray': v ? '3 4' : '' }));
+      const t = el('text', { x: L0 - 6, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 10.5, fill: 'var(--muted)', 'font-family': 'JetBrains Mono, monospace' });
       t.textContent = unit === 'k' ? (v >= 1000 ? `${v / 1000}M` : `${v}k`) : `${v}${unit}`; svg.appendChild(t);
     });
     for (let i = 0; i < 5; i++) {
@@ -124,6 +134,18 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
   const f1 = v => (Math.round(v * 10) / 10).toString();
   const meter = (label, used, total, text) => `<div class="bar"><div class="row"><span>${label}</span><span>${text} · ${pct(used, total)}%</span></div><div class="meter"><i style="width:${Math.max(0.5, Math.min(100, pct(used, total)))}%"></i></div></div>`;
 
+  // «آزمون جدید»'s questions that say nearly the same (rag.js duplicates; /api/ragdupes), asked for once with the page.
+  let DUP = null;
+  function dupesHtml() {
+    if (!DUP) return `<p class="note">${L('در حال بررسی…', 'Checking…')}</p>`;
+    if (DUP.pending) return `<p class="note">${L('بردارهای معنایی سؤال‌ها هنوز آماده نیست.', "The questions' meaning vectors are not ready yet.")}</p>`;
+    if (!DUP.list.length) return `<p class="note">${L('هیچ دو سؤالی تقریباً یکسان نیستند.', 'No two questions are nearly the same.')}</p>`;
+    return `<div class="mhead"><h3>${L(`${fa(DUP.total)} جفت با شباهت ۹۳٪ یا بیشتر`, `${fa(DUP.total)} pairs at 93% similarity or more`)}</h3><span class="mstat">${L('شبیه‌ترین‌ها اول', 'closest first')}</span></div>
+      <div class="tblw" style="border:0;padding:0"><table><thead><tr><th>${L('شباهت', 'Similarity')}</th><th>${L('سؤال', 'Question')}</th><th>${L('سؤال مشابه', 'Similar question')}</th></tr></thead><tbody>
+      ${DUP.list.slice(0, 25).map(x => `<tr><td class="num">${Math.round(x.s * 100)}%</td><td><span class="num">#${x.a}</span> <span dir="auto">${esc(x.ta)}</span></td><td><span class="num">#${x.b}</span> <span dir="auto">${esc(x.tb)}</span></td></tr>`).join('')}
+      </tbody></table></div>${DUP.list.length > 25 ? `<p class="note">${L(`و ${fa(DUP.list.length - 25)} جفت دیگر.`, `and ${fa(DUP.list.length - 25)} more pairs.`)}</p>` : ''}`;
+  }
+
   let D = null;
   function render() {
     const d = D, m = d.monitor, pts = m.points || [], s = m.sizes || {}, host = m.host || {};
@@ -131,101 +153,104 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
     const rss = pts.length ? pts[pts.length - 1].rss : null, ai = d.ai || {}, today = ai.today || { tasks: {} }, rag = d.rag || {};
     const ragReady = (rag.catalogs || []).some(c => c.ready);
     $app.innerHTML = `
-      <div class="top"><h1>سامانه</h1><a class="btn" href="/admin">داشبورد</a><a class="btn" href="/admin/images">ایجاد تصاویر</a><button class="btn" id="re">تازه کردن</button></div>
-      <p class="lead">معماری تئوری‌پرو با اعداد زنده‌ی سرور؛ هر دقیقه خودکار تازه می‌شود (آخرین: ${esc(hhmm(d.at))}).</p>
+      <div class="top"><h1>${L('سامانه', 'System')}</h1><button class="btn" id="lg" lang="${L('en', 'fa')}">${L('English', 'فارسی')}</button><a class="btn" href="/admin">${L('داشبورد', 'Dashboard')}</a><a class="btn" href="/admin/images">${L('ایجاد تصاویر', 'Pictures')}</a><button class="btn" id="re">${L('تازه کردن', 'Refresh')}</button></div>
+      <p class="lead">${L('معماری تئوری‌پرو با اعداد زنده‌ی سرور؛ هر دقیقه خودکار تازه می‌شود', "Teoripro's architecture with the server's live numbers; refreshed every minute")} (${L('آخرین', 'last')}: ${esc(hhmm(d.at))}).</p>
       <div class="pills">
-        <span class="pill ok">سرور سالم</span>
-        <span class="pill ${d.storage === 'oracle' ? 'ok' : 'bad'}">پایگاه داده: ${d.storage === 'oracle' ? 'Oracle' : esc(d.storage)}</span>
-        <span class="pill ${d.files ? 'ok' : 'bad'}">Object Storage ${d.files ? 'وصل' : 'وصل نیست'}</span>
-        <span class="pill">بالا از ${dur(d.up)} پیش</span>
-        <span class="pill">نسخه <span class="num">${esc(d.commit || d.version || '–')}</span></span>
+        <span class="pill ok">${L('سرور سالم', 'Server healthy')}</span>
+        <span class="pill ${d.storage === 'oracle' ? 'ok' : 'bad'}">${L('پایگاه داده', 'Database')}: ${d.storage === 'oracle' ? 'Oracle' : esc(d.storage)}</span>
+        <span class="pill ${d.files ? 'ok' : 'bad'}">Object Storage ${d.files ? L('وصل', 'connected') : L('وصل نیست', 'not connected')}</span>
+        <span class="pill">${L(`بالا از ${dur(d.up)} پیش`, `Up for ${dur(d.up)}`)}</span>
+        <span class="pill">${L('نسخه', 'Version')} <span class="num">${esc(d.commit || d.version || '–')}</span></span>
         <span class="pill">Node <span class="num">${esc(d.node)}</span></span>
       </div>
 
-      <div class="box users"><h3>کاربران برنامه</h3><p>سایت · اپ اندروید (گوگل پلی) · <span class="num">${fa(d.users)}</span> حساب</p></div>
+      <div class="box users"><h3>${L('کاربران برنامه', 'App users')}</h3><p>${L('سایت · اپ اندروید (گوگل پلی)', 'Website · Android app (Google Play)')} · <span class="num">${fa(d.users)}</span> ${L('حساب', 'accounts')}</p></div>
       <div class="arrow">↓</div>
-      <div class="box"><h3>Cloudflare</h3><p>دامنه · تونل امن به سرور · گواهی SSL · کش و محافظت</p></div>
+      <div class="box"><h3>Cloudflare</h3><p>${L('دامنه · تونل امن به سرور · گواهی SSL · کش و محافظت', 'Domain · secure tunnel to the server · SSL certificate · caching and protection')}</p></div>
       <div class="arrow">↓</div>
       <section class="server">
         <header><h2>Oracle Ampere A1 · ampere-lab</h2><span class="chip">${fa(host.cpus || 2)} OCPU · ${mb(host.memory)}</span></header>
         <div class="grid">
-          <div class="cell"><h4>بخش سرور (Node.js)</h4><p>ورود، آزمون‌ها، پرداخت، اخبار، ساخت تصاویر · حافظه‌ی فعلی <span class="num">${rss != null ? rss + ' MB' : '–'}</span></p></div>
-          <div class="cell"><h4>سایت و پنل ادمین</h4><p>نسخه‌ی وب برنامه · ایجاد تصاویر · داشبورد · همین صفحه</p></div>
-          <div class="cell"><h4>کارهای پس‌زمینه</h4><p>ساخت تصویر · پشتیبان شبانه · ثبت آمار هر دقیقه</p></div>
-          <div class="cell"><h4>محافظ systemd</h4><p>حافظه‌ی رزرو و سقف <span class="num">3 GB</span> · اولویت پردازنده · فقط‌خواندنی جز پوشه‌ی داده</p></div>
+          <div class="cell"><h4>${L('بخش سرور (Node.js)', 'Server (Node.js)')}</h4><p>${L('ورود، آزمون‌ها، پرداخت، اخبار، ساخت تصاویر · حافظه‌ی فعلی', 'Sign-in, tests, payments, news, pictures · memory now')} <span class="num">${rss != null ? rss + ' MB' : '–'}</span></p></div>
+          <div class="cell"><h4>${L('سایت و پنل ادمین', 'Website and admin panel')}</h4><p>${L('نسخه‌ی وب برنامه · ایجاد تصاویر · داشبورد · همین صفحه', 'The web app · pictures · dashboard · this page')}</p></div>
+          <div class="cell"><h4>${L('کارهای پس‌زمینه', 'Background jobs')}</h4><p>${L('ساخت تصویر · پشتیبان شبانه · ثبت آمار هر دقیقه', 'Picture making · nightly backup · stats every minute')}</p></div>
+          <div class="cell"><h4>${L('محافظ systemd', 'systemd guard')}</h4><p>${L('حافظه‌ی رزرو و سقف', 'Reserved memory, limit')} <span class="num">3 GB</span> · ${L('اولویت پردازنده · فقط‌خواندنی جز پوشه‌ی داده', 'CPU priority · read-only except the data folder')}</p></div>
         </div>
       </section>
       <div class="arrow">⇅</div>
       <div class="two">
-        <div class="box"><h3>Object Storage</h3><p>تصاویر · نسخه‌های پشتیبان</p><p class="num" style="margin-top:6px">${s.bucket ? `${fa(s.bucket.files)} files · ${mb(s.bucket.bytes)}` : '–'}</p></div>
-        <div class="box"><h3>Autonomous Database</h3><p>حساب‌ها · آزمون‌ها · بردارهای RAG</p><p class="num" style="margin-top:6px">${mb(s.db)}</p></div>
+        <div class="box"><h3>Object Storage</h3><p>${L('تصاویر · نسخه‌های پشتیبان', 'Pictures · backups')}</p><p class="num" style="margin-top:6px">${s.bucket ? `${fa(s.bucket.files)} files · ${mb(s.bucket.bytes)}` : '–'}</p></div>
+        <div class="box"><h3>Autonomous Database</h3><p>${L('حساب‌ها · آزمون‌ها · بردارهای RAG', 'Accounts · tests · RAG vectors')}</p><p class="num" style="margin-top:6px">${mb(s.db)}</p></div>
       </div>
       <div class="arrow">⇅</div>
-      <div class="box ai"><h3>AI Gateway</h3><p>امروز <span class="num">${usd(today.usd)}</span>${ai.budget ? ` از سقف <span class="num">${usd(ai.budget)}</span>` : ''} · ${fa(today.n || 0)} درخواست${today.fail ? ` · ${fa(today.fail)} ناموفق` : ''}</p>
-        <p>${Object.keys(ai.models || {}).length ? 'مدل‌ها: ' + Object.entries(ai.models).map(([k, v]) => `<span class="num">${esc(k.slice(9).toLowerCase())} → ${esc(v)}</span>`).join(' · ') : 'همه‌ی بخش‌ها روی مدل پیش‌فرض (Opus)'}</p></div>
+      <div class="box ai"><h3>AI Gateway</h3><p>${L('امروز', 'Today')} <span class="num">${usd(today.usd)}</span>${ai.budget ? ` ${L('از سقف', 'of the')} <span class="num">${usd(ai.budget)}</span>${L('', ' limit')}` : ''} · ${fa(today.n || 0)} ${L('درخواست', 'requests')}${today.fail ? ` · ${fa(today.fail)} ${L('ناموفق', 'failed')}` : ''}</p>
+        <p>${Object.keys(ai.models || {}).length ? L('مدل‌ها: ', 'Models: ') + Object.entries(ai.models).map(([k, v]) => `<span class="num">${esc(k.slice(9).toLowerCase())} → ${esc(v)}</span>`).join(' · ') : L('همه‌ی بخش‌ها روی مدل پیش‌فرض (Opus)', 'Every part on the default model (Opus)')}</p></div>
 
-      <h2 class="sec">پایش ۲۴ ساعت اخیر</h2>
-      <p class="note">${pts.length ? `${fa(pts.length)} نمونه، هر دقیقه یکی، به وقت کپنهاگ.` : 'سرور تازه آغاز به ثبت کرده است.'}</p>
+      <h2 class="sec">${L('پایش ۲۴ ساعت اخیر', 'Monitoring, last 24 hours')}</h2>
+      <p class="note">${pts.length ? L(`${fa(pts.length)} نمونه، هر دقیقه یکی، به وقت کپنهاگ.`, `${fa(pts.length)} samples, one a minute, Copenhagen time.`) : L('سرور تازه آغاز به ثبت کرده است.', 'The server has just started recording.')}</p>
       <div class="two">
-        <div class="mcard"><div class="mhead"><h3>پردازنده</h3><span class="mstat">الان <b>${f1(cpu.last)}%</b> · میانگین <b>${f1(cpu.avg)}%</b> · بیشینه <b>${f1(cpu.max)}%</b></span></div>
-          <div class="chart" data-c="cpu"></div><div class="legend"><span><i style="background:var(--accent)"></i>کل ماشین</span><span><i style="background:var(--c2)"></i>خود برنامه (٪ یک هسته، الان ${f1(app.last)})</span></div></div>
-        <div class="mcard"><div class="mhead"><h3>حافظه</h3><span class="mstat">الان <b>${f1(mem.last)}%</b> · بیشینه <b>${f1(mem.max)}%</b> از <b>${mb(host.memory)}</b></span></div>
+        <div class="mcard"><div class="mhead"><h3>${L('پردازنده', 'CPU')}</h3><span class="mstat">${L('الان', 'now')} <b>${f1(cpu.last)}%</b> · ${L('میانگین', 'avg')} <b>${f1(cpu.avg)}%</b> · ${L('بیشینه', 'max')} <b>${f1(cpu.max)}%</b></span></div>
+          <div class="chart" data-c="cpu"></div><div class="legend"><span><i style="background:var(--accent)"></i>${L('کل ماشین', 'Whole machine')}</span><span><i style="background:var(--c2)"></i>${L(`خود برنامه (٪ یک هسته، الان ${f1(app.last)})`, `The app (% of one core, now ${f1(app.last)})`)}</span></div></div>
+        <div class="mcard"><div class="mhead"><h3>${L('حافظه', 'Memory')}</h3><span class="mstat">${L('الان', 'now')} <b>${f1(mem.last)}%</b> · ${L('بیشینه', 'max')} <b>${f1(mem.max)}%</b> ${L('از', 'of')} <b>${mb(host.memory)}</b></span></div>
           <div class="chart" data-c="mem"></div></div>
-        <div class="mcard wide"><div class="mhead"><h3>شبکه</h3><span class="mstat">دریافت: میانگین <b>${f1(rx.avg)} kB/s</b> · بیشینه <b>${f1(rx.max)} kB/s</b> · ارسال: میانگین <b>${f1(tx.avg)} kB/s</b></span></div>
-          <div class="chart" data-c="net"></div><div class="legend"><span><i style="background:var(--accent)"></i>دریافت</span><span><i style="background:var(--c2)"></i>ارسال</span></div></div>
-        <div class="mcard wide"><div class="mhead"><h3>فضای ذخیره</h3><span class="mstat">${s.at ? 'اندازه‌گیری ' + esc(hhmm(s.at)) : ''}</span></div>
+        <div class="mcard wide"><div class="mhead"><h3>${L('شبکه', 'Network')}</h3><span class="mstat">${L('دریافت', 'In')}: ${L('میانگین', 'avg')} <b>${f1(rx.avg)} kB/s</b> · ${L('بیشینه', 'max')} <b>${f1(rx.max)} kB/s</b> · ${L('ارسال', 'Out')}: ${L('میانگین', 'avg')} <b>${f1(tx.avg)} kB/s</b></span></div>
+          <div class="chart" data-c="net"></div><div class="legend"><span><i style="background:var(--accent)"></i>${L('دریافت', 'In')}</span><span><i style="background:var(--c2)"></i>${L('ارسال', 'Out')}</span></div></div>
+        <div class="mcard wide"><div class="mhead"><h3>${L('فضای ذخیره', 'Storage')}</h3><span class="mstat">${s.at ? L('اندازه‌گیری', 'Measured') + ' ' + esc(hhmm(s.at)) : ''}</span></div>
           <div class="bars">
-            ${s.disk ? meter('دیسک سرور', s.disk.used, s.disk.total, `${mb(s.disk.used)} / ${mb(s.disk.total)}`) : ''}
+            ${s.disk ? meter(L('دیسک سرور', 'Server disk'), s.disk.used, s.disk.total, `${mb(s.disk.used)} / ${mb(s.disk.total)}`) : ''}
             ${s.bucket ? meter('Object Storage', s.bucket.bytes, 20e9, `${mb(s.bucket.bytes)} / 20 GB`) : ''}
             ${s.db ? meter('Autonomous Database', s.db, 20e9, `${mb(s.db)} / 20 GB`) : ''}
           </div></div>
       </div>
 
-      <h2 class="sec">هوش مصنوعی</h2>
+      <h2 class="sec">${L('هوش مصنوعی', 'AI')}</h2>
       <div class="two">
-        <div class="mcard"><div class="mhead"><h3>امروز به تفکیک بخش</h3><span class="mstat"><b>${usd(today.usd)}</b></span></div>
-          ${Object.keys(today.tasks).length ? `<table>${Object.entries(today.tasks).sort((a, b) => b[1].usd - a[1].usd).map(([k, x]) => `<tr><td>${esc(k)}</td><td>${fa(x.n)}${x.fail ? ` (${fa(x.fail)} ✕)` : ''}</td><td class="num">${x.in || x.out ? usd(x.usd) : '—'}</td></tr>`).join('')}</table>` : '<p class="note">امروز هنوز درخواستی نبوده است.</p>'}</div>
-        <div class="mcard"><div class="mhead"><h3>۱۴ روز اخیر</h3><span class="mstat">جمع <b>${usd((ai.days || []).reduce((a, x) => a + x.usd, 0))}</b></span></div>
-          <div style="display:flex;align-items:flex-end;gap:3px;height:90px;direction:ltr">${(ai.days || []).map(x => { const mx = Math.max(0.0001, ...(ai.days || []).map(y => y.usd)); return `<div title="${esc(x.day)}: ${usd(x.usd)}" style="flex:1;min-width:4px;height:${Math.max(2, Math.round(x.usd / mx * 86))}px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.85"></div>`; }).join('') || '<p class="note">داده‌ای نیست.</p>'}</div></div>
-        <div class="mcard"><div class="mhead"><h3>RAG (جستجوی معنایی)</h3><span class="pill ${ragReady ? 'ok' : ''}">${ragReady ? 'فعال' : 'در انتظار فهرست درس‌ها'}</span></div>
-          <p class="note">${fa(rag.questions || 0)} سؤال · ${fa(rag.vectors || 0)} بردار ${rag.persisted ? 'در ستون VECTOR اوراکل' : 'در حافظه'} · مدل <span class="num">${esc(rag.model || '–')}</span></p></div>
-        <div class="mcard"><div class="mhead"><h3>پشتیبان‌ها</h3><span class="mstat">${fa((d.backups || []).length)} نسخه</span></div>
-          ${(d.backups || []).length ? `<table>${d.backups.slice(0, 5).map(b => `<tr><td class="num">${esc(b.name)}</td><td class="num">${(b.size / 1e3).toFixed(0)} kB</td></tr>`).join('')}</table>` : '<p class="note">هنوز پشتیبانی نیست.</p>'}</div>
+        <div class="mcard"><div class="mhead"><h3>${L('امروز به تفکیک بخش', 'Today by part')}</h3><span class="mstat"><b>${usd(today.usd)}</b></span></div>
+          ${Object.keys(today.tasks).length ? `<table>${Object.entries(today.tasks).sort((a, b) => b[1].usd - a[1].usd).map(([k, x]) => `<tr><td>${esc(k)}</td><td>${fa(x.n)}${x.fail ? ` (${fa(x.fail)} ✕)` : ''}</td><td class="num">${x.in || x.out ? usd(x.usd) : '—'}</td></tr>`).join('')}</table>` : `<p class="note">${L('امروز هنوز درخواستی نبوده است.', 'No requests yet today.')}</p>`}</div>
+        <div class="mcard"><div class="mhead"><h3>${L('۱۴ روز اخیر', 'Last 14 days')}</h3><span class="mstat">${L('جمع', 'Total')} <b>${usd((ai.days || []).reduce((a, x) => a + x.usd, 0))}</b></span></div>
+          <div style="display:flex;align-items:flex-end;gap:3px;height:90px;direction:ltr">${(ai.days || []).map(x => { const mx = Math.max(0.0001, ...(ai.days || []).map(y => y.usd)); return `<div title="${esc(x.day)}: ${usd(x.usd)}" style="flex:1;min-width:4px;height:${Math.max(2, Math.round(x.usd / mx * 86))}px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.85"></div>`; }).join('') || `<p class="note">${L('داده‌ای نیست.', 'No data.')}</p>`}</div></div>
+        <div class="mcard"><div class="mhead"><h3>${L('RAG (جستجوی معنایی)', 'RAG (semantic search)')}</h3><span class="pill ${ragReady ? 'ok' : ''}">${ragReady ? L('فعال', 'Active') : L('در انتظار فهرست درس‌ها', 'Waiting for the catalogue')}</span></div>
+          <p class="note">${fa(rag.questions || 0)} ${L('سؤال', 'questions')} · ${fa(rag.vectors || 0)} ${L('بردار', 'vectors')} ${rag.persisted ? L('در ستون VECTOR اوراکل', "in Oracle's VECTOR column") : L('در حافظه', 'in memory')} · ${L('مدل', 'model')} <span class="num">${esc(rag.model || '–')}</span></p></div>
+        <div class="mcard"><div class="mhead"><h3>${L('پشتیبان‌ها', 'Backups')}</h3><span class="mstat">${fa((d.backups || []).length)} ${L('نسخه', 'copies')}</span></div>
+          ${(d.backups || []).length ? `<table>${d.backups.slice(0, 5).map(b => `<tr><td class="num">${esc(b.name)}</td><td class="num">${(b.size / 1e3).toFixed(0)} kB</td></tr>`).join('')}</table>` : `<p class="note">${L('هنوز پشتیبانی نیست.', 'No backups yet.')}</p>`}</div>
       </div>
 
-      <h2 class="sec">امنیت و نگهداری</h2>
+      <h2 class="sec">${L('سؤال‌های تکراری در بانک «آزمون جدید»', 'Near-duplicate questions in the new bank')}</h2>
+      <div class="mcard">${dupesHtml()}</div>
+
+      <h2 class="sec">${L('امنیت و نگهداری', 'Security and upkeep')}</h2>
       <div class="ops">
-        <div class="box"><span class="tag">کلیدها</span><h3>Oracle Vault</h3><p>هر کلید یک secret جدا · فقط همین فهرست خوانده می‌شود · سرور فقط اجازه‌ی خواندن دارد</p></div>
-        <div class="box"><span class="tag">پشتیبان</span><h3>پشتیبان شبانه</h3><p>هر شب بعد از ساعت ۳ در Object Storage · ۱۴ نسخه‌ی آخر</p></div>
-        <div class="box"><span class="tag">پایش</span><h3>هشدارها</h3><p>گیت‌هاب هر ۱۵ دقیقه سایت را بررسی می‌کند · اوراکل برای حافظه، پردازنده و قطعی ایمیل می‌فرستد</p></div>
-        <div class="box"><span class="tag">انتشار</span><h3>CI/CD با GitHub</h3><p>هر تغییر پیش از ادغام آزمایش می‌شود · نسخه‌ای که بالا نیاید خودکار برمی‌گردد</p></div>
+        <div class="box"><span class="tag">${L('کلیدها', 'Keys')}</span><h3>Oracle Vault</h3><p>${L('هر کلید یک secret جدا · فقط همین فهرست خوانده می‌شود · سرور فقط اجازه‌ی خواندن دارد', 'One secret per key · only this list is read · the server can only read')}</p></div>
+        <div class="box"><span class="tag">${L('پشتیبان', 'Backup')}</span><h3>${L('پشتیبان شبانه', 'Nightly backup')}</h3><p>${L('هر شب بعد از ساعت ۳ در Object Storage · ۱۴ نسخه‌ی آخر', 'Every night after 3:00 to Object Storage · the last 14 kept')}</p></div>
+        <div class="box"><span class="tag">${L('پایش', 'Monitoring')}</span><h3>${L('هشدارها', 'Alerts')}</h3><p>${L('گیت‌هاب هر ۱۵ دقیقه سایت را بررسی می‌کند · اوراکل برای حافظه، پردازنده و قطعی ایمیل می‌فرستد', 'GitHub checks the site every 15 minutes · Oracle emails on memory, CPU and outages')}</p></div>
+        <div class="box"><span class="tag">${L('انتشار', 'Release')}</span><h3>${L('CI/CD با GitHub', 'CI/CD with GitHub')}</h3><p>${L('هر تغییر پیش از ادغام آزمایش می‌شود · نسخه‌ای که بالا نیاید خودکار برمی‌گردد', 'Every change is tested before merging · a version that does not start is rolled back')}</p></div>
       </div>
 
-      <h2 class="sec">آزمون ظرفیت: ۱۰۰۰ کاربر همزمان (۳۱ اکتبر)</h2>
+      <h2 class="sec">${L('آزمون ظرفیت: ۱۰۰۰ کاربر همزمان (۳۱ اکتبر)', 'Capacity test: 1,000 concurrent users (31 October)')}</h2>
       <div class="kpis">
-        <div class="kpi"><b>0%</b><span>خطا</span></div>
-        <div class="kpi"><b>128,632</b><span>درخواست · حدود ۳۵۰ در ثانیه</span></div>
-        <div class="kpi"><b>129–185 ms</b><span>زمان پاسخ ۹۵٪</span></div>
-        <div class="kpi"><b>220 MB</b><span>بیشینه‌ی حافظه‌ی برنامه</span></div>
+        <div class="kpi"><b>0%</b><span>${L('خطا', 'errors')}</span></div>
+        <div class="kpi"><b>128,632</b><span>${L('درخواست · حدود ۳۵۰ در ثانیه', 'requests · about 350 a second')}</span></div>
+        <div class="kpi"><b>129–185 ms</b><span>${L('زمان پاسخ ۹۵٪', '95th percentile response')}</span></div>
+        <div class="kpi"><b>220 MB</b><span>${L('بیشینه‌ی حافظه‌ی برنامه', "the app's peak memory")}</span></div>
       </div>
 
-      <h2 class="sec">تصمیم‌های معماری</h2>
+      <h2 class="sec">${L('تصمیم‌های معماری', 'Architecture decisions')}</h2>
       <div class="ops">
-        <div class="box"><span class="tag">RAG</span><h3>جستجوی معنایی</h3><p>برای هر جستجو فقط ۲۰ بخش مرتبط و ۶ سؤال به Claude می‌رود، نه کل فهرست</p></div>
-        <div class="box"><span class="tag">Redis</span><h3>فعلاً لازم نیست</h3><p>با سرور دوم یا مصرف پایدار بالای ۷۰٪ یک هسته دوباره بررسی می‌شود</p></div>
-        <div class="box wide"><span class="tag">NestJS</span><h3>بازنویسی نمی‌شود</h3><p>همه‌ی قابلیت‌ها روی همین سرور Node.js ساخته شد و آزمون ظرفیت گلوگاهی نشان نداد</p></div>
+        <div class="box"><span class="tag">RAG</span><h3>${L('جستجوی معنایی', 'Semantic search')}</h3><p>${L('برای هر جستجو فقط ۲۰ بخش مرتبط و ۶ سؤال به Claude می‌رود، نه کل فهرست', 'Each search sends Claude only the 20 closest entries and 6 questions, not the whole catalogue')}</p></div>
+        <div class="box"><span class="tag">Redis</span><h3>${L('فعلاً لازم نیست', 'Not needed yet')}</h3><p>${L('با سرور دوم یا مصرف پایدار بالای ۷۰٪ یک هسته دوباره بررسی می‌شود', 'Revisited with a second server or sustained use above 70% of a core')}</p></div>
+        <div class="box wide"><span class="tag">NestJS</span><h3>${L('بازنویسی نمی‌شود', 'No rewrite')}</h3><p>${L('همه‌ی قابلیت‌ها روی همین سرور Node.js ساخته شد و آزمون ظرفیت گلوگاهی نشان نداد', 'Everything was built on the existing Node.js server, and the capacity test showed no bottleneck')}</p></div>
       </div>
 
-      <h2 class="sec">چه چیزی کجا ذخیره می‌شود</h2>
+      <h2 class="sec">${L('چه چیزی کجا ذخیره می‌شود', 'What is stored where')}</h2>
       <div class="tblw"><table>
-        <thead><tr><th>داده</th><th>محل</th></tr></thead>
+        <thead><tr><th>${L('داده', 'Data')}</th><th>${L('محل', 'Where')}</th></tr></thead>
         <tbody>
-          <tr><td>حساب‌ها، آزمون‌ها، نشان‌شده‌ها، تنظیمات</td><td>Autonomous Database</td></tr>
-          <tr><td>فهرست تصاویر، تصمیم‌های ادمین، اخبار، آمار سرور</td><td>Autonomous Database</td></tr>
-          <tr><td>بردارهای معنایی جستجو (RAG)، مصرف هوش مصنوعی</td><td>Autonomous Database</td></tr>
-          <tr><td>تصاویر و نسخه‌های پشتیبان</td><td>Object Storage</td></tr>
-          <tr><td>کلیدها و رمزها</td><td>Oracle Vault</td></tr>
-          <tr><td>سؤال‌ها و متن درس‌ها</td><td>کد برنامه در GitHub</td></tr>
+          <tr><td>${L('حساب‌ها، آزمون‌ها، نشان‌شده‌ها، تنظیمات', 'Accounts, tests, bookmarks, settings')}</td><td>Autonomous Database</td></tr>
+          <tr><td>${L('فهرست تصاویر، تصمیم‌های ادمین، اخبار، آمار سرور', "Picture list, the admin's decisions, news, server stats")}</td><td>Autonomous Database</td></tr>
+          <tr><td>${L('بردارهای معنایی جستجو (RAG)، مصرف هوش مصنوعی', 'Search meaning vectors (RAG), AI usage')}</td><td>Autonomous Database</td></tr>
+          <tr><td>${L('تصاویر و نسخه‌های پشتیبان', 'Pictures and backups')}</td><td>Object Storage</td></tr>
+          <tr><td>${L('کلیدها و رمزها', 'Keys and passwords')}</td><td>Oracle Vault</td></tr>
+          <tr><td>${L('سؤال‌ها و متن درس‌ها', 'Questions and lesson texts')}</td><td>${L('کد برنامه در GitHub', 'The app code on GitHub')}</td></tr>
         </tbody>
       </table></div>`;
     const series = k => pts.filter(p => p[k] != null).map(p => [p.t, p[k]]);
@@ -233,10 +258,18 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
       mem: () => [[{ data: series('mem'), color: 'var(--accent)' }], '%', 100], net: () => [[{ data: series('rx'), color: 'var(--accent)' }, { data: series('tx'), color: 'var(--c2)' }], 'k'] };
     document.querySelectorAll('[data-c]').forEach(b => { const [s2, u, top] = C[b.dataset.c](); draw(b, s2, u, top); });
     document.getElementById('re').onclick = load;
+    document.getElementById('lg').onclick = () => {
+      lang = lang === 'en' ? 'fa' : 'en';
+      try { localStorage.setItem('sysLang', lang); } catch {}
+      setLang(); render();
+    };
   }
   async function load() {
-    try { D = await api('system'); render(); }
-    catch (e) { if (e.message !== 'sign in') $app.innerHTML = `<p class="lead">خطا: ${esc(e.message)}</p>`; }
+    try {
+      D = await api('system'); render();
+      if (!DUP || DUP.pending) api('ragdupes').then(x => { DUP = x; render(); }).catch(() => {});
+    }
+    catch (e) { if (e.message !== 'sign in') $app.innerHTML = `<p class="lead">${L('خطا', 'Error')}: ${esc(e.message)}</p>`; }
   }
   load();
   setInterval(() => { if (!document.hidden) load(); }, 60e3);

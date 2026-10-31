@@ -173,4 +173,68 @@ Pick the entries where a learner best learns what this term means and the rule a
   try { return { ...(await job), v }; } finally { inflight.delete(key); }
 }
 
-module.exports = { search, termPage, searchAvailable: available };
+// «از مربی بپرس» (Mojtaba 2026-10-31): the user's own question about the theory test, in any words, answered like a
+// teacher from the app's own material only: the catalogue's entries closest in meaning to it and «آزمون جدید»'s
+// questions on it with their explanations (rag.js; the whole catalogue until its vectors are made), with the entries
+// to read more (their ids; the app opens their pages). The last few turns of the talk go with it, so a follow-up
+// («و در شب؟») is understood. { answer, sources: [ids], v }, or an Error with .status (409: the catalogue is needed).
+const ASK_SCHEMA = {
+  type: 'object',
+  properties: { answer: { type: 'string' }, sources: { type: 'array', items: { type: 'string' } } },
+  required: ['answer', 'sources'],
+  additionalProperties: false,
+};
+const askSystem = (entries, questions) => [
+  { type: 'text', text: `You are the friendly teacher inside a Danish driving theory test app (category B) for Persian speakers.
+The learner asks a question in their own words (any language or spelling). Answer it like a good teacher: clearly, correctly and briefly, using ONLY the app's material below (its teaching entries, and its practice questions with their correct answers and explanations). Never add rules, numbers, distances, speeds or sign codes that the material does not give. Denmark's rules only.
+If the material does not answer the question, or the question is not about driving, the traffic rules or the theory test, say so in one friendly sentence and suggest what they could ask instead; then "sources" is empty.
+
+Return JSON:
+- "answer": the answer in the language named in the request, 2 to 6 short sentences; a few lines that start with "- " when steps or a list read better. Keep Danish terms and sign codes as the material writes them. No headings, no markdown other than "- " lines.
+- "sources": the ids of the teaching entries (never of practice questions) where the learner reads more about it, best first, at most 3; only ids that appear in the material.
+Id prefixes: c: a step of the step-by-step course, r: a part of the rules page, s: a road sign, p: a right-of-way situation.
+
+TEACHING ENTRIES (id<TAB>title<TAB>start of the text):
+` },
+  { type: 'text', text: `${entries}\n\nPRACTICE QUESTIONS (background):\n${questions || '(none)'}`, ...(questions === null ? { cache_control: { type: 'ephemeral', ttl: '1h' } } : {}) },
+];
+async function ask({ username, q, v, catalog, ui, history }) {
+  q = String(q || '').replace(/\s+/g, ' ').trim().slice(0, 400);
+  if (q.length < 3) throw Object.assign(new Error('سؤالتان را بنویسید.'), { status: 400 });
+  v = catalog !== undefined ? addCatalog(catalog) : String(v || '');
+  if (!v) throw Object.assign(new Error('فهرست جستجو معتبر نیست.'), { status: 400 });
+  const cat = catalogs.get(v);
+  if (!cat) throw Object.assign(new Error('catalog'), { status: 409 });
+  ui = LANG[ui] ? ui : 'fa';
+  if (!available()) throw Object.assign(new Error('unavailable'), { status: 503 });
+  if (!allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
+  const turns = (Array.isArray(history) ? history : []).slice(-3)
+    .map(t => ({ q: String((t && t.q) || '').slice(0, 400), a: String((t && t.a) || '').slice(0, 1500) })).filter(t => t.q && t.a);
+  let sys = askSystem(cat.text, null);
+  if (rag.ready(v)) {
+    try {
+      // (A follow-up is looked up with the question before it, so «و در شب؟» finds the same topic.)
+      const got = await rag.retrieve(turns.length ? `${turns[turns.length - 1].q} ${q}` : q, v, { n: 14, m: 6 });
+      sys = askSystem(got.entries.map(e => e.line).join('\n'), got.questions.map(x => x.text).join('\n\n'));
+    } catch (e) { console.error('RAG ask', e.message); }
+  }
+  const messages = [];
+  for (const t of turns) messages.push({ role: 'user', content: t.q }, { role: 'assistant', content: JSON.stringify({ answer: t.a, sources: [] }) });
+  messages.push({ role: 'user', content: `Answer language: ${LANG[ui]}\nQuestion: ${q}` });
+  const response = await ai.call('ask', {
+    model: MODEL,
+    max_tokens: 2000,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: ASK_SCHEMA } },
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default',
+    system: sys,
+    messages,
+  });
+  if (response.stop_reason === 'refusal') throw Object.assign(new Error('پاسخی پیدا نشد.'), { status: 502 });
+  let out;
+  try { out = JSON.parse(ai.text(response)); } catch { throw Object.assign(new Error('پاسخی پیدا نشد.'), { status: 502 }); }
+  const sources = [...new Set((Array.isArray(out.sources) ? out.sources : []).map(String).filter(x => cat.ids.has(x)))].slice(0, 3);
+  return { answer: String(out.answer || '').trim().slice(0, 2500), sources, v };
+}
+
+module.exports = { search, termPage, ask, searchAvailable: available };

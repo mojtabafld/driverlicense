@@ -212,6 +212,19 @@ export default function CoachPage() {
         </Card>
       ) : null}
       {body}
+      {/* «از مربی بپرس» (app/ask.tsx): any question, answered from the app's own material. */}
+      {allowed && on ? (
+        <Card onPress={() => { tap(); router.push('/ask'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+            <Icon name="sparkles" size={19} color={c.link} weight="semibold" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <T style={{ fontWeight: '700', fontSize: 16 }}>از مربی بپرس</T>
+            <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 19 }}>هر سؤالی درباره‌ی آزمون؛ جواب از روی آموزش‌های برنامه.</T>
+          </View>
+          <Icon name="chevronLeft" size={14} color={c.faint} />
+        </Card>
+      ) : null}
     </SubPage>
   );
 }

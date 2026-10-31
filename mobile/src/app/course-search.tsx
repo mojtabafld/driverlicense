@@ -23,7 +23,7 @@ const KIND: Record<SearchKind, { icon: IconName; label: string }> = {
 // Short words that the search finds (it looks for all the words typed, so short phrases work best).
 const EXAMPLES = ['حق تقدم', 'حد سرعت', 'B 11', 'الکل', 'صندلی کودک', 'میدان'];
 
-function Row({ item }: { item: SearchItem }) {
+export function Row({ item }: { item: SearchItem }) {
   const c = useColors();
   const { lessonOk, firstOk } = useFree();
   const ok = item.free === 'lesson' ? lessonOk(item.lesson) : typeof item.free === 'number' ? firstOk(item.free) : true;
@@ -106,6 +106,13 @@ export default function CourseSearch() {
           <T style={{ color: c.muted, fontSize: 13.5, textAlign: 'center', lineHeight: 21 }}>چیزی با این کلمه‌ها پیدا نشد. کلمه‌های کمتر یا کوتاه‌تری امتحان کنید.</T>
         </Card>
       )}
+      {/* A question rather than words: the coach answers it (app/ask.tsx). */}
+      <Pressable onPress={() => { tap(); router.push({ pathname: '/ask', params: typed ? { q } : {} }); }} accessibilityRole="button"
+        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.accentSoft, opacity: pressed ? 0.7 : 1 })}>
+        <Icon name="sparkles" size={18} color={c.link} />
+        <T style={{ flex: 1, fontSize: 13.5, lineHeight: 21, color: c.link, fontWeight: '600' }}>سؤال دارید؟ از مربی بپرسید</T>
+        <Icon name="chevronLeft" size={14} color={c.link} />
+      </Pressable>
       <View style={{ height: 40 }} />
     </SubPage>
   );
