@@ -242,7 +242,13 @@ async function make(key, v) {
   let out = null;
   try { out = await work(b, white); } catch (e) { console.error('guide web', key, e.message); }
   if (!out) out = { l: b, m: b, s: b };   // not a PNG, or the work failed: the picture as it is
-  for (const size of SIZES) { await store.saveBlob(blobName(size, key, v), out[size].mime, out[size].data); remember(`${size}:${key}:${v}`, out[size]); }
+  // (a picture back from the worker is a Uint8Array: made a Buffer, as everything else here expects)
+  for (const size of SIZES) out[size] = { mime: out[size].mime, data: Buffer.isBuffer(out[size].data) ? out[size].data : Buffer.from(out[size].data.buffer, out[size].data.byteOffset, out[size].data.byteLength) };
+  // the app gets the picture even when keeping it fails (it is then made again next time)
+  for (const size of SIZES) {
+    remember(`${size}:${key}:${v}`, out[size]);
+    await store.saveBlob(blobName(size, key, v), out[size].mime, out[size].data).catch(e => console.error('guide web save', key, size, e.message));
+  }
   return out;
 }
 async function webBlob(key, size = 'l') {

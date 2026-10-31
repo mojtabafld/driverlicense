@@ -247,7 +247,8 @@ async function openOracle(mem) {
       `MERGE INTO tp_blobs t USING (SELECT :k AS k FROM dual) s ON (t.k = s.k)
        WHEN MATCHED THEN UPDATE SET t.mime = :m, t.data = :d
        WHEN NOT MATCHED THEN INSERT (k, mime, data) VALUES (:k, :m, :d)`,
-      { k: key, m: mime, d: { val: buf, type: oracledb.DB_TYPE_BLOB } }),
+      // (a Buffer: node-oracledb refuses a plain Uint8Array, e.g. a picture back from guideweb.js's worker, with NJS-011)
+      { k: key, m: mime, d: { val: Buffer.isBuffer(buf) ? buf : Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength), type: oracledb.DB_TYPE_BLOB } }),
     deleteBlob: key => run('DELETE FROM tp_blobs WHERE k = :k', { k: key }),
     blobKeys: async prefix => (await rows("SELECT k AS \"k\" FROM tp_blobs WHERE k LIKE :p || '%'", { p: prefix })).map(r => r.k),
     getBlob: async key => { const r = (await rows('SELECT mime AS "mime", data AS "data" FROM tp_blobs WHERE k = :k', { k: key }))[0]; return r ? { mime: r.mime, data: r.data } : null; },
