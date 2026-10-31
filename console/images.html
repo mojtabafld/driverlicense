@@ -40,6 +40,12 @@ h1{font-size:22px;margin:0}
 @media (max-width:640px){.pick{grid-template-columns:1fr}}
 label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
 select{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--surface);color:var(--text);width:100%}
+.zoomable{cursor:zoom-in}
+.btn.mini{padding:4px 10px;font-size:12px}
+.lightbox{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+.lb-in{max-width:min(1200px,100%);max-height:100%;display:flex;flex-direction:column;gap:10px;align-items:center}
+.lb-in img{max-width:100%;max-height:calc(100vh - 110px);object-fit:contain;border-radius:10px;background:#fff}
+.lb-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;background:var(--surface);color:var(--text);border-radius:12px;padding:8px 12px}
 .pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:12px;margin:10px 0}
 figure{margin:0;display:flex;flex-direction:column;gap:6px}
 figure img,.none{width:100%;aspect-ratio:4/3;object-fit:contain;background:var(--surface2);border-radius:10px;display:block}
@@ -149,10 +155,11 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
 
   // A sign's or right-of-way item's pictures: a click on one makes it the picture the app shows (its «تصویر اصلی»).
   function pictures(x) {
+    // A click on a picture opens it large here (Mojtaba 2026-10-31); choosing the one the app shows is its own button,
+    // under the picture and in the large view.
     const fig = (src, cap, on, act, pick) => `<figure class="${on ? 'on' : ''}">${!src ? `<div class="none">${esc(act || 'ساخته نشده')}</div>`
-      : pick ? `<img class="pickable" src="${esc(src)}" alt="" loading="lazy" data-pick="${pick}" title="${on ? 'تصویر اصلی' : 'انتخاب به‌عنوان تصویر اصلی'}">`
-      : `<a href="${esc(src)}" target="_blank" rel="noopener"><img src="${esc(src)}" alt="" loading="lazy"></a>`}
-      <figcaption>${cap}${src && pick ? ` ${on ? '<span class="on-tag">✓ تصویر اصلی</span>' : '<span class="muted">برای انتخاب کلیک کنید</span>'} <a href="${esc(src)}" target="_blank" rel="noopener" class="muted">⤢ بزرگ</a>` : ''}</figcaption></figure>`;
+      : `<img class="zoomable" src="${esc(src)}" alt="" loading="lazy" data-zoom="${esc(src)}" data-cap="${esc(cap.replace(/<[^>]+>/g, ''))}" ${pick ? `data-pickof="${pick}" data-on="${on ? 1 : ''}"` : ''} title="برای دیدن بزرگ کلیک کنید">`}
+      <figcaption>${cap}${src && pick ? ` ${on ? '<span class="on-tag">✓ تصویر اصلی</span>' : `<button class="btn soft mini" data-pick="${pick}">انتخاب به‌عنوان تصویر اصلی</button>`}` : ''}</figcaption></figure>`;
     if (x.set) return fig(x.v ? `/${x.set === 'newq' ? 'newq' : 'course'}-art/${encodeURIComponent(x.key)}.png?v=${encodeURIComponent(x.v)}` : '', '<b>تصویر فعلی</b>', false, 'هنوز ساخته نشده');
     const ref = (kind, v) => `/img/guideref/${kind}/${encodeURIComponent(x.key)}?v=${encodeURIComponent(String(v || ''))}`, c = x.choice || 'ai';
     return fig(x.ai ? ref('ai', x.ai) : '', '<b>تصویر ساخته‌شده (AI)</b>', c === 'ai' && !!x.ai, '', 'ai')
@@ -362,12 +369,27 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
     document.getElementById('rev').onclick = () => revise(false);
     document.getElementById('revgen').onclick = () => revise(true);
     const NAMES = { ai: 'تصویر ساخته‌شده', prove: 'تصویر prove.dk', official: 'طرح رسمی' };
-    document.querySelectorAll('[data-pick]').forEach(im => { im.onclick = async () => {
-      const choice = im.dataset.pick;
+    const choose = async choice => {
       if ((x.choice || 'ai') === choice) return;
       if (!confirm(`«${NAMES[choice]}» تصویر اصلی این مورد در برنامه شود؟`)) return;
       try { await api('POST', 'guiderefchoose', { key: x.key, choice }); toast('تصویر اصلی عوض شد'); } catch (e) { return toast(e.message); }
       view(true);
+    };
+    document.querySelectorAll('button[data-pick]').forEach(b => { b.onclick = () => choose(b.dataset.pick); });
+    // the large view: the picture, its name, and (for a choosable one not yet chosen) «انتخاب به‌عنوان تصویر اصلی»
+    document.querySelectorAll('img[data-zoom]').forEach(im => { im.onclick = () => {
+      const box = document.createElement('div');
+      box.className = 'lightbox';
+      box.innerHTML = `<div class="lb-in"><img src="${esc(im.dataset.zoom)}" alt=""><div class="lb-bar"><b>${esc(im.dataset.cap)}</b>
+        ${im.dataset.pickof ? (im.dataset.on ? '<span class="on-tag">✓ تصویر اصلی</span>' : '<button class="btn" data-lbpick>انتخاب به‌عنوان تصویر اصلی</button>') : ''}
+        <a class="btn soft" href="${esc(im.dataset.zoom)}" target="_blank" rel="noopener">باز کردن در زبانه‌ی جدید</a><button class="btn soft" data-lbclose>بستن</button></div></div>`;
+      const close = () => { box.remove(); document.removeEventListener('keydown', key); };
+      const key = e => { if (e.key === 'Escape') close(); };
+      box.onclick = e => { if (e.target === box || e.target.hasAttribute('data-lbclose')) close(); };
+      const pb = box.querySelector('[data-lbpick]');
+      if (pb) pb.onclick = () => { close(); choose(im.dataset.pickof); };
+      document.addEventListener('keydown', key);
+      document.body.appendChild(box);
     }; });
     // while a picture is being made, look again every 6 seconds (not while the prompt or the request is being edited)
     if (g.items.some(y => y.making)) {
