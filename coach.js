@@ -160,7 +160,7 @@ async function getPage(u, ui, deps, kind, catalog) {
     yourEarlierAdvice: ((c && c.hist) || []).slice(-3),
     generalPatterns: ((deps.store.meta.aiMemory && deps.store.meta.aiMemory.notes) || []).slice(0, 20),
   };
-  const { out } = await insights.ask({ system: pageSystem(kind, ui), data, schema: PAGE_SCHEMA[kind], maxTokens: 8000, effort: 'low' });
+  const { out } = await insights.ask({ system: pageSystem(kind, ui), data, schema: PAGE_SCHEMA[kind], maxTokens: 8000, effort: 'low', task: 'coach' });
   const ids = new Map(cat.map(x => [x.id, x.title]));
   const coach = { v: 2, at: now, sig, ui, headline: clipText(out.headline, 120), points: out.points.slice(0, 4).map(p => clipText(p, 240)),
     ...(kind === 'learn'

@@ -10,7 +10,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-const Anthropic = require('@anthropic-ai/sdk');
+const ai = require('./aigateway');
 const png = require('./png');
 
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
@@ -26,7 +26,8 @@ function imageTask(input, model = IMAGE_MODEL) {
   const body = /^nano-banana/.test(m)
     ? { model: m, input: { prompt: input.prompt, image_input: urls || [], aspect_ratio: input.aspect_ratio, resolution: input.resolution, output_format: 'png' } }
     : { model: `${m}-${urls ? 'image' : 'text'}-to-image`, input };
-  return kie('POST', '/jobs/createTask', { ...body, callBackUrl: `${PUBLIC_URL}/api/kiecallback` });
+  return kie('POST', '/jobs/createTask', { ...body, callBackUrl: `${PUBLIC_URL}/api/kiecallback` })
+    .then(d => { ai.picture('kie', true); return d; }, e => { ai.picture('kie', false, e.message); throw e; });   // counted by the AI gateway
 }
 const PROMPT_MODEL = (process.env.IMAGE_PROMPT_MODEL || '').trim() || 'claude-opus-5-5';
 const models = () => ({ prompt: PROMPT_MODEL, image: IMAGE_MODEL });
@@ -137,8 +138,8 @@ function openaiTask(input, images = []) {
   const taskId = `oa-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
   OA.set(taskId, { state: 'generating' });
   openaiCall(input, images)
-    .then(url => OA.set(taskId, { state: 'success', url }))
-    .catch(e => { console.error('openai picture', e.message); OA.set(taskId, { state: 'fail', failMsg: e.message }); });
+    .then(url => { ai.picture('openai', true); OA.set(taskId, { state: 'success', url }); })
+    .catch(e => { ai.picture('openai', false, e.message); console.error('openai picture', e.message); OA.set(taskId, { state: 'fail', failMsg: e.message }); });
   return { taskId };
 }
 function openaiRecord(taskId) {
@@ -159,10 +160,9 @@ async function kie(method, url, body) {
 
 // `extra`: one more instruction for this description (e.g. the console's attention to signs and markings).
 async function describe(q, extra = '') {
-  claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
   const lines = q.st.map((s, k) => `${k + 1}. ${s.da} → ${s.ok ? 'CORRECT' : 'WRONG'}. Explanation: ${s.eda || '-'}`).join('\n');
   const img = fs.readFileSync(path.join(SITE, q.img));
-  const r = await claude.messages.create({
+  const r = await ai.call('picture-describe', {
     model: CLAUDE, max_tokens: 1500, system: DESCRIBE,
     messages: [{ role: 'user', content: [
       { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img.toString('base64') } },
@@ -479,8 +479,7 @@ async function check(qid, job) {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const b = await blob(job.blob);
   if (!b || !/^image\/(png|jpeg|webp)$/.test(b.mime)) return null;
-  claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
-  const r = await claude.messages.create({
+  const r = await ai.call('picture-check', {
     model: CLAUDE, max_tokens: 800, system: CHECK,
     messages: [{ role: 'user', content: [
       { type: 'image', source: { type: 'base64', media_type: b.mime, data: b.data.toString('base64') } },
@@ -1359,11 +1358,10 @@ async function revisePrompt(prompt, request) {
 
 async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
-  claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
   // `image`: one { mime, data } or a list of them (e.g. a marked picture and a close-up).
   const images = (Array.isArray(image) ? image : image ? [image] : []).filter(Boolean);
   const content = [...images.map(i => ({ type: 'image', source: { type: 'base64', media_type: i.mime, data: i.data.toString('base64') } })), { type: 'text', text }];
-  const r = await claude.messages.create({ model: PROMPT_MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
+  const r = await ai.call('picture-prompt', { model: PROMPT_MODEL, max_tokens: maxTokens, system, messages: [{ role: 'user', content }] });
   const out = r.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
   if (!out) throw new Error('empty answer');
   return out;

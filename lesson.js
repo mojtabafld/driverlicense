@@ -9,7 +9,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-const Anthropic = require('@anthropic-ai/sdk');
+const ai = require('./aigateway');
 const imagegen = require('./imagegen');
 
 const MODEL = process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
@@ -297,8 +297,7 @@ async function getLesson({ store, siteDir, username, qid, ticks, lang, ui }) {
 async function generate({ store, key, system, prompt, maxTokens }) {
   if (inflight.has(key)) return inflight.get(key);
   const job = (async () => {
-    client = client || new Anthropic({ timeout: 120e3, maxRetries: 2 });
-    const response = await client.beta.messages.create({
+    const response = await ai.call('lesson', {
       model: MODEL,
       max_tokens: maxTokens,
       output_config: { effort: 'medium' },   // checked against the Danish rules, not written off the cuff

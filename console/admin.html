@@ -244,6 +244,8 @@ details summary{cursor:pointer;font-weight:700}
         <p class="muted" style="font-size:12.5px;margin:0 0 4px">فایل JSON کلید service account (برای تأیید خریدهای اپ اندروید). روی سرور ذخیره می‌شود و فقط ایمیل حسابش این‌جا نشان داده می‌شود.</p>
         <div id="pks" class="muted" style="font-size:13px">…</div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><input type="file" id="pkf" accept=".json,application/json" style="width:auto;border:0;padding:0"><button class="btn" id="pku">بارگذاری</button><button class="btn soft" id="pkc">بررسی</button></div></div>
+      <div class="card reports news" style="margin-bottom:16px" id="aiu"><h2>هوش مصنوعی: مصرف و هزینه</h2>
+        <div id="aius" class="muted" style="font-size:13px">…</div></div>
       <div class="row2">
         <div class="card chart"><h2>۳۰ روز اخیر</h2>${chart(d.days)}</div>
         <div class="card"><h2>زبان برنامه</h2>${bars(t.ui, UI)}<h2 style="margin-top:16px">نوع آزمون‌ها</h2>${bars(t.modes, MODE)}</div>
@@ -266,6 +268,7 @@ details summary{cursor:pointer;font-weight:700}
     wireUsers();
     wireNews();
     wirePlayKey();
+    wireAiUsage();
     wireSmtp();
     const rtb = document.getElementById('rtb');
     if (rtb) rtb.onclick = async () => {
@@ -293,6 +296,20 @@ details summary{cursor:pointer;font-weight:700}
     $('smdel').onclick = async () => { if (!confirm('تنظیم SMTP حذف شود؟')) return; try { show(await api('DELETE', 'smtp'), 'حذف شد.'); } catch (e) { st.textContent = e.message; } };
   }
   // The Google Play key card: its state, a JSON file sent from this device, a check with Google.
+  // The AI gateway's use (aigateway.js): today's cost and calls by task, the last 14 days, the budget (Mojtaba 2026-10-31).
+  const TASKS = { lesson: 'درس هوشمند', search: 'جستجو', 'search-term': 'صفحه‌ی اصطلاح', coach: 'مربی', insights: 'گزارش ادمین', 'picture-prompt': 'پرامپت تصویر', 'picture-describe': 'توصیف تصویر', 'picture-check': 'بررسی تصویر', 'picture:kie': 'ساخت تصویر (kie.ai)', 'picture:openai': 'ساخت تصویر (OpenAI)' };
+  const usd = v => `$${(+v || 0).toFixed((+v || 0) < 1 ? 3 : 2)}`;
+  function wireAiUsage() {
+    const st = document.getElementById('aius'); if (!st) return;
+    api('GET', 'aiusage').then(d => {
+      const t = d.today, rows = Object.entries(t.tasks).sort((a, b) => b[1].usd - a[1].usd || b[1].n - a[1].n);
+      const max = Math.max(0.0001, ...d.days.map(x => x.usd));
+      st.innerHTML = `<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:8px;color:var(--text)"><span>امروز: <b dir="ltr">${usd(t.usd)}</b>${d.budget ? ` از سقف <b dir="ltr">${usd(d.budget)}</b>` : ' (بدون سقف روزانه)'}</span><span>${t.n} درخواست${t.fail ? ` · ${t.fail} ناموفق` : ''}</span></div>`
+        + (rows.length ? `<table style="width:100%;font-size:13px;border-collapse:collapse">${rows.map(([k, x]) => `<tr><td style="padding:3px 0">${esc(TASKS[k] || k)}</td><td>${x.n}${x.fail ? ` (${x.fail} ✕)` : ''}</td><td dir="ltr" style="text-align:left">${x.in || x.out ? usd(x.usd) : '—'}</td></tr>`).join('')}</table>` : '<div>امروز هنوز درخواستی نبوده است.</div>')
+        + `<div style="display:flex;align-items:flex-end;gap:3px;height:48px;margin-top:10px" title="۱۴ روز اخیر">${d.days.map(x => `<div title="${esc(x.day)}: ${usd(x.usd)}" style="flex:1;min-width:4px;height:${Math.max(2, Math.round(x.usd / max * 46))}px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.8"></div>`).join('')}</div>`
+        + (Object.keys(d.models).length ? `<div style="margin-top:6px">مدل‌های تغییرداده‌شده: <span dir="ltr">${esc(Object.entries(d.models).map(([k, v]) => `${k.slice(9).toLowerCase()} → ${v}`).join(', '))}</span></div>` : '');
+    }).catch(e => { st.textContent = e.message; });
+  }
   function wirePlayKey() {
     const st = document.getElementById('pks'); if (!st) return;
     const show = (d, note) => {

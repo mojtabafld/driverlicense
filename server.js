@@ -1126,6 +1126,11 @@ async function api(req, res, route) {
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
   const user = s.user;
+  // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
+  if (req.method === 'GET' && route === 'aiusage') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    return send(res, 200, require('./aigateway').report());
+  }
   // The admin's backups (backup.js): the list, and one made now.
   if (route === 'backups' || route === 'backupnow') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
@@ -2057,6 +2062,8 @@ async function main() {
   // The pictures and other files in Oracle Cloud Object Storage when OCI_BUCKET is set (objstore.js), and a daily
   // backup of the database's data there (backup.js).
   store = require('./objstore').wrap(store);
+  // Every Claude call's model, use, cost and the daily budget (aigateway.js).
+  require('./aigateway').init(store);
   require('./backup').start(store);
   insights.init(store, dayKey);
   setNotes(store.meta.qNotes);

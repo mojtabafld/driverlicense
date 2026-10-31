@@ -13,7 +13,7 @@
 //   every AI explanation of that question from then on (lesson.js setNotes), so the explanations get better with use.
 // The personal coach (each user's own advice from their own results) is coach.js; it reads aiMemory too.
 'use strict';
-const Anthropic = require('@anthropic-ai/sdk');
+const ai = require('./aigateway');
 
 const MODEL = () => process.env.INSIGHTS_MODEL || 'claude-opus-5-5';
 const available = () => !!process.env.ANTHROPIC_API_KEY;
@@ -177,9 +177,9 @@ const SCHEMA = {
 };
 
 // Claude once, with a JSON answer of `schema`. Shared with coach.js.
-async function ask({ system, data, schema, maxTokens = 16000, effort = 'medium' }) {
-  client = client || new Anthropic({ timeout: 300e3, maxRetries: 2 });
-  const stream = client.beta.messages.stream({
+// `task`: its name in the AI gateway's use (insights for the admin's report, coach for a user's page).
+async function ask({ system, data, schema, maxTokens = 16000, effort = 'medium', task = 'insights' }) {
+  const res = await ai.call(task, {
     model: MODEL(),
     max_tokens: maxTokens,
     output_config: { effort, format: { type: 'json_schema', schema } },
@@ -187,8 +187,7 @@ async function ask({ system, data, schema, maxTokens = 16000, effort = 'medium' 
     fallbacks: 'default',
     system,
     messages: [{ role: 'user', content: typeof data === 'string' ? data : JSON.stringify(data) }],
-  });
-  const res = await stream.finalMessage();
+  }, { stream: true });
   if (res.stop_reason === 'refusal') throw new Error('refused');
   if (res.stop_reason === 'max_tokens') throw new Error('answer cut off');
   const text = res.content.filter(b => b.type === 'text').map(b => b.text).join('');

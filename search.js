@@ -8,7 +8,7 @@
 // from Anthropic's prompt cache. Results are cached in memory by catalogue + query + app language.
 'use strict';
 const crypto = require('node:crypto');
-const Anthropic = require('@anthropic-ai/sdk');
+const ai = require('./aigateway');
 
 const MODEL = process.env.SEARCH_AI_MODEL || process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
 const PER_USER_PER_HOUR = 40, ALL_PER_HOUR = 600;
@@ -78,8 +78,7 @@ async function search({ username, q, v, catalog, ui }) {
   if (inflight.has(key)) return { ...(await inflight.get(key)), v };
   if (!allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
   const job = (async () => {
-    client = client || new Anthropic({ timeout: 60e3, maxRetries: 1 });
-    const response = await client.beta.messages.create({
+    const response = await ai.call('search', {
       model: MODEL,
       max_tokens: 2000,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
@@ -125,8 +124,7 @@ async function termPage({ store, username, term, v, catalog }) {
   if (inflight.has(key)) return { ...(await inflight.get(key)), v };
   if (!allowed(username)) throw Object.assign(new Error('درخواست زیاد؛ کمی بعد دوباره امتحان کنید.'), { status: 429 });
   const job = (async () => {
-    client = client || new Anthropic({ timeout: 60e3, maxRetries: 1 });
-    const response = await client.beta.messages.create({
+    const response = await ai.call('search-term', {
       model: MODEL,
       max_tokens: 1000,
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
