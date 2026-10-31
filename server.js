@@ -25,7 +25,12 @@ if (process.env.TP_VAULT_SECRET) {
       process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2'); n++;
     }
     console.log(`Secrets: ${n} keys from Oracle Cloud Vault`);
-  } catch (e) { console.error('Secrets: Oracle Cloud Vault not read, the env file\'s keys are used:', String(e.stderr || e.message).trim()); }
+  } catch (e) {
+    console.error('Secrets: Oracle Cloud Vault not read, the env file\'s keys are used:', String(e.stderr || e.message).trim());
+    // With the keys only in the vault (the env file without the database's password), the server would run without
+    // them: it stops instead, and systemd starts it again a few seconds later, until the vault answers.
+    if (!process.env.ORACLE_PASSWORD && !process.env.DATABASE_URL) { console.error('Secrets: no database keys without the vault; trying again'); process.exit(1); }
+  }
 }
 const http = require('node:http');
 const fs = require('node:fs');
