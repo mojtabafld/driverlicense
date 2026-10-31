@@ -1606,7 +1606,7 @@ async function api(req, res, route) {
         return send(res, 200, { prompt });
       }
       if (req.method === 'POST' && route === 'guidegen') {
-        const b = await readBody(req), job = await guideref.generate(String(b.key || ''), b.prompt);
+        const b = await readBody(req), job = await guideref.generate(String(b.key || ''), b.prompt, b.provider === 'openai' ? 'openai' : 'kie');
         await consoleprompts.made(`g:${String(b.key || '')}`, job.prompt);
         await setPicStyle(`g:${String(b.key || '')}`, b.style);
         return send(res, 200, { job });
@@ -1638,6 +1638,11 @@ async function api(req, res, route) {
     try { return send(res, 200, { prompt: await imagegen.restyle(b.prompt, String(b.style || '')) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error('restyle', e.message); return send(res, 502, { error: 'تغییر سبک پرامپت ممکن نشد؛ دوباره امتحان کنید.' }); }
   }
+  // …the picture services there are, to choose from: { kie: { ok, name }, openai: { ok, name } }.
+  if (req.method === 'GET' && route === 'imageproviders') {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    return send(res, 200, imagegen.providers());
+  }
   // …a prompt in Persian ({ prompt } → { text }) and the prompt with the admin's request worked in ({ prompt, request } → { prompt }).
   if (req.method === 'POST' && (route === 'prompttr' || route === 'promptrevise')) {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
@@ -1667,7 +1672,7 @@ async function api(req, res, route) {
       }
       if (req.method === 'POST' && route === 'coursegen') {
         const b = await readBody(req);
-        const set = b.set === 'newq' ? 'newq' : 'course', job = await imagegen.artGen(set, String(b.key || ''), b.prompt);
+        const set = b.set === 'newq' ? 'newq' : 'course', job = await imagegen.artGen(set, String(b.key || ''), b.prompt, b.provider === 'openai' ? 'openai' : 'kie');
         await setPicStyle(`${set}:${String(b.key || '')}`, b.style);
         return send(res, 200, { job });
       }

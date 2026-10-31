@@ -11,7 +11,8 @@ const common = require('oci-common');
 const { SecretsClient } = require('oci-secrets');
 const { VaultsClient } = require('oci-vault');
 
-const NAME = /^[A-Z][A-Z0-9_]*$/;
+// A secret's name is its variable's, in capitals (e.g. «OpenAI_API_Key» is OPENAI_API_KEY; Mojtaba 2026-10-31).
+const NAME = /^[A-Za-z][A-Za-z0-9_]*$/;
 (async () => {
   const id = process.argv[2];
   if (!id) throw new Error('no secret OCID');
@@ -39,7 +40,7 @@ const NAME = /^[A-Z][A-Z0-9_]*$/;
       .filter(s => s.id !== id && s.lifecycleState === 'ACTIVE' && NAME.test(s.secretName))
       .sort((a, b) => a.secretName.localeCompare(b.secretName));
     for (const s of own) {
-      try { out += `\n${s.secretName}=${(await text(s.id)).replace(/\r?\n+$/, '').replace(/\n/g, '\\n')}`; }
+      try { out += `\n${s.secretName.toUpperCase()}=${(await text(s.id)).replace(/\r?\n+$/, '').replace(/\n/g, '\\n')}`; }
       catch (e) { process.stderr.write(`vault: ${s.secretName} not read: ${e.message}\n`); }
     }
   } catch (e) { process.stderr.write(`vault: the variables of their own not listed: ${e.message}\n`); }

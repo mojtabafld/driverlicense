@@ -129,12 +129,12 @@ async function draft(key) {
 }
 // «تایید ساخت تصویر»: a new picture from the (edited) prompt; a sign is redrawn from its official drawing as before.
 // Once made it replaces the item's made picture (one per item), shown on the main site if the made picture is chosen.
-function generate(key, prompt) {
+function generate(key, prompt, provider) {
   if (!itemOf(key)) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
   prompt = String(prompt || '').trim().slice(0, 20000);
   if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
   const p = imagegen.guidePrompt(key) || {};
-  return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '', target: `guide:${key}` });
+  return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '', target: `guide:${key}`, provider });
 }
 
 // The console's «اعمال اصلاحات روی همین تصویر» for a sign or right-of-way picture: its current made picture is corrected
