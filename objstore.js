@@ -81,32 +81,38 @@ function wrap(store) {
   };
   const forget = k => { const b = mem.get(k); if (b) { memBytes -= b.data.length; mem.delete(k); } };
   // Until the bucket answers once, the database is used as before (a wrong policy never loses a picture).
+  // The bucket's keys are listed then and kept up to date here, so a file not in it is never asked for: the SDK prints
+  // a warning for every «not found», and a read of a file not moved yet goes straight to the database.
   let ok = null;
-  const ready = () => (ok = ok || connect().then(() => true, e => { console.error(`Files: bucket «${process.env.OCI_BUCKET}» not reached, the database keeps them: ${e.message}`); ok = null; return false; }));
+  const there = new Set();
+  const ready = () => (ok = ok || connect()
+    .then(async () => { for (const o of await list(PREFIX)) there.add(o.name.slice(PREFIX.length)); console.log(`Files: bucket «${bucket}», ${there.size} files`); return true; })
+    .catch(e => { console.error(`Files: bucket «${process.env.OCI_BUCKET}» not reached, the database keeps them: ${e.message}`); ok = null; return false; }));
 
   store.saveBlob = async (key, mime, data) => {
     forget(key);
     if (!(await ready())) return db.saveBlob(key, mime, data);
     await put(PREFIX + key, data, mime);
+    there.add(key);
     keep(key, { mime, data: buf(data) });
     await db.deleteBlob(key).catch(() => {});   // an older copy there would come back if the bucket ever failed
   };
   store.getBlob = async key => {
     if (mem.has(key)) { const b = mem.get(key); mem.delete(key); mem.set(key, b); return b; }
     let b = null;
-    if (await ready()) b = await get(PREFIX + key).catch(e => { console.error('Files: read', key, e.message); return null; });
+    if ((await ready()) && there.has(key)) b = await get(PREFIX + key).catch(e => { console.error('Files: read', key, e.message); return null; });
     if (!b) b = await db.getBlob(key);
     keep(key, b);
     return b;
   };
   store.deleteBlob = async key => {
     forget(key);
-    if (await ready()) await remove(PREFIX + key);
+    if ((await ready()) && there.has(key)) { await remove(PREFIX + key); there.delete(key); }
     await db.deleteBlob(key);
   };
   store.blobKeys = async prefix => {
     const keys = new Set(await db.blobKeys(prefix));
-    if (await ready()) for (const o of await list(PREFIX + prefix)) keys.add(o.name.slice(PREFIX.length));
+    if (await ready()) for (const k of there) if (k.startsWith(prefix)) keys.add(k);
     return [...keys];
   };
   store.files = { put, get, remove, list, ready };
@@ -125,6 +131,7 @@ function wrap(store) {
         const b = await from.getBlob(key);
         if (!b) continue;
         await put(PREFIX + key, b.data, b.mime);
+        there.add(key);
         const back = await get(PREFIX + key);
         if (!back || !back.data.equals(buf(b.data))) throw new Error('the copy in the bucket differs');
         await from.deleteBlob(key);
