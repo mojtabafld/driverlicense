@@ -11,7 +11,7 @@ import { PROVE_PICS } from '@/lib/config';
 import { reloadApp } from '@/lib/reload';
 
 export type PaletteId = 'ocean' | 'violet' | 'lime' | 'coral' | 'amber' | 'emerald' | 'forest' | 'rose' | 'sky' | 'mono'
-  | 'teal' | 'indigo' | 'orchid' | 'gold' | 'slate' | 'graphite';
+  | 'teal' | 'indigo' | 'orchid' | 'slate' | 'graphite';
 type Spec = {
   id: PaletteId; name: string;
   hue: number; nhue: number; nsat: number; asat?: number;
@@ -38,7 +38,6 @@ export const PALETTES: Spec[] = [
   { id: 'teal', name: 'فیروزه‌ای', hue: 176, nhue: 180, nsat: 0.14, accD: '#2dd4bf', accD2: '#5eead4', onD: '#042f2a', accL: '#0f766e', pickSoftD: '#0f2b28' },
   { id: 'indigo', name: 'نیلی', hue: 239, nhue: 236, nsat: 0.45, accD: '#818cf8', accD2: '#a5b4fc', onD: '#0d1033', accL: '#4338ca', pickSoftD: '#1b1d40' },
   { id: 'orchid', name: 'بنفش یاسی', hue: 284, nhue: 280, nsat: 0.3, accD: '#c084fc', accD2: '#d8b4fe', onD: '#1e0b2e', accL: '#9333ea', pickSoftD: '#2a1838' },
-  { id: 'gold', name: 'طلایی', hue: 46, nhue: 42, nsat: 0.12, accD: '#facc15', accD2: '#fde047', onD: '#1a1500', accL: '#a16207', pickSoftD: '#2b250c' },
   { id: 'slate', name: 'سنگی', hue: 215, nhue: 215, nsat: 0.3, asat: 0.35, accD: '#a3b3c8', accD2: '#cbd5e1', onD: '#0f172a', accL: '#475569', pickSoftD: '#1e2632' },
   // «گرافیت»: soft charcoal greys, no tint, a near-white accent in the dark theme and a near-black one in the light
   // (Mojtaba 2026-10-29, after a picture he sent: a #1b1b1b page, #262626 cards, grey icon tiles, white bold titles).
