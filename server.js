@@ -1129,7 +1129,7 @@ async function api(req, res, route) {
   // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
   if (req.method === 'GET' && route === 'aiusage') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
-    return send(res, 200, require('./aigateway').report());
+    return send(res, 200, { ...require('./aigateway').report(), rag: require('./rag').info() });
   }
   // The admin's backups (backup.js): the list, and one made now.
   if (route === 'backups' || route === 'backupnow') {
@@ -2220,6 +2220,8 @@ async function main() {
   guideref.init(store, imagegen);
   consolepics.init(SITE);
   newqadmin.init(store, imagegen, SITE);
+  // The search's meaning vectors (rag.js): the 1,100 questions now, the catalogue when the app sends it.
+  require('./rag').init(store, SITE);
   setTimeout(() => imagegen.learnColours(), 3000);   // the «آموزش» pictures' colours ready for the first visits
   consoleprompts.init(store, imagegen, guideref, consolepics);
   webpic.init(store);

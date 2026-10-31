@@ -259,6 +259,28 @@ async function openOracle(mem) {
        WHEN NOT MATCHED THEN INSERT (username, gone_at) VALUES (:u, :at)`,
       { u: username, at }),
     close: () => pool.close(5),
+    // RAG's meaning vectors (rag.js), in Oracle's VECTOR type: k (a hash of the model and the text) → emb. The table
+    // is made on first use; a database without the VECTOR type throws, and rag.js keeps them in memory instead.
+    vectors: {
+      ready: null,
+      async table() {
+        if (!this.ready) this.ready = run('CREATE TABLE tp_vectors (k VARCHAR2(64) PRIMARY KEY, emb VECTOR(*, FLOAT32) NOT NULL)').catch(e => { if (e.errorNum !== 955) { this.ready = null; throw e; } });
+        return this.ready;
+      },
+      async all() {
+        await this.table();
+        return (await rows('SELECT k AS "k", emb AS "emb" FROM tp_vectors')).map(r => ({ k: r.k, emb: r.emb instanceof Float32Array ? r.emb : Float32Array.from(r.emb) }));
+      },
+      async put(list) {
+        await this.table();
+        const c = await pool.getConnection();
+        try {
+          await c.executeMany(`MERGE INTO tp_vectors t USING (SELECT :k AS k FROM dual) s ON (t.k = s.k)
+             WHEN NOT MATCHED THEN INSERT (k, emb) VALUES (:k, :emb)`,
+            list.map(x => ({ k: x.k, emb: x.emb })), { autoCommit: true, bindDefs: { k: { type: oracledb.STRING, maxSize: 64 }, emb: { type: oracledb.DB_TYPE_VECTOR } } });
+        } finally { await c.close(); }
+      },
+    },
     // Once every file is in the bucket (objstore.js): the empty files table's space given back (a DELETE keeps it).
     releaseBlobs: async () => {
       if ((await rows('SELECT COUNT(*) AS "n" FROM tp_blobs'))[0].n > 0) return false;
