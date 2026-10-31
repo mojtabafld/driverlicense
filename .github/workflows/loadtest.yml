@@ -13,6 +13,9 @@ on:
       minutes:
         description: "Minutes in all (a third ramping up, half holding, the rest ramping down)"
         default: "6"
+      runners:
+        description: "Machines sharing the visitors (each GitHub runner carries about 500 well)"
+        default: "2"
 
 permissions:
   contents: read
@@ -22,7 +25,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs: { shards: "${{ steps.p.outputs.shards }}" }
+    steps:
+      - id: p
+        run: echo "shards=$(seq -s, 1 ${{ inputs.runners }} | sed 's/^/[/;s/$/]/')" >> "$GITHUB_OUTPUT"
   k6:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix: { shard: "${{ fromJSON(needs.plan.outputs.shards) }}" }
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -34,13 +47,12 @@ jobs:
       - name: Run
         env:
           LOADTEST_TOKEN: ${{ secrets.LOADTEST_TOKEN }}
-          USERS: ${{ inputs.users }}
           MINUTES: ${{ inputs.minutes }}
-        run: k6 run --summary-export summary.json loadtest/k6.js | tee k6.txt
+        run: USERS=$(( ${{ inputs.users }} / ${{ inputs.runners }} )) k6 run --summary-export summary.json loadtest/k6.js | tee k6.txt
       - name: Summary
         if: always()
         run: |
-          { echo '## Load test: ${{ inputs.users }} visitors, ${{ inputs.minutes }} minutes'; echo '```'; sed -n '/checks/,$p' k6.txt | head -60; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '## Load test, machine ${{ matrix.shard }} of ${{ inputs.runners }}: ${{ inputs.users }} visitors in all, ${{ inputs.minutes }} minutes'; echo '```'; sed -n '/checks/,$p' k6.txt | head -60; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: k6-result, path: "summary.json\nk6.txt" }
+        with: { name: "k6-result-${{ matrix.shard }}", path: "summary.json\nk6.txt" }
