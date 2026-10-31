@@ -1,7 +1,7 @@
 // App state: the signed-in user, their exams and settings, and the question bank.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import type { Attempt, Bank, NewBank, Question, Settings, User } from './bank';
@@ -215,8 +215,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!PROVE_BANK && !newBank) fetchBank<NewBank>('newq.js').then(d => setNewBank({ questions: d.questions.filter(q => !q.x), gone: d.questions.filter(q => q.x) })).catch(() => {});
   }, [bank, newBank]);
 
-  // The intro comes before signing in, so the pictures it can show are read at start too.
-  useEffect(() => { api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; newqArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; mail?: boolean; google?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => { setMail(!!x.mail && !PROVE_PICS); setGoogle(!!x.google && !PROVE_PICS); rememberDefault(x.theme); setIntro(x.intro || {}); setIntroBg(x.introBg || {}); setLearnArt(x.learnArt || {}); setLearnBg(x.learnBg || {}); setCourseArt(x.courseArt || {}); setNewqArt(x.newqArt || {}); setAvatarArt(x.avatarArt || {}); setHeroArt(x.heroArt || {}); setLoginArt(x.loginArt || {}); setGuideArt(x.guideArt || {}); }).catch(() => {}); }, []);
+  // The intro comes before signing in, so the pictures it can show are read at start too. Read again every minute while
+  // the app is in front and whenever it comes back to it, so a picture the admin has just made shows without a reload
+  // (Mojtaba 2026-10-31); a list is set only when it changed, so nothing redraws for nothing.
+  const [cfgImgv, setCfgImgv] = useState<Record<string, string> | null>(null);
+  useEffect(() => {
+    const same = <T,>(set: (f: (o: T) => T) => void, v: T) => set(o => (JSON.stringify(o) === JSON.stringify(v) ? o : v));
+    let first = true;
+    const load = () => api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; newqArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; imgv?: Record<string, string>; mail?: boolean; google?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => {
+      if (first) { setMail(!!x.mail && !PROVE_PICS); setGoogle(!!x.google && !PROVE_PICS); rememberDefault(x.theme); first = false; }
+      same(setIntro, x.intro || {}); same(setIntroBg, x.introBg || {}); same(setLearnArt, x.learnArt || {}); same(setLearnBg, x.learnBg || {}); same(setCourseArt, x.courseArt || {}); same(setNewqArt, x.newqArt || {});
+      same(setAvatarArt, x.avatarArt || {}); same(setHeroArt, x.heroArt || {}); same(setLoginArt, x.loginArt || {}); same(setGuideArt, x.guideArt || {});
+      if (x.imgv) same(setCfgImgv as any, x.imgv);
+    }).catch(() => {});
+    load();
+    const shown = () => Platform.OS !== 'web' || typeof document === 'undefined' || document.visibilityState === 'visible';
+    const timer = setInterval(() => { if (shown() && AppState.currentState !== 'background') load(); }, 60e3);
+    const sub = AppState.addEventListener('change', st => { if (st === 'active') load(); });
+    const vis = () => { if (shown()) load(); };
+    if (Platform.OS === 'web' && typeof document !== 'undefined') document.addEventListener('visibilitychange', vis);
+    return () => { clearInterval(timer); sub.remove(); if (Platform.OS === 'web' && typeof document !== 'undefined') document.removeEventListener('visibilitychange', vis); };
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -244,7 +263,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // The translation's language, read by transText while the screens draw (kept in step with the account's settings).
   setTransLang(me?.settings?.trans === 'auto' ? undefined : me?.settings?.trans);
   const value = useMemo<Ctx>(() => ({
-    ready, token, bank, newBank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: me?.imgv ?? {},
+    ready, token, bank, newBank, user: me?.user ?? null, attempts: me?.attempts ?? [], imgv: cfgImgv ?? me?.imgv ?? {},
     settings: { ...DEFAULTS, ...(me?.settings || {}) },
     pay: PROVE_PICS ? null : pay, play: PROVE_PICS ? null : play, premium, locked,
     redeemPromo: async code => {
@@ -344,7 +363,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, bank, newBank, aiLessons, tts, pay, play, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser, google, googleErr]);
+  }), [ready, token, me, cfgImgv, bank, newBank, aiLessons, tts, pay, play, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser, google, googleErr]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
