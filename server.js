@@ -618,7 +618,7 @@ const isProtected = p => p === '/data.js' || p === '/newq.js' || p.startsWith('/
 const APP_MIME = { ...MIME, '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.map': 'application/json' };
 // DEFAULT_THEME: the main site's colour theme for everyone who has not picked one (mobile/src/ui/palette.ts; default
 // graphite). Written into the root page and /app's, so the web versions start in it; phones read it from /api/config.
-const THEMES = ['ocean', 'violet', 'lime', 'coral', 'amber', 'emerald', 'forest', 'rose', 'sky', 'mono', 'teal', 'indigo', 'orchid', 'gold', 'slate', 'graphite'];
+const THEMES = ['ocean', 'violet', 'lime', 'coral', 'amber', 'emerald', 'forest', 'rose', 'sky', 'mono', 'teal', 'indigo', 'orchid', 'slate', 'graphite'];
 const defaultTheme = () => { const t = String(process.env.DEFAULT_THEME || '').trim().toLowerCase(); return THEMES.includes(t) ? t : 'graphite'; };
 const withTheme = html => html.replace('<head>', `<head><script>window.__TP_THEME=${JSON.stringify(defaultTheme())}</script>`);
 const WEBS = {
