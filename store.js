@@ -259,6 +259,18 @@ async function openOracle(mem) {
        WHEN NOT MATCHED THEN INSERT (username, gone_at) VALUES (:u, :at)`,
       { u: username, at }),
     close: () => pool.close(5),
+    // Once every file is in the bucket (objstore.js): the empty files table's space given back (a DELETE keeps it).
+    releaseBlobs: async () => {
+      if ((await rows('SELECT COUNT(*) AS "n" FROM tp_blobs'))[0].n > 0) return false;
+      await run('TRUNCATE TABLE tp_blobs DROP STORAGE');
+      return true;
+    },
+    // The database's size on disk: its tables, indexes and LOBs (bytes), and tp_blobs' share of it.
+    size: async () => {
+      const all = (await rows('SELECT NVL(SUM(bytes), 0) AS "b" FROM user_segments'))[0].b;
+      const blobs = (await rows("SELECT NVL(SUM(s.bytes), 0) AS \"b\" FROM user_segments s WHERE s.segment_name = 'TP_BLOBS' OR s.segment_name IN (SELECT l.segment_name FROM user_lobs l WHERE l.table_name = 'TP_BLOBS') OR s.segment_name IN (SELECT i.index_name FROM user_indexes i WHERE i.table_name = 'TP_BLOBS')"))[0].b;
+      return { all: +all, blobs: +blobs };
+    },
   };
 }
 
