@@ -107,12 +107,14 @@ function learnOrders() {
 // request, so it runs in the background as a task like kie.ai's: «oa-…» ids, read back through kie()'s recordInfo
 // (below) in kie.ai's form, the picture as a data: URL. Kept in memory: a server restart fails the ones still running.
 const OPENAI_IMAGE_MODEL = (process.env.OPENAI_IMAGE_MODEL || '').trim() || 'gpt-image-1';
-const openaiReady = () => !!process.env.OPENAI_API_KEY;
+// (the vault's secret may also be named «OpenAI_API», i.e. OPENAI_API)
+const openaiKey = () => process.env.OPENAI_API_KEY || process.env.OPENAI_API || '';
+const openaiReady = () => !!openaiKey();
 const OA = new Map();
 const PROVIDERS = () => ({ kie: { ok: available(), name: `kie.ai (${IMAGE_MODEL})` }, openai: { ok: openaiReady(), name: `OpenAI (${OPENAI_IMAGE_MODEL})` } });
 const oaSize = ar => { const [w, h] = String(ar || '4:3').split(':').map(Number); return !w || !h || w === h ? '1024x1024' : w > h ? '1536x1024' : '1024x1536'; };
 async function openaiCall(input, images) {
-  const head = { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` };
+  const head = { Authorization: `Bearer ${openaiKey()}` };
   let r;
   if (images.length) {
     const f = new FormData();
