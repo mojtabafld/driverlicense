@@ -8,7 +8,7 @@ import { Platform, Pressable, TextInput, View } from 'react-native';
 
 import { RTL, tr } from '@/lib/i18n';
 import { toPremium, useFree } from '@/lib/free';
-import { localSearch, type SearchItem, type SearchKind } from '@/lib/search';
+import { ASK_ON, localSearch, type SearchItem, type SearchKind } from '@/lib/search';
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Enter, T, physicalAlign, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
@@ -107,12 +107,12 @@ export default function CourseSearch() {
         </Card>
       )}
       {/* A question rather than words: the coach answers it (app/ask.tsx). */}
-      <Pressable onPress={() => { tap(); router.push({ pathname: '/ask', params: typed ? { q } : {} }); }} accessibilityRole="button"
+      {ASK_ON ? <Pressable onPress={() => { tap(); router.push({ pathname: '/ask', params: typed ? { q } : {} }); }} accessibilityRole="button"
         style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, backgroundColor: c.accentSoft, opacity: pressed ? 0.7 : 1 })}>
         <Icon name="sparkles" size={18} color={c.link} />
         <T style={{ flex: 1, fontSize: 13.5, lineHeight: 21, color: c.link, fontWeight: '600' }}>سؤال دارید؟ از مربی بپرسید</T>
         <Icon name="chevronLeft" size={14} color={c.link} />
-      </Pressable>
+      </Pressable> : null}
       <View style={{ height: 40 }} />
     </SubPage>
   );

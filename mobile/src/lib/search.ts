@@ -75,6 +75,9 @@ export async function aiTermPage(term: { da: string; en: string; fa: string; cat
 // «از مربی بپرس» (app/ask.tsx; Mojtaba 2026-10-31): the user's own question answered by the server's AI from the app's
 // own material (search.js ask, with rag.js), with up to 3 entries to read more; the talk's last turns go with it.
 // The catalogue as for aiTermPage (its hash, the catalogue itself when the server asks). Throws an ApiError (402: premium).
+// Whether «از مربی بپرس» shows in the app (off for now, Mojtaba 2026-10-31: its links from the coach page and the
+// search are hidden; the page and the server's /api/ask stay).
+export const ASK_ON = false;
 export type AskTurn = { q: string; a: string; sources: SearchItem[] };
 export async function aiAsk(q: string, history: AskTurn[]): Promise<{ answer: string; sources: SearchItem[] }> {
   const prev = history.slice(-3).map(t => ({ q: t.q, a: t.a }));
