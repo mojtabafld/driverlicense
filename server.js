@@ -789,7 +789,9 @@ async function api(req, res, route) {
       // Premium can be bought in the Android app with Google Play (GOOGLE_PLAY_SERVICE_ACCOUNT): its product ids.
       play: playbilling.available() ? { products: playbilling.products() } : undefined,
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
-      guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions() });
+      guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions(),
+      // the questions' made pictures' versions too, so the app sees a new one without signing in again
+      imgv: imagegen.versions() });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
