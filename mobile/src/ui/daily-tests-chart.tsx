@@ -1,7 +1,7 @@
 // The exam tab's «آزمون‌های روزانه» chart, under the counts of right, wrong and unanswered (Mojtaba 2026-10-31, after a
 // picture he sent): how many tests were taken on each of the last seven days (Copenhagen's days; lessons' tests not
-// counted), as a smooth violet line over a soft fill, a point for each day, a light scale at the side, the days under
-// it, and the average a day in the head. One day is picked (at first the busiest, else today): a thin line down to it
+// counted), as a smooth line over a soft fill, a point for each day, a light scale at the side, the days under
+// it, and the average a day in the head; in the theme's accent colour. One day is picked (at first the busiest, else today): a thin line down to it
 // and a bubble with its date and count; a tap on another day picks it. Time runs left to right in every language.
 // `height`: the drawing's height (the exam tab makes it smaller on shorter screens).
 import { useMemo, useState } from 'react';
@@ -42,7 +42,8 @@ function smooth(p: [number, number][]): string {
 
 export function DailyTestsChart({ height = 120 }: { height?: number }) {
   const c = useColors(), dark = useIsDark(), { attempts } = useApp();
-  const violet = dark ? '#8f85ff' : '#6d5dfc';
+  // in the app's own colour (the theme chosen in the settings; Mojtaba 2026-10-31)
+  const tone = c.accent;
   const days = useMemo(() => {
     const now = Date.now(), keys = Array.from({ length: DAYS }, (_, i) => dayOf(now - (DAYS - 1 - i) * DAY));
     const n = new Map(keys.map(k => [k, 0]));
@@ -68,8 +69,8 @@ export function DailyTestsChart({ height = 120 }: { height?: number }) {
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: dark ? 'rgba(143,133,255,0.16)' : 'rgba(109,93,252,0.12)' }}>
-          <Icon name="chart" size={16} color={violet} weight="semibold" />
+        <View style={{ width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
+          <Icon name="chart" size={16} color={tone} weight="semibold" />
         </View>
         <T style={{ flex: 1, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>آزمون‌های روزانه</T>
         <T style={{ fontSize: 12.5, color: c.muted }} numberOfLines={1}>{t('میانگین {0} در روز', faNum(one(avg)))}</T>
@@ -80,16 +81,16 @@ export function DailyTestsChart({ height = 120 }: { height?: number }) {
             <Svg width={w} height={height}>
               <Defs>
                 <LinearGradient id="dtArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(0))} gradientUnits="userSpaceOnUse">
-                  <Stop offset="0" stopColor={violet} stopOpacity={dark ? 0.35 : 0.25} />
-                  <Stop offset="1" stopColor={violet} stopOpacity={0} />
+                  <Stop offset="0" stopColor={tone} stopOpacity={dark ? 0.35 : 0.25} />
+                  <Stop offset="1" stopColor={tone} stopOpacity={0} />
                 </LinearGradient>
               </Defs>
               {[0, top / 2, top].map(v => <Line key={v} x1={PAD_X} x2={PAD_X + plotW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} strokeDasharray={v ? '3 4' : undefined} />)}
               <Line x1={pts[sel][0]} x2={pts[sel][0]} y1={TOP} y2={y(0)} stroke={c.line} strokeWidth={1.2} />
               <Path d={area} fill="url(#dtArea)" />
-              <Path d={line} fill="none" stroke={violet} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+              <Path d={line} fill="none" stroke={tone} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
               {pts.map(([px, py], i) => (
-                <Circle key={i} cx={px} cy={py} r={i === sel ? 6 : 4} fill={i === sel ? violet : c.surface} stroke={i === sel ? c.surface : violet} strokeWidth={i === sel ? 3 : 2} />
+                <Circle key={i} cx={px} cy={py} r={i === sel ? 6 : 4} fill={i === sel ? tone : c.surface} stroke={i === sel ? c.surface : tone} strokeWidth={i === sel ? 3 : 2} />
               ))}
             </Svg>
             {/* the scale's numbers at the side, the days under the drawing */}
