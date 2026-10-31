@@ -16,6 +16,7 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { UI_LANG, tr } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
+import { ASK_ON } from '@/lib/search';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { ArcButton, Card, T, tap } from '@/ui/kit';
@@ -213,7 +214,7 @@ export default function CoachPage() {
       ) : null}
       {body}
       {/* «از مربی بپرس» (app/ask.tsx): any question, answered from the app's own material. */}
-      {allowed && on ? (
+      {ASK_ON && allowed && on ? (
         <Card onPress={() => { tap(); router.push('/ask'); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
             <Icon name="sparkles" size={19} color={c.link} weight="semibold" />
