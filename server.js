@@ -564,6 +564,12 @@ function registerAllowed(ip) {
 // Every API call: at most API_PER_MIN a minute from one address (the app makes a few dozen at most), so one client
 // cannot keep the server and its database busy. /api/config (the health check) is not counted.
 const API_PER_MIN = 240, apiHits = new Map();
+// The capacity test (.github/workflows/loadtest.yml) sends LOADTEST_TOKEN in X-Load-Test: all its requests come from
+// one address, so they pass the per-address limit above. Without LOADTEST_TOKEN set nothing passes (Mojtaba 2026-10-31).
+function loadTest(req) {
+  const want = process.env.LOADTEST_TOKEN || '', got = String(req.headers['x-load-test'] || '');
+  return want.length >= 16 && got.length === want.length && crypto.timingSafeEqual(Buffer.from(got), Buffer.from(want));
+}
 function apiAllowed(ip) {
   const now = Date.now(), h = apiHits.get(ip);
   if (!h || now - h.t > 60e3) { apiHits.set(ip, { t: now, n: 1 }); return true; }
@@ -780,7 +786,7 @@ const USER_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
 let lastKiePoll = 0;
 async function api(req, res, route) {
   const ip = clientIp(req);
-  if (route !== 'config' && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
+  if (route !== 'config' && !loadTest(req) && !apiAllowed(ip)) return send(res, 429, { error: 'درخواست زیاد؛ کمی بعد دوباره امتحان کنید.' });
   // For the uptime check (.github/workflows/uptime.yml): the server answers and its database too.
   if (req.method === 'GET' && route === 'health') {
     let db = false;
