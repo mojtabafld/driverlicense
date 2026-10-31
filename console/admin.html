@@ -7,7 +7,7 @@
      (its receiving webhook, /api/inbound). At the top, the AI's daily report (insights.js, /api/insights): what it found,
      what it suggests for the next updates, its memory, the pages used, and the notes it proposes for the questions most
      answered wrongly, each approved (as edited) or rejected here (/api/qnote); «گزارش تازه» makes one now
-     (/api/insightsrun). «ایجاد تصاویر» opens the picture page (/admin/images, console/images.html). It talks to /api/login, /api/logout, /api/adminstats and those. -->
+     (/api/insightsrun). «سامانه» opens the system page (/admin/system, console/system.html: the architecture with the server's live numbers); «ایجاد تصاویر» opens the picture page (/admin/images, console/images.html). It talks to /api/login, /api/logout, /api/adminstats and those. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -16,10 +16,10 @@
 <title>Teoripro Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f6f7;--surface:#fff;--surface2:#eef1f3;--line:#dde2e6;--text:#1c2226;--muted:#6b757d;--accent:#2e8285;--ok:#1f9a4a;--okSoft:#e3f5ea;--bad:#d64545;--badSoft:#fbe9e9;--warn:#b7791f;--warnSoft:#fbf1df;--bar:#2e8285;--bar2:#9ccfd0}
-@media (prefers-color-scheme:dark){:root{--bg:#121516;--surface:#1c2022;--surface2:#262b2e;--line:#333a3e;--text:#e8ecee;--muted:#9aa4aa;--accent:#4fb3b6;--ok:#4cc47a;--okSoft:#1c3326;--bad:#ef6b6b;--badSoft:#3a2222;--warn:#e0a84a;--warnSoft:#3a2f1c;--bar:#4fb3b6;--bar2:#2b5c5e}}
+:root{--bg:#f3f4f1;--surface:#fff;--surface2:#eef0ec;--line:#d9ddd5;--text:#17201b;--muted:#5d6a62;--accent:#1f7a52;--ok:#1f7a52;--okSoft:#e2f1e8;--bad:#c0392b;--badSoft:#fbe9e7;--warn:#b5651d;--warnSoft:#f8ecdf;--bar:#1f7a52;--bar2:#a9d6bd}
+@media (prefers-color-scheme:dark){:root{--bg:#0d110f;--surface:#151b18;--surface2:#1c2420;--line:#2a342f;--text:#eef3ef;--muted:#9aa89f;--accent:#4cc38a;--ok:#4cc38a;--okSoft:#173226;--bad:#ef7b6b;--badSoft:#3a1f1c;--warn:#f0a35e;--warnSoft:#33261a;--bar:#4cc38a;--bar2:#24553d;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:'Vazirmatn',system-ui,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
 main{max-width:1200px;margin:0 auto;padding:20px 16px 90px}
@@ -207,7 +207,7 @@ details summary{cursor:pointer;font-weight:700}
     $app.innerHTML = `
       <div class="head"><h1 class="grow">داشبورد Teoripro</h1>
         <span class="muted" style="font-size:12.5px">به‌روز: ${when(Date.now())}</span>
-        <a class="btn" href="/admin/images" style="text-decoration:none">ایجاد تصاویر</a><button class="btn soft" id="re">تازه کردن</button><button class="btn soft" id="out">خروج</button></div>
+        <a class="btn" href="/admin/system" style="text-decoration:none">سامانه</a><a class="btn soft" href="/admin/images" style="text-decoration:none">ایجاد تصاویر</a><button class="btn soft" id="re">تازه کردن</button><button class="btn soft" id="out">خروج</button></div>
       <div class="tiles">
         ${tile(fa(t.users), 'کاربران', `${fa(t.newToday)} تازه امروز، ${fa(t.new7)} این هفته`)}
         ${tile(fa(t.activeToday), 'فعال امروز', `${fa(t.active7)} در ۷ روز`)}
