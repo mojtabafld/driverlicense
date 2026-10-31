@@ -16,6 +16,7 @@
     "nodemailer": "^6.10.1",
     "oci-common": "^2.144.0",
     "oci-keymanagement": "^2.144.0",
+    "oci-objectstorage": "^2.144.0",
     "oci-secrets": "^2.144.0",
     "oci-vault": "^2.144.0",
     "oracledb": "^6.10.0",
