@@ -1269,6 +1269,31 @@ async function restyle(prompt, style) {
   return writeText(RESTYLE, `The new style: ${want}\n\nThe prompt:\n${prompt}`, null, 3000);
 }
 
+// The admin's picture page (Mojtaba 2026-10-31): a prompt in Persian, to read what it asks for, and the prompt with the
+// admin's own request (in Persian or English) worked into it, the picture then made from that.
+const TRANSLATE = `You translate prompts for an image model (pictures of a Danish driving-theory app) into Persian, for the app's admin to read.
+Translate the whole prompt faithfully, line by line, in natural, fluent Persian; keep sign codes (e.g. B11, E53), Danish words on signs and numbers as they are.
+Answer with the translation only.`;
+async function translatePrompt(prompt) {
+  prompt = String(prompt || '').trim().slice(0, 20000);
+  if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
+  return writeText(TRANSLATE, prompt, null, 4000);
+}
+const REVISE = `You edit prompts for an image model that draws the pictures of a Danish driving-theory app (category B).
+You get a prompt and the app admin's request (in Persian or English) for what to change or add in the picture. Rewrite the prompt so the picture does exactly what the admin asks:
+- work the request into the prompt where it belongs (the scene, the objects, the viewpoint, the style…), changing or removing whatever in the prompt contradicts it;
+- keep everything else exactly as it is: the scene, every sign (with its code and official Danish design), marking, road user, position and direction, and the style unless the request changes it;
+- whatever you add must stay correct under Danish traffic rules and the official sign designs;
+- keep it in English, in the same format.
+Answer with the prompt only.`;
+async function revisePrompt(prompt, request) {
+  prompt = String(prompt || '').trim().slice(0, 20000);
+  request = String(request || '').trim().slice(0, 3000);
+  if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
+  if (!request) throw Object.assign(new Error('بنویسید چه چیزی در تصویر تغییر کند.'), { status: 400 });
+  return writeText(REVISE, `The admin's request:\n${request}\n\nThe prompt:\n${prompt}`, null, 4000);
+}
+
 async function writeText(system, text, image, maxTokens = 1500) {
   if (!process.env.ANTHROPIC_API_KEY) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   claude = claude || new Anthropic({ timeout: 120e3, maxRetries: 2 });
@@ -1281,6 +1306,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { restyle, artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };

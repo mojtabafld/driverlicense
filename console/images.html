@@ -72,6 +72,7 @@ textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;mi
 .tag.bad{color:var(--bad);border-color:var(--bad)}
 .aibox{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
 textarea.fa{direction:rtl;text-align:right;min-height:80px}
+.trbox{white-space:pre-wrap;direction:rtl;text-align:right;font-size:13.5px;line-height:1.9;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px;background:var(--surface)}
 .prop{margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;font-size:14px;z-index:9}
 </style>
@@ -239,7 +240,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       api('GET', `newqitem?id=${x.key}`).then(d => { if (st.qfor === x.pid) { st.qd = d; view(); } }).catch(e => toast(e.message));
     }
     if (x && st.promptFor !== x.pid) {
-      st.prompt = null; st.promptFor = x.pid; st.style = null;
+      st.prompt = null; st.promptFor = x.pid; st.style = null; st.tr = null; st.trOpen = false; st.req = ''; st.revising = false;
       promptOf(x).then(d => { if (st.promptFor === x.pid) { st.prompt = st.saved = d.prompt || ''; st.style = st.base = (STYLES.some(([k]) => k === d.style) && d.style) || styleOf(st.saved); view(); } })
         .catch(e => toast(e.message));
     }
@@ -265,6 +266,16 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
             ${st.restyling ? '<span class="state">در حال نوشتن پرامپت برای این سبک…</span>' : '<span class="muted" style="font-size:12.5px">با انتخاب سبک، پرامپت برای همان صحنه در آن سبک بازنویسی می‌شود.</span>'}
           </div>
           <label>پرامپت<textarea id="pr" ${st.prompt == null ? 'disabled' : ''} placeholder="${st.prompt == null ? 'در حال بارگذاری…' : EMPTY}">${esc(st.prompt == null ? '' : st.prompt)}</textarea></label>
+          <div class="row" style="margin:6px 0 4px">
+            <button class="btn soft" id="trb" ${st.prompt == null || st.tr === 'loading' ? 'disabled' : ''}>${st.tr === 'loading' ? 'در حال ترجمه…' : st.trOpen ? 'بستن ترجمه' : 'ترجمه‌ی فارسی پرامپت'}</button>
+          </div>
+          ${st.trOpen && st.tr && st.tr !== 'loading' ? `<div class="trbox">${esc(st.tr.text)}${st.tr.for !== (st.prompt || '') ? '<div class="muted" style="font-size:12px;margin-top:6px">پرامپت پس از این ترجمه تغییر کرده؛ برای ترجمه‌ی تازه دوباره بزنید.</div>' : ''}</div>` : ''}
+          <label>درخواست ویرایش تصویر<textarea id="req" class="fa" ${st.prompt == null || st.revising ? 'disabled' : ''} placeholder="مثلاً: دوچرخه‌سوار از سمت چپ بیاید، هوا بارانی باشد، تابلو بزرگ‌تر دیده شود…">${esc(st.req || '')}</textarea></label>
+          <div class="row" style="margin:6px 0 12px">
+            <button class="btn" id="revgen" ${st.prompt == null || st.revising || x.making ? 'disabled' : ''}>افزودن به پرامپت و ساخت تصویر</button>
+            <button class="btn soft" id="rev" ${st.prompt == null || st.revising ? 'disabled' : ''}>فقط افزودن به پرامپت</button>
+            ${st.revising ? '<span class="state">در حال افزودن درخواست به پرامپت…</span>' : '<span class="muted" style="font-size:12.5px">درخواست شما با هوش مصنوعی در پرامپت بالا گنجانده می‌شود و تصویر از پرامپت نهایی ساخته می‌شود.</span>'}
+          </div>
           <div class="row">
             <button class="btn" id="gen" ${x.making ? 'disabled' : ''}>ساخت تصویر جدید با این پرامپت</button>
             <button class="btn soft" id="undo">بازگرداندن پرامپت</button>
@@ -303,10 +314,9 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       catch (e) { toast(e.message); }
       dr.disabled = false; dr.textContent = 'نوشتن پرامپت با هوش مصنوعی';
     };
-    document.getElementById('gen').onclick = async () => {
-      const prompt = ta.value.trim();
+    const generate = async (prompt, ask = true) => {
       if (!prompt) return toast('پرامپت خالی است.');
-      if (!confirm('با این پرامپت تصویر تازه ساخته شود؟')) return;
+      if (ask && !confirm('با این پرامپت تصویر تازه ساخته شود؟')) return;
       try {
         if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt, style: st.style });
         else await api('POST', 'guidegen', { key: x.key, prompt, style: st.style });
@@ -314,6 +324,38 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       } catch (e) { return toast(e.message); }
       view(true);
     };
+    document.getElementById('gen').onclick = () => generate(ta.value.trim());
+    // «ترجمه‌ی فارسی پرامپت»: the prompt as it is now in Persian (made again only when the prompt has changed)
+    document.getElementById('trb').onclick = async () => {
+      if (st.trOpen) { st.trOpen = false; return view(); }
+      const now = ta.value, pid = x.pid;
+      st.trOpen = true;
+      if (st.tr && st.tr.for === now) return view();
+      st.tr = 'loading'; view();
+      try { const d = await api('POST', 'prompttr', { prompt: now }); if (st.promptFor === pid) st.tr = { for: now, text: d.text }; }
+      catch (e) { st.tr = null; st.trOpen = false; toast(e.message); }
+      view();
+    };
+    // «درخواست ویرایش تصویر»: the admin's request worked into the prompt by the AI, and with «…و ساخت تصویر» the picture
+    // made from the final prompt right away
+    const rq = document.getElementById('req');
+    rq.oninput = () => { st.req = rq.value; };
+    const revise = async make => {
+      const request = rq.value.trim(), pid = x.pid;
+      if (!request) return toast('بنویسید چه چیزی در تصویر تغییر کند.');
+      if (make && !confirm('درخواست به پرامپت افزوده شود و تصویر تازه از پرامپت نهایی ساخته شود؟')) return;
+      st.prompt = ta.value; st.revising = true; view();
+      let out;
+      try { out = (await api('POST', 'promptrevise', { prompt: st.prompt, request })).prompt; }
+      catch (e) { st.revising = false; view(); return toast(e.message); }
+      st.revising = false;
+      if (st.promptFor !== pid) return view();
+      st.prompt = out; st.req = ''; st.trOpen = false;
+      if (!make) { toast('درخواست به پرامپت افزوده شد؛ پرامپت را ببینید و بسازید.'); return view(); }
+      view(); await generate(out, false);
+    };
+    document.getElementById('rev').onclick = () => revise(false);
+    document.getElementById('revgen').onclick = () => revise(true);
     const NAMES = { ai: 'تصویر ساخته‌شده', prove: 'تصویر prove.dk', official: 'طرح رسمی' };
     document.querySelectorAll('[data-pick]').forEach(im => { im.onclick = async () => {
       const choice = im.dataset.pick;
@@ -322,9 +364,9 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       try { await api('POST', 'guiderefchoose', { key: x.key, choice }); toast('تصویر اصلی عوض شد'); } catch (e) { return toast(e.message); }
       view(true);
     }; });
-    // while a picture is being made, look again every 6 seconds (not while the prompt is being edited)
+    // while a picture is being made, look again every 6 seconds (not while the prompt or the request is being edited)
     if (g.items.some(y => y.making)) {
-      const again = () => { if (document.activeElement === ta) pollT = setTimeout(again, 6000); else view(true); };
+      const again = () => { if (document.activeElement === ta || document.activeElement === rq) pollT = setTimeout(again, 6000); else view(true); };
       pollT = setTimeout(again, 6000);
     }
   }
