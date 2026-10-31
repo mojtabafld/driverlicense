@@ -1638,6 +1638,15 @@ async function api(req, res, route) {
     try { return send(res, 200, { prompt: await imagegen.restyle(b.prompt, String(b.style || '')) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error('restyle', e.message); return send(res, 502, { error: 'تغییر سبک پرامپت ممکن نشد؛ دوباره امتحان کنید.' }); }
   }
+  // …a prompt in Persian ({ prompt } → { text }) and the prompt with the admin's request worked in ({ prompt, request } → { prompt }).
+  if (req.method === 'POST' && (route === 'prompttr' || route === 'promptrevise')) {
+    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    const b = await readBody(req);
+    try {
+      if (route === 'prompttr') return send(res, 200, { text: await imagegen.translatePrompt(b.prompt) });
+      return send(res, 200, { prompt: await imagegen.revisePrompt(b.prompt, b.request) });
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error(route, e.message); return send(res, 502, { error: 'انجام نشد؛ دوباره امتحان کنید.' }); }
+  }
   if (route === 'courseart' || route === 'courseprompt' || route === 'coursegen') {
     if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
     const q = new URL(req.url, 'http://x').searchParams;
