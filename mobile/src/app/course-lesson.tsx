@@ -24,7 +24,7 @@ import { faNum } from '@/lib/logic';
 import { BarCount, FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { learnRtl } from '@/ui/swipe';
 import { Icon } from '@/ui/icon';
-import { OptionBox, OptionGroup } from '@/ui/option-box';
+import { OptionBox, OptionGroup, VerdictTag } from '@/ui/option-box';
 import { Art, RuleBox, TrapBox } from '@/ui/course-parts';
 import { Button, Card, Enter, T, TransT, TranslateButton, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
@@ -64,9 +64,11 @@ function ExamQuestion({ step, n, of, ticks, checked, onToggle }: { step: Extract
         return (
           <OptionBox key={i} on={on} mark={wrong} review={checked} n={i} disabled={checked} onPress={() => { tap(); onToggle(i); }}
               extra={checked ? (
-              <T style={{ fontSize: 13, lineHeight: 21, color: wrong ? c.bad : c.ok, fontWeight: '600', paddingHorizontal: 4 }}>
-                {wrong ? (s.ok ? 'اشتباه؛ این گزینه درست است و باید انتخاب می‌شد. ' : 'اشتباه؛ این گزینه نادرست است و نباید انتخاب می‌شد. ') : 'درست. '}{s.why}
-              </T>
+              <View style={{ gap: 4 }}>
+                <VerdictTag right={!wrong} />
+                {wrong ? <T style={{ fontSize: 13, lineHeight: 20, color: c.bad, fontWeight: '600', paddingHorizontal: 4 }}>{s.ok ? 'این گزینه درست است و باید انتخاب می‌شد.' : 'این گزینه نادرست است و نباید انتخاب می‌شد.'}</T> : null}
+                <T style={{ fontSize: 13.5, lineHeight: 20, color: c.muted, paddingHorizontal: 4 }}>{s.why}</T>
+              </View>
             ) : null}>
                 <T style={{ fontFamily: DA_FONT, fontSize: 15.5, lineHeight: 22, writingDirection: 'ltr', textAlign: 'left' }}>{courseText(s.da, lang)}</T>
                 {fa && transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da }) ? <TransT style={{ color: c.muted, fontSize: 13.5, lineHeight: 21 }}>{transText(lang, { fa: s.fa, en: courseText(s.da, 'en'), da: s.da })}</TransT> : null}

@@ -7,7 +7,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { RTL } from '@/lib/i18n';
 import { Icon } from './icon';
+import { mix } from './palette';
 import { T } from './kit';
 import { ARC, radius, useColors, useIsDark } from './theme';
 import { useSurfaceUnder } from './bar-shade';
@@ -85,4 +87,18 @@ function OldBox({ on, mark, review, onPress, disabled, extra, children }: Props)
       style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}>{box}</Pressable>
   ) : box;
   return extra ? <View style={{ gap: 6 }}>{pressable}{extra}</View> : pressable;
+}
+
+// The «درست» / «نادرست» tag under a checked statement (the exam's «بررسی», a lesson's test): a soft pill in the answer's
+// colour. A wrong statement's box is already tinted red, so its tag is a deeper red to stand out on it, in both themes
+// (Mojtaba 2026-10-31).
+export function VerdictTag({ right }: { right: boolean }) {
+  const c = useColors(), dark = useIsDark(), fg = right ? c.ok : c.bad;
+  const bg = right ? c.okSoft : mix(c.badSoft, c.bad, dark ? 0.28 : 0.15);
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 9, backgroundColor: bg, direction: RTL ? 'rtl' : 'ltr' } as any}>
+      <Icon name={right ? 'checkCircle' : 'xCircle'} size={15} color={fg} weight="semibold" />
+      <T style={{ fontSize: 12.5, fontWeight: '700', color: fg, writingDirection: RTL ? 'rtl' : 'ltr' }}>{right ? 'درست' : 'نادرست'}</T>
+    </View>
+  );
 }

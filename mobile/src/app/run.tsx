@@ -20,7 +20,7 @@ import { GlassTop } from '@/ui/liquid';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { ListButton } from '@/ui/question-list';
 import { Sheet, SheetScroll } from '@/ui/sheet';
-import { OptionBox, OptionGroup } from '@/ui/option-box';
+import { OptionBox, OptionGroup, VerdictTag } from '@/ui/option-box';
 import { learnRtl, Pager } from '@/ui/swipe';
 import { useWebBackGuard } from '@/ui/web-back';
 import { Icon } from '@/ui/icon';
@@ -66,13 +66,10 @@ function CheckChip({ on, onPress, disabled }: { on: boolean; onPress: () => void
 
 // Under a statement while «بررسی فوری» is on: whether the answer given (ticked or not) is right, and why.
 function Verdict({ right, why, whyFa }: { right: boolean; why?: string; whyFa?: string }) {
-  const c = useColors(), fg = right ? c.ok : c.bad;
+  const c = useColors();
   return (
     <View style={{ gap: 4 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 9, backgroundColor: right ? c.okSoft : c.badSoft, direction: RTL ? 'rtl' : 'ltr' } as any}>
-        <Icon name={right ? 'checkCircle' : 'xCircle'} size={15} color={fg} weight="semibold" />
-        <T style={{ fontSize: 12.5, fontWeight: '700', color: fg, writingDirection: RTL ? 'rtl' : 'ltr' }}>{right ? 'درست' : 'نادرست'}</T>
-      </View>
+      <VerdictTag right={right} />
       {why ? <L style={{ fontSize: 13.5, lineHeight: 20, color: c.muted }}>{why}</L> : null}
       {whyFa ? <TransT style={{ color: c.muted, fontSize: 13 }}>{whyFa}</TransT> : null}
     </View>
