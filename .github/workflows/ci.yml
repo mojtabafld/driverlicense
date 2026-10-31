@@ -1,0 +1,54 @@
+# Checks on every pull request (Mojtaba 2026-10-31), before anything is merged into main, which the server takes
+# in by itself every 2 minutes (deploy/oracle/update.sh, which also rolls back a version that does not start):
+#   server: every .js file parses, the server starts on its own (a file database, no keys) and answers
+#           /api/health, /api/config and the web app's page;
+#   app:    the app's TypeScript compiles (mobile/, tsc --noEmit).
+# A red run means: do not merge.
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - name: Every server file parses
+        run: for f in *.js deploy/oracle/*.js; do node --check "$f" || exit 1; done
+      - name: The server starts and answers
+        run: |
+          PORT=3999 DB_FILE=$RUNNER_TEMP/db.json node server.js > $RUNNER_TEMP/server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:3999/api/health >/dev/null && break; sleep 1; done
+          curl -sf localhost:3999/api/health | tee /dev/stderr | grep -q '"db":true'
+          curl -sf localhost:3999/api/config >/dev/null
+          curl -sf -o /dev/null localhost:3999/
+          echo "OK"
+      - if: failure()
+        run: cat $RUNNER_TEMP/server.log || true
+
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - name: TypeScript
+        run: npx tsc --noEmit -p .
