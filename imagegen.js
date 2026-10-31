@@ -102,7 +102,52 @@ function learnOrders() {
   catch { return {}; }
 }
 
+// OpenAI's own image API, a second picture service the admin's picture page can choose (Mojtaba 2026-10-31), with
+// OPENAI_API_KEY (the vault's «OpenAI_API_Key») and OPENAI_IMAGE_MODEL (default gpt-image-1). Its answer comes in one
+// request, so it runs in the background as a task like kie.ai's: «oa-…» ids, read back through kie()'s recordInfo
+// (below) in kie.ai's form, the picture as a data: URL. Kept in memory: a server restart fails the ones still running.
+const OPENAI_IMAGE_MODEL = (process.env.OPENAI_IMAGE_MODEL || '').trim() || 'gpt-image-1';
+const openaiReady = () => !!process.env.OPENAI_API_KEY;
+const OA = new Map();
+const PROVIDERS = () => ({ kie: { ok: available(), name: `kie.ai (${IMAGE_MODEL})` }, openai: { ok: openaiReady(), name: `OpenAI (${OPENAI_IMAGE_MODEL})` } });
+const oaSize = ar => { const [w, h] = String(ar || '4:3').split(':').map(Number); return !w || !h || w === h ? '1024x1024' : w > h ? '1536x1024' : '1024x1536'; };
+async function openaiCall(input, images) {
+  const head = { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` };
+  let r;
+  if (images.length) {
+    const f = new FormData();
+    f.append('model', OPENAI_IMAGE_MODEL); f.append('prompt', input.prompt); f.append('size', oaSize(input.aspect_ratio)); f.append('quality', 'high');
+    images.forEach((b, i) => f.append('image[]', new Blob([b.data], { type: b.mime }), `in-${i}.${b.mime === 'image/jpeg' ? 'jpg' : 'png'}`));
+    r = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: head, body: f, signal: AbortSignal.timeout(10 * 60e3) });
+  } else {
+    r = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { ...head, 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10 * 60e3),
+      body: JSON.stringify({ model: OPENAI_IMAGE_MODEL, prompt: input.prompt, size: oaSize(input.aspect_ratio), quality: 'high', n: 1 }) });
+  }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(d.error && d.error.message) || 'error'}`);
+  const b64 = d.data && d.data[0] && d.data[0].b64_json;
+  if (!b64) throw new Error('OpenAI: no picture');
+  return `data:image/png;base64,${b64}`;
+}
+function openaiTask(input, images = []) {
+  if (!openaiReady()) throw Object.assign(new Error('OPENAI_API_KEY تنظیم نشده است.'), { status: 503 });
+  const taskId = `oa-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  OA.set(taskId, { state: 'generating' });
+  openaiCall(input, images)
+    .then(url => OA.set(taskId, { state: 'success', url }))
+    .catch(e => { console.error('openai picture', e.message); OA.set(taskId, { state: 'fail', failMsg: e.message }); });
+  return { taskId };
+}
+function openaiRecord(taskId) {
+  const t = OA.get(taskId);
+  if (!t) return { state: 'fail', failMsg: 'the server restarted while the picture was being made' };
+  if (t.state === 'success') { OA.delete(taskId); return { state: 'success', resultJson: JSON.stringify({ resultUrls: [t.url] }) }; }
+  return t;
+}
+
 async function kie(method, url, body) {
+  const oa = method === 'GET' && /^\/jobs\/recordInfo\?taskId=oa-/.test(url) && decodeURIComponent(url.split('taskId=')[1]);
+  if (oa) return openaiRecord(oa);
   const r = await fetch(KIE + url, { method, headers: { Authorization: `Bearer ${process.env.KIE_API_KEY}`, 'Content-Type': 'application/json' }, body: body && JSON.stringify(body) });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || (d.code && d.code !== 200)) throw new Error(`kie.ai ${r.status}: ${d.msg || d.message || 'error'}`);
@@ -1001,12 +1046,12 @@ const ART_SETS = { course: [COURSE, COURSE_ART], newq: [NEWQ, NEWQ_ART] };
 const artKeys = set => Object.keys((ART_SETS[set] || [, {}])[1]);
 const artVersions = set => (ART_SETS[set] ? ART_SETS[set][0].versions() : {});
 const artPrompt = (set, key) => { const a = ART_SETS[set]; return a && a[1][key] ? a[0].promptOf(key) : null; };
-function artGen(set, key, prompt) {
+function artGen(set, key, prompt, provider) {
   const a = ART_SETS[set];
   if (!a || !a[1][key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
   prompt = String(prompt || '').trim().slice(0, 20000);
   if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
-  return startOneOff(`${set}-${key}`, { prompt, aspect: a[1][key].aspect || '4:3', target: `${set}:${key}` });
+  return startOneOff(`${set}-${key}`, { prompt, aspect: a[1][key].aspect || '4:3', target: `${set}:${key}`, provider });
 }
 
 // ---------- profile pictures to choose from in the settings ----------
@@ -1173,14 +1218,22 @@ const saveOneOff = () => store.saveMeta('oneOff', oneOffs());
 // `images` ([{ mime, data }]) are sent instead of `ref`; with `regions` and `base` (the picture being corrected), only
 // those parts of the result are put on `base` (kept as blob `oneoff-<id>-base` meanwhile), as in editRegions.
 // `record`: the prompt kept with the picture when it differs from what the model is sent (an edit instruction).
-async function startOneOff(id, { prompt, aspect = '4:3', ref = '', target = '', images: inputs = null, regions = null, base = null, record = '' }) {
-  if (!available()) throw Object.assign(new Error('KIE_API_KEY تنظیم نشده است.'), { status: 503 });
+// `provider`: 'openai' for OpenAI's own image API, else kie.ai's.
+async function startOneOff(id, { prompt, aspect = '4:3', ref = '', target = '', images: inputs = null, regions = null, base = null, record = '', provider = 'kie' }) {
+  const oa = provider === 'openai';
+  if (oa ? !openaiReady() : !available()) throw Object.assign(new Error(`${oa ? 'OPENAI_API_KEY' : 'KIE_API_KEY'} تنظیم نشده است.`), { status: 503 });
   const old = oneOffs()[id];
   if (old && !old.done) throw Object.assign(new Error('یک تصویر در حال ساخت است؛ صبر کنید تا تمام شود.'), { status: 409 });
   if (old && old.blob) { await store.deleteBlob(old.blob).catch(() => {}); cache.delete(old.blob); }
-  const job = oneOffs()[id] = { at: Date.now(), prompt: record || prompt, state: 'queued', done: false, ...(target ? { target } : {}) };
+  const job = oneOffs()[id] = { at: Date.now(), prompt: record || prompt, state: 'queued', done: false, ...(target ? { target } : {}), ...(oa ? { provider } : {}) };
   try {
     const input = { prompt, aspect_ratio: aspect, resolution: '2K' };
+    if (oa) {
+      if (regions && base) { await store.saveBlob(`oneoff-${id}-base`, base.mime, base.data); Object.assign(job, { regions, base: `oneoff-${id}-base` }); }
+      const pics = inputs || (ref ? [{ mime: /\.jpe?g$/i.test(ref) ? 'image/jpeg' : 'image/png', data: fs.readFileSync(ref) }] : []);
+      Object.assign(job, { taskId: openaiTask(input, pics).taskId, state: 'generating' });
+      schedule(); await saveOneOff(); return job;
+    }
     if (inputs) input.input_urls = await Promise.all(inputs.map((b, i) => upload(b, `oneoff-${id}-${i}`)));
     else if (ref) input.input_urls = [await upload({ mime: 'image/png', data: fs.readFileSync(ref) }, `oneoff-${id}`)];
     if (regions && base) { await store.saveBlob(`oneoff-${id}-base`, base.mime, base.data); Object.assign(job, { regions, base: `oneoff-${id}-base` }); }
@@ -1306,6 +1359,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };

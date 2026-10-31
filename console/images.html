@@ -104,6 +104,9 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
   ];
   // part, group and item chosen (kept in the address, so a reload stays on the same picture)
   const h = new URLSearchParams(location.hash.slice(1));
+  // The picture services (kie.ai, OpenAI) and the one chosen here, kept in this browser (Mojtaba 2026-10-31).
+  let PROV = null, prov = 'kie';
+  try { prov = localStorage.getItem('img.provider') || 'kie'; } catch {}
   const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, filter: ({ 1: 'missing' })[h.get('m')] || h.get('m') || 'all', pid: null, qd: null, qfor: '', ai: null, data: {}, prompt: null, promptFor: '', saved: '' };
   const remember = () => history.replaceState(null, '', `#p=${st.part}&g=${st.g}&i=${st.i}${st.filter !== 'all' ? `&m=${st.filter}` : ''}`);
 
@@ -262,6 +265,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
           ${st.part === 'q' ? questionPanel(x) : ''}
           <div class="pics">${pictures(x)}</div>
           <div class="row" style="margin:0 0 8px">
+            <label class="chk">سرویس ساخت تصویر:<select id="prov" style="width:auto">${PROV ? Object.entries(PROV).map(([k, v]) => `<option value="${k}" ${k === prov ? 'selected' : ''} ${v.ok ? '' : 'disabled'}>${esc(v.name)}${v.ok ? '' : ' · کلید تنظیم نشده'}</option>`).join('') : '<option>…</option>'}</select></label>
             <label class="chk">سبک تصویر:<select id="sty" style="width:auto" ${st.prompt == null || st.restyling ? 'disabled' : ''}>${STYLES.map(([k, t]) => `<option value="${k}" ${k === (st.restyling || st.style) ? 'selected' : ''}>${t}${k === st.base ? ' · سبک فعلی' : ''}</option>`).join('')}</select></label>
             ${st.restyling ? '<span class="state">در حال نوشتن پرامپت برای این سبک…</span>' : '<span class="muted" style="font-size:12.5px">با انتخاب سبک، پرامپت برای همان صحنه در آن سبک بازنویسی می‌شود.</span>'}
           </div>
@@ -293,6 +297,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
     if (!x) return;
     if (st.part === 'q') questionWire(x);
     const ta = document.getElementById('pr');
+    document.getElementById('prov').onchange = e => { prov = e.target.value; try { localStorage.setItem('img.provider', prov); } catch {} };
     ta.oninput = () => { st.prompt = ta.value; };
     document.getElementById('undo').onclick = () => { st.prompt = ta.value = st.saved; st.style = st.base; view(); };
     document.getElementById('sty').onchange = async e => {
@@ -318,8 +323,8 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       if (!prompt) return toast('پرامپت خالی است.');
       if (ask && !confirm('با این پرامپت تصویر تازه ساخته شود؟')) return;
       try {
-        if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt, style: st.style });
-        else await api('POST', 'guidegen', { key: x.key, prompt, style: st.style });
+        if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt, style: st.style, provider: prov });
+        else await api('POST', 'guidegen', { key: x.key, prompt, style: st.style, provider: prov });
         st.saved = prompt; st.base = st.style; toast('ساخت تصویر شروع شد');
       } catch (e) { return toast(e.message); }
       view(true);
@@ -371,6 +376,11 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
     }
   }
   view();
+  api('GET', 'imageproviders').then(d => {
+    PROV = d;
+    if (!(PROV[prov] && PROV[prov].ok)) prov = Object.keys(PROV).find(k => PROV[k].ok) || 'kie';
+    if (document.activeElement !== document.getElementById('pr') && document.activeElement !== document.getElementById('req')) view();
+  }).catch(() => {});
 })();
 </script>
 </body>
