@@ -7,7 +7,7 @@
      (its receiving webhook, /api/inbound). At the top, the AI's daily report (insights.js, /api/insights): what it found,
      what it suggests for the next updates, its memory, the pages used, and the notes it proposes for the questions most
      answered wrongly, each approved (as edited) or rejected here (/api/qnote); «گزارش تازه» makes one now
-     (/api/insightsrun). «سامانه» opens the system page (/admin/system, console/system.html: the architecture with the server's live numbers); «ایجاد تصاویر» opens the picture page (/admin/images, console/images.html). It talks to /api/login, /api/logout, /api/adminstats and those. -->
+     (/api/insightsrun). «سامانه» opens the system page (/admin/system, console/system.html: the architecture with the server's live numbers); «ایجاد تصاویر» opens the picture page (/admin/images, console/images.html). It talks to /api/admincode and /api/admincodein (sign-in with an emailed code), /api/logout, /api/adminstats and those. -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -98,20 +98,39 @@ details summary{cursor:pointer;font-weight:700}
     return d;
   }
 
+  // Signing in (Mojtaba 2026-11-01): the admin's email address (one of the vault's ADMIN_EMAILS), then the code sent to it.
   function login(msg = '') {
     $app.innerHTML = `<form class="card login" id="f">
       <h1>داشبورد Teoripro</h1>
-      <p class="muted" style="margin:0">کاربران و استفاده از برنامه؛ فقط برای مدیران.</p>
-      <input name="u" placeholder="نام کاربری یا ایمیل" autocomplete="username" dir="ltr" required>
-      <input name="p" type="password" placeholder="رمز عبور" autocomplete="current-password" dir="ltr" required>
+      <p class="muted" style="margin:0">فقط برای مدیران. ایمیل مدیر را بنویسید تا کد ورود برایش فرستاده شود.</p>
+      <input name="e" type="email" placeholder="ایمیل" autocomplete="username" dir="ltr" required>
       <div class="err" id="err">${esc(msg)}</div>
-      <button class="btn">ورود</button>
+      <button class="btn">فرستادن کد</button>
     </form>`;
     const f = document.getElementById('f');
-    f.u.focus();
+    f.e.focus();
     f.onsubmit = async e => {
       e.preventDefault();
-      try { const d = await api('POST', 'login', { username: f.u.value, password: f.p.value }); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد.'); } view(); }
+      const email = f.e.value.trim();
+      try { await api('POST', 'admincode', { email }); codeStep(email); }
+      catch (er) { document.getElementById('err').textContent = er.message; }
+    };
+  }
+  function codeStep(email, msg = '') {
+    $app.innerHTML = `<form class="card login" id="f">
+      <h1>کد ورود</h1>
+      <p class="muted" style="margin:0">اگر <span dir="ltr">${esc(email)}</span> ایمیل مدیر باشد، یک کد ۶ رقمی به آن فرستاده شد (۱۵ دقیقه اعتبار دارد).</p>
+      <input name="c" inputmode="numeric" autocomplete="one-time-code" placeholder="کد ۶ رقمی" dir="ltr" maxlength="8" required>
+      <div class="err" id="err">${esc(msg)}</div>
+      <button class="btn">ورود</button>
+      <button class="btn soft" type="button" id="back">ایمیل دیگر</button>
+    </form>`;
+    const f = document.getElementById('f');
+    f.c.focus();
+    document.getElementById('back').onclick = () => login();
+    f.onsubmit = async e => {
+      e.preventDefault();
+      try { const d = await api('POST', 'admincodein', { email, code: f.c.value }); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد.'); } view(); }
       catch (er) { document.getElementById('err').textContent = er.message; }
     };
   }

@@ -2,7 +2,7 @@
 // Run locally:  node server.js            (data kept in data/db.json)
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
-// ADMIN_USERS (comma-separated usernames that get the admin panel), ANTHROPIC_API_KEY (AI lessons in the review),
+// ADMIN_EMAILS or ADMIN_USERS (comma-separated email addresses of the admins), ANTHROPIC_API_KEY (AI lessons in the review),
 // LESSON_AI_MODEL (Claude model for those lessons, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
 // INSIGHTS_HOUR / INSIGHTS_EMAIL / INSIGHTS_MODEL (the AI's daily report, insights.js), ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
@@ -82,8 +82,13 @@ const MAX_WORDS = 3000;
 const MAX_TERMS = 500; // bookmarked glossary terms per user
 const MAX_SAVED = 1000; // bookmarked questions per user
 const MAX_LESSON_DRAFTS = 100; // unfinished lessons per user (there are 44)
-const ADMINS = new Set((process.env.ADMIN_USERS || '').split(',').map(u => u.trim().toLowerCase()).filter(Boolean));
-const isAdmin = u => ADMINS.has(u.username);
+// The admins (Mojtaba 2026-11-01): by their email address alone, as the vault's ADMIN_EMAILS (or ADMIN_USERS, its earlier
+// name) lists them (comma-separated). An account is an admin when its address is on the list and confirmed (signed up or
+// in with an emailed code, or Google), so a deleted and made-again account with the same address is an admin again.
+// The dashboard signs in with a code sent to that address (POST admincode / admincodein), no password.
+const ADMINS = new Set((process.env.ADMIN_EMAILS || process.env.ADMIN_USERS || '').split(',').map(u => u.trim().toLowerCase()).filter(x => x.includes('@')));
+const emailOf = u => String((u && (u.email || (String(u.username || '').includes('@') ? u.username : ''))) || '').trim().toLowerCase();
+const isAdmin = u => !!u && !u.guest && !!u.emailOk && ADMINS.has(emailOf(u));
 
 const clip = (v, n) => String(v ?? '').trim().slice(0, n);
 
@@ -877,6 +882,33 @@ async function api(req, res, route) {
     return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
   }
 
+  // The dashboard's sign-in (console/admin.html; Mojtaba 2026-11-01): POST admincode { email } sends a code to an admin's
+  // address (ADMINS; the account must exist, made in the app with that address), POST admincodein { email, code } signs
+  // in with it (a cookie session). The answer to admincode is the same for any address, so the list is not told.
+  if (req.method === 'POST' && route === 'admincode') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const e = mail.normal((await readBody(req)).email);
+    if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست وارد کنید.' });
+    addFail(ip);
+    const u = ADMINS.has(e) ? await live(resetUser(e)) : null;
+    if (u && mail.available()) {
+      try { await sendCodeMail(u, e, 'fa', 'login'); }
+      catch (err) { if (err.status) return send(res, err.status, { error: err.message }); console.error('admin code mail', err.message); return send(res, 502, { error: 'ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.' }); }
+    } else if (ADMINS.has(e)) console.error('admin code: no account with the admin address', e.replace(/^(.{2}).*@/, '$1…@'));
+    return send(res, 200, { ok: true });
+  }
+  if (req.method === 'POST' && route === 'admincodein') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const { email, code } = await readBody(req), e = mail.normal(email);
+    const u = ADMINS.has(e) ? await live(resetUser(e)) : null;
+    if (!u || !(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+    delete u.reset;
+    if (!u.emailOk) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
+    await store.saveUser(u);
+    fails.delete(ip);
+    await newSession(req, res, u.username);
+    return send(res, 200, { user: publicUser(u) });
+  }
   // Signing in with Google (Mojtaba 2026-10-21), the authorization-code flow, on the web and in the Android apps alike:
   // GET google/start?ret=web|app&base=/|/app/&scheme=…&lang=… goes to Google's own page; Google comes back to
   // google/callback, whose code the server trades (with GOOGLE_CLIENT_SECRET) for the user's verified email and name.
