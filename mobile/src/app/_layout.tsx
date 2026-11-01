@@ -11,6 +11,7 @@ import { useOnline } from '@/lib/online';
 import { initialOnboarded, loadOnboarded, loadPromoSeen, saveOnboarded, savePromoSeen } from '@/lib/prefs';
 import { PROVE_PICS } from '@/lib/config';
 import { ProPromo } from '@/ui/pro-promo';
+import { setPromoGate } from '@/lib/promo-gate';
 import { AppProvider, useApp } from '@/lib/store';
 import { useUsage } from '@/lib/usage';
 import { DA_FONTS, FA_FONTS } from '@/ui/fonts';
@@ -63,7 +64,7 @@ function Root() {
   // The questions' language and the look: asked once per account, on its first sign-in (Mojtaba, 2026-10-16); an
   // account that already has its settings, from any device, is not asked again.
   const askLang = !!user && !settings.langChosen;
-  const { premium, pay } = useApp();
+  const { premium, pay, configReady } = useApp();
   const [promo, setPromo] = useState(false);
   // Right after an account is made (made in the last day; not a guest's), never again on this device (Mojtaba
   // 2026-10-29). It offers the free trial, so it needs only the server's premium on (pay), on every platform. Not while
@@ -73,13 +74,19 @@ function Root() {
   // (keyed by the account and when it was made: an account deleted and made again with the same name is new again)
   const promoKey = user ? `${user.username}:${user.created || 0}` : '';
   const markPromo = () => { if (promoKey) loadPromoSeen().then(seen => { if (!seen.includes(promoKey)) savePromoSeen([...seen, promoKey].slice(-20)); }); };
+  // (the warm-up waits for it: lib/promo-gate.ts; 'done' as soon as it is known not to show)
   useEffect(() => {
     const fresh = !!user && !user.guest && !user.verify && Date.now() - (user.created || 0) < 24 * 3600e3;
-    if (!onboarded || !user || !fresh || askLang || premium || !pay || PROVE_PICS) return;
+    if (!onboarded || askLang || (user && user.verify) || (user && !configReady)) return;
+    if (!user || !fresh || premium || !pay || PROVE_PICS) { if (!promo) setPromoGate('done', promoKey); return; }
     let live = true;
-    loadPromoSeen().then(seen => { if (live && !seen.includes(promoKey)) setPromo(true); });
+    loadPromoSeen().then(seen => {
+      if (!live) return;
+      if (seen.includes(promoKey)) { if (!promo) setPromoGate('done', promoKey); return; }
+      setPromoGate('open', promoKey); setPromo(true);
+    });
     return () => { live = false; };
-  }, [onboarded, promoKey, user?.verify, askLang, premium, !!pay]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onboarded, promoKey, user?.verify, askLang, premium, !!pay, configReady]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!promo) return;
     const id = setTimeout(markPromo, 2500);
@@ -161,7 +168,7 @@ function Root() {
       ) : null}
       {/* The first premium page: right after signing up, to a user without premium, after the intro and the language
           screen (Mojtaba 2026-10-29). */}
-      {promo ? <View style={StyleSheet.absoluteFill}><ProPromo onClose={() => { markPromo(); setPromo(false); }} /></View> : null}
+      {promo ? <View style={StyleSheet.absoluteFill}><ProPromo onClose={() => { markPromo(); setPromo(false); setPromoGate('done', promoKey); }} /></View> : null}
       {/* A newer Android app is out: asks once per start to install it (after the intro and the language screen). */}
       {onboarded && user && !askLang ? <UpdatePrompt /> : null}
     </ThemeProvider>

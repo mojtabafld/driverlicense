@@ -13,7 +13,13 @@ const key = () => (process.env.STRIPE_SECRET_KEY || '').trim();
 const available = () => /^(sk|rk)_(test|live)_/.test(key());
 const testMode = () => /^(sk|rk)_test_/.test(key());
 const gated = () => available() && process.env.PREMIUM_GATE !== '0';
-const kr = (v, d) => { const n = Math.round(+v); return Number.isFinite(n) && n >= 5 && n <= 10000 ? n : d; };
+// A price from the vault in kroner, written any way («79», «79 kr», «79,00», «DKK 79»; Mojtaba 2026-11-01: a value with
+// words or a comma fell back to the default before); out of 5–10000, the default.
+const kr = (v, d) => {
+  const t = String(v == null ? '' : v).replace(/(\d),(\d{1,2})(?!\d)/, '$1.$2').replace(/[^\d.]/g, '');
+  const n = Math.round(parseFloat(t));
+  return Number.isFinite(n) && n >= 5 && n <= 10000 ? n : d;
+};
 const PLANS = {
   week: { days: 7, price: () => kr(process.env.PREMIUM_PRICE_WEEK, 49), name: 'Teoripro Premium – 1 uge' },
   month: { days: 30, price: () => kr(process.env.PREMIUM_PRICE_MONTH, 99), name: 'Teoripro Premium – 1 måned' },

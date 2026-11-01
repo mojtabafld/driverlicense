@@ -12,6 +12,7 @@ import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { faNum, fmtDate, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf, shuffle } from '@/lib/logic';
 import { RTL, tr } from '@/lib/i18n';
 import { loadPromoSeen, savePromoSeen } from '@/lib/prefs';
+import { usePromoGate } from '@/lib/promo-gate';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
@@ -301,9 +302,14 @@ export default function Home() {
   // The warm-up (app/warmup.tsx; Mojtaba 2026-10-30): five questions asked in a lighter way, right after the first
   // sign-in, before any test, once per account (kept beside the premium page's «seen», as `w:` keys), so home is not
   // empty afterwards.
+  // Only for a new account (made in the last day: not after the history is deleted, Mojtaba 2026-11-01), and only once
+  // the premium offer after sign-up is closed or skipped and home is on screen again (so after the premium page too,
+  // bought or left; lib/promo-gate.ts), never behind it.
   const { ready: loaded } = useApp();
+  const gate = usePromoGate(user ? `${user.username}:${user.created || 0}` : ''), homeShown = useIsFocused();
+  const newAccount = !!user && Date.now() - (user.created || 0) < 24 * 3600e3;
   useEffect(() => {
-    if (!tryout || !loaded || !user || user.verify) return;
+    if (!tryout || !loaded || !user || user.verify || !newAccount || gate !== 'done' || !homeShown) return;
     const key = `w:${user.username}:${user.created || 0}`;
     let live = true;
     loadPromoSeen().then(seen => {
@@ -312,7 +318,7 @@ export default function Home() {
       router.push('/warmup');
     });
     return () => { live = false; };
-  }, [tryout, loaded, user?.username]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tryout, loaded, user?.username, newAccount, gate, homeShown]); // eslint-disable-line react-hooks/exhaustive-deps
   // Main site: the step-by-step course's lessons (lib/course.ts) finished out of those written; /app: prove.dk's lessons tried.
   const { done } = useCourseProgress();
   const ready = COURSE.flatMap(ch => ch.lessons);
