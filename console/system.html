@@ -151,7 +151,10 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
     const d = D, m = d.monitor, pts = m.points || [], s = m.sizes || {}, host = m.host || {};
     const cpu = stat(pts.map(p => p.cpu || 0)), app = stat(pts.map(p => p.app || 0)), mem = stat(pts.map(p => p.mem || 0)), rx = stat(pts.map(p => p.rx || 0)), tx = stat(pts.map(p => p.tx || 0));
     const rss = pts.length ? pts[pts.length - 1].rss : null, ai = d.ai || {}, today = ai.today || { tasks: {} }, rag = d.rag || {};
-    const ragReady = (rag.catalogs || []).some(c => c.ready);
+    // RAG: the questions' vectors serve «سؤال‌های مشابه» and the duplicates list as soon as they are loaded; the lessons'
+    // catalogue comes from the app with its first AI search (the glossary's «آموزش این واژه»), so after a restart it
+    // is missing until then, which is not a fault.
+    const ragQ = (rag.questions || 0) > 0, ragCat = (rag.catalogs || []).some(c => c.ready);
     $app.innerHTML = `
       <div class="top"><h1>${L('سامانه', 'System')}</h1><button class="btn" id="lg" lang="${L('en', 'fa')}">${L('English', 'فارسی')}</button><a class="btn" href="/admin">${L('داشبورد', 'Dashboard')}</a><a class="btn" href="/admin/images">${L('ایجاد تصاویر', 'Pictures')}</a><button class="btn" id="re">${L('تازه کردن', 'Refresh')}</button></div>
       <p class="lead">${L('معماری تئوری‌پرو با اعداد زنده‌ی سرور؛ هر دقیقه خودکار تازه می‌شود', "Teoripro's architecture with the server's live numbers; refreshed every minute")} (${L('آخرین', 'last')}: ${esc(hhmm(d.at))}).</p>
@@ -209,8 +212,9 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
           ${Object.keys(today.tasks).length ? `<table>${Object.entries(today.tasks).sort((a, b) => b[1].usd - a[1].usd).map(([k, x]) => `<tr><td>${esc(k)}</td><td>${fa(x.n)}${x.fail ? ` (${fa(x.fail)} ✕)` : ''}</td><td class="num">${x.in || x.out ? usd(x.usd) : '—'}</td></tr>`).join('')}</table>` : `<p class="note">${L('امروز هنوز درخواستی نبوده است.', 'No requests yet today.')}</p>`}</div>
         <div class="mcard"><div class="mhead"><h3>${L('۱۴ روز اخیر', 'Last 14 days')}</h3><span class="mstat">${L('جمع', 'Total')} <b>${usd((ai.days || []).reduce((a, x) => a + x.usd, 0))}</b></span></div>
           <div style="display:flex;align-items:flex-end;gap:3px;height:90px;direction:ltr">${(ai.days || []).map(x => { const mx = Math.max(0.0001, ...(ai.days || []).map(y => y.usd)); return `<div title="${esc(x.day)}: ${usd(x.usd)}" style="flex:1;min-width:4px;height:${Math.max(2, Math.round(x.usd / mx * 86))}px;background:var(--accent);border-radius:3px 3px 0 0;opacity:.85"></div>`; }).join('') || `<p class="note">${L('داده‌ای نیست.', 'No data.')}</p>`}</div></div>
-        <div class="mcard"><div class="mhead"><h3>${L('RAG (جستجوی معنایی)', 'RAG (semantic search)')}</h3><span class="pill ${ragReady ? 'ok' : ''}">${ragReady ? L('فعال', 'Active') : L('در انتظار فهرست درس‌ها', 'Waiting for the catalogue')}</span></div>
-          <p class="note">${fa(rag.questions || 0)} ${L('سؤال', 'questions')} · ${fa(rag.vectors || 0)} ${L('بردار', 'vectors')} ${rag.persisted ? L('در ستون VECTOR اوراکل', "in Oracle's VECTOR column") : L('در حافظه', 'in memory')} · ${L('مدل', 'model')} <span class="num">${esc(rag.model || '–')}</span></p></div>
+        <div class="mcard"><div class="mhead"><h3>${L('RAG (جستجوی معنایی)', 'RAG (semantic search)')}</h3><span class="pill ${ragQ ? 'ok' : ''}">${ragQ ? L('فعال', 'Active') : L('در حال آماده شدن', 'Getting ready')}</span></div>
+          <p class="note">${fa(rag.questions || 0)} ${L('سؤال', 'questions')} · ${fa(rag.vectors || 0)} ${L('بردار', 'vectors')} ${rag.persisted ? L('در ستون VECTOR اوراکل', "in Oracle's VECTOR column") : L('در حافظه', 'in memory')} · ${L('مدل', 'model')} <span class="num">${esc(rag.model || '–')}</span></p>
+          <p class="note">${ragCat ? L('فهرست درس‌ها: بارگذاری‌شده', 'Lessons catalogue: loaded') : L('فهرست درس‌ها: با اولین جستجوی هوشمند از اپ بارگذاری می‌شود (بعد از هر راه‌اندازی دوباره).', 'Lessons catalogue: loaded with the first AI search from the app (after each restart).')}</p></div>
         <div class="mcard"><div class="mhead"><h3>${L('پشتیبان‌ها', 'Backups')}</h3><span class="mstat">${fa((d.backups || []).length)} ${L('نسخه', 'copies')}</span></div>
           ${(d.backups || []).length ? `<table>${d.backups.slice(0, 5).map(b => `<tr><td class="num">${esc(b.name)}</td><td class="num">${(b.size / 1e3).toFixed(0)} kB</td></tr>`).join('')}</table>` : `<p class="note">${L('هنوز پشتیبانی نیست.', 'No backups yet.')}</p>`}</div>
       </div>
