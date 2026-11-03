@@ -22,7 +22,7 @@ import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
-import { TestStats } from '@/ui/chart-view';
+import { HomeChartIcon, TestStats } from '@/ui/chart-view';
 import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
@@ -425,9 +425,12 @@ export default function Home() {
           const diff = last && prev ? Math.round((pctOf(last) - pctOf(prev)) * 100) : null;
           return (
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-              <View style={{ flex: 1, gap: 2 }}>
-                <T style={{ fontWeight: '700', fontSize: slim ? 16 : 18 }}>نمودار پیشرفت</T>
-                {slim ? null : <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>}
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <HomeChartIcon kind="progress" size={slim ? 30 : 36} />
+                <View style={{ flex: 1, gap: 2 }}>
+                  <T style={{ fontWeight: '700', fontSize: slim ? 16 : 18 }}>نمودار پیشرفت</T>
+                  {slim ? null : <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>}
+                </View>
               </View>
               {last ? (
                 <View style={{ alignItems: 'flex-end', gap: 2 }}>
