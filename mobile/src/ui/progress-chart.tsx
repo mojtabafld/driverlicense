@@ -6,7 +6,7 @@
 // that attempt (the newest is picked until another is); its details and a review button show below. With `fill` it takes the height of the space it is given,
 // at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 
@@ -25,8 +25,8 @@ import { ARC, useColors, useIsDark } from './theme';
 // passed, a darker grey. The bars grow up from the bottom when the chart opens; dates below.
 // A bar that did not pass: the theme's lines' colour, a step lighter in the dark theme (Mojtaba 2026-10-24).
 export const failBar = (line: string, dark: boolean) => (dark ? mix(line, '#ffffff', 0.08) : line);
-// (ARC since 2026-10-29, after another picture: a scale of question counts at the left, two bars a test: its questions
-// in a pale tint and its right answers in full, the picked test's count in a dark bubble above it; a legend under it.)
+// ARC: one column per test. Its full height is the question count; the saturated part
+// shows correct answers, with the remaining questions in a pale tint above it.
 const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 34 : 14, B = 24, FILL_MIN = 120;
 // The line drew itself in already since the app started.
 let drawnOnce = false;
@@ -45,6 +45,7 @@ const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'm
 // `noLegend`: ARC, without the legend under the chart (the smallest phones).
 export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, noLegend, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; noLegend?: boolean; onBlank?: () => void }) {
   const c = useColors(), dark = useIsDark();
+  const chartId = useId().replace(/:/g, '');
   // «قبول» in green / «مردود» in red, only the word, for the picked exam.
   const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
   const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
@@ -109,7 +110,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
   const VIEW = 10, VW = Math.max(0, W - L - R);
   const slot = VW / Math.min(VIEW, data.length);
-  const CW = slot * data.length, bw = ARC ? Math.max(4, Math.min(26, slot * 0.3)) : Math.max(4, Math.min(34, slot * 0.66));
+  const CW = slot * data.length, bw = ARC ? Math.max(4, Math.min(34, slot * 0.56)) : Math.max(4, Math.min(34, slot * 0.66));
   const DOT = 5;   // the points' radius (10 across), with a ring in the card's colour
   const x0 = (i: number) => slot * (i + 0.5);
   // In every language the chart runs left to right, the oldest at the left and the newest at the right edge, where it
@@ -122,11 +123,11 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   // ARC: the scale in questions, up to the longest test's count.
   const top = Math.max(5, ...data.map(a => a.items.length));
   const y = (v: number) => (ARC ? TOP + (1 - v / top) * (H - TOP - B) : TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B));
-  // ARC: the bars' tops as far as they have grown; each at least MIN_BAR tall, so a test with no right answer (0%)
-  // still shows (a short bar in red; Mojtaba 2026-10-24).
+  // Keep the full column visible even for very short tests. Correct answers occupy
+  // their exact fraction of that column, including an empty fill for a zero score.
   const MIN_BAR = 8;
-  const tops = data.map(a => (ARC ? y(0) - Math.max(MIN_BAR, y(0) - y(scoreOf(a))) * draw : y(pctOf(a) * 100)));
   const totals = data.map(a => y(0) - Math.max(MIN_BAR, y(0) - y(a.items.length)) * draw);
+  const tops = data.map((a, i) => (ARC ? y(0) - (y(0) - totals[i]) * pctOf(a) : y(pctOf(a) * 100)));
   // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge
   // (mirrored right to left with FLIP: the part drawn runs from the right end, `ahead` is a point not reached yet).
   const edge = Math.max(0, CW - VW) + (VW + DOT * 2 + 2) * draw;
@@ -141,9 +142,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
   const line = data.map((_, i) => (i === 0 ? `M${x(0)} ${tops[0]}` : `C${(x(i - 1) + x(i)) / 2} ${tops[i - 1]} ${(x(i - 1) + x(i)) / 2} ${tops[i]} ${x(i)} ${tops[i]}`)).join(' ');
   const area = `${line} L${x(data.length - 1)} ${y(lo)} L${x(0)} ${y(lo)} Z`;
   // ARC: a bar from the bottom to its top, its top corners rounded.
-  // ARC: `dx` its offset from the test's middle, `t` its top; fully rounded tops, as the picture's.
-  const bar = (i: number, dx = 0, t = tops[i]) => {
-    const l = x(i) + dx - bw / 2, r = x(i) + dx + bw / 2, b = y(0), k = Math.min(bw / 2, b - t);
+  // ARC: centred on the test, with rounded top corners.
+  const bar = (i: number, t = totals[i]) => {
+    const l = x(i) - bw / 2, r = x(i) + bw / 2, b = y(0), k = Math.min(bw / 2, b - t);
     return `M${l} ${b} L${l} ${t + k} Q${l} ${t} ${l + k} ${t} L${r - k} ${t} Q${r} ${t} ${r} ${t + k} L${r} ${b} Z`;
   };
   const every = ARC ? Math.max(1, Math.ceil(90 / slot)) : slot >= 26 ? 1 : 2;
@@ -195,12 +196,13 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   </G>}
                   {/* Each point shows once the line has reached it. */}
                   {ARC ? data.map((d, i) => {
-                    // A test's two bars: its questions in a pale tint, its right answers in full (green when it passed, coral when
-                    // not); the others than the picked one faded (Mojtaba 2026-10-30).
+                    // One column: pale total with correct answers filled from the bottom.
+                    // Clip the fill to the column so a full score retains its rounded top.
                     const col = good(d) ? c.ok : c.bad, on = i === sel;
                     return (<G key={i} opacity={on ? 1 : 0.4}>
-                      <Path d={bar(i, -(bw / 2 + 2), totals[i])} fill={col} fillOpacity={dark ? 0.28 : 0.22} />
-                      <Path d={bar(i, bw / 2 + 2)} fill={col} />
+                      <Defs><ClipPath id={`${chartId}-${clipId}-bar-${i}`}><Path d={bar(i)} /></ClipPath></Defs>
+                      <Path d={bar(i)} fill={col} fillOpacity={dark ? 0.28 : 0.22} />
+                      {scoreOf(d) > 0 ? <Rect x={x(i) - bw / 2} y={tops[i]} width={bw} height={Math.max(0, y(0) - tops[i])} fill={col} clipPath={`url(#${chartId}-${clipId}-bar-${i})`} /> : null}
                     </G>);
                   })
                   /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
@@ -226,8 +228,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                     2026-10-30; a drag scrolls instead). */}
                 {data.map((_, i) => (
                   <Pressable key={`p${i}`} onPress={() => { tap(); if (ARC && chosen === i) onOpen(data[i]); else setSel(ARC ? i : sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
-                    // (ARC: the test's whole column, so a tap on either of its bars, the questions' or the right answers', picks
-                    // it; it covered only around the right answers' bar, Mojtaba 2026-10-30)
+                    // The whole column picks the test, including its pale portion.
                     style={ARC ? { position: 'absolute', left: x(i) - slot / 2, top: 0, width: slot, height: H }
                       : { position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
                 ))}

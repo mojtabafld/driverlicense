@@ -429,7 +429,6 @@ export default function Home() {
                 <HomeChartIcon kind="progress" size={slim ? 30 : 36} />
                 <View style={{ flex: 1, gap: 2 }}>
                   <T style={{ fontWeight: '700', fontSize: slim ? 16 : 18 }}>نمودار پیشرفت</T>
-                  {slim ? null : <T style={{ color: c.muted, fontSize: 13 }}>پاسخ‌های درست در هر آزمون</T>}
                 </View>
               </View>
               {last ? (
