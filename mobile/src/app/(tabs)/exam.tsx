@@ -166,25 +166,16 @@ export default function Exam() {
   // Fitted to the screen (Mojtaba 2026-10-29): while the last card runs under the tab bar, a denser level (up to 4),
   // starting over on a new screen height.
   const { height } = useWindowDimensions(), ins = useSafeAreaInsets(), lastBox = useRef<View>(null);
-  const [level, setLevel] = useState(0), fitAfter = useRef(0);
+  const [level, setLevel] = useState(0);
   // Measured only while the tab is in view: a hidden tab (or one sliding in) reads a wrong place and stepped to a
   // denser level for nothing, hiding the legend and shrinking the percent after moving between pages (Mojtaba
   // 2026-10-29). Each time the tab comes into view it starts over from the full layout.
   const focused = useIsFocused();
-  useEffect(() => {
-    if (focused) {
-      // Entrance motion temporarily moves the cards below their final position.
-      fitAfter.current = Date.now() + 700;
-      // Reset compactness when this screen's available height changes.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLevel(0);
-    }
-  }, [height, focused]);
+  useEffect(() => { if (focused) setLevel(0); }, [height, focused]); // eslint-disable-line react-hooks/set-state-in-effect
   const fit = () => {
-    if (level >= 4 || !focused || Date.now() < fitAfter.current) return;
+    if (level >= 4 || !focused) return;
     lastBox.current?.measureInWindow((_x, top, _w, h) => {
-      // Several layout callbacks can finish together; advance once for this measured layout.
-      if (h && top + h > height - (TAB_BAR_H + 12 + Math.max(16, ins.bottom)) + 1) setLevel(l => l === level ? Math.min(4, l + 1) : l);
+      if (h && top + h > height - (TAB_BAR_H + 12 + Math.max(16, ins.bottom)) + 1) setLevel(l => Math.min(4, l + 1));
     });
   };
   useEffect(() => {
@@ -194,7 +185,7 @@ export default function Exam() {
   return (
     <View style={{ flex: 1 }}>
     {/* (fill: the two cards above grow so the last ones end just above the tab bar on every screen; Mojtaba 2026-10-29) */}
-    <Screen dashboard={!PROVE_PICS} fill barGap={12} gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+    <Screen fill barGap={12} gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />}>
       {/* (main site: the history and the mistakes are pills in this card; the screen is fitted by it, the last card) */}
       {own ? <View ref={lastBox} onLayout={fit} style={{ flexGrow: 1, gap: level >= 2 ? 10 : 14 }}><NewTestCard test={test} level={level} /></View> : (

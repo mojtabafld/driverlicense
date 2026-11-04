@@ -16,7 +16,7 @@ import { usePromoGate } from '@/lib/promo-gate';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, Button, Card, FitLine, Ring, Screen, T, physical, tap, useCountUp } from '@/ui/kit';
+import { ArcButton, Button, Card, FitLine, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
@@ -31,7 +31,6 @@ import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { type DayPart } from '@/ui/greet-icon';
 import { HomeLicenceArt } from '@/ui/header-art';
-import { DashboardWaves } from '@/ui/dashboard-art';
 import { useDashboardLook } from '@/ui/dashboard-style';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
@@ -189,7 +188,6 @@ export default function Home() {
   const ringSize = tighter ? 76 : small ? 88 : compact ? 104 : 120;
   const readinessPad = tighter ? 10 : compact ? 12 : 16;
   const readinessGap = tighter ? 12 : small ? 14 : 18;
-  const waveStart = readinessPad + ringSize + readinessGap;
   // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
   // chart card's height from and to while it is shown or moving (null when closed: the card takes the height left).
   // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
@@ -358,12 +356,8 @@ export default function Home() {
         } : undefined}>
       <View style={{ gap }}>
       <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: readinessPad + share / 2 }}>
-        {ARC ? <View testID="home-readiness-waves" pointerEvents="none" aria-hidden
-          style={{ position: 'absolute', top: 0, bottom: 0, ...physical({ left: RTL ? 0 : waveStart, right: RTL ? waveStart : 0 }) }}>
-          <DashboardWaves />
-        </View> : null}
         {ARC ? <>
-          {/* The ring has a clear column; the waves stay in the text column. */}
+          {/* The readiness ring and its status share a clean card without decorative waves. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: readinessGap }}>
             {/* In the ring a seal with a tick in the chance's colour (green, amber, red; 2026-10-30; it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
             {/* Before the first test a tap on the ring starts a 5-question tryout of the test page (Mojtaba 2026-10-30;

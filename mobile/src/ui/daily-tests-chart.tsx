@@ -4,7 +4,7 @@
 // it, and the average a day in the head; in the theme's accent colour. One day is picked (at first the busiest, else today): a thin line down to it
 // and a bubble with its date and count; a tap on another day picks it. Time runs left to right in every language.
 // `height`: the drawing's height (the exam tab makes it smaller on shorter screens).
-import { useContext, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
@@ -15,7 +15,6 @@ import { dayLabel, dayOf } from './date-pick';
 import { HomeChartIcon } from './chart-icon';
 import { T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
-import { DashboardContext, useDashboardLook } from './dashboard-style';
 
 const DAYS = 7, DAY = 864e5;
 const LABEL_W = 26, PAD_X = 10, TOP = 8, BOTTOM = 22;
@@ -43,7 +42,6 @@ function smooth(p: [number, number][]): string {
 
 export function DailyTestsChart({ height = 120 }: { height?: number }) {
   const c = useColors(), dark = useIsDark(), { attempts } = useApp();
-  const dashboard = useContext(DashboardContext), look = useDashboardLook();
   // in the app's own colour (the theme chosen in the settings; Mojtaba 2026-10-31)
   const tone = c.accent;
   const days = useMemo(() => {
@@ -69,7 +67,7 @@ export function DailyTestsChart({ height = 120 }: { height?: number }) {
   const bx = !w ? 0 : high ? (sx + 12 + bubbleW <= PAD_X * 2 + plotW ? sx + 12 : sx - 12 - bubbleW) : Math.min(Math.max(sx - bubbleW / 2, 0), PAD_X * 2 + plotW - bubbleW);
   const by = high ? Math.max(0, sy - bubbleH / 2) : sy - bubbleH - 10;
   return (
-    <View style={[{ gap: 8 }, dashboard ? { backgroundColor: look.row, borderRadius: 20, paddingHorizontal: 10, paddingTop: 10, paddingBottom: 2 } : null]}>
+    <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <HomeChartIcon kind="daily" />
         <T style={{ flex: 1, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>آزمون‌های روزانه</T>
