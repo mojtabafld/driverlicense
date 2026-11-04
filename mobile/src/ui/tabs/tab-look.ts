@@ -36,8 +36,8 @@ function textOn(fill: string, preferred: string) {
 export function useTabLook() {
   const c = useColors(), dark = useIsDark();
   const rail = mix(c.accent, c.surface2, dark ? 0.88 : 0.92);
-  // A filled theme accent in light mode, softened toward the card colour in dark mode.
-  const active = dark ? mix(c.accent, c.surface, 0.35) : c.accent;
+  // A softer accent fill, blended with the theme's card colour in both modes.
+  const active = mix(c.accent, c.surface, dark ? 0.48 : 0.12);
   return {
     rail,
     edge: mix(c.accent, rail, 0.8),
