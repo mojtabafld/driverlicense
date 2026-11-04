@@ -10,6 +10,7 @@ import { BarItem, useBarLook } from './glass-bar';
 import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
 import { Sheet, SheetScroll } from './sheet';
+import { sheetWidth } from './sheet-frame';
 import { useColors } from './theme';
 
 export type QItem = { n: number; tone: 'answered' | 'empty' | 'ok' | 'bad'; marked?: boolean };
@@ -52,7 +53,7 @@ export function QuestionSheet({ open, items, current, onPick, onClose }: { open:
   const c = useColors();
   // Whole columns of 50-point tiles that fit the sheet; the grid is that wide and centred, so its last row starts at
   // the right like the rows above it.
-  const cols = Math.max(1, Math.floor((Math.min(useWindowDimensions().width, 560) - 36 - 12 + 8) / 58)); // 12: room for the current ring
+  const cols = Math.max(1, Math.floor((sheetWidth(useWindowDimensions().width) - 38 - 12 + 8) / 58)); // 38: padding and border; 12: room for the current ring
   return (
     <Sheet open={open} onClose={onClose} maxHeight="80%">
       <T style={{ fontSize: 19, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>سؤال‌ها</T>

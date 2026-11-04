@@ -5,11 +5,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, Modal, Platform, Pressable, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PROVE_PICS } from '@/lib/config';
 import { UI_CHOSEN } from '@/lib/i18n';
 import { Button, T } from './kit';
 import { useColors } from './theme';
+import { SHEET_INSET, useSheetFrame } from './sheet-frame';
 
 const KEY = 'tp.a2hs';
 
@@ -50,6 +52,7 @@ const DockIcon = ({ color }: { color: string }) => (
 
 export function InstallHint() {
   const c = useColors();
+  const frame = useSheetFrame(), ins = useSafeAreaInsets();
   const [kind, setKind] = useState<'ios' | 'mac' | null>(null);
   const up = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -78,11 +81,11 @@ export function InstallHint() {
       ];
   return (
     <Modal transparent visible animationType="none" onRequestClose={close}>
-      <Animated.View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)', opacity: up }}>
+      <Animated.View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)', opacity: up,
+        paddingHorizontal: SHEET_INSET, paddingTop: Math.max(SHEET_INSET, ins.top), paddingBottom: Math.max(SHEET_INSET, ins.bottom) }}>
         <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="بستن" />
-        <Animated.View style={{ alignSelf: 'center', width: '100%', maxWidth: 480, padding: 22, paddingBottom: 30, gap: 16,
-          borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface, borderWidth: 1, borderBottomWidth: 0, borderColor: c.line,
-          transform: [{ translateY: up.interpolate({ inputRange: [0, 1], outputRange: [360, 0] }) }] }}>
+        <Animated.View style={[frame, { alignSelf: 'center', width: '100%', maxWidth: 480, padding: 22, paddingBottom: 30, gap: 16,
+          transform: [{ translateY: up.interpolate({ inputRange: [0, 1], outputRange: [360, 0] }) }] }]}>
           <View style={{ alignSelf: 'center', width: 38, height: 5, borderRadius: 3, backgroundColor: c.line, marginTop: -8 }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <Image source={{ uri: '/apple-touch-icon.png?v=2' }} style={{ width: 54, height: 54, borderRadius: 13 }} />
