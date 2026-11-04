@@ -14,6 +14,7 @@ import { Animated, Easing, Modal, PanResponder, Platform, Pressable, ScrollView,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors, useIsDark } from './theme';
+import { SHEET_INSET, useSheetFrame } from './sheet-frame';
 
 // Whether the sheet's list is at its top, so a drag down on it moves the sheet instead of the list.
 type Now = { top: boolean; onClose: () => void; h: number; from: number; at: number | null; scroll: React.RefObject<any> };
@@ -71,6 +72,7 @@ function sheetPan(y: Animated.Value, now: Now) {
 export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { open: boolean; onClose: () => void; children: React.ReactNode; maxHeight?: DimensionValue;
   style?: StyleProp<ViewStyle> }) {
   const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), { height: winH } = useWindowDimensions();
+  const frame = useSheetFrame();
   const [y] = useState(() => new Animated.Value(winH));
   const [fade] = useState(() => new Animated.Value(1));
   // Still shown while it slides out after `open` goes false.
@@ -96,8 +98,8 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
   const dim = Animated.multiply(fade, y.interpolate({ inputRange: [0, Math.max(1, winH * 0.6)], outputRange: [1, 0], extrapolate: 'clamp' }));
   const sheet = (
     <Animated.View {...(WEB ? pan.panHandlers : null)} onLayout={e => { Object.assign(now, { h: e.nativeEvent.layout.height }); }}
-      style={[{ maxHeight, width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 8, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
-        borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: c.surface, opacity: fade, transform: [{ translateY: y }] },
+      style={[frame, { maxHeight, width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18, gap: 14,
+        opacity: fade, transform: [{ translateY: y }] },
         Platform.OS === 'web' ? ({ touchAction: 'none', overscrollBehavior: 'contain' } as any) : null, style]}>
       {/* The grab handle: a sign that the sheet can be dragged down. */}
       <View style={{ alignItems: 'center', marginBottom: -4 }}>
@@ -113,7 +115,7 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
       <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: dim, backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
         <Pressable onPress={onClose} accessibilityLabel="بستن" style={{ flex: 1 }} />
       </Animated.View>
-      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end' }}>
+      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: SHEET_INSET, paddingTop: Math.max(SHEET_INSET, ins.top), paddingBottom: Math.max(SHEET_INSET, ins.bottom) }}>
         {WEB ? sheet : <GestureDetector gesture={gesture}>{sheet}</GestureDetector>}
       </View>
       </GestureHandlerRootView>
