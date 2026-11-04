@@ -49,8 +49,8 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
         <LinearGradient colors={frameColors} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
           style={{ width: pictureSize, height: pictureSize, flexShrink: 0, borderRadius: pictureSize * 14 / 48, borderWidth: 1.2,
             borderColor: rgba(c.link, dark ? 0.28 : 0.18), alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-          {v ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}-c3` }} style={{ width: '86%', height: '86%' }} contentFit="contain" transition={250} />
-            : <Icon name={icon} size={Math.round(pictureSize * 0.5)} color={c.link} weight="semibold" />}
+          {v ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}-c3` }} style={{ width: '100%', height: '100%' }} contentFit="contain" transition={250} />
+            : <Icon name={icon} size={Math.round(pictureSize * 0.65)} color={c.link} weight="semibold" />}
         </LinearGradient>
         <View style={{ flex: 1, gap: 1 }}>
           <T style={{ fontSize: short ? 16 : 17.5, lineHeight: short ? 22 : 25, fontWeight: '700' }} numberOfLines={short ? 1 : 2}>{title}</T>
