@@ -115,7 +115,7 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
       <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: dim, backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
         <Pressable onPress={onClose} accessibilityLabel="بستن" style={{ flex: 1 }} />
       </Animated.View>
-      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
+      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: SHEET_INSET, paddingBottom: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
         {WEB ? sheet : <GestureDetector gesture={gesture}>{sheet}</GestureDetector>}
       </View>
       </GestureHandlerRootView>
