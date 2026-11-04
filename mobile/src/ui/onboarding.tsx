@@ -15,7 +15,7 @@ import { T, tap } from './kit';
 import { TallPicture } from './tall-picture';
 import { ArtAi, ArtBank, ArtExam, ArtProgress } from './onboarding-art';
 import { IntroAi, IntroBank, IntroExam, IntroProgress } from './intro-art';
-import { ARC, useIsDark, useSystemTheme } from './theme';
+import { ARC, useColors, useSystemTheme } from './theme';
 import { LangButton } from './intro-top';
 import { LangWheel } from './lang-wheel';
 import { px } from './palette';
@@ -27,21 +27,18 @@ const SLIDES = [
   { Art: ARC ? IntroAi : ArtAi, title: 'هوش مصنوعی، همراه شما', text: 'برای هر سؤال توضیحی ساده به فارسی بگیرید: چرا پاسخ شما درست یا اشتباه بود و چه نکته‌ای را برای دفعه‌ی بعد به خاطر بسپارید.' },
   { Art: ARC ? IntroProgress : ArtProgress, title: 'پیشرفت‌تان را ببینید', text: 'نمودار پیشرفت، احتمال قبولی و تمرین هدفمند همان مباحثی که بیشتر در آن‌ها اشتباه می‌کنید.' },
 ];
-// Flat dark forest green, the colour the server's intro pictures are made on (so they sit in the page seamlessly),
-// going only a shade darker at the very bottom.
-// Main site (Mojtaba, 2026-10-15): the light theme's in the login button's green, the dark theme's in the page headers'
-// dark green.
-const INTRO_LIGHT = [px('#2f55d4'), px('#2f55d4'), px('#13255f')] as const, INTRO_DARK = ARC ? [px('#141c3d'), px('#141c3d'), px('#0d1330')] as const : ['#1b483d', '#1b483d', '#123329'] as const;
+// Intro and offline screens share the same solid page colour as the rest of the app.
 const INTRO_APP = ['#14421c', '#14421c', '#0d3014'] as const;
 export function useIntroBg(): readonly [string, string, string] {
-  const dark = useIsDark();
-  return ARC ? (dark ? INTRO_DARK : INTRO_LIGHT) : INTRO_APP;
+  const c = useColors();
+  return ARC ? [c.bg, c.bg, c.bg] : INTRO_APP;
 }
 const BUTTON = '#ffffff', BUTTON_TEXT = ARC ? px('#2f55d4') : '#14421c';
 
 // The slide's title on one line: measured once at full size in an invisible, very wide box, then set just small
 // enough to fit the width it has (never larger than `size`).
 function FitTitle({ text, size }: { text: string; size: number }) {
+  const c = useColors();
   const [full, setFull] = useState<{ text: string; w: number } | null>(null);
   const [room, setRoom] = useState(0);
   const w = full && full.text === text ? full.w : 0;
@@ -53,7 +50,7 @@ function FitTitle({ text, size }: { text: string; size: number }) {
           <T style={{ fontSize: size, lineHeight: size * 1.45, fontWeight: '800' }}>{text}</T>
         </View>
       </View>
-      <T numberOfLines={1} style={{ color: '#fff', fontSize: fs, lineHeight: Math.round(fs * 1.45), fontWeight: '800', opacity: w && room ? 1 : 0 }}>{text}</T>
+      <T numberOfLines={1} style={{ color: ARC ? c.text : '#fff', fontSize: fs, lineHeight: Math.round(fs * 1.45), fontWeight: '800', opacity: w && room ? 1 : 0 }}>{text}</T>
     </View>
   );
 }
@@ -62,6 +59,7 @@ function FitTitle({ text, size }: { text: string; size: number }) {
 export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: string) => void }) {
   useSystemTheme();   // (the phone's light or dark, as on the sign-in pages)
   const BG = useIntroBg();
+  const c = useColors();
   // Main site: the language first, on its wheel, when this browser has none chosen yet (a language other than
   // Persian reloads the page, which then opens on the slides).
   const [wheel, setWheel] = useState(!PROVE_PICS && !UI_CHOSEN);
@@ -109,8 +107,8 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
   if (wheel) return <LangWheel onDone={l => { if (!setUiLang(l)) setWheel(false); }} />;
   if (ARC) return null;
   return (
-    <View style={{ flex: 1 }} {...swipe}>
-      <LinearGradient colors={[BG[0], BG[0], BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+    <View style={{ flex: 1, backgroundColor: BG[0] }} {...swipe}>
+      {ARC ? null : <LinearGradient colors={[BG[0], BG[0], BG[2]]} locations={[0, 0.8, 1]} start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />}
       <Animated.View style={{ flex: 1, opacity: fade, transform: [{ translateY: shift }] }}>
         <TallPicture key={i} height={headH} bg={BG[0]} source={pic ? { uri: `${API_URL}/intro/${i + 1}.png?v=${pic}` } : null}>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: ins.top }}>
@@ -119,7 +117,7 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
         </TallPicture>
         <View style={{ gap: 12, marginTop: -28, paddingHorizontal: 28, width: '100%', maxWidth: 560, alignSelf: 'center' }}>
           <FitTitle text={title} size={30} />
-          <T style={{ color: 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>{text}</T>
+          <T style={{ color: ARC ? c.muted : 'rgba(255,255,255,0.86)', fontSize: 16, lineHeight: 28 }}>{text}</T>
         </View>
       </Animated.View>
       {/* The language and the theme, at the top (main site): the language button opens the three to pick from. A tap
@@ -136,22 +134,22 @@ export function Onboarding({ onDone, onTop }: { onDone: () => void; onTop?: (c: 
           <View style={{ flex: 1, alignItems: 'flex-start' }}>
             {last ? null : (
               <Pressable onPress={() => { tap(); onDone(); }} hitSlop={10} accessibilityRole="button">
-                <T style={{ color: 'rgba(255,255,255,0.9)', fontSize: 16 }}>رد شدن</T>
+                <T style={{ color: ARC ? c.muted : 'rgba(255,255,255,0.9)', fontSize: 16 }}>رد شدن</T>
               </Pressable>
             )}
           </View>
           <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center', justifyContent: last ? 'flex-start' : 'center', gap: 8 }}>
             {SLIDES.map((_, k) => (
               <Pressable key={k} onPress={() => go(k)} hitSlop={6} accessibilityLabel={`اسلاید ${k + 1}`}>
-                <View style={{ width: k === i ? 12 : 7, height: k === i ? 12 : 7, borderRadius: 6, backgroundColor: k === i ? '#fff' : 'rgba(255,255,255,0.55)' }} />
+                <View style={{ width: k === i ? 12 : 7, height: k === i ? 12 : 7, borderRadius: 6, backgroundColor: ARC ? (k === i ? c.accent : c.line) : k === i ? '#fff' : 'rgba(255,255,255,0.55)' }} />
               </Pressable>
             ))}
           </View>
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
             <Pressable onPress={() => (last ? (tap(), onDone()) : go(i + 1))} accessibilityRole="button"
-              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, height: 50, paddingHorizontal: 22, borderRadius: 12, backgroundColor: BUTTON })}>
-              <T style={{ color: BUTTON_TEXT, fontSize: 16, fontWeight: '600' }}>{last ? 'شروع کنید' : 'بعدی'}</T>
-              <Icon name="chevronLeft" size={16} color={BUTTON_TEXT} weight="semibold" />
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flexDirection: 'row', alignItems: 'center', gap: 6, height: 50, paddingHorizontal: 22, borderRadius: 12, backgroundColor: ARC ? c.accent : BUTTON })}>
+              <T style={{ color: ARC ? c.accentText : BUTTON_TEXT, fontSize: 16, fontWeight: '600' }}>{last ? 'شروع کنید' : 'بعدی'}</T>
+              <Icon name="chevronLeft" size={16} color={ARC ? c.accentText : BUTTON_TEXT} weight="semibold" />
             </Pressable>
           </View>
         </View>

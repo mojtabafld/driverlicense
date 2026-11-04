@@ -123,15 +123,11 @@ export function PageIn({ children, motion = 'tab' }: { children?: React.ReactNod
   return <Animated.View style={style as any}>{children}</Animated.View>;
 }
 
-// Page background: the site's bg colour as a very soft gradient (lighter at the top), in both themes. `anim`: the
-// style from usePageMotion, for the page's content.
+// One solid page colour, shared with every header. `anim`: the page's entrance motion.
 export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?: object }) {
   const c = useColors();
-  const dashboard = useContext(DashboardContext), look = useDashboardLook();
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
-      <LinearGradient colors={dashboard ? [look.pageTop, c.bg, look.pageBottom] : c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
-      {dashboard ? <View pointerEvents="none" style={{ position: 'absolute', top: -170, right: -180, width: 400, height: 400, borderRadius: 200, backgroundColor: look.wash, opacity: 0.55 }} /> : null}
       {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
     </View>
   );
@@ -265,7 +261,7 @@ const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // A picture header's foot fading into the page (Hero's, and the sign-in page's).
 export function HeroFade() {
-  const page = useColors().bgGradient[0];
+  const page = useColors().bg;
   return <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
     style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />;
 }
@@ -404,7 +400,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
   // page, only the picture or drawing goes, and the title may take the whole width.
-  const dashboard = useContext(DashboardContext), dashboardLook = useDashboardLook();
+  const dashboard = useContext(DashboardContext);
   const plain = (dashboard || plainHead) && !tall;
   const { theme, setMode } = useTheme();
   const lightPic = look.light ?? look.pic + 3, light = theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
@@ -414,7 +410,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   // «هدر ساده» without the colour band (flat: the page's own colour, no fade; the title in the text colour) unless
   // PLAIN_GRADIENT is on (then the band and its fade stay, as before).
   const flat = plain && (dashboard || !PLAIN_GRADIENT), page = useColors();
-  const pic = light ? lightPic : look.pic, bg = flat ? (dashboard ? dashboardLook.pageTop : page.bgGradient[0]) : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
+  const pic = light ? lightPic : look.pic, bg = flat ? page.bg : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
   useHeaderTop(bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
@@ -846,13 +842,13 @@ export function useCountUp(target: number, ms = 900) {
 
 // `format`: the label from the ring's value as it fills (so the number counts up with it); else the fixed `label`.
 // `children`: drawn in the middle instead of the label (the home page's icon; Mojtaba 2026-10-29).
-export function Ring({ value, size = 76, stroke = 8, color, label, format, children }: { value: number; size?: number; stroke?: number; color?: string; label?: string; format?: (v: number) => string; children?: React.ReactNode }) {
+export function Ring({ value, size = 76, stroke = 8, color, trackColor, label, format, children }: { value: number; size?: number; stroke?: number; color?: string; trackColor?: string; label?: string; format?: (v: number) => string; children?: React.ReactNode }) {
   const c = useColors(), r = (size - stroke) / 2, C = 2 * Math.PI * r;
   const shown = useCountUp(Math.max(0, Math.min(1, value)), 1800);
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
-        <Circle cx={size / 2} cy={size / 2} r={r} stroke={c.line} strokeWidth={stroke} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={trackColor ?? c.line} strokeWidth={stroke} fill="none" />
         <Circle cx={size / 2} cy={size / 2} r={r} stroke={color ?? c.accent} strokeWidth={stroke} fill="none" strokeLinecap="round"
           strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - shown)} />
       </Svg>

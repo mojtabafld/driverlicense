@@ -99,21 +99,23 @@ function Root() {
   // background gradient, so the top of the screen runs into the page; over the intro and the language screen, their
   // navy (the intro's changes with its picture).
   const [introTop, setIntroTop] = useState<string | null>(null);
+  const navigationBase = dark ? DarkTheme : DefaultTheme;
+  const navigationTheme = { ...navigationBase, colors: { ...navigationBase.colors, background: c.bg, card: c.bg } };
   // Main site: the language screens are on the page's own colour (ui/lang-wheel.tsx, ui/lang-pick.tsx), so the top runs
   // into them in it too (Mojtaba 2026-10-20).
-  const cover = blocked ? (ARC ? INTRO_BG[0] : OFFLINE_TOP) : ARC && (onboarded === false || askLang) ? c.bg : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
+  const cover = blocked ? (ARC ? c.bg : OFFLINE_TOP) : ARC && (onboarded === false || askLang) ? c.bg : onboarded === false ? introTop ?? INTRO_BG[0] : askLang ? INTRO_BG[0] : null;
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof document === 'undefined') return;
     document.documentElement.style.colorScheme = (cover && cover !== c.bg) || dark ? 'dark' : 'light';
-    setWebTop(c.bgGradient[0], cover);   // (a page's picture header, in view, puts its own green there: ui/kit.tsx)
-  }, [dark, c.bgGradient, c.bg, cover]);
+    setWebTop(c.bg, cover);
+  }, [dark, c.bg, cover]);
   if (blocked) return <Offline onRetry={check} />;
   // A new account waiting for its email link: only that page (the app loads once the link is opened).
-  if (ready && fonts && onboarded && user?.verify) return <ThemeProvider value={dark ? DarkTheme : DefaultTheme}><StatusBar style={dark ? 'light' : 'dark'} /><VerifyEmail /></ThemeProvider>;
+  if (ready && fonts && onboarded && user?.verify) return <ThemeProvider value={navigationTheme}><StatusBar style={dark ? 'light' : 'dark'} /><VerifyEmail /></ThemeProvider>;
   // arc: Arc's skeleton of a page while it loads; /app keeps the spinner.
   if (!ready || !fonts || onboarded === null || (user && !bank)) return ARC ? <PageSkeleton /> : <Backdrop><ActivityIndicator style={{ flex: 1 }} /></Backdrop>;
   return (
-    <ThemeProvider value={dark ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={navigationTheme}>
       {Platform.OS === 'web' && !ARC ? <OfflinePreload /> : null}
       {/* Phones: status bar text in the theme's contrast colour over the gradient (the app draws edge to edge). */}
       <StatusBar style={dark || (!ARC && (!onboarded || askLang)) ? 'light' : 'dark'} />
@@ -122,7 +124,7 @@ function Root() {
       {!onboarded ? (
         <Onboarding onTop={setIntroTop} onDone={() => { saveOnboarded(); setOnboarded(true); }} />
       ) : (
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: 'transparent' },
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg },
         animation: 'fade', animationDuration: 180 /* inner pages: a short, light fade (minimal, as in Uber); the exam and the result keep theirs */ }}>
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(tabs)" />
