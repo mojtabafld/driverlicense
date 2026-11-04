@@ -18,15 +18,32 @@ export function tabLayout(width: number, home: boolean, activeLabel: string) {
 
 export type TabLayout = ReturnType<typeof tabLayout>;
 
+function luminance(color: string) {
+  const rgb = [1, 3, 5].map(i => {
+    const v = parseInt(color.slice(i, i + 2), 16) / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  });
+  return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+}
+
+// Keep the palette's preferred ink whenever it stays readable on the filled pill.
+function textOn(fill: string, preferred: string) {
+  const a = luminance(fill), b = luminance(preferred);
+  if ((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) >= 4.5) return preferred;
+  return a > 0.179 ? '#000000' : '#ffffff';
+}
+
 export function useTabLook() {
   const c = useColors(), dark = useIsDark();
   const rail = mix(c.accent, c.surface2, dark ? 0.88 : 0.92);
+  // A filled theme accent in light mode, softened toward the card colour in dark mode.
+  const active = dark ? mix(c.accent, c.surface, 0.35) : c.accent;
   return {
     rail,
     edge: mix(c.accent, rail, 0.8),
     circle: mix(c.accent, rail, dark ? 0.86 : 0.9),
     muted: mix(c.link, c.text, dark ? 0.65 : 0.45),
-    active: dark ? mix(c.accent, '#ffffff', 0.9) : c.surface,
-    onActive: dark ? mix(c.accent, '#0b0d18', 0.82) : mix(c.link, c.text, 0.18),
+    active,
+    onActive: textOn(active, c.accentText),
   };
 }
