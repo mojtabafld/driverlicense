@@ -31,6 +31,8 @@ import { ARC, useColors } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { type DayPart } from '@/ui/greet-icon';
 import { HomeLicenceArt } from '@/ui/header-art';
+import { DashboardWaves } from '@/ui/dashboard-art';
+import { useDashboardLook } from '@/ui/dashboard-style';
 
 // A count card: a bare icon with the label beside it, then the number and one short line of detail (or, with
 // `progress`, a slim progress bar with its percent); it opens its own page (exams, lessons, mistakes). A full
@@ -155,9 +157,11 @@ function StartCard({ compact }: { compact: boolean }) {
 
 export default function Home() {
   const c = useColors();
+  const look = useDashboardLook();
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height, width } = useWindowDimensions();
+  const shortPage = ARC && height < 700;
   // «هدر ساده»: the header is lower (Hero in ui/kit.tsx); the height it leaves is shared out evenly between the three
   // cards (the pass card, the counts, the chart) instead of all going to the chart (Mojtaba 2026-10-18).
   const plain = usePlainHeader();
@@ -274,10 +278,10 @@ export default function Home() {
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
   const fit = () => {
-    if (!ARC || level >= 4 || grow || !focused) return;
+    if (!ARC || shortPage || level >= 4 || grow || !focused) return;
     chartBox.current?.measureInWindow((_x, top) => {
       const room = height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - top;
-      if (top > 0 && room < chartNeed - 1) setMore(m => m + 1);
+      if (top > 0 && room < chartNeed - 1) setMore(m => m === more ? m + 1 : m);
     });
   };
   // On the web the box's layout event does not fire when only its top moves (the cards above it filling in), so look
@@ -336,7 +340,7 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
-    <Screen fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined}
+    <Screen dashboard={!PROVE_PICS} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={user?.name ? `${hello}،` : hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined}
       hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} bare />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
       heroExtra={ARC ? <BellButton /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
@@ -350,7 +354,8 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      <Card style={{ gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
+      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
+        {ARC ? <DashboardWaves /> : null}
         {ARC ? <>
           {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
               title with its pill under it, as before; no average or mistakes in this card. */}
@@ -360,18 +365,18 @@ export default function Home() {
                 its seal still, no longer animated). */}
             {tryout ? (
               <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-                <Ring value={0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
-                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.text} weight="semibold" />
+                <Ring value={0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={c.accent}>
+                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.link} weight="semibold" />
                 </Ring>
               </Pressable>
             ) : (
-              <Ring value={est ? est.prob : 0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={probColor}>
-                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={est ? probColor : c.muted} weight="semibold" />
+              <Ring value={est ? est.prob : 0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={c.accent}>
+                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.link} weight="semibold" />
               </Ring>
             )}
             <View style={{ flex: 1, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
-              <PassPct value={est ? est.prob : null} size={tighter ? 26 : small ? 28 : 32} />
+              <PassPct value={est ? est.prob : null} size={tighter ? 28 : small ? 30 : 36} />
               <Pill text={probWord} fg={probColor} bg={probSoft} />
             </View>
           </View>
@@ -411,11 +416,11 @@ export default function Home() {
           header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
       {exams.length || ARC ? (
-      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1 }}
+      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1, minHeight: shortPage ? 280 : undefined }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>
-      <Card style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
+      <Card testID="home-progress" style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         {ARC ? (() => {
           // As the picture's head (Mojtaba 2026-10-29): the title over a short line at its start; at its end the picked
           // test's right answers large (the latest until one is tapped; 2026-10-30, in place of the bubble over its bars),
