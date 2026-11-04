@@ -1,10 +1,9 @@
 // Exams: a random exam like the real one, an exam of your mistakes, and the latest exams and lessons (the card stays,
 // with a note, before the first one). On the main site the random exam is the app's own questions (ui/new-test.tsx,
 // Mojtaba 2026-10-19: it took the old card's place and name); the /app copy keeps the old bank's random exam.
-import { router, useIsFocused } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FULL, SECONDS_PER_Q, SIZES, faNum, mistakeIds, passMin, randomIds } from '@/lib/logic';
 import { topicFa, topicName } from '@/lib/names';
@@ -24,7 +23,6 @@ import { MoreButton } from '@/ui/more-button';
 import { ArcButton, Button, Card, FitLine, Screen, T, tap } from '@/ui/kit';
 import { ARC, useColors } from '@/ui/theme';
 import { ExamWheelArt } from '@/ui/header-art';
-import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { NewTestCard, useNewTest } from '@/ui/new-test';
 import { Confetti } from '@/ui/confetti';
 
@@ -161,34 +159,14 @@ export default function Exam() {
     loadCheered().then(seen => { if (live && !seen.includes(key)) { setParty(true); saveCheered([...seen, key].slice(-20)); } });
     return () => { live = false; };
   }, [allDone]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Scrolled down to the page's end, where the history card is: its arrow button shows «نمایش همه» for a moment, once
-  // each time the end is reached (Mojtaba 2026-10-20).
-  // Fitted to the screen (Mojtaba 2026-10-29): while the last card runs under the tab bar, a denser level (up to 4),
-  // starting over on a new screen height.
-  const { height } = useWindowDimensions(), ins = useSafeAreaInsets(), lastBox = useRef<View>(null);
-  const [level, setLevel] = useState(0);
-  // Measured only while the tab is in view: a hidden tab (or one sliding in) reads a wrong place and stepped to a
-  // denser level for nothing, hiding the legend and shrinking the percent after moving between pages (Mojtaba
-  // 2026-10-29). Each time the tab comes into view it starts over from the full layout.
-  const focused = useIsFocused();
-  useEffect(() => { if (focused) setLevel(0); }, [height, focused]); // eslint-disable-line react-hooks/set-state-in-effect
-  const fit = () => {
-    if (level >= 4 || !focused) return;
-    lastBox.current?.measureInWindow((_x, top, _w, h) => {
-      if (h && top + h > height - (TAB_BAR_H + 12 + Math.max(16, ins.bottom)) + 1) setLevel(l => Math.min(4, l + 1));
-    });
-  };
-  useEffect(() => {
-    const ts = [500, 1200, 2500].map(ms => setTimeout(fit, ms));
-    return () => ts.forEach(clearTimeout);
-  });
+  // Compact spacing on short screens; overflow scrolls instead of removing content.
+  const { height } = useWindowDimensions();
+  const level = height < 740 ? 2 : height < 900 ? 1 : 0;
   return (
     <View style={{ flex: 1 }}>
-    {/* (fill: the two cards above grow so the last ones end just above the tab bar on every screen; Mojtaba 2026-10-29) */}
-    <Screen fill barGap={12} gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+    <Screen gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />}>
-      {/* (main site: the history and the mistakes are pills in this card; the screen is fitted by it, the last card) */}
-      {own ? <View ref={lastBox} onLayout={fit} style={{ flexGrow: 1, gap: level >= 2 ? 10 : 14 }}><NewTestCard test={test} level={level} /></View> : (
+      {own ? <NewTestCard test={test} level={level} /> : (
       <Card style={{ gap: 14 }}>
         {/* The title with its icon, in a tile like the mistakes card's */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -219,7 +197,7 @@ export default function Exam() {
             : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)}
       </Card>
       )}
-      {own ? null : <View ref={lastBox} onLayout={fit}><ShortcutsCard level={level} /></View>}
+      {own ? null : <ShortcutsCard level={level} />}
       {/* Main site: no mistakes card (Mojtaba 2026-10-19); the random test's card has the mistakes bar and its test. */}
       {own ? null : <MistakesCard />}
     </Screen>

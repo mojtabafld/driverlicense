@@ -50,7 +50,7 @@ export function useNewTest() {
   return { ready: ids.length > 0, ids, last, missed, week, unseen, size, setSize, fresh, setFresh, count, start, randomLeft };
 }
 
-// `level` (0–3): denser on shorter screens, so the exam tab's cards all end above the tab bar (Mojtaba 2026-10-29).
+// `level` controls spacing and type size; every section remains available by scrolling.
 export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number }) {
   const c = useColors();
   const { limited } = useFree();
@@ -65,7 +65,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
     <>
     {/* One card (Mojtaba 2026-10-29): the progress (after a picture he sent; at 0% before the first answer too) on top,
         a thin line, then the random test. */}
-    <Card style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20, flexGrow: 1, justifyContent: 'space-between' }}>
+    <Card testID="exam-setup" style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }}>
       <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
       <View style={{ height: 1, backgroundColor: c.line }} />
       {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
@@ -195,14 +195,13 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           ))}
         </View>
       ) : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: level >= 3 || open ? 'none' : 'flex' }}>
+      <View testID="exam-answer-counts" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: open ? 'none' : 'flex' }}>
         {countTag(rightTone, c.okSoft, `${tr('درست')} ${faNum(right)}`)}
         {countTag(wrongTone, c.badSoft, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {countTag(rest, c.surface2, `${tr('جواب‌نداده')} ${faNum(left)}`)}
       </View>
-      {/* The tests taken on each of the last seven days, under the counts (Mojtaba 2026-10-31); smaller on shorter
-          screens, left out on the shortest. */}
-      {level >= 4 ? null : <DailyTestsChart height={[130, 112, 96, 80][level] ?? 80} />}
+      {/* Keep the daily chart on short screens too; the whole card can scroll. */}
+      <DailyTestsChart height={[130, 112, 96, 80][level] ?? 80} />
       {/* (the pills under the counts of right, wrong and unanswered; Mojtaba 2026-10-30) */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
