@@ -1,4 +1,5 @@
 import type { ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors, useIsDark } from './theme';
 
@@ -8,8 +9,13 @@ export const sheetWidth = (width: number) => Math.min(Math.max(0, width - SHEET_
 // The same softly outlined frame for every bottom popup, slightly inset at the sides.
 export function useSheetFrame(): ViewStyle {
   const c = useColors(), dark = useIsDark();
+  const ins = useSafeAreaInsets();
+  // Home-indicator phones need a broader bottom curve than the sheet's top corners.
+  const bottomRadius = Math.min(56, Math.max(36, ins.bottom + 14));
   return {
     borderRadius: 36,
+    borderBottomLeftRadius: bottomRadius,
+    borderBottomRightRadius: bottomRadius,
     borderCurve: 'continuous',
     backgroundColor: c.surface,
     borderWidth: 1,
