@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
-import { Fragment, cloneElement, isValidElement, useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, cloneElement, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -20,6 +20,7 @@ import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 import { graphiteCtl, heroDark, px } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
+import { DashboardContext, useDashboardLook } from './dashboard-style';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -126,9 +127,11 @@ export function PageIn({ children, motion = 'tab' }: { children?: React.ReactNod
 // style from usePageMotion, for the page's content.
 export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?: object }) {
   const c = useColors();
+  const dashboard = useContext(DashboardContext), look = useDashboardLook();
   return (
     <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
-      <LinearGradient colors={c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={dashboard ? [look.pageTop, c.bg, look.pageBottom] : c.bgGradient} locations={[0, 0.45, 1]} start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }} style={StyleSheet.absoluteFill} />
+      {dashboard ? <View pointerEvents="none" style={{ position: 'absolute', top: -170, right: -180, width: 400, height: 400, borderRadius: 200, backgroundColor: look.wash, opacity: 0.55 }} /> : null}
       {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
     </View>
   );
@@ -401,7 +404,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
   // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
   // page, only the picture or drawing goes, and the title may take the whole width.
-  const plain = usePlainHeader() && !tall;
+  const dashboard = useContext(DashboardContext), dashboardLook = useDashboardLook();
+  const plain = (dashboard || plainHead) && !tall;
   const { theme, setMode } = useTheme();
   const lightPic = look.light ?? look.pic + 3, light = theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
   const act = action === 'theme'
@@ -409,8 +413,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
     : action;
   // «هدر ساده» without the colour band (flat: the page's own colour, no fade; the title in the text colour) unless
   // PLAIN_GRADIENT is on (then the band and its fade stay, as before).
-  const flat = plain && !PLAIN_GRADIENT, page = useColors();
-  const pic = light ? lightPic : look.pic, bg = flat ? page.bgGradient[0] : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
+  const flat = plain && (dashboard || !PLAIN_GRADIENT), page = useColors();
+  const pic = light ? lightPic : look.pic, bg = flat ? (dashboard ? dashboardLook.pageTop : page.bgGradient[0]) : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
   useHeaderTop(bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
@@ -516,7 +520,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
 // Whether a scroll view is scrolled to (within 48 points of) its end.
 const atEndOf = (n: { contentOffset: { y: number }; layoutMeasurement: { height: number }; contentSize: { height: number } }) =>
   n.contentOffset.y + n.layoutMeasurement.height >= n.contentSize.height - 48;
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter }: { lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter, dashboard = false }: { dashboard?: boolean; lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number, atEnd: boolean) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
@@ -539,6 +543,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
     </View>
   );
   return (
+    <DashboardContext.Provider value={dashboard}>
     <Backdrop>
       <PageIn>
       <View style={{ flex: 1 }}>
@@ -552,6 +557,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
       </View>
       </PageIn>
     </Backdrop>
+    </DashboardContext.Provider>
   );
 }
 
@@ -655,20 +661,23 @@ export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: (
 // A tappable card hands its own size (flex, width, alignSelf) to the touch area around it and fills that, so cards
 // side by side in a row keep the sizes they ask for.
 // Cards come in with useEnter; their place in the layout (flex, width, margins) stays on the outer box.
-export function Card({ children, style, onPress }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void }) {
+export function Card({ children, style, onPress, testID }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; testID?: string }) {
   const anim = useEnter(), c = useColors(), under = useSurfaceUnder(c.surface); // (in the apps: the bars see it under them)
+  const dashboard = useContext(DashboardContext), look = useDashboardLook();
+  const dashboardStyle: ViewStyle | null = dashboard ? { borderRadius: 26, borderColor: look.edge, shadowColor: c.accent,
+    shadowOpacity: look.dark ? 0.025 : 0.055, shadowRadius: 16, shadowOffset: { width: 0, height: 5 }, elevation: 2 } : null;
   const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical, ...rest } = StyleSheet.flatten(style) ?? {};
   const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical };
   // Grows to the size the card is given; flexGrow, not flex: 1, so that inside a box of no set height (a row of cards)
   // phones keep the content's own height instead of collapsing it to nothing.
   const fill = flex != null || flexGrow != null ? { flexGrow: 1 } : null;
   return (
-    <Animated.View ref={under as any} style={[outer, anim] as any}>
+    <Animated.View testID={testID} ref={under as any} style={[outer, anim] as any}>
       {onPress ? (
         <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [fill, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }]}>
-          <Glass style={[{ padding: 16 }, rest, fill]}>{children}</Glass>
+          <Glass style={[{ padding: 16 }, dashboardStyle, rest, fill]}>{children}</Glass>
         </Pressable>
-      ) : <Glass style={[{ padding: 16 }, rest, fill]}>{children}</Glass>}
+      ) : <Glass style={[{ padding: 16 }, dashboardStyle, rest, fill]}>{children}</Glass>}
     </Animated.View>
   );
 }
@@ -727,6 +736,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary' | 'accent'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean; busy?: boolean;
 }) {
   const c = useColors();
+  const dashboard = useContext(DashboardContext);
   const [scale] = useState(() => new Animated.Value(1));
   const width = useRef(0);
   const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
@@ -753,7 +763,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
-          minHeight: big ? 56 : 50, borderRadius: big ? 16 : radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+          minHeight: big ? 56 : 50, borderRadius: dashboard ? 25 : big ? 16 : radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
           borderColor: primary ? fill : c.line,
           backgroundColor: primary ? fill : pressed || hovered ? c.surface2 : c.surface,
           opacity: disabled ? (big ? 0.72 : 0.52) : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
@@ -776,14 +786,15 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
 // In the light theme the track is the sign-in switch's grey (Mojtaba, 2026-10-15), so it shows on the white cards.
 export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
+  const dashboard = useContext(DashboardContext), look = useDashboardLook();
   return {
-    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: dark ? c.nav : px('#e3e6ef') } as ViewStyle,
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: dashboard ? look.wash : dark ? c.nav : px('#e3e6ef') } as ViewStyle,
     // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
     // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
     pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
-    raised: { borderRadius: radius.pill, backgroundColor: dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
+    raised: { borderRadius: radius.pill, backgroundColor: dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
       boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
-    label: (on: boolean) => ({ color: on ? c.text : c.muted, fontWeight: '500' }) as TextStyle,
+    label: (on: boolean) => ({ color: on ? (dashboard ? c.accentText : c.text) : c.muted, fontWeight: '500' }) as TextStyle,
   };
 }
 
