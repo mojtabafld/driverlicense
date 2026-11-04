@@ -2,10 +2,10 @@ import type { ViewStyle } from 'react-native';
 
 import { useColors, useIsDark } from './theme';
 
-export const SHEET_INSET = 12;
+export const SHEET_INSET = 0;
 export const sheetWidth = (width: number) => Math.min(Math.max(0, width - SHEET_INSET * 2), 560);
 
-// The same floating, softly outlined frame for every bottom popup.
+// The same softly outlined frame for every bottom popup, flush with the screen edges.
 export function useSheetFrame(): ViewStyle {
   const c = useColors(), dark = useIsDark();
   return {
