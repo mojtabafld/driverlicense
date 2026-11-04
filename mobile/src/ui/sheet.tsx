@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useColors, useIsDark } from './theme';
 import { SHEET_INSET, useSheetFrame } from './sheet-frame';
+import { SheetViewport } from './sheet-viewport';
 
 // Whether the sheet's list is at its top, so a drag down on it moves the sheet instead of the list.
 type Now = { top: boolean; onClose: () => void; h: number; from: number; at: number | null; scroll: React.RefObject<any> };
@@ -97,7 +98,7 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
   const [gesture] = useState(() => sheetPan(y, now));
   const dim = Animated.multiply(fade, y.interpolate({ inputRange: [0, Math.max(1, winH * 0.6)], outputRange: [1, 0], extrapolate: 'clamp' }));
   const sheet = (
-    <Animated.View {...(WEB ? pan.panHandlers : null)} onLayout={e => { Object.assign(now, { h: e.nativeEvent.layout.height }); }}
+    <Animated.View testID="bottom-sheet-frame" {...(WEB ? pan.panHandlers : null)} onLayout={e => { Object.assign(now, { h: e.nativeEvent.layout.height }); }}
       style={[frame, { maxHeight, width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 8, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
         opacity: fade, transform: [{ translateY: y }] },
         Platform.OS === 'web' ? ({ touchAction: 'none', overscrollBehavior: 'contain' } as any) : null, style]}>
@@ -112,12 +113,14 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
     <Modal visible={shown} transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       {/* A modal is its own window on Android, so gestures need their own root in it. */}
       <GestureHandlerRootView style={{ flex: 1 }}>
+      <SheetViewport>
       <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: dim, backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
         <Pressable onPress={onClose} accessibilityLabel="بستن" style={{ flex: 1 }} />
       </Animated.View>
-      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
+      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: SHEET_INSET, paddingBottom: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
         {WEB ? sheet : <GestureDetector gesture={gesture}>{sheet}</GestureDetector>}
       </View>
+      </SheetViewport>
       </GestureHandlerRootView>
     </Modal>
   );

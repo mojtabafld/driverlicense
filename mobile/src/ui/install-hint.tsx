@@ -12,6 +12,7 @@ import { UI_CHOSEN } from '@/lib/i18n';
 import { Button, T } from './kit';
 import { useColors } from './theme';
 import { SHEET_INSET, useSheetFrame } from './sheet-frame';
+import { SheetViewport } from './sheet-viewport';
 
 const KEY = 'tp.a2hs';
 
@@ -81,8 +82,9 @@ export function InstallHint() {
       ];
   return (
     <Modal transparent visible animationType="none" onRequestClose={close}>
+      <SheetViewport>
       <Animated.View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)', opacity: up,
-        paddingHorizontal: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
+        paddingHorizontal: SHEET_INSET, paddingBottom: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
         <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="بستن" />
         <Animated.View style={[frame, { alignSelf: 'center', width: '100%', maxWidth: 480, padding: 22, paddingBottom: ins.bottom + 30, gap: 16,
           transform: [{ translateY: up.interpolate({ inputRange: [0, 1], outputRange: [360, 0] }) }] }]}>
@@ -105,6 +107,7 @@ export function InstallHint() {
           <Button big label="متوجه شدم" onPress={close} style={{ outlineStyle: 'none' } as object} />
         </Animated.View>
       </Animated.View>
+      </SheetViewport>
     </Modal>
   );
 }
