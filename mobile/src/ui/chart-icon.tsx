@@ -2,17 +2,18 @@ import { useId } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
-import { useIsDark } from './theme';
+import { mix } from './palette';
+import { useColors, useIsDark } from './theme';
 
 // Matching pastel tiles for chart headings; independent of text direction.
 export function HomeChartIcon({ kind, size = 36 }: { kind: 'stats' | 'progress' | 'daily'; size?: number }) {
-  const dark = useIsDark();
+  const c = useColors(), dark = useIsDark();
   const id = `home-chart-${useId().replace(/:/g, '')}`;
   const daily = kind === 'daily';
   const stats = kind === 'stats';
-  const ink = daily ? (dark ? '#f7bf62' : '#d88a00') : stats ? (dark ? '#c4a6ff' : '#6200ee') : (dark ? '#80d8bd' : '#188c70');
-  const top = daily ? (dark ? '#49361a' : '#fff0d2') : stats ? (dark ? '#38264f' : '#e8ddff') : (dark ? '#193d34' : '#e1f3ec');
-  const bottom = daily ? (dark ? '#302619' : '#fff8ec') : stats ? (dark ? '#291e3c' : '#f4efff') : (dark ? '#152e28' : '#f2faf6');
+  const ink = c.link;
+  const top = mix(ink, c.surface, dark ? 0.82 : 0.86);
+  const bottom = mix(ink, c.surface, dark ? 0.92 : 0.96);
   return (
     <View accessible={false} aria-hidden style={{ width: size, height: size, flexShrink: 0 }}>
       <Svg width={size} height={size} viewBox="0 0 48 48">
