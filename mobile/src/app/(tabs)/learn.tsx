@@ -1,5 +1,5 @@
 // «آموزش»: five parts as cards one under the other, each with its picture (made by the server's image model; the part's
-// icon until it is there) filling the card from its start and melting into the card's colour under its title, a
+// icon until it is there) in a rounded pastel frame beside its title, a
 // short line on what is in it and its progress note; a card opens its part's page: the app's own course «آموزش گام‌به‌گام» (app/course.tsx), the rules,
 // the road signs, right of way and the test's glossary.
 // At /app (prove.dk's copy) the cards stay two by two and the first one is prove.dk's 44 lessons one by one
@@ -7,12 +7,10 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import { useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
-import { RTL } from '@/lib/i18n';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
@@ -20,35 +18,25 @@ import { useApp } from '@/lib/store';
 import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
-import { Card, Screen, T, physical } from '@/ui/kit';
+import { Card, Screen, T } from '@/ui/kit';
 import { SearchBox } from '@/ui/search-box';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
+import { mix, rgba } from '@/ui/palette';
 
-// The fade from the picture into the card's own colour: its steps slow at both ends (smoothstep, as ui/tall-picture.tsx),
-// from clear over the picture to the full colour under the title.
-const FADE = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] as const;
-const FADE_AT = FADE.map(t => 0.22 + 0.2 * t) as unknown as readonly [number, number, ...number[]];
-const FADE_A = FADE.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
-
-// A card of the five (Mojtaba 2026-10-21/22): its picture fills the card from its start (the right in Persian, the left
-// in English and Danish), drawn whole at the card's height, and melts into the card's colour
-// (light or dark) under the title and its short line, with the round ‹ at the card's end.
+// The five learning cards show their original illustrations inside theme-colored pastel frames.
 function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName; title: string; text: string; note?: string; href: Href }) {
   const c = useColors();
   const { learnArt } = useApp();
   // The dark theme draws the card's own dark picture (6–10: the same drawing on a dark tint of its colour; Mojtaba
   // 2026-10-22) once the server has made it, with the light theme's fade; until then the light one.
   const dark = useIsDark(), pn = dark && learnArt[n + 5] ? n + 5 : n, v = learnArt[pn];
-  // The card's height (its picture's room is as high), so the picture is drawn whole at that height.
-  const [boxH, setBoxH] = useState(0);
   // Short phones: lower cards; very short ones (iPhone SE first generation) without the short line, so all five fit
   // above the tab bar (Mojtaba 2026-10-22). The height left by the status bar and the home indicator counts (an
   // iPhone's 844 points are about 760 there).
   const ins = useSafeAreaInsets(), h = useWindowDimensions().height - ins.top - ins.bottom, short = h < 780, tiny = h < 640;
-  const fades = FADE_A.map(a => `${c.surface}${a}`) as unknown as readonly [string, string, ...string[]];
-  // The picture's room before the words; the gradient runs from the picture to them.
-  const room = <View style={{ width: '30%' }} />, from = { x: RTL ? 1 : 0, y: 0.5 }, to = { x: RTL ? 0 : 1, y: 0.5 };
+  const pictureSize = tiny ? 40 : short ? 48 : 68;
+  const frameColors = [mix(c.link, c.surface, dark ? 0.82 : 0.86), mix(c.link, c.surface, dark ? 0.92 : 0.96)] as const;
   // The round ‹ at the card's end, beside the words, not on the picture (Mojtaba 2026-10-22).
   const arrow = (
     <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: c.surface2, alignItems: 'center', justifyContent: 'center' }}>
@@ -57,19 +45,13 @@ function Part({ n, icon, title, text, note, href }: { n: number; icon: IconName;
   );
   return (
     <Card onPress={() => router.push(href)} style={{ flexGrow: 1, flexShrink: 0, padding: 0, overflow: 'hidden', minHeight: tiny ? 52 : short ? 62 : 92 }}>
-      <View style={[{ position: 'absolute', top: 0, bottom: 0, width: '42%', backgroundColor: v ? 'transparent' : c.accentSoft, alignItems: 'center', justifyContent: 'center' }, physical(RTL ? { right: 0 } : { left: 0 })]}
-        onLayout={e => setBoxH(Math.round(e.nativeEvent.layout.height))}>
-        {/* Whole, as high as the card (never cropped top or bottom: smaller on a short card, Mojtaba 2026-10-22), pushed a
-            little past the card's edge so the picture's plain margin on that side is cut away; the rest of the room in
-            the picture's own background colour. */}
-        {/* («-c3»: the pictures without their background, 2026-10-29; a new address, so no old copy is shown from a cache) */}
-        {v && boxH ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}-c3` }} style={[{ position: 'absolute', top: 0, height: boxH, width: boxH * 1.5 }, physical(RTL ? { right: -0.15 * boxH * 1.5 } : { left: -0.15 * boxH * 1.5 })]} contentFit="contain" transition={250} />
-          : v ? null : <Icon name={icon} size={26} color={c.link} weight="semibold" />}
-      </View>
-      {/* (the dark theme: no fade, the picture's charcoal is the card's own; Mojtaba 2026-10-29) */}
-      {dark ? null : <LinearGradient pointerEvents="none" colors={fades} locations={FADE_AT} start={from} end={to} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} />}
-      <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: short ? 7 : 12, paddingHorizontal: 12 }}>
-        {room}
+      <View accessibilityRole="button" accessibilityLabel={title} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: tiny ? 6 : short ? 7 : 12, paddingHorizontal: 12 }}>
+        <LinearGradient colors={frameColors} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+          style={{ width: pictureSize, height: pictureSize, flexShrink: 0, borderRadius: pictureSize * 14 / 48, borderWidth: 1.2,
+            borderColor: rgba(c.link, dark ? 0.28 : 0.18), alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          {v ? <Image source={{ uri: `${API_URL}/learn-art/${pn}.png?v=${v}-c3` }} style={{ width: '86%', height: '86%' }} contentFit="contain" transition={250} />
+            : <Icon name={icon} size={Math.round(pictureSize * 0.5)} color={c.link} weight="semibold" />}
+        </LinearGradient>
         <View style={{ flex: 1, gap: 1 }}>
           <T style={{ fontSize: short ? 16 : 17.5, lineHeight: short ? 22 : 25, fontWeight: '700' }} numberOfLines={short ? 1 : 2}>{title}</T>
           {tiny ? null : <T style={{ fontSize: 12.5, lineHeight: 18, color: c.muted }} numberOfLines={1}>{text}</T>}
