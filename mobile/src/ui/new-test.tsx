@@ -24,8 +24,6 @@ import { SizeSegment } from './size-segment';
 import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
 import { ARC, radius, useColors, useIsDark } from './theme';
-import { DashboardIcon } from './dashboard-art';
-import { useDashboardLook } from './dashboard-style';
 
 export type NewTest = ReturnType<typeof useNewTest>;
 export function useNewTest() {
@@ -65,15 +63,11 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
   const tight = !answered;
   return (
     <>
-    {/* Separate progress and test setup cards, with the start action kept above the tab bar. */}
-    <Card testID="exam-progress" style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20, flexGrow: 1 }}>
+    {/* One card (Mojtaba 2026-10-29): the progress (after a picture he sent; at 0% before the first answer too) on top,
+        a thin line, then the random test. */}
+    <Card style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20, flexGrow: 1, justifyContent: 'space-between' }}>
       <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
-    </Card>
-    <Card testID="exam-controls" style={{ gap: level >= 3 ? 8 : 12, paddingVertical: level >= 2 ? 12 : 16, paddingHorizontal: level >= 2 ? 16 : 20 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        <DashboardIcon name="exam" size={32} />
-        <T style={{ fontWeight: '700', fontSize: 16 }}>آزمون تصادفی</T>
-      </View>
+      <View style={{ height: 1, backgroundColor: c.line }} />
       {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
           تکراری» (Mojtaba 2026-10-30). */}
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
@@ -126,7 +120,6 @@ function mix(a: string, b: string, t: number): string | null {
 
 function Progress({ answered, total, right, wrong, week, level = 0 }: { answered: number; total: number; right: number; wrong: number; week: number; level?: number }) {
   const c = useColors(), [open, setOpen] = useState(false);
-  const look = useDashboardLook();
   const share = total ? answered / total : 0;
   const big = useCountUp(share, 1100);
   // A whole percent: never 0 once a question is answered, never 100 before all of them are.
@@ -142,7 +135,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
     <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
       style={({ pressed }) => ({ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: [5, 4, 3][tight],
-        paddingVertical: [10, 9, 8][tight], paddingHorizontal: [10, 8, 6][tight], borderRadius: 18, backgroundColor: look.wash, opacity: pressed ? 0.75 : 1 })}>
+        paddingVertical: [10, 9, 8][tight], paddingHorizontal: [10, 8, 6][tight], borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
       <Icon name={icon} size={[16, 15, 13][tight]} color={color} weight="semibold" />
       {/* (one size for each width of screen; English and Danish, longer, a step smaller) */}
       <T style={{ flexShrink: 1, color, fontWeight: '700', fontSize: [13, 11.5, 10.5, 10][tight + (RTL ? 0 : 1)] }} numberOfLines={1} maxFontSizeMultiplier={1.1}>{text}</T>
@@ -168,7 +161,6 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
     <>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <DashboardIcon name="chart" size={30} />
           <T style={{ fontSize: 17, fontWeight: '700' }}>پیشرفت شما</T>
         </View>
         {/* (a «…» button at the title's end: the card opens to more on the progress, each part's count and share;
@@ -179,7 +171,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         </Pressable>
       </View>
       {/* The percent above the progress bar; the shortcuts below open history and mistakes. */}
-      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.link }}>{pctText(shown)}</T>
+      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
         {seg(wrong, wrongTone)}
@@ -203,7 +195,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           ))}
         </View>
       ) : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: level >= 4 || open ? 'none' : 'flex' }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: level >= 3 || open ? 'none' : 'flex' }}>
         {countTag(rightTone, c.okSoft, `${tr('درست')} ${faNum(right)}`)}
         {countTag(wrongTone, c.badSoft, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {countTag(rest, c.surface2, `${tr('جواب‌نداده')} ${faNum(left)}`)}
