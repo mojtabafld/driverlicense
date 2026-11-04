@@ -82,9 +82,9 @@ export function InstallHint() {
   return (
     <Modal transparent visible animationType="none" onRequestClose={close}>
       <Animated.View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)', opacity: up,
-        paddingHorizontal: SHEET_INSET, paddingTop: Math.max(SHEET_INSET, ins.top), paddingBottom: Math.max(SHEET_INSET, ins.bottom) }}>
+        paddingHorizontal: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
         <Pressable style={{ flex: 1 }} onPress={close} accessibilityLabel="بستن" />
-        <Animated.View style={[frame, { alignSelf: 'center', width: '100%', maxWidth: 480, padding: 22, paddingBottom: 30, gap: 16,
+        <Animated.View style={[frame, { alignSelf: 'center', width: '100%', maxWidth: 480, padding: 22, paddingBottom: ins.bottom + 30, gap: 16,
           transform: [{ translateY: up.interpolate({ inputRange: [0, 1], outputRange: [360, 0] }) }] }]}>
           <View style={{ alignSelf: 'center', width: 38, height: 5, borderRadius: 3, backgroundColor: c.line, marginTop: -8 }} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>

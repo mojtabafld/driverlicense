@@ -98,7 +98,7 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
   const dim = Animated.multiply(fade, y.interpolate({ inputRange: [0, Math.max(1, winH * 0.6)], outputRange: [1, 0], extrapolate: 'clamp' }));
   const sheet = (
     <Animated.View {...(WEB ? pan.panHandlers : null)} onLayout={e => { Object.assign(now, { h: e.nativeEvent.layout.height }); }}
-      style={[frame, { maxHeight, width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 8, paddingHorizontal: 18, paddingBottom: 18, gap: 14,
+      style={[frame, { maxHeight, width: '100%', maxWidth: 560, alignSelf: 'center', paddingTop: 8, paddingHorizontal: 18, paddingBottom: ins.bottom + 18, gap: 14,
         opacity: fade, transform: [{ translateY: y }] },
         Platform.OS === 'web' ? ({ touchAction: 'none', overscrollBehavior: 'contain' } as any) : null, style]}>
       {/* The grab handle: a sign that the sheet can be dragged down. */}
@@ -115,7 +115,7 @@ export function Sheet({ open, onClose, children, maxHeight = '85%', style }: { o
       <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: dim, backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
         <Pressable onPress={onClose} accessibilityLabel="بستن" style={{ flex: 1 }} />
       </Animated.View>
-      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: SHEET_INSET, paddingTop: Math.max(SHEET_INSET, ins.top), paddingBottom: Math.max(SHEET_INSET, ins.bottom) }}>
+      <View pointerEvents="box-none" style={{ flex: 1, justifyContent: 'flex-end', paddingHorizontal: SHEET_INSET, paddingTop: Math.max(12, ins.top) }}>
         {WEB ? sheet : <GestureDetector gesture={gesture}>{sheet}</GestureDetector>}
       </View>
       </GestureHandlerRootView>
