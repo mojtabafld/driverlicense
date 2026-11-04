@@ -19,6 +19,7 @@ import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 import { graphiteCtl, heroDark, px } from './palette';
+import { TAB_BAR_H } from './tabs/tab-look';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -216,7 +217,7 @@ export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
 // `scrollRef` / `onScrollY`: the scroll view and where it is scrolled (and whether to its end).
 // Room for the floating tab bar (src/ui/tabs/app-tabs.tsx: 64 high, above the bottom edge) and a clear gap above it,
 // on every platform.
-const BAR_ROOM = 64 + 30;
+const BAR_ROOM = TAB_BAR_H + 30;
 
 // A page's picture header: a picture made for the page (imagegen.js HERO_PROMPTS) covering the whole header from the top
 // edge (under the status bar) to its square bottom, and the title and a line on its calm right side (no buttons on
@@ -543,7 +544,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
       <View style={{ flex: 1 }}>
       {fill
         ? <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
-            {top}<View style={[box, { flex: 1, paddingBottom: (barGap != null ? 64 + barGap : BAR_ROOM) + Math.max(16, ins.bottom) }]}>{head}{children}</View>
+            {top}<View style={[box, { flex: 1, paddingBottom: (barGap != null ? TAB_BAR_H + barGap : BAR_ROOM) + Math.max(16, ins.bottom) }]}>{head}{children}</View>
           </ScrollView>
         : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
             {top}<View style={box}>{head}{children}</View>
