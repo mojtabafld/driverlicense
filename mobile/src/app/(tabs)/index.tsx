@@ -16,7 +16,7 @@ import { usePromoGate } from '@/lib/promo-gate';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, Button, Card, FitLine, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
+import { ArcButton, Button, Card, FitLine, Ring, Screen, T, physical, tap, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
@@ -187,6 +187,9 @@ export default function Home() {
   const small = ARC && height < 760;
   const gap = tighter || small ? 8 : compact ? 10 : 14; // between the page's cards
   const ringSize = tighter ? 76 : small ? 88 : compact ? 104 : 120;
+  const readinessPad = tighter ? 10 : compact ? 12 : 16;
+  const readinessGap = tighter ? 12 : small ? 14 : 18;
+  const waveStart = readinessPad + ringSize + readinessGap;
   // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
   // chart card's height from and to while it is shown or moving (null when closed: the card takes the height left).
   // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
@@ -354,15 +357,18 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: tighter ? 10 : compact ? 12 : 16, paddingVertical: (tighter ? 10 : compact ? 12 : 16) + share / 2 }}>
-        {ARC ? <DashboardWaves /> : null}
+      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: readinessPad + share / 2 }}>
+        {ARC ? <View testID="home-readiness-waves" pointerEvents="none" aria-hidden
+          style={{ position: 'absolute', top: 0, bottom: 0, ...physical({ left: RTL ? 0 : waveStart, right: RTL ? waveStart : 0 }) }}>
+          <DashboardWaves />
+        </View> : null}
         {ARC ? <>
-          {/* Main site (Mojtaba 2026-10-29): the larger ring at the card's start (the right in Persian) and beside it the
-              title with its pill under it, as before; no average or mistakes in this card. */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: tighter ? 12 : small ? 14 : 18 }}>
+          {/* The ring has a clear column; the waves stay in the text column. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: readinessGap }}>
             {/* In the ring a seal with a tick in the chance's colour (green, amber, red; 2026-10-30; it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
             {/* Before the first test a tap on the ring starts a 5-question tryout of the test page (Mojtaba 2026-10-30;
                 its seal still, no longer animated). */}
+            <View testID="home-readiness-ring" style={{ flexShrink: 0 }}>
             {tryout ? (
               <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
                 <Ring value={0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={c.accent}>
@@ -374,10 +380,17 @@ export default function Home() {
                 <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.link} weight="semibold" />
               </Ring>
             )}
-            <View style={{ flex: 1, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
+            </View>
+            <View style={{ flex: 1, minWidth: 0, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
-              <PassPct value={est ? est.prob : null} size={tighter ? 28 : small ? 30 : 36} />
-              <Pill text={probWord} fg={probColor} bg={probSoft} />
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' }}>
+                <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
+                  <PassPct value={est ? est.prob : null} size={tighter ? 28 : small ? 30 : 36} />
+                </View>
+                <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: probSoft }}>
+                  <T numberOfLines={2} style={{ color: probColor, fontSize: width < 360 ? 11 : 12, lineHeight: 17, fontWeight: '700', textAlign: 'center' }}>{probWord}</T>
+                </View>
+              </View>
             </View>
           </View>
         </> : <>
