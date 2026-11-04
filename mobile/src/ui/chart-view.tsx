@@ -14,7 +14,6 @@ import { Icon, type IconName } from './icon';
 import { Card, FitLine, T, tap } from './kit';
 import { useColors } from './theme';
 import { HomeChartIcon } from './chart-icon';
-import { useDashboardLook } from './dashboard-style';
 
 export { HomeChartIcon } from './chart-icon';
 
@@ -83,13 +82,12 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
 // `noFacts`: without the line of facts under the numbers (the smallest phones).
 export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean }) {
   const c = useColors();
-  const look = useDashboardLook();
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
   const ok = attempts.filter(passed).length;
   const qs = attempts.reduce((s, a) => s + a.items.length, 0), secs = attempts.reduce((s, a) => s + (a.secs || 0), 0);
   const cell = (label: string, value: string, color?: string) => (
-    <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, borderRadius: 16, backgroundColor: look.row, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
+    <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
       <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
