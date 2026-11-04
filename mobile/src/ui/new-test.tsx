@@ -128,15 +128,13 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const done = total > 0 && answered >= total, left = total - answered, dark = useIsDark();
   const { attempts } = useApp();
   const tests = attempts.filter(a => a.mode !== 'lesson').length, mistakes = mistakeIds(attempts).length;
-  // A pill: an icon in its colour and its words, a tap opening its page. The three share one line on every screen: on a
-  // narrow one they give up room and their words get smaller (FitLine; Mojtaba 2026-10-30).
+  // Two equal-width shortcuts share the full row on every screen.
   // (narrower phones: smaller icons, room and words, so nothing is cut off; a step smaller still on small ones,
   // Mojtaba 2026-10-30)
   const { width: winW } = useWindowDimensions(), tight = winW < 345 ? 2 : winW < 400 ? 1 : 0;
   const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
     <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
-      // (together as wide as the progress bar under them, each grown from its own width; a little larger: Mojtaba 2026-10-30)
-      style={({ pressed }) => ({ flexGrow: 1, flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: [5, 4, 3][tight],
+      style={({ pressed }) => ({ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: [5, 4, 3][tight],
         paddingVertical: [10, 9, 8][tight], paddingHorizontal: [10, 8, 6][tight], borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
       <Icon name={icon} size={[16, 15, 13][tight]} color={color} weight="semibold" />
       {/* (one size for each width of screen; English and Danish, longer, a step smaller) */}
@@ -147,8 +145,8 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const soft = (x: string) => (dark ? x : mix(x, c.surface, 0.2) ?? x);
   const rightTone = soft(c.ok), wrongTone = soft(c.bad), rest = dark ? mix(c.line, '#ffffff', 0.08) ?? c.line : mix(c.line, '#000000', 0.04) ?? c.line;
   const big2 = [60, 48, 40, 34][level] ?? 34;
-  const dot = (color: string, text: string) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+  const countTag = (color: string, backgroundColor: string, text: string) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor }}>
       <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color }} />
       <T style={{ color: c.muted, fontSize: 13, lineHeight: 20 }}>{text}</T>
     </View>
@@ -172,9 +170,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           <Icon name="more" size={20} color={c.text} weight="semibold" />
         </Pressable>
       </View>
-      {/* The percent large; the pills (in one line at the end, under the counts): the questions left (or, all answered,
-          only a green circled tick), the tests' history and the mistakes, each opening its page, their icons in their
-          own colours (Mojtaba 2026-10-30: the history and the mistakes were two cards under this one). */}
+      {/* The percent above the progress bar; the shortcuts below open history and mistakes. */}
       <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
@@ -199,21 +195,16 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           ))}
         </View>
       ) : null}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 16, rowGap: 2, display: level >= 3 || open ? 'none' : 'flex' }}>
-        {dot(rightTone, `${tr('درست')} ${faNum(right)}`)}
-        {dot(wrongTone, `${tr('اشتباه')} ${faNum(wrong)}`)}
-        {left ? dot(rest, `${tr('جواب‌نداده')} ${faNum(left)}`) : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: level >= 3 || open ? 'none' : 'flex' }}>
+        {countTag(rightTone, c.okSoft, `${tr('درست')} ${faNum(right)}`)}
+        {countTag(wrongTone, c.badSoft, `${tr('اشتباه')} ${faNum(wrong)}`)}
+        {countTag(rest, c.surface2, `${tr('جواب‌نداده')} ${faNum(left)}`)}
       </View>
       {/* The tests taken on each of the last seven days, under the counts (Mojtaba 2026-10-31); smaller on shorter
           screens, left out on the shortest. */}
       {level >= 4 ? null : <DailyTestsChart height={[130, 112, 96, 80][level] ?? 80} />}
       {/* (the pills under the counts of right, wrong and unanswered; Mojtaba 2026-10-30) */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        {done ? (
-          <View accessibilityLabel={tr('همه جواب داده شد')} style={{ width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: c.okSoft }}>
-            <Icon name="checkCircle" size={20} color={c.ok} weight="semibold" />
-          </View>
-        ) : tag('exam', c.link, t('{0} سؤال مانده', faNum(left)), wrong ? () => router.push('/mistakes') : undefined)}
         {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
         {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
       </View>
