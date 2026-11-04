@@ -12,7 +12,7 @@ import { RTL, t } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { dayLabel, dayOf } from './date-pick';
-import { Icon } from './icon';
+import { HomeChartIcon } from './chart-icon';
 import { T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 
@@ -69,9 +69,7 @@ export function DailyTestsChart({ height = 120 }: { height?: number }) {
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: c.accentSoft }}>
-          <Icon name="chart" size={16} color={tone} weight="semibold" />
-        </View>
+        <HomeChartIcon kind="daily" />
         <T style={{ flex: 1, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>آزمون‌های روزانه</T>
         <T style={{ fontSize: 12.5, color: c.muted }} numberOfLines={1}>{t('میانگین {0} در روز', faNum(one(avg)))}</T>
       </View>
