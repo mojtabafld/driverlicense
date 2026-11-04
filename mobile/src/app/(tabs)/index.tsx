@@ -433,7 +433,7 @@ export default function Home() {
               </View>
               {last ? (
                 <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                  <T style={{ fontSize: slim ? 17 : 22, lineHeight: slim ? 24 : 30, fontWeight: '700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
+                  <T style={{ fontSize: slim ? 17 : 22, lineHeight: slim ? 24 : 30, fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <T raw style={{ fontSize: 12.5, color: c.muted }}>{fmtDate(last.at)}</T>
                     {diff != null && diff !== 0 && !slim ? (
