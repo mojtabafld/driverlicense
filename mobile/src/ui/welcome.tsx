@@ -4,9 +4,8 @@
 // on as a guest. «ادامه با ایمیل» puts «ورود» and «ساخت حساب» in their place (Mojtaba 2026-10-22), each opening the
 // steps in that mode (app/login.tsx), with «گزینه‌های دیگر» to go back to the ways in.
 import { useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useColorScheme, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
@@ -17,7 +16,7 @@ import { VibeCards } from './vibe-cards';
 import { Icon, type IconName } from './icon';
 import { L, T, physical, physicalAlign, tap, useHeaderTop } from './kit';
 import { defaultAccentDark, defaultAccentLight, defaultPalette } from './palette';
-import { useColors } from './theme';
+import { useColors, useIsDark } from './theme';
 import Svg, { Path } from 'react-native-svg';
 
 // «ادامه با اپل»: hidden until there is an Apple Developer account (Mojtaba 2026-10-21); what it still needs is in
@@ -59,7 +58,10 @@ const NIGHT = { dark: true, top: GREY ? '#2a2a2a' : '#1b2a3f', bottom: GREY ? '#
 const DAY = { dark: false, top: GREY ? '#e4e4e4' : '#dfe7f1', bottom: GREY ? '#f7f7f7' : '#f7f9fc', ink: GREY ? '#151515' : '#0f1722', muted: GREY ? '#5f5f5f' : '#566273',
   faint: GREY ? '#808080' : '#76808e', soft: GREY ? '#333333' : '#334155', accent: LIGHT.accent, onAccent: LIGHT.on,
   glass: 'rgba(15,23,34,0.05)', glassEdge: 'rgba(15,23,34,0.11)', road: roadOn(LIGHT.accent, LIGHT.on) };
-export function useN() { return useColorScheme() === 'dark' ? NIGHT : DAY; }
+export function useN() {
+  const c = useColors(), dark = useIsDark(), base = dark ? NIGHT : DAY;
+  return { ...base, top: c.bg, bottom: c.bg, ink: c.text, muted: c.muted, faint: c.faint, soft: c.text };
+}
 // The app's symbol (assets/icon-src/symbol.svg): the road bent into a tick, its broken centre line in the tile's colour.
 export function RoadTick({ size }: { size: number }) {
   const N = useN();
@@ -138,9 +140,8 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
   const headline = byMail ? 'ادامه با ایمیل' : 'راه قبولی در آزمون تئوری';
   const head = Math.min(26, Math.floor((Math.min(width, 440) - 48) / (tr(headline).length * (UI_LANG === 'fa' ? 0.45 : 0.5))));
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: N.top }}>
       <StatusBar style={N.dark ? 'light' : 'dark'} />
-      <LinearGradient pointerEvents="none" colors={[N.top, N.bottom, N.bottom]} locations={[0, 0.6, 1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
           {/* The language only, at the top; the theme is the phone's (ui/theme.ts useSystemTheme; Mojtaba 2026-10-21). */}

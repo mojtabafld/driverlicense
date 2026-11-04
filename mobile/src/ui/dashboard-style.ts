@@ -8,8 +8,6 @@ export function useDashboardLook() {
   const c = useColors(), dark = useIsDark();
   return {
     dark,
-    pageTop: mix(c.accent, c.bg, dark ? 0.96 : 0.94),
-    pageBottom: mix(c.accent, c.bg, dark ? 0.99 : 0.98),
     edge: mix(c.link, c.surface, dark ? 0.91 : 0.96),
     wash: mix(c.link, c.surface, dark ? 0.87 : 0.94),
     row: mix(c.link, c.surface, dark ? 0.96 : 0.98),

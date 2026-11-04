@@ -4,7 +4,6 @@
 // (lib/prefs LastUser) on a glass card with its profile picture, name and email; a tap on it asks only for the
 // password. «شما نیستید؟» forgets the account and shows the welcome screen.
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -32,9 +31,8 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
   // The browser's top (and the phone's status bar on the web) in the page's top colour.
   useHeaderTop(N.top);
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: N.top }}>
       <StatusBar style={N.dark ? 'light' : 'dark'} />
-      <LinearGradient pointerEvents="none" colors={[N.top, N.bottom, N.bottom]} locations={[0, 0.6, 1]} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 30 : 24), paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24, gap: 22 }}>
           {/* The name as a logo, as on the welcome screen: «Teori» white, «pro» on a pill of the accent. */}

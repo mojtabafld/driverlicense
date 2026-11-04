@@ -27,7 +27,7 @@ import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
 import { mix } from '@/ui/palette';
-import { ARC, useColors } from '@/ui/theme';
+import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { type DayPart } from '@/ui/greet-icon';
 import { HomeLicenceArt } from '@/ui/header-art';
@@ -157,6 +157,9 @@ function StartCard({ compact }: { compact: boolean }) {
 export default function Home() {
   const c = useColors();
   const look = useDashboardLook();
+  const dark = useIsDark();
+  const readinessTone = dark ? mix(c.accent, c.text, 0.4) : c.accent;
+  const readinessTrack = dark ? mix(c.line, c.text, 0.18) : c.line;
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height, width } = useWindowDimensions();
@@ -365,26 +368,24 @@ export default function Home() {
             <View testID="home-readiness-ring" style={{ flexShrink: 0 }}>
             {tryout ? (
               <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-                <Ring value={0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={c.accent}>
-                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.link} weight="semibold" />
+                <Ring value={0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
+                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
                 </Ring>
               </Pressable>
             ) : (
-              <Ring value={est ? est.prob : 0} size={ringSize} stroke={tighter ? 8 : small ? 10 : 11} color={c.accent}>
-                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={c.link} weight="semibold" />
+              <Ring value={est ? est.prob : 0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
+                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
               </Ring>
             )}
             </View>
             <View style={{ flex: 1, minWidth: 0, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' }}>
                 <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
-                  <PassPct value={est ? est.prob : null} size={tighter ? 28 : small ? 30 : 36} />
+                  <PassPct value={est ? est.prob : null} size={(tighter ? 28 : small ? 30 : 36) + (dark ? 2 : 0)} />
                 </View>
                 <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: probSoft }}>
                   <T numberOfLines={2} style={{ color: probColor, fontSize: width < 360 ? 11 : 12, lineHeight: 17, fontWeight: '700', textAlign: 'center' }}>{probWord}</T>
                 </View>
-              </View>
             </View>
           </View>
         </> : <>
