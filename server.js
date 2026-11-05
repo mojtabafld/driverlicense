@@ -1797,7 +1797,7 @@ async function api(req, res, route) {
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guiderefchoose') { const b = await readBody(req); await guideref.choose(String(b.key || ''), b.choice); return send(res, 200, guideref.list()); }
       if (req.method === 'POST' && route === 'guidedraft') {
-        const b = await readBody(req), prompt = await guideref.draft(String(b.key || ''));
+        const b = await readBody(req), prompt = imagegen.withFrame(await guideref.draft(String(b.key || '')), (imagegen.guidePrompt(String(b.key || '')) || {}).aspect || '4:3');
         await consoleprompts.saved(`g:${String(b.key || '')}`, prompt);
         return send(res, 200, { prompt });
       }
@@ -1849,7 +1849,9 @@ async function api(req, res, route) {
   if (req.method === 'POST' && route === 'restyle') {
     if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req);
-    try { return send(res, 200, { prompt: await imagegen.restyle(b.prompt, String(b.style || '')) }); }
+    // (with the picture card's size line and frame when the page says its shape: «4:3» or the like)
+    const framed = p => (/^\d{1,2}:\d{1,2}$/.test(String(b.aspect || '')) ? imagegen.withFrame(p, b.aspect) : p);
+    try { return send(res, 200, { prompt: framed(await imagegen.restyle(b.prompt, String(b.style || ''))) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error('restyle', e.message); return send(res, 502, { error: 'تغییر سبک پرامپت ممکن نشد؛ دوباره امتحان کنید.' }); }
   }
   // …the picture services there are, to choose from: { kie: { ok, name }, openai: { ok, name } }.
@@ -1863,7 +1865,8 @@ async function api(req, res, route) {
     const b = await readBody(req);
     try {
       if (route === 'prompttr') return send(res, 200, { text: await imagegen.translatePrompt(b.prompt) });
-      return send(res, 200, { prompt: await imagegen.revisePrompt(b.prompt, b.request) });
+      const prompt = await imagegen.revisePrompt(b.prompt, b.request);
+      return send(res, 200, { prompt: /^\d{1,2}:\d{1,2}$/.test(String(b.aspect || '')) ? imagegen.withFrame(prompt, b.aspect) : prompt });
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error(route, e.message); return send(res, 502, { error: 'انجام نشد؛ دوباره امتحان کنید.' }); }
   }
   if (route === 'courseart' || route === 'courseprompt' || route === 'coursegen') {

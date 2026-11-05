@@ -320,7 +320,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       if (style === st.base) { st.style = style; st.prompt = st.saved; return view(); }
       st.restyling = style; view();
       try {
-        const d = await api('POST', 'restyle', { prompt: from, style });
+        const d = await api('POST', 'restyle', { prompt: from, style, aspect: x.aspect || '4:3' });
         if (st.promptFor === pid) { st.style = style; st.prompt = d.prompt; }
       } catch (er) { toast(er.message); }
       st.restyling = null; view();
@@ -418,7 +418,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       if (make && !confirm('درخواست به پرامپت افزوده شود و تصویر تازه از پرامپت نهایی ساخته شود؟')) return;
       st.prompt = ta.value; st.revising = true; view();
       let out;
-      try { out = (await api('POST', 'promptrevise', { prompt: st.prompt, request })).prompt; }
+      try { out = (await api('POST', 'promptrevise', { prompt: st.prompt, request, aspect: x.aspect || '4:3' })).prompt; }
       catch (e) { st.revising = false; view(); return toast(e.message); }
       st.revising = false;
       if (st.promptFor !== pid) return view();
