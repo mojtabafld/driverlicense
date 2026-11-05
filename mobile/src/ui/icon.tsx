@@ -15,6 +15,8 @@ import BookOpen from 'lucide-react-native/icons/book-open';
 import Bookmark from 'lucide-react-native/icons/bookmark';
 import Bug from 'lucide-react-native/icons/bug';
 import Calendar from 'lucide-react-native/icons/calendar';
+import CalendarCheck from 'lucide-react-native/icons/calendar-check';
+import TrendingUp from 'lucide-react-native/icons/trending-up';
 import Car from 'lucide-react-native/icons/car';
 import ChartColumn from 'lucide-react-native/icons/chart-column';
 import Check from 'lucide-react-native/icons/check';
@@ -92,7 +94,7 @@ const ICONS: Record<IconName, LucideIcon> = {
   search: Search, flame: Flame, speaker: Volume2, stop: Square, rules: Scale, sign: Signpost, priority: Merge, help: CircleQuestionMark,
   bug: Bug, info: Info, send: Send, bulbCircle: Lightbulb, gauge: Gauge, distance: Ruler, glass: Wine, seatbelt: ShieldCheck,
   phone: Smartphone, headlight: Flashlight, car: Car, parking: SquareParking, road: Road, lanes: ArrowRightLeft, idCard: IdCard,
-  trophy: Trophy, passed: BadgeCheck, more: Ellipsis, bell: Bell, plus: Plus, minus: Minus, calendar: Calendar, note: StickyNote, mail: Mail,
+  trophy: Trophy, passed: BadgeCheck, more: Ellipsis, bell: Bell, plus: Plus, minus: Minus, calendar: Calendar, calendarCheck: CalendarCheck, trend: TrendingUp, note: StickyNote, mail: Mail,
 };
 
 export function Icon({ name, size = 24, color, filled = false }: IconProps) {
