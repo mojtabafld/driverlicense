@@ -9,7 +9,7 @@
 // well each lesson practised is now known.
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { tr, transText } from '@/lib/i18n';
 import { EXAM } from '@/lib/course';

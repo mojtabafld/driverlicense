@@ -16,15 +16,12 @@ import type { Attempt } from '@/lib/bank';
 import { Icon } from './icon';
 import { Marquee } from './marquee';
 import { ArcButton, Button, T, tap, useCountUp } from './kit';
-import { mix } from './palette';
 import { ARC, useColors, useIsDark } from './theme';
 
 // The main site (ARC) draws it as bars (Mojtaba 2026-10-24, after a picture he sent): no percent scale or grid, the
 // thin dashed pass line over them, a bar with rounded top corners for each attempt, in a soft grey of the theme (its lines' colour) and green
 // when it passed (or reached 80%); the picked one (by default the newest) has its percent above it and, when not
 // passed, a darker grey. The bars grow up from the bottom when the chart opens; dates below.
-// A bar that did not pass: the theme's lines' colour, a step lighter in the dark theme (Mojtaba 2026-10-24).
-export const failBar = (line: string, dark: boolean) => (dark ? mix(line, '#ffffff', 0.08) : line);
 // ARC: one column per test. Its full height is the question count; the saturated part
 // shows correct answers, with the remaining questions in a pale tint above it.
 const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 10 : 14, B = 24, FILL_MIN = 120;

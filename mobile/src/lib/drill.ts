@@ -171,7 +171,6 @@ export const ITEMS: DrillItem[] = COURSE.flatMap(chapter => chapter.lessons.filt
   const extra = (EXTRA[lesson.id] || []).map(x => ({ id: x.id, chapter, lesson, q: { kind: 'exam' as const, art: x.art, da: x.da, fa: x.fa, statements: x.statements }, teach: teach[x.teach] }));
   return [...own, ...extra];
 }));
-export const itemById = (id: string) => ITEMS.find(x => x.id === id);
 
 // ---- spaced repetition ----
 // A question's card: its box (0: new or missed … MAX_BOX: mastered), when it is due again, how often it was answered

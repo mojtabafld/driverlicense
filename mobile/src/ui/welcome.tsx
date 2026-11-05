@@ -62,17 +62,6 @@ export function useN() {
   const c = useColors(), dark = useIsDark(), base = dark ? NIGHT : DAY;
   return { ...base, top: c.bg, bottom: c.bg, ink: c.text, muted: c.muted, faint: c.faint, soft: c.text };
 }
-// The app's symbol (assets/icon-src/symbol.svg): the road bent into a tick, its broken centre line in the tile's colour.
-export function RoadTick({ size }: { size: number }) {
-  const N = useN();
-  const d = 'M268 531 L432 695 L756 329';
-  return (
-    <Svg width={size} height={size} viewBox="0 0 1024 1024">
-      <Path d={d} fill="none" stroke={N.road} strokeWidth={184} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d={d} fill="none" stroke={N.accent} strokeWidth={26} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50 50" strokeDashoffset={-20} />
-    </Svg>
-  );
-}
 
 // A wide button with its icon at the reading side's edge and its label in the middle.
 // The app's language from the welcome screen (Mojtaba 2026-10-21), beside the theme button: a sheet of the three, each

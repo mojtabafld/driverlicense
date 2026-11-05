@@ -2,10 +2,9 @@
 // drawn in the theme's colours on two soft circles, no cars and no road signs. «آموزش گام‌به‌گام»: a road of steps to
 // the licence; «قوانین»: an open rule book; «حق تقدم»: two crossing ways and who goes first; «علائم رانندگی»: the
 // shapes signs are learnt by, on a card, with a magnifier.
-import { ARC } from './theme';
 import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { RTL, latin } from '@/lib/i18n';
-import { heroDark, px } from './palette';
+import { px } from './palette';
 
 type Art = { light: boolean; height: number };
 
@@ -222,42 +221,3 @@ export function LearnBookArt({ light, height }: Art) {
   );
 }
 
-// The sign-in page's picture (main site), drawn like the home, exam and learn headers (Mojtaba, 2026-10-15): a phone
-// with a profile, a password field and a green button, a shield with a tick beside it and the Danish flag, on two soft
-// circles, in the middle of a plain box in the headers' own green (light / dark), as wide as the screen.
-export const LOGIN_BG = { light: px('#d3d9ee'), dark: ARC ? heroDark() : '#18244b' };
-export function LoginArt({ light, width, height }: { light: boolean; width: number; height: number }) {
-  const t = light ? LIGHT : DARK, back = light ? px('#b0bada') : px('#111b3d');
-  return (
-    <Svg width={width} height={height} viewBox="34 2 232 172" preserveAspectRatio="xMidYMid meet">
-      <Circle cx={190} cy={58} r={48} fill={t.blob} />
-      <Circle cx={104} cy={128} r={40} fill={t.blob} />
-      <G transform="translate(118 14) rotate(5)">
-        <Rect x={5} y={7} width={74} height={140} rx={14} fill={back} />
-        <Rect width={74} height={140} rx={14} fill={t.card} stroke={t.cardLine} strokeWidth={1.5} />
-        <Rect x={28} y={7} width={18} height={4} rx={2} fill={t.line} />
-        <Circle cx={37} cy={36} r={13} fill="#e3eef9" />
-        <Circle cx={37} cy={33} r={5} fill={t.avatar} />
-        <Path d="M28 44 q9 -10 18 0 z" fill={t.avatar} />
-        <Rect x={10} y={60} width={54} height={14} rx={7} fill="none" stroke={t.cardLine} strokeWidth={1.5} />
-        <Rect x={17} y={65} width={28} height={4} rx={2} fill={t.line} />
-        <Rect x={10} y={80} width={54} height={14} rx={7} fill="none" stroke={t.cardLine} strokeWidth={1.5} />
-        {[0, 1, 2, 3, 4].map(i => <Circle key={i} cx={19 + i * 7} cy={87} r={2.2} fill={t.pole} />)}
-        <Rect x={10} y={102} width={54} height={15} rx={7.5} fill={px('#2f55d4')} />
-        <Rect x={28} y={108} width={18} height={3.5} rx={1.75} fill="#fff" />
-      </G>
-      <G transform="translate(84 92)">
-        <Path d="M22 0 L42 7 V22 Q42 38 22 46 Q2 38 2 22 V7 Z" fill={t.ok} />
-        <Path d="M14 23 l6 6 l10 -11" fill="none" stroke="#fff" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round" />
-      </G>
-      <G transform="translate(206 112) rotate(-12)">
-        <Rect width={30} height={21} rx={4} fill="#c8102e" />
-        <Rect x={9} width={5} height={21} fill="#fff" />
-        <Rect y={8} width={30} height={5} fill="#fff" />
-      </G>
-      <Circle cx={92} cy={42} r={3.5} fill={t.gold} />
-      <Circle cx={232} cy={28} r={4} fill={t.gold} />
-      <Circle cx={240} cy={160} r={2.5} fill={t.you} />
-    </Svg>
-  );
-}

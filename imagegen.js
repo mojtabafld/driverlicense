@@ -330,7 +330,6 @@ const versions = () => Object.fromEntries(Object.entries(store.meta.images || {}
 const list = () => ({ available: available(), models: [IMAGE_MODEL],
   items: Object.fromEntries(Object.entries(store.meta.images || {}).filter(([, x]) => x.jobs.length)) });
 
-const firstQuestion = () => BANK.tests[0].qs[0];
 
 // Uploads a generated picture to kie.ai's temporary file store (kept 3 days) and returns its URL.
 async function upload(b, name) {
@@ -1471,6 +1470,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, artAspect, withFrame, frameLine, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, vibeVersions, vibeBlob, vibeList, vibeGen, vibeChoose, vibeReset, vibeCand, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, artAspect, withFrame, frameLine, edit, remove, draft, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, vibeVersions, vibeBlob, vibeList, vibeGen, vibeChoose, vibeReset, vibeCand, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };

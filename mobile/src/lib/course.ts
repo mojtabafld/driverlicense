@@ -1234,5 +1234,3 @@ export const lessonById = (id: string) => {
   for (const ch of COURSE) { const l = ch.lessons.find(x => x.id === id); if (l) return { chapter: ch, lesson: l }; }
   return null;
 };
-export const lessonCount = () => COURSE.reduce((n, ch) => n + ch.lessons.length + ch.planned.length, 0);
-export const readyCount = () => COURSE.reduce((n, ch) => n + ch.lessons.length, 0);
