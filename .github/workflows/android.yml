@@ -203,7 +203,7 @@ jobs:
             gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
           done
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG }}-${{ env.RELEASE_N }}
           name: ${{ inputs.copy == 'prove' && 'Android /app build' || 'Android build' }} ${{ env.RELEASE_N }}
