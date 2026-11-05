@@ -1,4 +1,4 @@
-import { mix } from '../palette';
+import { PALETTE, mix } from '../palette';
 import { useColors, useIsDark } from '../theme';
 
 export const TAB_BAR_H = 72;
@@ -33,17 +33,27 @@ function textOn(fill: string, preferred: string) {
   return a > 0.179 ? '#000000' : '#ffffff';
 }
 
+// The bar's colours (Mojtaba 2026-11-05, after his two pictures): a soft rail a step off the page, the tabs as round
+// buttons a step darker (light) or lighter (dark) than it, and the chosen tab a white pill with dark ink. «سنگی» (slate)
+// takes the pictures' own colours; every other theme the same steps in its own colour (its accent mixed into the page),
+// the white pill faintly tinted with it in the dark mode.
+const SLATE = {
+  light: { rail: '#dfe1ec', circle: '#cbcedd', muted: '#3e4352', active: '#ffffff', onActive: '#15171c' },
+  dark: { rail: '#262a38', circle: '#383c4a', muted: '#c8ccd6', active: '#ffffff', onActive: '#111318' },
+};
 export function useTabLook() {
   const c = useColors(), dark = useIsDark();
-  const rail = mix(c.accent, c.surface2, dark ? 0.88 : 0.92);
-  // A softer accent fill, blended with the theme's card colour in both modes.
-  const active = mix(c.accent, c.surface, dark ? 0.48 : 0.12);
+  if (PALETTE === 'slate') { const l = SLATE[dark ? 'dark' : 'light']; return { ...l, edge: l.rail }; }
+  const rail = mix(c.accent, c.bg, dark ? 0.84 : 0.86);
+  const circle = mix(c.accent, c.bg, dark ? 0.72 : 0.74);
+  const active = dark ? mix(c.accent, '#ffffff', 0.92) : '#ffffff';
+  const onActive = textOn(active, mix(c.accent, '#0b0d12', dark ? 0.82 : 0.72));
   return {
     rail,
-    edge: mix(c.accent, rail, 0.8),
-    circle: mix(c.accent, rail, dark ? 0.86 : 0.9),
-    muted: mix(c.link, c.text, dark ? 0.65 : 0.45),
+    edge: rail,
+    circle,
+    muted: dark ? mix(c.accent, '#ffffff', 0.72) : mix(c.accent, '#1b1e26', 0.62),
     active,
-    onActive: textOn(active, c.accentText),
+    onActive,
   };
 }
