@@ -20,7 +20,7 @@ import { Toggle } from '@/ui/toggle';
 import { useCoachMode } from '@/lib/coach-mode';
 import { PaletteRow } from '@/ui/palette-pick';
 import { NotifySettings } from '@/ui/notify-settings';
-import { DashboardIcon, DashboardWaves } from '@/ui/dashboard-art';
+import { DashboardIcon } from '@/ui/dashboard-art';
 import { useDashboardLook } from '@/ui/dashboard-style';
 import { pctText } from '@/ui/activity';
 
@@ -105,7 +105,6 @@ export default function Settings() {
       <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
         cancel="ماندن" ok={UI_LANG === 'fa' ? 'خروج' : fmt('خروج از حساب')} okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
       <Card testID="settings-profile" style={{ gap: 12, padding: 20 }}>
-      <DashboardWaves />
       <View style={{ alignItems: 'center', gap: 12, paddingTop: 6, paddingBottom: 4 }}>
         {!guest ? <Pressable onPress={() => { tap(); router.push('/account'); }} accessibilityRole="button" accessibilityLabel="حساب کاربری"
           style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), opacity: pressed ? 0.7 : 1 })}>
