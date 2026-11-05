@@ -283,6 +283,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
           </div>
           <label>پرامپت<textarea id="pr" ${st.prompt == null ? 'disabled' : ''} placeholder="${st.prompt == null ? 'در حال بارگذاری…' : EMPTY}">${esc(st.prompt == null ? '' : st.prompt)}</textarea></label>
           <div class="row" style="margin:6px 0 4px">
+            <button class="btn soft" id="copy" ${st.prompt == null ? 'disabled' : ''}>📋 کپی پرامپت</button>
             <button class="btn soft" id="trb" ${st.prompt == null || st.tr === 'loading' ? 'disabled' : ''}>${st.tr === 'loading' ? 'در حال ترجمه…' : st.trOpen ? 'بستن ترجمه' : 'ترجمه‌ی فارسی پرامپت'}</button>
           </div>
           ${st.trOpen && st.tr && st.tr !== 'loading' ? `<div class="trbox">${esc(st.tr.text)}${st.tr.for !== (st.prompt || '') ? '<div class="muted" style="font-size:12px;margin-top:6px">پرامپت پس از این ترجمه تغییر کرده؛ برای ترجمه‌ی تازه دوباره بزنید.</div>' : ''}</div>` : ''}
@@ -342,6 +343,19 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       view(true);
     };
     document.getElementById('gen').onclick = () => generate(ta.value.trim());
+    // «کپی پرامپت»: the prompt as it is in the box now (with any edits), to the clipboard; a page not served over HTTPS
+    // (no navigator.clipboard) copies it from a hidden text box instead.
+    document.getElementById('copy').onclick = async () => {
+      const text = ta.value;
+      if (!text.trim()) return toast('پرامپت خالی است.');
+      try { await navigator.clipboard.writeText(text); }
+      catch {
+        const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+        document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove();
+        if (!ok) return toast('کپی ممکن نشد؛ متن را دستی انتخاب کنید.');
+      }
+      toast('پرامپت کپی شد');
+    };
     // «آپلود تصویر»: a picture from the admin's device in place of the item's picture. A large one (over 2048 px) or a
     // WebP is redrawn on a canvas (JPEG) first, so it is sent as a PNG or JPEG of a sensible size.
     document.getElementById('upl').onchange = async e => {
