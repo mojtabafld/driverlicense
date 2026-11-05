@@ -1,4 +1,4 @@
-import { PALETTE, mix, railColor } from '../palette';
+import { PALETTE, deepAccent, mix, railColor } from '../palette';
 import { useColors, useIsDark } from '../theme';
 
 export const TAB_BAR_H = 72;
@@ -43,11 +43,12 @@ const SLATE = {
 };
 export function useTabLook() {
   const c = useColors(), dark = useIsDark();
-  if (PALETTE === 'slate') { const l = SLATE[dark ? 'dark' : 'light']; return { ...l, edge: l.rail }; }
+  // (dark: the chosen tab's pill a dark shade of the theme's colour with white ink, no longer white)
+  if (PALETTE === 'slate') { const l = SLATE[dark ? 'dark' : 'light']; return { ...l, edge: l.rail, ...(dark ? { active: deepAccent(c.accent), onActive: '#ffffff' } : {}) }; }
   const rail = railColor(dark, c.accent);   // (the same rail the page and cards are made from: theme.ts harmonize)
   const circle = dark ? mix(rail, '#ffffff', 0.08) : mix(rail, '#000000', 0.06);
-  const active = dark ? mix(c.accent, '#ffffff', 0.92) : '#ffffff';
-  const onActive = textOn(active, mix(c.accent, '#0b0d12', dark ? 0.82 : 0.72));
+  const active = dark ? deepAccent(c.accent) : '#ffffff';
+  const onActive = dark ? textOn(active, '#ffffff') : textOn(active, mix(c.accent, '#0b0d12', 0.72));
   return {
     rail,
     edge: rail,
