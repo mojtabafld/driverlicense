@@ -20,10 +20,12 @@ const ART = {
 };
 // Each card's colour (the colour its picture was drawn on).
 const BG = { light: ['#fae1d5', '#e7e4fb', '#dfeddf'], dark: ['#402920', '#282543', '#223022'] };
+// The cards in the order shown (Mojtaba 2026-11-05: the smart coach first, then practice); `n`: the card's own number,
+// which its picture and colour go by.
 const CARDS = [
-  { tag: 'تمرین', text: '۱۱۰۰ سؤال، درست مثل آزمون واقعی. هر روز کمی، تا روز آزمون.' },
-  { tag: 'مربی هوشمند', text: 'اشتباه کردی؟ مربی هوشمند توضیح می‌دهد چرا، به زبان خودت.' },
-  { tag: 'قبولی', text: 'پیشرفتت را ببین، آماده شو و با خیال راحت قبول شو.' },
+  { n: 1, tag: 'مربی هوشمند', text: 'اشتباه کردی؟ مربی هوشمند توضیح می‌دهد چرا، به زبان خودت.' },
+  { n: 0, tag: 'تمرین', text: '۱۱۰۰ سؤال، درست مثل آزمون واقعی. هر روز کمی، تا روز آزمون.' },
+  { n: 2, tag: 'قبولی', text: 'پیشرفتت را ببین، آماده شو و با خیال راحت قبول شو.' },
 ];
 const web = Platform.OS === 'web';
 
@@ -33,7 +35,7 @@ export function VibeCards({ room }: { room: number }) {
   // A picture chosen on the admin's picture page («صفحه ورود», served at /vibe-art/<n>-<look>.png) in place of the
   // bundled mascot.
   const { vibeArt } = useApp();
-  const pic = (i: number) => { const k = `${i + 1}-${look}`, v = vibeArt[k]; return v ? { uri: `${API_URL}/vibe-art/${k}.png?v=${encodeURIComponent(v)}` } : ART[look][i]; };
+  const pic = (n: number) => { const k = `${n + 1}-${look}`, v = vibeArt[k]; return v ? { uri: `${API_URL}/vibe-art/${k}.png?v=${encodeURIComponent(v)}` } : ART[look][n]; };
   const W = Math.min(width, 520), gap = 14;
   // The card keeps its width; on a short screen only its picture is lower (drawn whole on the card's own colour).
   const small = room < 300, textH = small ? 96 : 118, CW = Math.round(Math.min(300, W * 0.7)), picH = Math.max(90, Math.min(Math.round(CW * 0.82), room - textH - 26));
@@ -78,9 +80,9 @@ export function VibeCards({ room }: { room: number }) {
           const lift = x.interpolate({ inputRange: r, outputRange: [14, 0, 14], extrapolate: 'clamp' });
           return (
             <Animated.View key={i} style={{ width: CW, opacity, transform: [{ translateY: lift }, { scale }, { rotate }] }}>
-              <View style={{ borderRadius: 34, overflow: 'hidden', backgroundColor: BG[look][i], paddingBottom: small ? 12 : 18 }}>
+              <View style={{ borderRadius: 34, overflow: 'hidden', backgroundColor: BG[look][card.n], paddingBottom: small ? 12 : 18 }}>
                 <Animated.View style={{ height: picH, transform: [{ translateY: i === at ? float.interpolate({ inputRange: [0, 1], outputRange: [3, -5] }) : 0 }] }}>
-                  <Image source={pic(i)} style={{ width: CW, height: picH }} contentFit="contain" transition={200} />
+                  <Image source={pic(card.n)} style={{ width: CW, height: picH }} contentFit="contain" transition={200} />
                 </Animated.View>
                 <View style={{ alignItems: 'center', gap: small ? 6 : 10, paddingHorizontal: 18, minHeight: textH - 18 }}>
                   <View style={{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 10, backgroundColor: N.dark ? 'rgba(255,255,255,0.12)' : '#ffffff' }}>
