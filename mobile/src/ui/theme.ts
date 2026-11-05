@@ -123,6 +123,20 @@ const arcDark: typeof tealLight = {
 };
 // The main site's chosen colour theme (ui/palette.ts) replaces arc's own ocean colours.
 const PAL = STYLE === 'arc' ? paletteColors() : null;
+// «نرم» (Mojtaba 2026-11-05, after two pictures he sent: a soft product UI with isometric line art): a neutral pale grey
+// page, near-white cards with large corners resting on a faint shadow, inner panels a step greyer, pill-shaped buttons
+// with a near-black main one, the theme's colour only on toggles, links and the chosen things. The bottom bar keeps its
+// own colours (tabs/tab-look.ts). SOFT = false brings the look before it back whole.
+export const SOFT = STYLE === 'arc';
+function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
+  const bg = isDark ? '#0d0d0f' : '#f0f0f2', surface = isDark ? '#17171a' : '#fcfcfd', surface2 = isDark ? '#202024' : '#f4f4f6';
+  const line = isDark ? '#2a2a2f' : '#e6e6ea', border = isDark ? '#222226' : 'rgba(0,0,0,0.05)';
+  return { ...c, bg, surface, surface2, line, cardBorder: border, hairline: line, glass: surface, glassStrong: surface, glassBorder: line,
+    nav: isDark ? '#26262b' : '#ececef', navOff: surface2, note: surface2,
+    btn: isDark ? '#f2f2f4' : '#111113', btnFg: isDark ? '#111113' : '#ffffff', cta: isDark ? '#f2f2f4' : '#111113', ctaFg: isDark ? '#111113' : '#ffffff',
+    strong: isDark ? '#f2f2f4' : '#111113', strongFg: isDark ? '#111113' : '#ffffff',
+    bgGradient: [bg, bg, bg] as readonly [string, string, string] };
+}
 // The page, the cards and the other surfaces from the bottom bar's rail (palette.ts railColor; Mojtaba 2026-11-05):
 // light, the page a paler form of the rail and the cards white; dark, the page a deeper form of it, the cards between
 // the page and the rail, and the second surfaces the rail itself. Lines and hairlines a step off them.
@@ -139,8 +153,8 @@ function harmonize<T extends typeof tealLight>(c: T, isDark: boolean): T {
     glass: surface, glassStrong: surface, glassBorder: line, nav: rail, navOff: surface, note: rail,
     bgGradient: [bg, bg, bg] as readonly [string, string, string] };
 }
-const light: typeof tealLight = STYLE === 'arc' ? harmonize(PAL?.light ?? arcLight, false) : STYLE === 'uber' ? uberLight : tealLight;
-const dark: typeof tealLight = STYLE === 'arc' ? harmonize(PAL?.dark ?? arcDark, true) : STYLE === 'uber' ? uberDark : tealDark;
+const light: typeof tealLight = STYLE === 'arc' ? (SOFT ? soften(PAL?.light ?? arcLight, false) : harmonize(PAL?.light ?? arcLight, false)) : STYLE === 'uber' ? uberLight : tealLight;
+const dark: typeof tealLight = STYLE === 'arc' ? (SOFT ? soften(PAL?.dark ?? arcDark, true) : harmonize(PAL?.dark ?? arcDark, true)) : STYLE === 'uber' ? uberDark : tealDark;
 // UBER: the neutral looks (uber and arc), where main buttons are black / white rather than the accent.
 export const UBER = STYLE !== 'teal';
 export const ARC = STYLE === 'arc';
@@ -165,7 +179,7 @@ export const useColors = (): Colors => (useIsDark() ? dark : light);
 // arc: Arc's --radius-control 18 (buttons, fields), --radius-panel 26 (panels, larger cards), --radius-surface 34;
 // everyday cards 22 so their small inner parts keep concentric corners.
 export const radius = STYLE === 'arc'
-  ? { btn: 18, sm: 14, md: 22, lg: 26, field: 18, xl: 34, pill: 999 }
+  ? (SOFT ? { btn: 18, sm: 16, md: 26, lg: 30, field: 18, xl: 34, pill: 999 } : { btn: 18, sm: 14, md: 22, lg: 26, field: 18, xl: 34, pill: 999 })
   : STYLE === 'uber'
   ? { btn: 12, sm: 10, md: 14, lg: 14, field: 12, xl: 20, pill: 999 }
   : { btn: 4, sm: 8, md: 10, lg: 10, field: 12, xl: 20, pill: 999 };
