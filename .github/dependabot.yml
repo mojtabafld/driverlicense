@@ -1,0 +1,15 @@
+# Dependabot (Mojtaba 2026-11-05): a pull request when a package of the server or the app has a known security hole
+# (security updates only, no routine version bumps), and the workflows' actions once a month. CI checks each one.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 0
+  - package-ecosystem: npm
+    directory: /mobile
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 0
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }

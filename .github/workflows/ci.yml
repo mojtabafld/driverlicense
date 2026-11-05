@@ -2,6 +2,7 @@
 # in by itself every 2 minutes (deploy/oracle/update.sh, which also rolls back a version that does not start):
 #   server: every .js file parses, the server starts on its own (a file database, no keys) and answers
 #           /api/health, /api/config and the web app's page;
+#           and its packages have no known high-severity hole (npm audit);
 #   app:    the app's TypeScript compiles (mobile/, tsc --noEmit).
 # A red run means: do not merge.
 name: CI
@@ -27,7 +28,10 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci --no-audit --no-fund
       - name: Every server file parses
-        run: for f in *.js deploy/oracle/*.js; do node --check "$f" || exit 1; done
+        run: for f in *.js deploy/oracle/*.js scripts/*.js; do node --check "$f" || exit 1; done
+      # (the server's own packages, not the build tools: a known high or critical hole fails the run)
+      - name: No known high-severity holes in the server's packages
+        run: npm audit --omit=dev --audit-level=high
       - name: The server starts and answers
         run: |
           PORT=3999 DB_FILE=$RUNNER_TEMP/db.json node server.js > $RUNNER_TEMP/server.log 2>&1 &

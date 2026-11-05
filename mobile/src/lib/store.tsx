@@ -129,7 +129,7 @@ async function rememberLast(u: User | undefined, token: string | null, set: (u: 
   await saveLastUser(last); set(last);
   if (!u.avatar?.photo || !token || Platform.OS !== 'web') return;
   try {
-    const r = await fetch(`${API_URL}/api/avatar?v=${u.avatar.photo}`, { headers: { Authorization: `Bearer ${token}` } });
+    const r = await fetch(`${API_URL}/api/avatar?v=${u.avatar.photo}`, token === 'cookie' ? { credentials: 'same-origin' } : { headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok) return;
     const b = await r.blob();
     if (b.size > 200e3) return;
@@ -249,7 +249,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         // (an old code left in the address after a reload, while signed in, says nothing)
         catch (e) { if (!(await loadToken())) setGoogleErr(e instanceof Error ? e.message : GOOGLE_FAILED); }
       } else if (back?.error) setGoogleErr(googleError(back.error));
-      const t = await loadToken();
+      let t = await loadToken();
+      // The web version: a token kept in the page's storage from before 2026-11-05 is moved to the HttpOnly cookie.
+      if (t && Platform.OS === 'web' && t !== 'cookie') {
+        try { await api('POST', 'cookieswap', undefined, t); t = 'cookie'; await saveToken(t); } catch (e) { if (e instanceof ApiError && e.status === 401) { t = null; await saveToken(null); } }
+      }
       if (t) {
         setApiToken(t); setToken(t);
         // Only a refused session signs out; without a connection the token stays (the app shows its offline page and

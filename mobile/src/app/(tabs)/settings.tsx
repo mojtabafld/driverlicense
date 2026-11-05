@@ -185,6 +185,8 @@ export default function Settings() {
       {/* «راهنما»: how to use the app, reporting a problem, and the version. */}
       <Card style={{ gap: 4 }}>
         <T style={{ fontWeight: '700', fontSize: 16, marginBottom: 4 }}>راهنما</T>
+        {/* «دستگاه‌های من» (app/devices.tsx): where the account is signed in, and signing the others out. */}
+        {!guest ? <LinkRow icon="phone" title="دستگاه‌های من" sub="دستگاه‌هایی که با این حساب وارد شده‌اند" onPress={() => router.push('/devices')} /> : null}
         <LinkRow icon="help" title="راهنمای استفاده" sub="آزمون، آموزش، اشتباهات و امکانات اپ" onPress={() => router.push('/help')} />
         <LinkRow icon="bug" title="گزارش خطا" sub="مشکلی دیدید؟ برای ما بنویسید" onPress={() => router.push('/report')} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}>

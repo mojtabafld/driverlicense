@@ -4417,5 +4417,13 @@
 "سؤال‌های مشابه (#)":["Similar questions (#)","Lignende spørgsmål (#)"],
 "مربی الان در دسترس نیست.":["The coach is not available right now.","Træneren er ikke tilgængelig lige nu."],
 "سؤالتان را بنویسید.":["Write your question.","Skriv dit spørgsmål."],
-"پاسخی پیدا نشد.":["No answer was found.","Der blev ikke fundet noget svar."]
+"پاسخی پیدا نشد.":["No answer was found.","Der blev ikke fundet noget svar."],
+"دستگاه‌های من":["My devices","Mine enheder"],
+"دستگاه‌هایی که با این حساب وارد شده‌اند":["Devices signed in to this account","Enheder, der er logget ind på denne konto"],
+"جاهایی که با این حساب وارد شده‌اید":["Where you are signed in with this account","Hvor du er logget ind med denne konto"],
+"همین دستگاه":["This device","Denne enhed"],
+"آخرین استفاده: #":["Last used: #","Sidst brugt: #"],
+"خروج این دستگاه":["Sign this device out","Log denne enhed ud"],
+"خروج از همه‌ی دستگاه‌های دیگر":["Sign out of all other devices","Log ud af alle andre enheder"],
+"اگر دستگاهی را نمی‌شناسید، آن را خارج کنید. هر ورود از نوع تازه‌ای از دستگاه به ایمیل شما خبر داده می‌شود؛ دستگاهی که یک ماه استفاده نشود خودکار خارج می‌شود.":["If you do not recognise a device, sign it out. A sign-in on a new kind of device is emailed to you; a device unused for a month is signed out by itself.","Hvis du ikke genkender en enhed, så log den ud. Et login på en ny slags enhed sendes til din e-mail; en enhed, der ikke bruges i en måned, logges ud af sig selv."]
 }
