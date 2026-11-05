@@ -65,9 +65,10 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
     <>
     {/* One card (Mojtaba 2026-10-29): the progress (after a picture he sent; at 0% before the first answer too) on top,
         a thin line, then the random test. */}
-    <Card testID="exam-setup" style={{ gap: tight || level ? (level >= 3 ? 8 : 10) : 14, paddingVertical: level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }}>
+    <Card testID="exam-setup" style={{ flex: 1, gap: tight || level ? (level >= 3 ? 7 : 10) : 14, paddingVertical: level >= 3 ? 10 : level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }}>
       <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
-      <View style={{ height: 1, backgroundColor: c.line }} />
+      {/* (the smallest phones: no line, the card's gaps part the two halves) */}
+      {level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
       {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
           تکراری» (Mojtaba 2026-10-30). */}
       {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
@@ -144,7 +145,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
   const soft = (x: string) => (dark ? x : mix(x, c.surface, 0.2) ?? x);
   const rightTone = soft(c.ok), wrongTone = soft(c.bad), rest = dark ? mix(c.line, '#ffffff', 0.08) ?? c.line : mix(c.line, '#000000', 0.04) ?? c.line;
-  const big2 = [60, 48, 40, 34][level] ?? 34;
+  const big2 = [60, 48, 40, 30][level] ?? 30;
   const countTag = (color: string, backgroundColor: string, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor }}>
       <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color }} />
@@ -195,13 +196,14 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
           ))}
         </View>
       ) : null}
-      <View testID="exam-answer-counts" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: open ? 'none' : 'flex' }}>
+      {/* (the smallest phones: the counts only in the «…» view, so the card fits above the tab bar) */}
+      <View testID="exam-answer-counts" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: open || level >= 3 ? 'none' : 'flex' }}>
         {countTag(rightTone, c.okSoft, `${tr('درست')} ${faNum(right)}`)}
         {countTag(wrongTone, c.badSoft, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {countTag(rest, c.surface2, `${tr('جواب‌نداده')} ${faNum(left)}`)}
       </View>
       {/* Keep the daily chart on short screens too; the whole card can scroll. */}
-      <DailyTestsChart height={[130, 112, 96, 80][level] ?? 80} />
+      <DailyTestsChart height={[130, 112, 96, 80][level] ?? 80} fill />
       {/* (the pills under the counts of right, wrong and unanswered; Mojtaba 2026-10-30) */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}

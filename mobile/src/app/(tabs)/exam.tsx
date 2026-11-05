@@ -161,10 +161,13 @@ export default function Exam() {
   }, [allDone]); // eslint-disable-line react-hooks/exhaustive-deps
   // Compact spacing on short screens; overflow scrolls instead of removing content.
   const { height } = useWindowDimensions();
-  const level = height < 740 ? 2 : height < 900 ? 1 : 0;
+  // (3, the smallest phones: the card's densest form, so it still ends above the tab bar; Mojtaba 2026-11-05)
+  const level = height < 760 ? 3 : height < 820 ? 2 : height < 900 ? 1 : 0;
   return (
     <View style={{ flex: 1 }}>
-    <Screen gap={level >= 2 ? 10 : 14} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
+    {/* (main site: the card fills the page down to just above the tab bar, at the same gap as home's; its daily chart
+        takes the room left, so its rows keep even gaps on every screen; Mojtaba 2026-11-05) */}
+    <Screen gap={level >= 3 ? 8 : level >= 2 ? 10 : 14} fill={own} barGap={own ? (level >= 3 ? 8 : level >= 2 ? 10 : 14) : undefined} lead={<PageIcon name="exam" />} title="آزمون" subtitle="مثل آزمون واقعی، خودت را بسنج" hero={{ pic: 2, icon: 'exam', art: ARC ? ExamWheelArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="exam" />}>
       {own ? <NewTestCard test={test} level={level} /> : (
       <Card style={{ gap: 14 }}>

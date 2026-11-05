@@ -40,7 +40,9 @@ function smooth(p: [number, number][]): string {
   return out;
 }
 
-export function DailyTestsChart({ height = 120 }: { height?: number }) {
+// `fill` (the exam tab, Mojtaba 2026-11-05): the drawing takes the room its card leaves (at least 64 points), so the
+// card ends just above the tab bar on every screen.
+export function DailyTestsChart({ height: fixed = 120, fill = false }: { height?: number; fill?: boolean }) {
   const c = useColors(), dark = useIsDark(), { attempts } = useApp();
   // in the app's own colour (the theme chosen in the settings; Mojtaba 2026-10-31)
   const tone = c.accent;
@@ -52,7 +54,8 @@ export function DailyTestsChart({ height = 120 }: { height?: number }) {
   }, [attempts]);
   const busiest = days.reduce((b, d, i) => (d.n > days[b].n ? i : b), DAYS - 1);
   const [pick, setPick] = useState<number | null>(null), sel = pick ?? busiest;
-  const [w, setW] = useState(0);
+  const [w, setW] = useState(0), [boxH, setBoxH] = useState(0);
+  const height = fill ? Math.max(64, boxH || fixed) : fixed;
   const avg = days.reduce((s, d) => s + d.n, 0) / DAYS;
   // The scale: 0, half and the top, a round number at or above the busiest day.
   const max = Math.max(...days.map(d => d.n)), top = max <= 4 ? 4 : max <= 10 ? Math.ceil(max / 2) * 2 : Math.ceil(max / 5) * 5;
@@ -67,13 +70,14 @@ export function DailyTestsChart({ height = 120 }: { height?: number }) {
   const bx = !w ? 0 : high ? (sx + 12 + bubbleW <= PAD_X * 2 + plotW ? sx + 12 : sx - 12 - bubbleW) : Math.min(Math.max(sx - bubbleW / 2, 0), PAD_X * 2 + plotW - bubbleW);
   const by = high ? Math.max(0, sy - bubbleH / 2) : sy - bubbleH - 10;
   return (
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: 8, ...(fill ? { flex: 1, minHeight: 100 } : {}) }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <HomeChartIcon kind="daily" />
         <T style={{ flex: 1, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>آزمون‌های روزانه</T>
         <T style={{ fontSize: 12.5, color: c.muted }} numberOfLines={1}>{t('میانگین {0} در روز', faNum(one(avg)))}</T>
       </View>
-      <View onLayout={e => setW(e.nativeEvent.layout.width)} style={{ height, direction: 'ltr' } as any}>
+      <View onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setBoxH(Math.round(e.nativeEvent.layout.height)); }}
+        style={(fill ? { flex: 1, minHeight: 64, direction: 'ltr' } : { height, direction: 'ltr' }) as any}>
         {w ? (
           <>
             <Svg width={w} height={height}>
