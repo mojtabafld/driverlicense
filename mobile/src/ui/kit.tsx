@@ -18,7 +18,7 @@ import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, SOFT, UBER, lightness, radius, useColors, useTheme } from './theme';
-import { graphiteCtl, heroDark, px } from './palette';
+import { deepAccent, graphiteCtl, heroDark, px } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
 
@@ -746,7 +746,8 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   // (…but in the dark theme the accent button, the exam's start, is the theme's own colour with text that reads on it)
   const isDark = useTheme().theme === 'dark';
   const accent = variant === 'accent' && (!SOFT || isDark), primary = variant === 'primary' || variant === 'accent';
-  const fill = accent ? g?.fill ?? c.accent : c.cta;
+  // (dark: a dark shade of the theme's colour with white text, Mojtaba 2026-11-05)
+  const fill = accent ? g?.fill ?? (SOFT && isDark ? deepAccent(c.accent) : c.accent) : c.cta;
   const fg = accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).

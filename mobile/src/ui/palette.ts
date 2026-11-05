@@ -209,3 +209,7 @@ export function paletteColors() {
 }
 // A swatch for the picker: the theme's page and accent in the dark theme.
 export const swatch = (s: Spec) => ({ accent: s.accD, accentL: s.accL, bg: s.dark?.bg ?? (s.id === 'ocean' ? '#121524' : fromHls(s.nhue, 0.09, s.nsat * 0.6)) });
+
+// In the dark theme, the chosen tab's pill and the exam's start button (Mojtaba 2026-11-05): a dark shade of the
+// theme's own colour, with white ink on it.
+export const deepAccent = (accent: string) => mix(accent, '#000000', 0.45);
