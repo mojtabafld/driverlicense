@@ -1806,6 +1806,24 @@ async function api(req, res, route) {
       }
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
+  // «آپلود تصویر» on the admin's picture page: { id: 'g:<key>' | 'newq:<key>' | 'course:<key>', data: a PNG or JPEG data URL }
+  // puts the picture in place of the item's made picture (a sign's or right of way's then shown in the app).
+  if (req.method === 'POST' && route === 'imageupload') {
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
+    try {
+      const b = await readBody(req, 16e6), id = String(b.id || '');
+      const m = /^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/.exec(String(b.data || ''));
+      if (!m) return send(res, 400, { error: 'فقط تصویر PNG یا JPEG.' });
+      const data = Buffer.from(m[2], 'base64'), png = data.length > 8 && data.readUInt32BE(0) === 0x89504e47, jpg = data[0] === 0xff && data[1] === 0xd8;
+      if (!(m[1] === 'image/png' ? png : jpg)) return send(res, 400, { error: 'فایل تصویر خراب است.' });
+      const pic = { mime: m[1], data };
+      if (id.startsWith('g:')) await guideref.upload(id.slice(2), pic);
+      else if (/^(newq|course):/.test(id)) await imagegen.artPut(id.slice(0, id.indexOf(':')), id.slice(id.indexOf(':') + 1), pic);
+      else return send(res, 400, { error: 'bad id' });
+      console.log('picture uploaded', id, data.length, 'by', user.username);
+      return send(res, 200, { ok: true });
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); if (e.message === 'too large') return send(res, 413, { error: 'تصویر بیش از حد بزرگ است.' }); throw e; }
+  }
   // The admin's picture page (/admin/images): the step-by-step course's pictures by lesson and «آزمون جدید»'s by topic
   // (?set=course|newq), each with its version, and a new one on its way or failed; a picture's prompt; and a new
   // picture from an edited prompt.

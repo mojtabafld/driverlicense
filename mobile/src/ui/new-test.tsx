@@ -146,10 +146,14 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const soft = (x: string) => (dark ? x : mix(x, c.surface, 0.2) ?? x);
   const rightTone = soft(c.ok), wrongTone = soft(c.bad), rest = dark ? mix(c.line, '#ffffff', 0.08) ?? c.line : mix(c.line, '#000000', 0.04) ?? c.line;
   const big2 = [60, 48, 40, 30][level] ?? 30;
-  const countTag = (color: string, backgroundColor: string, text: string) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.pill, backgroundColor }}>
-      <View style={{ width: 9, height: 9, borderRadius: 5, backgroundColor: color }} />
-      <T style={{ color: c.muted, fontSize: 13, lineHeight: 20 }}>{text}</T>
+  // Always on one line (Mojtaba 2026-11-05): the row is measured once at full size in a hidden wide box, then its
+  // text, dots and padding set just small enough to fit the card's width.
+  const [countsW, setCountsW] = useState({ full: 0, room: 0 });
+  const k = countsW.full && countsW.room ? Math.max(0.6, Math.min(1, (countsW.room / countsW.full) * 0.97)) : 1;
+  const countTag = (color: string, backgroundColor: string, text: string, z = k) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 * z, paddingHorizontal: 10 * z, paddingVertical: 5, borderRadius: radius.pill, backgroundColor }}>
+      <View style={{ width: 9 * z, height: 9 * z, borderRadius: 5, backgroundColor: color }} />
+      <T style={{ color: c.muted, fontSize: 13 * z, lineHeight: 20 }} numberOfLines={1} maxFontSizeMultiplier={1}>{text}</T>
     </View>
   );
   // A segment of the bar: its true share of the questions (Mojtaba 2026-10-29: 5 right and 35 wrong looked the same),
@@ -197,7 +201,16 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         </View>
       ) : null}
       {/* (the smallest phones: the counts only in the «…» view, so the card fits above the tab bar) */}
-      <View testID="exam-answer-counts" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, display: open || level >= 3 ? 'none' : 'flex' }}>
+      <View testID="exam-answer-counts" onLayout={e => { const room = e.nativeEvent.layout.width; setCountsW(w => (w.room === room ? w : { ...w, room })); }}
+        style={{ flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: 6 * k, overflow: 'hidden', display: open || level >= 3 ? 'none' : 'flex' }}>
+        {/* (the same row at full size, hidden in a wide box, to measure) */}
+        <View pointerEvents="none" style={{ position: 'absolute', opacity: 0, top: 0, left: 0, width: 4000, flexDirection: 'row' }}>
+          <View onLayout={e => { const full = e.nativeEvent.layout.width; setCountsW(w => (w.full === full ? w : { ...w, full })); }} style={{ flexDirection: 'row', gap: 6, flexShrink: 0 }}>
+            {countTag(rightTone, c.okSoft, `${tr('درست')} ${faNum(right)}`, 1)}
+            {countTag(wrongTone, c.badSoft, `${tr('اشتباه')} ${faNum(wrong)}`, 1)}
+            {countTag(rest, c.surface2, `${tr('جواب‌نداده')} ${faNum(left)}`, 1)}
+          </View>
+        </View>
         {countTag(rightTone, c.okSoft, `${tr('درست')} ${faNum(right)}`)}
         {countTag(wrongTone, c.badSoft, `${tr('اشتباه')} ${faNum(wrong)}`)}
         {countTag(rest, c.surface2, `${tr('جواب‌نداده')} ${faNum(left)}`)}

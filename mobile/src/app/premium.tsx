@@ -142,14 +142,14 @@ export default function Premium() {
           <Icon name="checkCircle" size={24} color={c.ok} />
           <View style={{ flex: 1 }}>
             <T style={{ fontWeight: '700', fontSize: 14.5 }}>نسخه‌ی ویژه برای حساب شما فعال است</T>
-            {until > Date.now() ? <T style={{ color: c.muted, fontSize: 12.5 }}>{t('فعال تا {0}', fmtDay(until))}</T> : null}
+            <T style={{ color: c.muted, fontSize: 12.5 }}>{until > Date.now() ? t('فعال تا {0}', fmtDay(until)) : t('بدون تاریخ انقضا')}</T>
           </View>
         </Card>
       ) : premium ? (
         <Card style={{ gap: 8, alignItems: 'center' }}>
           <Icon name="checkCircle" size={36} color={c.ok} />
           <T style={{ fontWeight: '700', fontSize: 17, textAlign: 'center' }}>نسخه‌ی ویژه برای حساب شما فعال است</T>
-          {until > Date.now() ? <T style={{ color: c.muted, fontSize: 13 }}>{t('فعال تا {0}', fmtDay(until))}</T> : null}
+          <T style={{ color: c.muted, fontSize: 13 }}>{until > Date.now() ? t('فعال تا {0}', fmtDay(until)) : t('بدون تاریخ انقضا')}</T>
         </Card>
       ) : until ? (
         <Card><T style={{ color: c.muted, textAlign: 'center' }}>{t('نسخه‌ی ویژه‌ی شما {0} تمام شد.', fmtDay(until))}</T></Card>

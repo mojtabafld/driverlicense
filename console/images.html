@@ -9,7 +9,7 @@
      starts on the style the saved prompt is in, marked «سبک فعلی». A question can be bookmarked, taken out of the bank or
      rewritten by the AI on the admin's instruction (a proposal, applied on «اعمال»; /api/newq*, newqadmin.js). For a sign or right of way, a click on its made picture,
      prove.dk's or the official drawing makes it the one the app shows (/api/guiderefchoose). It talks to /api/courseart, /api/courseprompt, /api/coursegen
-     (?set=newq|course), /api/guideref, /api/guidegen, /api/guidedraft and /api/consoleprompt. -->
+     (?set=newq|course), /api/guideref, /api/guidegen, /api/guidedraft, /api/consoleprompt and /api/imageupload («آپلود تصویر»). -->
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -272,6 +272,10 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
         ${x ? `
           ${st.part === 'q' ? questionPanel(x) : ''}
           <div class="pics">${pictures(x)}</div>
+          <div class="row" style="margin:0 0 12px">
+            <label class="btn soft" style="cursor:pointer">⬆ آپلود تصویر<input type="file" id="upl" accept="image/png,image/jpeg,image/webp" hidden ${st.uploading ? 'disabled' : ''}></label>
+            ${st.uploading ? '<span class="state">در حال آپلود…</span>' : `<span class="muted" style="font-size:12.5px">تصویری از دستگاه خود انتخاب کنید؛ جای ${x.set ? 'تصویر فعلی' : 'تصویر ساخته‌شده'} را می‌گیرد و در برنامه نشان داده می‌شود.</span>`}
+          </div>
           <div class="row" style="margin:0 0 8px">
             <label class="chk">سرویس ساخت تصویر:<select id="prov" style="width:auto">${PROV ? Object.entries(PROV).map(([k, v]) => `<option value="${k}" ${k === prov ? 'selected' : ''} ${v.ok ? '' : 'disabled'}>${esc(v.name)}${v.ok ? '' : ' · کلید تنظیم نشده'}</option>`).join('') : '<option>…</option>'}</select></label>
             <label class="chk">سبک تصویر:<select id="sty" style="width:auto" ${st.prompt == null || st.restyling ? 'disabled' : ''}>${STYLES.map(([k, t]) => `<option value="${k}" ${k === (st.restyling || st.style) ? 'selected' : ''}>${t}${k === st.base ? ' · سبک فعلی' : ''}</option>`).join('')}</select></label>
@@ -338,6 +342,30 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       view(true);
     };
     document.getElementById('gen').onclick = () => generate(ta.value.trim());
+    // «آپلود تصویر»: a picture from the admin's device in place of the item's picture. A large one (over 2048 px) or a
+    // WebP is redrawn on a canvas (JPEG) first, so it is sent as a PNG or JPEG of a sensible size.
+    document.getElementById('upl').onchange = async e => {
+      const f = e.target.files && e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      if (!confirm(`«${f.name}» به‌عنوان تصویر این مورد قرار بگیرد؟`)) return;
+      const pid = x.pid;
+      st.uploading = true; view();
+      try {
+        const url = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => bad(new Error('خواندن فایل ممکن نشد.')); r.readAsDataURL(f); });
+        const im = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error('این فایل تصویر نیست.')); i.src = url; });
+        let data = url;
+        const big = Math.max(im.naturalWidth, im.naturalHeight), MAX = 2048;
+        if (big > MAX || !/^data:image\/(png|jpeg);/.test(url)) {
+          const k = Math.min(1, MAX / big), cv = document.createElement('canvas');
+          cv.width = Math.round(im.naturalWidth * k); cv.height = Math.round(im.naturalHeight * k);
+          const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(im, 0, 0, cv.width, cv.height);
+          data = cv.toDataURL('image/jpeg', 0.92);
+        }
+        await api('POST', 'imageupload', { id: pid, data });
+        toast('تصویر آپلود شد و جای تصویر قبلی را گرفت');
+      } catch (er) { toast(er.message); }
+      st.uploading = false; view(true);
+    };
     // «ترجمه‌ی فارسی پرامپت»: the prompt as it is now in Persian (made again only when the prompt has changed)
     document.getElementById('trb').onclick = async () => {
       if (st.trOpen) { st.trOpen = false; return view(); }
