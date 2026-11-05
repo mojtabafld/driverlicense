@@ -191,10 +191,6 @@ export default function Home() {
   const ringSize = tighter ? 76 : small ? 88 : compact ? 104 : 120;
   const readinessPad = tighter ? 10 : compact ? 12 : 16;
   const readinessGap = tighter ? 12 : small ? 14 : 18;
-  // (the ring above its verdict's tag, both within the card's old height: ringSize)
-  // (the card's top and bottom room, all but 6 points, given to the ring too: the card's height is the same as before)
-  const TAG_H = 21, tagGap = tighter ? 4 : 6, padV = readinessPad + share / 2, blockH = Math.round(ringSize + 2 * (padV - 6));
-  const innerRing = blockH - TAG_H - tagGap;
   // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
   // chart card's height from and to while it is shown or moving (null when closed: the card takes the height left).
   // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
@@ -362,23 +358,34 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: ARC ? 6 : readinessPad + share / 2 }}>
+      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: readinessPad + share / 2 }}>
         {ARC ? <>
-          {/* The chance of passing (Mojtaba 2026-11-05): its title and percent inside the ring (no seal any more) and the
-              verdict's tag under it, the ring made smaller by the tag's room so the card keeps its height (ringSize). */}
-          <View style={{ height: blockH, alignItems: 'center', justifyContent: 'center', gap: tagGap }}>
-            {/* Before the first test a tap on the ring starts a 5-question tryout of the test page (Mojtaba 2026-10-30). */}
-            <Pressable testID="home-readiness-ring" disabled={!tryout} onPress={startTryout} accessibilityRole={tryout ? 'button' : undefined}
-              accessibilityLabel={tryout ? tr('آزمون آزمایشی ۵ سؤالی') : undefined} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-              <Ring value={!tryout && est ? est.prob : 0} size={innerRing} stroke={(tighter ? 7 : small ? 8 : 9) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
-                <View style={{ alignItems: 'center' }}>
-                  <T numberOfLines={1} style={{ color: c.muted, fontWeight: '700', fontSize: Math.max(10, Math.round(innerRing * 0.1)), lineHeight: Math.round(innerRing * 0.15) }}>احتمال قبولی</T>
-                  <View testID="home-readiness-value"><PassPct value={est ? est.prob : null} size={Math.round(innerRing * 0.25)} /></View>
-                </View>
+          {/* The readiness ring and its status share a clean card without decorative waves. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: readinessGap }}>
+            {/* In the ring a seal with a tick in the chance's colour (green, amber, red; 2026-10-30; it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
+            {/* Before the first test a tap on the ring starts a 5-question tryout of the test page (Mojtaba 2026-10-30;
+                its seal still, no longer animated). */}
+            <View testID="home-readiness-ring" style={{ flexShrink: 0 }}>
+            {tryout ? (
+              <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+                <Ring value={0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
+                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
+                </Ring>
+              </Pressable>
+            ) : (
+              <Ring value={est ? est.prob : 0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
+                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
               </Ring>
-            </Pressable>
-            <View testID="home-readiness-status" style={{ height: TAG_H, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 99, backgroundColor: probSoft }}>
-              <T numberOfLines={1} style={{ color: probColor, fontSize: width < 360 ? 11 : 12, lineHeight: 17, fontWeight: '700', textAlign: 'center' }}>{probWord}</T>
+            )}
+            </View>
+            <View style={{ flex: 1, minWidth: 0, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
+              <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
+                <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
+                  <PassPct value={est ? est.prob : null} size={(tighter ? 28 : small ? 30 : 36) + (dark ? 2 : 0)} />
+                </View>
+                <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: probSoft }}>
+                  <T numberOfLines={2} style={{ color: probColor, fontSize: width < 360 ? 11 : 12, lineHeight: 17, fontWeight: '700', textAlign: 'center' }}>{probWord}</T>
+                </View>
             </View>
           </View>
         </> : <>
