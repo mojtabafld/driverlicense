@@ -6,7 +6,7 @@ export const DashboardContext = createContext(false);
 // The cards' corner on the four tab pages (home, learning, exam, settings; ui/kit.tsx Screen): squarer than elsewhere
 // (Mojtaba 2026-11-05: 6, it was 10, 14 and before that 22, and 26 on the dashboards). Null outside them.
 // («نرم», 2026-11-05: 28, the large soft corners of his pictures; 6 before it.)
-export const TAB_CARD_RADIUS = SOFT ? 28 : 6;
+export const TAB_CARD_RADIUS = SOFT ? 16 : 6;   // (16 since 2026-11-05 evening: squarer, he asked; it was 28)
 export const CardRadiusContext = createContext<number | null>(null);
 
 export function useDashboardLook() {

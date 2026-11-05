@@ -17,7 +17,7 @@ import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
-import { ARC, DA_FONT, SOFT, UBER, radius, useColors, useTheme } from './theme';
+import { ARC, DA_FONT, SOFT, UBER, lightness, radius, useColors, useTheme } from './theme';
 import { graphiteCtl, heroDark, px } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
@@ -743,8 +743,11 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   // («گرافیت»: the accent button in its grey, as the chosen tab; Mojtaba 2026-10-29.)
   const g = graphiteCtl(useTheme().theme === 'dark');
   // («نرم»: every main button the near-black pill of his pictures, white in the dark theme)
-  const accent = variant === 'accent' && !SOFT, primary = variant === 'primary' || variant === 'accent', fg = accent ? g?.fg ?? c.accentText : primary ? c.ctaFg : c.text;
+  // (…but in the dark theme the accent button, the exam's start, is the theme's own colour with text that reads on it)
+  const isDark = useTheme().theme === 'dark';
+  const accent = variant === 'accent' && (!SOFT || isDark), primary = variant === 'primary' || variant === 'accent';
   const fill = accent ? g?.fill ?? c.accent : c.cta;
+  const fg = accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
