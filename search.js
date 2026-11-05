@@ -237,4 +237,4 @@ async function ask({ username, q, v, catalog, ui, history }) {
   return { answer: String(out.answer || '').trim().slice(0, 2500), sources, v };
 }
 
-module.exports = { search, termPage, ask, searchAvailable: available };
+module.exports = { search, termPage, ask };

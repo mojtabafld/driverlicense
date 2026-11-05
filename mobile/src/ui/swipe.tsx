@@ -101,10 +101,6 @@ export function Pager({ i, n, go, rtl, style, children }: { i: number; n: number
   const p = usePager(i, n, go, rtl);
   return <Animated.View {...p.handlers} style={[{ flex: 1 }, WEB, style, { transform: [{ translateX: p.dx }] }]}>{children}</Animated.View>;
 }
-export function SwipeBack({ back, style, children }: { back: () => void; style?: StyleProp<ViewStyle>; children: React.ReactNode }) {
-  const p = useSwipeBack(back);
-  return <Animated.View {...p.handlers} style={[{ flex: 1 }, WEB, style, backLean(p.dx)]}>{children}</Animated.View>;
-}
 // One or the other on the same page: with `pager` the questions turn, without it a drag from right to left goes back.
 export function SideSwipe({ pager, back, children }: { pager?: { i: number; n: number; go: (k: number) => void; rtl?: boolean }; back: () => void; children: React.ReactNode }) {
   const p = usePager(pager?.i ?? 0, pager?.n ?? 0, pager?.go ?? noop, pager?.rtl), b = useSwipeBack(back);

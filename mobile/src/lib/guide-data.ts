@@ -12,4 +12,3 @@ export type GuideKind = 'signs' | 'priority';
 
 export const SIGN_CATS = data.signs as SignCat[];
 export const PRIORITY_CATS = data.priority as PriorityCat[];
-export const GUIDE_SOURCES = data.sources as string;

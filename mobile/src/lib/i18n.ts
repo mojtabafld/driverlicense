@@ -11,7 +11,6 @@ import { PROVE_PICS } from './config';
 import STRINGS from './i18n/strings.json';
 
 export type UiLang = 'fa' | 'en' | 'da';
-export const UI_LANGS: UiLang[] = ['fa', 'en', 'da'];
 const KEY = 'tp.ui';
 const valid = (v: unknown): v is UiLang => v === 'fa' || v === 'en' || v === 'da';
 // Kept in localStorage on the web and in the secure store on Android (its synchronous calls, read when the app starts).

@@ -19,7 +19,3 @@ export function topicPracticeIds(stats: MistakeStat[]) {
   return shuffle((open.length ? open : stats).map(st => st.id));
 }
 
-// The still-wrong questions, most-missed first, `n` at most, in random order.
-export function mostMissedIds(attempts: Attempt[], Q: Map<number, Question>, n: number) {
-  return shuffle(mistakeStats(attempts, id => Q.has(id)).filter(st => !st.lastOk).slice(0, n).map(st => st.id));
-}

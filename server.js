@@ -5,7 +5,7 @@
 // ADMIN_EMAILS or ADMIN_USERS (comma-separated email addresses of the admins), ANTHROPIC_API_KEY (AI lessons in the review),
 // LESSON_AI_MODEL (Claude model for those lessons, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
-// INSIGHTS_HOUR / INSIGHTS_EMAIL / INSIGHTS_MODEL (the AI's daily report, insights.js), ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
+// INSIGHTS_MODEL (the coach's model, insights.js), ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
 // PROMO_CODE / PROMO_DAYS (a free trial code) and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js),
 // RESEND_API_KEY, MAIL_FROM, REPORT_TO, RESEND_WEBHOOK_SECRET and FORWARD_TO (email, mail.js).
 // See README.md for all variables.
@@ -537,7 +537,7 @@ const REPORTS_KEPT = 500, REPORTS_PER_HOUR = 10, reportTimes = new Map(); // bug
 const INBOX_KEPT = 200; // emails Resend received for the domain (mail.js), for the admin panel
 const FULL = 25, PASS_MIN = 20;
 const scoreOf = a => a.items.filter(x => x.ok).length;
-// What insights.js and coach.js read: the bank, the scoring, the day and, for the report's mail, where the panel is.
+// What coach.js reads: the bank, the scoring and the day.
 const usageTimes = new Map();
 const aiDeps = () => ({ store, bank: lessonBank(SITE), scoreOf, FULL, PASS_MIN, dayKey, visits });
 function adminStats() {

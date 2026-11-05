@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { Fragment, cloneElement, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 
 import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
@@ -17,7 +17,7 @@ import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
-import { ARC, DA_FONT, SOFT, UBER, lightness, radius, useColors, useTheme } from './theme';
+import { ARC, SOFT, UBER, lightness, radius, useColors, useTheme } from './theme';
 import { deepAccent, graphiteCtl, heroDark, px } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
@@ -133,18 +133,6 @@ export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?
   );
 }
 
-// The site's logo: the app icon's road bent into a check (assets/icon-src/symbol.svg) on a rounded square in the accent.
-export function Logo({ size = 28 }: { size?: number }) {
-  const c = useColors();
-  return (
-    <Svg width={size} height={size} viewBox="0 0 32 32">
-      <Rect x={2} y={2} width={28} height={28} rx={9} fill={c.accent} />
-      <Path d="M10.3 16.5l3.8 3.8 7.6-8.6" stroke="#fff" strokeWidth={4.3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M10.3 16.5l3.8 3.8 7.6-8.6" stroke={c.accent} strokeWidth={0.7} strokeDasharray="1.2 1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
 // Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
 // A round button in the look of the home page's (the default profile picture, ui/avatar.tsx, and the chart button,
 // ui/chart-view.tsx): the theme's link colour on the blush-to-lavender wash (Mojtaba 2026-10-19: every page's header
@@ -176,26 +164,6 @@ export function ThemeButton() {
       style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
       {dark ? <Icon name="sun" size={20} color={c.text} /> : <Icon name="moon" size={19} color={c.muted} />}
     </Pressable>
-  );
-}
-
-// Top bar with the Teoripro brand and the theme button, in the page's own background so it reads as one surface.
-export function TopBar({ right }: { right?: React.ReactNode }) {
-  const c = useColors(), ins = useSafeAreaInsets();
-  return (
-    <View style={{ paddingTop: ins.top + 6 }}>
-      <View style={{ height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, direction: 'ltr' } as ViewStyle}>
-          {/* The logo first in the page's reading order: at the outer (right) edge, the name inside it. */}
-          {/* uber: «Teori» in the text colour and «pro» in the accent, like «Uber Eats» */}
-          <Text style={{ fontFamily: DA_FONT, fontSize: 18, color: c.link }}>
-            <Text style={{ fontWeight: '700', color: UBER ? c.text : c.link }}>Teori</Text>pro
-          </Text>
-          <Logo />
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>{right}<ThemeButton /></View>
-      </View>
-    </View>
   );
 }
 

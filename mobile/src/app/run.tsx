@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, AppState, BackHandler, Easing, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { RTL, tr, transText } from '@/lib/i18n';
+import { tr, transText } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { imgSource } from '@/lib/img-source';
 import { SECONDS_PER_Q, faNum, grade, isExamMode } from '@/lib/logic';

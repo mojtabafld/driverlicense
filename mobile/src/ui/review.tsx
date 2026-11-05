@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Animated, Easing, Platform, Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView, type TextStyle } from 'react-native';
 import { router } from 'expo-router';
 
-import { UI_LANG, t as fmt, tr, transText, transWord } from '@/lib/i18n';
+import { UI_LANG, t as fmt, transText, transWord } from '@/lib/i18n';
 import { api } from '@/lib/api';
 import type { Item, Question, User } from '@/lib/bank';
 import { imgSource } from '@/lib/img-source';

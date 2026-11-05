@@ -29,7 +29,6 @@ import { usePlainHeader } from '@/lib/header-style';
 import { mix } from '@/ui/palette';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
-import { type DayPart } from '@/ui/greet-icon';
 import { HomeLicenceArt } from '@/ui/header-art';
 import { useDashboardLook } from '@/ui/dashboard-style';
 
@@ -88,6 +87,7 @@ function PassPct({ value, size }: { value: number | null; size: number }) {
 // dusk and before dawn, so a bright summer evening at 20:00 is still «عصر» and a dark winter afternoon at 17:00 is
 // «شب»); otherwise morning before 12, noon 12–15 and afternoon after.
 // «به‌خیر» with a zero-width non-joiner: «به» is a preposition here, so it stays apart from «خیر» (the Academy's rule).
+type DayPart = 'morning' | 'noon' | 'evening' | 'night';
 function dayPart(d = new Date()): DayPart {
   if (isDark(d)) return 'night';
   const h = d.getHours();

@@ -53,7 +53,6 @@ function build(): SearchItem[] {
 
 export const SEARCH_ITEMS = build();
 const BY_ID = new Map(SEARCH_ITEMS.map(x => [x.id, x]));
-export const searchItem = (id: string) => BY_ID.get(id);
 
 // What the AI gets: id, title and the start of the text, one entry per line (the same for every search, so the
 // server's prompt cache holds it).

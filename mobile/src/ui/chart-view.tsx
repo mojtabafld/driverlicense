@@ -4,33 +4,18 @@
 // test statistics come in under it, then the latest tests, each opening its own page (its result and review). Pressed
 // again, all goes back.
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, View } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
-import { RTL, tr } from '@/lib/i18n';
+import { RTL } from '@/lib/i18n';
 import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
-import { Card, FitLine, T, tap } from './kit';
+import { Card, FitLine, T } from './kit';
 import { useColors } from './theme';
 import { HomeChartIcon } from './chart-icon';
 
 export { HomeChartIcon } from './chart-icon';
-
-// `t`: how far the chart view is open (0 to 1); the button fills with the accent as it opens.
-export function ChartButton({ size = 44, on, t, onPress }: { size?: number; on: boolean; t: Animated.Value; onPress: () => void }) {
-  const c = useColors();
-  const g = Math.round(size * 0.52); // the icon, about as large as the profile picture's outline beside it
-  return (
-    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('نمودار و آمار آزمون‌ها')}
-      accessibilityState={{ expanded: on }}
-      style={({ pressed }) => ({ width: size, height: size, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
-      {/* The icon alone, no round background (Mojtaba 2026-10-29); open, a short line under it in the theme's colour. */}
-      <Icon name="chart" size={g} color={c.link} />
-      <Animated.View pointerEvents="none" style={{ position: 'absolute', bottom: 2, width: 16, height: 2.5, borderRadius: 2, backgroundColor: c.link, opacity: t }} />
-    </Pressable>
-  );
-}
 
 // Green or red for an attempt, as in the lists: a full test by the real pass rule, a shorter one at 80%.
 const passed = (a: Attempt) => (isFull(a) ? isPass(a) : pctOf(a) >= 0.8);

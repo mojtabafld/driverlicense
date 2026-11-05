@@ -195,5 +195,3 @@ export const radius = STYLE === 'arc'
 export const space = (n: number) => n * 4;
 // Danish / English text: the Latin font bundled with the app (src/ui/fonts.ts); L picks the weight, this is its regular.
 export const DA_FONT = Platform.OS === 'web' ? `${DA_REGULAR}, Vazirmatn-400, Helvetica, sans-serif` : DA_REGULAR;
-// Numbers that stand out (the exam's timer and position, in a regular weight): Poppins on the web, the system's font on phones.
-export const NUM_FONT = Platform.OS === 'web' ? 'Poppins, Inter-500, system-ui, sans-serif' : undefined;
