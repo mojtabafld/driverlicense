@@ -77,10 +77,11 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
 }
 
 // The chance of passing as a large number, counting up as the ring fills; «–» before there is an estimate.
-function PassPct({ value, size }: { value: number | null; size: number }) {
+function PassPct({ value, size, color }: { value: number | null; size: number; color?: string }) {
   const shown = useCountUp(value ?? 0, 1800);
   // (bold by its own family: the main site draws every heavier weight as 500; Mojtaba 2026-10-30)
-  return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700' }}>{value == null ? '–' : pctText(shown)}</T>;
+  // `color`: the verdict tag's colour beside it (green, amber, red; Mojtaba 2026-11-05).
+  return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', ...(color ? { color } : {}) }}>{value == null ? '–' : pctText(shown)}</T>;
 }
 
 // A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
@@ -380,12 +381,15 @@ export default function Home() {
             </View>
             <View style={{ flex: 1, minWidth: 0, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
               <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
+              {/* The percent with its verdict tag beside it, the percent in the tag's colour (Mojtaba 2026-11-05). */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
                 <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
-                  <PassPct value={est ? est.prob : null} size={(tighter ? 28 : small ? 30 : 36) + (dark ? 2 : 0)} />
+                  <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 28 : small ? 30 : 36) + (dark ? 2 : 0)} />
                 </View>
                 <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: probSoft }}>
                   <T numberOfLines={2} style={{ color: probColor, fontSize: width < 360 ? 11 : 12, lineHeight: 17, fontWeight: '700', textAlign: 'center' }}>{probWord}</T>
                 </View>
+              </View>
             </View>
           </View>
         </> : <>
