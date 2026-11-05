@@ -1229,6 +1229,9 @@ async function api(req, res, route) {
 
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
+  // A device's check that it is still signed in (lib/store.tsx, every few seconds while the app is in front): another
+  // device's «خروج» (devices/out) ends this session, and the next check signs it out here.
+  if (req.method === 'GET' && route === 'alive') return send(res, 200, { ok: true });
   const user = s.user, adminReq = adminSession(s);
   // The «سامانه» page's numbers (console/system.html): the machine and the app over 24 hours (monitor.js), the sizes,
   // the AI's use, RAG, the backups, the version running.

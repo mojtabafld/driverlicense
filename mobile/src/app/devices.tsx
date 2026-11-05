@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { api } from '@/lib/api';
+import { t } from '@/lib/i18n';
 import { fmtDateTime } from '@/lib/names';
 import { Icon } from '@/ui/icon';
 import { ArcButton, Card, T, tap } from '@/ui/kit';
@@ -38,12 +39,12 @@ export default function DevicesPage() {
               </View>
               <View style={{ flex: 1, gap: 1 }}>
                 <T raw style={{ fontWeight: '700', fontSize: 14.5 }} numberOfLines={1}>{d.name}</T>
-                <T style={{ color: c.muted, fontSize: 12 }}>{d.current ? 'همین دستگاه' : `آخرین استفاده: ${fmtDateTime(d.seen)}`}</T>
+                <T style={{ color: c.muted, fontSize: 12 }}>{d.current ? 'همین دستگاه' : t('آخرین استفاده: {0}', fmtDateTime(d.seen))}</T>
               </View>
               {!d.current ? (
-                <Pressable onPress={() => out({ id: d.id })} disabled={busy} accessibilityRole="button" accessibilityLabel="خروج این دستگاه" hitSlop={6}
+                <Pressable onPress={() => out({ id: d.id })} disabled={busy} accessibilityRole="button" accessibilityLabel={t('خارج کردن این دستگاه')} hitSlop={6}
                   style={({ pressed }) => ({ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 99, backgroundColor: c.badSoft, opacity: pressed || busy ? 0.6 : 1 })}>
-                  <T style={{ color: c.bad, fontSize: 12.5, fontWeight: '700' }}>خروج</T>
+                  <T style={{ color: c.bad, fontSize: 12.5, fontWeight: '700' }}>خارج کردن</T>
                 </Pressable>
               ) : null}
             </View>

@@ -265,6 +265,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Signed out from another device («دستگاه‌های من», Mojtaba 2026-11-05): while signed in and the app is in front, a
+  // small check every 15 s and whenever it comes back to the front; once the server no longer knows the session (401)
+  // this device signs out at once. (Without a connection nothing happens.)
+  useEffect(() => {
+    if (!token) return;
+    const mine = gen.current;
+    const check = () => api('GET', 'alive').catch(async e => {
+      if (!(e instanceof ApiError && e.status === 401) || gen.current !== mine) return;
+      gen.current++;
+      setApiToken(null); setToken(null); setMe(null);
+      await saveToken(null);
+      lookOut();
+    });
+    const shown = () => Platform.OS !== 'web' || typeof document === 'undefined' || document.visibilityState === 'visible';
+    const timer = setInterval(() => { if (shown() && AppState.currentState !== 'background') check(); }, 15e3);
+    const sub = AppState.addEventListener('change', st => { if (st === 'active') check(); });
+    const vis = () => { if (shown()) check(); };
+    if (Platform.OS === 'web' && typeof document !== 'undefined') document.addEventListener('visibilitychange', vis);
+    return () => { clearInterval(timer); sub.remove(); if (Platform.OS === 'web' && typeof document !== 'undefined') document.removeEventListener('visibilitychange', vis); };
+  }, [token]);
+
   const signedIn = async (t: string) => { setApiToken(t); setToken(t); await saveToken(t); await load(); };
   const premium = (me?.user.premium?.until ?? 0) > Date.now() || !!me?.user.admin, locked = !!pay?.gate && !premium;
   // The translation's language, read by transText while the screens draw (kept in step with the account's settings).
