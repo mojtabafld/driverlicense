@@ -1811,7 +1811,7 @@ async function api(req, res, route) {
   if (req.method === 'POST' && route === 'imageupload') {
     if (!adminReq) return send(res, 403, { error: 'forbidden' });
     try {
-      const b = await readBody(req, 16e6), id = String(b.id || '');
+      const b = await readBody(req, 48e6), id = String(b.id || '');
       const m = /^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/.exec(String(b.data || ''));
       if (!m) return send(res, 400, { error: 'فقط تصویر PNG یا JPEG.' });
       const data = Buffer.from(m[2], 'base64'), png = data.length > 8 && data.readUInt32BE(0) === 0x89504e47, jpg = data[0] === 0xff && data[1] === 0xd8;
@@ -1869,7 +1869,7 @@ async function api(req, res, route) {
     try {
       if (req.method === 'GET' && route === 'courseart') {
         const set = q.get('set') === 'newq' ? 'newq' : 'course', v = imagegen.artVersions(set);
-        const item = ({ key, name, da }) => { const j = imagegen.oneOff(`${set}-${key}`); return { key, name, da, v: v[key] || null, making: j && !j.done ? j.state : null, failed: j && j.done && !j.blob && j.error ? j.error : null }; };
+        const item = ({ key, name, da }) => { const j = imagegen.oneOff(`${set}-${key}`); return { key, name, da, aspect: imagegen.artAspect(set, key), v: v[key] || null, making: j && !j.done ? j.state : null, failed: j && j.done && !j.blob && j.error ? j.error : null }; };
         const groups = set === 'newq' ? consolepics.newqGroups() : consolepics.courseGroups(imagegen.artKeys('course'));
         // (a question's bookmark, removal and AI edit: newqadmin.js)
         const fl = set === 'newq' ? newqadmin.flags() : {};

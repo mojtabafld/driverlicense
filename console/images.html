@@ -274,7 +274,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
           <div class="pics">${pictures(x)}</div>
           <div class="row" style="margin:0 0 12px">
             <label class="btn soft" style="cursor:pointer">⬆ آپلود تصویر<input type="file" id="upl" accept="image/png,image/jpeg,image/webp" hidden ${st.uploading ? 'disabled' : ''}></label>
-            ${st.uploading ? '<span class="state">در حال آپلود…</span>' : `<span class="muted" style="font-size:12.5px">تصویری از دستگاه خود انتخاب کنید؛ جای ${x.set ? 'تصویر فعلی' : 'تصویر ساخته‌شده'} را می‌گیرد و در برنامه نشان داده می‌شود.</span>`}
+            ${st.uploading ? '<span class="state">در حال آپلود…</span>' : `<span class="muted" style="font-size:12.5px">تصویری از دستگاه خود انتخاب کنید؛ با بالاترین کیفیت و به نسبت ${esc(x.aspect || '4:3')} کارت برنامه (برش از وسط) جای ${x.set ? 'تصویر فعلی' : 'تصویر ساخته‌شده'} را می‌گیرد.</span>`}
           </div>
           <div class="row" style="margin:0 0 8px">
             <label class="chk">سرویس ساخت تصویر:<select id="prov" style="width:auto">${PROV ? Object.entries(PROV).map(([k, v]) => `<option value="${k}" ${k === prov ? 'selected' : ''} ${v.ok ? '' : 'disabled'}>${esc(v.name)}${v.ok ? '' : ' · کلید تنظیم نشده'}</option>`).join('') : '<option>…</option>'}</select></label>
@@ -356,27 +356,35 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       }
       toast('پرامپت کپی شد');
     };
-    // «آپلود تصویر»: a picture from the admin's device in place of the item's picture. A large one (over 2048 px) or a
-    // WebP is redrawn on a canvas (JPEG) first, so it is sent as a PNG or JPEG of a sensible size.
+    // «آپلود تصویر»: a picture from the admin's device in place of the item's picture, at the best quality there is.
+    // It is cut to the shape of the card it shows in (the item's aspect, e.g. 4:3: the middle of it, so the card has no
+    // empty bands) at its full size in pixels; a PNG stays a lossless PNG, anything else becomes a JPEG at quality 0.98.
+    // A file already that shape (a PNG or JPEG) is sent exactly as it is.
     document.getElementById('upl').onchange = async e => {
       const f = e.target.files && e.target.files[0]; e.target.value = '';
       if (!f) return;
-      if (!confirm(`«${f.name}» به‌عنوان تصویر این مورد قرار بگیرد؟`)) return;
+      const [aw, ah] = String(x.aspect || '4:3').split(':').map(Number), want = aw / ah;
+      if (!confirm(`«${f.name}» به‌عنوان تصویر این مورد قرار بگیرد؟\n(به نسبت ${x.aspect || '4:3'} کارت برنامه برش می‌خورد، اگر نسبتش فرق کند.)`)) return;
       const pid = x.pid;
       st.uploading = true; view();
       try {
         const url = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => bad(new Error('خواندن فایل ممکن نشد.')); r.readAsDataURL(f); });
         const im = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error('این فایل تصویر نیست.')); i.src = url; });
+        const W = im.naturalWidth, H = im.naturalHeight, png = /^data:image\/png;/.test(url);
+        // the largest box of the card's shape inside the picture, in its middle
+        let cw = W, ch = Math.round(W / want);
+        if (ch > H) { ch = H; cw = Math.round(H * want); }
         let data = url;
-        const big = Math.max(im.naturalWidth, im.naturalHeight), MAX = 2048;
-        if (big > MAX || !/^data:image\/(png|jpeg);/.test(url)) {
-          const k = Math.min(1, MAX / big), cv = document.createElement('canvas');
-          cv.width = Math.round(im.naturalWidth * k); cv.height = Math.round(im.naturalHeight * k);
-          const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(im, 0, 0, cv.width, cv.height);
-          data = cv.toDataURL('image/jpeg', 0.92);
+        if (Math.abs(cw - W) > 1 || Math.abs(ch - H) > 1 || !/^data:image\/(png|jpeg);/.test(url)) {
+          const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+          const cx = cv.getContext('2d'); cx.imageSmoothingQuality = 'high';
+          if (!png) { cx.fillStyle = '#fff'; cx.fillRect(0, 0, cw, ch); }
+          cx.drawImage(im, Math.round((W - cw) / 2), Math.round((H - ch) / 2), cw, ch, 0, 0, cw, ch);
+          data = png ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.98);
         }
+        if (data.length > 47e6) throw new Error('تصویر بیش از حد بزرگ است (بیشتر از حدود ۳۵ مگابایت).');
         await api('POST', 'imageupload', { id: pid, data });
-        toast('تصویر آپلود شد و جای تصویر قبلی را گرفت');
+        toast(`تصویر ${cw}×${ch} آپلود شد و جای تصویر قبلی را گرفت`);
       } catch (er) { toast(er.message); }
       st.uploading = false; view(true);
     };
