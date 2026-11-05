@@ -166,6 +166,14 @@ export function graphiteCtl(dark: boolean) {
   return dark ? { fill: '#3d3d3d', fg: '#f5f5f5', on: '#8a8a8a', off: '#383838' } : { fill: '#e2e2e2', fg: '#151515', on: '#5c5c5c', off: '#e2e2e2' };
 }
 
+// The bottom bar's rail (Mojtaba 2026-11-05): the colour the app's page, cards and other surfaces are made from
+// (theme.ts harmonize), so they all sit in one family with the bar. «سنگی» (slate): his pictures' own; every other
+// theme its accent mixed into a near-white (light) or a near-black (dark).
+export function railColor(dark: boolean, accent: string) {
+  if (PALETTE === 'slate') return dark ? '#262a38' : '#dfe1ec';
+  return dark ? mix(accent, '#0e1016', 0.84) : mix(accent, '#f4f5f8', 0.86);
+}
+
 // The theme's colours for the light and dark themes (null for «اقیانوس», which keeps theme.ts's own values).
 export function paletteColors() {
   if (PALETTE === 'ocean') return null;
