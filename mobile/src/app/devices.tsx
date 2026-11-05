@@ -12,7 +12,7 @@ import { ArcButton, Card, T, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
-type Device = { id: string; name: string; at: number; seen: number; current: boolean };
+type Device = { id: string; name: string; at: number; seen: number; current: boolean; main?: boolean };
 
 export default function DevicesPage() {
   const c = useColors();
@@ -26,10 +26,11 @@ export default function DevicesPage() {
     tap(); setBusy(true);
     try { await api('POST', 'devices/out', body); await load(); } catch (e: any) { setErr(e?.message || String(e)); } finally { setBusy(false); }
   };
-  const others = (list || []).filter(d => !d.current);
+  // (the main device is signed out only on itself, so «every other» leaves it)
+  const others = (list || []).filter(d => !d.current && !d.main);
   return (
     <SubPage title="دستگاه‌های من" subtitle="جاهایی که با این حساب وارد شده‌اید">
-      {err ? <T raw style={{ color: c.bad, fontSize: 13 }}>{err}</T> : null}
+      {err ? <T style={{ color: c.bad, fontSize: 13 }}>{err}</T> : null}
       {!list ? <Card><T style={{ color: c.muted, fontSize: 13.5 }}>در حال بارگذاری…</T></Card> : (
         <Card style={{ gap: 0, paddingVertical: 4 }}>
           {list.map((d, i) => (
@@ -38,10 +39,13 @@ export default function DevicesPage() {
                 <Icon name="phone" size={19} color={d.current ? c.link : c.text} />
               </View>
               <View style={{ flex: 1, gap: 1 }}>
-                <T raw style={{ fontWeight: '700', fontSize: 14.5 }} numberOfLines={1}>{d.name}</T>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <T raw style={{ flexShrink: 1, fontWeight: '700', fontSize: 14.5 }} numberOfLines={1}>{d.name}</T>
+                  {d.main ? <View style={{ paddingHorizontal: 7, paddingVertical: 1, borderRadius: 99, backgroundColor: c.accentSoft }}><T style={{ color: c.link, fontSize: 11, fontWeight: '700' }}>دستگاه اصلی</T></View> : null}
+                </View>
                 <T style={{ color: c.muted, fontSize: 12 }}>{d.current ? 'همین دستگاه' : t('آخرین استفاده: {0}', fmtDateTime(d.seen))}</T>
               </View>
-              {!d.current ? (
+              {!d.current && !d.main ? (
                 <Pressable onPress={() => out({ id: d.id })} disabled={busy} accessibilityRole="button" accessibilityLabel={t('خارج کردن این دستگاه')} hitSlop={6}
                   style={({ pressed }) => ({ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 99, backgroundColor: c.badSoft, opacity: pressed || busy ? 0.6 : 1 })}>
                   <T style={{ color: c.bad, fontSize: 12.5, fontWeight: '700' }}>خارج کردن</T>
@@ -52,7 +56,7 @@ export default function DevicesPage() {
         </Card>
       )}
       {others.length ? <ArcButton label="خروج از همه‌ی دستگاه‌های دیگر" icon="xmark" variant="secondary" onPress={() => out({ others: true })} /> : null}
-      <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>اگر دستگاهی را نمی‌شناسید، آن را خارج کنید. هر ورود از نوع تازه‌ای از دستگاه به ایمیل شما خبر داده می‌شود؛ دستگاهی که یک ماه استفاده نشود خودکار خارج می‌شود.</T>
+      <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>اگر دستگاهی را نمی‌شناسید، آن را خارج کنید. دستگاه اصلی (همان که با آن ثبت‌نام کردید) فقط از روی خودش خارج می‌شود. هر ورود از نوع تازه‌ای از دستگاه به ایمیل شما خبر داده می‌شود؛ دستگاهی که یک ماه استفاده نشود خودکار خارج می‌شود.</T>
       <View style={{ height: 40 }} />
     </SubPage>
   );
