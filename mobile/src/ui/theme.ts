@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import { PROVE_PICS } from '@/lib/config';
 import type { ThemeMode, ThemeName } from '@/lib/prefs';
 import { DA_REGULAR } from './fonts';
-import { paletteColors, mix, railColor } from './palette';
+import { PALETTE, paletteColors, mix, railColor } from './palette';
 
 // Two looks; STYLE picks the one in use. «teal» is the app's look until October 2026 (main at ed597e7), kept whole so
 // it can come back by setting STYLE = 'teal'. «uber» follows Uber Eats: black and white surfaces, flat cards with soft
@@ -134,6 +134,12 @@ function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // (dark: the page a deep shade of the theme's own colour, Mojtaba 2026-11-05, so each theme reads as itself)
   const bg = isDark ? mix(c.accent, '#000000', 0.84) : '#f0f0f2', surface = isDark ? '#17171a' : '#fcfcfd', surface2 = isDark ? '#202024' : '#f4f4f6';
   const line = isDark ? '#2a2a2f' : '#e6e6ea', border = isDark ? '#222226' : 'rgba(0,0,0,0.05)';
+  // «گرافیت» in the dark theme (Mojtaba 2026-11-05, after a screenshot of a delivery app he sent): its page #1c1c1c,
+  // the cards and panels a step and two lighter, the lines a third.
+  if (isDark && PALETTE === 'graphite') return soft(c, true, '#1c1c1c', '#232323', '#2c2c2c', '#353535', '#2e2e2e');
+  return soft(c, isDark, bg, surface, surface2, line, border);
+}
+function soft<T extends typeof tealLight>(c: T, isDark: boolean, bg: string, surface: string, surface2: string, line: string, border: string): T {
   return { ...c, bg, surface, surface2, line, cardBorder: border, hairline: line, glass: surface, glassStrong: surface, glassBorder: line,
     nav: isDark ? '#26262b' : '#ececef', navOff: surface2, note: surface2,
     btn: isDark ? '#f2f2f4' : '#111113', btnFg: isDark ? '#111113' : '#ffffff', cta: isDark ? '#f2f2f4' : '#111113', ctaFg: isDark ? '#111113' : '#ffffff',
