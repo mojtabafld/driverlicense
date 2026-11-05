@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import { PROVE_PICS } from '@/lib/config';
 import type { ThemeMode, ThemeName } from '@/lib/prefs';
 import { DA_REGULAR } from './fonts';
-import { paletteColors } from './palette';
+import { paletteColors, mix, railColor } from './palette';
 
 // Two looks; STYLE picks the one in use. «teal» is the app's look until October 2026 (main at ed597e7), kept whole so
 // it can come back by setting STYLE = 'teal'. «uber» follows Uber Eats: black and white surfaces, flat cards with soft
@@ -123,8 +123,24 @@ const arcDark: typeof tealLight = {
 };
 // The main site's chosen colour theme (ui/palette.ts) replaces arc's own ocean colours.
 const PAL = STYLE === 'arc' ? paletteColors() : null;
-const light: typeof tealLight = STYLE === 'arc' ? (PAL?.light ?? arcLight) : STYLE === 'uber' ? uberLight : tealLight;
-const dark: typeof tealLight = STYLE === 'arc' ? (PAL?.dark ?? arcDark) : STYLE === 'uber' ? uberDark : tealDark;
+// The page, the cards and the other surfaces from the bottom bar's rail (palette.ts railColor; Mojtaba 2026-11-05):
+// light, the page a paler form of the rail and the cards white; dark, the page a deeper form of it, the cards between
+// the page and the rail, and the second surfaces the rail itself. Lines and hairlines a step off them.
+function harmonize<T extends typeof tealLight>(c: T, isDark: boolean): T {
+  const rail = railColor(isDark, c.accent);
+  if (!isDark) {
+    const bg = mix(rail, '#ffffff', 0.5), s2 = mix(rail, '#ffffff', 0.35);
+    return { ...c, bg, surface: '#ffffff', surface2: s2, line: mix(rail, '#000000', 0.03), cardBorder: rail, hairline: mix(rail, '#ffffff', 0.3),
+      glass: '#ffffff', glassStrong: '#ffffff', glassBorder: rail, nav: rail, navOff: s2, note: mix(rail, '#ffffff', 0.2),
+      bgGradient: [bg, bg, bg] as readonly [string, string, string] };
+  }
+  const bg = mix(rail, '#000000', 0.42), surface = mix(rail, '#000000', 0.18), line = mix(rail, '#ffffff', 0.07);
+  return { ...c, bg, surface, surface2: rail, line, cardBorder: mix(rail, '#ffffff', 0.03), hairline: mix(rail, '#ffffff', 0.03),
+    glass: surface, glassStrong: surface, glassBorder: line, nav: rail, navOff: surface, note: rail,
+    bgGradient: [bg, bg, bg] as readonly [string, string, string] };
+}
+const light: typeof tealLight = STYLE === 'arc' ? harmonize(PAL?.light ?? arcLight, false) : STYLE === 'uber' ? uberLight : tealLight;
+const dark: typeof tealLight = STYLE === 'arc' ? harmonize(PAL?.dark ?? arcDark, true) : STYLE === 'uber' ? uberDark : tealDark;
 // UBER: the neutral looks (uber and arc), where main buttons are black / white rather than the accent.
 export const UBER = STYLE !== 'teal';
 export const ARC = STYLE === 'arc';

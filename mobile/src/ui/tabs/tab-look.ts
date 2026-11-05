@@ -1,4 +1,4 @@
-import { PALETTE, mix } from '../palette';
+import { PALETTE, mix, railColor } from '../palette';
 import { useColors, useIsDark } from '../theme';
 
 export const TAB_BAR_H = 72;
@@ -44,8 +44,8 @@ const SLATE = {
 export function useTabLook() {
   const c = useColors(), dark = useIsDark();
   if (PALETTE === 'slate') { const l = SLATE[dark ? 'dark' : 'light']; return { ...l, edge: l.rail }; }
-  const rail = mix(c.accent, c.bg, dark ? 0.84 : 0.86);
-  const circle = mix(c.accent, c.bg, dark ? 0.72 : 0.74);
+  const rail = railColor(dark, c.accent);   // (the same rail the page and cards are made from: theme.ts harmonize)
+  const circle = dark ? mix(rail, '#ffffff', 0.08) : mix(rail, '#000000', 0.06);
   const active = dark ? mix(c.accent, '#ffffff', 0.92) : '#ffffff';
   const onActive = textOn(active, mix(c.accent, '#0b0d12', dark ? 0.82 : 0.72));
   return {
