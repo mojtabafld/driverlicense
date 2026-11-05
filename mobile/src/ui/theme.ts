@@ -128,8 +128,11 @@ const PAL = STYLE === 'arc' ? paletteColors() : null;
 // with a near-black main one, the theme's colour only on toggles, links and the chosen things. The bottom bar keeps its
 // own colours (tabs/tab-look.ts). SOFT = false brings the look before it back whole.
 export const SOFT = STYLE === 'arc';
+// A colour's lightness (0 dark … 1 light), to put dark or light text on it.
+export const lightness = (hex: string) => { const n = parseInt(hex.replace('#', '').slice(0, 6), 16); return (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; };
 function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
-  const bg = isDark ? '#0d0d0f' : '#f0f0f2', surface = isDark ? '#17171a' : '#fcfcfd', surface2 = isDark ? '#202024' : '#f4f4f6';
+  // (dark: the page a deep shade of the theme's own colour, Mojtaba 2026-11-05, so each theme reads as itself)
+  const bg = isDark ? mix(c.accent, '#000000', 0.84) : '#f0f0f2', surface = isDark ? '#17171a' : '#fcfcfd', surface2 = isDark ? '#202024' : '#f4f4f6';
   const line = isDark ? '#2a2a2f' : '#e6e6ea', border = isDark ? '#222226' : 'rgba(0,0,0,0.05)';
   return { ...c, bg, surface, surface2, line, cardBorder: border, hairline: line, glass: surface, glassStrong: surface, glassBorder: line,
     nav: isDark ? '#26262b' : '#ececef', navOff: surface2, note: surface2,
@@ -179,7 +182,7 @@ export const useColors = (): Colors => (useIsDark() ? dark : light);
 // arc: Arc's --radius-control 18 (buttons, fields), --radius-panel 26 (panels, larger cards), --radius-surface 34;
 // everyday cards 22 so their small inner parts keep concentric corners.
 export const radius = STYLE === 'arc'
-  ? (SOFT ? { btn: 18, sm: 16, md: 26, lg: 30, field: 18, xl: 34, pill: 999 } : { btn: 18, sm: 14, md: 22, lg: 26, field: 18, xl: 34, pill: 999 })
+  ? (SOFT ? { btn: 18, sm: 12, md: 16, lg: 18, field: 16, xl: 24, pill: 999 } : { btn: 18, sm: 14, md: 22, lg: 26, field: 18, xl: 34, pill: 999 })
   : STYLE === 'uber'
   ? { btn: 12, sm: 10, md: 14, lg: 14, field: 12, xl: 20, pill: 999 }
   : { btn: 4, sm: 8, md: 10, lg: 10, field: 12, xl: 20, pill: 999 };
