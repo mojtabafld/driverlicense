@@ -17,7 +17,6 @@ import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { ArcButton, Button, Card, FitLine, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
-import { CardWaves, Gauge } from '@/ui/gauge';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
@@ -161,8 +160,6 @@ export default function Home() {
   const dark = useIsDark();
   const readinessTone = dark ? mix(c.accent, c.text, 0.4) : c.accent;
   const readinessTrack = dark ? mix(c.line, c.text, 0.18) : c.line;
-  const gaugeFrom = dark ? mix(readinessTone, c.bg, 0.35) : mix(c.accent, '#ffffff', 0.4);
-  const gaugeTrack = dark ? mix(c.accent, c.surface, 0.82) : mix(c.accent, '#ffffff', 0.86);
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height, width } = useWindowDimensions();
@@ -194,12 +191,6 @@ export default function Home() {
   const ringSize = tighter ? 76 : small ? 88 : compact ? 104 : 120;
   const readinessPad = tighter ? 10 : compact ? 12 : 16;
   const readinessGap = tighter ? 12 : small ? 14 : 18;
-  // The gauge (ui/gauge.tsx): its size by the screen's fit level, its gradient from a light form of the theme's colour.
-  // (by the screen's height, about a fifth of it, and smaller again at the denser fit levels, so the chart card still
-  // ends above the tab bar on small phones)
-  const gaugeSize = Math.round(Math.min(176, Math.max(104, height * (small ? 0.17 : 0.2))) * (tiniest ? 0.74 : tighter ? 0.84 : tight ? 0.92 : 1));
-  const gaugeStroke = Math.max(8, Math.round(gaugeSize * 0.07));
-  const pctSize = Math.round(gaugeSize * 0.21) + (dark ? 2 : 0);
   // The chart view (Mojtaba 2026-10-19): `view` while it is open (or opening), `t` its motion from 0 to 1, `grow` the
   // chart card's height from and to while it is shown or moving (null when closed: the card takes the height left).
   // Opening, the cards above the chart fold up and fade, so the chart glides to the top keeping its height (on a short
@@ -367,28 +358,35 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      <Card testID="home-readiness" style={ARC ? { backgroundColor: look.hero, overflow: 'hidden', alignItems: 'center', gap: 0, padding: readinessPad, paddingBottom: readinessPad + 2, paddingTop: readinessPad + share / 2 }
-        : { backgroundColor: c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: readinessPad + share / 2 }}>
+      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: readinessPad + share / 2 }}>
         {ARC ? <>
-          {/* The chance of passing as a gauge (Mojtaba 2026-11-05, after a «steps today» card he sent): a 270° arc in a
-              gradient of the theme's colour around a seal, the percent and its title, a pill with the verdict where the
-              arc opens, and two soft waves of the theme's colour along the card's bottom. Before the first test a tap on
-              the gauge starts the 5-question tryout. */}
-          <CardWaves color={readinessTone} height={Math.round(gaugeSize * 0.42)} strength={dark ? 0.5 : 1} />
-          <Pressable testID="home-readiness-ring" disabled={!tryout} onPress={startTryout} accessibilityRole={tryout ? 'button' : undefined}
-            accessibilityLabel={tryout ? tr('آزمون آزمایشی ۵ سؤالی') : undefined} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
-            <Gauge value={!tryout && est ? est.prob : 0} size={gaugeSize} stroke={gaugeStroke} from={gaugeFrom} to={readinessTone} track={gaugeTrack}>
-              <View style={{ alignItems: 'center', gap: tighter ? 0 : 2, marginTop: Math.round(gaugeSize * 0.04) }}>
-                <Icon name="passed" size={Math.round(gaugeSize * 0.15)} color={readinessTone} weight="semibold" />
-                <View testID="home-readiness-value"><PassPct value={est ? est.prob : null} size={pctSize} /></View>
-                <T style={{ color: c.muted, fontSize: gaugeSize < 130 ? 11.5 : 13.5, fontWeight: '600' }}>احتمال قبولی</T>
-              </View>
-            </Gauge>
-          </Pressable>
-          <View testID="home-readiness-status" style={{ marginTop: -Math.round(gaugeSize * 0.13), flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: tighter ? 4 : 6,
-            borderRadius: 99, backgroundColor: c.surface, borderWidth: 1, borderColor: mix(c.line, c.surface, 0.3), maxWidth: '90%' }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: probColor }} />
-            <T numberOfLines={1} style={{ color: c.text, fontSize: width < 360 ? 11.5 : 12.5, fontWeight: '700', flexShrink: 1 }}>{probWord}</T>
+          {/* The readiness ring and its status share a clean card without decorative waves. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: readinessGap }}>
+            {/* In the ring a seal with a tick in the chance's colour (green, amber, red; 2026-10-30; it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
+            {/* Before the first test a tap on the ring starts a 5-question tryout of the test page (Mojtaba 2026-10-30;
+                its seal still, no longer animated). */}
+            <View testID="home-readiness-ring" style={{ flexShrink: 0 }}>
+            {tryout ? (
+              <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+                <Ring value={0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
+                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
+                </Ring>
+              </Pressable>
+            ) : (
+              <Ring value={est ? est.prob : 0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
+                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
+              </Ring>
+            )}
+            </View>
+            <View style={{ flex: 1, minWidth: 0, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
+              <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
+                <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
+                  <PassPct value={est ? est.prob : null} size={(tighter ? 28 : small ? 30 : 36) + (dark ? 2 : 0)} />
+                </View>
+                <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: probSoft }}>
+                  <T numberOfLines={2} style={{ color: probColor, fontSize: width < 360 ? 11 : 12, lineHeight: 17, fontWeight: '700', textAlign: 'center' }}>{probWord}</T>
+                </View>
+            </View>
           </View>
         </> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
