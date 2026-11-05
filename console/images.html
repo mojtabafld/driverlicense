@@ -107,6 +107,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
     { id: 'course', title: 'آموزش' },
     { id: 'signs', title: 'علائم' },
     { id: 'priority', title: 'حق تقدم' },
+    { id: 'landing', title: 'صفحه ورود' },
   ];
   // part, group and item chosen (kept in the address, so a reload stays on the same picture)
   const h = new URLSearchParams(location.hash.slice(1));
@@ -237,8 +238,67 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
   }
   const EMPTY = 'هنوز پرامپتی برای این تصویر ذخیره نشده؛ آن را بنویسید.';
   let pollT = null;
+  // «صفحه ورود» (Mojtaba 2026-11-05): the welcome page's three cards, a light and a dark picture each, made with OpenAI
+  // (or kie.ai) in the style of data/hero-ref/landing-style.jpg; a new one waits beside the current one until it is
+  // chosen («انتخاب برای برنامه»), and «بازگشت به تصویر خود برنامه» goes back to the app's own mascot.
+  const VIBE_TAGS = ['تمرین', 'مربی هوشمند', 'قبولی'];
+  let vibe = null; const vibeEdits = {};
+  async function landing(fresh) {
+    if (!vibe || fresh) {
+      try { vibe = await api('GET', 'vibeart'); }
+      catch (e) { $app.innerHTML = e.status === 401 || e.status === 403 ? '<div class="card"><p>برای این صفحه ابتدا در داشبورد با حساب مدیر وارد شوید.</p><a class="btn" href="/admin">رفتن به داشبورد</a></div>' : `<div class="card fail">${esc(e.message)}</div>`; return; }
+    }
+    const P = vibe.providers || {}, vp = P.openai && P.openai.ok ? 'openai' : 'kie';
+    const card = it => {
+      const n = +it.key[0], dark = it.key.endsWith('dark'), c = it.cand, making = c && !c.done;
+      const box = (src, cap) => `<figure><div style="background:${esc(it.bg)};border-radius:12px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden">${src ? `<img class="zoomable" src="${esc(src)}" data-zoom="${esc(src)}" data-cap="${esc(cap)}" style="width:100%;height:100%;object-fit:contain">` : '<span class="muted" style="font-size:12.5px">تصویر خود برنامه</span>'}</div><figcaption>${cap}</figcaption></figure>`;
+      return `<div class="card" style="margin-bottom:14px">
+        <h3 style="margin:0 0 10px;font-size:16px">کارت ${faNum(n)} · ${VIBE_TAGS[n - 1]} · ${dark ? 'تیره' : 'روشن'}</h3>
+        <div class="pics">
+          ${box(it.v ? `/vibe-art/${it.key}.png?v=${encodeURIComponent(it.v)}` : '', 'تصویر فعلی در برنامه')}
+          ${c && c.done && c.v ? box(`/api/vibecand?key=${it.key}&v=${encodeURIComponent(c.v)}`, `تصویر تازه (${c.provider === 'openai' ? 'ChatGPT' : 'kie.ai'})`) : c && !c.done ? `<figure><div class="none">در حال ساخت… (${esc(c.state)})</div></figure>` : ''}
+        </div>
+        ${c && c.done && !c.v ? `<p class="fail">ساخت تصویر ناموفق بود: ${esc(c.error || 'failed')}</p>` : ''}
+        <label>پرامپت<textarea data-vp="${it.key}" style="min-height:150px">${esc(vibeEdits[it.key] ?? it.prompt)}</textarea></label>
+        <div class="row" style="margin-top:6px">
+          <button class="btn" data-vgen="${it.key}" ${making ? 'disabled' : ''}>ساخت تصویر با ${vp === 'openai' ? 'ChatGPT' : 'kie.ai'}</button>
+          ${c && c.done && c.v ? `<button class="btn soft" data-vpick="${it.key}">انتخاب برای برنامه</button>` : ''}
+          ${it.v ? `<button class="btn soft" data-vreset="${it.key}">بازگشت به تصویر خود برنامه</button>` : ''}
+        </div></div>`;
+    };
+    $app.innerHTML = `
+      <div class="head"><h1>ایجاد تصاویر</h1><span class="sp"></span><a class="btn soft" href="/admin">بازگشت به داشبورد</a></div>
+      <div class="tabs">${PARTS.map(p => `<button class="tab ${p.id === st.part ? 'on' : ''}" data-part="${p.id}">${p.title}</button>`).join('')}</div>
+      <p class="muted" style="font-size:13px;margin:0 0 12px">تصاویر سه کارت صفحه‌ی ورود، روشن و تیره، به سبک تصویر نمونه (خطی ایزومتریک). ${P.openai && P.openai.ok ? 'ساخت با ChatGPT (OpenAI).' : 'کلید OpenAI روی سرور تنظیم نشده؛ ساخت با kie.ai.'} هر تصویر تازه کنار تصویر فعلی می‌ماند تا «انتخاب برای برنامه» را بزنید.</p>
+      ${vibe.items.map(card).join('')}`;
+    document.querySelectorAll('[data-part]').forEach(b => { b.onclick = () => { st.part = b.dataset.part; st.g = 0; st.i = 0; st.pid = null; remember(); view(); }; });
+    document.querySelectorAll('textarea[data-vp]').forEach(t => { t.oninput = () => { vibeEdits[t.dataset.vp] = t.value; }; });
+    document.querySelectorAll('[data-vgen]').forEach(b => { b.onclick = async () => {
+      const key = b.dataset.vgen; b.disabled = true;
+      try { await api('POST', 'vibegen', { key, prompt: vibeEdits[key] ?? vibe.items.find(x => x.key === key).prompt, provider: vp }); delete vibeEdits[key]; toast('ساخت تصویر شروع شد'); }
+      catch (e) { toast(e.message); }
+      landing(true);
+    }; });
+    document.querySelectorAll('[data-vpick]').forEach(b => { b.onclick = async () => {
+      if (!confirm('این تصویر در صفحه‌ی ورود برنامه نشان داده شود؟')) return;
+      try { vibe.items = (await api('POST', 'vibechoose', { key: b.dataset.vpick })).items; toast('تصویر برنامه عوض شد'); } catch (e) { toast(e.message); }
+      landing();
+    }; });
+    document.querySelectorAll('[data-vreset]').forEach(b => { b.onclick = async () => {
+      if (!confirm('تصویر خود برنامه برگردد؟')) return;
+      try { vibe.items = (await api('POST', 'vibereset', { key: b.dataset.vreset })).items; toast('تصویر خود برنامه برگشت'); } catch (e) { toast(e.message); }
+      landing();
+    }; });
+    document.querySelectorAll('img[data-zoom]').forEach(im => { im.onclick = () => window.open(im.dataset.zoom, '_blank', 'noopener'); });
+    // while one is being made, read the list again now and then (not while a prompt is being typed)
+    if (vibe.items.some(x => x.cand && !x.cand.done)) {
+      const again = () => { if (st.part !== 'landing') return; if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') pollT = setTimeout(again, 6000); else landing(true); };
+      pollT = setTimeout(again, 8000);
+    }
+  }
   async function view(fresh) {
     clearTimeout(pollT);
+    if (st.part === 'landing') return landing(fresh);
     try { await load(st.part, fresh); }
     catch (e) {
       if (e.status === 401 || e.status === 403) { $app.innerHTML = '<div class="card"><p>برای این صفحه ابتدا در داشبورد با حساب مدیر وارد شوید.</p><a class="btn" href="/admin">رفتن به داشبورد</a></div>'; return; }

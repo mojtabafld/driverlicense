@@ -775,17 +775,17 @@ function serveStatic(req, res) {
   if (p === '/app') { res.writeHead(301, { Location: '/app/' }); return res.end(); }
   if (p.startsWith('/app/')) return serveAppWeb(req, res, p.slice(4), WEBS.app);
   // The app at the root (everything that is not the API's or a shared file).
-  if (!p.startsWith('/img/') && p !== '/data.js' && p !== '/newq.js' && !p.startsWith('/newq-art/') && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/course-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/hero-art/') && !p.startsWith('/hero-try/') && !p.startsWith('/login-art/') && !p.startsWith('/store-art/') && !p.startsWith('/guide-art/')) return serveAppWeb(req, res, p);
+  if (!p.startsWith('/img/') && p !== '/data.js' && p !== '/newq.js' && !p.startsWith('/newq-art/') && !p.startsWith('/intro/') && !p.startsWith('/learn-art/') && !p.startsWith('/course-art/') && !p.startsWith('/avatar-art/') && !p.startsWith('/hero-art/') && !p.startsWith('/hero-try/') && !p.startsWith('/login-art/') && !p.startsWith('/store-art/') && !p.startsWith('/guide-art/') && !p.startsWith('/vibe-art/')) return serveAppWeb(req, res, p);
   // The app's intro pictures (made by imagegen.js), open to everyone: the intro comes before signing in.
   // The pictures of the «آموزش» tab's cards (made by imagegen.js), served the same way.
   // And the profile pictures to choose from, and the pictures at the top of the «آموزش» and «آزمون» pages.
   const im = /^\/intro\/([1-9])\.png$/.exec(p), lm = /^\/learn-art\/([1-9]|10)\.png$/.exec(p), am = /^\/avatar-art\/([1-9]|10)\.png$/.exec(p), hm = /^\/hero-art\/([1-9]|10)\.png$/.exec(p), tm = /^\/hero-try\/([1-2])\.png$/.exec(p), lg = /^\/login-art\/([1-8])\.png$/.exec(p), sm = /^\/store-art\/([1-7])\.png$/.exec(p),
-    gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p), nm = /^\/newq-art\/(\d{4,5})\.png$/.exec(p);
-  if (im || lm || am || hm || tm || lg || sm || gm2 || cm || nm) {
-    const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : lg ? imagegen.loginBlob(lg[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : nm ? imagegen.newqBlob(nm[1]) : guideref.webBlob(gm2[1], new URL(req.url, 'http://x').searchParams.get('s') || 'l'));
+    gm2 = /^\/guide-art\/([a-z0-9-]{3,40})\.png$/.exec(p), cm = /^\/course-art\/([a-z0-9-]{3,40})\.png$/.exec(p), nm = /^\/newq-art\/(\d{4,5})\.png$/.exec(p), vm = /^\/vibe-art\/([1-3]-(?:light|dark))\.png$/.exec(p);
+  if (im || lm || am || hm || tm || lg || sm || gm2 || cm || nm || vm) {
+    const load = () => (im ? imagegen.introBlob(im[1]) : lm ? imagegen.learnBlob(lm[1]) : am ? imagegen.avatarBlob(am[1]) : hm ? imagegen.heroBlob(hm[1]) : tm ? imagegen.heroTryBlob(tm[1]) : lg ? imagegen.loginBlob(lg[1]) : sm ? imagegen.storeBlob(sm[1]) : cm ? imagegen.courseBlob(cm[1]) : nm ? imagegen.newqBlob(nm[1]) : vm ? imagegen.vibeBlob(vm[1]) : guideref.webBlob(gm2[1], new URL(req.url, 'http://x').searchParams.get('s') || 'l'));
     // Sent smaller and kept in memory (webpic.js) when the picture's version is known; the others as they are.
     const ver = im ? imagegen.introVersions()[im[1]] : lm ? imagegen.learnVersions()[lm[1]] : am ? imagegen.avatarVersions()[am[1]] : hm ? imagegen.heroVersions()[hm[1]] : lg ? imagegen.loginVersions()[lg[1]]
-      : cm ? imagegen.courseVersions()[cm[1]] : nm ? imagegen.newqVersions()[nm[1]] : undefined;   // (/guide-art has its own sizes and store: guideref.webBlob)
+      : cm ? imagegen.courseVersions()[cm[1]] : nm ? imagegen.newqVersions()[nm[1]] : vm ? imagegen.vibeVersions()[vm[1]] : undefined;   // (/guide-art has its own sizes and store: guideref.webBlob)
     // The «آموزش» cards' pictures with their plain background cut away (Mojtaba 2026-10-29: in the dark theme the
     // picture's own background showed on the card), at most 720 px wide, as a transparent PNG.
     const loadCut = () => load().then(b => (b ? cutBackground(b, 720) : b));
@@ -874,7 +874,7 @@ async function api(req, res, route) {
     return send(res, db ? 200 : 503, { ok: db, db, files, up: Math.round(process.uptime()), mem: Math.round(process.memoryUsage().rss / 1e6) });
   }
   if (req.method === 'GET' && route === 'config') {
-    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, google: googleOn() || undefined, theme: defaultTheme(), version: VERSION, app: latestApp(), aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), heroDiag: imagegen.heroDiag(),
+    return send(res, 200, { inviteRequired: !!INVITE_CODE, mail: mail.available() || undefined, google: googleOn() || undefined, theme: defaultTheme(), version: VERSION, app: latestApp(), aiLessons: lessonsAvailable(), tts: tts.available(), intro: imagegen.introVersions(), introBg: imagegen.introColours(), learnArt: imagegen.learnVersions(), learnBg: imagegen.learnColours(), courseArt: imagegen.courseVersions(), newqArt: imagegen.newqVersions(), avatarArt: imagegen.avatarVersions(), heroArt: imagegen.heroVersions(), loginArt: imagegen.loginVersions(), vibeArt: imagegen.vibeVersions(), heroDiag: imagegen.heroDiag(),
       // Premium can be bought (a Stripe key is set): its plans (id, days, kroner), whether the AI and read-aloud need it, test mode.
       pay: payFor((sessionUser(req) || {}).user) ? { plans: payments.plans(), gate: payments.gated() || undefined, test: payments.testMode() || undefined,
         promo: payments.promoCodes().length ? payments.promoDays() : undefined, trial: payments.promoDays() } : undefined,
@@ -1830,6 +1830,27 @@ async function api(req, res, route) {
         await setPicStyle(`g:${String(b.key || '')}`, b.style);
         return send(res, 200, { job });
       }
+    } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+  }
+  // «صفحه ورود» on the admin's picture page (imagegen vibe*): GET vibeart → { items, providers }; POST vibegen { key,
+  // prompt, provider } makes a candidate, vibechoose { key } makes it the card's picture, vibereset { key } goes back to
+  // the app's own one; GET /api/vibecand?key= is the candidate itself.
+  if (['vibeart', 'vibegen', 'vibechoose', 'vibereset', 'vibecand'].includes(route)) {
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
+    try {
+      if (req.method === 'GET' && route === 'vibeart') return send(res, 200, { items: imagegen.vibeList(), providers: imagegen.providers() });
+      if (req.method === 'GET' && route === 'vibecand') {
+        const b = await imagegen.oneOffBlob(`vibe-${String(new URL(req.url, 'http://x').searchParams.get('key') || '')}`);
+        if (!b) return send(res, 404, { error: 'not found' });
+        res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+        return res.end(b.data);
+      }
+      if (req.method !== 'POST') return send(res, 405, { error: 'method' });
+      const b = await readBody(req, 64e3), key = String(b.key || '');
+      if (route === 'vibegen') { const job = await imagegen.vibeGen(key, b.prompt, b.provider === 'kie' ? 'kie' : 'openai'); return send(res, 200, { job: { state: job.state, error: job.error || '' } }); }
+      if (route === 'vibechoose') await imagegen.vibeChoose(key);
+      if (route === 'vibereset') await imagegen.vibeReset(key);
+      return send(res, 200, { items: imagegen.vibeList() });
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
   }
   // «آپلود تصویر» on the admin's picture page: { id: 'g:<key>' | 'newq:<key>' | 'course:<key>', data: a PNG or JPEG data URL }

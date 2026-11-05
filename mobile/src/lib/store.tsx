@@ -49,7 +49,7 @@ type Ctx = {
   // «آزمون جدید»'s question pictures that the server has made: question number → version.
   newqArt: Record<string, string>;
   // The profile pictures to choose from that the server has made: number → version.
-  avatarArt: Record<string, string>; heroArt: Record<string, string>; loginArt: Record<string, string>;
+  avatarArt: Record<string, string>; heroArt: Record<string, string>; loginArt: Record<string, string>; vibeArt: Record<string, string>;
   // The teaching pages' pictures (signs, right of way) that the server has made: key → version. At /app (PROVE_PICS) a
   // version starting with «p» is prove.dk's picture of it (/img/guideprove/<key>.png).
   guideArt: Record<string, string>;
@@ -161,6 +161,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [avatarArt, setAvatarArt] = useState<Record<string, string>>({});
   const [heroArt, setHeroArt] = useState<Record<string, string>>({});
   const [loginArt, setLoginArt] = useState<Record<string, string>>({});
+  // (the welcome page's card pictures chosen on the admin's picture page; none: the app's own mascots)
+  const [vibeArt, setVibeArt] = useState<Record<string, string>>({});
   const [guideArt, setGuideArt] = useState<Record<string, string>>({});
 
   // Light / dark mode (ui/theme-mode.tsx): read when the account loads, and a change is kept on the account.
@@ -225,10 +227,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const same = <T,>(set: (f: (o: T) => T) => void, v: T) => set(o => (JSON.stringify(o) === JSON.stringify(v) ? o : v));
     let first = true;
-    const load = () => api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; newqArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; guideArt?: Record<string, string>; imgv?: Record<string, string>; mail?: boolean; google?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => {
+    const load = () => api<{ intro?: Record<string, string>; introBg?: Record<string, string>; learnArt?: Record<string, string>; learnBg?: Record<string, string>; courseArt?: Record<string, string>; newqArt?: Record<string, string>; avatarArt?: Record<string, string>; heroArt?: Record<string, string>; loginArt?: Record<string, string>; vibeArt?: Record<string, string>; guideArt?: Record<string, string>; imgv?: Record<string, string>; mail?: boolean; google?: boolean; theme?: string }>('GET', PROVE_PICS ? 'config?pics=prove' : 'config').then(x => {
       if (first) { setMail(!!x.mail && !PROVE_PICS); setGoogle(!!x.google && !PROVE_PICS); rememberDefault(x.theme); first = false; }
       same(setIntro, x.intro || {}); same(setIntroBg, x.introBg || {}); same(setLearnArt, x.learnArt || {}); same(setLearnBg, x.learnBg || {}); same(setCourseArt, x.courseArt || {}); same(setNewqArt, x.newqArt || {});
-      same(setAvatarArt, x.avatarArt || {}); same(setHeroArt, x.heroArt || {}); same(setLoginArt, x.loginArt || {}); same(setGuideArt, x.guideArt || {});
+      same(setAvatarArt, x.avatarArt || {}); same(setHeroArt, x.heroArt || {}); same(setLoginArt, x.loginArt || {}); same(setVibeArt, x.vibeArt || {}); same(setGuideArt, x.guideArt || {});
       if (x.imgv) same(setCfgImgv as any, x.imgv);
     }).catch(() => {});
     load();
@@ -311,7 +313,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const d = await api<{ user: User }>('POST', 'paysync');
       setMe(m => (m ? { ...m, user: d.user } : m));
     },
-    saved: Array.isArray(me?.saved) ? me.saved : [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt,
+    saved: Array.isArray(me?.saved) ? me.saved : [], aiLessons, tts: tts && !locked, ttsServer: tts, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, vibeArt, guideArt,
     toggleSaved: async (id, a) => {
       const list = (v?: Saved[]) => (Array.isArray(v) ? v : []);
       const on = !list(me?.saved).some(x => x.id === id);
@@ -391,7 +393,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await api('PUT', 'settings', next);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [ready, token, me, cfgImgv, bank, newBank, aiLessons, tts, pay, play, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, guideArt, lastUser, google, googleErr]);
+  }), [ready, token, me, cfgImgv, bank, newBank, aiLessons, tts, pay, play, mail, premium, locked, intro, introBg, learnArt, learnBg, courseArt, newqArt, avatarArt, heroArt, loginArt, vibeArt, guideArt, lastUser, google, googleErr]);
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
 
