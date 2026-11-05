@@ -44,7 +44,7 @@ function LinkRow({ icon, title, sub, onPress, ok }: { icon: IconName; title: str
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={title}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 10,
-        marginVertical: 3, borderRadius: 10, backgroundColor: look.row, opacity: pressed ? 0.7 : 1 })}>
+        marginVertical: 3, borderRadius: 7, backgroundColor: look.row, opacity: pressed ? 0.7 : 1 })}>
       <DashboardIcon name={icon} />
       <View style={{ flex: 1 }}>
         <T style={{ fontWeight: '700' }}>{title}</T>
@@ -66,7 +66,7 @@ function LangSettings() {
   const { settings } = useApp();
   return (
     <Pressable onPress={() => { tap(); router.push('/language'); }} accessibilityRole="button" accessibilityLabel="تنظیمات زبان"
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 10, backgroundColor: look.row, opacity: pressed ? 0.7 : 1 })}>
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 7, backgroundColor: look.row, opacity: pressed ? 0.7 : 1 })}>
       <DashboardIcon name="translate" />
       <View style={{ flex: 1 }}>
         <T style={{ fontWeight: '700' }}>تنظیمات زبان</T>
@@ -130,7 +130,7 @@ export default function Settings() {
       {/* Main site: «نسخه‌ی ویژه» in the profile card, in the box where the tests, average and mistakes were (Mojtaba
           2026-11-05); without it (/app, or no payments) those numbers stay. */}
       {!PROVE_PICS && showPrem ? premRow : (
-      <View style={{ flexDirection: 'row', borderRadius: 10, backgroundColor: look.row, paddingVertical: 12 }}>
+      <View style={{ flexDirection: 'row', borderRadius: 7, backgroundColor: look.row, paddingVertical: 12 }}>
         {([
           ['آزمون‌ها', faNum(exams.length), 'exam'],
           ['میانگین', average == null ? '–' : pctText(average), 'chart'],

@@ -114,7 +114,7 @@ function ShortcutsCard({ level = 0 }: { level?: number }) {
   const tests = attempts.filter(a => a.mode !== 'lesson').length, wrong = mistakeIds(attempts).length, low = level >= 3;
   const half = (icon: IconName, label: string, count: string, href: '/history' | '/mistakes', tone?: string) => (
     <Pressable onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: low ? 12 : 16, paddingHorizontal: 12, borderRadius: 12,
+      style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: low ? 12 : 16, paddingHorizontal: 12, borderRadius: 8,
         backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder, opacity: pressed ? 0.8 : 1 })}>
       <View style={{ width: low ? 38 : 44, height: low ? 38 : 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface2 }}>
         <Icon name={icon} size={low ? 18 : 21} color={tone ?? c.text} />
