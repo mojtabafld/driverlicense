@@ -4,8 +4,8 @@ import { useColors, useIsDark } from './theme';
 
 export const DashboardContext = createContext(false);
 // The cards' corner on the four tab pages (home, learning, exam, settings; ui/kit.tsx Screen): squarer than elsewhere
-// (Mojtaba 2026-11-05: 10, it was 14 and before that 22, and 26 on the dashboards). Null outside them.
-export const TAB_CARD_RADIUS = 10;
+// (Mojtaba 2026-11-05: 6, it was 10, 14 and before that 22, and 26 on the dashboards). Null outside them.
+export const TAB_CARD_RADIUS = 6;
 export const CardRadiusContext = createContext<number | null>(null);
 
 export function useDashboardLook() {
