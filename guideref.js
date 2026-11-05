@@ -175,6 +175,15 @@ async function choose(key, choice) {
   return save();
 }
 
+// «آپلود تصویر»: an uploaded picture ({ mime, data }) becomes the item's made picture and the one the app shows.
+async function upload(key, b) {
+  if (!itemOf(key)) throw Object.assign(new Error('این مورد پیدا نشد.'), { status: 404 });
+  await imagegen.dropOneOff(`guide-${key}`);
+  await imagegen.guidePut(key, b);
+  delete meta().choice[key];
+  return save();
+}
+
 // For the admin panel: kind = prove | official | ai.
 async function refBlob(kind, key) {
   if (kind === 'ai') return imagegen.guideBlob(key);
@@ -285,4 +294,4 @@ function item(key) {
   return null;
 }
 
-module.exports = { init, startImport, editRegions, list, item, choose, draft, generate, refBlob, versions, proveVersions, webBlob };
+module.exports = { init, startImport, editRegions, list, item, choose, draft, generate, refBlob, versions, proveVersions, webBlob, upload };

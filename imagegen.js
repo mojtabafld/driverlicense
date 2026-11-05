@@ -1056,6 +1056,16 @@ function artGen(set, key, prompt, provider) {
   return startOneOff(`${set}-${key}`, { prompt, aspect: a[1][key].aspect || '4:3', target: `${set}:${key}`, provider });
 }
 
+// «آپلود تصویر» on the admin's picture page: an uploaded picture ({ mime, data }) takes the course's or a question's
+// picture's place like a made one; its prompt stays as it was (so a new picture can still be made from it).
+async function artPut(set, key, b) {
+  const a = ART_SETS[set];
+  if (!a || !a[1][key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
+  await dropOneOff(`${set}-${key}`);
+  const sm = shrink(b.data, b.mime);
+  await a[0].put(key, { mime: sm.mime, data: sm.buf });
+}
+
 // ---------- profile pictures to choose from in the settings ----------
 // Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
 // centred with room around it so it sits well in a circle. Served at /avatar-art/<n>.png.
@@ -1367,6 +1377,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
