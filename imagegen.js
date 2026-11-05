@@ -1227,10 +1227,12 @@ const heroTryBlob = HERO_TRY.blob;
 const VIBE_REF = path.join(__dirname, 'data', 'hero-ref', 'landing-style.jpg');
 const VIBE_BG = { light: ['#fae1d5', '#e7e4fb', '#dfeddf'], dark: ['#402920', '#282543', '#223022'] };
 const VIBE_ACCENT = [['warm coral', '#e8846a', '#f6c9b8'], ['periwinkle violet', '#6e5ce6', '#d9d3fb'], ['fresh green', '#3f9e5c', '#cfe8d5']];
+// One object per card, drawn in detail on its own platform, about what the card says (Mojtaba 2026-11-05: no second
+// item and no cable between two).
 const VIBE_SCENES = [
-  'Practice every day: on a flat square isometric platform tile, a neat stack of three question cards (each with two grey text lines and a small red-and-white triangular road-sign symbol on the top card); in front of the stack a small smartphone lying flat with a small square button-like screen element; a thin curved cable runs from the stack to a second, smaller platform tile on the right holding a small cube-shaped desk calendar with a check mark on its top face.',
-  'A smart coach that explains: on a flat square isometric platform tile, an upright answer card with two short answer rows, one marked with a small cross and one with a small check mark, and a small speech bubble with three short lines floating above it; a thin curved cable runs from the card to a second platform tile on the right holding a rounded cube (the AI coach) with a simple light-bulb symbol on its front face.',
-  'Passing the test: on a flat square isometric platform tile, a small card with three rising bars and beside it a round ring gauge mostly filled; a thin curved cable runs to a second platform tile on the right on which a driving licence card (a faceless round photo silhouette and two grey lines) stands upright on a small step podium with a round check-mark badge beside it.',
+  'Practice (1100 questions, just like the real test, a little every day): ONE detailed object only: a neat stack of three question cards lying on a single flat square isometric platform tile. The top card is drawn in detail: a small road picture area with a red-and-white triangular warning sign, two short grey text lines, and three rounded answer rows with small round check boxes, one of them ticked; a tiny row of progress dots along its edge. Nothing else on the platform.',
+  'A smart coach that explains (made a mistake? the coach tells you why): ONE detailed object only: a single rounded speech-bubble shaped card standing upright on a single flat square isometric platform tile. On its face, in detail: one answer row with a small cross, one answer row with a small check mark under it, and a small light-bulb symbol with three short rays in the corner; three short grey explanation lines below. Nothing else on the platform.',
+  'Passing the test (see your progress, get ready, pass): ONE detailed object only: a driving licence card standing upright at a slight angle on a single flat square isometric platform tile. Drawn in detail: a faceless round photo silhouette, two grey text lines, a small chip-like square, and a round rosette badge with a check mark pinned on its corner. Nothing else on the platform.',
 ];
 const vibePrompt = (n, look) => {
   const [name, strong, soft] = VIBE_ACCENT[n], dark = look === 'dark', bg = VIBE_BG[look][n];
@@ -1240,7 +1242,7 @@ const vibePrompt = (n, look) => {
     dark
       ? `Colours for a DARK card: the whole background is one plain flat colour ${bg} from edge to edge (no gradient, no floor, no frame, no vignette). The objects are drawn with thin light grey-lavender outlines (#c9c7d8) and filled with muted dark slate surfaces (#3a3a4a and #45455a) a little lighter than the background, with a single ${name} accent (${strong}) on the one main object and its symbols.`
       : `Colours for a LIGHT card: the whole background is one plain flat colour ${bg} from edge to edge (no gradient, no floor, no frame, no vignette). The objects are white and very pale grey surfaces with thin dark grey outlines (#4a4a5a), with a single ${name} accent (${strong} for lines and symbols, ${soft} for its filled faces) on the one main object and its symbols.`,
-    'Composition: the whole group is centred, seen from the same isometric angle as the reference, filling about 70% of the width, with even empty background around it. No readable text, no letters, no numbers, no logos, no brand names, no watermarks, no people, no faces.',
+    'Composition: ONE object on ONE platform, centred, seen from the same isometric angle as the reference, filling about 65% of the width, with even empty background around it. No second platform, no cables, wires or lines connecting anything, no extra objects. No readable text, no letters, no numbers, no logos, no brand names, no watermarks, no people, no faces.',
   ].join('\n');
 };
 const VIBE_ART = Object.fromEntries([0, 1, 2].flatMap(n => ['light', 'dark'].map(look => [`${n + 1}-${look}`, { prompt: vibePrompt(n, look), aspect: '1:1' }])));
@@ -1248,7 +1250,7 @@ const VIBE = artSet({ metaKey: 'vibeArt', set: 'v1', prompts: VIBE_ART, aspect: 
 const vibeVersions = VIBE.versions, vibeBlob = VIBE.blob;
 // The admin's list: each card's key, its default or last used prompt, the chosen picture's version and the candidate.
 function vibeList() {
-  const v = VIBE.versions(), saved = (store.meta.vibePrompts || {});
+  const v = VIBE.versions(), saved = (store.meta.vibePrompts2 || {});
   return Object.keys(VIBE_ART).map(key => {
     const j = oneOff(`vibe-${key}`);
     return { key, prompt: withFrame(saved[key] || VIBE_ART[key].prompt, '1:1'), v: v[key] || null, bg: VIBE_BG[key.endsWith('dark') ? 'dark' : 'light'][+key[0] - 1],
@@ -1258,8 +1260,8 @@ function vibeList() {
 async function vibeGen(key, prompt, provider) {
   if (!VIBE_ART[key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
   prompt = String(prompt || '').trim().slice(0, 20000) || VIBE_ART[key].prompt;
-  store.meta.vibePrompts = { ...(store.meta.vibePrompts || {}), [key]: prompt };
-  await store.saveMeta('vibePrompts', store.meta.vibePrompts);
+  store.meta.vibePrompts2 = { ...(store.meta.vibePrompts2 || {}), [key]: prompt };
+  await store.saveMeta('vibePrompts2', store.meta.vibePrompts2);
   return startOneOff(`vibe-${key}`, { prompt: withFrame(prompt, '1:1'), aspect: '1:1', ref: fs.existsSync(VIBE_REF) ? VIBE_REF : '', provider });
 }
 // The candidate becomes the card's picture (and the app shows it).
