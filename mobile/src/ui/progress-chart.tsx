@@ -27,7 +27,9 @@ import { ARC, useColors, useIsDark } from './theme';
 export const failBar = (line: string, dark: boolean) => (dark ? mix(line, '#ffffff', 0.08) : line);
 // ARC: one column per test. Its full height is the question count; the saturated part
 // shows correct answers, with the remaining questions in a pale tint above it.
-const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 34 : 14, B = 24, FILL_MIN = 120;
+const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 10 : 14, B = 24, FILL_MIN = 120;
+// (ARC: the top 10 px only hold the highest count's label; it was 34, from the bubble over the picked test, gone since
+// 2026-10-30. Mojtaba 2026-11-05: less room between the card's head and the chart's lines.)
 // The line drew itself in already since the app started.
 let drawnOnce = false;
 // The tests the chart needs: the main site's bars from the first test on (Mojtaba 2026-10-30: the warm-up's test shows
