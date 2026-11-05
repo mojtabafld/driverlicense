@@ -1882,7 +1882,7 @@ async function api(req, res, route) {
       if (req.method === 'GET' && route === 'courseprompt') {
         const set = q.get('set') === 'newq' ? 'newq' : 'course', key = String(q.get('key') || ''), j = imagegen.oneOff(`${set}-${key}`), prompt = imagegen.artPrompt(set, key);
         if (prompt == null) return send(res, 404, { error: 'این تصویر پیدا نشد.' });
-        return send(res, 200, { key, prompt: j && !j.done ? j.prompt : prompt, style: picStyle(`${set}:${key}`) });
+        return send(res, 200, { key, prompt: imagegen.withFrame(j && !j.done ? j.prompt : prompt, imagegen.artAspect(set, key)), style: picStyle(`${set}:${key}`) });
       }
       if (req.method === 'POST' && route === 'coursegen') {
         const b = await readBody(req);
@@ -1902,7 +1902,10 @@ async function api(req, res, route) {
     if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
-    return send(res, 200, { ...consoleprompts.get(id), style: picStyle(id) });
+    const cp = consoleprompts.get(id);
+    // (a sign's or right of way's prompt with its «Frame:» line, so a prompt copied to another image service makes the card's shape too)
+    if (id.startsWith('g:') && cp.prompt) cp.prompt = imagegen.withFrame(cp.prompt, (imagegen.guidePrompt(id.slice(2)) || {}).aspect || '4:3');
+    return send(res, 200, { ...cp, style: picStyle(id) });
   }
   // «اصلاح بخش‌هایی از تصویر» (consoleprompts.region): { id, part, mode, marked, regions: [{ box, message, crop }] } —
   // the pictures as JPEG data URLs drawn by the console; the API changes the saved prompt for the marked parts only,

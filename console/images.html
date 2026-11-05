@@ -274,7 +274,7 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
           <div class="pics">${pictures(x)}</div>
           <div class="row" style="margin:0 0 12px">
             <label class="btn soft" style="cursor:pointer">⬆ آپلود تصویر<input type="file" id="upl" accept="image/png,image/jpeg,image/webp" hidden ${st.uploading ? 'disabled' : ''}></label>
-            ${st.uploading ? '<span class="state">در حال آپلود…</span>' : `<span class="muted" style="font-size:12.5px">تصویری از دستگاه خود انتخاب کنید؛ با بالاترین کیفیت و به نسبت ${esc(x.aspect || '4:3')} کارت برنامه (برش از وسط) جای ${x.set ? 'تصویر فعلی' : 'تصویر ساخته‌شده'} را می‌گیرد.</span>`}
+            ${st.uploading ? '<span class="state">در حال آپلود…</span>' : `<span class="muted" style="font-size:12.5px">تصویری از دستگاه خود انتخاب کنید؛ با بالاترین کیفیت و به نسبت ${esc(x.aspect || '4:3')} کارت برنامه (بی‌برش؛ کناره‌ها با همان تصویر مات پر می‌شود) جای ${x.set ? 'تصویر فعلی' : 'تصویر ساخته‌شده'} را می‌گیرد.</span>`}
           </div>
           <div class="row" style="margin:0 0 8px">
             <label class="chk">سرویس ساخت تصویر:<select id="prov" style="width:auto">${PROV ? Object.entries(PROV).map(([k, v]) => `<option value="${k}" ${k === prov ? 'selected' : ''} ${v.ok ? '' : 'disabled'}>${esc(v.name)}${v.ok ? '' : ' · کلید تنظیم نشده'}</option>`).join('') : '<option>…</option>'}</select></label>
@@ -364,22 +364,31 @@ textarea.fa{direction:rtl;text-align:right;min-height:80px}
       const f = e.target.files && e.target.files[0]; e.target.value = '';
       if (!f) return;
       const [aw, ah] = String(x.aspect || '4:3').split(':').map(Number), want = aw / ah;
-      if (!confirm(`«${f.name}» به‌عنوان تصویر این مورد قرار بگیرد؟\n(به نسبت ${x.aspect || '4:3'} کارت برنامه برش می‌خورد، اگر نسبتش فرق کند.)`)) return;
+      if (!confirm(`«${f.name}» به‌عنوان تصویر این مورد قرار بگیرد؟\n(اگر نسبتش با کارت برنامه (${x.aspect || '4:3'}) فرق کند، کل تصویر حفظ می‌شود و کناره‌ها با همان تصویر مات پر می‌شود.)`)) return;
       const pid = x.pid;
       st.uploading = true; view();
       try {
         const url = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => bad(new Error('خواندن فایل ممکن نشد.')); r.readAsDataURL(f); });
         const im = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error('این فایل تصویر نیست.')); i.src = url; });
         const W = im.naturalWidth, H = im.naturalHeight, png = /^data:image\/png;/.test(url);
-        // the largest box of the card's shape inside the picture, in its middle
+        // The card's shape around the whole picture at its full size: a picture of another shape is not cut; the
+        // bands beside it (or above and below it) are filled with the same picture enlarged and blurred, so the card
+        // has no empty space and nothing of the picture is lost.
         let cw = W, ch = Math.round(W / want);
-        if (ch > H) { ch = H; cw = Math.round(H * want); }
+        if (ch < H) { ch = H; cw = Math.round(H * want); }
         let data = url;
         if (Math.abs(cw - W) > 1 || Math.abs(ch - H) > 1 || !/^data:image\/(png|jpeg);/.test(url)) {
           const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
-          const cx = cv.getContext('2d'); cx.imageSmoothingQuality = 'high';
-          if (!png) { cx.fillStyle = '#fff'; cx.fillRect(0, 0, cw, ch); }
-          cx.drawImage(im, Math.round((W - cw) / 2), Math.round((H - ch) / 2), cw, ch, 0, 0, cw, ch);
+          const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+          if (Math.abs(cw - W) > 1 || Math.abs(ch - H) > 1) {
+            // the blur: the picture covering the frame, drawn very small and stretched back (works in every browser)
+            const sm = document.createElement('canvas'), k = 48 / Math.max(cw, ch); sm.width = Math.max(2, Math.round(cw * k)); sm.height = Math.max(2, Math.round(ch * k));
+            const sx = sm.getContext('2d'), cover = Math.max(cw / W, ch / H);
+            sx.drawImage(im, (sm.width - W * cover * k) / 2, (sm.height - H * cover * k) / 2, W * cover * k, H * cover * k);
+            cx.drawImage(sm, 0, 0, cw, ch);
+            cx.fillStyle = 'rgba(255,255,255,0.12)'; cx.fillRect(0, 0, cw, ch);
+          } else if (!png) { cx.fillStyle = '#fff'; cx.fillRect(0, 0, cw, ch); }
+          cx.drawImage(im, Math.round((cw - W) / 2), Math.round((ch - H) / 2), W, H);
           data = png ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.98);
         }
         if (data.length > 47e6) throw new Error('تصویر بیش از حد بزرگ است (بیشتر از حدود ۳۵ مگابایت).');
