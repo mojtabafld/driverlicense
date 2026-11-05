@@ -17,7 +17,7 @@ import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
-import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
+import { ARC, DA_FONT, SOFT, UBER, radius, useColors, useTheme } from './theme';
 import { graphiteCtl, heroDark, px } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
@@ -694,7 +694,7 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
       <View style={{
         flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-        paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: big ? radius.field : radius.btn,
+        paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: SOFT ? 999 : big ? radius.field : radius.btn,
         backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
       }}>
         {icon ? <Icon name={icon} size={18} color={fg} weight="semibold" /> : null}<T style={{ color: fg, fontWeight: '600', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
@@ -715,7 +715,7 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
       style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }, style]}>
-      <View style={{ height: ARC ? 50 : 54, borderRadius: ARC ? radius.btn : 12, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: bg }}>
+      <View style={{ height: ARC ? 50 : 54, borderRadius: SOFT ? 999 : ARC ? radius.btn : 12, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: bg }}>
         {icon ? <Icon name={icon} size={18} color={fg} weight={iconWeight} /> : null}
         <T numberOfLines={1} style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: fg, textAlign: 'center' }}>{label}</T>
       </View>
@@ -742,7 +742,8 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   // exam tab's start (Mojtaba 2026-10-20).
   // («گرافیت»: the accent button in its grey, as the chosen tab; Mojtaba 2026-10-29.)
   const g = graphiteCtl(useTheme().theme === 'dark');
-  const accent = variant === 'accent', primary = variant === 'primary' || accent, fg = accent ? g?.fg ?? c.accentText : primary ? c.ctaFg : c.text;
+  // («نرم»: every main button the near-black pill of his pictures, white in the dark theme)
+  const accent = variant === 'accent' && !SOFT, primary = variant === 'primary' || variant === 'accent', fg = accent ? g?.fg ?? c.accentText : primary ? c.ctaFg : c.text;
   const fill = accent ? g?.fill ?? c.accent : c.cta;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
@@ -761,7 +762,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
-          minHeight: big ? 56 : 50, borderRadius: dashboard ? 25 : big ? 16 : radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+          minHeight: big ? 56 : 50, borderRadius: SOFT ? 999 : dashboard ? 25 : big ? 16 : radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
           borderColor: primary ? fill : c.line,
           backgroundColor: primary ? fill : pressed || hovered ? c.surface2 : c.surface,
           opacity: disabled ? (big ? 0.72 : 0.52) : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
@@ -786,13 +787,14 @@ export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
   const dashboard = useContext(DashboardContext), look = useDashboardLook();
   return {
-    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: dashboard ? look.wash : dark ? c.nav : px('#e3e6ef') } as ViewStyle,
+    // («نرم»: a grey track with the chosen part a white raised pill and dark text, as in his pictures, on the dashboards too)
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? c.nav : '#ebebee') : dashboard ? look.wash : dark ? c.nav : px('#e3e6ef') } as ViewStyle,
     // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
     // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
     pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
-    raised: { borderRadius: radius.pill, backgroundColor: dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
+    raised: { borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? '#3a3a40' : '#ffffff') : dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
       boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
-    label: (on: boolean) => ({ color: on ? (dashboard ? c.accentText : c.text) : c.muted, fontWeight: '500' }) as TextStyle,
+    label: (on: boolean) => ({ color: on ? (dashboard && !SOFT ? c.accentText : c.text) : c.muted, fontWeight: '500' }) as TextStyle,
   };
 }
 
