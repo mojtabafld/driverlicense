@@ -698,8 +698,10 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
 // resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
 // `big`: taller, with a larger label (the sign-in page's one wide button). `busy`: a spinner in the icon's place while
 // what it does is on its way (the glossary's «آموزش این واژه» waiting for the AI).
-export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big, busy }: {
+export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big, busy, after }: {
   label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary' | 'accent'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean; busy?: boolean;
+  /** Drawn right after the label, centred with it (the exam's question-count pill); gets the text colour. */
+  after?: (fg: string) => React.ReactNode;
 }) {
   const c = useColors();
   const dashboard = useContext(DashboardContext);
@@ -746,6 +748,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
           <Animated.View style={labelIn as any}>
             <T numberOfLines={1} style={{ fontSize: big ? 16.5 : 15, lineHeight: big ? 24 : 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
           </Animated.View>
+          {after?.(fg)}
         </Animated.View>
       )}
     </Pressable>

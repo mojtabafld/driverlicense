@@ -236,13 +236,15 @@ function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: 
   const dark = useIsDark();
   return (
     <View>
-      <ArcButton label="شروع آزمون" onPress={onStart} icon="play" variant="accent" />
-      <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={4} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
-        style={({ pressed }) => ({ position: 'absolute', top: 7, bottom: 7, ...(RTL ? { left: 7 } : { right: 7 }), flexDirection: 'row', alignItems: 'center', gap: 4,
-          paddingHorizontal: 12, borderRadius: 999, backgroundColor: dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)', opacity: pressed ? 0.75 : 1 })}>
-        <T style={{ color: '#ffffff', fontSize: 14, fontWeight: '700' }}>{t('{0} سؤال', faNum(size))}</T>
-        <Icon name="chevronDown" size={15} color="#ffffff" weight="semibold" />
-      </Pressable>
+      {/* (the count sits right after «شروع آزمون», the whole line centred; Mojtaba 2026-11-05) */}
+      <ArcButton label="شروع آزمون" onPress={onStart} icon="play" variant="accent" after={fg => (
+        <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, marginStart: 4, paddingVertical: 5,
+            paddingHorizontal: 11, borderRadius: 999, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
+          <T style={{ color: fg, fontSize: 14, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>{t('{0} سؤال', faNum(size))}</T>
+          <Icon name="chevronDown" size={15} color={fg} weight="semibold" />
+        </Pressable>
+      )} />
       <Sheet open={open} onClose={() => setOpen(false)}>
         <View style={{ gap: 10, paddingHorizontal: 4 }}>
           <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '700' }}>تعداد سؤال‌ها</T>
