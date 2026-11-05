@@ -149,6 +149,12 @@ function deviceOf(req) {
   return (web ? `${browser}${os ? ` · ${os}` : ''}` : `App${os ? ` · ${os}` : ''}`).slice(0, 60);
 }
 const devId = key => key.slice(2, 18);
+// The device's own id the app sends (X-Device, lib/api.ts), the same after signing out and in; null without one.
+const devOf = req => { const v = String(req.headers['x-device'] || ''); return /^[a-f0-9]{32}$/.test(v) ? v : null; };
+// The account's main device (Mojtaba 2026-11-05): the one it was registered on (user.mainDev, its X-Device id). Only
+// that device itself can sign it out. An account from before gets as its main device the earliest of its devices
+// still signed in, once that device is seen with its id.
+const isMain = (u, d) => !!(u && d && d.dev && u.mainDev && d.dev === u.mainDev);
 async function newSession(req, res, username, { admin = false } = {}) {
   const token = crypto.randomBytes(32).toString('hex'), key = sessKey(token), now = Date.now();
   const s = { username, exp: now + SESSION_DAYS * 864e5 };
@@ -161,7 +167,9 @@ async function newSession(req, res, username, { admin = false } = {}) {
     const name = deviceOf(req), devs = u.devices || {};
     for (const [id] of Object.entries(devs)) if (!Object.keys(store.sessions).some(k => devId(k) === id)) delete devs[id];
     const known = Object.values(devs).some(d => d.name === name), first = !Object.keys(devs).length && !u.seenDevice;
-    devs[devId(key)] = { name, at: now, seen: now };
+    const dev = devOf(req);
+    devs[devId(key)] = { name, at: now, seen: now, ...(dev ? { dev } : {}) };
+    if (dev && !u.mainDev && first) u.mainDev = dev;   // (registered on this device)
     u.devices = devs; u.seenDevice = 1;
     await store.saveUser(u);
     if (!known && !first && u.email && mail.available() && !u.guest) {
@@ -1293,14 +1301,29 @@ async function api(req, res, route) {
   // «دستگاه‌های من» (Mojtaba 2026-11-05): the devices the account is signed in on (its live sessions), this one marked;
   // POST devices/out { id } signs one out, { others: true } every one but this.
   if (req.method === 'GET' && route === 'devices') {
+    // This device is always listed: one signed in before the list existed (or whose entry went) is added now.
+    const mine = devId(s.key), dev = devOf(req), devs = user.devices = user.devices || {};
+    let changed = false;
+    if (!devs[mine]) { devs[mine] = { name: deviceOf(req), at: Date.now(), seen: Date.now() }; changed = true; }
+    if (dev && devs[mine].dev !== dev) { devs[mine].dev = dev; changed = true; }
     const live = new Set(Object.entries(store.sessions).filter(([, x]) => x.username === user.username).map(([k]) => devId(k)));
-    const list = Object.entries(user.devices || {}).filter(([id]) => live.has(id))
-      .map(([id, d]) => ({ id, name: d.name, at: d.at, seen: d.seen, current: id === devId(s.key) })).sort((a, b) => b.current - a.current || b.seen - a.seen);
+    // An account from before: its earliest device still signed in becomes its main device once it has its id.
+    if (!user.mainDev) {
+      const first = Object.entries(devs).filter(([id]) => live.has(id)).map(([, d]) => d).sort((a, b) => a.at - b.at)[0];
+      if (first && first.dev) { user.mainDev = first.dev; changed = true; }
+    }
+    if (changed) await store.saveUser(user);
+    const list = Object.entries(devs).filter(([id]) => live.has(id))
+      .map(([id, d]) => ({ id, name: d.name, at: d.at, seen: d.seen, current: id === mine, main: isMain(user, d) }))
+      .sort((a, b) => b.current - a.current || b.main - a.main || b.seen - a.seen);
     return send(res, 200, { devices: list });
   }
   if (req.method === 'POST' && route === 'devices/out') {
     const b = await readBody(req), mine = devId(s.key);
-    const out = id => id !== mine && (b.others || id === String(b.id || ''));
+    // never the main device from another one (it signs out only on itself)
+    const main = id => isMain(user, (user.devices || {})[id]);
+    if (b.id && String(b.id) !== mine && main(String(b.id))) return send(res, 403, { error: 'دستگاه اصلی فقط از روی خودش خارج می‌شود.' });
+    const out = id => id !== mine && !main(id) && (b.others || id === String(b.id || ''));
     for (const [k, x] of Object.entries(store.sessions)) if (x.username === user.username && out(devId(k))) { delete store.sessions[k]; await store.deleteSession(k); }
     for (const id of Object.keys(user.devices || {})) if (out(id)) delete user.devices[id];
     await store.saveUser(user);
@@ -2451,7 +2474,7 @@ async function main() {
     // so cross-origin requests are allowed without credentials.
     if (req.headers.origin) {
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Client');
+      res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Client, X-Device, X-Session');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     }
