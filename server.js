@@ -1840,7 +1840,7 @@ async function api(req, res, route) {
     try {
       if (req.method === 'GET' && route === 'vibeart') return send(res, 200, { items: imagegen.vibeList(), providers: imagegen.providers() });
       if (req.method === 'GET' && route === 'vibecand') {
-        const b = await imagegen.oneOffBlob(`vibe-${String(new URL(req.url, 'http://x').searchParams.get('key') || '')}`);
+        const b = await imagegen.vibeCand(String(new URL(req.url, 'http://x').searchParams.get('key') || ''));
         if (!b) return send(res, 404, { error: 'not found' });
         res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
         return res.end(b.data);
