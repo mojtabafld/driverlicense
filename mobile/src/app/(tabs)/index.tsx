@@ -359,7 +359,7 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: readinessPad + share / 2 }}>
+      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
         {ARC ? <>
           {/* The readiness ring and its status share a clean card without decorative waves. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: readinessGap }}>
