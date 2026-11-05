@@ -185,6 +185,24 @@ function sendReset(to, name, code, lang) {
   return send(to, t.subject(code), html, `${t.hi(name)}\n\n${t.body} ${code}\n\n${t.note}\n\n${t.ignore}`);
 }
 
+// «ورود تازه» (Mojtaba 2026-11-05): an account signed in on a device it had not been signed in on before; the device's
+// kind and the time, and what to do when it was not the user (the app's «دستگاه‌های من» signs out the others).
+const NEWDEV = {
+  fa: { subject: 'ورود تازه به حساب Teoripro', hi: n => `سلام ${n}،`, body: (d, t) => `حساب شما همین الان روی یک دستگاه تازه باز شد: ${d}، ${t}.`,
+    note: 'اگر خودتان بودید، کاری لازم نیست. اگر نه، در برنامه به «تنظیمات ← دستگاه‌های من» بروید و «خروج از همه‌ی دستگاه‌های دیگر» را بزنید.', dir: 'rtl' },
+  en: { subject: 'New sign-in to your Teoripro account', hi: n => `Hi ${n},`, body: (d, t) => `Your account was just opened on a new device: ${d}, ${t}.`,
+    note: 'If this was you, there is nothing to do. If not, open the app, go to Settings → My devices and choose “Sign out of all other devices”.', dir: 'ltr' },
+  da: { subject: 'Nyt login på din Teoripro-konto', hi: n => `Hej ${n},`, body: (d, t) => `Din konto blev netop åbnet på en ny enhed: ${d}, ${t}.`,
+    note: 'Hvis det var dig, skal du ikke gøre noget. Hvis ikke, så åbn appen, gå til Indstillinger → Mine enheder og vælg “Log ud af alle andre enheder”.', dir: 'ltr' },
+};
+function sendNewDevice(to, name, device, lang) {
+  const t = NEWDEV[lang] || NEWDEV.fa, l = NEWDEV[lang] ? lang : 'fa';
+  const when = new Date().toLocaleString(l === 'fa' ? 'fa-IR' : l === 'da' ? 'da-DK' : 'en-GB', { timeZone: 'Europe/Copenhagen', dateStyle: 'medium', timeStyle: 'short' });
+  const html = `<div dir="${t.dir}" style="font-family:Tahoma,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;max-width:480px">
+<p>${esc(t.hi(name))}</p><p>${esc(t.body(device, when))}</p><p style="font-size:13px;color:#6b7280">${esc(t.note)}</p></div>`;
+  return send(to, t.subject, html, `${t.hi(name)}\n\n${t.body(device, when)}\n\n${t.note}`);
+}
+
 // The daily study reminder (asked for in «یادآوری روزانه»): the streak so far and a button to the app; `off` turns it off.
 const REMIND = {
   fa: { subject: n => (n ? `${n} روز پیاپی؛ امروز هم تمرین کنید` : 'وقت تمرین امروز است'), hi: n => `سلام ${n}،`,
@@ -321,4 +339,4 @@ async function send(to, subject, html, text, { replyTo } = {}) {
 // A test email from the dashboard's card.
 const sendTest = to => send([to], 'Teoripro: test email', '<p>This is a test email from Teoripro.</p>', 'This is a test email from Teoripro.');
 
-module.exports = { welcomeNews, available, setSmtpFile, saveSmtp, clearSmtp, smtpInfo, sendTest, sendVerify, sendReset, sendCode, sendWelcome, sendPremium, sendReminder, sendReport, sendInsights, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };
+module.exports = { welcomeNews, available, setSmtpFile, saveSmtp, clearSmtp, smtpInfo, sendTest, sendVerify, sendReset, sendCode, sendNewDevice, sendWelcome, sendPremium, sendReminder, sendReport, sendInsights, reportTo, verifyWebhook, getReceived, bodyText, forward, EMAIL_RE, normal };

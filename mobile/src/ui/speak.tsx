@@ -36,7 +36,7 @@ function usePlayer() {
     if (!modeSet) { modeSet = true; setAudioModeAsync({ playsInSilentMode: true }).catch(() => {}); }
     const url = `${API_URL}/api/tts?${query}`;
     // The web's audio element cannot send headers, so the token goes in the address there (as for the pictures).
-    const source = Platform.OS === 'web' ? `${url}${token ? `&t=${token}` : ''}` : { uri: url, headers: token ? { Authorization: `Bearer ${token}` } : undefined };
+    const source = Platform.OS === 'web' ? `${url}${token && token !== 'cookie' ? `&t=${token}` : ''}` : { uri: url, headers: token ? { Authorization: `Bearer ${token}` } : undefined };
     const player = createAudioPlayer(source as any);
     const m = { player, stop };
     me.current = m; current = m;

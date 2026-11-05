@@ -74,7 +74,9 @@ const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'data', 'db.json');
 // Set INVITE_PAUSED back to false to require INVITE_CODE again.
 const INVITE_PAUSED = true;
 const INVITE_CODE = INVITE_PAUSED ? '' : (process.env.INVITE_CODE || '').trim();
-const SESSION_DAYS = 60;
+// A session lasts while it is used: SESSION_DAYS after its last use (moved on at most once a day), so a device left
+// unused for a month is signed out (Mojtaba 2026-11-05; it was 60 days from the sign-in, used or not).
+const SESSION_DAYS = 30;
 const MAX_ATTEMPTS = 500;
 const MODES = ['random', 'mistakes', 'top', 'lesson', 'sections', 'new', 'demo']; // lesson: one of prove.dk's 44 tests, in its order; sections: random questions from chosen official sections; new: «آزمون جدید», the app's own questions (site/newq.js); demo: the 5-question tryout from home's pass ring (not a free test)
 const lessonOf = b => (b.mode === 'lesson' && Number.isInteger(+b.lesson) && +b.lesson > 0 ? { lesson: +b.lesson } : {});
@@ -134,12 +136,38 @@ const originOf = req => `${isHttps(req) ? 'https' : 'http'}://${String(req.heade
 const cookie = (req, value, maxAge) =>
   `tp_session=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${isHttps(req) ? '; Secure' : ''}`;
 
+// Sessions (Mojtaba 2026-11-05): the database keeps only the token's hash («h:» + sha256), so a copy of the database or a
+// backup opens no account; the token itself is only on the device (the app's secure store, or the web's HttpOnly
+// cookie). A session from before (kept by its token) is moved to its hash the first time it is used.
+const sessKey = t => `h:${tokenHash(t)}`;
+// The device a session is on, as the account's «دستگاه‌های من» lists it (user.devices, by the key's first 16 characters).
+function deviceOf(req) {
+  const ua = String(req.headers['user-agent'] || '');
+  const os = /Android/i.test(ua) ? 'Android' : /iPhone|iPad|iOS/i.test(ua) ? 'iPhone' : /Windows/i.test(ua) ? 'Windows' : /Mac OS X|Macintosh/i.test(ua) ? 'Mac' : /Linux/i.test(ua) ? 'Linux' : /okhttp/i.test(ua) ? 'Android' : '';
+  const web = /Mozilla/i.test(ua);
+  const browser = !web ? '' : /Edg\//.test(ua) ? 'Edge' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+  return (web ? `${browser}${os ? ` · ${os}` : ''}` : `App${os ? ` · ${os}` : ''}`).slice(0, 60);
+}
+const devId = key => key.slice(2, 18);
 async function newSession(req, res, username, { admin = false } = {}) {
-  const token = crypto.randomBytes(32).toString('hex');
-  const s = { username, exp: Date.now() + SESSION_DAYS * 864e5 };
-  store.sessions[token] = s;
-  await store.saveSession(token, s);
+  const token = crypto.randomBytes(32).toString('hex'), key = sessKey(token), now = Date.now();
+  const s = { username, exp: now + SESSION_DAYS * 864e5 };
+  store.sessions[key] = s;
+  await store.saveSession(key, s);
   if (admin) await markAdminSession(token);
+  // The device, and an email when the account has not been on this kind of device before (not for its first one).
+  const u = store.users[username];
+  if (u) {
+    const name = deviceOf(req), devs = u.devices || {};
+    for (const [id] of Object.entries(devs)) if (!Object.keys(store.sessions).some(k => devId(k) === id)) delete devs[id];
+    const known = Object.values(devs).some(d => d.name === name), first = !Object.keys(devs).length && !u.seenDevice;
+    devs[devId(key)] = { name, at: now, seen: now };
+    u.devices = devs; u.seenDevice = 1;
+    await store.saveUser(u);
+    if (!known && !first && u.email && mail.available() && !u.guest) {
+      mail.sendNewDevice(u.email, u.name || '', name, (u.settings || {}).ui).catch(e => console.error('new device mail', e.message));
+    }
+  }
   res.setHeader('Set-Cookie', cookie(req, token, SESSION_DAYS * 86400));
   return token;
 }
@@ -157,6 +185,10 @@ const adminSession = sess => !!sess && isAdmin(sess.user) && (adminSessions()[to
 // The mobile app (X-Client: app) gets its session token in the response and sends it back as
 // "Authorization: Bearer <token>"; the web site keeps using the HttpOnly cookie only.
 const isApp = req => req.headers['x-client'] === 'app';
+// The app's web version keeps its session in the HttpOnly cookie only (X-Session: cookie; Mojtaba 2026-11-05), where no
+// script can read it: it is told «cookie» in place of the token.
+const cookieMode = req => req.headers['x-session'] === 'cookie';
+const tokenOut = (req, token) => (isApp(req) ? { token: cookieMode(req) ? 'cookie' : token } : {});
 function sessionUser(req) {
   // Every credential the request carries, in this order: the app's own token (Bearer), the token of a picture in the
   // app's web version (an <img> or <audio> cannot send headers: ?t=<token>, only for /img/ and /api/tts), then the site's cookie. The first one
@@ -168,15 +200,30 @@ function sessionUser(req) {
     (/(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '') || [])[1],
   ].filter(Boolean);
   for (const token of tokens) {
-    const s = store.sessions[token];
-    if (!s) continue;
-    if (s.exp < Date.now()) {
+    const key = sessKey(token);
+    let s = store.sessions[key];
+    if (!s && store.sessions[token]) {   // (kept by its token before 2026-11-05: moved to its hash)
+      s = store.sessions[key] = store.sessions[token];
       delete store.sessions[token];
-      store.deleteSession(token).catch(() => {});
+      store.saveSession(key, s).then(() => store.deleteSession(token)).catch(e => console.error('session move', e.message));
+    }
+    if (!s) continue;
+    const now = Date.now();
+    if (s.exp < now) {
+      delete store.sessions[key];
+      store.deleteSession(key).catch(() => {});
       continue;
     }
     const user = store.users[s.username];
-    if (user) return { token, user };
+    if (!user) continue;
+    // Used: its life moved on (at most once a day), and the device's «last seen».
+    if (s.exp - now < (SESSION_DAYS - 1) * 864e5) {
+      s.exp = now + SESSION_DAYS * 864e5;
+      store.saveSession(key, s).catch(() => {});
+      const d = user.devices && user.devices[devId(key)];
+      if (d) { d.seen = now; store.saveUser(user).catch(() => {}); }
+    }
+    return { token, key, user };
   }
   return null;
 }
@@ -863,7 +910,7 @@ async function api(req, res, route) {
     // The link goes out now; when it cannot, the app's «send again» button tries again.
     if (user.email) await sendVerifyMail(req, user, lang).catch(err => console.error('verify mail', u, err.message));
     const token = await newSession(req, res, u);
-    return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
+    return send(res, 200, { user: publicUser(user), ...tokenOut(req, token) });
   }
   // «ورود به عنوان کاربر مهمان» (the sign-in page): a new account with a made-up name and a random password nobody sees,
   // kept in this browser by its session; progress is saved as for anyone. Refused where signing up needs an invite.
@@ -878,7 +925,7 @@ async function api(req, res, route) {
     store.users[u] = user;
     await store.saveUser(user);
     const token = await newSession(req, res, u);
-    return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
+    return send(res, 200, { user: publicUser(user), ...tokenOut(req, token) });
   }
   if (req.method === 'POST' && route === 'login') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -892,7 +939,7 @@ async function api(req, res, route) {
     }
     fails.delete(ip);
     const token = await newSession(req, res, user.username);
-    return send(res, 200, { user: publicUser(user), ...(isApp(req) ? { token } : {}) });
+    return send(res, 200, { user: publicUser(user), ...tokenOut(req, token) });
   }
 
   // The dashboard's sign-in (console/admin.html; Mojtaba 2026-11-01): POST admincode { email } sends a code to an admin's
@@ -990,7 +1037,7 @@ async function api(req, res, route) {
     const u = g && Date.now() - g.at < 60e3 ? store.users[g.username] : null;
     if (!u) { addFail(ip); return send(res, 400, { error: 'ورود با گوگل کامل نشد؛ دوباره امتحان کنید.' }); }
     const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
-    return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
+    return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
   // POST code { email, lang, signup }: the code that signs in (an account with this address; else 404) or, with
   // `signup`, makes a new account (no account with it yet; else 409). Counted as a failed try, as «forgot».
@@ -1056,7 +1103,7 @@ async function api(req, res, route) {
     }
     fails.delete(ip);
     const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
-    return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
+    return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
   // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (else 404). Counted as a
   // failed try, so one address cannot ask again and again (nor test many addresses).
@@ -1089,7 +1136,7 @@ async function api(req, res, route) {
     for (const [k, x] of Object.entries(store.sessions)) if (x.username === u.username) { delete store.sessions[k]; await store.deleteSession(k); }
     console.log('password reset', u.username);
     const token = await newSession(req, res, u.username);
-    return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
+    return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
 
   // kie.ai calls this when a picture is ready; the body is not trusted, it only makes the server check its jobs now.
@@ -1240,10 +1287,33 @@ async function api(req, res, route) {
     return send(res, 403, { error: 'اول ایمیل خود را با لینکی که برایتان فرستادیم تأیید کنید.', verify: true });
   }
 
+  // «دستگاه‌های من» (Mojtaba 2026-11-05): the devices the account is signed in on (its live sessions), this one marked;
+  // POST devices/out { id } signs one out, { others: true } every one but this.
+  if (req.method === 'GET' && route === 'devices') {
+    const live = new Set(Object.entries(store.sessions).filter(([, x]) => x.username === user.username).map(([k]) => devId(k)));
+    const list = Object.entries(user.devices || {}).filter(([id]) => live.has(id))
+      .map(([id, d]) => ({ id, name: d.name, at: d.at, seen: d.seen, current: id === devId(s.key) })).sort((a, b) => b.current - a.current || b.seen - a.seen);
+    return send(res, 200, { devices: list });
+  }
+  if (req.method === 'POST' && route === 'devices/out') {
+    const b = await readBody(req), mine = devId(s.key);
+    const out = id => id !== mine && (b.others || id === String(b.id || ''));
+    for (const [k, x] of Object.entries(store.sessions)) if (x.username === user.username && out(devId(k))) { delete store.sessions[k]; await store.deleteSession(k); }
+    for (const id of Object.keys(user.devices || {})) if (out(id)) delete user.devices[id];
+    await store.saveUser(user);
+    return send(res, 200, { ok: true });
+  }
+  // The web version moving from a token kept in the page's storage to the HttpOnly cookie (once, 2026-11-05): the same
+  // session, now in the cookie only.
+  if (req.method === 'POST' && route === 'cookieswap') {
+    res.setHeader('Set-Cookie', cookie(req, s.token, SESSION_DAYS * 86400));
+    return send(res, 200, { token: 'cookie' });
+  }
   if (req.method === 'POST' && route === 'logout') {
     // The session used, and the cookie's one too when it differs: signing out leaves neither behind.
     const ck = /(?:^|;\s*)tp_session=([a-f0-9]{64})/.exec(req.headers.cookie || '');
-    for (const t of new Set([s.token, ck && ck[1]].filter(Boolean))) { delete store.sessions[t]; await store.deleteSession(t); }
+    for (const t of new Set([s.token, ck && ck[1]].filter(Boolean))) for (const k of [sessKey(t), t]) if (store.sessions[k]) { delete store.sessions[k]; await store.deleteSession(k); }
+    if (user.devices) { delete user.devices[devId(s.key)]; await store.saveUser(user); }
     res.setHeader('Set-Cookie', cookie(req, '', 0));
     return send(res, 200, { ok: true });
   }
@@ -1356,7 +1426,7 @@ async function api(req, res, route) {
       if (typeof b.current !== 'string' || !(await checkPw(b.current, user))) { addFail(ip); return send(res, 403, { error: 'رمز عبور فعلی درست نیست.' }); }
       if (typeof b.password !== 'string' || !b.password.length) return send(res, 400, { error: 'رمز عبور جدید را وارد کنید.' });
       user.salt = crypto.randomBytes(16).toString('hex'); user.hash = await hashPw(b.password, user.salt);
-      for (const [t, x] of Object.entries(store.sessions)) if (x.username === user.username && t !== s.token) { delete store.sessions[t]; await store.deleteSession(t); }
+      for (const [t, x] of Object.entries(store.sessions)) if (x.username === user.username && t !== s.key) { delete store.sessions[t]; await store.deleteSession(t); }
     }
     await store.saveUser(user);
     return send(res, 200, { user: publicUser(user) });
@@ -2324,6 +2394,17 @@ async function main() {
   consolepics.init(SITE);
   newqadmin.init(store, imagegen, SITE);
   // The search's meaning vectors (rag.js): the 1,100 questions now, the catalogue when the app sends it.
+  // Sessions kept by their token from before 2026-11-05: moved to the token's hash, all at once, so no token stays in
+  // the database (sessionUser also moves one it meets first).
+  {
+    const old = Object.keys(store.sessions).filter(k => !k.startsWith('h:'));
+    for (const t of old) {
+      const x = store.sessions[t], key = sessKey(t);
+      store.sessions[key] = x; delete store.sessions[t];
+      try { await store.saveSession(key, x); await store.deleteSession(t); } catch (e) { console.error('session move', e.message); }
+    }
+    if (old.length) console.log(`Sessions: ${old.length} moved to their tokens' hashes`);
+  }
   require('./rag').init(store, SITE);
   setTimeout(() => imagegen.learnColours(), 3000);   // the «آموزش» pictures' colours ready for the first visits
   consoleprompts.init(store, imagegen, guideref, consolepics);
