@@ -1068,12 +1068,27 @@ async function artPut(set, key, b) {
 // The shape a course or question picture is made in (its card in the app shows it at this shape).
 const artAspect = (set, key) => { const a = ART_SETS[set]; return (a && a[1][key] && a[1][key].aspect) || '4:3'; };
 // The line every prompt made on request ends with: the picture fills its frame, the shape of the card it shows in.
-const frameLine = aspect => {
-  const [w, h] = String(aspect || '4:3').split(':').map(Number), wide = w >= h, px = wide ? `${1600}×${Math.round(1600 * h / w)}` : `${Math.round(1600 * w / h)}×${1600}`;
-  return `Frame: ${w === h ? 'square' : wide ? 'LANDSCAPE' : 'PORTRAIT'} ${aspect} (width:height = ${w}:${h}, e.g. ${px} pixels${w === h ? '' : wide ? ', wider than tall' : ', taller than wide'}), composed for exactly that frame and filling it completely from edge to edge: no border, no margin, no white or empty bands, no rounded corners; every important part of the scene well inside the frame.`;
+// The picture's size from its card's shape: the app shows a question's picture at the full width of its card and
+// 3/4 as tall (4:3), at most ~430 px wide on a phone, so 1600 px across is sharp at 3× and more.
+const frameSize = aspect => {
+  const [w, h] = String(aspect || '4:3').split(':').map(Number), wide = w >= h;
+  return { w, h, wide, px: wide ? [1600, Math.round(1600 * h / w)] : [Math.round(1600 * w / h), 1600] };
 };
-// The prompt with its «Frame:» line as it should be now (an older one is replaced).
-const withFrame = (prompt, aspect) => `${String(prompt || '').split('\n').filter(l => !/^Frame: /.test(l)).join('\n').trimEnd()}\n${frameLine(aspect)}`;
+// The prompt's first line: the exact size and shape, before anything else (image services weigh the start most).
+const sizeLine = aspect => {
+  const { w, h, wide, px } = frameSize(aspect);
+  return `IMAGE SIZE: ${px[0]}×${px[1]} pixels, ${w === h ? 'square' : wide ? 'LANDSCAPE (wider than tall)' : 'PORTRAIT (taller than wide)'}, aspect ratio ${w}:${h}: the exact shape of the picture card in the app this picture is shown in. Compose the whole scene for this frame.`;
+};
+// …and its last line: the frame filled edge to edge.
+const frameLine = aspect => {
+  const { w, h, wide, px } = frameSize(aspect);
+  return `Frame: ${w === h ? 'square' : wide ? 'LANDSCAPE' : 'PORTRAIT'} ${w}:${h} (width:height = ${w}:${h}, ${px[0]}×${px[1]} pixels${w === h ? '' : wide ? ', wider than tall' : ', taller than wide'}), composed for exactly that frame and filling it completely from edge to edge: no border, no margin, no white or empty bands, no rounded corners; every important part of the scene well inside the frame.`;
+};
+// The prompt with its size line first and its «Frame:» line last, as they should be now (older ones are replaced).
+const withFrame = (prompt, aspect) => {
+  const body = String(prompt || '').split('\n').filter(l => !/^(Frame|IMAGE SIZE): /.test(l)).join('\n').trim();
+  return `${sizeLine(aspect)}\n${body}\n${frameLine(aspect)}`;
+};
 
 // ---------- profile pictures to choose from in the settings ----------
 // Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
