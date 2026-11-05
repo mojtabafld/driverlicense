@@ -150,8 +150,9 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // text, dots and padding set just small enough to fit the card's width.
   const [countsW, setCountsW] = useState({ full: 0, room: 0 });
   const k = countsW.full && countsW.room ? Math.max(0.6, Math.min(1, (countsW.room / countsW.full) * 0.97)) : 1;
+  // (corners 8, squarer like the cards, no longer pills; Mojtaba 2026-11-05)
   const countTag = (color: string, backgroundColor: string, text: string, z = k) => (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 * z, paddingHorizontal: 10 * z, paddingVertical: 5, borderRadius: radius.pill, backgroundColor }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 * z, paddingHorizontal: 10 * z, paddingVertical: 5, borderRadius: 8, backgroundColor }}>
       <View style={{ width: 9 * z, height: 9 * z, borderRadius: 5, backgroundColor: color }} />
       <T style={{ color: c.muted, fontSize: 13 * z, lineHeight: 20 }} numberOfLines={1} maxFontSizeMultiplier={1}>{text}</T>
     </View>
