@@ -20,7 +20,7 @@ import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, UBER, radius, useColors, useTheme } from './theme';
 import { graphiteCtl, heroDark, px } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
-import { DashboardContext, useDashboardLook } from './dashboard-style';
+import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
 // the web does not; this keeps "left" meaning the left edge on both.
@@ -540,6 +540,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   );
   return (
     <DashboardContext.Provider value={dashboard}>
+    <CardRadiusContext.Provider value={TAB_CARD_RADIUS}>
     <Backdrop>
       <PageIn>
       <View style={{ flex: 1 }}>
@@ -553,6 +554,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
       </View>
       </PageIn>
     </Backdrop>
+    </CardRadiusContext.Provider>
     </DashboardContext.Provider>
   );
 }
@@ -659,8 +661,8 @@ export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: (
 // Cards come in with useEnter; their place in the layout (flex, width, margins) stays on the outer box.
 export function Card({ children, style, onPress, testID }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; testID?: string }) {
   const anim = useEnter(), c = useColors(), under = useSurfaceUnder(c.surface); // (in the apps: the bars see it under them)
-  const dashboard = useContext(DashboardContext), look = useDashboardLook();
-  const dashboardStyle: ViewStyle | null = dashboard ? { borderRadius: 26, borderColor: look.edge, shadowColor: c.accent,
+  const dashboard = useContext(DashboardContext), look = useDashboardLook(), tabRadius = useContext(CardRadiusContext);
+  const dashboardStyle: ViewStyle | null = dashboard ? { borderRadius: tabRadius ?? 26, borderColor: look.edge, shadowColor: c.accent,
     shadowOpacity: look.dark ? 0.025 : 0.055, shadowRadius: 16, shadowOffset: { width: 0, height: 5 }, elevation: 2 } : null;
   const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical, ...rest } = StyleSheet.flatten(style) ?? {};
   const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical };
@@ -671,9 +673,9 @@ export function Card({ children, style, onPress, testID }: { children: React.Rea
     <Animated.View testID={testID} ref={under as any} style={[outer, anim] as any}>
       {onPress ? (
         <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [fill, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }]}>
-          <Glass style={[{ padding: 16 }, dashboardStyle, rest, fill]}>{children}</Glass>
+          <Glass style={[{ padding: 16 }, tabRadius != null ? { borderRadius: tabRadius } : null, dashboardStyle, rest, fill]}>{children}</Glass>
         </Pressable>
-      ) : <Glass style={[{ padding: 16 }, dashboardStyle, rest, fill]}>{children}</Glass>}
+      ) : <Glass style={[{ padding: 16 }, tabRadius != null ? { borderRadius: tabRadius } : null, dashboardStyle, rest, fill]}>{children}</Glass>}
     </Animated.View>
   );
 }
