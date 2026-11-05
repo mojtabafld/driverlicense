@@ -5,13 +5,11 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/vazirmatn": "^0.4.1",
-    "@expo/ui": "~57.0.21",
     "@react-native-community/slider": "5.2.0",
     "expo": "~57.0.26",
     "expo-audio": "~57.0.5",
     "expo-blur": "~57.0.3",
     "expo-constants": "~57.0.20",
-    "expo-device": "~57.0.2",
     "expo-font": "~57.0.4",
     "expo-glass-effect": "~57.0.4",
     "expo-haptics": "~57.0.3",

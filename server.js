@@ -134,14 +134,26 @@ const originOf = req => `${isHttps(req) ? 'https' : 'http'}://${String(req.heade
 const cookie = (req, value, maxAge) =>
   `tp_session=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${isHttps(req) ? '; Secure' : ''}`;
 
-async function newSession(req, res, username) {
+async function newSession(req, res, username, { admin = false } = {}) {
   const token = crypto.randomBytes(32).toString('hex');
   const s = { username, exp: Date.now() + SESSION_DAYS * 864e5 };
   store.sessions[token] = s;
   await store.saveSession(token, s);
+  if (admin) await markAdminSession(token);
   res.setHeader('Set-Cookie', cookie(req, token, SESSION_DAYS * 86400));
   return token;
 }
+// Admin rights need more than an admin's account (Mojtaba 2026-11-05): a session begun with a code sent to the admin's
+// address (the dashboard's admincodein, the app's codein) or with Google, never with a password, and for 7 days at most.
+// Such sessions are kept by the hash of their token in store.meta.adminSessions (so the sessions table stays as it is).
+const ADMIN_SESSION_DAYS = 7;
+const adminSessions = () => (store.meta.adminSessions && store.meta.adminSessions.s) || {};
+async function markAdminSession(token) {
+  const now = Date.now(), all = Object.fromEntries(Object.entries(adminSessions()).filter(([, exp]) => exp > now));
+  all[tokenHash(token)] = now + ADMIN_SESSION_DAYS * 864e5;
+  await store.saveMeta('adminSessions', { s: all });
+}
+const adminSession = sess => !!sess && isAdmin(sess.user) && (adminSessions()[tokenHash(sess.token)] || 0) > Date.now();
 // The mobile app (X-Client: app) gets its session token in the response and sends it back as
 // "Authorization: Bearer <token>"; the web site keeps using the HttpOnly cookie only.
 const isApp = req => req.headers['x-client'] === 'app';
@@ -640,7 +652,8 @@ const WEBS = {
   app: { dir: path.join(__dirname, 'app-web-app'), base: '/app',
     // (and the same default theme as the root page: without it the copy started in sky, Mojtaba 2026-10-21)
     page: b => Buffer.from(withTheme(b.toString('utf8')).replace('href="/manifest.webmanifest"', 'href="/app/manifest.webmanifest"')),
-    manifest: () => { const m = JSON.parse(fs.readFileSync(path.join(__dirname, 'app-web', 'manifest.webmanifest'), 'utf8')); return Buffer.from(JSON.stringify({ ...m, start_url: '/app/', scope: '/app/' })); } },
+    // (read once: the file only changes with a deploy, which restarts the server)
+    manifest: (() => { let b = null; return () => b || (b = Buffer.from(JSON.stringify({ ...JSON.parse(fs.readFileSync(path.join(__dirname, 'app-web', 'manifest.webmanifest'), 'utf8')), start_url: '/app/', scope: '/app/' }))); })() },
 };
 // The pages themselves: never shown inside another site's frame (clickjacking), no plugins, no <base> tricks, and
 // only the origin (not the path) sent to other sites.
@@ -743,7 +756,7 @@ function serveStatic(req, res) {
   const rm = /^\/img\/guideref\/(ai|prove|official|cand)\/([a-z0-9-]{3,40})$/.exec(p);
   if (rm) {
     const sess = sessionUser(req);
-    if (!sess || !isAdmin(sess.user)) { res.writeHead(403); return res.end(); }
+    if (!adminSession(sess)) { res.writeHead(403); return res.end(); }
     return guideref.refBlob(rm[1], rm[2]).then(b => {
       if (!b) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff' });
@@ -906,7 +919,7 @@ async function api(req, res, route) {
     if (!u.emailOk) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
     await store.saveUser(u);
     fails.delete(ip);
-    await newSession(req, res, u.username);
+    await newSession(req, res, u.username, { admin: true });
     return send(res, 200, { user: publicUser(u) });
   }
   // Signing in with Google (Mojtaba 2026-10-21), the authorization-code flow, on the web and in the Android apps alike:
@@ -976,7 +989,7 @@ async function api(req, res, route) {
     googleCodes.delete(k);
     const u = g && Date.now() - g.at < 60e3 ? store.users[g.username] : null;
     if (!u) { addFail(ip); return send(res, 400, { error: 'ورود با گوگل کامل نشد؛ دوباره امتحان کنید.' }); }
-    const token = await newSession(req, res, u.username);
+    const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
     return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
   }
   // POST code { email, lang, signup }: the code that signs in (an account with this address; else 404) or, with
@@ -1042,7 +1055,7 @@ async function api(req, res, route) {
       mail.sendWelcome(e, u.name, ['fa', 'en', 'da'].includes(b.lang) ? b.lang : 'fa', appLink(req), back).catch(err => console.error('welcome mail', err.message));
     }
     fails.delete(ip);
-    const token = await newSession(req, res, u.username);
+    const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
     return send(res, 200, { user: publicUser(u), ...(isApp(req) ? { token } : {}) });
   }
   // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (else 404). Counted as a
@@ -1169,11 +1182,11 @@ async function api(req, res, route) {
 
   const s = sessionUser(req);
   if (!s) return send(res, 401, { error: 'unauthorized' });
-  const user = s.user;
+  const user = s.user, adminReq = adminSession(s);
   // The «سامانه» page's numbers (console/system.html): the machine and the app over 24 hours (monitor.js), the sizes,
   // the AI's use, RAG, the backups, the version running.
   if (req.method === 'GET' && route === 'system') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     let head = '';
     try { const h = fs.readFileSync(path.join(__dirname, '.git', 'HEAD'), 'utf8').trim(); head = h.startsWith('ref: ') ? fs.readFileSync(path.join(__dirname, '.git', h.slice(5)), 'utf8').trim() : h; } catch {}
     const ai = require('./aigateway').report();
@@ -1187,17 +1200,17 @@ async function api(req, res, route) {
   // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
   // The admin's list of «آزمون جدید»'s questions that say nearly the same (rag.js duplicates), for the «سامانه» page.
   if (req.method === 'GET' && route === 'ragdupes') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const min = Math.min(0.99, Math.max(0.85, +new URL(req.url, 'http://x').searchParams.get('min') || 0.93));
     return send(res, 200, require('./rag').duplicates({ min }) || { pending: true });
   }
   if (req.method === 'GET' && route === 'aiusage') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...require('./aigateway').report(), rag: require('./rag').info() });
   }
   // The admin's backups (backup.js): the list, and one made now.
   if (route === 'backups' || route === 'backupnow') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     try {
       if (req.method === 'POST' && route === 'backupnow') return send(res, 200, { made: await require('./backup').backup(true), list: await require('./backup').list() });
       if (req.method === 'GET' && route === 'backups') return send(res, 200, { list: await require('./backup').list(), bucket: !!store.files });
@@ -1530,7 +1543,7 @@ async function api(req, res, route) {
   // New question pictures (admin): list, start one (qid, model, optional edited prompt), write a description only,
   // choose which picture is shown (job id or null = original).
   if (['imggen', 'imggenstart', 'imggenset', 'imggendraft', 'imggenedit', 'imggendel'].includes(route)) {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     try {
       if (req.method === 'GET' && route === 'imggen') return send(res, 200, imagegen.list());
       const b = await readBody(req);
@@ -1705,7 +1718,7 @@ async function api(req, res, route) {
   // guidedraft { key } → { prompt } (Claude), guidegen { key, prompt }: a new picture for an item, to choose with
   // guiderefchoose { key, choice: 'cand' }.
   if (['guideref', 'guiderefimport', 'guiderefchoose', 'guidedraft', 'guidegen'].includes(route)) {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     try {
       if (req.method === 'GET' && route === 'guideref') return send(res, 200, { ...guideref.list(), models: imagegen.models(), marks: store.meta.consoleMarks || {}, prompts: consoleprompts.marks() });
       if (req.method === 'POST' && route === 'guiderefimport') { guideref.startImport(); return send(res, 200, guideref.list()); }
@@ -1729,7 +1742,7 @@ async function api(req, res, route) {
   // …and its questions' bookmarks, removal from the bank and AI edits (newqadmin.js): newqitem?id, and POST newqmark
   // { id, on }, newqremove { id, on }, newqai { id, instruction } (a proposal), newqapply { id, q }, newqrevert { id }.
   if (route.startsWith('newq') && ['newqitem', 'newqmark', 'newqremove', 'newqai', 'newqapply', 'newqrevert'].includes(route)) {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     try {
       if (req.method === 'GET' && route === 'newqitem') return send(res, 200, newqadmin.item(new URL(req.url, 'http://x').searchParams.get('id')));
       if (req.method !== 'POST') return send(res, 405, { error: 'method' });
@@ -1743,19 +1756,19 @@ async function api(req, res, route) {
   }
   // …and a prompt rewritten for the style chosen there (imagegen.restyle): { prompt, style } → { prompt }.
   if (req.method === 'POST' && route === 'restyle') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req);
     try { return send(res, 200, { prompt: await imagegen.restyle(b.prompt, String(b.style || '')) }); }
     catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error('restyle', e.message); return send(res, 502, { error: 'تغییر سبک پرامپت ممکن نشد؛ دوباره امتحان کنید.' }); }
   }
   // …the picture services there are, to choose from: { kie: { ok, name }, openai: { ok, name } }.
   if (req.method === 'GET' && route === 'imageproviders') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, imagegen.providers());
   }
   // …a prompt in Persian ({ prompt } → { text }) and the prompt with the admin's request worked in ({ prompt, request } → { prompt }).
   if (req.method === 'POST' && (route === 'prompttr' || route === 'promptrevise')) {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req);
     try {
       if (route === 'prompttr') return send(res, 200, { text: await imagegen.translatePrompt(b.prompt) });
@@ -1763,7 +1776,7 @@ async function api(req, res, route) {
     } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); console.error(route, e.message); return send(res, 502, { error: 'انجام نشد؛ دوباره امتحان کنید.' }); }
   }
   if (route === 'courseart' || route === 'courseprompt' || route === 'coursegen') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const q = new URL(req.url, 'http://x').searchParams;
     try {
       if (req.method === 'GET' && route === 'courseart') {
@@ -1790,12 +1803,12 @@ async function api(req, res, route) {
   }
   // The questions' pictures for the console, by lesson or by the parts of «قوانین» (?kind=lessons|rules).
   if (req.method === 'GET' && route === 'consolepics') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...consolepics.list(new URL(req.url, 'http://x').searchParams.get('kind') === 'rules' ? 'rules' : 'lessons', store.meta.images || {}), models: imagegen.models(), marks: store.meta.consoleMarks || {}, prompts: consoleprompts.marks() });
   }
   // An item's saved prompt (consoleprompts.js): ?id=q:<qid>|g:<key> → { id, prompt, by: 'api' | 'claude', at, note, prev }.
   if (req.method === 'GET' && route === 'consoleprompt') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const id = String(new URL(req.url, 'http://x').searchParams.get('id') || '');
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
     return send(res, 200, { ...consoleprompts.get(id), style: picStyle(id) });
@@ -1804,7 +1817,7 @@ async function api(req, res, route) {
   // the pictures as JPEG data URLs drawn by the console; the API changes the saved prompt for the marked parts only,
   // and with mode 'image' the saved picture is corrected in those parts, the rest of it left exactly as it is.
   if (req.method === 'POST' && route === 'consoleregion') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req, 8e6), id = String(b.id || '');
     if (!consoleprompts.ID_RE.test(id)) return send(res, 400, { error: 'bad id' });
     const pic = u => { const m = /^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/=]+)$/.exec(String(u || '')); return m ? { mime: m[1], data: Buffer.from(m[2], 'base64') } : null; };
@@ -1822,7 +1835,7 @@ async function api(req, res, route) {
   }
   // Every marked item in full, newest mark first, for the console's «علامت‌دارها».
   if (req.method === 'GET' && route === 'consolemarked') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const marks = store.meta.consoleMarks || {}, items = [];
     for (const [id, m] of Object.entries(marks).sort((a, b) => b[1].at - a[1].at)) {
       const d = id[0] === 'q' ? consolepics.detail(id.slice(2), store.meta.images || {}) : guideref.item(id.slice(2));
@@ -1832,7 +1845,7 @@ async function api(req, res, route) {
   }
   // The console's marks: an item ('q:<qid>' or 'g:<key>') flagged to be made again later, with an optional note.
   if (req.method === 'POST' && route === 'consolemark') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req), id = String(b.id || '');
     if (!/^(q:\d{1,6}|g:[a-z0-9-]{3,40})$/.test(id)) return send(res, 400, { error: 'bad id' });
     const marks = store.meta.consoleMarks = store.meta.consoleMarks || {};
@@ -1866,7 +1879,7 @@ async function api(req, res, route) {
   // (The AI's daily report and its card in the dashboard were removed, Mojtaba 2026-10-30; the question notes already
   // approved still go into the AI's analyses.)
   if (req.method === 'POST' && route === 'qnote') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req);
     if (!['approve', 'reject', 'remove'].includes(b.action)) return send(res, 400, { error: 'bad action' });
     const notes = insights.decide(+b.qid, b.action, { fa: typeof b.fa === 'string' ? b.fa.trim() : '', en: typeof b.en === 'string' ? b.en.trim() : '', by: user.username });
@@ -1885,7 +1898,7 @@ async function api(req, res, route) {
     return send(res, 200, { items: items.map(({ id, at, title, text }) => ({ id, at, title, text })) });
   }
   if (req.method === 'POST' && route === 'news') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const b = await readBody(req);
     const title = String(b.title || '').trim().slice(0, 140), text = String(b.text || '').trim().slice(0, 4000);
     if (!title && !text) return send(res, 400, { error: 'عنوان یا متن پیام را بنویسید.' });
@@ -1898,7 +1911,7 @@ async function api(req, res, route) {
     return send(res, 200, { item, notify: b.notify !== false });
   }
   if (req.method === 'DELETE' && route === 'news') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const id = new URL(req.url, 'http://x').searchParams.get('id') || '';
     const news = (store.meta.news || []).filter(x => x.id !== id);
     store.meta.news = news;
@@ -1910,7 +1923,7 @@ async function api(req, res, route) {
   // The SMTP card in the dashboard: GET its settings (never the password), POST { host, port, user, pass } saves them
   // (an empty password keeps the saved one), DELETE removes them (back to Resend), POST smtptest { to } sends a test.
   if (route === 'smtp' || route === 'smtptest') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     if (req.method === 'GET' && route === 'smtp') return send(res, 200, mail.smtpInfo());
     if (req.method === 'DELETE' && route === 'smtp') { mail.clearSmtp(); return send(res, 200, mail.smtpInfo()); }
     if (req.method === 'POST' && route === 'smtp') {
@@ -1927,7 +1940,7 @@ async function api(req, res, route) {
   // exception, e.g. for testing; Mojtaba 2026-10-30): its deleted accounts' records go, and on its account(s) the trial
   // marks and a trial-only pass.
   if (req.method === 'POST' && route === 'resettrial') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     const e = mail.normal((await readBody(req)).email);
     if (!mail.EMAIL_RE.test(e)) return send(res, 400, { error: 'یک ایمیل درست بنویسید.' });
     const g = gone(), k = mailKey(e);
@@ -1947,7 +1960,7 @@ async function api(req, res, route) {
     return send(res, 200, { ok: true, accounts, records: had });
   }
   if (route === 'playkey' || route === 'playkeycheck') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     if (req.method === 'GET' && route === 'playkey') return send(res, 200, playbilling.info());
     if (req.method === 'POST' && route === 'playkey') {
       const b = await readBody(req, 64e3);
@@ -1957,7 +1970,7 @@ async function api(req, res, route) {
     if (req.method === 'POST' && route === 'playkeycheck') return send(res, 200, { ...playbilling.info(), check: await playbilling.verify().catch(e => ({ ok: false, error: e.message })) });
   }
   if (req.method === 'GET' && route === 'adminstats') {
-    if (!isAdmin(user)) return send(res, 403, { error: 'forbidden' });
+    if (!adminReq) return send(res, 403, { error: 'forbidden' });
     return send(res, 200, { ...adminStats(), reports: (store.meta.reports || []).slice().reverse(), clientErrors: (store.meta.clientErrors || []).slice().reverse(), inbox: (store.meta.inbox || []).slice().reverse(),
       mail: { on: mail.available(), reportTo: mail.reportTo(), inbound: !!process.env.RESEND_WEBHOOK_SECRET, forward: !!process.env.FORWARD_TO } });
   }
