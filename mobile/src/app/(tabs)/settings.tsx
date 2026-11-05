@@ -127,6 +127,9 @@ export default function Settings() {
           {user?.created ? <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>عضو از {fmtDay(user.created)}</T> : null}
         </Pressable>
       </View>
+      {/* Main site: «نسخه‌ی ویژه» in the profile card, in the box where the tests, average and mistakes were (Mojtaba
+          2026-11-05); without it (/app, or no payments) those numbers stay. */}
+      {!PROVE_PICS && showPrem ? premRow : (
       <View style={{ flexDirection: 'row', borderRadius: 20, backgroundColor: look.row, paddingVertical: 12 }}>
         {([
           ['آزمون‌ها', faNum(exams.length), 'exam'],
@@ -138,16 +141,14 @@ export default function Settings() {
           <T style={{ fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700', fontSize: 18, lineHeight: 24 }}>{value}</T>
         </View>)}
       </View>
+      )}
       </Card>
-      {!PROVE_PICS && (showPrem || !guest) ? <Card style={{ gap: 8 }}>
-        {!PROVE_PICS && showPrem ? (
-          premRow
-        ) : null}
+      {!PROVE_PICS && !guest ? <Card style={{ gap: 8 }}>
         {/* «حالت مربی» (Mojtaba 2026-10-24): the AI coach, under «نسخه‌ی ویژه»; for premium accounts, on unless turned off
             here (lib/coach-mode.ts); without premium the switch is faded and the line leads to the premium page. */}
         {!PROVE_PICS && !guest ? (
           <Pressable disabled={coach.allowed} onPress={() => router.push('/premium')} accessibilityRole={coach.allowed ? undefined : 'button'}
-            style={{ paddingTop: showPrem ? 8 : 0, borderTopWidth: showPrem ? 1 : 0, borderTopColor: c.line }}>
+            style={{ paddingTop: 0 }}>
             <Row icon="coach" title="حالت مربی" sub={coach.allowed ? 'با هوش مصنوعی، از روی آزمون‌ها و درس‌هایتان می‌گوید چه چیزی را تمرین کنید تا بهتر یاد بگیرید.' : 'با هوش مصنوعی به بهتر یاد گرفتن شما کمک می‌کند؛ با نسخه‌ی ویژه.'}
               right={<Toggle label="حالت مربی" value={coach.on} disabled={!coach.allowed} onChange={v => { setSettings({ coach: v }); }} />} />
           </Pressable>
