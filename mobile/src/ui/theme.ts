@@ -132,10 +132,13 @@ export const SOFT = STYLE === 'arc';
 export const lightness = (hex: string) => { const n = parseInt(hex.replace('#', '').slice(0, 6), 16); return (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; };
 function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // (dark: the page a deep shade of the theme's own colour, Mojtaba 2026-11-05, so each theme reads as itself)
-  const bg = isDark ? mix(c.accent, '#000000', 0.84) : '#f0f0f2', surface = isDark ? '#17171a' : '#fcfcfd', surface2 = isDark ? '#202024' : '#f4f4f6';
-  const line = isDark ? '#2a2a2f' : '#e6e6ea', border = isDark ? '#222226' : 'rgba(0,0,0,0.05)';
+  // (dark, Mojtaba 2026-11-05: every background a dark shade of the theme's colour, the page darkest, the cards and
+  // their inner panels a step lighter each)
+  const sh = (t: number) => mix(c.accent, '#000000', t);
+  const bg = isDark ? sh(0.8) : '#f0f0f2', surface = isDark ? sh(0.72) : '#fcfcfd', surface2 = isDark ? sh(0.64) : '#f4f4f6';
+  const line = isDark ? sh(0.58) : '#e6e6ea', border = isDark ? sh(0.66) : 'rgba(0,0,0,0.05)';
   return { ...c, bg, surface, surface2, line, cardBorder: border, hairline: line, glass: surface, glassStrong: surface, glassBorder: line,
-    nav: isDark ? '#26262b' : '#ececef', navOff: surface2, note: surface2,
+    nav: isDark ? sh(0.6) : '#ececef', navOff: surface2, note: surface2,
     btn: isDark ? '#f2f2f4' : '#111113', btnFg: isDark ? '#111113' : '#ffffff', cta: isDark ? '#f2f2f4' : '#111113', ctaFg: isDark ? '#111113' : '#ffffff',
     strong: isDark ? '#f2f2f4' : '#111113', strongFg: isDark ? '#111113' : '#ffffff',
     bgGradient: [bg, bg, bg] as readonly [string, string, string] };

@@ -18,7 +18,7 @@ import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, DA_FONT, SOFT, UBER, lightness, radius, useColors, useTheme } from './theme';
-import { graphiteCtl, heroDark, px } from './palette';
+import { graphiteCtl, heroDark, mix, px } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
 
@@ -795,7 +795,7 @@ export function useArcSeg() {
     // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
     // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
     pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
-    raised: { borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? '#3a3a40' : '#ffffff') : dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
+    raised: { borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? mix(c.accent, '#000000', 0.45) : '#ffffff') : dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
       boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
     label: (on: boolean) => ({ color: on ? (dashboard && !SOFT ? c.accentText : c.text) : c.muted, fontWeight: '500' }) as TextStyle,
   };
