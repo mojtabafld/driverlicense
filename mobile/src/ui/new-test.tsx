@@ -20,7 +20,8 @@ import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
 import { DailyTestsChart } from './daily-tests-chart';
 import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
-import { SizeSegment } from './size-segment';
+import { Sheet } from './sheet';
+import { ChoiceCard } from './step-frame';
 import { SizeSlider } from './size-slider';
 import { Toggle } from './toggle';
 import { ARC, radius, useColors, useIsDark } from './theme';
@@ -71,7 +72,8 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       {level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
       {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
           تکراری» (Mojtaba 2026-10-30). */}
-      {ARC ? <SizeSegment value={size} values={SIZES} onChange={setSize} /> : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
+      {/* (the main site: the number of questions is chosen in the start button, StartWithSize; /app keeps its slider) */}
+      {ARC ? null : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <T style={{ fontWeight: '700' }}>بدون سؤال تکراری</T>
@@ -100,7 +102,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       ) : null}
       {/* (Premium: no «tested on … of … questions» line here any more; the progress card above says it. Mojtaba 2026-10-29) */}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
-        : count ? (ARC ? <ArcButton label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
+        : count ? (ARC ? <StartWithSize size={size} setSize={setSize} onStart={start} /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
     </Card>
     </>
@@ -227,3 +229,29 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   );
 }
 
+// The start button with the number of questions in it (Mojtaba 2026-11-05, in place of the 5 … 25 segments): its end
+// holds «۲۵ سؤال ▾», which opens a sheet of the sizes, chosen as the first steps' language is (ChoiceCard).
+function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: number) => void; onStart: () => void }) {
+  const [open, setOpen] = useState(false);
+  const dark = useIsDark();
+  return (
+    <View>
+      <ArcButton label="شروع آزمون" onPress={onStart} icon="play" variant="accent" />
+      <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={4} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
+        style={({ pressed }) => ({ position: 'absolute', top: 7, bottom: 7, ...(RTL ? { left: 7 } : { right: 7 }), flexDirection: 'row', alignItems: 'center', gap: 4,
+          paddingHorizontal: 12, borderRadius: 999, backgroundColor: dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)', opacity: pressed ? 0.75 : 1 })}>
+        <T style={{ color: '#ffffff', fontSize: 14, fontWeight: '700' }}>{t('{0} سؤال', faNum(size))}</T>
+        <Icon name="chevronDown" size={15} color="#ffffff" weight="semibold" />
+      </Pressable>
+      <Sheet open={open} onClose={() => setOpen(false)}>
+        <View style={{ gap: 10, paddingHorizontal: 4 }}>
+          <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '700' }}>تعداد سؤال‌ها</T>
+          {SIZES.map(n => (
+            <ChoiceCard key={n} on={n === size} onPress={() => { setSize(n); setOpen(false); }} raw
+              name={<T style={{ fontSize: 17, fontWeight: '700' }}>{t('{0} سؤال', faNum(n))}</T>} note={n === FULL ? tr('مثل آزمون واقعی') : undefined} />
+          ))}
+        </View>
+      </Sheet>
+    </View>
+  );
+}
