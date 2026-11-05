@@ -1224,7 +1224,6 @@ const heroTryBlob = HERO_TRY.blob;
 // a dark version of each card, on the card's own colour (mobile/src/ui/vibe-cards.tsx). Made only on request (OpenAI or
 // kie.ai): a new one waits as a candidate (one-off `vibe-<key>`) until the admin chooses it; the chosen one is served at
 // /vibe-art/<key>.png and the app shows it in place of its bundled mascot.
-const VIBE_REF = path.join(__dirname, 'data', 'hero-ref', 'landing-style.jpg');
 const VIBE_BG = { light: ['#fae1d5', '#e7e4fb', '#dfeddf'], dark: ['#402920', '#282543', '#223022'] };
 const VIBE_ACCENT = [['warm coral', '#e8846a', '#f6c9b8'], ['periwinkle violet', '#6e5ce6', '#d9d3fb'], ['fresh green', '#3f9e5c', '#cfe8d5']];
 // One object per card, drawn in detail on its own platform, about what the card says (Mojtaba 2026-11-05: no second
@@ -1237,7 +1236,7 @@ const VIBE_SCENES = [
 const vibePrompt = (n, look) => {
   const [name, strong, soft] = VIBE_ACCENT[n], dark = look === 'dark', bg = VIBE_BG[look][n];
   return [
-    'Use the attached picture ONLY as the reference for the drawing style: a clean, minimal isometric line illustration like a modern tech product page — crisp thin outlines of an even width with rounded joins, flat surfaces with very soft flat shading on the sides, small dashed details and tick marks on the platform edges, generous empty space, no gradients, no texture, no 3D render look. Do NOT copy its objects or its layout.',
+    'Style: a clean, minimal, modern isometric line illustration like the empty-state picture of a premium tech product page: crisp dark grey outlines of an even, medium width with rounded corners and joins, flat white and very pale grey surfaces, the sides of each solid a step darker (flat shading, no gradients), the platform a thick rounded square slab with a thin inner border line and small ruler tick marks along its edges, a soft flat shadow under the object, generous empty space, no texture, no photo or 3D-render look.',
     `Scene: ${VIBE_SCENES[n]}`,
     dark
       ? `Colours for a DARK card: the whole background is one plain flat colour ${bg} from edge to edge (no gradient, no floor, no frame, no vignette). The objects are drawn with thin light grey-lavender outlines (#c9c7d8) and filled with muted dark slate surfaces (#3a3a4a and #45455a) a little lighter than the background, with a single ${name} accent (${strong}) on the one main object and its symbols.`
@@ -1250,7 +1249,7 @@ const VIBE = artSet({ metaKey: 'vibeArt', set: 'v1', prompts: VIBE_ART, aspect: 
 const vibeVersions = VIBE.versions, vibeBlob = VIBE.blob;
 // The admin's list: each card's key, its default or last used prompt, the chosen picture's version and the candidate.
 function vibeList() {
-  const v = VIBE.versions(), saved = (store.meta.vibePrompts2 || {});
+  const v = VIBE.versions(), saved = (store.meta.vibePrompts3 || {});
   return Object.keys(VIBE_ART).map(key => {
     const j = oneOff(`vibe-${key}`);
     return { key, prompt: withFrame(saved[key] || VIBE_ART[key].prompt, '1:1'), v: v[key] || null, bg: VIBE_BG[key.endsWith('dark') ? 'dark' : 'light'][+key[0] - 1],
@@ -1260,16 +1259,25 @@ function vibeList() {
 async function vibeGen(key, prompt, provider) {
   if (!VIBE_ART[key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
   prompt = String(prompt || '').trim().slice(0, 20000) || VIBE_ART[key].prompt;
-  store.meta.vibePrompts2 = { ...(store.meta.vibePrompts2 || {}), [key]: prompt };
-  await store.saveMeta('vibePrompts2', store.meta.vibePrompts2);
-  return startOneOff(`vibe-${key}`, { prompt: withFrame(prompt, '1:1'), aspect: '1:1', ref: fs.existsSync(VIBE_REF) ? VIBE_REF : '', provider });
+  store.meta.vibePrompts3 = { ...(store.meta.vibePrompts3 || {}), [key]: prompt };
+  await store.saveMeta('vibePrompts3', store.meta.vibePrompts3);
+  // (no reference picture: given his sample, the model copied its two platforms and the cable between them)
+  return startOneOff(`vibe-${key}`, { prompt: withFrame(prompt, '1:1'), aspect: '1:1', provider });
 }
+// A picture's own background cut away (see-through), so it lies on the card's colour exactly in the app; a file it
+// cannot read (not a PNG) is kept as it is.
+function vibeCut(b) {
+  try { const im = png.decode(b.data); if (!im) return b; return { mime: 'image/png', data: png.encode(png.cutout(im, png.edgeColour(im), 10, 40)) }; }
+  catch (e) { console.error('vibe cut', e.message); return b; }
+}
+// The candidate as the console shows it (cut as it will be in the app).
+const vibeCand = async key => { const b = await oneOffBlob(`vibe-${key}`); return b ? vibeCut(b) : null; };
 // The candidate becomes the card's picture (and the app shows it).
 async function vibeChoose(key) {
   if (!VIBE_ART[key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
   const b = await oneOffBlob(`vibe-${key}`);
   if (!b) throw Object.assign(new Error('تصویر تازه‌ای برای این کارت نیست.'), { status: 409 });
-  await VIBE.put(key, b, (oneOff(`vibe-${key}`) || {}).prompt);
+  await VIBE.put(key, vibeCut(b), (oneOff(`vibe-${key}`) || {}).prompt);
   await dropOneOff(`vibe-${key}`);
 }
 // Back to the app's own mascot.
@@ -1463,6 +1471,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, artAspect, withFrame, frameLine, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, vibeVersions, vibeBlob, vibeList, vibeGen, vibeChoose, vibeReset, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, artAspect, withFrame, frameLine, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, vibeVersions, vibeBlob, vibeList, vibeGen, vibeChoose, vibeReset, vibeCand, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
