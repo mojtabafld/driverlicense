@@ -28,7 +28,8 @@ export function ZoomableImage({ source, style, ratio = 4 / 3, children, transiti
   return (
     <View>
       <Pressable ref={under} onPress={() => { if (Date.now() - closedAt.current < 600) return; tap(); setOpen(true); }} accessibilityRole="imagebutton" accessibilityLabel="بزرگ‌نمایی تصویر">
-        <Image source={source} style={style} contentFit="contain" transition={transition} />
+        {/* (covering its box, so a picture of another shape leaves no empty bands; Mojtaba 2026-11-05) */}
+        <Image source={source} style={style} contentFit="cover" transition={transition} />
         <View pointerEvents="none" style={{ position: 'absolute', bottom: 8, ...physical({ right: 8 }), width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.55)' }}>
           <Icon name="zoom" size={17} color="#fff" />
         </View>

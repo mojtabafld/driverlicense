@@ -85,7 +85,8 @@ function startImport() {
 function list() {
   const m = meta(), ai = imagegen.guideVersions();
   const row = (key, label, sub) => ({ key, label, sub, ai: ai[key] || null, prove: !!(m.items[key] || {}).prove, official: !!(m.items[key] || {}).off,
-    canOfficial: !!(MAP[key] || {}).official, choice: m.choice[key] || 'ai', onProve: !!MAP[key], cand: candOf(key) });
+    canOfficial: !!(MAP[key] || {}).official, choice: m.choice[key] || 'ai', onProve: !!MAP[key], cand: candOf(key),
+    aspect: (imagegen.guidePrompt(key) || {}).aspect || '4:3' });
   const groups = [
     ...DATA.signs.map(g => ({ kind: 'signs', id: g.id, title: g.title, items: g.items.map(i => row(i.key, i.fa, i.code)) })),
     ...DATA.priority.map(g => ({ kind: 'priority', id: g.id, title: g.title, items: g.items.map(i => row(i.key, i.title, '')) })),
@@ -134,7 +135,7 @@ function generate(key, prompt, provider) {
   prompt = String(prompt || '').trim().slice(0, 20000);
   if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
   const p = imagegen.guidePrompt(key) || {};
-  return imagegen.startOneOff(`guide-${key}`, { prompt, aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '', target: `guide:${key}`, provider });
+  return imagegen.startOneOff(`guide-${key}`, { prompt: imagegen.withFrame(prompt, p.aspect || '4:3'), aspect: p.aspect || '4:3', ref: p.ref ? path.join(__dirname, 'data', 'guide-ref', p.ref) : '', target: `guide:${key}`, provider });
 }
 
 // The console's «اعمال اصلاحات روی همین تصویر» for a sign or right-of-way picture: its current made picture is corrected

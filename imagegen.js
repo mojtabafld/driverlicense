@@ -1053,7 +1053,8 @@ function artGen(set, key, prompt, provider) {
   if (!a || !a[1][key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
   prompt = String(prompt || '').trim().slice(0, 20000);
   if (!prompt) throw Object.assign(new Error('پرامپت خالی است.'), { status: 400 });
-  return startOneOff(`${set}-${key}`, { prompt, aspect: a[1][key].aspect || '4:3', target: `${set}:${key}`, provider });
+  const aspect = a[1][key].aspect || '4:3';
+  return startOneOff(`${set}-${key}`, { prompt: withFrame(prompt, aspect), aspect, target: `${set}:${key}`, provider });
 }
 
 // «آپلود تصویر» on the admin's picture page: an uploaded picture ({ mime, data }) takes the course's or a question's
@@ -1062,9 +1063,13 @@ async function artPut(set, key, b) {
   const a = ART_SETS[set];
   if (!a || !a[1][key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
   await dropOneOff(`${set}-${key}`);
-  const sm = shrink(b.data, b.mime);
-  await a[0].put(key, { mime: sm.mime, data: sm.buf });
+  await a[0].put(key, b);   // as uploaded, at its full size (the web gets it smaller through webpic.js)
 }
+// The shape a course or question picture is made in (its card in the app shows it at this shape).
+const artAspect = (set, key) => { const a = ART_SETS[set]; return (a && a[1][key] && a[1][key].aspect) || '4:3'; };
+// The line every prompt made on request ends with: the picture fills its frame, the shape of the card it shows in.
+const frameLine = aspect => `Frame: a ${aspect} picture composed for that exact frame and filling it completely from edge to edge: no border, no margin, no white or empty bands, no rounded corners, nothing cropped off at the edges that matters.`;
+const withFrame = (prompt, aspect) => (/^Frame: /m.test(prompt) ? prompt : `${prompt}\n${frameLine(aspect)}`);
 
 // ---------- profile pictures to choose from in the settings ----------
 // Ten round-friendly, minimal 3D icons on the app's theme (cars, signs, the licence…), each on its own soft colour,
@@ -1377,6 +1382,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, artAspect, withFrame, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
