@@ -8,7 +8,9 @@ import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, Pressable, View, useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
+import { API_URL } from '@/lib/config';
 import { tr } from '@/lib/i18n';
+import { useApp } from '@/lib/store';
 import { T, tap } from './kit';
 import { useN } from './welcome';
 
@@ -28,6 +30,10 @@ const web = Platform.OS === 'web';
 // `room`: the height the cards may take (their picture shrinks to fit it).
 export function VibeCards({ room }: { room: number }) {
   const N = useN(), { width } = useWindowDimensions(), look = N.dark ? 'dark' : 'light';
+  // A picture chosen on the admin's picture page («صفحه ورود», served at /vibe-art/<n>-<look>.png) in place of the
+  // bundled mascot.
+  const { vibeArt } = useApp();
+  const pic = (i: number) => { const k = `${i + 1}-${look}`, v = vibeArt[k]; return v ? { uri: `${API_URL}/vibe-art/${k}.png?v=${encodeURIComponent(v)}` } : ART[look][i]; };
   const W = Math.min(width, 520), gap = 14;
   // The card keeps its width; on a short screen only its picture is lower (drawn whole on the card's own colour).
   const small = room < 300, textH = small ? 96 : 118, CW = Math.round(Math.min(300, W * 0.7)), picH = Math.max(90, Math.min(Math.round(CW * 0.82), room - textH - 26));
@@ -74,7 +80,7 @@ export function VibeCards({ room }: { room: number }) {
             <Animated.View key={i} style={{ width: CW, opacity, transform: [{ translateY: lift }, { scale }, { rotate }] }}>
               <View style={{ borderRadius: 34, overflow: 'hidden', backgroundColor: BG[look][i], paddingBottom: small ? 12 : 18 }}>
                 <Animated.View style={{ height: picH, transform: [{ translateY: i === at ? float.interpolate({ inputRange: [0, 1], outputRange: [3, -5] }) : 0 }] }}>
-                  <Image source={ART[look][i]} style={{ width: CW, height: picH }} contentFit="contain" transition={200} />
+                  <Image source={pic(i)} style={{ width: CW, height: picH }} contentFit="contain" transition={200} />
                 </Animated.View>
                 <View style={{ alignItems: 'center', gap: small ? 6 : 10, paddingHorizontal: 18, minHeight: textH - 18 }}>
                   <View style={{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 10, backgroundColor: N.dark ? 'rgba(255,255,255,0.12)' : '#ffffff' }}>

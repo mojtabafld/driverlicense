@@ -1219,6 +1219,66 @@ const HERO_TRY = artSet({ metaKey: 'heroTry', set: 'card1', aspect: '4:3', prefi
   derive: { 2: '1' } });
 const heroTryBlob = HERO_TRY.blob;
 
+// ---------- the welcome page's three cards (Mojtaba 2026-11-05, «صفحه ورود» on the admin's picture page) ----------
+// In the style of a picture he sent (data/hero-ref/landing-style.jpg: a clean isometric line illustration), a light and
+// a dark version of each card, on the card's own colour (mobile/src/ui/vibe-cards.tsx). Made only on request (OpenAI or
+// kie.ai): a new one waits as a candidate (one-off `vibe-<key>`) until the admin chooses it; the chosen one is served at
+// /vibe-art/<key>.png and the app shows it in place of its bundled mascot.
+const VIBE_REF = path.join(__dirname, 'data', 'hero-ref', 'landing-style.jpg');
+const VIBE_BG = { light: ['#fae1d5', '#e7e4fb', '#dfeddf'], dark: ['#402920', '#282543', '#223022'] };
+const VIBE_ACCENT = [['warm coral', '#e8846a', '#f6c9b8'], ['periwinkle violet', '#6e5ce6', '#d9d3fb'], ['fresh green', '#3f9e5c', '#cfe8d5']];
+const VIBE_SCENES = [
+  'Practice every day: on a flat square isometric platform tile, a neat stack of three question cards (each with two grey text lines and a small red-and-white triangular road-sign symbol on the top card); in front of the stack a small smartphone lying flat with a small square button-like screen element; a thin curved cable runs from the stack to a second, smaller platform tile on the right holding a small cube-shaped desk calendar with a check mark on its top face.',
+  'A smart coach that explains: on a flat square isometric platform tile, an upright answer card with two short answer rows, one marked with a small cross and one with a small check mark, and a small speech bubble with three short lines floating above it; a thin curved cable runs from the card to a second platform tile on the right holding a rounded cube (the AI coach) with a simple light-bulb symbol on its front face.',
+  'Passing the test: on a flat square isometric platform tile, a small card with three rising bars and beside it a round ring gauge mostly filled; a thin curved cable runs to a second platform tile on the right on which a driving licence card (a faceless round photo silhouette and two grey lines) stands upright on a small step podium with a round check-mark badge beside it.',
+];
+const vibePrompt = (n, look) => {
+  const [name, strong, soft] = VIBE_ACCENT[n], dark = look === 'dark', bg = VIBE_BG[look][n];
+  return [
+    'Use the attached picture ONLY as the reference for the drawing style: a clean, minimal isometric line illustration like a modern tech product page — crisp thin outlines of an even width with rounded joins, flat surfaces with very soft flat shading on the sides, small dashed details and tick marks on the platform edges, generous empty space, no gradients, no texture, no 3D render look. Do NOT copy its objects or its layout.',
+    `Scene: ${VIBE_SCENES[n]}`,
+    dark
+      ? `Colours for a DARK card: the whole background is one plain flat colour ${bg} from edge to edge (no gradient, no floor, no frame, no vignette). The objects are drawn with thin light grey-lavender outlines (#c9c7d8) and filled with muted dark slate surfaces (#3a3a4a and #45455a) a little lighter than the background, with a single ${name} accent (${strong}) on the one main object and its symbols.`
+      : `Colours for a LIGHT card: the whole background is one plain flat colour ${bg} from edge to edge (no gradient, no floor, no frame, no vignette). The objects are white and very pale grey surfaces with thin dark grey outlines (#4a4a5a), with a single ${name} accent (${strong} for lines and symbols, ${soft} for its filled faces) on the one main object and its symbols.`,
+    'Composition: the whole group is centred, seen from the same isometric angle as the reference, filling about 70% of the width, with even empty background around it. No readable text, no letters, no numbers, no logos, no brand names, no watermarks, no people, no faces.',
+  ].join('\n');
+};
+const VIBE_ART = Object.fromEntries([0, 1, 2].flatMap(n => ['light', 'dark'].map(look => [`${n + 1}-${look}`, { prompt: vibePrompt(n, look), aspect: '1:1' }])));
+const VIBE = artSet({ metaKey: 'vibeArt', set: 'v1', prompts: VIBE_ART, aspect: '1:1', prefix: 'vibe-art', allow: new Set() });
+const vibeVersions = VIBE.versions, vibeBlob = VIBE.blob;
+// The admin's list: each card's key, its default or last used prompt, the chosen picture's version and the candidate.
+function vibeList() {
+  const v = VIBE.versions(), saved = (store.meta.vibePrompts || {});
+  return Object.keys(VIBE_ART).map(key => {
+    const j = oneOff(`vibe-${key}`);
+    return { key, prompt: withFrame(saved[key] || VIBE_ART[key].prompt, '1:1'), v: v[key] || null, bg: VIBE_BG[key.endsWith('dark') ? 'dark' : 'light'][+key[0] - 1],
+      cand: j ? { state: j.state, done: !!j.done, v: j.v || null, error: j.error || '', provider: j.provider || 'kie' } : null };
+  });
+}
+async function vibeGen(key, prompt, provider) {
+  if (!VIBE_ART[key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
+  prompt = String(prompt || '').trim().slice(0, 20000) || VIBE_ART[key].prompt;
+  store.meta.vibePrompts = { ...(store.meta.vibePrompts || {}), [key]: prompt };
+  await store.saveMeta('vibePrompts', store.meta.vibePrompts);
+  return startOneOff(`vibe-${key}`, { prompt: withFrame(prompt, '1:1'), aspect: '1:1', ref: fs.existsSync(VIBE_REF) ? VIBE_REF : '', provider });
+}
+// The candidate becomes the card's picture (and the app shows it).
+async function vibeChoose(key) {
+  if (!VIBE_ART[key]) throw Object.assign(new Error('این تصویر پیدا نشد.'), { status: 404 });
+  const b = await oneOffBlob(`vibe-${key}`);
+  if (!b) throw Object.assign(new Error('تصویر تازه‌ای برای این کارت نیست.'), { status: 409 });
+  await VIBE.put(key, b, (oneOff(`vibe-${key}`) || {}).prompt);
+  await dropOneOff(`vibe-${key}`);
+}
+// Back to the app's own mascot.
+async function vibeReset(key) {
+  const m = store.meta.vibeArt;
+  if (!m || !m.items || !m.items[key]) return;
+  const j = m.items[key];
+  if (j.blob) { await store.deleteBlob(j.blob).catch(() => {}); cache.delete(j.blob); }
+  delete m.items[key]; await store.saveMeta('vibeArt', m);
+}
+
 // ---------- the pictures behind the app's store screenshots (Play Store / App Store) ----------
 // Six tall scenes, one per feature, laid behind a phone with the app on it and a big title (composed outside the app):
 // the objects stand large in the lower right corner, partly cut by the right edge, the rest one calm dark green.
@@ -1401,6 +1461,6 @@ async function writeText(system, text, image, maxTokens = 1500) {
   return out;
 }
 
-module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, artAspect, withFrame, frameLine, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
+module.exports = { providers: PROVIDERS, restyle, translatePrompt, revisePrompt, artKeys, artVersions, artPrompt, artGen, artPut, artAspect, withFrame, frameLine, edit, remove, draft, firstQuestion, init, start, poll, setActive, activeBlob, jobBlob, versions, list, available, introVersions, introColours, introBlob, learnVersions, learnBlob, learnColours, courseVersions, courseBlob, newqVersions, newqBlob, avatarVersions, avatarBlob, avatarCount, heroVersions, heroBlob, heroTryBlob, vibeVersions, vibeBlob, vibeList, vibeGen, vibeChoose, vibeReset, loginVersions, loginBlob, storeBlob, heroDiag, guideVersions, guideBlob,
   guidePrompt, guidePut: GUIDE.put, houseStyle, withHouseStyle, startOneOff, oneOff, oneOffBlob, dropOneOff, writeText, models,
   questionPrompt, guidePromptNow: GUIDE.promptOf, editRegions, regionPrompt };
