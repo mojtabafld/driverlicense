@@ -29,6 +29,27 @@ function take(key) {
 // localhost in tests.
 const rpOf = origin => new URL(origin).hostname;
 
+// The Android app (Mojtaba 2026-11-06): its passkeys come from the app itself, whose «origin» is its signing
+// certificate (android:apk-key-hash:<the SHA-256 of the certificate, base64url>). The certificates' SHA-256
+// fingerprints (public, as Play Console shows them under App integrity): android-certs.json, and ANDROID_CERT_SHA256
+// (comma separated) for more. The same list is the site's /.well-known/assetlinks.json, which tells Android the app
+// may use this site's passkeys.
+const PACKAGE = 'app.bitlane.teoripro';
+const certs = () => {
+  let file = [];
+  try { file = require('./android-certs.json'); } catch {}
+  return [...new Set([...file, ...String(process.env.ANDROID_CERT_SHA256 || '').split(',')]
+    .map(x => String(x).trim().toUpperCase().replace(/[^0-9A-F]/g, ''))
+    .filter(x => x.length === 64)
+    .map(x => x.match(/../g).join(':')))];
+};
+const androidOrigins = () => certs().map(h => 'android:apk-key-hash:' + Buffer.from(h.replace(/:/g, ''), 'hex').toString('base64url'));
+const originsOf = origin => [origin, ...androidOrigins()];
+const assetLinks = () => [{
+  relation: ['delegate_permission/common.handle_all_urls', 'delegate_permission/common.get_login_creds'],
+  target: { namespace: 'android_app', package_name: PACKAGE, sha256_cert_fingerprints: certs() },
+}];
+
 // The passkeys a user has, as shown in Settings.
 const listOf = u => (u.passkeys || []).map(k => ({ id: k.id, name: k.name, created: k.created, used: k.used || null }));
 
@@ -60,7 +81,7 @@ async function register(u, origin, response, ua) {
   if ((u.passkeys || []).length >= MAX_KEYS) throw Object.assign(new Error('حداکثر ۱۰ Passkey برای هر حساب.'), { status: 400 });
   let v;
   try {
-    v = await w().verifyRegistrationResponse({ response, expectedChallenge: challenge, expectedOrigin: origin, expectedRPID: rpOf(origin), requireUserVerification: false });
+    v = await w().verifyRegistrationResponse({ response, expectedChallenge: challenge, expectedOrigin: originsOf(origin), expectedRPID: rpOf(origin), requireUserVerification: false });
   } catch (e) { throw Object.assign(new Error('Passkey تأیید نشد.'), { status: 400, cause: e }); }
   if (!v.verified || !v.registrationInfo) throw Object.assign(new Error('Passkey تأیید نشد.'), { status: 400 });
   const c = v.registrationInfo.credential;
@@ -89,7 +110,7 @@ async function login(users, origin, id, response) {
   if (!user) return null;
   let v;
   try {
-    v = await w().verifyAuthenticationResponse({ response, expectedChallenge: challenge, expectedOrigin: origin, expectedRPID: rpOf(origin),
+    v = await w().verifyAuthenticationResponse({ response, expectedChallenge: challenge, expectedOrigin: originsOf(origin), expectedRPID: rpOf(origin),
       credential: { id: key.id, publicKey: Buffer.from(key.pk, 'base64url'), counter: key.counter || 0, transports: key.transports },
       requireUserVerification: false });
   } catch { return null; }
@@ -99,9 +120,11 @@ async function login(users, origin, id, response) {
   return user;
 }
 
+// Removing one: the account is not asked to add a passkey again (Mojtaba 2026-11-06).
 function remove(u, id) {
   u.passkeys = (u.passkeys || []).filter(k => k.id !== String(id || ''));
+  u.pkAsked = u.pkAsked || Date.now();
   return listOf(u);
 }
 
-module.exports = { regOptions, register, loginOptions, login, remove, listOf };
+module.exports = { regOptions, register, loginOptions, login, remove, listOf, assetLinks, certs };
