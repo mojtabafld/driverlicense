@@ -73,23 +73,6 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
           تکراری» (Mojtaba 2026-10-30). */}
       {/* (the main site: the number of questions is chosen in the start button, StartWithSize; /app keeps its slider) */}
       {ARC ? null : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
-      {/* A round check box before the words, as a question's statements are ticked (Mojtaba 2026-11-06) */}
-      <Pressable onPress={() => { tap(); setFresh(!fresh); }} accessibilityRole="checkbox" accessibilityState={{ checked: fresh }} accessibilityLabel={tr('بدون سؤال تکراری')}
-        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.7 : 1 })}>
-        <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: fresh ? c.pick : 'transparent', borderWidth: fresh ? 0 : 1.75, borderColor: c.faint }}>
-          {fresh ? <Icon name="check" size={14} color={c.accentText} weight="bold" /> : null}
-        </View>
-        <T style={{ flex: 1, fontWeight: '700' }}>بدون سؤال تکراری</T>
-      </Pressable>
-      {fresh && unseen.length < size && !(unseen.length === 0 && premium && !limited) ? (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
-          <Icon name="info" size={17} color={c.muted} />
-          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{unseen.length
-            ? `فقط ${faNum(unseen.length)} سؤال تازه مانده؛ آزمون با همه‌ی آن‌ها انجام می‌شود.`
-            : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
-        </View>
-      ) : null}
       {/* The free tests' notice: only without premium (Mojtaba 2026-10-29). */}
       {limited && !premium ? (
         <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
@@ -106,6 +89,23 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
         : count ? (ARC ? <StartWithSize size={size} setSize={setSize} onStart={start} /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
+      {/* A round check box before the words, as a question's statements are ticked, under the start button (Mojtaba 2026-11-06) */}
+      <Pressable onPress={() => { tap(); setFresh(!fresh); }} accessibilityRole="checkbox" accessibilityState={{ checked: fresh }} accessibilityLabel={tr('بدون سؤال تکراری')}
+        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.7 : 1 })}>
+        <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
+          backgroundColor: fresh ? c.pick : 'transparent', borderWidth: fresh ? 0 : 1.75, borderColor: c.faint }}>
+          {fresh ? <Icon name="check" size={14} color={c.accentText} weight="bold" /> : null}
+        </View>
+        <T style={{ flex: 1, fontWeight: '700' }}>بدون سؤال تکراری</T>
+      </Pressable>
+      {fresh && unseen.length < size && !(unseen.length === 0 && premium && !limited) ? (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+          <Icon name="info" size={17} color={c.muted} />
+          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{unseen.length
+            ? `فقط ${faNum(unseen.length)} سؤال تازه مانده؛ آزمون با همه‌ی آن‌ها انجام می‌شود.`
+            : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
+        </View>
+      ) : null}
     </Card>
     </>
   );
