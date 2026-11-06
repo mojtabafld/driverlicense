@@ -1327,9 +1327,12 @@ async function api(req, res, route) {
   if (req.method === 'POST' && route === 'integrity/check') {
     try {
       const v = await integrity.check(s.user.username, (await readBody(req, 32e3)).token);
-      const d = s.user.devices && s.user.devices[devId(s.key)];
-      if (d) { d.pi = v; await store.saveUser(s.user); }
-      if (!v.ok) console.error('integrity', s.user.username.replace(/^(.{2}).*@/, '$1…@'), v.app, v.device.join(',') || '-');
+      // kept on the device (a session from before the devices' list gets its entry here), so the «سامانه» page counts it
+      const devs = s.user.devices = s.user.devices || {}, id = devId(s.key), now = Date.now();
+      devs[id] = devs[id] || { name: deviceOf(req), at: now, seen: now, ...(devOf(req) ? { dev: devOf(req) } : {}) };
+      devs[id].pi = v;
+      await store.saveUser(s.user);
+      console.log('integrity', s.user.username.replace(/^(.{2}).*@/, '$1…@'), v.ok ? 'ok' : 'FAILED', v.app, v.device.join(',') || '-', v.lic);
       return send(res, 200, { ok: v.ok });
     } catch (e) { console.error('integrity check', e.message); return send(res, e.status || 502, { error: e.message }); }
   }
