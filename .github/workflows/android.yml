@@ -58,7 +58,7 @@ jobs:
       TAG: ${{ inputs.copy == 'prove' && 'prove' || 'release' }}
       APK: ${{ inputs.copy == 'prove' && 'teoriprove-prove.apk' || 'teoriprove.apk' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Release number
         env:
