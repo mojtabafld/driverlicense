@@ -34,8 +34,21 @@ function account() {
   return keyCache;
 }
 // A service account's JSON key, as it is or in base64; null if it is not one.
+// (A key from the vault comes with its line breaks written as «\n», vault.js: its lines are joined again, and a line
+// break inside a string written back as JSON's own \n.)
+function unflatten(raw) {
+  const t = raw.replace(/\\n/g, '\n');
+  let out = '', inStr = false;
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i];
+    if (inStr && c === '\\') { out += c + (t[i + 1] || ''); i++; continue; }
+    if (c === '"') inStr = !inStr;
+    out += inStr && c === '\n' ? '\\n' : c;
+  }
+  return out;
+}
 function readKey(raw) {
-  for (const text of [raw, Buffer.from(raw, 'base64').toString('utf8')]) {
+  for (const text of [raw, unflatten(raw), Buffer.from(raw, 'base64').toString('utf8')]) {
     try { const k = JSON.parse(text); if (k.client_email && k.private_key) return k; } catch {}
   }
   return null;
