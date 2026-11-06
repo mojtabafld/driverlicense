@@ -1331,7 +1331,7 @@ async function api(req, res, route) {
       if (d) { d.pi = v; await store.saveUser(s.user); }
       if (!v.ok) console.error('integrity', s.user.username.replace(/^(.{2}).*@/, '$1…@'), v.app, v.device.join(',') || '-');
       return send(res, 200, { ok: v.ok });
-    } catch (e) { return send(res, e.status || 502, { error: e.message }); }
+    } catch (e) { console.error('integrity check', e.message); return send(res, e.status || 502, { error: e.message }); }
   }
   // (an admin's rights also need Cloudflare Access's sign-in: access.js)
   const user = s.user, adminReq = adminSession(s) && await access.adminOk(req, emailOf(user));
@@ -1348,7 +1348,7 @@ async function api(req, res, route) {
       at: Date.now(), up: Math.round(process.uptime()), node: process.version, version: VERSION, commit: head.slice(0, 7),
       users: Object.keys(store.users).length, storage: store.kind || 'file', files: store.files ? await store.files.ready() : null,
       monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models },
-      rag: require('./rag').info(), audit: audit.list().slice(0, 200), integrity: integrity.report(store.users), backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
+      rag: require('./rag').info(), audit: audit.list().slice(0, 200), integrity: integrity.report(store.users), encryption: store.encryption ? store.encryption() : null, backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
     });
   }
   // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
@@ -2427,6 +2427,8 @@ async function main() {
   // backup of the database's data there (backup.js).
   store = require('./objstore').wrap(store);
   audit.init(store);
+  // The database's data sealed (datacrypt.js) once this version has run 5 minutes (store.js: arm).
+  if (store.arm) setTimeout(() => store.arm(), 5 * 60e3).unref();
   // Every Claude call's model, use, cost and the daily budget (aigateway.js).
   require('./aigateway').init(store);
   // The machine's and the app's numbers, once a minute, for the «سامانه» page (monitor.js).

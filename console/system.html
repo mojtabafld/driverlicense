@@ -252,6 +252,8 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
         <div class="box"><span class="tag">${L('انتشار', 'Release')}</span><h3>${L('CI/CD با GitHub', 'CI/CD with GitHub')}</h3><p>${L('هر تغییر پیش از ادغام آزمایش می‌شود · نسخه‌ای که بالا نیاید خودکار برمی‌گردد', 'Every change is tested before merging · a version that does not start is rolled back')}</p></div>
       </div>
 
+      <div class="pills"><span class="pill ${d.encryption && d.encryption.on ? 'ok' : 'bad'}">${L('رمزگذاری داده‌های پایگاه داده', 'Database data encryption')}: ${d.encryption ? (d.encryption.on ? L('روشن', 'on') : d.encryption.key ? L('در حال شروع', 'starting') : L('خاموش (DATA_KEY تنظیم نشده)', 'off (DATA_KEY not set)')) : '–'}</span></div>
+
       <h2 class="sec">Play Integrity</h2>
       <div class="mcard">${piHtml(d.integrity)}</div>
 
