@@ -14,7 +14,17 @@ const play = require('./playbilling');
 const SCOPE = 'https://www.googleapis.com/auth/playintegrity';
 const NONCE_MS = 10 * 60e3;
 const project = () => String(process.env.PLAY_INTEGRITY_PROJECT || '').trim().replace(/[^0-9]/g, '');
-const available = () => !!project() && play.available();
+// The service account that decodes the tokens: PLAY_INTEGRITY_SERVICE_ACCOUNT (a JSON key, as it is or in base64, of a
+// service account in the Cloud project linked in Play Console), else Google Play's (GOOGLE_PLAY_SERVICE_ACCOUNT), whose
+// own project must then be the linked one.
+let own = null, ownSrc = null;
+function key() {
+  const raw = String(process.env.PLAY_INTEGRITY_SERVICE_ACCOUNT || '').trim();
+  if (!raw) return null;
+  if (raw !== ownSrc) { ownSrc = raw; own = play.readKey(raw); if (!own) console.error('PLAY_INTEGRITY_SERVICE_ACCOUNT is not a service account JSON key'); }
+  return own;
+}
+const available = () => !!project() && (!!key() || play.available());
 
 const nonces = new Map();
 function nonce(username) {
@@ -38,7 +48,7 @@ async function check(username, token) {
   if (!available()) throw Object.assign(new Error('Play Integrity is off'), { status: 404 });
   if (typeof token !== 'string' || token.length < 20 || token.length > 20000) throw Object.assign(new Error('bad token'), { status: 400 });
   const r = await fetch(`https://playintegrity.googleapis.com/v1/${encodeURIComponent(play.pkg())}:decodeIntegrityToken`, {
-    method: 'POST', headers: { Authorization: `Bearer ${await play.accessToken(SCOPE)}`, 'Content-Type': 'application/json' },
+    method: 'POST', headers: { Authorization: `Bearer ${await play.accessToken(SCOPE, key())}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ integrity_token: token }),
   });
   const d = await r.json().catch(() => ({}));
