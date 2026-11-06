@@ -98,7 +98,7 @@ async function loginOptions(origin) {
   return { id, options: opts };
 }
 
-// The account the passkey belongs to, once its signature checks out; null otherwise.
+// The account the passkey belongs to, once its signature checks out ({ user, verified }); null otherwise.
 async function login(users, origin, id, response) {
   const challenge = take('auth:' + String(id || ''));
   if (!challenge || !response || typeof response.id !== 'string') return null;
@@ -117,7 +117,8 @@ async function login(users, origin, id, response) {
   if (!v.verified) return null;
   key.counter = v.authenticationInfo.newCounter;
   key.used = Date.now();
-  return user;
+  // verified: the device checked who it is (fingerprint, face or PIN), as an admin's sign-in needs
+  return { user, verified: !!v.authenticationInfo.userVerified };
 }
 
 // Removing one: the account is not asked to add a passkey again (Mojtaba 2026-11-06).
