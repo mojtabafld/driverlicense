@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 import { PROVE_PICS } from '@/lib/config';
 import type { ThemeMode, ThemeName } from '@/lib/prefs';
 import { DA_REGULAR } from './fonts';
-import { PALETTE, paletteColors, mix, railColor } from './palette';
+import { paletteColors, mix, railColor } from './palette';
 
 // Two looks; STYLE picks the one in use. «teal» is the app's look until October 2026 (main at ed597e7), kept whole so
 // it can come back by setting STYLE = 'teal'. «uber» follows Uber Eats: black and white surfaces, flat cards with soft
@@ -138,24 +138,17 @@ function lighten(hex: string, by: number): string {
   let h = 0;
   if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
   if (h < 0) h += 6; // (a red-pink hue came out negative and was drawn green: «گلبهی», 2026-11-06)
-  const l = Math.min(1, l0 + by), cc = (1 - Math.abs(2 * l - 1)) * sat, x = cc * (1 - Math.abs((h % 2 + 2) % 2 - 1)), m = l - cc / 2;
+  const l = Math.max(0, Math.min(1, l0 + by)), cc = (1 - Math.abs(2 * l - 1)) * sat, x = cc * (1 - Math.abs((h % 2 + 2) % 2 - 1)), m = l - cc / 2;
   const [r1, g1, b1] = h < 1 && h >= 0 ? [cc, x, 0] : h < 2 ? [x, cc, 0] : h < 3 ? [0, cc, x] : h < 4 ? [0, x, cc] : h < 5 ? [x, 0, cc] : [cc, 0, x];
   return '#' + [r1, g1, b1].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
 }
 function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
-  // (dark: the page a deep shade of the theme's own colour, Mojtaba 2026-11-05, so each theme reads as itself)
-  const bg = isDark ? mix(c.accent, '#000000', 0.84) : '#f0f0f2', surface = isDark ? '#17171a' : '#fcfcfd', surface2 = isDark ? '#202024' : '#f4f4f6';
-  const line = isDark ? '#2a2a2f' : '#e6e6ea', border = isDark ? '#222226' : 'rgba(0,0,0,0.05)';
-  // «گرافیت» in the dark theme (Mojtaba 2026-11-05, after a screenshot of a delivery app he sent): its page #1c1c1c,
-  // the cards and panels a step and two lighter, the lines a third.
-  if (isDark && PALETTE === 'graphite') return soft(c, true, '#1c1c1c', '#232323', '#2c2c2c', '#353535', '#2e2e2e');
-  // Light, every theme (Mojtaba 2026-11-06): the page #fdfdfd, the cards the bottom bar's rail 5% lighter (4% until later that day), what sits
-  // inside them the rail itself.
-  if (!isDark) {
-    const rail = railColor(false, c.accent);
-    return soft(c, false, '#fdfdfd', lighten(rail, 0.05), rail, rail, 'rgba(0,0,0,0.04)');
-  }
-  return soft(c, isDark, bg, surface, surface2, line, border);
+  // Every theme (Mojtaba 2026-11-06), light: the page #fdfdfd, the cards the bottom bar's rail 5% lighter (4% until
+  // later that day), what sits inside them the rail itself. Dark, the same mirrored: the page #020202, the cards the
+  // rail 5% darker, what sits inside them the rail. (Until then «گرافیت» dark had its own greys, the others a page in a
+  // deep shade of the theme's colour.)
+  const rail = railColor(isDark, c.accent);
+  return soft(c, isDark, isDark ? '#020202' : '#fdfdfd', lighten(rail, isDark ? -0.05 : 0.05), rail, rail, isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)');
 }
 function soft<T extends typeof tealLight>(c: T, isDark: boolean, bg: string, surface: string, surface2: string, line: string, border: string): T {
   return { ...c, bg, surface, surface2, line, cardBorder: border, hairline: line, glass: surface, glassStrong: surface, glassBorder: line,
