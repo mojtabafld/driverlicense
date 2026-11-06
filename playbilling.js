@@ -29,12 +29,16 @@ function account() {
   const raw = (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT || '').trim() || fileKey();
   if (!raw) return null;
   if (raw === keySrc) return keyCache;
-  keySrc = raw; keyCache = null;
-  for (const text of [raw, Buffer.from(raw, 'base64').toString('utf8')]) {
-    try { const k = JSON.parse(text); if (k.client_email && k.private_key) { keyCache = k; break; } } catch {}
-  }
+  keySrc = raw; keyCache = readKey(raw);
   if (!keyCache) console.error('GOOGLE_PLAY_SERVICE_ACCOUNT is not a service account JSON key');
   return keyCache;
+}
+// A service account's JSON key, as it is or in base64; null if it is not one.
+function readKey(raw) {
+  for (const text of [raw, Buffer.from(raw, 'base64').toString('utf8')]) {
+    try { const k = JSON.parse(text); if (k.client_email && k.private_key) return k; } catch {}
+  }
+  return null;
 }
 const available = () => !!account();
 
@@ -47,10 +51,11 @@ const accountId = username => crypto.createHash('sha256').update(`teoripro-play:
 // (scope: the Play Developer API's by default; integrity.js asks for Play Integrity's)
 const toks = {};
 const ANDROIDPUBLISHER = 'https://www.googleapis.com/auth/androidpublisher';
-async function accessToken(scope = ANDROIDPUBLISHER) {
-  const tok = toks[scope];
+// (key: another service account's, e.g. Play Integrity's own; integrity.js)
+async function accessToken(scope = ANDROIDPUBLISHER, key = null) {
+  const k = key || account(), id = `${k.client_email} ${scope}`, tok = toks[id];
   if (tok && tok.until > Date.now() + 60e3) return tok.value;
-  const k = account(), now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000);
   const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
   const body = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: k.client_email, scope, aud: oauth(), iat: now, exp: now + 3600 })}`;
   const jwt = `${body}.${crypto.createSign('RSA-SHA256').update(body).sign(k.private_key, 'base64url')}`;
@@ -58,7 +63,7 @@ async function accessToken(scope = ANDROIDPUBLISHER) {
     body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.access_token) throw Object.assign(new Error('Google Play is not reachable; try again in a minute.'), { status: 502, detail: d.error });
-  toks[scope] = { value: d.access_token, until: Date.now() + (d.expires_in || 3600) * 1000 };
+  toks[id] = { value: d.access_token, until: Date.now() + (d.expires_in || 3600) * 1000 };
   return d.access_token;
 }
 
@@ -123,4 +128,4 @@ async function verify() {
   return { ok: true, products: found, missing };
 }
 
-module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify, serviceAccount: () => account(), accessToken, pkg };
+module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify, serviceAccount: () => account(), accessToken, pkg, readKey };
