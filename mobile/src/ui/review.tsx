@@ -337,7 +337,7 @@ export function ReviewCard({ q, it, index, lang, fa: faStart, at, alwaysOpen, st
   const flat = !!alwaysOpen;
   return (
     <View style={flat ? { gap: 4 } : { backgroundColor: c.surface, borderRadius: 10, borderWidth: 1, borderColor: c.cardBorder, overflow: 'hidden',
-      shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+      shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 } }}>
       {/* Head: picture, badges, question */}
       <Pressable disabled={alwaysOpen} onPress={() => setOpen(!open)} style={{ padding: flat ? 0 : 12, gap: flat ? 12 : 10 }}>
         <View style={flat ? { borderRadius: radius.btn, overflow: 'hidden' } : null}>

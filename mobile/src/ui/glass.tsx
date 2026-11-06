@@ -5,7 +5,7 @@ import { SOFT, radius, useColors, useIsDark } from './theme';
 
 // «نرم»: a card rests on a faint, wide shadow in the light theme (none in the dark one).
 const SHADOW = Platform.OS === 'web' ? { boxShadow: '0 1px 2px rgba(16,16,24,0.04), 0 8px 28px rgba(16,16,24,0.05)' } as any
-  : { shadowColor: '#101018', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 6 }, elevation: 2 };
+  : { shadowColor: '#101018', shadowOpacity: 0.06, shadowRadius: 18, shadowOffset: { width: 0, height: 6 } };  // (no Android elevation: it drew a dark shadow under the cards, Mojtaba 2026-11-06)
 
 type Props = { style?: StyleProp<ViewStyle>; children?: React.ReactNode; tint?: string; interactive?: boolean; strong?: boolean; r?: number };
 export function Glass({ style, children, tint, r = radius.md }: Props) {

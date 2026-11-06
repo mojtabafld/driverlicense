@@ -632,7 +632,7 @@ export function Card({ children, style, onPress, testID }: { children: React.Rea
   const anim = useEnter(), c = useColors(), under = useSurfaceUnder(c.surface); // (in the apps: the bars see it under them)
   const dashboard = useContext(DashboardContext), look = useDashboardLook(), tabRadius = useContext(CardRadiusContext);
   const dashboardStyle: ViewStyle | null = dashboard ? { borderRadius: tabRadius ?? 26, borderColor: look.edge, shadowColor: c.accent,
-    shadowOpacity: look.dark ? 0.025 : 0.055, shadowRadius: 16, shadowOffset: { width: 0, height: 5 }, elevation: 2 } : null;
+    shadowOpacity: look.dark ? 0.025 : 0.055, shadowRadius: 16, shadowOffset: { width: 0, height: 5 } } : null;  // (no Android elevation, as glass.tsx)
   const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical, ...rest } = StyleSheet.flatten(style) ?? {};
   const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical };
   // Grows to the size the card is given; flexGrow, not flex: 1, so that inside a box of no set height (a row of cards)
