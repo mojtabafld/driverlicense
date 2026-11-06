@@ -137,6 +137,9 @@ function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // «گرافیت» in the dark theme (Mojtaba 2026-11-05, after a screenshot of a delivery app he sent): its page #1c1c1c,
   // the cards and panels a step and two lighter, the lines a third.
   if (isDark && PALETTE === 'graphite') return soft(c, true, '#1c1c1c', '#232323', '#2c2c2c', '#353535', '#2e2e2e');
+  // «سنگی» in the light theme (Mojtaba 2026-11-06, after a picture he sent): the page #f0f0f0, the cards #fdfdfd and the
+  // inner panels #f5f5f7, as measured on it.
+  if (!isDark && PALETTE === 'slate') return soft(c, false, '#f0f0f0', '#fdfdfd', '#f5f5f7', '#e7e7e9', 'rgba(0,0,0,0.05)');
   return soft(c, isDark, bg, surface, surface2, line, border);
 }
 function soft<T extends typeof tealLight>(c: T, isDark: boolean, bg: string, surface: string, surface2: string, line: string, border: string): T {
