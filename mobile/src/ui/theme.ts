@@ -148,11 +148,11 @@ function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // «گرافیت» in the dark theme (Mojtaba 2026-11-05, after a screenshot of a delivery app he sent): its page #1c1c1c,
   // the cards and panels a step and two lighter, the lines a third.
   if (isDark && PALETTE === 'graphite') return soft(c, true, '#1c1c1c', '#232323', '#2c2c2c', '#353535', '#2e2e2e');
-  // Light, every theme (Mojtaba 2026-11-06): the page #fdfdfd, the cards the bottom bar's rail 4% lighter, what sits
+  // Light, every theme (Mojtaba 2026-11-06): the page #fdfdfd, the cards the bottom bar's rail 5% lighter (4% until later that day), what sits
   // inside them the rail itself.
   if (!isDark) {
     const rail = railColor(false, c.accent);
-    return soft(c, false, '#fdfdfd', lighten(rail, 0.04), rail, rail, 'rgba(0,0,0,0.04)');
+    return soft(c, false, '#fdfdfd', lighten(rail, 0.05), rail, rail, 'rgba(0,0,0,0.04)');
   }
   return soft(c, isDark, bg, surface, surface2, line, border);
 }
