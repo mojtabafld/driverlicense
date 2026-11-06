@@ -52,6 +52,7 @@ const playbilling = require('./playbilling');
 playbilling.setKeyFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'play-service-account.json'));
 const push = require('./push');
 const mail = require('./mail');
+const passkey = require('./passkey');
 mail.setSmtpFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'smtp.json'));
 const insights = require('./insights');
 const coach = require('./coach');
@@ -1113,6 +1114,23 @@ async function api(req, res, route) {
     const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
     return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
+  // Passkeys (passkey.js; Mojtaba 2026-11-06): POST passkey/loginoptions gives a challenge (and its id), POST
+  // passkey/login { id, response } signs in the account the passkey belongs to. A passkey is as strong as an emailed
+  // code or more (it cannot be phished), so an admin signing in with one gets admin rights, as with the code.
+  if (req.method === 'POST' && route === 'passkey/loginoptions') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    return send(res, 200, await passkey.loginOptions(originOf(req)));
+  }
+  if (req.method === 'POST' && route === 'passkey/login') {
+    if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
+    const b = await readBody(req);
+    const u = await live(await passkey.login(store.users, originOf(req), b.id, b.response));
+    if (!u) { addFail(ip); return send(res, 401, { error: 'ورود با Passkey انجام نشد.' }); }
+    await store.saveUser(u);
+    fails.delete(ip);
+    const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
+    return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
+  }
   // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (else 404). Counted as a
   // failed try, so one address cannot ask again and again (nor test many addresses).
   if (req.method === 'POST' && route === 'forgot') {
@@ -1328,6 +1346,25 @@ async function api(req, res, route) {
     for (const id of Object.keys(user.devices || {})) if (out(id)) delete user.devices[id];
     await store.saveUser(user);
     return send(res, 200, { ok: true });
+  }
+  // The account's passkeys (Settings): GET passkeys lists them, POST passkey/regoptions then passkey/register
+  // { response } adds one, POST passkey/remove { id } takes one away. Not for guest accounts.
+  if (route === 'passkeys' || route.startsWith('passkey/')) {
+    if (user.guest) return send(res, 403, { error: 'برای Passkey اول با ایمیل وارد شوید.' });
+    if (req.method === 'GET' && route === 'passkeys') return send(res, 200, { passkeys: passkey.listOf(user) });
+    if (req.method === 'POST' && route === 'passkey/regoptions') return send(res, 200, await passkey.regOptions(user, originOf(req)));
+    if (req.method === 'POST' && route === 'passkey/register') {
+      try {
+        const list = await passkey.register(user, originOf(req), (await readBody(req)).response, req.headers['user-agent']);
+        await store.saveUser(user);
+        return send(res, 200, { passkeys: list });
+      } catch (e) { if (e.status) return send(res, e.status, { error: e.message }); throw e; }
+    }
+    if (req.method === 'POST' && route === 'passkey/remove') {
+      const list = passkey.remove(user, (await readBody(req)).id);
+      await store.saveUser(user);
+      return send(res, 200, { passkeys: list });
+    }
   }
   // The web version moving from a token kept in the page's storage to the HttpOnly cookie (once, 2026-11-05): the same
   // session, now in the cookie only.

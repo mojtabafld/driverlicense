@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { AppState, Platform } from 'react-native';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
+import { passkeyLogin } from './passkey';
 import type { Attempt, Bank, NewBank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_BANK, PROVE_PICS } from './config';
 import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n';
@@ -57,6 +58,8 @@ type Ctx = {
   setAvatar: (b: { preset: number } | { image: string } | { remove: true }) => Promise<void>;
   toggleSaved: (id: number, a?: number[]) => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
+  // Signing in with a passkey (lib/passkey.ts; the web version).
+  passkeySignIn: () => Promise<void>;
   // `exam`: the questions' language chosen while signing up (ui/sign-steps.tsx), so the language screen does not come.
   register: (name: string, username: string, password: string, email?: string, exam?: 'da' | 'en') => Promise<void>;
   // Email confirmation is on (the server can send mail): signing up asks for an address, and a new account waits for its link.
@@ -331,6 +334,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     Q: new Map([...(bank?.questions || []), ...(newBank?.questions || []), ...(newBank?.gone || [])].map(q => [q.id, q])),
     login: async (username, password) => { const d = await api<{ token: string }>('POST', 'login', { username, password }); await signedIn(d.token); },
+    passkeySignIn: async () => { const d = await passkeyLogin<{ token: string }>(); await signedIn(d.token); },
     register: async (name, username, password, email, exam) => { const d = await api<{ token: string }>('POST', 'register', { name, username, password, email, lang: UI_LANG, exam }); await signedIn(d.token); },
     mail,
     sendVerify: async email => {

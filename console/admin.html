@@ -98,17 +98,34 @@ details summary{cursor:pointer;font-weight:700}
     return d;
   }
 
+  // Signing in with a passkey (Mojtaba 2026-11-06; made in the app's settings on this site): the server's
+  // passkey/loginoptions and passkey/login (passkey.js); an admin's passkey gives an admin session, as the code does.
+  const b64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0));
+  const u64 = buf => buf ? btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') : undefined;
+  async function passkeyLogin() {
+    const { id, options: o } = await api('POST', 'passkey/loginoptions');
+    const cred = await navigator.credentials.get({ publicKey: { challenge: b64(o.challenge), rpId: o.rpId, timeout: o.timeout, userVerification: o.userVerification, allowCredentials: [] } });
+    const r = cred.response;
+    return api('POST', 'passkey/login', { id, response: { id: cred.id, rawId: u64(cred.rawId), type: cred.type, clientExtensionResults: cred.getClientExtensionResults(),
+      response: { clientDataJSON: u64(r.clientDataJSON), authenticatorData: u64(r.authenticatorData), signature: u64(r.signature), userHandle: u64(r.userHandle) } } });
+  }
   // Signing in (Mojtaba 2026-11-01): the admin's email address (one of the vault's ADMIN_EMAILS), then the code sent to it.
   function login(msg = '') {
     $app.innerHTML = `<form class="card login" id="f">
       <h1>داشبورد Teoripro</h1>
-      <p class="muted" style="margin:0">فقط برای مدیران. ایمیل مدیر را بنویسید تا کد ورود برایش فرستاده شود.</p>
+      <p class="muted" style="margin:0">فقط برای مدیران. ایمیل مدیر را بنویسید تا کد ورود برایش فرستاده شود، یا با Passkey وارد شوید.</p>
       <input name="e" type="email" placeholder="ایمیل" autocomplete="username" dir="ltr" required>
       <div class="err" id="err">${esc(msg)}</div>
       <button class="btn">فرستادن کد</button>
+      ${window.PublicKeyCredential ? '<button class="btn soft" type="button" id="pk">ورود با Passkey</button>' : ''}
     </form>`;
     const f = document.getElementById('f');
     f.e.focus();
+    const pk = document.getElementById('pk');
+    if (pk) pk.onclick = async () => {
+      try { const d = await passkeyLogin(); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد.'); } view(); }
+      catch (er) { if (!['NotAllowedError', 'AbortError'].includes(er.name)) document.getElementById('err').textContent = er.message; }
+    };
     f.onsubmit = async e => {
       e.preventDefault();
       const email = f.e.value.trim();

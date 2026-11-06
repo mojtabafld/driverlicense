@@ -113,7 +113,7 @@ function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?:
 // The ways in, as the Saphe app's first screen (Mojtaba 2026-10-21): Apple (hidden for now, APPLE), Google (`onGoogle`, while
 // the server has it on; else off) and email (its two choices, then `onEmail` in that mode, ui/sign-steps.tsx), then the
 // guest link and the line on the privacy policy.
-export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { onEmail: (mode: 'login' | 'register') => void; mailFirst?: boolean; onGuest: () => void; onGoogle?: () => void; busy: boolean; err: string }) {
+export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mailFirst }: { onEmail: (mode: 'login' | 'register') => void; mailFirst?: boolean; onGuest: () => void; onGoogle?: () => void; onPasskey?: () => void; busy: boolean; err: string }) {
   const c = useColors(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions(), N = useN();
   // The email's choices in place of the ways in, with a short fade (`mailFirst`: back from their steps, they show again).
   const [byMail, setByMail] = useState(!!mailFirst);
@@ -168,6 +168,8 @@ export function Welcome({ onEmail, onGuest, onGoogle, busy, err, mailFirst }: { 
               <Wide main label="ادامه با ایمیل" icon="mail" onPress={() => pick(true)} />
               {APPLE ? <Wide label="ادامه با اپل" mark={fg => <AppleMark color={fg} />} /> : null}
               <Wide label="ادامه با گوگل" mark={() => <GoogleG />} onPress={onGoogle} off={!onGoogle} />
+              {/* (the web version, a browser with passkeys: signing in with one, Mojtaba 2026-11-06) */}
+              {onPasskey ? <Wide label="ورود با Passkey" icon="fingerprint" onPress={onPasskey} /> : null}
             </>}
             {err && !byMail ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
             {byMail ? null : <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
