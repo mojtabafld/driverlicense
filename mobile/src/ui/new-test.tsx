@@ -23,7 +23,7 @@ import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
 import { Sheet } from './sheet';
 import { ChoiceCard } from './step-frame';
 import { SizeSlider } from './size-slider';
-import { ARC, radius, useColors, useIsDark } from './theme';
+import { ARC, useColors, useIsDark } from './theme';
 
 export type NewTest = ReturnType<typeof useNewTest>;
 export function useNewTest() {
@@ -140,10 +140,12 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
     <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
       style={({ pressed }) => ({ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: [5, 4, 3][tight],
-        paddingVertical: [10, 9, 8][tight], paddingHorizontal: [10, 8, 6][tight], borderRadius: radius.pill, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+        paddingVertical: [10, 9, 8][tight], paddingHorizontal: [10, 8, 6][tight], borderRadius: 10, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
       <Icon name={icon} size={[16, 15, 13][tight]} color={color} weight="semibold" />
       {/* (one size for each width of screen; English and Danish, longer, a step smaller) */}
       <T style={{ flexShrink: 1, color, fontWeight: '700', fontSize: [13, 11.5, 10.5, 10][tight + (RTL ? 0 : 1)] }} numberOfLines={1} maxFontSizeMultiplier={1.1}>{text}</T>
+      {/* an «open» arrow after the words, as a link card's «Manage ↗» (↖ in Persian), in squarer corners (Mojtaba 2026-11-06) */}
+      {go ? <Icon name={RTL ? 'arrowUpLeft' : 'arrowUpRight'} size={[16, 15, 13][tight]} color={c.text} /> : null}
     </Pressable>
   );
   // The right ones green, the wrong ones red (the mistakes not put right yet), the rest a neutral grey (Mojtaba 2026-10-21).
