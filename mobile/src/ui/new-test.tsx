@@ -236,8 +236,9 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
 function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: number) => void; onStart: () => void }) {
   const [open, setOpen] = useState(false);
   const dark = useIsDark();
-  // «شروع آزمون {0}» → the words before and after the count ('§' passes through the translation untouched)
-  const [head, tail = ''] = t('شروع آزمون {0}', '§').split('§').map(s => s.trim());
+  // «شروع آزمون {0} سؤالی» → the words before and after the count ('§' passes through the translation untouched); only the
+  // number is in the box, «questions test» after it (Mojtaba 2026-11-06)
+  const [head, tail = ''] = t('شروع آزمون {0} سؤالی', '§').split('§').map(s => s.trim());
   return (
     <View>
       {/* The count pill sits inside the label where the language puts the number («Start 25 questions test»), the whole
@@ -247,8 +248,8 @@ function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: 
           style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5,
             paddingHorizontal: 10, borderRadius: 6, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
           {/* bold (the app's type is capped at 500, so the family is named) in a squarer box; Mojtaba 2026-11-06 */}
-          <T style={{ color: fg, fontSize: 14, lineHeight: 20, fontWeight: 'normal', textAlign: 'center',
-            fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700' }}>{t('{0} سؤال', faNum(size))}</T>
+          <T style={{ color: fg, fontSize: 15, lineHeight: 20, fontWeight: 'normal', textAlign: 'center',
+            fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700' }}>{RTL ? faNum(size) : String(size)}</T>
           <Icon name="chevronDown" size={15} color={fg} weight="semibold" />
         </Pressable>
         {tail ? <T numberOfLines={1} style={{ color: fg, fontSize: 15, lineHeight: 22, fontWeight: '500', textAlign: 'center' }}>{tail}</T> : null}
