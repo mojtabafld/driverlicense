@@ -96,7 +96,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
           backgroundColor: fresh ? c.pick : 'transparent', borderWidth: fresh ? 0 : 1.75, borderColor: c.faint }}>
           {fresh ? <Icon name="check" size={14} color={c.accentText} weight="bold" /> : null}
         </View>
-        <T style={{ flex: 1, fontWeight: '700' }}>بدون سؤال تکراری</T>
+        <T style={{ flex: 1, fontWeight: '700', fontSize: 14, lineHeight: 22 }}>بدون سؤال تکراری</T>
       </Pressable>
       {fresh && unseen.length < size && !(unseen.length === 0 && premium && !limited) ? (
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
