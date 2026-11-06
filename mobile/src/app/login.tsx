@@ -20,6 +20,7 @@ import { CodeBoxes } from '@/ui/code-boxes';
 import { SignSteps } from '@/ui/sign-steps';
 import { Welcome } from '@/ui/welcome';
 import { WelcomeBack } from '@/ui/welcome-back';
+import { cancelled, passkeyOk } from '@/lib/passkey';
 
 // Sign in / sign up switch: a soft track with the chosen side raised. (Main site, light: the track a step darker than
 // the page, as the app's switches look on their white cards, «پاسخ شما / پاسخ صحیح» for one.)
@@ -48,7 +49,7 @@ export default function Login() {
   // Light or dark as the phone is set, with no theme button on these pages (Mojtaba 2026-10-21).
   useSystemTheme();
   const c = useColors(), dark = useIsDark();
-  const { login, register, guest, mail, forgot, checkResetCode, resetPassword, google, googleErr, googleSignIn } = useApp();
+  const { login, register, guest, mail, forgot, checkResetCode, resetPassword, google, googleErr, googleSignIn, passkeySignIn } = useApp();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   // The steps' flow (ui/sign-steps.tsx): «ادامه با ایمیل» signs in or up by the address; the account signed out last signs in.
   const [flow, setFlow] = useState<'login' | 'register' | 'email'>('login');
@@ -147,6 +148,7 @@ export default function Login() {
       {last === undefined ? null
         : welcome && last ? <WelcomeBack last={last} onPick={() => { setFlow('login'); setMailFirst(false); setErr(''); setWelcome(false); }} onNotYou={forgetLastUser} />
         : welcome ? <Welcome busy={busy} err={err || googleErr} onGuest={asGuest} onGoogle={google ? () => { setErr(''); googleSignIn().catch((e: any) => setErr(e.message)); } : undefined}
+          onPasskey={passkeyOk() ? () => { setErr(''); passkeySignIn().catch((e: any) => { if (!cancelled(e)) setErr(e.message); }); } : undefined}
           mailFirst={mailFirst} onEmail={m => { setFlow(m); setMailFirst(true); setErr(''); setWelcome(false); }} />
         : <SignSteps start={flow} known={flow === 'login' && last ? last.id : undefined} onBack={() => setWelcome(true)} />}
       <InstallHint />
