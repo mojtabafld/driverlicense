@@ -698,10 +698,12 @@ export function ActionButton({ label, onPress, icon, tone = 'main', disabled, st
 // resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
 // `big`: taller, with a larger label (the sign-in page's one wide button). `busy`: a spinner in the icon's place while
 // what it does is on its way (the glossary's «آموزش این واژه» waiting for the AI).
-export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big, busy, after }: {
+export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big, busy, after, corner }: {
   label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary' | 'accent'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean; busy?: boolean;
   /** Drawn right after the label, centred with it (the exam's question-count pill); gets the text colour. */
   after?: (fg: string) => React.ReactNode;
+  /** Its corners' radius instead of the theme's (the exam's start, squarer; Mojtaba 2026-11-06). */
+  corner?: number;
 }) {
   const c = useColors();
   const dashboard = useContext(DashboardContext);
@@ -736,7 +738,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
-          minHeight: big ? 56 : 50, borderRadius: SOFT ? 999 : dashboard ? 25 : big ? 16 : radius.btn, borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+          minHeight: big ? 56 : 50, borderRadius: corner ?? (SOFT ? 999 : dashboard ? 25 : big ? 16 : radius.btn), borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
           borderColor: primary ? fill : c.line,
           backgroundColor: primary ? fill : pressed || hovered ? c.surface2 : c.surface,
           opacity: disabled ? (big ? 0.72 : 0.52) : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
