@@ -245,7 +245,7 @@ function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: 
     <View>
       {/* The count pill sits inside the label where the language puts the number («Start 25 questions test»), the whole
           line centred (Mojtaba 2026-11-06). */}
-      <ArcButton label={head} onPress={onStart} icon="play" variant="accent" after={fg => (<>
+      <ArcButton label={head} onPress={onStart} icon="play" variant="accent" corner={12} after={fg => (<>
         <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
           style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5,
             paddingHorizontal: 10, borderRadius: 6, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
