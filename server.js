@@ -1338,9 +1338,12 @@ async function api(req, res, route) {
       if (first && first.dev) { user.mainDev = first.dev; changed = true; }
     }
     if (changed) await store.saveUser(user);
-    const list = Object.entries(devs).filter(([id]) => live.has(id))
+    const all = Object.entries(devs).filter(([id]) => live.has(id))
       .map(([id, d]) => ({ id, name: d.name, at: d.at, seen: d.seen, current: id === mine, main: isMain(user, d) }))
       .sort((a, b) => b.current - a.current || b.main - a.main || b.seen - a.seen);
+    // The same kind of device more than once (signed in again on it, say) is listed once (Mojtaba 2026-11-06): this one,
+    // else the main one, else the latest used; signing it out signs out its copies too (devices/out).
+    const seenNames = new Set(), list = all.filter(d => !seenNames.has(d.name) && seenNames.add(d.name));
     return send(res, 200, { devices: list });
   }
   if (req.method === 'POST' && route === 'devices/out') {
@@ -1348,7 +1351,9 @@ async function api(req, res, route) {
     // never the main device from another one (it signs out only on itself)
     const main = id => isMain(user, (user.devices || {})[id]);
     if (b.id && String(b.id) !== mine && main(String(b.id))) return send(res, 403, { error: 'دستگاه اصلی فقط از روی خودش خارج می‌شود.' });
-    const out = id => id !== mine && !main(id) && (b.others || id === String(b.id || ''));
+    // (one listed device stands for every one of the same name: those go with it)
+    const named = (user.devices || {})[String(b.id || '')], sameName = id => !!named && ((user.devices || {})[id] || {}).name === named.name;
+    const out = id => id !== mine && !main(id) && (b.others || id === String(b.id || '') || sameName(id));
     for (const [k, x] of Object.entries(store.sessions)) if (x.username === user.username && out(devId(k))) { delete store.sessions[k]; await store.deleteSession(k); }
     for (const id of Object.keys(user.devices || {})) if (out(id)) delete user.devices[id];
     await store.saveUser(user);
