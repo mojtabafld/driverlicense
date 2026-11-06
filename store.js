@@ -16,6 +16,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
+const dc = require('./datacrypt');
 
 async function openStore({ dbFile }) {
   const mem = { users: {}, sessions: {}, meta: {} };
@@ -181,12 +182,79 @@ async function openOracle(mem) {
     try { await run(ddl); } catch (e) { if (e.errorNum !== 955) throw e; } // ORA-00955: it is there already
   }
   await run('DELETE FROM tp_sessions WHERE expires < :now', { now: Date.now() });
-  for (const r of await rows('SELECT data AS "data" FROM tp_users')) { const u = JSON.parse(r.data); mem.users[u.username] = u; }
+  // The data sealed by the server (datacrypt.js, with DATA_KEY): documents sealed, accounts' names as HMACs in the keys.
+  // Read in either form. Writes are sealed once `armed`: at once when the database has sealed rows already, else (the
+  // first time) 5 minutes after the server is up (arm, called by server.js), so that a new version rolled back in its
+  // first 2 minutes (deploy/oracle/update.sh) leaves the database as the old one can read it; migrate then seals the rest.
+  let armed = false;
+  const sealOn = () => armed && dc.on();
+  const read = text => JSON.parse(dc.open(text));
+  const doc = obj => clob(sealOn() ? dc.seal(JSON.stringify(obj)) : JSON.stringify(obj));
+  const uKey = name => (sealOn() ? dc.id(name) : name);
+  // an account's name in both forms, for the statements that look one up (its rows may still be in either)
+  const both = name => ({ u1: name, u2: dc.on() ? dc.id(name) : name });
+  const metaRow = (key, data) => (sealOn() && key.includes('@') ? { k: dc.id(key), d: clob(dc.seal(JSON.stringify({ k: key, d: data }))) } : { k: key, d: doc(data) });
+  let seenSealed = false;
+  // the users' rows (a user found twice, as a row in the clear and a sealed one: the newer save)
+  const readUsers = async () => {
+    const out = {};
+    for (const r of await rows('SELECT username AS "k", data AS "data" FROM tp_users')) {
+      if (dc.sealed(r.data)) seenSealed = true;
+      const u = read(r.data), had = out[u.username];
+      if (!had || (+u.savedAt || 0) >= (+had.savedAt || 0)) out[u.username] = u;
+    }
+    return out;
+  };
+  const names = users => {
+    const m = new Map();
+    if (dc.on()) for (const n of Object.keys(users)) m.set(dc.id(n), n);
+    return m;
+  };
+  const nameOf = (map, k) => (dc.isId(k) ? map.get(k) : k);
+  mem.users = await readUsers();
+  let byId = names(mem.users);
   for (const r of await rows('SELECT token AS "token", username AS "username", expires AS "exp" FROM tp_sessions')) {
-    mem.sessions[r.token] = { username: r.username, exp: +r.exp };
+    const n = nameOf(byId, r.username);
+    if (n) mem.sessions[r.token] = { username: n, exp: +r.exp };
   }
-  for (const r of await rows('SELECT k AS "k", data AS "data" FROM tp_meta')) mem.meta[r.k] = JSON.parse(r.data);
-  console.log(`Storage: Oracle Database (${Object.keys(mem.users).length} users)`);
+  for (const r of await rows('SELECT k AS "k", data AS "data" FROM tp_meta')) {
+    if (dc.sealed(r.data)) seenSealed = true;
+    const v = read(r.data);
+    if (dc.isId(r.k)) mem.meta[v.k] = v.d; else mem.meta[r.k] = v;
+  }
+  if (seenSealed) armed = true;
+  console.log(`Storage: Oracle Database (${Object.keys(mem.users).length} users${dc.on() ? `; data encryption ${armed ? 'on' : 'starting in 5 minutes'}` : ''})`);
+  // Everything still in the clear sealed: each row written in its sealed form first, then the old one removed, so a
+  // stop half way loses nothing (both forms are read).
+  const migrate = async () => {
+    if (!sealOn()) return;
+    let n = 0;
+    for (const r of await rows('SELECT username AS "k", data AS "data" FROM tp_users')) {
+      if (dc.isId(r.k) && dc.sealed(r.data)) continue;
+      const u = read(r.data), cur = mem.users[u.username] || u, k = dc.id(u.username);
+      await merge(`MERGE INTO tp_users t USING (SELECT :k AS username FROM dual) s ON (t.username = s.username)
+         WHEN MATCHED THEN UPDATE SET t.data = :d WHEN NOT MATCHED THEN INSERT (username, data) VALUES (:k, :d)`, { k, d: doc(cur) });
+      if (r.k !== k) await run('DELETE FROM tp_users WHERE username = :o', { o: r.k });
+      n++;
+    }
+    for (const name of Object.keys(mem.users)) await run('UPDATE tp_sessions SET username = :k WHERE username = :o', { k: dc.id(name), o: name });
+    for (const r of await rows(`SELECT username AS "k", gone_at AS "at" FROM tp_gone WHERE username NOT LIKE 'x:%'`)) {
+      const k = dc.id(r.k);
+      await merge(`MERGE INTO tp_gone t USING (SELECT :k AS username FROM dual) s ON (t.username = s.username)
+         WHEN MATCHED THEN UPDATE SET t.gone_at = GREATEST(t.gone_at, :at) WHEN NOT MATCHED THEN INSERT (username, gone_at) VALUES (:k, :at)`, { k, at: +r.at });
+      await run('DELETE FROM tp_gone WHERE username = :o', { o: r.k });
+    }
+    for (const r of await rows('SELECT k AS "k", data AS "data" FROM tp_meta')) {
+      if (dc.sealed(r.data)) continue;
+      const row = metaRow(r.k, read(r.data));
+      await merge(`MERGE INTO tp_meta t USING (SELECT :k AS k FROM dual) s ON (t.k = s.k)
+         WHEN MATCHED THEN UPDATE SET t.data = :d WHEN NOT MATCHED THEN INSERT (k, data) VALUES (:k, :d)`, row);
+      if (row.k !== r.k) await run('DELETE FROM tp_meta WHERE k = :o', { o: r.k });
+      n++;
+    }
+    console.log(`Storage: data encryption on (${n} rows sealed)`);
+  };
+  if (armed) migrate().catch(e => console.error('data encryption', e.message));
   return {
     ...mem,
     kind: 'oracle',
@@ -196,44 +264,44 @@ async function openOracle(mem) {
       return merge(
         `MERGE INTO tp_users t
            USING (SELECT :u AS username FROM dual
-                   WHERE NOT EXISTS (SELECT 1 FROM tp_gone g WHERE g.username = :u AND g.gone_at >= :created)) s
+                   WHERE NOT EXISTS (SELECT 1 FROM tp_gone g WHERE g.username IN (:u1, :u2) AND g.gone_at >= :created)) s
            ON (t.username = s.username)
          WHEN MATCHED THEN UPDATE SET t.data = :d
          WHEN NOT MATCHED THEN INSERT (username, data) VALUES (s.username, :d)`,
-        { u: u.username, d: clob(JSON.stringify(u)), created: Math.round(+u.created || 0) });
+        { u: uKey(u.username), ...both(u.username), d: doc(u), created: Math.round(+u.created || 0) });
     },
     saveSession: (token, s) => merge(
       `MERGE INTO tp_sessions t USING (SELECT :t AS token FROM dual) s ON (t.token = s.token)
        WHEN MATCHED THEN UPDATE SET t.expires = :e
        WHEN NOT MATCHED THEN INSERT (token, username, expires) VALUES (:t, :u, :e)`,
-      { t: token, u: s.username, e: s.exp }),
+      { t: token, u: uKey(s.username), e: s.exp }),
     deleteSession: token => run('DELETE FROM tp_sessions WHERE token = :t', { t: token }),
     deleteUser: async username => {
       await merge(
         `MERGE INTO tp_gone t USING (SELECT :u AS username FROM dual) s ON (t.username = s.username)
          WHEN MATCHED THEN UPDATE SET t.gone_at = :at
          WHEN NOT MATCHED THEN INSERT (username, gone_at) VALUES (:u, :at)`,
-        { u: username, at: Date.now() });
-      await run('DELETE FROM tp_sessions WHERE username = :u', { u: username });
-      await run('DELETE FROM tp_users WHERE username = :u', { u: username });
+        { u: uKey(username), at: Date.now() });
+      await run('DELETE FROM tp_sessions WHERE username IN (:u1, :u2)', both(username));
+      await run('DELETE FROM tp_users WHERE username IN (:u1, :u2)', both(username));
     },
-    exists: async username => (await rows('SELECT 1 AS "one" FROM tp_users WHERE username = :u', { u: username })).length > 0,
+    exists: async username => (await rows('SELECT 1 AS "one" FROM tp_users WHERE username IN (:u1, :u2)', both(username))).length > 0,
     catchUp: async () => {
-      const seen = new Set();
-      for (const r of await rows('SELECT data AS "data" FROM tp_users')) {
-        const d = JSON.parse(r.data);
-        seen.add(d.username);
-        const m = mem.users[d.username];
-        if (!m || (+d.savedAt || 0) > (+m.savedAt || 0)) mem.users[d.username] = d;
+      const got = await readUsers();
+      for (const [n, d] of Object.entries(got)) {
+        const m = mem.users[n];
+        if (!m || (+d.savedAt || 0) > (+m.savedAt || 0)) mem.users[n] = d;
       }
       const fresh = Date.now() - 60e3;
-      for (const [k, u] of Object.entries(mem.users)) if (!seen.has(k) && !((+u.created || 0) > fresh)) delete mem.users[k];
+      for (const [k, u] of Object.entries(mem.users)) if (!got[k] && !((+u.created || 0) > fresh)) delete mem.users[k];
+      byId = names(mem.users);
       for (const r of await rows('SELECT token AS "token", username AS "username", expires AS "exp" FROM tp_sessions')) {
-        if (!mem.sessions[r.token]) mem.sessions[r.token] = { username: r.username, exp: +r.exp };
+        const n = nameOf(byId, r.username);
+        if (n && !mem.sessions[r.token]) mem.sessions[r.token] = { username: n, exp: +r.exp };
       }
       for (const [t, x] of Object.entries(mem.sessions)) if (!mem.users[x.username]) delete mem.sessions[t];
       const g = (await rows("SELECT data AS \"data\" FROM tp_meta WHERE k = 'gone'"))[0];
-      if (g) mem.meta.gone = JSON.parse(g.data);
+      if (g) mem.meta.gone = read(g.data);
     },
     saveMeta: (key, data) => {
       mem.meta[key] = data;
@@ -241,8 +309,15 @@ async function openOracle(mem) {
         `MERGE INTO tp_meta t USING (SELECT :k AS k FROM dual) s ON (t.k = s.k)
          WHEN MATCHED THEN UPDATE SET t.data = :d
          WHEN NOT MATCHED THEN INSERT (k, data) VALUES (:k, :d)`,
-        { k: key, d: clob(JSON.stringify(data)) });
+        metaRow(key, data));
     },
+    // (server.js, 5 minutes after it is up) writes sealed from now on, and the rows in the clear sealed
+    arm: () => {
+      if (armed || !dc.on()) return;
+      armed = true;
+      migrate().catch(e => console.error('data encryption', e.message));
+    },
+    encryption: () => ({ key: dc.on(), on: sealOn() }),
     saveBlob: (key, mime, buf) => merge(
       `MERGE INTO tp_blobs t USING (SELECT :k AS k FROM dual) s ON (t.k = s.k)
        WHEN MATCHED THEN UPDATE SET t.mime = :m, t.data = :d
@@ -257,7 +332,7 @@ async function openOracle(mem) {
       `MERGE INTO tp_gone t USING (SELECT :u AS username FROM dual) s ON (t.username = s.username)
        WHEN MATCHED THEN UPDATE SET t.gone_at = :at
        WHEN NOT MATCHED THEN INSERT (username, gone_at) VALUES (:u, :at)`,
-      { u: username, at }),
+      { u: uKey(username), at }),
     close: () => pool.close(5),
     // RAG's meaning vectors (rag.js), in Oracle's VECTOR type: k (a hash of the model and the text) → emb. The table
     // is made on first use; a database without the VECTOR type throws, and rag.js keeps them in memory instead.
