@@ -234,17 +234,21 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
 function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: number) => void; onStart: () => void }) {
   const [open, setOpen] = useState(false);
   const dark = useIsDark();
+  // «شروع آزمون {0}» → the words before and after the count ('§' passes through the translation untouched)
+  const [head, tail = ''] = t('شروع آزمون {0}', '§').split('§').map(s => s.trim());
   return (
     <View>
-      {/* (the count sits right after «شروع آزمون», the whole line centred; Mojtaba 2026-11-05) */}
-      <ArcButton label="شروع آزمون" onPress={onStart} icon="play" variant="accent" after={fg => (
+      {/* The count pill sits inside the label where the language puts the number («Start 25 questions test»), the whole
+          line centred (Mojtaba 2026-11-06). */}
+      <ArcButton label={head} onPress={onStart} icon="play" variant="accent" after={fg => (<>
         <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
-          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, marginStart: 4, paddingVertical: 5,
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5,
             paddingHorizontal: 11, borderRadius: 999, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
           <T style={{ color: fg, fontSize: 14, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>{t('{0} سؤال', faNum(size))}</T>
           <Icon name="chevronDown" size={15} color={fg} weight="semibold" />
         </Pressable>
-      )} />
+        {tail ? <T numberOfLines={1} style={{ color: fg, fontSize: 15, lineHeight: 22, fontWeight: '500', textAlign: 'center' }}>{tail}</T> : null}
+      </>)} />
       <Sheet open={open} onClose={() => setOpen(false)}>
         <View style={{ gap: 10, paddingHorizontal: 4 }}>
           <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '700' }}>تعداد سؤال‌ها</T>

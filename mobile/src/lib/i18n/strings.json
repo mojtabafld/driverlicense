@@ -1819,6 +1819,7 @@
 "شرایط جاده":["Road conditions","Vejforhold"],
 "شروع":["Start","Start"],
 "شروع آزمون":["Start test","Start prøve"],
+"شروع آزمون {0}":["Start {0} test","Start prøve med {0}"],
 "شروع آزمون # سؤالی":["Start #-question test","Start prøve med # spørgsmål"],
 "شروع آموزش":["Start learning","Start undervisning"],
 "شروع آموزش (# سؤال)":["Start learning (# questions)","Start træning (# spørgsmål)"],
