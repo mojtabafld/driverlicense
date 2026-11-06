@@ -53,6 +53,7 @@ playbilling.setKeyFile(path.join(path.dirname(process.env.DB_FILE || path.join(_
 const push = require('./push');
 const mail = require('./mail');
 const passkey = require('./passkey');
+const access = require('./access');
 mail.setSmtpFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'smtp.json'));
 const insights = require('./insights');
 const coach = require('./coach');
@@ -129,11 +130,23 @@ let store; // set in main()
 // scrypt runs on the thread pool (not the event loop), so a flood of sign-in tries does not stall every other request.
 const hashPw = (pw, salt) => new Promise((resolve, reject) => crypto.scrypt(pw, salt, 64, (e, k) => (e ? reject(e) : resolve(k.toString('hex')))));
 async function checkPw(pw, user) {
+  // (an account without a password, a guest's say, never matches: it was a server error, outside the try count)
+  if (!user || !user.salt || !user.hash || typeof pw !== 'string') return false;
   const a = Buffer.from(await hashPw(pw, user.salt), 'hex'), b = Buffer.from(user.hash, 'hex');
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 const isHttps = req => (req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https';
-const originOf = req => `${isHttps(req) ? 'https' : 'http'}://${String(req.headers.host || 'localhost').replace(/[^a-zA-Z0-9.:-]/g, '')}`;
+// The site's address for links (emails) and passkeys: the request's own host only when it is one of the site's
+// (PUBLIC_HOSTS, comma separated; teori.bitlane.app by default) or a local one in development; any other Host header
+// gets PUBLIC_ORIGIN (Mojtaba 2026-11-06: a forged Host must not put another site in an email's link).
+const PUBLIC_HOSTS = new Set(String(process.env.PUBLIC_HOSTS || 'teori.bitlane.app').split(',').map(x => x.trim().toLowerCase()).filter(Boolean));
+const PUBLIC_ORIGIN = process.env.PUBLIC_ORIGIN || 'https://teori.bitlane.app';
+const localHost = h => /^(localhost|127\.0\.0\.1|\[::1\]|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(h);
+const originOf = req => {
+  const host = String(req.headers.host || 'localhost').toLowerCase().replace(/[^a-z0-9.:\[\]-]/g, '');
+  if (!PUBLIC_HOSTS.has(host.replace(/:\d+$/, '')) && !localHost(host)) return PUBLIC_ORIGIN;
+  return `${isHttps(req) ? 'https' : 'http'}://${host}`;
+};
 const cookie = (req, value, maxAge) =>
   `tp_session=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${isHttps(req) ? '; Secure' : ''}`;
 
@@ -190,6 +203,9 @@ async function markAdminSession(token) {
   all[tokenHash(token)] = now + ADMIN_SESSION_DAYS * 864e5;
   await store.saveMeta('adminSessions', { s: all });
 }
+// An admin who has a passkey gets admin rights only with it (Mojtaba 2026-11-06): an emailed code or Google gives an
+// ordinary session. ADMIN_CODE_LOGIN=1 (the vault) lets the code in again, e.g. when the passkey's device is lost.
+const codeAdmin = u => isAdmin(u) && (!(u.passkeys || []).length || process.env.ADMIN_CODE_LOGIN === '1');
 const adminSession = sess => !!sess && isAdmin(sess.user) && (adminSessions()[tokenHash(sess.token)] || 0) > Date.now();
 // The mobile app (X-Client: app) gets its session token in the response and sends it back as
 // "Authorization: Bearer <token>"; the web site keeps using the HttpOnly cookie only.
@@ -619,6 +635,15 @@ const clientIp = req => {
 
 // Simple rate limit per IP: 10 failures / 10 minutes (login and invite code).
 const fails = new Map();
+// Wrong passwords for one account, from any address (Mojtaba 2026-11-06): 10 in 15 minutes stop that account's password
+// sign-in for the rest of them, so many addresses cannot guess together (the code, Google and passkey still work).
+const acctFails = new Map();
+const acctLocked = name => { const f = acctFails.get(name); return !!f && f.n >= 10 && Date.now() - f.t < 15 * 60e3; };
+function acctFail(name) {
+  const f = acctFails.get(name);
+  if (!f || Date.now() - f.t > 15 * 60e3) acctFails.set(name, { n: 1, t: Date.now() }); else f.n++;
+  if (acctFails.size > 50000) acctFails.delete(acctFails.keys().next().value);
+}
 function tooMany(ip) {
   const f = fails.get(ip);
   return f && f.n >= 10 && Date.now() - f.t < 10 * 60e3;
@@ -715,6 +740,9 @@ const WEBS = {
 };
 // The pages themselves: never shown inside another site's frame (clickjacking), no plugins, no <base> tricks, and
 // only the origin (not the path) sent to other sites.
+const appCsp = nonce => [`default-src 'self'`, `script-src 'self' 'nonce-${nonce}'`, `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+  `img-src 'self' data: blob:`, `font-src 'self' data: https://fonts.gstatic.com`, `connect-src 'self'`, `media-src 'self' blob: data:`, `worker-src 'self' blob:`,
+  `manifest-src 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, `base-uri 'self'`, `object-src 'none'`].join('; ');
 const PAGE_HEADERS = { 'X-Frame-Options': 'DENY', 'Content-Security-Policy': "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
   'Referrer-Policy': 'strict-origin-when-cross-origin' };
 function serveAppWeb(req, res, p, web = WEBS.root) {
@@ -732,11 +760,15 @@ function serveAppWeb(req, res, p, web = WEBS.root) {
     fs.readFile(file, (e, buf) => {
       if (e) { res.writeHead(404); return res.end('Not found'); }
       if (isIndex && web.page) buf = web.page(buf);
+      // The app's page: only its own scripts run (and the theme's line, by its nonce), so a slipped-in script would not
+      // (Mojtaba 2026-11-06). Its styles are inline (React Native for the web writes them).
+      const nonce = isIndex ? crypto.randomBytes(16).toString('base64') : '';
+      if (isIndex) buf = Buffer.from(buf.toString('utf8').replace(/<script>window\.__TP_THEME/g, `<script nonce="${nonce}">window.__TP_THEME`));
       res.writeHead(200, {
         'Content-Type': APP_MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
         // (The service worker, sw.js, is looked for again on every start, so a new one reaches the devices at once.)
         'Cache-Control': isIndex ? 'no-store' : p.includes('/_expo/static/') ? 'public, max-age=31536000, immutable' : p === '/sw.js' ? 'no-cache' : 'public, max-age=86400',
-        'X-Content-Type-Options': 'nosniff', ...(isIndex ? PAGE_HEADERS : {}),
+        'X-Content-Type-Options': 'nosniff', ...(isIndex ? { ...PAGE_HEADERS, 'Content-Security-Policy': appCsp(nonce) } : {}),
       });
       res.end(req.method === 'HEAD' ? undefined : buf);
     });
@@ -746,6 +778,12 @@ function serveAppWeb(req, res, p, web = WEBS.root) {
 function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
+  // Where to report a security problem (RFC 9116; Mojtaba 2026-11-06).
+  if (p === '/.well-known/security.txt' || p === '/security.txt') {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+    const exp = new Date(Date.now() + 180 * 864e5).toISOString();
+    return res.end(req.method === 'HEAD' ? undefined : `Contact: ${PUBLIC_ORIGIN}/help\nExpires: ${exp}\nPreferred-Languages: en, da, fa\nCanonical: ${PUBLIC_ORIGIN}/.well-known/security.txt\n`);
+  }
   // Android's check that the app may use this site's passkeys (passkey.js; Mojtaba 2026-11-06).
   if (p === '/.well-known/assetlinks.json') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff' });
@@ -949,11 +987,13 @@ async function api(req, res, route) {
     const { username, password } = await readBody(req);
     const id = String(username || '').trim().toLowerCase();
     const user = await live(store.users[id] || (id.includes('@') ? Object.values(store.users).find(x => x.email === id) : undefined));
+    if (user && acctLocked(user.username)) { addFail(ip); return send(res, 429, { error: 'تلاش‌های ناموفق زیاد برای این حساب. ۱۵ دقیقه دیگر دوباره امتحان کنید، یا با کد ایمیلی وارد شوید.' }); }
     if (!user || typeof password !== 'string' || !(await checkPw(password, user))) {
       addFail(ip);
+      if (user) acctFail(user.username);
       return send(res, 401, { error: 'ایمیل (یا نام کاربری) یا رمز عبور اشتباه است.' });
     }
-    fails.delete(ip);
+    fails.delete(ip); acctFails.delete(user.username);
     const token = await newSession(req, res, user.username);
     return send(res, 200, { user: publicUser(user), ...tokenOut(req, token) });
   }
@@ -978,6 +1018,7 @@ async function api(req, res, route) {
     const { email, code } = await readBody(req), e = mail.normal(email);
     const u = ADMINS.has(e) ? await live(resetUser(e)) : null;
     if (!u || !(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+    if (!codeAdmin(u)) return send(res, 403, { error: 'این حساب Passkey دارد؛ با «ورود با Passkey» وارد شوید.' });
     delete u.reset;
     if (!u.emailOk) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
     await store.saveUser(u);
@@ -1052,7 +1093,7 @@ async function api(req, res, route) {
     googleCodes.delete(k);
     const u = g && Date.now() - g.at < 60e3 ? store.users[g.username] : null;
     if (!u) { addFail(ip); return send(res, 400, { error: 'ورود با گوگل کامل نشد؛ دوباره امتحان کنید.' }); }
-    const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
+    const token = await newSession(req, res, u.username, { admin: codeAdmin(u) });
     return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
   // POST code { email, lang, signup }: the code that signs in (an account with this address; else 404) or, with
@@ -1118,7 +1159,7 @@ async function api(req, res, route) {
       mail.sendWelcome(e, u.name, ['fa', 'en', 'da'].includes(b.lang) ? b.lang : 'fa', appLink(req), back).catch(err => console.error('welcome mail', err.message));
     }
     fails.delete(ip);
-    const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
+    const token = await newSession(req, res, u.username, { admin: codeAdmin(u) });
     return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
   // Passkeys (passkey.js; Mojtaba 2026-11-06): POST passkey/loginoptions gives a challenge (and its id), POST
@@ -1131,11 +1172,13 @@ async function api(req, res, route) {
   if (req.method === 'POST' && route === 'passkey/login') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const b = await readBody(req);
-    const u = await live(await passkey.login(store.users, originOf(req), b.id, b.response));
+    const got = await passkey.login(store.users, originOf(req), b.id, b.response);
+    const u = await live(got && got.user);
     if (!u) { addFail(ip); return send(res, 401, { error: 'ورود با Passkey انجام نشد.' }); }
     await store.saveUser(u);
     fails.delete(ip);
-    const token = await newSession(req, res, u.username, { admin: isAdmin(u) });
+    // admin rights only when the device itself checked who it is (fingerprint, face or PIN; Mojtaba 2026-11-06)
+    const token = await newSession(req, res, u.username, { admin: isAdmin(u) && got.verified });
     return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
   // POST forgot { email, lang }: a 6-digit code to that address, when an account has it (else 404). Counted as a
@@ -1265,7 +1308,8 @@ async function api(req, res, route) {
   // A device's check that it is still signed in (lib/store.tsx, every few seconds while the app is in front): another
   // device's «خروج» (devices/out) ends this session, and the next check signs it out here.
   if (req.method === 'GET' && route === 'alive') return send(res, 200, { ok: true });
-  const user = s.user, adminReq = adminSession(s);
+  // (an admin's rights also need Cloudflare Access's sign-in: access.js)
+  const user = s.user, adminReq = adminSession(s) && await access.adminOk(req, emailOf(user));
   // The «سامانه» page's numbers (console/system.html): the machine and the app over 24 hours (monitor.js), the sizes,
   // the AI's use, RAG, the backups, the version running.
   if (req.method === 'GET' && route === 'system') {
@@ -2542,10 +2586,13 @@ async function main() {
     if (isHttps(req)) res.setHeader('Strict-Transport-Security', 'max-age=31536000');
     let pathname;
     try { pathname = new URL(req.url, 'http://x').pathname; } catch { res.writeHead(400); return res.end(); }
-    // The app's web version runs on another origin and authenticates with a Bearer token (never cookies),
-    // so cross-origin requests are allowed without credentials.
-    if (req.headers.origin) {
-      res.setHeader('Access-Control-Allow-Origin', '*');
+    // Other sites may not call the API from a browser (Mojtaba 2026-11-06; it was any origin): only the site's own
+    // addresses and local development are answered with CORS headers. The Android app sends no Origin.
+    const origin = String(req.headers.origin || '');
+    let oh = ''; try { oh = new URL(origin).host.toLowerCase(); } catch {}
+    if (origin && (PUBLIC_HOSTS.has(oh.replace(/:\d+$/, '')) || localHost(oh))) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
       res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Client, X-Device, X-Session');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
@@ -2555,7 +2602,7 @@ async function main() {
       try { await api(req, res, m[1]); }
       catch (e) {
         console.error(e);
-        if (!res.headersSent) send(res, /json|large/.test(e.message) ? 400 : 500, { error: 'خطای سرور؛ دوباره امتحان کنید.' });
+        if (!res.headersSent) send(res, /json|large/.test(e.message) ? 400 : 500, { error: /json|large/.test(e.message) ? 'درخواست نامعتبر است.' : 'خطای سرور؛ دوباره امتحان کنید.' });
       }
     } else if (req.method === 'GET' || req.method === 'HEAD') serveStatic(req, res);
     else { res.writeHead(405); res.end(); }
