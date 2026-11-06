@@ -137,6 +137,7 @@ function lighten(hex: string, by: number): string {
   const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l0 - 1));
   let h = 0;
   if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  if (h < 0) h += 6; // (a red-pink hue came out negative and was drawn green: «گلبهی», 2026-11-06)
   const l = Math.min(1, l0 + by), cc = (1 - Math.abs(2 * l - 1)) * sat, x = cc * (1 - Math.abs((h % 2 + 2) % 2 - 1)), m = l - cc / 2;
   const [r1, g1, b1] = h < 1 && h >= 0 ? [cc, x, 0] : h < 2 ? [x, cc, 0] : h < 3 ? [0, cc, x] : h < 4 ? [0, x, cc] : h < 5 ? [x, 0, cc] : [cc, 0, x];
   return '#' + [r1, g1, b1].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
