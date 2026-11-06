@@ -54,6 +54,8 @@ const push = require('./push');
 const mail = require('./mail');
 const passkey = require('./passkey');
 const access = require('./access');
+const audit = require('./audit');
+const integrity = require('./integrity');
 mail.setSmtpFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'smtp.json'));
 const insights = require('./insights');
 const coach = require('./coach');
@@ -174,7 +176,7 @@ async function newSession(req, res, username, { admin = false } = {}) {
   const s = { username, exp: now + SESSION_DAYS * 864e5 };
   store.sessions[key] = s;
   await store.saveSession(key, s);
-  if (admin) await markAdminSession(token);
+  if (admin) await markAdminSession(token, req, username);
   // The device, and an email when the account has not been on this kind of device before (not for its first one).
   const u = store.users[username];
   if (u) {
@@ -198,7 +200,8 @@ async function newSession(req, res, username, { admin = false } = {}) {
 // Such sessions are kept by the hash of their token in store.meta.adminSessions (so the sessions table stays as it is).
 const ADMIN_SESSION_DAYS = 7;
 const adminSessions = () => (store.meta.adminSessions && store.meta.adminSessions.s) || {};
-async function markAdminSession(token) {
+async function markAdminSession(token, req, username) {
+  audit.record({ by: emailOf(store.users[username]) || username, act: 'signin', ip: clientIp(req), dev: deviceOf(req), d: { how: req.auditHow || 'code' } });
   const now = Date.now(), all = Object.fromEntries(Object.entries(adminSessions()).filter(([, exp]) => exp > now));
   all[tokenHash(token)] = now + ADMIN_SESSION_DAYS * 864e5;
   await store.saveMeta('adminSessions', { s: all });
@@ -707,7 +710,7 @@ function readBody(req, limit = 256e3) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
     req.on('data', c => { size += c.length; if (size > limit) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
-    req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); } catch { reject(new Error('bad json')); } });
+    req.on('end', () => { try { resolve(req.auditBody = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')); } catch { reject(new Error('bad json')); } });
     req.on('error', reject);
   });
 }
@@ -929,7 +932,9 @@ async function api(req, res, route) {
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
       guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions(),
       // the questions' made pictures' versions too, so the app sees a new one without signing in again
-      imgv: imagegen.versions() });
+      imgv: imagegen.versions(),
+      // Play Integrity's Cloud project number (integrity.js), for the Android app's check
+      integrity: integrity.available() ? integrity.project() : undefined });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -1017,7 +1022,11 @@ async function api(req, res, route) {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const { email, code } = await readBody(req), e = mail.normal(email);
     const u = ADMINS.has(e) ? await live(resetUser(e)) : null;
-    if (!u || !(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+    if (!u || !(await resetCodeOk(u, code))) {
+      addFail(ip);
+      if (u) audit.record({ by: e, act: 'signin-failed', ip, dev: deviceOf(req), d: { how: 'code' } });
+      return send(res, 400, { error: BAD_CODE });
+    }
     if (!codeAdmin(u)) return send(res, 403, { error: 'این حساب Passkey دارد؛ با «ورود با Passkey» وارد شوید.' });
     delete u.reset;
     if (!u.emailOk) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
@@ -1093,6 +1102,7 @@ async function api(req, res, route) {
     googleCodes.delete(k);
     const u = g && Date.now() - g.at < 60e3 ? store.users[g.username] : null;
     if (!u) { addFail(ip); return send(res, 400, { error: 'ورود با گوگل کامل نشد؛ دوباره امتحان کنید.' }); }
+    req.auditHow = 'google';
     const token = await newSession(req, res, u.username, { admin: codeAdmin(u) });
     return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
@@ -1178,6 +1188,7 @@ async function api(req, res, route) {
     await store.saveUser(u);
     fails.delete(ip);
     // admin rights only when the device itself checked who it is (fingerprint, face or PIN; Mojtaba 2026-11-06)
+    req.auditHow = 'passkey';
     const token = await newSession(req, res, u.username, { admin: isAdmin(u) && got.verified });
     return send(res, 200, { user: publicUser(u), ...tokenOut(req, token) });
   }
@@ -1308,8 +1319,24 @@ async function api(req, res, route) {
   // A device's check that it is still signed in (lib/store.tsx, every few seconds while the app is in front): another
   // device's «خروج» (devices/out) ends this session, and the next check signs it out here.
   if (req.method === 'GET' && route === 'alive') return send(res, 200, { ok: true });
+  // Play Integrity (integrity.js): the Android app's one-time value, then its token, whose verdict is kept on the device.
+  if (req.method === 'GET' && route === 'integrity/nonce') {
+    if (!integrity.available()) return send(res, 404, { error: 'off' });
+    return send(res, 200, { nonce: integrity.nonce(s.user.username) });
+  }
+  if (req.method === 'POST' && route === 'integrity/check') {
+    try {
+      const v = await integrity.check(s.user.username, (await readBody(req, 32e3)).token);
+      const d = s.user.devices && s.user.devices[devId(s.key)];
+      if (d) { d.pi = v; await store.saveUser(s.user); }
+      if (!v.ok) console.error('integrity', s.user.username.replace(/^(.{2}).*@/, '$1…@'), v.app, v.device.join(',') || '-');
+      return send(res, 200, { ok: v.ok });
+    } catch (e) { return send(res, e.status || 502, { error: e.message }); }
+  }
   // (an admin's rights also need Cloudflare Access's sign-in: access.js)
   const user = s.user, adminReq = adminSession(s) && await access.adminOk(req, emailOf(user));
+  // the admins' log (audit.js): an admin's actions, and an admin session's requests refused
+  if (adminSession(s)) audit.watch(req, res, { route, by: emailOf(user), ip, dev: deviceOf(req), admin: adminReq });
   // The «سامانه» page's numbers (console/system.html): the machine and the app over 24 hours (monitor.js), the sizes,
   // the AI's use, RAG, the backups, the version running.
   if (req.method === 'GET' && route === 'system') {
@@ -1321,7 +1348,7 @@ async function api(req, res, route) {
       at: Date.now(), up: Math.round(process.uptime()), node: process.version, version: VERSION, commit: head.slice(0, 7),
       users: Object.keys(store.users).length, storage: store.kind || 'file', files: store.files ? await store.files.ready() : null,
       monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models },
-      rag: require('./rag').info(), backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
+      rag: require('./rag').info(), audit: audit.list().slice(0, 200), integrity: integrity.report(store.users), backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
     });
   }
   // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
@@ -2399,6 +2426,7 @@ async function main() {
   // The pictures and other files in Oracle Cloud Object Storage when OCI_BUCKET is set (objstore.js), and a daily
   // backup of the database's data there (backup.js).
   store = require('./objstore').wrap(store);
+  audit.init(store);
   // Every Claude call's model, use, cost and the daily budget (aigateway.js).
   require('./aigateway').init(store);
   // The machine's and the app's numbers, once a minute, for the «سامانه» page (monitor.js).

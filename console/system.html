@@ -136,6 +136,28 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
 
   // «آزمون جدید»'s questions that say nearly the same (rag.js duplicates; /api/ragdupes), asked for once with the page.
   let DUP = null;
+  // The admins' log (audit.js): sign-ins with admin rights, the changes made with them, and refused requests.
+  function auditHtml(list) {
+    if (!list || !list.length) return `<p class="note">${L('هنوز چیزی ثبت نشده است.', 'Nothing recorded yet.')}</p>`;
+    const when = t => new Date(t).toLocaleString('en-GB', { timeZone: 'Europe/Copenhagen', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const what = x => x.act === 'signin' ? L('ورود مدیر', 'Admin sign-in') : x.act === 'signin-failed' ? L('کد نادرست برای ورود مدیر', 'Wrong admin sign-in code')
+      : x.act.startsWith('denied:') ? L('رد شد: ', 'Refused: ') + x.act.slice(7) : `${x.m || ''} ${x.act}`;
+    const bad = x => x.act === 'signin-failed' || x.act.startsWith('denied:') || (x.code && x.code >= 400);
+    const det = x => x.d ? Object.entries(x.d).map(([k, v]) => `${k}: ${v}`).join(' · ') : '';
+    return `<div class="tblw" style="border:0;padding:0"><table><thead><tr><th>${L('زمان', 'When')}</th><th>${L('مدیر', 'Admin')}</th><th>${L('کار', 'Action')}</th><th>${L('جزئیات', 'Details')}</th><th>${L('از', 'From')}</th></tr></thead><tbody>
+      ${list.slice(0, 100).map(x => `<tr${bad(x) ? ' style="color:#c0392b"' : ''}><td class="num">${esc(when(x.at))}</td><td dir="ltr">${esc(x.by)}</td><td dir="auto">${esc(what(x))}${x.code ? ` <span class="num">(${x.code})</span>` : ''}</td><td dir="auto">${esc(det(x))}</td><td dir="ltr"><span class="num">${esc(x.ip || '')}</span> ${esc(x.dev || '')}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
+  // Play Integrity (integrity.js): the Android devices checked in 30 days, by Google Play's verdict.
+  function piHtml(pi) {
+    if (!pi || !pi.on) return `<p class="note">${L('خاموش است: PLAY_INTEGRITY_PROJECT (شماره‌ی پروژه‌ی Google Cloud) تنظیم نشده.', 'Off: PLAY_INTEGRITY_PROJECT (the Google Cloud project number) is not set.')}</p>`;
+    if (!pi.devices) return `<p class="note">${L('هنوز هیچ دستگاهی بررسی نشده است.', 'No device checked yet.')}</p>`;
+    const row = o => Object.entries(o).map(([k, v]) => `<span class="pill${/PLAY_RECOGNIZED|STRONG|DEVICE/.test(k) ? ' ok' : ' bad'}">${esc(k)} · <span class="num">${fa(v)}</span></span>`).join(' ');
+    return `<div class="mhead"><h3>${L(`${fa(pi.ok)} از ${fa(pi.devices)} دستگاه سالم`, `${fa(pi.ok)} of ${fa(pi.devices)} devices pass`)}</h3><span class="mstat">${L('۳۰ روز اخیر · فقط ثبت، بدون مسدودسازی', 'last 30 days · recorded only, nothing blocked')}</span></div>
+      <p>${L('اپ', 'App')}: ${row(pi.app)}</p><p>${L('دستگاه', 'Device')}: ${row(pi.device)}</p>`;
+  }
+
   function dupesHtml() {
     if (!DUP) return `<p class="note">${L('در حال بررسی…', 'Checking…')}</p>`;
     if (DUP.pending) return `<p class="note">${L('بردارهای معنایی سؤال‌ها هنوز آماده نیست.', "The questions' meaning vectors are not ready yet.")}</p>`;
@@ -229,6 +251,12 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
         <div class="box"><span class="tag">${L('پایش', 'Monitoring')}</span><h3>${L('هشدارها', 'Alerts')}</h3><p>${L('گیت‌هاب هر ۱۵ دقیقه سایت را بررسی می‌کند · اوراکل برای حافظه، پردازنده و قطعی ایمیل می‌فرستد', 'GitHub checks the site every 15 minutes · Oracle emails on memory, CPU and outages')}</p></div>
         <div class="box"><span class="tag">${L('انتشار', 'Release')}</span><h3>${L('CI/CD با GitHub', 'CI/CD with GitHub')}</h3><p>${L('هر تغییر پیش از ادغام آزمایش می‌شود · نسخه‌ای که بالا نیاید خودکار برمی‌گردد', 'Every change is tested before merging · a version that does not start is rolled back')}</p></div>
       </div>
+
+      <h2 class="sec">Play Integrity</h2>
+      <div class="mcard">${piHtml(d.integrity)}</div>
+
+      <h2 class="sec">${L('گزارش کارهای مدیر', "Admins' log")}</h2>
+      <div class="mcard">${auditHtml(d.audit)}</div>
 
       <h2 class="sec">${L('آزمون ظرفیت: ۱۰۰۰ کاربر همزمان (۳۱ اکتبر)', 'Capacity test: 1,000 concurrent users (31 October)')}</h2>
       <div class="kpis">

@@ -44,19 +44,22 @@ const accountId = username => crypto.createHash('sha256').update(`teoripro-play:
 
 // An access token for the Play Developer API: a JWT signed with the service account's key, swapped at Google's OAuth
 // endpoint; kept until a minute before it runs out.
-let tok = null;
-async function accessToken() {
+// (scope: the Play Developer API's by default; integrity.js asks for Play Integrity's)
+const toks = {};
+const ANDROIDPUBLISHER = 'https://www.googleapis.com/auth/androidpublisher';
+async function accessToken(scope = ANDROIDPUBLISHER) {
+  const tok = toks[scope];
   if (tok && tok.until > Date.now() + 60e3) return tok.value;
   const k = account(), now = Math.floor(Date.now() / 1000);
   const b64 = o => Buffer.from(JSON.stringify(o)).toString('base64url');
-  const body = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: k.client_email, scope: 'https://www.googleapis.com/auth/androidpublisher', aud: oauth(), iat: now, exp: now + 3600 })}`;
+  const body = `${b64({ alg: 'RS256', typ: 'JWT' })}.${b64({ iss: k.client_email, scope, aud: oauth(), iat: now, exp: now + 3600 })}`;
   const jwt = `${body}.${crypto.createSign('RSA-SHA256').update(body).sign(k.private_key, 'base64url')}`;
   const r = await fetch(oauth(), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }) });
   const d = await r.json().catch(() => ({}));
   if (!r.ok || !d.access_token) throw Object.assign(new Error('Google Play is not reachable; try again in a minute.'), { status: 502, detail: d.error });
-  tok = { value: d.access_token, until: Date.now() + (d.expires_in || 3600) * 1000 };
-  return tok.value;
+  toks[scope] = { value: d.access_token, until: Date.now() + (d.expires_in || 3600) * 1000 };
+  return d.access_token;
 }
 
 async function call(method, path) {
@@ -120,4 +123,4 @@ async function verify() {
   return { ok: true, products: found, missing };
 }
 
-module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify, serviceAccount: () => account() };
+module.exports = { available, accountId, check, consume, PRODUCTS, products: () => Object.keys(PRODUCTS), setKeyFile, info, saveKey, verify, serviceAccount: () => account(), accessToken, pkg };
