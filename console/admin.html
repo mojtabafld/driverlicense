@@ -123,7 +123,7 @@ details summary{cursor:pointer;font-weight:700}
     f.e.focus();
     const pk = document.getElementById('pk');
     if (pk) pk.onclick = async () => {
-      try { const d = await passkeyLogin(); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد.'); } view(); }
+      try { const d = await passkeyLogin(); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد (Passkey باید با اثر انگشت، چهره یا رمز دستگاه تأیید شود).'); } view(); }
       catch (er) { if (!['NotAllowedError', 'AbortError'].includes(er.name)) document.getElementById('err').textContent = er.message; }
     };
     f.onsubmit = async e => {
@@ -140,11 +140,18 @@ details summary{cursor:pointer;font-weight:700}
       <input name="c" inputmode="numeric" autocomplete="one-time-code" placeholder="کد ۶ رقمی" dir="ltr" maxlength="8" required>
       <div class="err" id="err">${esc(msg)}</div>
       <button class="btn">ورود</button>
+      ${window.PublicKeyCredential ? '<button class="btn soft" type="button" id="pk">ورود با Passkey</button>' : ''}
       <button class="btn soft" type="button" id="back">ایمیل دیگر</button>
     </form>`;
     const f = document.getElementById('f');
     f.c.focus();
     document.getElementById('back').onclick = () => login();
+    // (an admin with a passkey is told to use it: the button is here too, Mojtaba 2026-11-06)
+    const pk = document.getElementById('pk');
+    if (pk) pk.onclick = async () => {
+      try { const d = await passkeyLogin(); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد (Passkey باید با اثر انگشت، چهره یا رمز دستگاه تأیید شود).'); } view(); }
+      catch (er) { if (!['NotAllowedError', 'AbortError'].includes(er.name)) document.getElementById('err').textContent = er.message; }
+    };
     f.onsubmit = async e => {
       e.preventDefault();
       try { const d = await api('POST', 'admincodein', { email, code: f.c.value }); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد.'); } view(); }
