@@ -243,8 +243,10 @@ function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: 
       <ArcButton label={head} onPress={onStart} icon="play" variant="accent" after={fg => (<>
         <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
           style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5,
-            paddingHorizontal: 11, borderRadius: 999, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
-          <T style={{ color: fg, fontSize: 14, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>{t('{0} سؤال', faNum(size))}</T>
+            paddingHorizontal: 10, borderRadius: 6, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
+          {/* bold (the app's type is capped at 500, so the family is named) in a squarer box; Mojtaba 2026-11-06 */}
+          <T style={{ color: fg, fontSize: 14, lineHeight: 20, fontWeight: 'normal', textAlign: 'center',
+            fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700' }}>{t('{0} سؤال', faNum(size))}</T>
           <Icon name="chevronDown" size={15} color={fg} weight="semibold" />
         </Pressable>
         {tail ? <T numberOfLines={1} style={{ color: fg, fontSize: 15, lineHeight: 22, fontWeight: '500', textAlign: 'center' }}>{tail}</T> : null}
