@@ -130,6 +130,17 @@ const PAL = STYLE === 'arc' ? paletteColors() : null;
 export const SOFT = STYLE === 'arc';
 // A colour's lightness (0 dark … 1 light), to put dark or light text on it.
 export const lightness = (hex: string) => { const n = parseInt(hex.replace('#', '').slice(0, 6), 16); return (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; };
+// A colour with its HSL lightness raised by `by` (0…1).
+function lighten(hex: string, by: number): string {
+  const n = parseInt(hex.slice(1, 7), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l0 = (max + min) / 2, d = max - min;
+  const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l0 - 1));
+  let h = 0;
+  if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  const l = Math.min(1, l0 + by), cc = (1 - Math.abs(2 * l - 1)) * sat, x = cc * (1 - Math.abs((h % 2 + 2) % 2 - 1)), m = l - cc / 2;
+  const [r1, g1, b1] = h < 1 && h >= 0 ? [cc, x, 0] : h < 2 ? [x, cc, 0] : h < 3 ? [0, cc, x] : h < 4 ? [0, x, cc] : h < 5 ? [x, 0, cc] : [cc, 0, x];
+  return '#' + [r1, g1, b1].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
 function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // (dark: the page a deep shade of the theme's own colour, Mojtaba 2026-11-05, so each theme reads as itself)
   const bg = isDark ? mix(c.accent, '#000000', 0.84) : '#f0f0f2', surface = isDark ? '#17171a' : '#fcfcfd', surface2 = isDark ? '#202024' : '#f4f4f6';
@@ -137,10 +148,12 @@ function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // «گرافیت» in the dark theme (Mojtaba 2026-11-05, after a screenshot of a delivery app he sent): its page #1c1c1c,
   // the cards and panels a step and two lighter, the lines a third.
   if (isDark && PALETTE === 'graphite') return soft(c, true, '#1c1c1c', '#232323', '#2c2c2c', '#353535', '#2e2e2e');
-  // «سنگی» in the light theme (Mojtaba 2026-11-06, after a picture he sent): the page white (#fdfdfd, its big panels),
-  // the cards its grey inner panels (#f5f5f7, as the GitLab row's), what sits inside them a step greyer (#ebebed, its
-  // segmented control's track), as measured on it.
-  if (!isDark && PALETTE === 'slate') return soft(c, false, '#fdfdfd', '#f5f5f7', '#ebebed', '#e6e6e9', 'rgba(0,0,0,0.04)');
+  // Light, every theme (Mojtaba 2026-11-06): the page #fdfdfd, the cards the bottom bar's rail 4% lighter, what sits
+  // inside them the rail itself.
+  if (!isDark) {
+    const rail = railColor(false, c.accent);
+    return soft(c, false, '#fdfdfd', lighten(rail, 0.04), rail, rail, 'rgba(0,0,0,0.04)');
+  }
   return soft(c, isDark, bg, surface, surface2, line, border);
 }
 function soft<T extends typeof tealLight>(c: T, isDark: boolean, bg: string, surface: string, surface2: string, line: string, border: string): T {
