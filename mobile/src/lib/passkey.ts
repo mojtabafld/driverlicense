@@ -1,6 +1,7 @@
-// Passkeys in the browser (Mojtaba 2026-11-06; the server's side is passkey.js): signing in with the device's own
-// lock and adding a passkey to the account. The web version only for now; the Android app needs its own native module
-// and a new build, so there `passkeyOk()` is false and the buttons are not shown.
+// Passkeys (Mojtaba 2026-11-06; the server's side is passkey.js): signing in with the device's own lock and adding a
+// passkey to the account. In the browser with WebAuthn; in the Android app with its Credential Manager
+// (react-native-passkey, which takes and gives the same JSON as the server), once the site's assetlinks.json names the
+// app's signing certificate.
 import { Platform } from 'react-native';
 
 import { api } from './api';
@@ -17,13 +18,29 @@ const toB64 = (buf: ArrayBuffer | null | undefined) => {
   return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 };
 
-export const passkeyOk = () => Platform.OS === 'web' && typeof window !== 'undefined' && !!(window as any).PublicKeyCredential && !!navigator.credentials;
+const WEB = Platform.OS === 'web';
+// (loaded only in the app: the module is native)
+const native = () => require('react-native-passkey').Passkey as typeof import('react-native-passkey').Passkey;
 
-// The browser cancelled or the user closed its window: not an error to show.
-export const cancelled = (e: unknown) => !!e && typeof e === 'object' && ['NotAllowedError', 'AbortError'].includes((e as any).name);
+export const passkeyOk = () => {
+  if (WEB) return typeof window !== 'undefined' && !!(window as any).PublicKeyCredential && !!navigator.credentials;
+  if (Platform.OS !== 'android') return false;
+  try { return native().isSupported(); } catch { return false; }
+};
+
+// The browser or the phone's sheet was closed: not an error to show.
+export const cancelled = (e: unknown) => !!e && typeof e === 'object'
+  && (['NotAllowedError', 'AbortError'].includes((e as any).name) || ['UserCancelled', 'NoCredentials'].includes((e as any).error));
+// The phone's errors are { error, message }: a message to show.
+const plain = (e: any) => (e && typeof e === 'object' && !(e instanceof Error) && e.error ? Object.assign(new Error(e.message || e.error), { error: e.error }) : e);
 
 export async function passkeyLogin<T = any>(): Promise<T> {
   const { id, options: o } = await api<{ id: string; options: any }>('POST', 'passkey/loginoptions');
+  if (!WEB) {
+    let response;
+    try { response = await native().get(o); } catch (e) { throw plain(e); }
+    return api<T>('POST', 'passkey/login', { id, response });
+  }
   const cred = (await navigator.credentials.get({
     publicKey: {
       challenge: toBytes(o.challenge), rpId: o.rpId, timeout: o.timeout, userVerification: o.userVerification,
@@ -43,6 +60,11 @@ export type Passkey = { id: string; name: string; created: number; used: number 
 
 export async function passkeyAdd(): Promise<Passkey[]> {
   const o = await api<any>('POST', 'passkey/regoptions');
+  if (!WEB) {
+    let response;
+    try { response = await native().create(o); } catch (e) { throw plain(e); }
+    return (await api<{ passkeys: Passkey[] }>('POST', 'passkey/register', { response })).passkeys;
+  }
   const cred = (await navigator.credentials.create({
     publicKey: {
       challenge: toBytes(o.challenge), rp: o.rp, timeout: o.timeout, attestation: o.attestation,
@@ -63,3 +85,5 @@ export async function passkeyAdd(): Promise<Passkey[]> {
 
 export const passkeyList = async () => (await api<{ passkeys: Passkey[] }>('GET', 'passkeys')).passkeys;
 export const passkeyRemove = async (id: string) => (await api<{ passkeys: Passkey[] }>('POST', 'passkey/remove', { id })).passkeys;
+// The offer after signing in was shown (once per account).
+export const passkeyAsked = () => api('POST', 'passkey/asked').catch(() => {});

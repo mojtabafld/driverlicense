@@ -243,6 +243,8 @@ const publicUser = u => ({ username: u.username, name: u.name, created: u.create
   // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
   // freeAi: the one free answer analysis is still to be had (true), or the question it was had for.
   freeAi: u.guest ? undefined : u.freeAi ? u.freeAi.qid : true,
+  // pkOffer: offer to add a passkey after signing in (none yet, never asked, never removed one; Mojtaba 2026-11-06).
+  pkOffer: !u.guest && !(u.passkeys || []).length && !u.pkAsked ? true : undefined,
   guest: u.guest || undefined, email: u.email || undefined, emailOk: u.email && u.emailOk ? true : undefined, verify: needsVerify(u) || undefined,
   // playId: the id the Android app hands Google Play with a purchase, so it counts for this account only (playbilling.js).
   playId: playbilling.available() && !u.guest ? playbilling.accountId(u.username) : undefined,
@@ -744,6 +746,11 @@ function serveAppWeb(req, res, p, web = WEBS.root) {
 function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.writeHead(400); return res.end(); }
+  // Android's check that the app may use this site's passkeys (passkey.js; Mojtaba 2026-11-06).
+  if (p === '/.well-known/assetlinks.json') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff' });
+    return res.end(req.method === 'HEAD' ? undefined : JSON.stringify(passkey.assetLinks()));
+  }
   if (p === '/privacy' || p === '/privacy/' || p === '/app/privacy') {
     res.writeHead(200, { 'Content-Type': MIME['.html'], 'Cache-Control': 'public, max-age=3600', 'X-Content-Type-Options': 'nosniff', ...PAGE_HEADERS });
     return res.end(req.method === 'HEAD' ? undefined : PRIVACY_HTML);
@@ -1331,9 +1338,12 @@ async function api(req, res, route) {
       if (first && first.dev) { user.mainDev = first.dev; changed = true; }
     }
     if (changed) await store.saveUser(user);
-    const list = Object.entries(devs).filter(([id]) => live.has(id))
+    const all = Object.entries(devs).filter(([id]) => live.has(id))
       .map(([id, d]) => ({ id, name: d.name, at: d.at, seen: d.seen, current: id === mine, main: isMain(user, d) }))
       .sort((a, b) => b.current - a.current || b.main - a.main || b.seen - a.seen);
+    // The same kind of device more than once (signed in again on it, say) is listed once (Mojtaba 2026-11-06): this one,
+    // else the main one, else the latest used; signing it out signs out its copies too (devices/out).
+    const seenNames = new Set(), list = all.filter(d => !seenNames.has(d.name) && seenNames.add(d.name));
     return send(res, 200, { devices: list });
   }
   if (req.method === 'POST' && route === 'devices/out') {
@@ -1341,7 +1351,9 @@ async function api(req, res, route) {
     // never the main device from another one (it signs out only on itself)
     const main = id => isMain(user, (user.devices || {})[id]);
     if (b.id && String(b.id) !== mine && main(String(b.id))) return send(res, 403, { error: 'دستگاه اصلی فقط از روی خودش خارج می‌شود.' });
-    const out = id => id !== mine && !main(id) && (b.others || id === String(b.id || ''));
+    // (one listed device stands for every one of the same name: those go with it)
+    const named = (user.devices || {})[String(b.id || '')], sameName = id => !!named && ((user.devices || {})[id] || {}).name === named.name;
+    const out = id => id !== mine && !main(id) && (b.others || id === String(b.id || '') || sameName(id));
     for (const [k, x] of Object.entries(store.sessions)) if (x.username === user.username && out(devId(k))) { delete store.sessions[k]; await store.deleteSession(k); }
     for (const id of Object.keys(user.devices || {})) if (out(id)) delete user.devices[id];
     await store.saveUser(user);
@@ -1352,6 +1364,8 @@ async function api(req, res, route) {
   if (route === 'passkeys' || route.startsWith('passkey/')) {
     if (user.guest) return send(res, 403, { error: 'برای Passkey اول با ایمیل وارد شوید.' });
     if (req.method === 'GET' && route === 'passkeys') return send(res, 200, { passkeys: passkey.listOf(user) });
+    // The offer to add a passkey (after signing in, once per account; Mojtaba 2026-11-06) was shown: not again.
+    if (req.method === 'POST' && route === 'passkey/asked') { if (!user.pkAsked) { user.pkAsked = Date.now(); await store.saveUser(user); } return send(res, 200, { ok: true }); }
     if (req.method === 'POST' && route === 'passkey/regoptions') return send(res, 200, await passkey.regOptions(user, originOf(req)));
     if (req.method === 'POST' && route === 'passkey/register') {
       try {

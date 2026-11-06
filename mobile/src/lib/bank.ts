@@ -24,4 +24,6 @@ export type User = { username: string; name: string; created: number; admin?: bo
   // The one free answer analysis without premium: still to be had (true), or the question it was had for.
   freeAi?: true | number; emailOk?: boolean; verify?: boolean; promoUsed?: boolean;
   // playId: the id the Android app hands Google Play with a purchase (server's playbilling.js), when it sells there.
-  playId?: string };
+  playId?: string;
+  // pkOffer: offer to add a passkey after signing in (once; the server's publicUser).
+  pkOffer?: boolean };

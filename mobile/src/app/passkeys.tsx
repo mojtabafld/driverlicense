@@ -1,6 +1,6 @@
 // «Passkey» (Mojtaba 2026-11-06), from the settings: the account's passkeys (server: passkey.js), adding one on this
 // device (its fingerprint, face or PIN) and removing one. Signing in with one is on the sign-in screen
-// (ui/welcome.tsx). The web version only for now; the Android app needs a new build with its own module.
+// (ui/welcome.tsx). On the web and in the Android app (lib/passkey.ts).
 import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -58,7 +58,7 @@ export default function PasskeysPage() {
       ) : <Card><T style={{ color: c.muted, fontSize: 13.5 }}>هنوز Passkey‌ای نساخته‌اید.</T></Card>}
       {passkeyOk()
         ? <ArcButton label={busy ? '…' : 'ساخت Passkey روی این دستگاه'} icon="plus" onPress={() => run(passkeyAdd, 'Passkey ساخته شد. از این به بعد می‌توانید با آن وارد شوید.')} disabled={busy} />
-        : <T style={{ color: c.faint, fontSize: 12.5, lineHeight: 20 }}>ساخت Passkey فعلاً فقط در نسخه‌ی وب (teori.bitlane.app) ممکن است.</T>}
+        : <T style={{ color: c.faint, fontSize: 12.5, lineHeight: 20 }}>این دستگاه یا مرورگر از Passkey پشتیبانی نمی‌کند (اندروید ۹ به بالا یا مرورگرهای جدید لازم است).</T>}
       <T style={{ color: c.faint, fontSize: 12, lineHeight: 19 }}>ورود با کد ایمیلی و گوگل مثل قبل کار می‌کند. Passkey روی خود دستگاه می‌ماند و اگر با حساب گوگل یا iCloud همگام شود، روی دستگاه‌های دیگرتان هم کار می‌کند.</T>
       <View style={{ height: 40 }} />
     </SubPage>

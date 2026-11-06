@@ -123,6 +123,11 @@ jobs:
             echo "KEY_ALIAS=teoriprove" >> "$GITHUB_ENV"
           fi
 
+      # The signing key's SHA-256 fingerprint (public): what the site's assetlinks.json (android-certs.json) must name
+      # for passkeys in an APK installed from the release (Mojtaba 2026-11-06).
+      - name: Signing certificate fingerprint
+        run: keytool -list -v -keystore "$STORE" -storepass "$STORE_PASS" -alias "$KEY_ALIAS" | grep -E "SHA256:" | sed 's/^/Upload key certificate /'
+
       # Version: the build number, so each APK counts as newer; release signing with the key above.
       - name: Version and signing in the Gradle project
         run: |
@@ -186,6 +191,16 @@ jobs:
           track: internal
           status: completed
           releaseName: ${{ env.APP_VERSION }}
+
+      # The certificate Google Play signs the app with (Play App Signing), for assetlinks.json: printed only.
+      - name: Play app signing certificate
+        if: inputs.play && inputs.upload && inputs.copy != 'prove'
+        continue-on-error: true
+        timeout-minutes: 12
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        working-directory: .
+        run: node scripts/play-signing-cert.js app.bitlane.teoripro "$GITHUB_RUN_NUMBER"
 
       # A copy for the run page only; the release below is what counts, so a full artifact storage quota does not stop it.
       - uses: actions/upload-artifact@v4

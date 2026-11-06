@@ -3,15 +3,16 @@
 // that one); pressed, the cards above the chart fold away and the chart glides to the top of the page, and the user's
 // test statistics come in under it, then the latest tests, each opening its own page (its result and review). Pressed
 // again, all goes back.
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
-import { RTL } from '@/lib/i18n';
+import { RTL, tr } from '@/lib/i18n';
 import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
-import { Card, FitLine, T } from './kit';
+import { Card, FitLine, T, tap } from './kit';
 import { useColors } from './theme';
 import { HomeChartIcon } from './chart-icon';
 
@@ -77,6 +78,17 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
       <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
   );
+  // The tests' count opens their history, with an «open» arrow in its right corner as the exam tab's buttons have
+  // (Mojtaba 2026-11-06).
+  const testsCell = (
+    <Pressable onPress={() => { tap(); router.push('/history'); }} accessibilityRole="button" accessibilityLabel={tr('تاریخچه‌ی آزمون‌ها')}
+      style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.6 : 1 })}>
+      {cell('آزمون‌ها', faNum(n))}
+      <View pointerEvents="none" style={{ position: 'absolute', top: dense ? 4 : 8, right: 2 }}>
+        <Icon name="arrowUpRight" size={14} color={c.muted} />
+      </View>
+    </Pressable>
+  );
   const rule = <View style={{ width: 1, marginVertical: dense ? 6 : 12, backgroundColor: c.line }} />;
   const fact = (icon: IconName, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -91,7 +103,7 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
         <T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>آمار آزمون‌ها</T>
       </View>}
       <View style={{ flexDirection: 'row' }}>
-        {cell('آزمون‌ها', faNum(n))}
+        {testsCell}
         {rule}
         {cell('میانگین', avg != null ? pctText(avg) : '–')}
         {rule}

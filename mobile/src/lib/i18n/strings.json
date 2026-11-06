@@ -1,4 +1,10 @@
 {
+"ورود سریع‌تر با Passkey":["Faster sign-in with a passkey", "Hurtigere login med passkey"],
+"دفعه‌ی بعد فقط با اثر انگشت، چهره یا قفل دستگاه وارد شوید؛ بدون رمز و بدون کد. اگر نخواستید، بعداً هم از تنظیمات ← Passkey می‌توانید بسازید.":["Next time, sign in with just your fingerprint, face or screen lock — no password, no code. If you'd rather not now, you can create one later in Settings → Passkey.", "Næste gang logger du ind med fingeraftryk, ansigt eller skærmlås — uden adgangskode og kode. Vil du ikke nu, kan du oprette en senere under Indstillinger → Passkey."],
+"Passkey ساخته شد.":["Passkey created.", "Passkey oprettet."],
+"ساخت Passkey":["Create passkey", "Opret passkey"],
+"حالا نه":["Not now", "Ikke nu"],
+"این دستگاه یا مرورگر از Passkey پشتیبانی نمی‌کند (اندروید ۹ به بالا یا مرورگرهای جدید لازم است).":["This device or browser doesn't support passkeys (Android 9+ or a recent browser is needed).", "Denne enhed eller browser understøtter ikke passkeys (Android 9+ eller en nyere browser kræves)."],
 "ورود با Passkey انجام نشد.":["Signing in with the passkey failed.", "Log ind med passkey mislykkedes."],
 "Passkey تأیید نشد.":["The passkey could not be verified.", "Passkey kunne ikke bekræftes."],
 "زمان ساخت Passkey تمام شد؛ دوباره امتحان کنید.":["Creating the passkey timed out; please try again.", "Tiden til at oprette passkey udløb; prøv igen."],

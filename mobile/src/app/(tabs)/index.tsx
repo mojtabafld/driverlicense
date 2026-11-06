@@ -23,6 +23,7 @@ import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { HomeChartIcon, TestStats } from '@/ui/chart-view';
+import { PasskeyOffer } from '@/ui/passkey-offer';
 import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
@@ -314,7 +315,7 @@ export default function Home() {
   // Only for a new account (made in the last day: not after the history is deleted, Mojtaba 2026-11-01), and only once
   // the premium offer after sign-up is closed or skipped and home is on screen again (so after the premium page too,
   // bought or left; lib/promo-gate.ts), never behind it.
-  const { ready: loaded } = useApp();
+  const { ready: loaded, settings } = useApp();
   const gate = usePromoGate(user ? `${user.username}:${user.created || 0}` : ''), homeShown = useIsFocused();
   const newAccount = !!user && Date.now() - (user.created || 0) < 24 * 3600e3;
   useEffect(() => {
@@ -490,6 +491,9 @@ export default function Home() {
           <View ref={listBox}><ActivityList attempts={exams} limit={3} title="آخرین آزمون‌ها" allHref="/history" hint={hint} /></View>
         </Animated.View>
       ) : null}
+      {/* the offer to add a passkey, once per account (ui/passkey-offer.tsx) */}
+      {/* (not over the first sign-in's language screen, nor before the premium offer and the warm-up are past) */}
+      <PasskeyOffer wait={!settings.langChosen || (newAccount && gate !== 'done')} />
     </Screen>
   );
 }
