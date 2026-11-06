@@ -3,12 +3,12 @@
 // or the Cf-Access-Jwt-Assertion header it adds) is checked against the team's public keys: signed by them, for this
 // Access application (its AUD tag), not expired, and for an admin's address. So a stolen admin session is of no use
 // without also getting past Cloudflare Access.
-// ACCESS_ADMIN: 'enforce' (refuse admin rights without it), 'log' (only log what would happen; the default until it
-// is seen to work), 'off'. ACCESS_TEAM and ACCESS_AUD name the team (<team>.cloudflareaccess.com) and the application.
+// ACCESS_ADMIN: 'enforce' (refuse admin rights without it; the default), 'log' (only log what would happen), 'off'. ACCESS_TEAM and ACCESS_AUD name the team (<team>.cloudflareaccess.com) and the application.
 'use strict';
 const crypto = require('crypto');
 
-const MODE = () => String(process.env.ACCESS_ADMIN || 'log').toLowerCase();
+// (enforce by default since 2026-11-06: the admin's requests were seen to carry a valid token, «ok» in the log)
+const MODE = () => String(process.env.ACCESS_ADMIN || 'enforce').toLowerCase();
 const TEAM = () => process.env.ACCESS_TEAM || 'haniscloud';
 const AUD = () => process.env.ACCESS_AUD || '4a8fa6907bfe87dd9728087f444c45197944ac117f03feaf4b1d77e1117ca2a6';
 
