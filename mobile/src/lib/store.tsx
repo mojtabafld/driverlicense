@@ -5,6 +5,7 @@ import { AppState, Platform } from 'react-native';
 
 import { ApiError, api, fetchBank, getApiToken, setApiToken } from './api';
 import { passkeyLogin } from './passkey';
+import { checkIntegrity } from './integrity';
 import type { Attempt, Bank, NewBank, Question, Settings, User } from './bank';
 import { API_URL, FROZEN, PROVE_BANK, PROVE_PICS } from './config';
 import { EXAM_FOR, UI_LANG, askRestart, keepUiLang, setTransLang } from './i18n';
@@ -213,7 +214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMe(d);
     // Notifications allowed on this device before: it is this account's device now (lib/push.ts).
     if (!PROVE_PICS && !d.user.verify) syncPush(d.user.username).catch(() => {});
-    api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay; play?: { products: string[] } }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); setPlay(x.play ?? null); }).catch(() => {}).finally(() => setConfigReady(true));
+    api<{ aiLessons?: boolean; tts?: boolean; pay?: Pay; play?: { products: string[] }; integrity?: string }>('GET', 'config').then(x => { setAiLessons(!!x.aiLessons); setTts(!!x.tts); setPay(x.pay ?? null); setPlay(x.play ?? null); if (!PROVE_PICS) checkIntegrity(x.integrity, d.user.username); }).catch(() => {}).finally(() => setConfigReady(true));
     // An account still waiting for its email link reads only itself, so nothing else (the questions) is loaded yet.
     if (d.user.verify) return;
     if (!bank) setBank(await fetchBank<Bank>());

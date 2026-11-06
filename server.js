@@ -55,6 +55,7 @@ const mail = require('./mail');
 const passkey = require('./passkey');
 const access = require('./access');
 const audit = require('./audit');
+const integrity = require('./integrity');
 mail.setSmtpFile(path.join(path.dirname(process.env.DB_FILE || path.join(__dirname, 'data', 'db.json')), 'smtp.json'));
 const insights = require('./insights');
 const coach = require('./coach');
@@ -931,7 +932,9 @@ async function api(req, res, route) {
       // ?pics=prove (the app's copy at /app): prove.dk's pictures of the signs and right of way wherever they are copied in.
       guideArt: new URL(req.url, 'http://x').searchParams.get('pics') === 'prove' ? guideref.proveVersions() : guideref.versions(),
       // the questions' made pictures' versions too, so the app sees a new one without signing in again
-      imgv: imagegen.versions() });
+      imgv: imagegen.versions(),
+      // Play Integrity's Cloud project number (integrity.js), for the Android app's check
+      integrity: integrity.available() ? integrity.project() : undefined });
   }
   if (req.method === 'POST' && route === 'register') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
@@ -1316,6 +1319,20 @@ async function api(req, res, route) {
   // A device's check that it is still signed in (lib/store.tsx, every few seconds while the app is in front): another
   // device's «خروج» (devices/out) ends this session, and the next check signs it out here.
   if (req.method === 'GET' && route === 'alive') return send(res, 200, { ok: true });
+  // Play Integrity (integrity.js): the Android app's one-time value, then its token, whose verdict is kept on the device.
+  if (req.method === 'GET' && route === 'integrity/nonce') {
+    if (!integrity.available()) return send(res, 404, { error: 'off' });
+    return send(res, 200, { nonce: integrity.nonce(s.user.username) });
+  }
+  if (req.method === 'POST' && route === 'integrity/check') {
+    try {
+      const v = await integrity.check(s.user.username, (await readBody(req, 32e3)).token);
+      const d = s.user.devices && s.user.devices[devId(s.key)];
+      if (d) { d.pi = v; await store.saveUser(s.user); }
+      if (!v.ok) console.error('integrity', s.user.username.replace(/^(.{2}).*@/, '$1…@'), v.app, v.device.join(',') || '-');
+      return send(res, 200, { ok: v.ok });
+    } catch (e) { return send(res, e.status || 502, { error: e.message }); }
+  }
   // (an admin's rights also need Cloudflare Access's sign-in: access.js)
   const user = s.user, adminReq = adminSession(s) && await access.adminOk(req, emailOf(user));
   // the admins' log (audit.js): an admin's actions, and an admin session's requests refused
@@ -1331,7 +1348,7 @@ async function api(req, res, route) {
       at: Date.now(), up: Math.round(process.uptime()), node: process.version, version: VERSION, commit: head.slice(0, 7),
       users: Object.keys(store.users).length, storage: store.kind || 'file', files: store.files ? await store.files.ready() : null,
       monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models },
-      rag: require('./rag').info(), audit: audit.list().slice(0, 200), backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
+      rag: require('./rag').info(), audit: audit.list().slice(0, 200), integrity: integrity.report(store.users), backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
     });
   }
   // The AI gateway's use for the admin (aigateway.js): today by task, the last 14 days, the budget, the last calls.
