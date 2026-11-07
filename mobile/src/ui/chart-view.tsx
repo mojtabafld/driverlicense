@@ -78,7 +78,10 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   // own (Mojtaba 2026-11-07).
   const cell = (label: string, value: string, color?: string, icon?: { name: IconName; tint: string }) => (
     <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
-      {icon ? <Icon name={icon.name} size={15} color={icon.tint} /> : null}
+      {/* (a tile in the title's colour with a white icon, smaller than the card's own; Mojtaba 2026-11-07) */}
+      {icon ? <View style={{ width: 24, height: 24, borderRadius: 8, marginBottom: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: icon.tint }}>
+        <Icon name={icon.name} size={14} color="#ffffff" weight="semibold" />
+      </View> : null}
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
       <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
