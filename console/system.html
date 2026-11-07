@@ -145,7 +145,7 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
     const bad = x => x.act === 'signin-failed' || x.act.startsWith('denied:') || (x.code && x.code >= 400);
     const det = x => x.d ? Object.entries(x.d).map(([k, v]) => `${k}: ${v}`).join(' · ') : '';
     return `<div class="tblw" style="border:0;padding:0"><table><thead><tr><th>${L('زمان', 'When')}</th><th>${L('مدیر', 'Admin')}</th><th>${L('کار', 'Action')}</th><th>${L('جزئیات', 'Details')}</th><th>${L('از', 'From')}</th></tr></thead><tbody>
-      ${list.slice(0, 100).map(x => `<tr${bad(x) ? ' style="color:#c0392b"' : ''}><td class="num">${esc(when(x.at))}</td><td dir="ltr">${esc(x.by)}</td><td dir="auto">${esc(what(x))}${x.code ? ` <span class="num">(${x.code})</span>` : ''}</td><td dir="auto">${esc(det(x))}</td><td dir="ltr"><span class="num">${esc(x.ip || '')}</span> ${esc(x.dev || '')}</td></tr>`).join('')}
+      ${list.slice(0, 100).map(x => `<tr${bad(x) ? ' style="color:#c0392b"' : ''}><td class="num">${esc(when(x.at))}</td><td dir="ltr">${esc(x.by)}</td><td dir="auto">${esc(what(x))}${x.code ? ` <span class="num">(${x.code})</span>` : ''}${x.n > 1 ? ` <span class="num">×${x.n}</span>` : ''}</td><td dir="auto">${esc(det(x))}</td><td dir="ltr"><span class="num">${esc(x.ip || '')}</span> ${esc(x.dev || '')}</td></tr>`).join('')}
       </tbody></table></div>`;
   }
 

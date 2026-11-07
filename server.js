@@ -322,7 +322,7 @@ async function sendCodeMail(u, e, lang, kind) {
   if (u) { u.reset = rec; await store.saveUser(u); } else signupCodes.set(e, rec);
   const ui = ['fa', 'en', 'da'].includes(lang) ? lang : u ? (u.settings || {}).ui : 'fa';
   await mail.sendCode(u ? u.email || u.username : e, u ? u.name || '' : '', code, ui, kind);
-  console.log('code mail sent', kind, u ? u.username : e.replace(/^(.{2}).*@/, '$1…@'));
+  console.log('code mail sent', kind, String(u ? u.username : e).replace(/^(.{2}).*@/, '$1…@'));
 }
 // Past exams a user deletes (one, or the whole history) are kept in meta `removed:<username>:attempts`, the newest
 // KEPT_REMOVED, so they can be put back (Mojtaba 2026-10-22: negin's history was gone and there was no copy).
@@ -394,6 +394,9 @@ function premiumMail(u, req) {
   mail.sendPremium(u.email, u.name || u.username, (u.settings || {}).ui, appLink(req), u.premium.until).catch(err => console.error('premium mail', u.username, err.message));
 }
 
+// A profile photo's file name (security review, 2026-11-07): with the data encrypted (datacrypt.js) an HMAC of the
+// account's name, not its address (avatar-<address> before, still read and moved on first use); [current, old].
+const avatarKeys = name => [require('./datacrypt').on() ? `avatar-${require('./datacrypt').id(name).slice(2)}` : `avatar-${name}`, `avatar-${name}`];
 // Google Play's app review (Mojtaba 2026-11-07): its reviewers cannot read the inbox the sign-in code goes to, so the
 // review account (REVIEW_EMAIL, review@bitlane.app unless set) also takes a fixed 6-digit code, the vault's REVIEW_CODE,
 // given to Google in Play Console (App content → App access); no email is sent to it then. It has premium, so the whole
@@ -401,7 +404,20 @@ function premiumMail(u, req) {
 const REVIEW_EMAIL = () => mail.normal(process.env.REVIEW_EMAIL || 'review@bitlane.app');
 const REVIEW_CODE = () => String(process.env.REVIEW_CODE || '').replace(/\D/g, '');
 const reviewOn = () => REVIEW_CODE().length === 6;
-const reviewCodeOk = (e, code) => reviewOn() && e === REVIEW_EMAIL() && safeEqual(String(code || '').replace(/\D/g, ''), REVIEW_CODE());
+// Wrong codes for the review account from anywhere count together (its code never changes, so it must not be guessable
+// from many addresses): after 20 in an hour it takes no code until the hour is over.
+const reviewFails = [];
+const REVIEW_FAILS_HOUR = 20;
+function reviewCodeOk(e, code) {
+  if (!reviewOn() || e !== REVIEW_EMAIL()) return false;
+  const now = Date.now();
+  while (reviewFails.length && now - reviewFails[0] > 3600e3) reviewFails.shift();
+  if (reviewFails.length >= REVIEW_FAILS_HOUR) return false;
+  if (safeEqual(String(code || '').replace(/\D/g, ''), REVIEW_CODE())) return true;
+  reviewFails.push(now);
+  if (reviewFails.length === REVIEW_FAILS_HOUR) console.error('review account: too many wrong codes, its code is off for an hour');
+  return false;
+}
 const isReview = u => reviewOn() && !!u && !u.guest && mail.normal(emailOf(u)) === REVIEW_EMAIL();
 // Whether the code is the one waiting for a new account at this address; a wrong code counts as a try.
 function signupCodeOk(e, code) {
@@ -639,7 +655,9 @@ function adminStats() {
 const IP_HEADER = String(process.env.CLIENT_IP_HEADER || '').trim().toLowerCase();
 const fromHere = a => /^(127\.|::1$|::ffff:127\.)/.test(a || '');
 const clientIp = req => {
-  const d = String(req.headers['do-connecting-ip'] || '').trim();
+  // (DigitalOcean's header only where no other proxy header is named: elsewhere anyone could send it and pass as any
+  // address, around every per-address limit; security review 2026-11-07)
+  const d = IP_HEADER ? '' : String(req.headers['do-connecting-ip'] || '').trim();
   if (d) return d;
   const r = req.socket.remoteAddress;
   if (IP_HEADER && fromHere(r)) { const v = String(req.headers[IP_HEADER] || '').split(',').pop().trim(); if (v) return v; }
@@ -1338,6 +1356,7 @@ async function api(req, res, route) {
   }
   if (req.method === 'POST' && route === 'integrity/check') {
     try {
+      if (!integrity.waiting(s.user.username)) return send(res, 400, { error: 'no nonce' });
       const v = await integrity.check(s.user.username, (await readBody(req, 32e3)).token);
       // kept on the device (a session from before the devices' list gets its entry here), so the «سامانه» page counts it
       const devs = s.user.devices = s.user.devices || {}, id = devId(s.key), now = Date.now();
@@ -1615,7 +1634,7 @@ async function api(req, res, route) {
     delete store.users[u];
     await store.deleteUser(u);
     if (store.meta[`removed:${u}:attempts`]) await store.saveMeta(`removed:${u}:attempts`, { at: Date.now(), attempts: [] }); // a deleted account's tests go too
-    if (user.avatar && user.avatar.photo) await store.deleteBlob(`avatar-${u}`).catch(() => {});
+    if (user.avatar && user.avatar.photo) for (const k of new Set(avatarKeys(u))) await store.deleteBlob(k).catch(() => {});
     if ((store.meta.reports || []).some(r => r.username === u)) {
       store.meta.reports = store.meta.reports.filter(r => r.username !== u);
       await store.saveMeta('reports', store.meta.reports);
@@ -1633,20 +1652,26 @@ async function api(req, res, route) {
   // Profile picture: { preset: n } (one of the made pictures), { image: base64 JPEG } (their own, cropped and made
   // small by the app; kept in blob avatar-<username>) or { remove: true }. GET returns their own picture.
   if (route === 'avatar') {
-    const key = `avatar-${user.username}`;
+    const [key, old] = avatarKeys(user.username);
     if (req.method === 'GET') {
-      const b = user.avatar && user.avatar.photo ? await store.getBlob(key) : null;
+      let b = user.avatar && user.avatar.photo ? await store.getBlob(key) : null;
+      // (one saved under its old name, the address: moved to the new one)
+      if (!b && old !== key && user.avatar && user.avatar.photo) {
+        b = await store.getBlob(old);
+        if (b) { await store.saveBlob(key, b.mime, b.data); await store.deleteBlob(old).catch(() => {}); }
+      }
       if (!b) return send(res, 404, { error: 'not found' });
       res.writeHead(200, { 'Content-Type': b.mime, 'Content-Length': b.data.length, 'Cache-Control': 'private, max-age=2592000', 'X-Content-Type-Options': 'nosniff' });
       return res.end(b.data);
     }
     if (req.method === 'POST') {
       const b = await readBody(req);
-      if (b.remove) { if (user.avatar && user.avatar.photo) await store.deleteBlob(key).catch(() => {}); delete user.avatar; }
+      const dropPhoto = async () => { for (const k of new Set([key, old])) await store.deleteBlob(k).catch(() => {}); };
+      if (b.remove) { if (user.avatar && user.avatar.photo) await dropPhoto(); delete user.avatar; }
       else if (b.preset !== undefined) {
         const n = +b.preset;
         if (!Number.isInteger(n) || n < 1 || n > imagegen.avatarCount) return send(res, 400, { error: 'تصویر نامعتبر است.' });
-        if (user.avatar && user.avatar.photo) await store.deleteBlob(key).catch(() => {});
+        if (user.avatar && user.avatar.photo) await dropPhoto();
         user.avatar = { preset: n };
       } else {
         const data = Buffer.from(String(b.image || '').replace(/^data:image\/\w+;base64,/, ''), 'base64');
@@ -1654,6 +1679,7 @@ async function api(req, res, route) {
         if (!jpeg && !png) return send(res, 400, { error: 'تصویر نامعتبر است.' });
         if (data.length > 180e3) return send(res, 413, { error: 'تصویر خیلی بزرگ است.' });
         await store.saveBlob(key, jpeg ? 'image/jpeg' : 'image/png', data);
+        if (old !== key) await store.deleteBlob(old).catch(() => {});
         user.avatar = { photo: Date.now().toString(36) };
       }
       await store.saveUser(user);
