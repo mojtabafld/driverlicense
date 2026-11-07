@@ -149,8 +149,10 @@ const originOf = req => {
   if (!PUBLIC_HOSTS.has(host.replace(/:\d+$/, '')) && !localHost(host)) return PUBLIC_ORIGIN;
   return `${isHttps(req) ? 'https' : 'http'}://${host}`;
 };
+// (Secure on every host but a local one, not only when the proxy says https: the site is https only; security review
+// 2026-11-07)
 const cookie = (req, value, maxAge) =>
-  `tp_session=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${isHttps(req) ? '; Secure' : ''}`;
+  `tp_session=${value}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${isHttps(req) || !localHost(String(req.headers.host || '')) ? '; Secure' : ''}`;
 
 // Sessions (Mojtaba 2026-11-05): the database keeps only the token's hash («h:» + sha256), so a copy of the database or a
 // backup opens no account; the token itself is only on the device (the app's secure store, or the web's HttpOnly
@@ -948,6 +950,8 @@ async function api(req, res, route) {
     let db = false;
     try { db = store.exists ? (await Promise.race([store.exists('__health__'), new Promise((_, no) => setTimeout(() => no(new Error('slow')), 8e3))]), true) : true; } catch {}
     const files = store.files ? await store.files.ready() : null;
+    // (to visitors, through Cloudflare, only whether it and its database answer; the details for this machine's own checks)
+    if (req.headers['cf-connecting-ip']) return send(res, db ? 200 : 503, { ok: db, db });
     return send(res, db ? 200 : 503, { ok: db, db, files, up: Math.round(process.uptime()), mem: Math.round(process.memoryUsage().rss / 1e6) });
   }
   if (req.method === 'GET' && route === 'config') {
