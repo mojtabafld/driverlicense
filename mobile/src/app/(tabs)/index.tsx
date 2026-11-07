@@ -161,6 +161,7 @@ export default function Home() {
   const look = useDashboardLook();
   const dark = useIsDark();
   const readinessTone = dark ? mix(c.accent, c.text, 0.4) : c.accent;
+  const readinessTrack = dark ? mix(c.line, c.text, 0.18) : c.line;
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
   const { height, width } = useWindowDimensions();
@@ -369,12 +370,12 @@ export default function Home() {
             <View testID="home-readiness-ring" style={{ flexShrink: 0 }}>
             {tryout ? (
               <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-                <Ring value={0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} glow>
+                <Ring value={0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
                   <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
                 </Ring>
               </Pressable>
             ) : (
-              <Ring value={est ? est.prob : 0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} glow>
+              <Ring value={est ? est.prob : 0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
                 <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
               </Ring>
             )}
