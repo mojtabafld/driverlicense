@@ -13,7 +13,7 @@ export function useDashboardLook() {
   const c = useColors(), dark = useIsDark();
   // («نرم»: neutral greys, no tint of the theme's colour in the surfaces)
   // (no outline round the cards in «سنگی»: Material 3's cards are a surface without one; Mojtaba 2026-11-07)
-  if (SOFT) return { dark, edge: PALETTE === 'slate' ? c.surface : c.line, wash: c.surface2, row: c.surface2, hero: c.surface };
+  if (SOFT) return { dark, edge: PALETTE === 'slate' || dark ? c.surface : c.line, wash: c.surface2, row: c.surface2, hero: c.surface };
   return {
     dark,
     edge: mix(c.link, c.surface, dark ? 0.91 : 0.96),

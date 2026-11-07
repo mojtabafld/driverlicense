@@ -170,7 +170,9 @@ export function graphiteCtl(dark: boolean) {
 // (theme.ts harmonize), so they all sit in one family with the bar. «سنگی» (slate): his pictures' own; every other
 // theme its accent mixed into a near-white (light) or a near-black (dark).
 export function railColor(dark: boolean, accent: string) {
-  if (PALETTE === 'slate') return dark ? '#1e1f20' : '#f0f4f9';   // (Material 3's surface container, theme.ts M3)
+  // (Material 3's surface container, theme.ts M3; dark, every theme's since 2026-11-07)
+  if (dark) return '#1e1f20';
+  if (PALETTE === 'slate') return '#f0f4f9';
   return dark ? mix(accent, '#0e1016', 0.84) : mix(accent, '#f4f5f8', 0.86);
 }
 

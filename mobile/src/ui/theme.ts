@@ -154,6 +154,9 @@ function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
     return { ...soft(c, isDark, m.bg, m.card, m.inner, m.line, 'rgba(0,0,0,0)'), accent: m.primary, accentText: m.onPrimary, accentSoft: m.primarySoft,
       link: m.primary, forest: m.primary, text: m.text, muted: m.muted, faint: m.outline, pick: m.primary, pickSoft: m.container, checked: m.primarySoft,
       ok: m.green, bad: m.error }; }
+  // Dark, every theme on «سنگی»'s Material surfaces (Mojtaba 2026-11-07): the page, cards and inner surfaces the same
+  // neutral greys whatever the theme's colour, the accent its own.
+  if (isDark) { const m = M3.dark; return soft(c, true, m.bg, m.card, m.inner, m.line, 'rgba(0,0,0,0)'); }
   const rail = railColor(isDark, c.accent);
   return soft(c, isDark, isDark ? '#020202' : '#fdfdfd', lighten(rail, isDark ? -0.05 : 0.05), rail, rail, isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)');
 }
