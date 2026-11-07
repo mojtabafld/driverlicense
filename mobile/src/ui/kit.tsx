@@ -679,8 +679,11 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
 export function ActionButton({ label, onPress, icon, tone = 'main', disabled, style, iconWeight = 'semibold' }: {
   label: string; onPress: () => void; icon?: IconName; tone?: 'main' | 'soft' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; iconWeight?: 'semibold' | 'bold';
 }) {
-  const c = useColors();
-  const bg = tone === 'main' ? c.btn : tone === 'danger' ? c.bad : c.nav, fg = tone === 'main' ? c.btnFg : tone === 'danger' ? '#ffffff' : c.navFg;
+  const c = useColors(), dark = useTheme().theme === 'dark';
+  // («soft», e.g. a dialog's «ماندن»: a step off the dialog's card in the theme's colour, so it shows; the neutral grey
+  // it was matched the cards once they took the theme's colour; Mojtaba 2026-11-07)
+  const soft = SOFT ? lighten(railColor(dark, c.accent), dark ? 0.1 : -0.08) : c.nav;
+  const bg = tone === 'main' ? c.btn : tone === 'danger' ? c.bad : soft, fg = tone === 'main' ? c.btnFg : tone === 'danger' ? '#ffffff' : SOFT ? c.text : c.navFg;
   return (
     <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
       style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }, style]}>
