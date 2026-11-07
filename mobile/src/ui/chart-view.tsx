@@ -3,7 +3,6 @@
 // that one); pressed, the cards above the chart fold away and the chart glides to the top of the page, and the user's
 // test statistics come in under it, then the latest tests, each opening its own page (its result and review). Pressed
 // again, all goes back.
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View } from 'react-native';
@@ -67,12 +66,12 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
 // `dense`: the home page on a short screen: less room (the line of facts under the numbers stays; Mojtaba 2026-10-29).
 // `noHead`: the shortest screens: the numbers alone, without the card's title.
 // `noFacts`: without the line of facts under the numbers (the smallest phones).
-// The four titles' icon tiles (Mojtaba 2026-11-07, after his picture): a gradient from a light tone at the top corner
-// to a deeper one at the bottom, a faint light edge and a white icon; blue, violet, orange and green. Light theme:
-// bright tones; dark theme: deeper, quieter ones that do not glare on the dark cards.
-const TINT: Record<'light' | 'dark', Record<'tests' | 'avg' | 'best' | 'passed', readonly [string, string]> & { edge: string }> = {
-  light: { tests: ['#7ab4ff', '#2f6bf0'], avg: ['#b39bff', '#6d4ef2'], best: ['#ffbb73', '#f07a22'], passed: ['#6fe39d', '#22b05e'], edge: 'rgba(255,255,255,0.45)' },
-  dark: { tests: ['#4b8df8', '#1e40af'], avg: ['#8f6cf3', '#4c1d95'], best: ['#f2a03a', '#a8510d'], passed: ['#34c46c', '#14632f'], edge: 'rgba(255,255,255,0.14)' },
+// The four titles' icon colours: blue, violet, amber and green, read on light and dark cards alike.
+// Light: deep tones with a white icon; dark: soft, lighter tones with a dark icon, so they glow on the dark cards
+// without glaring (Mojtaba 2026-11-07).
+const TINT = {
+  light: { tests: '#2563eb', avg: '#7c3aed', best: '#d97706', passed: '#059669', ink: '#ffffff' },
+  dark: { tests: '#60a5fa', avg: '#a78bfa', best: '#fbbf24', passed: '#34d399', ink: '#0b1020' },
 };
 export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean }) {
   const c = useColors(), tint = TINT[useIsDark() ? 'dark' : 'light'];
@@ -82,13 +81,12 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   const qs = attempts.reduce((s, a) => s + a.items.length, 0), secs = attempts.reduce((s, a) => s + (a.secs || 0), 0);
   // Each title with an icon of its own above it, smaller than the card's own (15 against its 18) and in a colour of its
   // own (Mojtaba 2026-11-07).
-  const cell = (label: string, value: string, color?: string, icon?: { name: IconName; tint: readonly [string, string] }) => (
+  const cell = (label: string, value: string, color?: string, icon?: { name: IconName; tint: string }) => (
     <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
-      {/* (smaller than the card's own icon) */}
-      {icon ? <LinearGradient colors={icon.tint} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={{ width: 26, height: 26, borderRadius: 8, marginBottom: 2, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: tint.edge }}>
-        <Icon name={icon.name} size={14} color="#ffffff" weight="semibold" />
-      </LinearGradient> : null}
+      {/* (a tile in the title's colour with a white icon, smaller than the card's own; Mojtaba 2026-11-07) */}
+      {icon ? <View style={{ width: 24, height: 24, borderRadius: 8, marginBottom: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: icon.tint }}>
+        <Icon name={icon.name} size={14} color={tint.ink} weight="semibold" />
+      </View> : null}
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
       <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
