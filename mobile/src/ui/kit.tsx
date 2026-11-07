@@ -430,13 +430,14 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {lead ? <FadingLead onDone={openSub}>{lead}</FadingLead> : null}
                 <View style={{ flex: 1, gap: 1 }}>
-                  {/* (the name on its own line under the greeting since 2026-11-06, Mojtaba) */}
-                  <View style={{ alignItems: 'flex-start' }}>
-                    <T style={[{ fontSize: 18, lineHeight: 26, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}</T>
-                    <View style={{ maxWidth: '100%', overflow: nameClip ? 'hidden' : 'visible' }} onLayout={e => setNameW(e.nativeEvent.layout.width)}>
+                  {/* (the name on the greeting's line again, after a comma, cut short with … when it does not fit; Mojtaba
+                      2026-11-07; on its own line under it from 2026-11-06) */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <T style={[{ fontSize: 18, lineHeight: 26, fontWeight: '500', color: ink, flexShrink: 0 }, shade]} numberOfLines={1}>{title}{RTL ? '،' : ','}</T>
+                    <View style={{ flexShrink: 1, overflow: nameClip ? 'hidden' : 'visible' }} onLayout={e => setNameW(e.nativeEvent.layout.width)}>
                       <Animated.View style={{ opacity: nameIn.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1, 1] }),
                         transform: [{ translateX: nameIn.interpolate({ inputRange: [0, 1], outputRange: [(RTL ? 1 : -1) * Math.min(Math.max(nameW, 24), 64), 0] }) }] }}>
-                        <T style={[{ fontSize: 20, lineHeight: 28, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
+                        <T style={[{ fontSize: 18, lineHeight: 26, fontWeight: '700', color: ink }, bold, shade]} numberOfLines={1}>{name}</T>
                       </Animated.View>
                     </View>
                   </View>

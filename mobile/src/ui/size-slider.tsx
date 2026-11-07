@@ -5,14 +5,15 @@ import { View } from 'react-native';
 
 import { tap } from './kit';
 import { SizeTicks } from './size-ticks';
-import { useColors } from './theme';
+import { SOFT, useColors, useM3 } from './theme';
 
 // `grey`: in the solid neutral (`strong`) of the exam tab's start button instead of the accent. `disabled`: pale and
 // not movable (e.g. when fewer questions are left than the smallest choice needs).
 type Props = { value: number; values: number[]; onChange: (v: number) => void; grey?: boolean; disabled?: boolean };
 export function SizeSlider({ value, values, onChange, grey, disabled }: Props) {
-  const c = useColors();
-  const tint = grey ? c.strong : c.accent;
+  const c = useColors(), m = useM3();
+  // (Material 3: the primary, as the buttons; Mojtaba 2026-11-07)
+  const tint = SOFT ? m.primary : grey ? c.strong : c.accent;
   const step = values[1] - values[0];
   return (
     <View style={{ gap: 2, opacity: disabled ? 0.35 : 1 }} pointerEvents={disabled ? 'none' : 'auto'} accessibilityState={{ disabled }}>
@@ -20,7 +21,7 @@ export function SizeSlider({ value, values, onChange, grey, disabled }: Props) {
         onValueChange={v => { if (v !== value) { tap(); onChange(v); } }}
         minimumTrackTintColor={tint} maximumTrackTintColor={c.line} thumbTintColor={tint}
         accessibilityLabel="تعداد سؤال‌ها" style={{ height: 40 }} />
-      <SizeTicks value={value} values={values} color={grey ? c.text : undefined} />
+      <SizeTicks value={value} values={values} color={SOFT ? m.primary : grey ? c.text : undefined} />
     </View>
   );
 }
