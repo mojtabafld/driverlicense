@@ -12,6 +12,7 @@ import { RTL, tr } from '@/lib/i18n';
 import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
+import { Cookie } from './cookie';
 import { Card, FitLine, T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 import { HomeChartIcon } from './chart-icon';
@@ -69,24 +70,25 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
 // The four titles' icon colours: blue, violet, amber and green, read on light and dark cards alike.
 // Light: soft, lighter tones with a dark icon; dark: deep tones with a white icon (Mojtaba 2026-11-07: light in the
 // light theme, dark in the dark one).
-const TINT = {
-  light: { tests: '#60a5fa', avg: '#a78bfa', best: '#fbbf24', passed: '#34d399', ink: '#0b1020' },
-  dark: { tests: '#2563eb', avg: '#7c3aed', best: '#d97706', passed: '#059669', ink: '#ffffff' },
-};
+// Material 3 tonal pairs (Mojtaba 2026-11-07, after fonts.google.com's «Self-hosting web fonts» card): in the light
+// theme a soft container with its deep tone for the icon, in the dark theme the deep container with the soft tone.
+const TONE = {
+  tests: ['#c2e7ff', '#004a77'], avg: ['#e9ddff', '#4f378b'], best: ['#ffdea6', '#5c4300'], passed: ['#c4eed0', '#0f5223'],
+} as const;
+type Tone = keyof typeof TONE;
 export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean }) {
-  const c = useColors(), tint = TINT[useIsDark() ? 'dark' : 'light'];
+  const c = useColors(), dark = useIsDark();
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
   const ok = attempts.filter(passed).length;
   const qs = attempts.reduce((s, a) => s + a.items.length, 0), secs = attempts.reduce((s, a) => s + (a.secs || 0), 0);
   // Each title with an icon of its own above it, smaller than the card's own (15 against its 18) and in a colour of its
   // own (Mojtaba 2026-11-07).
-  const cell = (label: string, value: string, color?: string, icon?: { name: IconName; tint: string }) => (
+  const cell = (label: string, value: string, color?: string, icon?: { name: IconName; tone: Tone }) => (
     <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
-      {/* (a tile in the title's colour with a white icon, smaller than the card's own; Mojtaba 2026-11-07) */}
-      {icon ? <View style={{ width: 24, height: 24, borderRadius: 8, marginBottom: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: icon.tint }}>
-        <Icon name={icon.name} size={14} color={tint.ink} weight="semibold" />
-      </View> : null}
+      {icon ? <View style={{ marginBottom: 2 }}><Cookie size={dense ? 28 : 32} color={TONE[icon.tone][dark ? 1 : 0]}>
+        <Icon name={icon.name} size={dense ? 15 : 17} color={TONE[icon.tone][dark ? 0 : 1]} />
+      </Cookie></View> : null}
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
       <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
@@ -96,7 +98,7 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   const testsCell = (
     <Pressable onPress={() => { tap(); router.push('/history'); }} accessibilityRole="button" accessibilityLabel={tr('تاریخچه‌ی آزمون‌ها')}
       style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.6 : 1 })}>
-      {cell('آزمون‌ها', faNum(n), undefined, { name: 'clipboard', tint: tint.tests })}
+      {cell('آزمون‌ها', faNum(n), undefined, { name: 'clipboard', tone: 'tests' })}
       <View pointerEvents="none" style={{ position: 'absolute', top: dense ? 4 : 8, right: 2 }}>
         <Icon name="arrowUpRight" size={14} color={c.muted} />
       </View>
@@ -118,12 +120,12 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
       <View style={{ flexDirection: 'row' }}>
         {testsCell}
         {rule}
-        {cell('میانگین', avg != null ? pctText(avg) : '–', undefined, { name: 'gauge', tint: tint.avg })}
+        {cell('میانگین', avg != null ? pctText(avg) : '–', undefined, { name: 'gauge', tone: 'avg' })}
         {rule}
-        {cell('بهترین', best != null ? pctText(best) : '–', undefined, { name: 'trophy', tint: tint.best })}
+        {cell('بهترین', best != null ? pctText(best) : '–', undefined, { name: 'trophy', tone: 'best' })}
         {rule}
         {/* Every test passed (e.g. 5 of 5): green; any not: the warning colour (Mojtaba 2026-10-20). */}
-        {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined, { name: 'passed', tint: tint.passed })}
+        {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined, { name: 'passed', tone: 'passed' })}
       </View>
       {n && !noFacts ? (
         // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).
