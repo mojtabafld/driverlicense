@@ -17,12 +17,12 @@ import { fmtDateTime, fmtTime, modeName } from '@/lib/names';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon } from '@/ui/icon';
-import { Confetti } from '@/ui/confetti';
 import { Backdrop, Button, Card, EmptyState, Enter, SegPill, T, physical, tap, useArcSeg, usePageMotion } from '@/ui/kit';
 import { FootBtn, GlassBar, navIcons } from '@/ui/glass-bar';
 import { GlassTop } from '@/ui/liquid';
 import { learnRtl, Pager } from '@/ui/swipe';
 import { ListButton, QuestionSheet } from '@/ui/question-list';
+import { SuccessBadge } from '@/ui/success-badge';
 import { ReviewCard, RevealScrollProvider, uiText, useRevealScroll } from '@/ui/review';
 import { ARC, useColors, useIsDark } from '@/ui/theme';
 
@@ -250,16 +250,19 @@ export default function Result() {
             <Icon name="arrowRight" size={20} color={c.text} />
           </Pressable>
           <T style={{ fontSize: 19, lineHeight: 30, fontWeight: '700', textAlign: 'center' }}>خلاصه‌ی آزمون</T>
-          <View style={{ width: 150, height: 150, alignItems: 'center', justifyContent: 'center' }}>
+          {/* Passed: the success picture (ui/success-badge.tsx) in the ring's place, the score in words under it (Mojtaba
+              2026-11-07, in place of the confetti). */}
+          {pass ? <SuccessBadge /> : <View style={{ width: 150, height: 150, alignItems: 'center', justifyContent: 'center' }}>
             <RingSvg size={150} stroke={12} pct={pct} color={pass ? c.ok : c.bad} track={c.surface2} />
             {full
               ? <><T style={{ fontSize: 38, lineHeight: 46, fontWeight: '700', textAlign: 'center' }}>{faNum(right)}</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>از {faNum(n)}</T></>
               : <><T style={{ fontSize: 32, lineHeight: 42, fontWeight: '700', textAlign: 'center' }}>{faNum(pctN)}٪</T><T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{faNum(right)} از {faNum(n)}</T></>}
-          </View>
+          </View>}
           <View style={{ alignItems: 'center', gap: 2 }}>
-            <T style={{ fontSize: 22, lineHeight: 34, fontWeight: '800', textAlign: 'center', color: pass ? c.ok : c.bad }}>
-              {full ? (pass ? '🎉 قبول شدید!' : 'مردود — دوباره تلاش کنید') : `${pass ? 'قبول' : 'مردود'}، ${faNum(pctN)}٪ پاسخ درست`}
+            <T style={{ fontSize: 22, lineHeight: 34, fontWeight: '800', textAlign: 'center', color: pass ? c.text : c.bad }}>
+              {full ? (pass ? 'قبول شدید!' : 'مردود — دوباره تلاش کنید') : `${pass ? 'قبول' : 'مردود'}، ${faNum(pctN)}٪ پاسخ درست`}
             </T>
+            {pass ? <T style={{ color: c.muted, fontSize: 14.5, lineHeight: 23, textAlign: 'center' }}>{`${faNum(right)} از ${faNum(n)} پاسخ درست`}</T> : null}
             <T style={{ color: c.muted, fontSize: 13, textAlign: 'center' }}>{modeName(a, bank)}، {fmtDateTime(a.at)}</T>
           </View>
           <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
@@ -293,8 +296,6 @@ export default function Result() {
           </View>
         </Card>
       </ScrollView>
-      {/* Every answer right: confetti over the summary (Mojtaba 2026-10-22). */}
-      {n && !wrongN ? <Confetti /> : null}
     </Backdrop>
   );
 }
