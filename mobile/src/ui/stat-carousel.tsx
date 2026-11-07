@@ -14,7 +14,8 @@ import { useColors, useM3 } from './theme';
 
 export type StatItem = { title: string; sub: string; icon: IconName; color?: string; onPress?: () => void; label?: string };
 
-export function StatCarousel({ items, dense }: { items: StatItem[]; dense?: boolean }) {
+// `fill`: the cards' colour (the inner surface inside a card by default; the card colour on the page).
+export function StatCarousel({ items, dense, fill }: { items: StatItem[]; dense?: boolean; fill?: string }) {
   const c = useColors(), tab = useTabLook(), m = useM3();
   const [w, setW] = useState(0), [at, setAt] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
@@ -62,7 +63,7 @@ export function StatCarousel({ items, dense }: { items: StatItem[]; dense?: bool
           {items.map((it, i) => (
             <Pressable key={i} disabled={!it.onPress} onPress={() => { tap(); it.onPress?.(); }} accessibilityRole={it.onPress ? 'button' : undefined} accessibilityLabel={it.label}
               style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, left: RTL ? w - W - i * stepW : i * stepW, borderRadius: 24,
-                backgroundColor: c.surface2, opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
+                backgroundColor: fill ?? c.surface2, opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
               <View style={{ flex: 1, gap: 3 }}>
                 <T numberOfLines={1} style={{ fontSize: dense ? 18 : 19.5, lineHeight: dense ? 26 : 28, fontWeight: '500', color: it.color ?? c.text }}>{it.title}</T>
