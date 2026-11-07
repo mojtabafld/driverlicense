@@ -67,11 +67,11 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
 // `noHead`: the shortest screens: the numbers alone, without the card's title.
 // `noFacts`: without the line of facts under the numbers (the smallest phones).
 // The four titles' icon colours: blue, violet, amber and green, read on light and dark cards alike.
-// Light: deep tones with a white icon; dark: soft, lighter tones with a dark icon, so they glow on the dark cards
-// without glaring (Mojtaba 2026-11-07).
+// Light: soft, lighter tones with a dark icon; dark: deep tones with a white icon (Mojtaba 2026-11-07: light in the
+// light theme, dark in the dark one).
 const TINT = {
-  light: { tests: '#2563eb', avg: '#7c3aed', best: '#d97706', passed: '#059669', ink: '#ffffff' },
-  dark: { tests: '#60a5fa', avg: '#a78bfa', best: '#fbbf24', passed: '#34d399', ink: '#0b1020' },
+  light: { tests: '#60a5fa', avg: '#a78bfa', best: '#fbbf24', passed: '#34d399', ink: '#0b1020' },
+  dark: { tests: '#2563eb', avg: '#7c3aed', best: '#d97706', passed: '#059669', ink: '#ffffff' },
 };
 export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean }) {
   const c = useColors(), tint = TINT[useIsDark() ? 'dark' : 'light'];
