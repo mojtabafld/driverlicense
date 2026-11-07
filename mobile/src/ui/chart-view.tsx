@@ -8,12 +8,11 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
-import { RTL, tr } from '@/lib/i18n';
+import { RTL, t, tr } from '@/lib/i18n';
 import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
-import { Cookie } from './cookie';
-import { useTabLook } from './tabs/tab-look';
+import { StatCarousel } from './stat-carousel';
 import { Card, FitLine, T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 import { HomeChartIcon } from './chart-icon';
@@ -72,34 +71,11 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
 // indicator colour with its ink, so «سنگی» has Material's secondary container (#004a77 / #c2e7ff dark, the other way
 // round light) and the other themes the tint of their own colour.
 export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean }) {
-  const c = useColors(), tab = useTabLook();
+  const c = useColors();
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
   const ok = attempts.filter(passed).length;
   const qs = attempts.reduce((s, a) => s + a.items.length, 0), secs = attempts.reduce((s, a) => s + (a.secs || 0), 0);
-  // Each title with an icon of its own above it, smaller than the card's own (15 against its 18) and in a colour of its
-  // own (Mojtaba 2026-11-07).
-  const cell = (label: string, value: string, color?: string, icon?: IconName) => (
-    <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
-      {icon ? <View style={{ marginBottom: 2 }}><Cookie size={dense ? 32 : 38} color={tab.indicator}>
-        <Icon name={icon} size={dense ? 17 : 20} color={tab.onIndicator} />
-      </Cookie></View> : null}
-      <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
-      <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
-    </View>
-  );
-  // The tests' count opens their history, with an «open» arrow in its right corner as the exam tab's buttons have
-  // (Mojtaba 2026-11-06).
-  const testsCell = (
-    <Pressable onPress={() => { tap(); router.push('/history'); }} accessibilityRole="button" accessibilityLabel={tr('تاریخچه‌ی آزمون‌ها')}
-      style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.6 : 1 })}>
-      {cell('آزمون‌ها', faNum(n), undefined, 'clipboard')}
-      <View pointerEvents="none" style={{ position: 'absolute', top: dense ? 4 : 8, right: 2 }}>
-        <Icon name="arrowUpRight" size={14} color={c.muted} />
-      </View>
-    </Pressable>
-  );
-  const rule = <View style={{ width: 1, marginVertical: dense ? 6 : 12, backgroundColor: c.line }} />;
   const fact = (icon: IconName, text: string) => (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <Icon name={icon} size={15} color={c.muted} />
@@ -112,15 +88,16 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
         <HomeChartIcon kind="stats" />
         <T style={{ flex: 1, fontWeight: '700', fontSize: 17 }}>آمار آزمون‌ها</T>
       </View>}
-      <View style={{ flexDirection: 'row' }}>
-        {testsCell}
-        {rule}
-        {cell('میانگین', avg != null ? pctText(avg) : '–', undefined, 'gauge')}
-        {rule}
-        {cell('بهترین', best != null ? pctText(best) : '–', undefined, 'trophy')}
-        {rule}
-        {/* Every test passed (e.g. 5 of 5): green; any not: the warning colour (Mojtaba 2026-10-20). */}
-        {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined, 'passed')}
+      {/* The four numbers as a row of Material cards that slides (Mojtaba 2026-11-07, after fonts.google.com's carousel);
+          the tests' card opens their history. */}
+      <View style={{ paddingHorizontal: 4, paddingTop: noHead ? 10 : 8, paddingBottom: dense ? 8 : 12 }}>
+        <StatCarousel dense={dense} items={[
+          { title: t('{0} آزمون', faNum(n)), sub: tr('تاریخچه‌ی آزمون‌هایتان را ببینید'), icon: 'clipboard', onPress: () => router.push('/history'), label: tr('تاریخچه‌ی آزمون‌ها') },
+          { title: avg != null ? t('میانگین {0}', pctText(avg)) : tr('میانگین'), sub: tr('میانگین نمره‌ی همه‌ی آزمون‌ها'), icon: 'gauge' },
+          { title: best != null ? t('بهترین {0}', pctText(best)) : tr('بهترین'), sub: tr('بالاترین نمره‌ای که گرفته‌اید'), icon: 'trophy' },
+          // (every test passed, e.g. 5 of 5: green; any not: the warning colour; Mojtaba 2026-10-20)
+          { title: n ? t('قبولی {0} از {1}', faNum(ok), faNum(n)) : tr('قبولی'), sub: tr('آزمون‌هایی که قبول شده‌اید'), icon: 'passed', color: n ? (ok === n ? c.ok : c.warn) : undefined },
+        ]} />
       </View>
       {n && !noFacts ? (
         // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).

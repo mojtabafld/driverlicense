@@ -4456,5 +4456,12 @@
 "خارج کردن این دستگاه":["Sign out this device","Log denne enhed ud"],
 "خروج این دستگاه":["Sign this device out","Log denne enhed ud"],
 "خروج از همه‌ی دستگاه‌های دیگر":["Sign out of all other devices","Log ud af alle andre enheder"],
-"اگر دستگاهی را نمی‌شناسید، آن را خارج کنید. هر ورود از نوع تازه‌ای از دستگاه به ایمیل شما خبر داده می‌شود؛ دستگاهی که یک ماه استفاده نشود خودکار خارج می‌شود.":["If you do not recognise a device, sign it out. A sign-in on a new kind of device is emailed to you; a device unused for a month is signed out by itself.","Hvis du ikke genkender en enhed, så log den ud. Et login på en ny slags enhed sendes til din e-mail; en enhed, der ikke bruges i en måned, logges ud af sig selv."]
+"اگر دستگاهی را نمی‌شناسید، آن را خارج کنید. هر ورود از نوع تازه‌ای از دستگاه به ایمیل شما خبر داده می‌شود؛ دستگاهی که یک ماه استفاده نشود خودکار خارج می‌شود.":["If you do not recognise a device, sign it out. A sign-in on a new kind of device is emailed to you; a device unused for a month is signed out by itself.","Hvis du ikke genkender en enhed, så log den ud. Et login på en ny slags enhed sendes til din e-mail; en enhed, der ikke bruges i en måned, logges ud af sig selv."],
+"تاریخچه‌ی آزمون‌هایتان را ببینید":["See your test history", "Se din prøvehistorik"],
+"میانگین {0}":["Average {0}", "Gennemsnit {0}"],
+"میانگین نمره‌ی همه‌ی آزمون‌ها":["The average score of all your tests", "Gennemsnittet af alle dine prøver"],
+"بهترین {0}":["Best {0}", "Bedste {0}"],
+"بالاترین نمره‌ای که گرفته‌اید":["Your highest score so far", "Din højeste score indtil nu"],
+"قبولی {0} از {1}":["Passed {0} of {1}", "Bestået {0} af {1}"],
+"آزمون‌هایی که قبول شده‌اید":["The tests you have passed", "De prøver, du har bestået"]
 }
