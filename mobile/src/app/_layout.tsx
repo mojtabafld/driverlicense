@@ -194,9 +194,9 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
     api('POST', 'clienterror', { message: error?.message, stack: error?.stack, path, version: Platform.OS }).catch(() => {});
   }, [error, path]);
   const btn = (label: string, onPress: () => void, main?: boolean) => (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => ({ height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20,
-      backgroundColor: main ? c.cta : c.surface2, opacity: pressed ? 0.8 : 1 })}>
-      <Text style={{ color: main ? c.ctaFg : c.text, fontSize: 16, fontWeight: '600' }}>{label}</Text>
+    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => ({ height: 50, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20,
+      backgroundColor: 'transparent', borderWidth: 1, borderColor: main ? c.cta : c.line, opacity: pressed ? 0.8 : 1 })}>
+      <Text style={{ color: main ? c.cta : c.text, fontSize: 16, fontWeight: '500' }}>{label}</Text>
     </Pressable>
   );
   return (

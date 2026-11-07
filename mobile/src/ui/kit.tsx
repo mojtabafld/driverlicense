@@ -684,7 +684,9 @@ export function M3Button({ label, onPress, icon, kind, disabled, style, big, m, 
   label: string; onPress: () => void; icon?: IconName; kind: M3Kind; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
   m: ReturnType<typeof useM3>; busy?: boolean; after?: (fg: string) => React.ReactNode; iconSize?: number;
 }) {
-  const filled = kind === 'filled' || kind === 'error', err = kind === 'error' || kind === 'outlinedError';
+  // (every button outlined, as fonts.google.com's «View all articles» and «Download book»: Mojtaba 2026-11-07, «همه
+  // دکمه‌ها به این سبک»; the kinds only choose the colour, the primary or the error)
+  const filled = false, err = kind === 'error' || kind === 'outlinedError';
   const tone = err ? m.error : m.primary;
   const fg = filled ? (err ? m.onError : m.onPrimary) : tone;
   return (
@@ -760,7 +762,7 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   // (Material 3 in every theme: primary and accent the filled button, secondary the outlined one; Mojtaba 2026-11-07)
   const mm = useM3(), m3 = SOFT ? { primary: mm.primary, onPrimary: mm.onPrimary } : null;
   const fill = m3 ? m3.primary : accent ? g?.fill ?? (SOFT && isDark ? deepAccent(c.accent) : c.accent) : c.cta;
-  const fg = m3 ? (primary ? m3.onPrimary : m3.primary) : accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
+  const fg = m3 ? m3.primary : accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
@@ -779,9 +781,10 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
           minHeight: big ? 56 : 50, borderRadius: SOFT ? 999 : corner ?? (dashboard ? 25 : big ? 16 : radius.btn), borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
-          borderColor: primary ? fill : m3 ? m3.primary : c.line,
-          backgroundColor: primary ? fill : m3 ? (pressed || hovered ? rgbaOf(m3.primary, pressed ? 0.12 : 0.08) : 'transparent') : pressed || hovered ? c.surface2 : c.surface,
-          opacity: disabled ? (big ? 0.72 : 0.52) : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
+          // (Material 3: every one the outlined button, a transparent pill with a 1px line in the primary; Mojtaba 2026-11-07)
+          borderColor: m3 ? m3.primary : primary ? fill : c.line,
+          backgroundColor: m3 ? (pressed || hovered ? rgbaOf(m3.primary, pressed ? 0.12 : 0.08) : 'transparent') : primary ? fill : pressed || hovered ? c.surface2 : c.surface,
+          opacity: disabled ? (big ? 0.72 : 0.52) : !m3 && primary && pressed ? 0.84 : !m3 && primary && hovered ? 0.91 : 1,
           transform: [{ scale }],
           ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
           ...(Platform.OS === 'web' ? { transitionProperty: 'background-color, opacity, box-shadow', transitionDuration: '150ms' } as any : {}),

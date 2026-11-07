@@ -84,8 +84,8 @@ export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
           </View>
         </View>
         <Pressable onPress={() => { tap(); onDone(l); }} accessibilityRole="button"
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, alignItems: 'center', justifyContent: 'center', height: 56, borderRadius: SOFT ? 999 : 16, backgroundColor: c.cta })}>
-          <T raw style={{ color: c.ctaFg, fontSize: 17, fontFamily: LANG_FONT(l, 700), fontWeight: 'normal', textAlign: 'center' }}>{GO[l]}</T>
+          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, alignItems: 'center', justifyContent: 'center', height: 56, borderRadius: SOFT ? 999 : 16, backgroundColor: SOFT ? 'transparent' : c.cta, ...(SOFT ? { borderWidth: 1, borderColor: c.cta } : {}) })}>
+          <T raw style={{ color: SOFT ? c.cta : c.ctaFg, fontSize: 17, fontFamily: LANG_FONT(l, 700), fontWeight: 'normal', textAlign: 'center' }}>{GO[l]}</T>
         </Pressable>
       </View>
     </View>
