@@ -11,7 +11,7 @@ import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 import { RTL, t as fmt, tr } from '@/lib/i18n';
 import { Icon } from './icon';
 import { L, T, physical, physicalAlign, tap } from './kit';
-import { DA_FONT, useColors, useIsDark } from './theme';
+import { DA_FONT, SOFT, useColors, useIsDark } from './theme';
 
 type FrameProps = {
   onBack?: () => void; corner?: React.ReactNode; title: React.ReactNode; sub?: React.ReactNode; children?: React.ReactNode;
@@ -58,10 +58,10 @@ export function StepFrame({ onBack, corner, title, sub, children, button, fade }
       </ScrollView>
       <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12, paddingBottom: kb ? 12 : ins.bottom + 14, marginBottom: kb, paddingHorizontal: 24, backgroundColor: c.bg }}>
         <Pressable onPress={() => { if (ready) { tap(); button.onPress(); } }} disabled={!ready} accessibilityRole="button" accessibilityState={{ disabled: !ready }}
-          style={({ pressed }) => ({ width: '100%', maxWidth: 432, alignSelf: 'center', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center',
+          style={({ pressed }) => ({ width: '100%', maxWidth: 432, alignSelf: 'center', height: 56, borderRadius: SOFT ? 999 : 16, justifyContent: 'center', alignItems: 'center',
             backgroundColor: ready ? c.cta : grey, opacity: pressed ? 0.85 : 1 })}>
           {button.busy ? <L style={{ fontSize: 17, color: c.muted }}>…</L>
-            : typeof button.label === 'string' ? <T style={{ fontSize: 17, fontWeight: '600', color: ready ? c.ctaFg : c.faint }}>{button.label}</T> : button.label}
+            : typeof button.label === 'string' ? <T style={{ fontSize: 17, fontWeight: SOFT ? '500' : '600', color: ready ? c.ctaFg : c.faint }}>{button.label}</T> : button.label}
           <View style={{ position: 'absolute', top: 0, bottom: 0, ...physical(RTL ? { left: 18 } : { right: 18 }), justifyContent: 'center' }}>
             <Icon name="arrowLeft" size={20} color={ready ? c.ctaFg : c.faint} />
           </View>
