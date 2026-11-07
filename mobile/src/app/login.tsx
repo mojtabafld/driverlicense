@@ -27,7 +27,7 @@ import { cancelled, passkeyOk } from '@/lib/passkey';
 function ModeSwitch({ mode, onChange }: { mode: 'login' | 'register'; onChange: (m: 'login' | 'register') => void }) {
   const c = useColors(), dark = useIsDark(), seg = useArcSeg();
   return (
-    <View style={[{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }, ARC && seg.track, ARC && !dark && { backgroundColor: '#e4e4e4' }]}>
+    <View style={[{ flexDirection: 'row', padding: 4, gap: 4, borderRadius: 14, backgroundColor: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }, ARC && seg.track]}>
       {(['login', 'register'] as const).map(m => {
         const on = m === mode;
         return (

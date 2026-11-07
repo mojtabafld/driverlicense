@@ -131,7 +131,7 @@ export const SOFT = STYLE === 'arc';
 // A colour's lightness (0 dark … 1 light), to put dark or light text on it.
 export const lightness = (hex: string) => { const n = parseInt(hex.replace('#', '').slice(0, 6), 16); return (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255; };
 // A colour with its HSL lightness raised by `by` (0…1).
-function lighten(hex: string, by: number): string {
+export function lighten(hex: string, by: number): string {
   const n = parseInt(hex.slice(1, 7), 16), r = (n >> 16 & 255) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b), l0 = (max + min) / 2, d = max - min;
   const sat = d === 0 ? 0 : d / (1 - Math.abs(2 * l0 - 1));

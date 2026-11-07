@@ -17,8 +17,8 @@ import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
-import { ARC, SOFT, UBER, lightness, radius, useColors, useTheme } from './theme';
-import { deepAccent, graphiteCtl, heroDark, px } from './palette';
+import { ARC, SOFT, UBER, lighten, lightness, radius, useColors, useTheme } from './theme';
+import { deepAccent, graphiteCtl, heroDark, px, railColor } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
 
@@ -763,14 +763,16 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
 // In the light theme the track is the sign-in switch's grey (Mojtaba, 2026-10-15), so it shows on the white cards.
 export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
-  const dashboard = useContext(DashboardContext), look = useDashboardLook();
+  const dashboard = useContext(DashboardContext), look = useDashboardLook(), rail = railColor(dark, c.accent);
   return {
     // («نرم»: a grey track with the chosen part a white raised pill and dark text, as in his pictures, on the dashboards too)
-    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? c.nav : '#ebebee') : dashboard ? look.wash : dark ? c.nav : px('#e3e6ef') } as ViewStyle,
+    // (Every switch's track in the active theme's colour, Mojtaba 2026-11-07: the bottom bar's rail, as the cards' inner
+    // surfaces; it was a neutral grey.)
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: SOFT ? rail : dashboard ? look.wash : dark ? c.nav : px('#e3e6ef') } as ViewStyle,
     // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
     // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
     pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
-    raised: { borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? '#3a3a40' : '#ffffff') : dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
+    raised: { borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? lighten(rail, 0.12) : '#ffffff') : dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
       boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
     label: (on: boolean) => ({ color: on ? (dashboard && !SOFT ? c.accentText : c.text) : c.muted, fontWeight: '500' }) as TextStyle,
   };
