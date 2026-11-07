@@ -185,7 +185,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         </Pressable>
       </View>
       {/* The percent above the progress bar; the shortcuts below open history and mistakes. */}
-      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
+      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Geist-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
         {seg(wrong, wrongTone)}
@@ -253,7 +253,7 @@ function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: 
             paddingHorizontal: 10, borderRadius: 6, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
           {/* bold (the app's type is capped at 500, so the family is named) in a squarer box; Mojtaba 2026-11-06 */}
           <T style={{ color: fg, fontSize: 15, lineHeight: 20, fontWeight: 'normal', textAlign: 'center',
-            fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700' }}>{RTL ? faNum(size) : String(size)}</T>
+            fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700' }}>{RTL ? faNum(size) : String(size)}</T>
           <Icon name="chevronDown" size={15} color={fg} weight="semibold" />
         </Pressable>
         {tail ? <T numberOfLines={1} style={{ color: fg, fontSize: 15, lineHeight: 22, fontWeight: '500', textAlign: 'center' }}>{tail}</T> : null}

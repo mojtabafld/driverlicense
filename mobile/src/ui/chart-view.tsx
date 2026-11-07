@@ -88,7 +88,7 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
         <Icon name={icon.name} size={14} color={tint.ink} weight="semibold" />
       </View> : null}
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
-      <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
+      <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
   );
   // The tests' count opens their history, with an «open» arrow in its right corner as the exam tab's buttons have

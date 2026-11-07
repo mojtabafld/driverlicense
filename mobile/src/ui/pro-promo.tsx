@@ -146,7 +146,7 @@ export function ProPromo({ onClose }: { onClose: () => void }) {
             <LinearGradient colors={['#ffd1dc', '#f6e7c8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99 }}>
               <Icon name="sparkles" size={13} color="#1b1b1b" />
-              <T raw style={{ color: '#1b1b1b', fontSize: 13, fontWeight: '800', fontFamily: Platform.OS === 'web' ? 'Inter-700, sans-serif' : 'Inter-700' }}>PRO</T>
+              <T raw style={{ color: '#1b1b1b', fontSize: 13, fontWeight: '800', fontFamily: Platform.OS === 'web' ? 'Geist-700, sans-serif' : 'Geist-700' }}>PRO</T>
             </LinearGradient>
             <T raw style={{ fontSize: 14, fontWeight: '700' }}>Teoripro</T>
           </View>

@@ -54,7 +54,7 @@ function Countdown({ run, left, colors }: { run: Animated.Value; left: number; c
         <AnimatedCircle cx={S / 2} cy={S / 2} r={r} stroke={color} strokeWidth={W} fill="none" strokeLinecap="round"
           strokeDasharray={`${C} ${C}`} strokeDashoffset={run.interpolate({ inputRange: [0, 1], outputRange: [0, C] })} />
       </Svg>
-      <Animated.Text style={{ fontSize: 17, fontWeight: '800', color: left <= 2 ? colors[2] : colors[0], fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', transform: [{ scale: pop }] }}>
+      <Animated.Text style={{ fontSize: 17, fontWeight: '800', color: left <= 2 ? colors[2] : colors[0], fontFamily: RTL ? 'Vazirmatn-800' : 'Geist-700', transform: [{ scale: pop }] }}>
         {faNum(left)}
       </Animated.Text>
     </View>
@@ -197,7 +197,7 @@ export default function Warmup() {
           <T style={{ color: c.muted, fontSize: 14 }}>بعداً</T>
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-          <Animated.Text style={{ fontSize: three > 3 ? 44 : 120, lineHeight: three > 3 ? 64 : 150, textAlign: 'center', fontFamily: RTL ? 'Vazirmatn-800' : 'Inter-700', color: c.text,
+          <Animated.Text style={{ fontSize: three > 3 ? 44 : 120, lineHeight: three > 3 ? 64 : 150, textAlign: 'center', fontFamily: RTL ? 'Vazirmatn-800' : 'Geist-700', color: c.text,
             opacity: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0, 1, 0] }),
             transform: [{ scale: big.interpolate({ inputRange: [0, 1, 2], outputRange: [0.4, 1, 1.5] }) }] }}>{three > 3 ? tr('آماده‌اید؟') : faNum(three)}</Animated.Text>
         </View>
