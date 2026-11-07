@@ -1,4 +1,4 @@
-// Icon names of src/ui/icon.tsx: the app's own names, each drawn with one Lucide icon (lucide-react-native).
+// Icon names of src/ui/icon.tsx: the app's own names, each drawn with one Material Symbol (icon-paths.ts).
 import type { SymbolWeight } from 'expo-symbols';
 
 export type IconName = 'house' | 'exam' | 'learn' | 'settings' | 'moon' | 'sun' | 'check' | 'checkCircle' | 'xCircle' | 'chevronLeft' | 'sparkles' | 'clipboard' | 'warning'
