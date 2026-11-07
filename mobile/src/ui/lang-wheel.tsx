@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
 import { Icon } from './icon';
 import { T, tap } from './kit';
-import { useColors } from './theme';
+import { SOFT, useColors } from './theme';
 
 export const LANG_NAMES: Record<UiLang, string> = { fa: 'فارسی', en: 'English', da: 'Dansk' };
 export const LANG_FONT = (l: UiLang, w: 500 | 700 = 500) => (l === 'fa' ? `Vazirmatn-${w}` : `Geist-${w}`);
@@ -84,7 +84,7 @@ export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
           </View>
         </View>
         <Pressable onPress={() => { tap(); onDone(l); }} accessibilityRole="button"
-          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, alignItems: 'center', justifyContent: 'center', height: 56, borderRadius: 16, backgroundColor: c.cta })}>
+          style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, alignItems: 'center', justifyContent: 'center', height: 56, borderRadius: SOFT ? 999 : 16, backgroundColor: c.cta })}>
           <T raw style={{ color: c.ctaFg, fontSize: 17, fontFamily: LANG_FONT(l, 700), fontWeight: 'normal', textAlign: 'center' }}>{GO[l]}</T>
         </Pressable>
       </View>

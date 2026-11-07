@@ -6,20 +6,24 @@ import { Platform, Pressable, TextInput, View } from 'react-native';
 import { RTL, tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { physicalAlign, tap } from './kit';
-import { DA_FONT, useColors, useIsDark } from './theme';
+import { DA_FONT, SOFT, useColors, useIsDark, useM3 } from './theme';
 
 export function Field({ icon, label, value, onChange, secure, ltr, onSubmit }: {
   icon: IconName; label: string; value: string; onChange: (v: string) => void; secure?: boolean; ltr?: boolean; onSubmit?: () => void;
 }) {
-  const c = useColors(), dark = useIsDark();
+  const c = useColors(), dark = useIsDark(), m = useM3();
   const [show, setShow] = useState(false), [focus, setFocus] = useState(false);
   return (
     <View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 54, borderRadius: 14, borderWidth: 1.5,
+      {/* (Material 3's outlined text field, Mojtaba 2026-11-07: no fill, a 1px outline that turns 2px in the primary
+          when focused, corners 16) */}
+      <View style={SOFT ? { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: focus ? 15 : 16, height: 56, borderRadius: 16,
+        borderWidth: focus ? 2 : 1, borderColor: focus ? m.primary : m.outline, backgroundColor: 'transparent',
+        ...(Platform.OS === 'web' ? { transition: 'border-color .15s' } as any : {}) } : { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, height: 54, borderRadius: 14, borderWidth: 1.5,
         borderColor: focus ? c.accent : dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)',
         backgroundColor: focus ? c.surface : dark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.75)',
         ...(Platform.OS === 'web' ? { boxShadow: focus ? `0 0 0 4px ${c.accentSoft}` : '0 1px 2px rgba(0,0,0,.05)', transition: 'border-color .15s, box-shadow .15s, background-color .15s' } as any : {}) }}>
-        <Icon name={icon} size={19} color={focus ? c.link : c.faint} />
+        <Icon name={icon} size={19} color={focus ? (SOFT ? m.primary : c.link) : c.faint} />
         <TextInput value={value} onChangeText={onChange} secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false}
           placeholder={tr(label)} accessibilityLabel={tr(label)} placeholderTextColor={c.muted} onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
           onSubmitEditing={onSubmit} returnKeyType={onSubmit ? 'go' : 'next'}

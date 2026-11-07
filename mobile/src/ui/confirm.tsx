@@ -12,7 +12,7 @@ import { tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { ActionButton, T } from './kit';
 import { SlideToConfirm } from './slide-confirm';
-import { useColors, useIsDark } from './theme';
+import { SOFT, useColors, useIsDark, useM3 } from './theme';
 
 type Props = {
   open: boolean; title: string; text?: string; children?: React.ReactNode;
@@ -22,7 +22,7 @@ type Props = {
   slide?: { label: string; doneLabel: string };
 };
 export function Confirm({ open, title, text, children, cancel, ok, danger, onCancel, onOk, cancelIcon = 'xmark', okIcon = 'check', icon, slide }: Props) {
-  const c = useColors(), dark = useIsDark();
+  const c = useColors(), dark = useIsDark(), m = useM3();
   const long = Math.max(tr(ok).length, tr(cancel).length) > 11;
   const [v] = useState(() => new Animated.Value(0));
   // Still shown while it fades out after `open` goes false.
@@ -42,7 +42,8 @@ export function Confirm({ open, title, text, children, cancel, ok, danger, onCan
         <Animated.View style={{ width: '100%', maxWidth: 360, transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
         {/* The card itself does not close the dialog. */}
         <Pressable onPress={() => {}} accessibilityRole="alert"
-          style={{ width: '100%', padding: 20, gap: 14, borderRadius: 22, backgroundColor: c.surface, borderWidth: 1, borderColor: c.cardBorder,
+          // (Material 3's dialog: corners 28, the surface container a step above the page, no outline; Mojtaba 2026-11-07)
+          style={{ width: '100%', padding: SOFT ? 24 : 20, gap: 14, borderRadius: SOFT ? 28 : 22, backgroundColor: SOFT ? m.dialog : c.surface, borderWidth: SOFT ? 0 : 1, borderColor: c.cardBorder,
             shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 8 }}>
           <View style={{ gap: 6, alignItems: 'center' }}>
             {icon ? (

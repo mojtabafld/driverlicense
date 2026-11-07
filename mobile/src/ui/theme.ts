@@ -142,7 +142,20 @@ export function lighten(hex: string, by: number): string {
   const [r1, g1, b1] = h < 1 && h >= 0 ? [cc, x, 0] : h < 2 ? [x, cc, 0] : h < 3 ? [0, cc, x] : h < 4 ? [0, x, cc] : h < 5 ? [x, 0, cc] : [cc, 0, x];
   return '#' + [r1, g1, b1].map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
 }
+// Material 3's primary and its ink for a theme (useM3 below): «سنگی» its own scheme; the others, dark, a light tone of
+// their colour on a deep ink, light, the colour itself with white or black ink, whichever reads.
+function m3Primary(accent: string, isDark: boolean) {
+  if (PALETTE === 'slate') { const m = M3[isDark ? 'dark' : 'light']; return { primary: m.primary, onPrimary: m.onPrimary }; }
+  return { primary: isDark ? mix(accent, '#ffffff', 0.45) : accent,
+    onPrimary: isDark ? mix(accent, '#000000', 0.72) : lightness(accent) > 0.62 ? '#111113' : '#ffffff' };
+}
+// Every main button (btn / cta, and the custom ones drawn with them) Material's filled button in the primary
+// (Mojtaba 2026-11-07).
 function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
+  const out = soften0(c, isDark), p = m3Primary(c.accent, isDark);
+  return { ...out, btn: p.primary, btnFg: p.onPrimary, cta: p.primary, ctaFg: p.onPrimary };
+}
+function soften0<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // Every theme (Mojtaba 2026-11-06), light: the page #fdfdfd, the cards the bottom bar's rail 5% lighter (4% until
   // later that day), what sits inside them the rail itself. Dark, the same mirrored: the page #020202, the cards the
   // rail 5% darker, what sits inside them the rail. (Until then «گرافیت» dark had its own greys, the others a page in a
@@ -226,3 +239,17 @@ export const radius = STYLE === 'arc'
 export const space = (n: number) => n * 4;
 // Danish / English text: the Latin font bundled with the app (src/ui/fonts.ts); L picks the weight, this is its regular.
 export const DA_FONT = Platform.OS === 'web' ? `${DA_REGULAR}, Vazirmatn-400, Helvetica, sans-serif` : DA_REGULAR;
+
+// Material 3's button and dialog roles (Mojtaba 2026-11-07, after fonts.google.com: «View all articles», «Download
+// book», «Filters»): the filled button in the primary with its on-primary ink, the outlined button a transparent pill
+// with a 1px line and its label in the primary, the error colours for a destructive action. «سنگی» takes Material's
+// own scheme (M3); the other themes the same roles from their colour: dark, a light tone of it on a deep ink; light,
+// the colour itself with white or black ink, whichever reads.
+export function useM3() {
+  const c = useColors(), dark = useIsDark(), m = m3Scheme(dark);
+  if (m) return { primary: m.primary, onPrimary: m.onPrimary, outline: dark ? '#8e918f' : '#747775', label: m.primary,
+    error: m.error, onError: dark ? '#601410' : '#ffffff', dialog: dark ? '#2b2c2f' : '#f0f4f9' };
+  const { primary, onPrimary } = m3Primary(c.accent, dark);
+  return { primary, onPrimary, outline: dark ? '#8e918f' : '#747775', label: primary,
+    error: dark ? '#f2b8b5' : '#b3261e', onError: dark ? '#601410' : '#ffffff', dialog: dark ? '#2b2c2f' : c.surface };
+}

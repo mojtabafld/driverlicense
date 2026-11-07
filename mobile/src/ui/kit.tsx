@@ -17,8 +17,8 @@ import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
-import { ARC, SOFT, m3Scheme, UBER, lighten, lightness, radius, useColors, useTheme } from './theme';
-import { PALETTE, deepAccent, graphiteCtl, heroDark, mix, px, railColor } from './palette';
+import { ARC, SOFT, m3Scheme, UBER, lighten, lightness, radius, useColors, useM3, useTheme } from './theme';
+import { PALETTE, deepAccent, graphiteCtl, heroDark, mix, px, railColor, rgba as rgbaOf } from './palette';
 import { TAB_BAR_H, useTabLook } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
 
@@ -653,7 +653,10 @@ export function Card({ children, style, onPress, testID }: { children: React.Rea
 type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass' | 'danger' | 'grey'; disabled?: boolean; style?: StyleProp<ViewStyle>; icon?: IconName; big?: boolean };
 // Every button carries a flat icon before its label, in the label's colour.
 export function Button({ label, onPress, kind = 'primary', disabled, style, icon, big }: BtnProps) {
-  const c = useColors();
+  const c = useColors(), m = useM3();
+  // Material 3 (Mojtaba 2026-11-07): primary a filled pill, the others outlined pills (danger in the error colour).
+  if (SOFT && kind !== 'grey') return <M3Button label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} big={big}
+    kind={kind === 'primary' ? 'filled' : kind === 'danger' ? 'outlinedError' : 'outlined'} m={m} />;
   // grey: the main flat button (ActionButton). In the Uber look every main button is that one and outlined ones take
   // the text colour, so no button is green.
   const grey = kind === 'grey' || (UBER && kind === 'primary'), primary = kind === 'primary' && !grey;
@@ -672,6 +675,33 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
   );
 }
 
+// Material 3's common buttons (Mojtaba 2026-11-07, after fonts.google.com): a full pill, 46 tall (52 `big`), the
+// label in weight 500. filled: the primary with its ink; outlined: transparent with a 1px line and the label in the
+// primary (the line in the primary too, as on fonts.google.com); error / outlinedError: the same in the error colour.
+// A press lays the label's colour over it at 12% (Material's pressed state); disabled at 38%.
+export type M3Kind = 'filled' | 'outlined' | 'error' | 'outlinedError';
+export function M3Button({ label, onPress, icon, kind, disabled, style, big, m, busy, after, iconSize = 18 }: {
+  label: string; onPress: () => void; icon?: IconName; kind: M3Kind; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
+  m: ReturnType<typeof useM3>; busy?: boolean; after?: (fg: string) => React.ReactNode; iconSize?: number;
+}) {
+  const filled = kind === 'filled' || kind === 'error', err = kind === 'error' || kind === 'outlinedError';
+  const tone = err ? m.error : m.primary;
+  const fg = filled ? (err ? m.onError : m.onPrimary) : tone;
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled, busy }} style={style}>
+      {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
+        <View style={{ minHeight: big ? 52 : 46, borderRadius: 999, paddingHorizontal: 22, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          backgroundColor: filled ? tone : 'transparent', borderWidth: filled ? 0 : 1, borderColor: tone, opacity: disabled ? 0.38 : 1 }}>
+          {pressed || hovered ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: fg, opacity: pressed ? 0.12 : 0.08 }} /> : null}
+          {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={iconSize} color={fg} /> : null}
+          <T numberOfLines={1} style={{ fontSize: big ? 16 : 15, lineHeight: big ? 24 : 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
+          {after?.(fg)}
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
 // The flat, minimal action button, like a «Confirm order» button: a solid fill, no border, sheen or shadow, 54 tall
 // with corners rounded 12. main: `btn` (soft light grey with black text in dark mode, near-black with white text in
 // light mode); soft: the grey of the secondary buttons (cancel, back to the exam); danger: red with white text.
@@ -679,7 +709,10 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
 export function ActionButton({ label, onPress, icon, tone = 'main', disabled, style, iconWeight = 'semibold' }: {
   label: string; onPress: () => void; icon?: IconName; tone?: 'main' | 'soft' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; iconWeight?: 'semibold' | 'bold';
 }) {
-  const c = useColors(), dark = useTheme().theme === 'dark';
+  const c = useColors(), dark = useTheme().theme === 'dark', m = useM3();
+  // Material 3 (Mojtaba 2026-11-07): main the filled button, soft the outlined one, danger filled in the error colour.
+  if (SOFT) return <M3Button label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} big
+    kind={tone === 'main' ? 'filled' : tone === 'danger' ? 'error' : 'outlined'} m={m} />;
   // («soft», e.g. a dialog's «ماندن»: a step off the dialog's card in the theme's colour, so it shows; the neutral grey
   // it was matched the cards once they took the theme's colour; Mojtaba 2026-11-07)
   const soft = SOFT ? lighten(railColor(dark, c.accent), dark ? 0.1 : -0.08) : c.nav;
@@ -724,9 +757,10 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const accent = variant === 'accent' && (!SOFT || isDark), primary = variant === 'primary' || variant === 'accent';
   // (dark: a dark shade of the theme's colour with white text, Mojtaba 2026-11-05)
   // («سنگی»: Material 3's filled button, its primary with on-primary ink; Mojtaba 2026-11-07)
-  const m3 = variant === 'accent' ? m3Scheme(isDark) : null;
+  // (Material 3 in every theme: primary and accent the filled button, secondary the outlined one; Mojtaba 2026-11-07)
+  const mm = useM3(), m3 = SOFT ? { primary: mm.primary, onPrimary: mm.onPrimary } : null;
   const fill = m3 ? m3.primary : accent ? g?.fill ?? (SOFT && isDark ? deepAccent(c.accent) : c.accent) : c.cta;
-  const fg = m3 ? m3.onPrimary : accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
+  const fg = m3 ? (primary ? m3.onPrimary : m3.primary) : accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
@@ -744,9 +778,9 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
       onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
         <Animated.View style={{
-          minHeight: big ? 56 : 50, borderRadius: corner ?? (SOFT ? 999 : dashboard ? 25 : big ? 16 : radius.btn), borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
-          borderColor: primary ? fill : c.line,
-          backgroundColor: primary ? fill : pressed || hovered ? c.surface2 : c.surface,
+          minHeight: big ? 56 : 50, borderRadius: SOFT ? 999 : corner ?? (dashboard ? 25 : big ? 16 : radius.btn), borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+          borderColor: primary ? fill : m3 ? m3.primary : c.line,
+          backgroundColor: primary ? fill : m3 ? (pressed || hovered ? rgbaOf(m3.primary, pressed ? 0.12 : 0.08) : 'transparent') : pressed || hovered ? c.surface2 : c.surface,
           opacity: disabled ? (big ? 0.72 : 0.52) : primary && pressed ? 0.84 : primary && hovered ? 0.91 : 1,
           transform: [{ scale }],
           ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
