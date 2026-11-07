@@ -81,8 +81,8 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   // own (Mojtaba 2026-11-07).
   const cell = (label: string, value: string, color?: string, icon?: IconName) => (
     <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
-      {icon ? <View style={{ marginBottom: 2 }}><Cookie size={dense ? 28 : 32} color={tab.indicator}>
-        <Icon name={icon} size={dense ? 15 : 17} color={tab.onIndicator} />
+      {icon ? <View style={{ marginBottom: 2 }}><Cookie size={dense ? 32 : 38} color={tab.indicator}>
+        <Icon name={icon} size={dense ? 17 : 20} color={tab.onIndicator} />
       </Cookie></View> : null}
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
       <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
