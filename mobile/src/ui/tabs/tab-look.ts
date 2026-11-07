@@ -1,5 +1,5 @@
-import { PALETTE, deepAccent, mix, railColor } from '../palette';
-import { M3_DARK, useColors, useIsDark } from '../theme';
+import { deepAccent, mix, railColor } from '../palette';
+import { m3Scheme, useColors, useIsDark } from '../theme';
 
 export const TAB_BAR_H = 72;
 export const TAB_PAD = 7;
@@ -36,10 +36,11 @@ function textOn(fill: string, preferred: string) {
 // The bar's colours: Material 3's navigation bar (Mojtaba 2026-11-07, after his picture of fonts.google.com): the bar a
 // surface a step off the page, each tab's icon and label under it in a soft ink, and the open tab's icon on a pill
 // (the indicator) in a tint of the theme's colour, its label in the theme's colour. «سنگی» dark takes Material's own
-// dark scheme (theme.ts M3_DARK).
+// light and dark schemes (theme.ts M3).
 export function useTabLook() {
   const c = useColors(), dark = useIsDark();
-  if (dark && PALETTE === 'slate') return { rail: M3_DARK.card, edge: M3_DARK.card, indicator: M3_DARK.container, onIndicator: M3_DARK.onContainer, muted: M3_DARK.muted, label: M3_DARK.primary };
+  const m = m3Scheme(dark);
+  if (m) return { rail: m.card, edge: m.card, indicator: m.container, onIndicator: m.onContainer, muted: m.muted, label: m.primary };
   const rail = railColor(dark, c.accent);   // (the same rail the page and cards are made from: theme.ts)
   const indicator = dark ? deepAccent(c.accent) : mix(c.accent, '#ffffff', 0.78);
   return {

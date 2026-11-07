@@ -147,17 +147,26 @@ function soften<T extends typeof tealLight>(c: T, isDark: boolean): T {
   // later that day), what sits inside them the rail itself. Dark, the same mirrored: the page #020202, the cards the
   // rail 5% darker, what sits inside them the rail. (Until then «گرافیت» dark had its own greys, the others a page in a
   // deep shade of the theme's colour.)
-  // «سنگی» dark (Mojtaba 2026-11-07, after his picture of fonts.google.com): Material 3's dark scheme, a near-black page,
-  // the cards and inner surfaces its surface containers, the accent its light blue, text and notes its greys.
-  if (isDark && PALETTE === 'slate') return { ...soft(c, true, M3_DARK.bg, M3_DARK.card, M3_DARK.inner, M3_DARK.line, 'rgba(255,255,255,0.04)'),
-    accent: M3_DARK.primary, accentText: M3_DARK.onPrimary, accentSoft: 'rgba(168,199,250,0.16)', link: M3_DARK.primary, forest: M3_DARK.primary,
-    text: M3_DARK.text, muted: M3_DARK.muted, faint: '#8e918f', pick: M3_DARK.primary, pickSoft: M3_DARK.container, checked: 'rgba(168,199,250,0.16)' };
+  // «سنگی» (Mojtaba 2026-11-07, read from fonts.google.com/icons): Material 3's own light and dark schemes, the page its
+  // background, the cards and inner surfaces its surface containers, the accent its primary, text and notes its
+  // on-surface colours, right and wrong its green and error.
+  if (PALETTE === 'slate') { const m = M3[isDark ? 'dark' : 'light'];
+    return { ...soft(c, isDark, m.bg, m.card, m.inner, m.line, 'rgba(0,0,0,0)'), accent: m.primary, accentText: m.onPrimary, accentSoft: m.primarySoft,
+      link: m.primary, forest: m.primary, text: m.text, muted: m.muted, faint: m.outline, pick: m.primary, pickSoft: m.container, checked: m.primarySoft,
+      ok: m.green, bad: m.error }; }
   const rail = railColor(isDark, c.accent);
   return soft(c, isDark, isDark ? '#020202' : '#fdfdfd', lighten(rail, isDark ? -0.05 : 0.05), rail, rail, isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)');
 }
-// Material 3's dark scheme as fonts.google.com shows it (the «سنگی» dark theme; the bottom bar and switches use it too).
-export const M3_DARK = { bg: '#131314', card: '#1e1f20', inner: '#282a2c', line: '#444746', outline: '#8e918f', primary: '#a8c7fa', onPrimary: '#062e6f',
-  container: '#004a77', onContainer: '#c2e7ff', text: '#e3e3e3', muted: '#c4c7c5' };
+// Material 3's schemes as fonts.google.com uses them (its --sys-* colours; the «سنگی» theme, its bottom bar, segmented
+// buttons and start button). container / onContainer: the secondary container (the open tab's and chosen part's pill).
+export const M3 = {
+  light: { bg: '#ffffff', card: '#f0f4f9', inner: '#e9eef6', line: '#c4c7c5', outline: '#747775', primary: '#0b57d0', onPrimary: '#ffffff',
+    primarySoft: 'rgba(11,87,208,0.12)', container: '#c2e7ff', onContainer: '#004a77', text: '#1f1f1f', muted: '#444746', green: '#006c35', error: '#b3261e' },
+  dark: { bg: '#131314', card: '#1e1f20', inner: '#282a2c', line: '#444746', outline: '#8e918f', primary: '#a8c7fa', onPrimary: '#062e6f',
+    primarySoft: 'rgba(168,199,250,0.16)', container: '#004a77', onContainer: '#c2e7ff', text: '#e3e3e3', muted: '#c4c7c5', green: '#80da88', error: '#f2b8b5' },
+};
+// The Material scheme in use («سنگی» only), else null.
+export const m3Scheme = (dark: boolean) => (PALETTE === 'slate' ? M3[dark ? 'dark' : 'light'] : null);
 function soft<T extends typeof tealLight>(c: T, isDark: boolean, bg: string, surface: string, surface2: string, line: string, border: string): T {
   return { ...c, bg, surface, surface2, line, cardBorder: border, hairline: line, glass: surface, glassStrong: surface, glassBorder: line,
     nav: isDark ? '#26262b' : '#ececef', navOff: surface2, note: surface2,
