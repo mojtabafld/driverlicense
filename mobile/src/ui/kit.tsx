@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { Fragment, cloneElement, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 
 import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
@@ -18,7 +18,7 @@ import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
 import { ARC, SOFT, UBER, lighten, lightness, radius, useColors, useTheme } from './theme';
-import { deepAccent, graphiteCtl, heroDark, mix, px, railColor } from './palette';
+import { deepAccent, graphiteCtl, heroDark, px, railColor } from './palette';
 import { TAB_BAR_H } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
 
@@ -829,36 +829,9 @@ export function useCountUp(target: number, ms = 900) {
 
 // `format`: the label from the ring's value as it fills (so the number counts up with it); else the fixed `label`.
 // `children`: drawn in the middle instead of the label (the home page's icon; Mojtaba 2026-10-29).
-// `glow` (the home page's chance of passing; Mojtaba 2026-11-07, after his picture): a very pale track of the colour,
-// the arc fading in from a light tint to the full colour at its end, and a white knob ringed in the colour there.
-export function Ring({ value, size = 76, stroke = 8, color, trackColor, label, format, children, glow }: { value: number; size?: number; stroke?: number; color?: string; trackColor?: string; label?: string; format?: (v: number) => string; children?: React.ReactNode; glow?: boolean }) {
-  const c = useColors(), dark = useTheme().theme === 'dark', r = (size - stroke) / 2, C = 2 * Math.PI * r;
+export function Ring({ value, size = 76, stroke = 8, color, trackColor, label, format, children }: { value: number; size?: number; stroke?: number; color?: string; trackColor?: string; label?: string; format?: (v: number) => string; children?: React.ReactNode }) {
+  const c = useColors(), r = (size - stroke) / 2, C = 2 * Math.PI * r;
   const shown = useCountUp(Math.max(0, Math.min(1, value)), 1800);
-  if (glow) {
-    const ink = color ?? c.accent, mid = size / 2;
-    const track = mix(ink, c.surface, dark ? 0.8 : 0.88), from = mix(ink, c.surface, dark ? 0.55 : 0.7);
-    // (the arc as short pieces, each a step nearer the full colour: a gradient along the circle; from the top, clockwise)
-    const at = (a: number) => [mid + r * Math.sin(a), mid - r * Math.cos(a)];
-    const arc = (share: number, fade: string, to = ink, knob = true) => {
-      const A = 2 * Math.PI * Math.min(share, 0.9999), N = Math.max(1, Math.ceil(48 * share)), [kx, ky] = at(A);
-      return <>{Array.from({ length: N }, (_, i) => {
-        const a0 = (A * i) / N, a1 = (A * (i + 1)) / N + (i < N - 1 ? 0.01 : 0), [x0, y0] = at(a0), [x1, y1] = at(a1);
-        return <Path key={i} d={`M${x0} ${y0}A${r} ${r} 0 0 1 ${x1} ${y1}`} stroke={mix(fade, to, knob ? (i + 1) / N : 0.5 - 0.5 * Math.cos((2 * Math.PI * (i + 0.5)) / N))} strokeWidth={stroke} fill="none" strokeLinecap={knob && i === 0 ? 'round' : 'butt'} />;
-      })}{knob ? <Circle cx={kx} cy={ky} r={stroke * 0.42} fill="#ffffff" stroke={ink} strokeWidth={Math.max(1.5, stroke * 0.18)} /> : null}</>;
-    };
-    const idle = shown <= 0.002;
-    return (
-      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-        <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
-          <Circle cx={mid} cy={mid} r={r} stroke={track} strokeWidth={stroke} fill="none" />
-          {/* At 0% (no estimate yet) the whole track a still gradient, pale at the top deepening to the bottom and back,
-              so it has no seam, with no knob (Mojtaba 2026-11-07: still, never turning). */}
-          {idle ? arc(1, track, mix(ink, c.surface, dark ? 0.45 : 0.55), false) : arc(shown, from)}
-        </Svg>
-        {children ?? <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{format ? format(shown) : label}</T>}
-      </View>
-    );
-  }
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
