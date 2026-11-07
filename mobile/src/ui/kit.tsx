@@ -829,6 +829,22 @@ export function useCountUp(target: number, ms = 900) {
 
 // `format`: the label from the ring's value as it fills (so the number counts up with it); else the fixed `label`.
 // `children`: drawn in the middle instead of the label (the home page's icon; Mojtaba 2026-10-29).
+// The 0% ring's sweep: its child turning round once every 2.4 s, without end (still when the phone asks for less motion).
+function Sweep({ size, children }: { size: number; children: React.ReactNode }) {
+  const [turn] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    let loop: Animated.CompositeAnimation | null = null, live = true;
+    AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then(still => {
+      if (!live || still) return;
+      loop = Animated.loop(Animated.timing(turn, { toValue: 1, duration: 2400, easing: Easing.linear, useNativeDriver: Platform.OS !== 'web' }));
+      loop.start();
+    });
+    return () => { live = false; loop && loop.stop(); };
+  }, [turn]);
+  const rotate = turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  return <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { width: size, height: size, transform: [{ rotate }] }]}>{children}</Animated.View>;
+}
+
 // `glow` (the home page's chance of passing; Mojtaba 2026-11-07, after his picture): a very pale track of the colour,
 // the arc fading in from a light tint to the full colour at its end, and a white knob ringed in the colour there.
 export function Ring({ value, size = 76, stroke = 8, color, trackColor, label, format, children, glow }: { value: number; size?: number; stroke?: number; color?: string; trackColor?: string; label?: string; format?: (v: number) => string; children?: React.ReactNode; glow?: boolean }) {
@@ -839,18 +855,22 @@ export function Ring({ value, size = 76, stroke = 8, color, trackColor, label, f
     const track = mix(ink, c.surface, dark ? 0.8 : 0.88), from = mix(ink, c.surface, dark ? 0.55 : 0.7);
     // (the arc as short pieces, each a step nearer the full colour: a gradient along the circle; from the top, clockwise)
     const at = (a: number) => [mid + r * Math.sin(a), mid - r * Math.cos(a)];
-    const A = 2 * Math.PI * Math.min(shown, 0.9999), N = Math.max(1, Math.ceil(48 * shown));
-    const parts = Array.from({ length: N }, (_, i) => {
-      const a0 = (A * i) / N, a1 = (A * (i + 1)) / N + (i < N - 1 ? 0.01 : 0), [x0, y0] = at(a0), [x1, y1] = at(a1);
-      return <Path key={i} d={`M${x0} ${y0}A${r} ${r} 0 0 1 ${x1} ${y1}`} stroke={mix(from, ink, (i + 1) / N)} strokeWidth={stroke} fill="none" strokeLinecap={i === 0 ? 'round' : 'butt'} />;
-    });
-    const [kx, ky] = at(A), kr = stroke * 0.42;
+    const arc = (share: number, fade: string) => {
+      const A = 2 * Math.PI * Math.min(share, 0.9999), N = Math.max(1, Math.ceil(48 * share)), [kx, ky] = at(A);
+      return <>{Array.from({ length: N }, (_, i) => {
+        const a0 = (A * i) / N, a1 = (A * (i + 1)) / N + (i < N - 1 ? 0.01 : 0), [x0, y0] = at(a0), [x1, y1] = at(a1);
+        return <Path key={i} d={`M${x0} ${y0}A${r} ${r} 0 0 1 ${x1} ${y1}`} stroke={mix(fade, ink, (i + 1) / N)} strokeWidth={stroke} fill="none" strokeLinecap={i === 0 ? 'round' : 'butt'} />;
+      })}<Circle cx={kx} cy={ky} r={stroke * 0.42} fill="#ffffff" stroke={ink} strokeWidth={Math.max(1.5, stroke * 0.18)} /></>;
+    };
+    const idle = shown <= 0.002;
     return (
       <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
           <Circle cx={mid} cy={mid} r={r} stroke={track} strokeWidth={stroke} fill="none" />
-          {shown > 0.002 ? <>{parts}<Circle cx={kx} cy={ky} r={kr} fill="#ffffff" stroke={ink} strokeWidth={Math.max(1.5, stroke * 0.18)} /></> : null}
+          {idle ? null : arc(shown, from)}
         </Svg>
+        {/* At 0% (no estimate yet): a short arc fading in from the track sweeps round, as a scan (Mojtaba 2026-11-07). */}
+        {idle ? <Sweep size={size}><Svg width={size} height={size}>{arc(0.28, track)}</Svg></Sweep> : null}
         {children ?? <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{format ? format(shown) : label}</T>}
       </View>
     );
