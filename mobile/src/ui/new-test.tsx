@@ -20,8 +20,6 @@ import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
 import { DailyTestsChart } from './daily-tests-chart';
 import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
-import { Sheet } from './sheet';
-import { ChoiceCard } from './step-frame';
 import { SizeSlider } from './size-slider';
 import { ARC, SOFT, useColors, useIsDark, useM3 } from './theme';
 import { rgba } from './palette';
@@ -72,8 +70,8 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       {level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
       {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
           تکراری» (Mojtaba 2026-10-30). */}
-      {/* (the main site: the number of questions is chosen in the start button, StartWithSize; /app keeps its slider) */}
-      {ARC ? null : <SizeSlider value={size} values={SIZES} onChange={setSize} grey />}
+      {/* The number of questions on a slider over the start button, out of the button again (Mojtaba 2026-11-07). */}
+      {randomLeft && count ? <SizeSlider value={size} values={SIZES} onChange={setSize} grey={!ARC} /> : null}
       {/* The free tests' notice: only without premium (Mojtaba 2026-10-29). */}
       {limited && !premium ? (
         <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
@@ -88,7 +86,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       ) : null}
       {/* (Premium: no «tested on … of … questions» line here any more; the progress card above says it. Mojtaba 2026-10-29) */}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
-        : count ? (ARC ? <StartWithSize size={size} setSize={setSize} onStart={start} /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
+        : count ? (ARC ? <ArcButton label={t('شروع آزمون {0} سؤالی', faNum(count))} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
       {/* A round check box before the words, as a question's statements are ticked, under the start button (Mojtaba 2026-11-06) */}
       <Pressable onPress={() => { tap(); setFresh(!fresh); }} accessibilityRole="checkbox" accessibilityState={{ checked: fresh }} accessibilityLabel={tr('بدون سؤال تکراری')}
@@ -238,38 +236,3 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   );
 }
 
-// The start button with the number of questions in it (Mojtaba 2026-11-05, in place of the 5 … 25 segments): its end
-// holds «۲۵ سؤال ▾», which opens a sheet of the sizes, chosen as the first steps' language is (ChoiceCard).
-function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: number) => void; onStart: () => void }) {
-  const [open, setOpen] = useState(false);
-  const dark = useIsDark();
-  // «شروع آزمون {0} سؤالی» → the words before and after the count ('§' passes through the translation untouched); only the
-  // number is in the box, «questions test» after it (Mojtaba 2026-11-06)
-  const [head, tail = ''] = t('شروع آزمون {0} سؤالی', '§').split('§').map(s => s.trim());
-  return (
-    <View>
-      {/* The count pill sits inside the label where the language puts the number («Start 25 questions test»), the whole
-          line centred (Mojtaba 2026-11-06). */}
-      <ArcButton label={head} onPress={onStart} icon="play" variant="accent" corner={12} after={fg => (<>
-        <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
-          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5,
-            paddingHorizontal: 10, borderRadius: SOFT ? 999 : 6, backgroundColor: SOFT ? rgba(fg, 0.14) : fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
-          {/* bold (the app's type is capped at 500, so the family is named) in a squarer box; Mojtaba 2026-11-06 */}
-          <T style={{ color: fg, fontSize: 15, lineHeight: 20, fontWeight: 'normal', textAlign: 'center',
-            fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700' }}>{RTL ? faNum(size) : String(size)}</T>
-          <Icon name="chevronDown" size={15} color={fg} weight="semibold" />
-        </Pressable>
-        {tail ? <T numberOfLines={1} style={{ color: fg, fontSize: 15, lineHeight: 22, fontWeight: '500', textAlign: 'center' }}>{tail}</T> : null}
-      </>)} />
-      <Sheet open={open} onClose={() => setOpen(false)}>
-        <View style={{ gap: 10, paddingHorizontal: 4 }}>
-          <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '700' }}>تعداد سؤال‌ها</T>
-          {SIZES.map(n => (
-            <ChoiceCard key={n} on={n === size} onPress={() => { setSize(n); setOpen(false); }} raw
-              name={<T style={{ fontSize: 17, fontWeight: '700' }}>{t('{0} سؤال', faNum(n))}</T>} note={n === FULL ? tr('مثل آزمون واقعی') : undefined} />
-          ))}
-        </View>
-      </Sheet>
-    </View>
-  );
-}
