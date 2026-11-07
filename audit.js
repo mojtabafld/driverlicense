@@ -32,9 +32,13 @@ function details(route, body) {
 
 function record(e) {
   if (!store) return;
-  const now = Date.now(), old = now - DAYS * 864e5;
-  const l = [{ at: now, ...e }, ...list().filter(x => x.at > old)].slice(0, MAX);
-  store.meta.audit = { list: l };
+  const now = Date.now(), old = now - DAYS * 864e5, cur = list().filter(x => x.at > old), top = cur[0];
+  // The same failure again within 10 minutes (e.g. wrong codes for an admin's address, from anywhere) is counted on the
+  // entry before it, so a flood of them cannot push the real entries out of the list.
+  if (top && top.act === e.act && top.by === e.by && /^(signin-failed|denied:)/.test(e.act) && now - top.at < 10 * 60e3) {
+    cur[0] = { ...top, at: now, n: (top.n || 1) + 1, ip: e.ip, dev: e.dev };
+    store.meta.audit = { list: cur };
+  } else store.meta.audit = { list: [{ at: now, ...e }, ...cur].slice(0, MAX) };
   // saved once for a burst of actions
   clearTimeout(timer);
   timer = setTimeout(() => { Promise.resolve(store.saveMeta('audit', store.meta.audit)).catch(err => console.error('audit save', err.message)); }, 1500);

@@ -26,10 +26,12 @@ function key() {
 }
 const available = () => !!project() && (!!key() || play.available());
 
+// (one open value per account: a new one replaces it, so the list stays as small as the accounts using it; and Google is
+// asked to decode a token only for an account with one open, so its daily quota cannot be spent from outside)
 const nonces = new Map();
 function nonce(username) {
   const now = Date.now();
-  for (const [k, v] of nonces) if (v.exp < now) nonces.delete(k);
+  for (const [k, v] of nonces) if (v.exp < now || v.username === username) nonces.delete(k);
   const n = crypto.randomBytes(24).toString('base64url');
   nonces.set(n, { username, exp: now + NONCE_MS });
   return n;
@@ -78,4 +80,6 @@ function report(users) {
   return out;
 }
 
-module.exports = { available, project, nonce, check, report, summary };
+const waiting = username => [...nonces.values()].some(v => v.username === username && v.exp > Date.now());
+
+module.exports = { available, project, nonce, waiting, check, report, summary };
