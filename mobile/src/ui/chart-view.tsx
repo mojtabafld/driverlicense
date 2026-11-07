@@ -66,14 +66,19 @@ function GlideRow({ height, children }: { height: number; children: React.ReactN
 // `dense`: the home page on a short screen: less room (the line of facts under the numbers stays; Mojtaba 2026-10-29).
 // `noHead`: the shortest screens: the numbers alone, without the card's title.
 // `noFacts`: without the line of facts under the numbers (the smallest phones).
+// The four titles' icon colours: blue, violet, amber and green, read on light and dark cards alike.
+const TINT = { tests: '#3b82f6', avg: '#8b5cf6', best: '#f59e0b', passed: '#10b981' };
 export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean }) {
   const c = useColors();
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
   const ok = attempts.filter(passed).length;
   const qs = attempts.reduce((s, a) => s + a.items.length, 0), secs = attempts.reduce((s, a) => s + (a.secs || 0), 0);
-  const cell = (label: string, value: string, color?: string) => (
+  // Each title with an icon of its own above it, smaller than the card's own (15 against its 18) and in a colour of its
+  // own (Mojtaba 2026-11-07).
+  const cell = (label: string, value: string, color?: string, icon?: { name: IconName; tint: string }) => (
     <View style={{ flex: 1, alignItems: 'center', gap: 2, marginHorizontal: 2, paddingVertical: dense ? 6 : 12, paddingHorizontal: 4 }}>
+      {icon ? <Icon name={icon.name} size={15} color={icon.tint} /> : null}
       <FitLine size={12} style={{ color: c.muted, textAlign: 'center' }}>{label}</FitLine>
       <T style={{ fontSize: 18, lineHeight: 26, fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700', textAlign: 'center', color: color ?? c.text }} numberOfLines={1}>{value}</T>
     </View>
@@ -83,7 +88,7 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   const testsCell = (
     <Pressable onPress={() => { tap(); router.push('/history'); }} accessibilityRole="button" accessibilityLabel={tr('تاریخچه‌ی آزمون‌ها')}
       style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.6 : 1 })}>
-      {cell('آزمون‌ها', faNum(n))}
+      {cell('آزمون‌ها', faNum(n), undefined, { name: 'clipboard', tint: TINT.tests })}
       <View pointerEvents="none" style={{ position: 'absolute', top: dense ? 4 : 8, right: 2 }}>
         <Icon name="arrowUpRight" size={14} color={c.muted} />
       </View>
@@ -105,12 +110,12 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
       <View style={{ flexDirection: 'row' }}>
         {testsCell}
         {rule}
-        {cell('میانگین', avg != null ? pctText(avg) : '–')}
+        {cell('میانگین', avg != null ? pctText(avg) : '–', undefined, { name: 'gauge', tint: TINT.avg })}
         {rule}
-        {cell('بهترین', best != null ? pctText(best) : '–')}
+        {cell('بهترین', best != null ? pctText(best) : '–', undefined, { name: 'trophy', tint: TINT.best })}
         {rule}
         {/* Every test passed (e.g. 5 of 5): green; any not: the warning colour (Mojtaba 2026-10-20). */}
-        {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined)}
+        {cell('قبولی', n ? `${faNum(ok)} از ${faNum(n)}` : '–', n ? (ok === n ? c.ok : c.warn) : undefined, { name: 'passed', tint: TINT.passed })}
       </View>
       {n && !noFacts ? (
         // One line on any screen; too long for it, it glides through (Mojtaba 2026-10-20).
