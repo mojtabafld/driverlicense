@@ -1,5 +1,5 @@
-// Shared bottom navigation: the selected tab is an icon-and-label pill; the other tabs
-// are icon-only circles, on a softly tinted rail that follows the selected theme.
+// Shared bottom navigation, Material 3's navigation bar (Mojtaba 2026-11-07): four equal tabs, each an icon with its
+// label under it, the open one's icon on a tinted pill; on a rounded bar a step off the page (tab-look.ts).
 // (The home page's round start button beside the bar, from 2026-10-25, was removed on 2026-11-06, Mojtaba.)
 import { usePathname } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';

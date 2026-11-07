@@ -17,9 +17,9 @@ import { Glass } from './glass';
 import { API_URL, PROVE_PICS } from '@/lib/config';
 import { enTerms } from '@/lib/en-terms';
 import { useApp, useExamLang } from '@/lib/store';
-import { ARC, SOFT, UBER, lighten, lightness, radius, useColors, useTheme } from './theme';
-import { deepAccent, graphiteCtl, heroDark, px, railColor } from './palette';
-import { TAB_BAR_H } from './tabs/tab-look';
+import { ARC, SOFT, m3Scheme, UBER, lighten, lightness, radius, useColors, useTheme } from './theme';
+import { PALETTE, deepAccent, graphiteCtl, heroDark, mix, px, railColor } from './palette';
+import { TAB_BAR_H, useTabLook } from './tabs/tab-look';
 import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
 
 // A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
@@ -723,8 +723,10 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
   const isDark = useTheme().theme === 'dark';
   const accent = variant === 'accent' && (!SOFT || isDark), primary = variant === 'primary' || variant === 'accent';
   // (dark: a dark shade of the theme's colour with white text, Mojtaba 2026-11-05)
-  const fill = accent ? g?.fill ?? (SOFT && isDark ? deepAccent(c.accent) : c.accent) : c.cta;
-  const fg = accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
+  // («سنگی»: Material 3's filled button, its primary with on-primary ink; Mojtaba 2026-11-07)
+  const m3 = variant === 'accent' ? m3Scheme(isDark) : null;
+  const fill = m3 ? m3.primary : accent ? g?.fill ?? (SOFT && isDark ? deepAccent(c.accent) : c.accent) : c.cta;
+  const fg = m3 ? m3.onPrimary : accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
   const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
   // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
   const [enter] = useState(() => new Animated.Value(1));
@@ -766,7 +768,16 @@ export function ArcButton({ label, onPress, icon, variant = 'primary', disabled,
 // In the light theme the track is the sign-in switch's grey (Mojtaba, 2026-10-15), so it shows on the white cards.
 export function useArcSeg() {
   const c = useColors(), dark = useTheme().theme === 'dark';
-  const dashboard = useContext(DashboardContext), look = useDashboardLook(), rail = railColor(dark, c.accent);
+  const dashboard = useContext(DashboardContext), look = useDashboardLook(), rail = railColor(dark, c.accent), tab = useTabLook();
+  // Material 3's segmented button (Mojtaba 2026-11-07, after his picture of fonts.google.com): an outlined pill, the
+  // chosen part filled with the bottom bar's indicator tint and its ink.
+  const outline = m3Scheme(dark)?.outline ?? (dark ? mix(rail, '#ffffff', 0.28) : mix(rail, '#000000', 0.22));
+  if (SOFT) return {
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: 'transparent', borderWidth: 1, borderColor: outline } as ViewStyle,
+    pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
+    raised: { borderRadius: radius.pill, backgroundColor: tab.indicator } as ViewStyle,
+    label: (on: boolean) => ({ color: on ? tab.onIndicator : c.muted, fontWeight: '500' }) as TextStyle,
+  };
   return {
     // («نرم»: a grey track with the chosen part a white raised pill and dark text, as in his pictures, on the dashboards too)
     // (Every switch's track in the active theme's colour, Mojtaba 2026-11-07: the bottom bar's rail, as the cards' inner
