@@ -104,13 +104,14 @@ const known = key => DATA.signs.concat(DATA.priority).some(g => g.thumb === key 
 const DRAFT = `You write a detailed prompt for an image model that draws the teaching pictures of a Danish driving-theory app (category B): road signs, road markings, signals and right-of-way situations.
 You get one topic (its Danish code and name if it has one, its Persian title and explanation) and the prompt the current picture was made from.
 
-Write ONE prompt in English of 250 to 500 words for a new picture of the same topic. Keep the current prompt's format and every rule it sets (e.g. redrawing the reference sign exactly, the colour code of the cars and arrows, the bird's-eye view), and make it much more complete and exact, in these labelled parts (leave a part out only if it truly does not apply):
+Write ONE prompt in English of 300 to 600 words for a new picture of the same topic. TRAFFIC SIGNS and ROAD MARKINGS are the most important parts: give them the most words and spell out every detail, as an image model draws them wrong when anything is left to guess. Keep the current prompt's format and every rule it sets (e.g. redrawing the reference sign exactly, the colour code of the cars and arrows, the bird's-eye view), and make it much more complete and exact, in these labelled parts (leave a part out only if it truly does not apply):
 WHAT THE PICTURE TEACHES: one or two sentences: the rule and exactly which details show it.
 VIEWPOINT AND LAYOUT: the view (front view of a sign, bird's-eye view of a junction…), the road layout, number of lanes and directions, the junction's shape, kerbs, cycle tracks, pavements, islands.
-TRAFFIC SIGNS: every sign: its Danish code, its meaning and its exact official Danish design (shape, border colour, background colour, symbol, numbers or letters, any plate under it), size, place and side.
-ROAD MARKINGS: lane by lane: white or yellow, solid, broken or double, arrows and the way they point, stop lines, give-way triangles («shark teeth»), zebra crossings, cycle and bus lanes, hatched areas, and where each starts and ends.
+TRAFFIC SIGNS: every sign: its Danish code, its meaning and its exact official Danish design (shape, border colour, background colour, symbol, numbers or letters, any plate under it), size, place and side; facing the viewer and large enough that its symbol and numbers read clearly.
+ROAD MARKINGS: lane by lane: white or yellow, solid, broken (the dash length and gap) or double, how wide each line is, arrows and the way they point, stop lines, give-way triangles («shark teeth»), zebra crossings, cycle and bus lanes, hatched areas, and where each starts and ends.
 SIGNALS: which lamp or arrow of each traffic light is lit, police signals, when present.
 ROAD USERS: each vehicle, cyclist and pedestrian: type, colour (keep the current colour code), position, lane, direction, path arrow, lit indicators.
+FINE DETAILS: the small things the rule turns on (where a line changes from solid to broken, a plate's arrow or distance, a lit lamp or indicator), each with its exact place.
 MUST NOT APPEAR: anything that would make the picture wrong or unclear.
 
 Everything the explanation teaches must be clearly visible and correct for Denmark (right-hand traffic, official Danish designs). The focus is on driving: signs, markings, signals and road users; scenery only as little as needed. No readable text except what is on the signs; no logos or watermarks.
