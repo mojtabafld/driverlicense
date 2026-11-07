@@ -23,7 +23,8 @@ import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
 import { Sheet } from './sheet';
 import { ChoiceCard } from './step-frame';
 import { SizeSlider } from './size-slider';
-import { ARC, useColors, useIsDark } from './theme';
+import { ARC, SOFT, useColors, useIsDark, useM3 } from './theme';
+import { rgba } from './palette';
 
 export type NewTest = ReturnType<typeof useNewTest>;
 export function useNewTest() {
@@ -136,17 +137,19 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
   // Two equal-width shortcuts share the full row on every screen.
   // (narrower phones: smaller icons, room and words, so nothing is cut off; a step smaller still on small ones,
   // Mojtaba 2026-10-30)
-  const { width: winW } = useWindowDimensions(), tight = winW < 345 ? 2 : winW < 400 ? 1 : 0;
+  const { width: winW } = useWindowDimensions(), tight = winW < 345 ? 2 : winW < 400 ? 1 : 0, m = useM3();
+  // (outlined pills, as fonts.google.com's buttons: Mojtaba 2026-11-07)
   const tag = (icon: IconName, color: string, text: string, go?: () => void) => (
     <Pressable disabled={!go} onPress={() => { tap(); go?.(); }} accessibilityRole={go ? 'button' : undefined} accessibilityLabel={text}
       style={({ pressed }) => ({ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: [5, 4, 3][tight],
-        paddingVertical: [10, 9, 8][tight], paddingHorizontal: [24, 22, 19][tight], borderRadius: 10, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
+        paddingVertical: [10, 9, 8][tight], paddingHorizontal: [24, 22, 19][tight], ...(SOFT ? { borderRadius: 999, borderWidth: 1, borderColor: color,
+          backgroundColor: pressed ? rgba(color, 0.12) : 'transparent' } : { borderRadius: 10, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 }) })}>
       <Icon name={icon} size={[16, 15, 13][tight]} color={color} weight="semibold" />
       {/* (one size for each width of screen; English and Danish, longer, a step smaller) */}
       <T style={{ flexShrink: 1, color, fontWeight: 'normal' /* not bold, two sizes up (Mojtaba 2026-11-07) */, fontSize: [16, 14.5, 13.5, 13][tight + (RTL ? 0 : 1)] }} numberOfLines={1} maxFontSizeMultiplier={1.1}>{text}</T>
       {/* an «open» arrow, as a link card's «Manage ↗», in the button's right corner (Mojtaba 2026-11-06) */}
       {go ? <View pointerEvents="none" style={{ position: 'absolute', right: [10, 8, 6][tight], top: 0, bottom: 0, justifyContent: 'center' }}>
-        <Icon name="arrowUpRight" size={[16, 15, 13][tight]} color={c.text} />
+        <Icon name="arrowUpRight" size={[16, 15, 13][tight]} color={SOFT ? m.primary : c.text} />
       </View> : null}
     </Pressable>
   );
@@ -228,8 +231,8 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
       <DailyTestsChart height={[130, 112, 96, 80][level] ?? 80} fill />
       {/* (the pills under the counts of right, wrong and unanswered; Mojtaba 2026-10-30) */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        {tag('clock', c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
-        {tag('warning', mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
+        {tag('clock', SOFT ? m.primary : c.text, t('{0} آزمون', faNum(tests)), () => router.push('/history'))}
+        {tag('warning', SOFT ? (mistakes ? m.error : m.primary) : mistakes ? c.bad : c.ok, t('{0} اشتباه', faNum(mistakes)), () => router.push('/mistakes'))}
       </View>
     </>
   );
@@ -250,7 +253,7 @@ function StartWithSize({ size, setSize, onStart }: { size: number; setSize: (n: 
       <ArcButton label={head} onPress={onStart} icon="play" variant="accent" corner={12} after={fg => (<>
         <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr('تعداد سؤال‌ها')}
           style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5,
-            paddingHorizontal: 10, borderRadius: 6, backgroundColor: fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
+            paddingHorizontal: 10, borderRadius: SOFT ? 999 : 6, backgroundColor: SOFT ? rgba(fg, 0.14) : fg === '#ffffff' ? (dark ? 'rgba(255,255,255,0.16)' : 'rgba(255,255,255,0.18)') : 'rgba(0,0,0,0.08)', opacity: pressed ? 0.75 : 1 })}>
           {/* bold (the app's type is capped at 500, so the family is named) in a squarer box; Mojtaba 2026-11-06 */}
           <T style={{ color: fg, fontSize: 15, lineHeight: 20, fontWeight: 'normal', textAlign: 'center',
             fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700' }}>{RTL ? faNum(size) : String(size)}</T>
