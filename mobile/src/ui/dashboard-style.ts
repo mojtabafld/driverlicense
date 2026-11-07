@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { mix } from './palette';
+import { PALETTE, mix } from './palette';
 import { SOFT, useColors, useIsDark } from './theme';
 
 export const DashboardContext = createContext(false);
@@ -12,7 +12,8 @@ export const CardRadiusContext = createContext<number | null>(null);
 export function useDashboardLook() {
   const c = useColors(), dark = useIsDark();
   // («نرم»: neutral greys, no tint of the theme's colour in the surfaces)
-  if (SOFT) return { dark, edge: c.line, wash: c.surface2, row: c.surface2, hero: c.surface };
+  // (no outline round the cards in «سنگی» dark: Material 3's cards are a surface without one; Mojtaba 2026-11-07)
+  if (SOFT) return { dark, edge: dark && PALETTE === 'slate' ? c.surface : c.line, wash: c.surface2, row: c.surface2, hero: c.surface };
   return {
     dark,
     edge: mix(c.link, c.surface, dark ? 0.91 : 0.96),
