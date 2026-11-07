@@ -143,7 +143,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         paddingVertical: [10, 9, 8][tight], paddingHorizontal: [24, 22, 19][tight], borderRadius: 10, backgroundColor: c.surface2, opacity: pressed ? 0.75 : 1 })}>
       <Icon name={icon} size={[16, 15, 13][tight]} color={color} weight="semibold" />
       {/* (one size for each width of screen; English and Danish, longer, a step smaller) */}
-      <T style={{ flexShrink: 1, color, fontWeight: 'normal', fontFamily: RTL ? 'Vazirmatn-700' : 'Inter-700' /* bold: the app caps weights at 500, so the family is named (Mojtaba 2026-11-06) */, fontSize: [14, 12.5, 11.5, 11][tight + (RTL ? 0 : 1)] /* a size up (Mojtaba 2026-11-06) */ }} numberOfLines={1} maxFontSizeMultiplier={1.1}>{text}</T>
+      <T style={{ flexShrink: 1, color, fontWeight: 'normal' /* not bold, two sizes up (Mojtaba 2026-11-07) */, fontSize: [16, 14.5, 13.5, 13][tight + (RTL ? 0 : 1)] }} numberOfLines={1} maxFontSizeMultiplier={1.1}>{text}</T>
       {/* an «open» arrow, as a link card's «Manage ↗», in the button's right corner (Mojtaba 2026-11-06) */}
       {go ? <View pointerEvents="none" style={{ position: 'absolute', right: [10, 8, 6][tight], top: 0, bottom: 0, justifyContent: 'center' }}>
         <Icon name="arrowUpRight" size={[16, 15, 13][tight]} color={c.text} />
