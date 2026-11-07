@@ -72,23 +72,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
           تکراری» (Mojtaba 2026-10-30). */}
       {/* The number of questions on a slider over the start button, out of the button again (Mojtaba 2026-11-07). */}
       {randomLeft && count ? <SizeSlider value={size} values={SIZES} onChange={setSize} grey={!ARC} /> : null}
-      {/* The free tests' notice: only without premium (Mojtaba 2026-10-29). */}
-      {limited && !premium ? (
-        <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
-          <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
-          {/* The free tests left: always one line, shorter and smaller on a narrow screen (Mojtaba 2026-10-22). */}
-          {randomLeft ? (
-            <View style={{ flex: 1 }}>
-              <FitLine size={13} min={10.5} style={{ lineHeight: 21, color: c.muted }}>{t('{1} از {0} آزمون تصادفی رایگان مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))}</FitLine>
-            </View>
-          ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
-        </View>
-      ) : null}
-      {/* (Premium: no «tested on … of … questions» line here any more; the progress card above says it. Mojtaba 2026-10-29) */}
-      {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
-        : count ? (ARC ? <ArcButton label={t('شروع آزمون {0} سؤالی', faNum(count))} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
-          : null}
-      {/* A round check box before the words, as a question's statements are ticked, under the start button (Mojtaba 2026-11-06) */}
+      {/* A round check box before the words, as a question's statements are ticked, above the start button, under the slider (Mojtaba 2026-11-07; under the button from 2026-11-06) */}
       <Pressable onPress={() => { tap(); setFresh(!fresh); }} accessibilityRole="checkbox" accessibilityState={{ checked: fresh }} accessibilityLabel={tr('بدون سؤال تکراری')}
         style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.7 : 1 })}>
         <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
@@ -105,6 +89,22 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
             : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
         </View>
       ) : null}
+      {/* The free tests' notice: only without premium (Mojtaba 2026-10-29). */}
+      {limited && !premium ? (
+        <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
+          <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
+          {/* The free tests left: always one line, shorter and smaller on a narrow screen (Mojtaba 2026-10-22). */}
+          {randomLeft ? (
+            <View style={{ flex: 1 }}>
+              <FitLine size={13} min={10.5} style={{ lineHeight: 21, color: c.muted }}>{t('{1} از {0} آزمون تصادفی رایگان مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))}</FitLine>
+            </View>
+          ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
+        </View>
+      ) : null}
+      {/* (Premium: no «tested on … of … questions» line here any more; the progress card above says it. Mojtaba 2026-10-29) */}
+      {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
+        : count ? (ARC ? <ArcButton label={t('شروع آزمون {0} سؤالی', faNum(count))} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
+          : null}
     </Card>
     </>
   );
