@@ -155,7 +155,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
     return out;
   };
   const ticks = ARC ? arcTicks() : H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
-  const font = RTL ? 'Vazirmatn-400' : 'Inter-400';
+  const font = RTL ? 'Vazirmatn-400' : 'Geist-400';
   const a = sel != null ? data[sel] : null;
   // The picked attempt's name under the chart: «آخرین آزمون» for the newest (picked by default), else its number.
   const pickName = sel === data.length - 1 ? 'آخرین آزمون' : `آزمون ${faNum((sel ?? 0) + 1 + offset)}`;
@@ -219,7 +219,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                   {ARC ? null : <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />}
                   {/* ARC: dates under the line, the newest at the right edge and the oldest in view at the left (mirrored with FLIP). */}
                   {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && Math.abs(x(i) - (FLIP ? VW : CW - VW)) < 36)
-                    ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={ARC && i === sel ? c.text : c.muted} fontSize={11} fontFamily={ARC && i === sel ? (RTL ? 'Vazirmatn-700' : 'Inter-700') : font}
+                    ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={ARC && i === sel ? c.text : c.muted} fontSize={11} fontFamily={ARC && i === sel ? (RTL ? 'Vazirmatn-700' : 'Geist-700') : font}
                         textAnchor="middle">{ARC ? fmtDate(d.at) : faNum(i + 1 + offset)}</SvgText>
                     : null))}
                 </Svg>

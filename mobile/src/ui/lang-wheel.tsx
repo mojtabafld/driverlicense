@@ -13,7 +13,7 @@ import { T, tap } from './kit';
 import { useColors } from './theme';
 
 export const LANG_NAMES: Record<UiLang, string> = { fa: 'فارسی', en: 'English', da: 'Dansk' };
-export const LANG_FONT = (l: UiLang, w: 500 | 700 = 500) => (l === 'fa' ? `Vazirmatn-${w}` : `Inter-${w}`);
+export const LANG_FONT = (l: UiLang, w: 500 | 700 = 500) => (l === 'fa' ? `Vazirmatn-${w}` : `Geist-${w}`);
 // Danish on top, English in the middle (chosen to begin with), Persian below (Mojtaba, 2026-10-15); also the order
 // of the intro's language list.
 export const LANGS: UiLang[] = ['da', 'en', 'fa'];

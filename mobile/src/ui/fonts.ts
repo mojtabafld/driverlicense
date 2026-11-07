@@ -5,11 +5,11 @@ import { Vazirmatn_500Medium } from '@expo-google-fonts/vazirmatn/500Medium';
 import { Vazirmatn_600SemiBold } from '@expo-google-fonts/vazirmatn/600SemiBold';
 import { Vazirmatn_700Bold } from '@expo-google-fonts/vazirmatn/700Bold';
 import { Vazirmatn_800ExtraBold } from '@expo-google-fonts/vazirmatn/800ExtraBold';
-import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
-import { Inter_400Regular_Italic } from '@expo-google-fonts/inter/400Regular_Italic';
-import { Inter_500Medium } from '@expo-google-fonts/inter/500Medium';
-import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
-import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { Geist_400Regular } from '@expo-google-fonts/geist/400Regular';
+import { Geist_400Regular_Italic } from '@expo-google-fonts/geist/400Regular_Italic';
+import { Geist_500Medium } from '@expo-google-fonts/geist/500Medium';
+import { Geist_600SemiBold } from '@expo-google-fonts/geist/600SemiBold';
+import { Geist_700Bold } from '@expo-google-fonts/geist/700Bold';
 import type { TextStyle } from 'react-native';
 
 import { PROVE_PICS } from '@/lib/config';
@@ -24,20 +24,21 @@ export const FA_FONTS = {
 };
 
 // The font of the Danish / English text (questions, statements, explanations), bundled the same way as Vazirmatn:
-// Inter (SIL Open Font License) in four weights and the regular italic.
+// Geist (SIL Open Font License; Mojtaba 2026-11-07: more minimal than Inter, which it replaced) in four weights and
+// the regular italic.
 export const DA_FONTS = {
-  'Inter-400': Inter_400Regular, 'Inter-500': Inter_500Medium, 'Inter-600': Inter_600SemiBold, 'Inter-700': Inter_700Bold,
-  'Inter-400i': Inter_400Regular_Italic,
+  'Geist-400': Geist_400Regular, 'Geist-500': Geist_500Medium, 'Geist-600': Geist_600SemiBold, 'Geist-700': Geist_700Bold,
+  'Geist-400i': Geist_400Regular_Italic,
 };
 // The regular family, for text that sets no weight.
-export const DA_REGULAR = 'Inter-400';
+export const DA_REGULAR = 'Geist-400';
 
-// The family for a fontWeight and italic, and whether the italic must be slanted by the browser (never: Inter has
+// The family for a fontWeight and italic, and whether the italic must be slanted by the browser (never: Geist has
 // its own italic).
 export function daFamily(weight: TextStyle['fontWeight'], italic?: boolean): { family: string; slant: boolean } {
   const w = weight === 'bold' ? 700 : weight === 'normal' || weight == null ? 400 : Number(weight) || 400;
-  if (italic) return { family: 'Inter-400i', slant: false };
-  return { family: `Inter-${Math.min(MAX_DA, Math.max(400, Math.round(w / 100) * 100))}`, slant: false };
+  if (italic) return { family: 'Geist-400i', slant: false };
+  return { family: `Geist-${Math.min(MAX_DA, Math.max(400, Math.round(w / 100) * 100))}`, slant: false };
 }
 
 // The Vazirmatn family for a fontWeight ('bold' → 700; lighter → 400, heavier → 800).

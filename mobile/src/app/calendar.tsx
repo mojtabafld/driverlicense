@@ -252,7 +252,7 @@ export default function Calendar() {
             <TextInput value={text} onChangeText={v => { setText(v); if (err) setErr(''); }} multiline autoFocus maxLength={2000} placeholder={tr('چیزی که می‌خواهید به خاطر بسپارید…')}
               placeholderTextColor={c.faint} textAlignVertical="top"
               style={[{ minHeight: 92, maxHeight: 180, padding: 12, borderRadius: 14, backgroundColor: c.surface2, color: c.text, fontSize: 16, lineHeight: 24,
-                fontFamily: RTL ? 'Vazirmatn-400' : 'Inter-400', textAlign: RTL ? 'right' : 'left' }, Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null]} />
+                fontFamily: RTL ? 'Vazirmatn-400' : 'Geist-400', textAlign: RTL ? 'right' : 'left' }, Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null]} />
             {err ? <T raw style={{ color: c.bad, fontSize: 13 }}>{err}</T> : null}
             <ArcButton label={busy ? 'در حال ذخیره…' : 'ذخیره'} icon="check" onPress={keep} />
             {notes[edit.key] ? (
