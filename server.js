@@ -258,7 +258,8 @@ function sessionUser(req) {
 // avatar: { preset: n } (one of the made pictures) or { photo: version } (their own, at GET /api/avatar), or none.
 // premium: a pass bought with Stripe (payments.js), until when (also once it has run out); admins have its features too.
 const publicUser = u => ({ username: u.username, name: u.name, created: u.created, admin: isAdmin(u) || undefined, avatar: u.avatar || undefined,
-  premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined } : undefined,
+  premium: u.premium && u.premium.until ? { until: u.premium.until, plan: u.premium.plan, promo: u.premium.promo ? true : undefined }
+    : isReview(u) ? { until: Date.UTC(2099, 0, 1), plan: 'review' } : undefined,   // (Google Play's review account)
   // email: the account's address; verify: it is not confirmed yet (while email is on, the app waits for the link).
   // freeAi: the one free answer analysis is still to be had (true), or the question it was had for.
   freeAi: u.guest ? undefined : u.freeAi ? u.freeAi.qid : true,
@@ -393,6 +394,15 @@ function premiumMail(u, req) {
   mail.sendPremium(u.email, u.name || u.username, (u.settings || {}).ui, appLink(req), u.premium.until).catch(err => console.error('premium mail', u.username, err.message));
 }
 
+// Google Play's app review (Mojtaba 2026-11-07): its reviewers cannot read the inbox the sign-in code goes to, so the
+// review account (REVIEW_EMAIL, review@bitlane.app unless set) also takes a fixed 6-digit code, the vault's REVIEW_CODE,
+// given to Google in Play Console (App content → App access); no email is sent to it then. It has premium, so the whole
+// app can be reviewed. Without REVIEW_CODE nothing of this is on.
+const REVIEW_EMAIL = () => mail.normal(process.env.REVIEW_EMAIL || 'review@bitlane.app');
+const REVIEW_CODE = () => String(process.env.REVIEW_CODE || '').replace(/\D/g, '');
+const reviewOn = () => REVIEW_CODE().length === 6;
+const reviewCodeOk = (e, code) => reviewOn() && e === REVIEW_EMAIL() && safeEqual(String(code || '').replace(/\D/g, ''), REVIEW_CODE());
+const isReview = u => reviewOn() && !!u && !u.guest && mail.normal(emailOf(u)) === REVIEW_EMAIL();
 // Whether the code is the one waiting for a new account at this address; a wrong code counts as a try.
 function signupCodeOk(e, code) {
   const r = signupCodes.get(e);
@@ -432,7 +442,7 @@ const googleStates = new Map(), googleCodes = new Map();
 setInterval(() => { const t = Date.now(); for (const [k, v] of googleStates) if (t - v.at > 10 * 60e3) googleStates.delete(k); for (const [k, v] of googleCodes) if (t - v.at > 60e3) googleCodes.delete(k); }, 60e3).unref();
 const RULES_TO_ACCOUNT = Date.parse('2026-10-21T00:00:00Z');   // «قوانین»'s reading moved from the browser to the account
 const BAD_CODE = 'کد درست نیست یا دیگر معتبر نیست.';
-const hasPremium = u => payments.active(u) || isAdmin(u);
+const hasPremium = u => payments.active(u) || isAdmin(u) || isReview(u);
 // While payments are on (unless PREMIUM_GATE=0), the AI analysis and the read-aloud answer 402 to accounts without a pass.
 const PREMIUM_NEEDED = 'این امکان مخصوص نسخه‌ی ویژه است.';
 // With a test key (sk_/rk_test_) payments are only for the admins and the usernames in PREMIUM_TESTERS (comma-separated),
@@ -1119,6 +1129,8 @@ async function api(req, res, route) {
     if (signup && u) return send(res, 409, { error: 'با این ایمیل قبلاً حساب ساخته شده است؛ از «ورود» وارد شوید.' });
     if (!signup && !u) return send(res, 404, { error: 'حسابی با این ایمیل ثبت نشده است.' });
     if (signup && !registerAllowed(ip)) return send(res, 429, { error: 'ساخت حساب از این اتصال زیاد بوده است؛ کمی بعد دوباره امتحان کنید.' });
+    // (the review account: its fixed code, no email)
+    if (reviewOn() && e === REVIEW_EMAIL()) return send(res, 200, { ok: true });
     try { await sendCodeMail(u, e, lang, signup ? 'signup' : 'login'); }
     catch (err) { if (err.status) return send(res, err.status, { error: err.message }); console.error('code mail', err.message); return send(res, 502, { error: 'ایمیل فرستاده نشد؛ کمی بعد دوباره امتحان کنید.' }); }
     return send(res, 200, { ok: true });
@@ -1138,7 +1150,7 @@ async function api(req, res, route) {
   if (req.method === 'POST' && route === 'codecheck') {
     if (tooMany(ip)) return send(res, 429, { error: 'تلاش‌های ناموفق زیاد. ۱۰ دقیقه دیگر دوباره امتحان کنید.' });
     const { email, code } = await readBody(req);
-    if (!signupCodeOk(mail.normal(email), code)) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+    if (!reviewCodeOk(mail.normal(email), code) && !signupCodeOk(mail.normal(email), code)) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
     return send(res, 200, { ok: true });
   }
   // POST codein { email, code, name, exam }: the code from /api/code. For an account with this address it signs in (and
@@ -1150,12 +1162,12 @@ async function api(req, res, route) {
     const e = mail.normal(email);
     let u = await live(resetUser(e));
     if (u) {
-      if (!(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+      if (!reviewCodeOk(e, code) && !(await resetCodeOk(u, code))) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
       delete u.reset;
       if (!u.emailOk && u.email) { u.emailOk = u.okOnce = Date.now(); delete u.verify; delete u.mustVerify; }
       await store.saveUser(u);
     } else {
-      if (!signupCodeOk(e, code)) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
+      if (!reviewCodeOk(e, code) && !signupCodeOk(e, code)) { addFail(ip); return send(res, 400, { error: BAD_CODE }); }
       signupCodes.delete(e);
       const salt = crypto.randomBytes(16).toString('hex');
       const now = Date.now();
