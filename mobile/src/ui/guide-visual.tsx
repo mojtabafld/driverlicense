@@ -20,7 +20,7 @@ import { ZoomableImage } from './zoom';
 
 export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same in both themes
 
-// Use Learn's outlined tiles, bare Material icons and typography for both guide category grids.
+// Use Learn's filled, borderless tiles, bare Material icons and typography for both guide category grids.
 // `limit`: only the first groups (the page offers the rest).
 export function CatGrid({ kind, cats, limit }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[]; limit?: number }) {
   const c = useColors();
@@ -34,7 +34,7 @@ export function CatGrid({ kind, cats, limit }: { kind: GuideKind; cats: { id: st
   if (!PROVE_PICS) return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }} testID="guide-categories">
       {cats.slice(0, limit ?? cats.length).map((g, i) => (
-        <LearningTile key={g.id} icon={g.id === 'A' ? 'warning' : iconOf(g.title)} title={g.title} text={g.blurb}
+        <LearningTile key={g.id} filled icon={g.id === 'A' ? 'warning' : iconOf(g.title)} title={g.title} text={g.blurb}
           label={`${g.title}، ${faNum(g.items.length)} مورد`} onPress={() => open(g, i)} locked={!firstOk(i)} testID={`guide-category-${g.id}`}>
           <T style={{ fontSize: 11.5, lineHeight: 17, color: c.muted }}>{faNum(g.items.length)} مورد</T>
         </LearningTile>
