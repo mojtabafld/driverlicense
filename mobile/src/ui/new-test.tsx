@@ -186,7 +186,7 @@ function Progress({ answered, total, right, wrong, week, level = 0 }: { answered
         </Pressable>
       </View>
       {/* The percent above the progress bar; the shortcuts below open history and mistakes. */}
-      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'Geist-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
+      <T raw style={{ fontSize: big2, lineHeight: Math.round(big2 * 1.13), fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700', color: done ? c.ok : c.text }}>{pctText(shown)}</T>
       <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: answered }} style={{ flexDirection: 'row', gap: 4 }}>
         {seg(right, rightTone)}
         {seg(wrong, wrongTone)}

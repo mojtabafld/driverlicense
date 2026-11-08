@@ -149,7 +149,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 // One item of a bar: an icon over its label, white; `main`: on the darker capsule, in green (the tab bar's chosen tab).
 // `ltr`: a label read left to right (a position, «۷ / ۲۵»).
-// `latin`: the label in the Latin font (Geist) and its digits, e.g. the question count «3 / 25» on the main site.
+// `latin`: the label in the Latin font (Google Sans Flex) and its digits, e.g. the question count «3 / 25» on the main site.
 export function BarItem({ icon, label, main, filled, dim, ltr, latin, children }: { icon?: IconName; label: string; main?: boolean; filled?: boolean; dim?: boolean; ltr?: boolean;
   latin?: boolean; children?: React.ReactNode }) {
   const look = useBarLook();

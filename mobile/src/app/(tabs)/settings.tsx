@@ -122,7 +122,7 @@ export default function Settings() {
           </View>
         </Pressable>
         <Pressable disabled={guest} onPress={() => { tap(); router.push('/account'); }} accessibilityRole={guest ? undefined : 'button'} accessibilityLabel="حساب کاربری" style={{ alignItems: 'center', gap: 2 }}>
-          <T style={{ fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700', fontSize: 22, lineHeight: 30, textAlign: 'center' }}>{user?.name}</T>
+          <T style={{ fontFamily: RTL ? 'Vazirmatn-700' : 'GSans-700', fontSize: 22, lineHeight: 30, textAlign: 'center' }}>{user?.name}</T>
           {user?.created ? <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>عضو از {fmtDay(user.created)}</T> : null}
         </Pressable>
       </View>
@@ -137,7 +137,7 @@ export default function Settings() {
         ] as const).map(([label, value, icon], i) => <View key={label} style={{ flex: 1, alignItems: 'center', gap: 4, borderLeftWidth: i ? 1 : 0, borderLeftColor: look.edge }}>
           <Icon name={icon} size={17} color={c.link} />
           <T style={{ color: c.muted, fontSize: 11.5, lineHeight: 17 }}>{label}</T>
-          <T style={{ fontFamily: RTL ? 'Vazirmatn-700' : 'Geist-700', fontSize: 18, lineHeight: 24 }}>{value}</T>
+          <T style={{ fontFamily: RTL ? 'Vazirmatn-700' : 'GSans-700', fontSize: 18, lineHeight: 24 }}>{value}</T>
         </View>)}
       </View>
       )}

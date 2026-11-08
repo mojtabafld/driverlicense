@@ -123,7 +123,7 @@ function TermSheet({ t, en, onClose }: { t: Term | null; en: boolean; onClose: (
         <View style={{ borderRadius: 16, backgroundColor: c.surface2, overflow: 'hidden' }}>
           {langs.map((l, i) => (
             <View key={l} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, paddingHorizontal: 14, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
-              <T raw style={{ width: 64, fontSize: 12.5, fontWeight: '600', color: c.faint, fontFamily: l === 'fa' ? 'Vazirmatn-600' : 'Geist-600' }}>{WORD_LANG[l]}</T>
+              <T raw style={{ width: 64, fontSize: 12.5, fontWeight: '600', color: c.faint, fontFamily: l === 'fa' ? 'Vazirmatn-600' : 'GSans-600' }}>{WORD_LANG[l]}</T>
               <T raw keepDa style={[{ flex: 1, fontSize: i ? 16 : 19, lineHeight: i ? 24 : 28, fontWeight: i ? '500' : '700' }, l === 'fa' ? { fontFamily: i ? 'Vazirmatn-500' : 'Vazirmatn-700' }
                 : { fontFamily: DA_FONT, writingDirection: 'ltr', textAlign: physicalAlign(RTL ? 'right' : 'left') }]}>{x[l]}</T>
             </View>

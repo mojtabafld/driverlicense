@@ -83,7 +83,7 @@ function PassPct({ value, size, color }: { value: number | null; size: number; c
   const shown = useCountUp(value ?? 0, 1800);
   // (bold by its own family: the main site draws every heavier weight as 500; Mojtaba 2026-10-30)
   // `color`: the verdict tag's colour beside it (green, amber, red; Mojtaba 2026-11-05).
-  return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontFamily: RTL ? 'Vazirmatn-800' : 'Geist-700', ...(color ? { color } : {}) }}>{value == null ? '–' : pctText(shown)}</T>;
+  return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700', ...(color ? { color } : {}) }}>{value == null ? '–' : pctText(shown)}</T>;
 }
 
 // A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
@@ -448,7 +448,7 @@ export default function Home() {
               </View>
               {last ? (
                 <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                  <T style={{ fontSize: slim ? 17 : 22, lineHeight: slim ? 24 : 30, fontFamily: RTL ? 'Vazirmatn-800' : 'Geist-700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
+                  <T style={{ fontSize: slim ? 17 : 22, lineHeight: slim ? 24 : 30, fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <T raw style={{ fontSize: 12.5, color: c.muted }}>{fmtDate(last.at)}</T>
                     {diff != null && diff !== 0 && !slim ? (

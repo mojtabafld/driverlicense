@@ -62,7 +62,7 @@ export function IntroBank() {
       </Card>
       <Flag x={214} y={70} rot={-10} />
       <Card x={44} y={96} w={58} h={40} r={12}>
-        <SvgText x={73} y={122} fontSize={15} fontFamily={RTL ? 'Vazirmatn-700' : 'Geist-600'} fontWeight="700" textAnchor="middle" fill={t.okDeep}>{RTL ? 'فارسی' : UI_LANG === 'da' ? 'Dansk' : 'English'}</SvgText>
+        <SvgText x={73} y={122} fontSize={15} fontFamily={RTL ? 'Vazirmatn-700' : 'GSans-600'} fontWeight="700" textAnchor="middle" fill={t.okDeep}>{RTL ? 'فارسی' : UI_LANG === 'da' ? 'Dansk' : 'English'}</SvgText>
       </Card>
       <Seal x={206} y={190} r={17} />
       <Circle cx={58} cy={62} r={4} fill={t.gold} />
