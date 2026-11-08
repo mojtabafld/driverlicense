@@ -13,7 +13,7 @@ export function LearningTile({ icon, title, text, onPress, label, locked, childr
   const c = useColors(), m = useM3();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={tr(label ?? title)} testID={testID}
-      style={({ pressed }) => ({ flexBasis: fullWidth ? undefined : '47%', width: fullWidth ? '100%' : undefined, flexGrow: 1, minHeight: 150, borderRadius: 24, borderWidth: 1, borderColor: c.line, padding: 16, gap: 10,
+      style={({ pressed }) => ({ flexBasis: fullWidth ? undefined : '47%', width: fullWidth ? '100%' : undefined, flexGrow: 1, minHeight: 150, borderRadius: 24, borderWidth: filled ? 0 : 1, borderColor: c.line, padding: 16, gap: 10,
         justifyContent: 'flex-end', backgroundColor: pressed ? c.surface2 : filled ? c.surface : 'transparent' })}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Icon name={icon} size={44} color={m.primary} />
