@@ -23,6 +23,7 @@ import { ProgressChart } from '@/ui/progress-chart';
 import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { HomeChartIcon, TestStats } from '@/ui/chart-view';
+import { HomeKnowledge } from '@/ui/home-knowledge';
 import { PasskeyOffer } from '@/ui/passkey-offer';
 import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
@@ -216,7 +217,7 @@ export default function Home() {
   const [low, setLow] = useState(false);
   const fitEmpty = () => {
     if (exams.length || openTop.current == null || underH.current == null) return;
-    const room = Math.floor(height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - openTop.current - gap - underH.current);
+    const room = Math.floor(height - (TAB_BAR_H + gap + ins.bottom) - openTop.current - gap - underH.current);
     setGrow(g => (g && room < g[1] ? [g[0], Math.max(96, room)] : g));
     setLow(room < 140);
   };
@@ -236,7 +237,7 @@ export default function Home() {
         // Opened: the latest tests' «all» button shows «نمایش همه» for a moment, as on the exam page, once the page is
         // scrolled down to its end (Mojtaba 2026-10-20); at once when that card is already whole above the tab bar.
         if (finished && open) listBox.current?.measureInWindow((_x, y, _w, h) => {
-          if (h && y + h <= height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) + 1 && !atEnd.current) { atEnd.current = true; setHint(n => n + 1); }
+          if (h && y + h <= height - (TAB_BAR_H + gap + ins.bottom) + 1 && !atEnd.current) { atEnd.current = true; setHint(n => n + 1); }
         });
       });
   };
@@ -284,9 +285,10 @@ export default function Home() {
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
   const fit = () => {
-    if (!ARC || shortPage || level >= 4 || grow || !focused) return;
+    // (the main site no longer fits one screen: the page scrolls to the sections under the chart; Mojtaba 2026-11-08)
+    if (ARC || shortPage || level >= 4 || grow || !focused) return;
     chartBox.current?.measureInWindow((_x, top) => {
-      const room = height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - top;
+      const room = height - (TAB_BAR_H + gap + ins.bottom) - top;
       if (top > 0 && room < chartNeed - 1) setMore(m => m === more ? m + 1 : m);
     });
   };
@@ -430,7 +432,7 @@ export default function Home() {
           header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
       {exams.length || ARC ? (
-      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : { flex: 1, minHeight: shortPage ? 280 : undefined }}
+      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : ARC ? { height: compact ? 270 : 300 } /* (lower and no longer down to the tab bar: the sections under it follow; Mojtaba 2026-11-08) */ : { flex: 1, minHeight: shortPage ? 280 : undefined }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>
@@ -483,6 +485,9 @@ export default function Home() {
       </View>
       </Animated.View>
       ) : <StartCard compact={compact} />}
+      {/* Under the chart, the sections after fonts.google.com/knowledge (topics, the chapter you are on, a featured guide,
+          the glossary; ui/home-knowledge.tsx), the page scrolling to them (Mojtaba 2026-11-08); not in the chart view. */}
+      {ARC && !view ? <HomeKnowledge gap={gap} /> : null}
       {/* The chart view: the statistics and the latest tests, coming in under the chart; a row opens its test. */}
       {grow ? (
         <Animated.View {...swipe} onLayout={e => { if (view && underH.current == null) { underH.current = e.nativeEvent.layout.height; fitEmpty(); } }}
