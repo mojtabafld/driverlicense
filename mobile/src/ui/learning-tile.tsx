@@ -7,14 +7,14 @@ import { T, tap } from './kit';
 import { useColors, useM3 } from './theme';
 
 // Shared by Learn's guides and their category pages, so the outline, icon and typography stay identical.
-export function LearningTile({ icon, title, text, onPress, label, locked, children, testID, fullWidth }: {
-  icon: IconName; title: string; text: string; onPress: () => void; label?: string; locked?: boolean; children?: ReactNode; testID?: string; fullWidth?: boolean;
+export function LearningTile({ icon, title, text, onPress, label, locked, children, testID, fullWidth, filled = false }: {
+  icon: IconName; title: string; text: string; onPress: () => void; label?: string; locked?: boolean; children?: ReactNode; testID?: string; fullWidth?: boolean; filled?: boolean;
 }) {
   const c = useColors(), m = useM3();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={tr(label ?? title)} testID={testID}
       style={({ pressed }) => ({ flexBasis: fullWidth ? undefined : '47%', width: fullWidth ? '100%' : undefined, flexGrow: 1, minHeight: 150, borderRadius: 24, borderWidth: 1, borderColor: c.line, padding: 16, gap: 10,
-        justifyContent: 'flex-end', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+        justifyContent: 'flex-end', backgroundColor: pressed ? c.surface2 : filled ? c.surface : 'transparent' })}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Icon name={icon} size={44} color={m.primary} />
         {locked ? <Icon name="lock" size={18} color={c.muted} /> : null}

@@ -103,7 +103,7 @@ function LearnSections() {
   const { done } = useCourseProgress();
   const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
   const guide = (icon: IconName, title: string, text: string, href: Href) => (
-    <LearningTile key={title} icon={icon} title={title} text={text} onPress={() => router.push(href)} />
+    <LearningTile key={title} filled icon={icon} title={title} text={text} onPress={() => router.push(href)} />
   );
   return (
     <View style={{ gap: 28 }}>
