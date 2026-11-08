@@ -200,7 +200,7 @@ const BAR_ROOM = TAB_BAR_H + 30;
 const PLAIN_GRADIENT = false;
 // The headers' title in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts): the picture headers and the
 // plain one (Hero), and the settings page's title (Screen without a picture), so they all match.
-const HEAD_BOLD = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'Geist-700, Vazirmatn-700, sans-serif' : 'Geist-700', fontWeight: 'normal' as const };
+const HEAD_BOLD = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'GSans-700, Vazirmatn-700, sans-serif' : 'GSans-700', fontWeight: 'normal' as const };
 export type HeroLook = { pic: number; light?: number; icon: IconName; art?: React.ComponentType<{ light: boolean; height: number }> };
 
 // On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
