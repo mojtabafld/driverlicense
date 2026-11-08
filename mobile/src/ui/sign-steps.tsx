@@ -15,7 +15,7 @@ import { CodeBoxes } from './code-boxes';
 import { Icon } from './icon';
 import { T, tap } from './kit';
 import { BigField, ExamLangChoice, StepCount, StepFrame } from './step-frame';
-import { useColors } from './theme';
+import { useColors, useM3 } from './theme';
 
 type Step = 'id' | 'name' | 'email' | 'user' | 'pw' | 'lang' | 'code';
 const MAIL = /^\S+@\S+\.\S+$/;
@@ -24,7 +24,7 @@ const MAIL = /^\S+@\S+\.\S+$/;
 // for a username, its password asked). `email` (the welcome screen's «ادامه با ایمیل», Mojtaba 2026-10-21): one flow
 // for both, by the address: an account has it → its sign-in code; none → the sign-up's name, code and language.
 export function SignSteps({ start, onBack, known }: { start: 'login' | 'register' | 'email'; onBack: () => void; known?: string }) {
-  const c = useColors();
+  const c = useColors(), m = useM3();
   const { login, register, mail, sendCode, codeIn, checkCode, emailFree } = useApp();
   const unified = start === 'email' && mail;
   const [up, setUp] = useState(start === 'register');
@@ -101,8 +101,8 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
   const label = s.label ?? (up ? 'ادامه‌ی ثبت‌نام' : 'ادامه');
   const pill = (text: string, onPress: () => void, off?: boolean) => (
     <Pressable onPress={() => { if (!off && !busy) { tap(); onPress(); } }} accessibilityRole="button" accessibilityState={{ disabled: !!off }}
-      style={({ pressed }) => ({ alignSelf: 'center', paddingVertical: 9, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.surface2, opacity: off ? 0.6 : pressed ? 0.8 : 1 })}>
-      <T style={{ fontSize: 15, fontWeight: '500', color: off ? c.muted : c.text }}>{text}</T>
+      style={({ pressed }) => ({ alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 999, borderWidth: 1, borderColor: m.primary, backgroundColor: 'transparent', opacity: off ? 0.6 : pressed ? 0.8 : 1 })}>
+      <T style={{ fontSize: 15, fontWeight: '500', color: off ? c.muted : m.primary }}>{text}</T>
     </Pressable>
   );
   const field = step === 'id' ? <BigField value={id} onChange={v => { setErr(''); setId(mail ? v.replace(/[^A-Za-z0-9_.+@-]/g, '') : v.replace(/[^A-Za-z0-9_.-]/g, '')); }} placeholder={mail ? 'mail@mail.com' : 'نام کاربری'} ltr onSubmit={submit} good={mail && MAIL.test(id.trim())} bad={!!err} auto={{ autoComplete: mail ? 'email' : 'username', textContentType: mail ? 'emailAddress' : 'username', keyboardType: mail ? 'email-address' : 'default' }} />
@@ -118,14 +118,14 @@ export function SignSteps({ start, onBack, known }: { start: 'login' | 'register
       {/* New fields for each step, so the first takes the cursor (autoFocus) and password managers see each one. */}
       <View key={step} style={{ gap: 18 }}>{field}</View>
       {err ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: c.badSoft }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: c.badSoft }}>
           <Icon name="warning" size={17} color={c.bad} />
           <T style={{ flex: 1, color: c.bad, fontSize: 13.5 }}>{err}</T>
         </View>
       ) : null}
       {step === 'lang' ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, backgroundColor: c.surface2 }}>
-          <Icon name="bulbCircle" size={26} color={c.muted} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 24, backgroundColor: c.surface }}>
+          <Icon name="bulbCircle" size={28} color={m.primary} />
           <T style={{ flex: 1, color: c.muted, fontSize: 14, lineHeight: 23 }}>در تنظیمات می‌توانید زبان ترجمه‌ی سؤال‌ها و گزینه‌ها را تغییر دهید.</T>
         </View>
       ) : null}

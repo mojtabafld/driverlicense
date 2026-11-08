@@ -46,20 +46,20 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -24 }}>
             <VibeCards room={Math.max(200, height - ins.top - ins.bottom - 450)} />
           </View>
-          <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '800', textAlign: 'center', color: N.ink }}>خوش برگشتید</T>
+          <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '500', textAlign: 'center', color: N.ink }}>خوش برگشتید</T>
           <Pressable onPress={() => { tap(); onPick(); }} accessibilityRole="button" accessibilityLabel={last.name}
-            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 26,
-              backgroundColor: N.glass, borderWidth: 1, borderColor: N.glassEdge, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] })}>
+            style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24,
+              backgroundColor: N.glass, borderWidth: 0, opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] })}>
             <Face u={last} size={52} />
             <View style={{ flex: 1, gap: 2 }}>
-              <T raw keepDa numberOfLines={1} style={{ fontSize: 18, lineHeight: 26, fontWeight: '700', color: N.ink }}>{last.name}</T>
+              <T raw keepDa numberOfLines={1} style={{ fontSize: 16, lineHeight: 23, fontWeight: '500', color: N.ink }}>{last.name}</T>
               <L numberOfLines={1} style={{ fontSize: 14, lineHeight: 20, color: N.muted, alignSelf: 'flex-start' }}>{last.id}</L>
             </View>
-            <Icon name="chevronLeft" size={18} color={N.muted} weight="semibold" />
+            <Icon name="chevronLeft" size={18} color={N.accent} weight="semibold" />
           </Pressable>
           <T style={{ fontSize: 15, lineHeight: 25, color: N.muted, textAlign: 'center' }}>به نظر می‌رسد قبلاً حساب Teoripro دارید. برای ورود دوباره روی نام‌تان بزنید.</T>
           <Pressable onPress={() => { tap(); onNotYou(); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 8, marginTop: 6 }}>
-            {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ fontSize: 16, fontWeight: '600', color: N.ink, textDecorationLine: hovered ? 'underline' : 'none' }}>شما نیستید؟</T>}
+            {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ fontSize: 16, fontWeight: '500', color: N.ink, textDecorationLine: hovered ? 'underline' : 'none' }}>شما نیستید؟</T>}
           </Pressable>
         </View>
       </ScrollView>

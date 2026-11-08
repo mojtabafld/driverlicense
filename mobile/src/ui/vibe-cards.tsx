@@ -11,6 +11,7 @@ import { Animated, Easing, Platform, Pressable, View, useWindowDimensions, type 
 import { API_URL } from '@/lib/config';
 import { tr } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
+import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
 import { useN } from './welcome';
 
@@ -19,7 +20,7 @@ const ART = {
   dark: [require('../../assets/images/vibe-1-dark.webp'), require('../../assets/images/vibe-2-dark.webp'), require('../../assets/images/vibe-3-dark.webp')],
 };
 // Each card's colour (the colour its picture was drawn on).
-const BG = { light: ['#fae1d5', '#e7e4fb', '#dfeddf'], dark: ['#402920', '#282543', '#223022'] };
+const FEATURE_ICONS: IconName[] = ['exam', 'coach', 'trend'];
 // The cards in the order shown (Mojtaba 2026-11-05: the smart coach first, then practice); `n`: the card's own number,
 // which its picture and colour go by.
 const CARDS = [
@@ -80,15 +81,16 @@ export function VibeCards({ room }: { room: number }) {
           const lift = x.interpolate({ inputRange: r, outputRange: [14, 0, 14], extrapolate: 'clamp' });
           return (
             <Animated.View key={i} style={{ width: CW, opacity, transform: [{ translateY: lift }, { scale }, { rotate }] }}>
-              <View style={{ borderRadius: 34, overflow: 'hidden', backgroundColor: BG[look][card.n], paddingBottom: small ? 12 : 18 }}>
+              <View style={{ borderRadius: 24, overflow: 'hidden', backgroundColor: N.glass, paddingBottom: small ? 12 : 18 }}>
                 <Animated.View style={{ height: picH, transform: [{ translateY: i === at ? float.interpolate({ inputRange: [0, 1], outputRange: [3, -5] }) : 0 }] }}>
                   <Image source={pic(card.n)} style={{ width: CW, height: picH }} contentFit="contain" transition={200} />
                 </Animated.View>
                 <View style={{ alignItems: 'center', gap: small ? 6 : 10, paddingHorizontal: 18, minHeight: textH - 18 }}>
-                  <View style={{ paddingHorizontal: 14, paddingVertical: 5, borderRadius: 10, backgroundColor: N.dark ? 'rgba(255,255,255,0.12)' : '#ffffff' }}>
-                    <T style={{ fontSize: 13, fontWeight: '800', letterSpacing: 0.6, color: N.ink }}>{card.tag}</T>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Icon name={FEATURE_ICONS[card.n]} size={28} color={N.accent} />
+                    <T style={{ fontSize: 16, lineHeight: 23, fontWeight: '500', color: N.ink }}>{card.tag}</T>
                   </View>
-                  <T style={{ fontSize: small ? 14.5 : 16, lineHeight: small ? 22 : 26, fontWeight: '600', textAlign: 'center', color: N.ink }}>{card.text}</T>
+                  <T style={{ fontSize: small ? 14.5 : 16, lineHeight: small ? 22 : 26, fontWeight: '400', textAlign: 'center', color: N.ink }}>{card.text}</T>
                 </View>
               </View>
             </Animated.View>

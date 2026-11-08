@@ -14,9 +14,8 @@ import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
 import { VibeCards } from './vibe-cards';
 import { Icon, type IconName } from './icon';
-import { L, T, physical, physicalAlign, tap, useHeaderTop } from './kit';
-import { defaultAccentDark, defaultAccentLight, defaultPalette } from './palette';
-import { useColors, useIsDark } from './theme';
+import { L, M3Button, RoundIcon, T, physicalAlign, tap, useHeaderTop } from './kit';
+import { useColors, useIsDark, useM3 } from './theme';
 import Svg, { Path } from 'react-native-svg';
 
 // «ادامه با اپل»: hidden until there is an Apple Developer account (Mojtaba 2026-10-21); what it still needs is in
@@ -43,38 +42,22 @@ function GoogleG({ size = 20 }: { size?: number }) {
   );
 }
 
-// The welcome screen's own colours: the night look on a phone in the dark mode, and its day counterpart (light
-// blue-grey to white, dark text) in the light mode, as the phone is set, whatever the app's theme (Mojtaba 2026-10-26;
-// it was always the night look). Its accent (the tile, «pro», the first button) is the colour theme set as the default in
-// DigitalOcean (DEFAULT_THEME), in that theme's dark or light form, whatever this device has picked (Mojtaba 2026-10-24:
-// not a fixed amber).
-// `road`: the symbol's road white, unless the accent is nearly white itself («سیاه و سفید»): then in the accent's text
-// colour.
-const roadOn = (accent: string, on: string) => { const h = accent.replace('#', ''); const v = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); return v.every(x => x > 215) ? on : '#ffffff'; };
-// (With «گرافیت» the default, its plain charcoal and light greys instead of the blue-greys.)
-const DARK = defaultAccentDark(), LIGHT = defaultAccentLight(), GREY = defaultPalette() === 'graphite';
-const NIGHT = { dark: true, top: GREY ? '#2a2a2a' : '#1b2a3f', bottom: GREY ? '#141414' : '#0a0f17', ink: '#ffffff', muted: GREY ? '#a3a3a3' : '#9aa6b6', faint: GREY ? '#808080' : '#7d8896', soft: GREY ? '#d4d4d4' : '#cfd6df', accent: DARK.accent, onAccent: DARK.on,
-  glass: 'rgba(255,255,255,0.08)', glassEdge: 'rgba(255,255,255,0.14)', road: roadOn(DARK.accent, DARK.on) };
-const DAY = { dark: false, top: GREY ? '#e4e4e4' : '#dfe7f1', bottom: GREY ? '#f7f7f7' : '#f7f9fc', ink: GREY ? '#151515' : '#0f1722', muted: GREY ? '#5f5f5f' : '#566273',
-  faint: GREY ? '#808080' : '#76808e', soft: GREY ? '#333333' : '#334155', accent: LIGHT.accent, onAccent: LIGHT.on,
-  glass: 'rgba(15,23,34,0.05)', glassEdge: 'rgba(15,23,34,0.11)', road: roadOn(LIGHT.accent, LIGHT.on) };
+// Welcome, returning accounts and feature cards use the same Material color roles as the signed-in app.
 export function useN() {
-  const c = useColors(), dark = useIsDark(), base = dark ? NIGHT : DAY;
-  return { ...base, top: c.bg, bottom: c.bg, ink: c.text, muted: c.muted, faint: c.faint, soft: c.text };
+  const c = useColors(), dark = useIsDark(), m = useM3();
+  return { dark, top: c.bg, bottom: c.bg, ink: c.text, muted: c.muted, faint: c.muted, soft: m.primary,
+    accent: m.primary, onAccent: m.onPrimary, glass: c.surface, glassEdge: c.line };
 }
 
 // A wide button with its icon at the reading side's edge and its label in the middle.
 // The app's language from the welcome screen (Mojtaba 2026-10-21), beside the theme button: a sheet of the three, each
 // in its own language; another one loads the app again in it (lib/i18n.ts setUiLang).
 function LangButton() {
-  const c = useColors(), N = useN();
+  const c = useColors();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Pressable onPress={() => { tap(); setOpen(true); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('زبان برنامه')}
-        style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: N.glass, borderWidth: 1, borderColor: N.glassEdge, opacity: pressed ? 0.75 : 1 })}>
-        <Icon name="translate" size={19} color={N.ink} />
-      </Pressable>
+      <RoundIcon icon="translate" label="زبان برنامه" onPress={() => setOpen(true)} size={44} />
       <Sheet open={open} onClose={() => setOpen(false)}>
         <View style={{ gap: 10, paddingHorizontal: 4 }}>
           <T style={{ fontSize: 18, lineHeight: 26, fontWeight: '700' }}>زبان برنامه</T>
@@ -98,16 +81,9 @@ function LangButton() {
 // A wide button of the welcome screen; `main`: the first one, in the accent, the others glass on the night page;
 // `off`: shown but not usable yet, with «به‌زودی».
 function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?: IconName; main?: boolean; onPress?: () => void; mark?: (fg: string) => React.ReactNode; off?: boolean }) {
-  const N = useN(), fg = main ? N.onAccent : N.ink;
-  return (
-    <Pressable onPress={() => { if (off || !onPress) return; tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled: !!off }}
-      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ height: 54, borderRadius: 18, justifyContent: 'center', alignItems: 'center',
-        backgroundColor: main ? N.accent : N.glass, borderWidth: main ? 0 : 1, borderColor: N.glassEdge,
-        opacity: off ? 0.45 : pressed ? 0.85 : hovered ? 0.93 : 1, transform: [{ scale: pressed && !off ? 0.985 : 1 }] })}>
-      <View style={{ position: 'absolute', top: 0, bottom: 0, ...physical(RTL ? { right: 18 } : { left: 18 }), justifyContent: 'center' }}>{mark ? mark(fg) : icon ? <Icon name={icon} size={21} color={fg} /> : null}</View>
-      <T style={{ fontSize: 16.5, fontWeight: main ? '700' : '600', color: fg }}>{label}{off ? <T style={{ fontSize: 13, fontWeight: '500', color: fg }}>{`  · ${tr('به‌زودی')}`}</T> : null}</T>
-    </Pressable>
-  );
+  const m = useM3();
+  return <M3Button big m={m} kind={main ? 'filled' : 'outlined'} label={off ? `${tr(label)} · ${tr('به‌زودی')}` : label}
+    icon={icon} after={mark} disabled={!!off} onPress={() => onPress?.()} style={{ width: '100%' }} />;
 }
 
 // The ways in, as the Saphe app's first screen (Mojtaba 2026-10-21): Apple (hidden for now, APPLE), Google (`onGoogle`, while
@@ -127,7 +103,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
   // The headline's size: as large as the column lets it be on one line, at most 26 (bold Vazirmatn about 0.45 of the
   // size a letter, Inter 0.5).
   const headline = byMail ? 'ادامه با ایمیل' : 'راه قبولی در آزمون تئوری';
-  const head = Math.min(26, Math.floor((Math.min(width, 440) - 48) / (tr(headline).length * (UI_LANG === 'fa' ? 0.45 : 0.5))));
+  const head = width < 360 ? 24 : 28;
   return (
     <View style={{ flex: 1, backgroundColor: N.top }}>
       <StatusBar style={N.dark ? 'light' : 'dark'} />
@@ -153,7 +129,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
           <Animated.View style={{ gap: 12, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
             <View style={{ alignItems: 'center', gap: 2, marginBottom: 10 }}>
               {/* On one line on every screen: the font as large as the column lets it be. */}
-              <T numberOfLines={1} style={{ fontSize: head, lineHeight: Math.round(head * 1.45), fontWeight: '800', textAlign: 'center', color: N.ink }}>{headline}</T>
+              <T numberOfLines={2} style={{ fontSize: head, lineHeight: Math.round(head * 1.45), fontWeight: '500', textAlign: 'center', color: N.ink }}>{headline}</T>
               <T style={{ fontSize: 14.5, lineHeight: 22, color: N.muted, textAlign: 'center', display: height < 720 ? 'none' : 'flex' }}>{byMail ? 'وارد شوید یا یک حساب تازه بسازید' : 'تمرین مثل آزمون واقعی، با توضیح فارسی'}</T>
             </View>
             {byMail ? <>
@@ -161,7 +137,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
               <Wide label="ساخت حساب" icon="personAdd" onPress={() => onEmail('register')} />
               <Pressable onPress={() => { tap(); pick(false); }} accessibilityRole="button" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 6, marginTop: 2 }}>
                 {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
-                  <T style={{ color: N.ink, fontSize: 15.5, fontWeight: '600', textDecorationLine: hovered ? 'underline' : 'none' }}>گزینه‌های دیگر</T>
+                  <T style={{ color: N.ink, fontSize: 15.5, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>گزینه‌های دیگر</T>
                 )}
               </Pressable>
             </> : <>
@@ -174,12 +150,12 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
             {err && !byMail ? <T style={{ color: c.bad, fontSize: 13.5, textAlign: 'center' }}>{err}</T> : null}
             {byMail ? null : <Pressable onPress={() => { if (!busy) { tap(); onGuest(); } }} accessibilityRole="link" hitSlop={8} style={{ alignSelf: 'center', paddingVertical: 4, marginTop: 2 }}>
               {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
-                <T style={{ color: N.soft, fontSize: 15, fontWeight: '600', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
+                <T style={{ color: N.soft, fontSize: 15, fontWeight: '500', textDecorationLine: hovered ? 'underline' : 'none' }}>{busy ? '…' : 'ورود به عنوان کاربر مهمان'}</T>
               )}
             </Pressable>}
             <Pressable onPress={() => { tap(); Linking.openURL(`${API_URL}/privacy?lang=${UI_LANG}`).catch(() => {}); }} accessibilityRole="link" style={{ alignSelf: 'center', marginTop: 2 }}>
               <T style={{ color: N.faint, fontSize: 13, lineHeight: 20, textAlign: 'center' }}>با ادامه، این را می‌پذیرید:</T>
-              <T style={{ color: N.ink, fontSize: 13.5, lineHeight: 20, fontWeight: '700', textAlign: 'center' }}>سیاست حفظ حریم خصوصی</T>
+              <T style={{ color: N.ink, fontSize: 13.5, lineHeight: 20, fontWeight: '500', textAlign: 'center' }}>سیاست حفظ حریم خصوصی</T>
             </Pressable>
           </Animated.View>
         </View>
