@@ -25,12 +25,12 @@ import { ARC, useColors, useM3 } from './theme';
 import { mix } from './palette';
 
 export type NewTest = ReturnType<typeof useNewTest>;
-export function useNewTest() {
+export function useNewTest(freshOnly = true) {
   const { newBank, bank, attempts } = useApp();
   const src = PROVE_BANK ? bank : newBank;
   const { randomLeft } = useFree();
   const [size, setSize] = useState(FULL);
-  const [fresh, setFresh] = useState(true);
+  const [fresh, setFresh] = useState(freshOnly);
   const ids = src ? src.questions.map(q => q.id) : [], mine = new Set(ids);
   // Each question's latest answer, and those answered wrong at least once.
   // `week`: how many were answered for the first time in the last 7 days.
