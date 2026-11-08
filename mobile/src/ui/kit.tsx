@@ -1,3 +1,4 @@
+import { PageScroll } from './page-scroll';
 // Small building blocks shared by all screens, styled like the web site.
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -517,12 +518,12 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
           maxWidth: 980, width: '100%', alignSelf: 'center' }}>{head}</View>}
       </View>
       {fill
-        ? <ScrollView ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        ? <PageScroll ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
             <View style={[box, { flex: 1, paddingBottom: (barGap != null ? TAB_BAR_H + barGap : BAR_ROOM) + ins.bottom }]}>{children}</View>
-          </ScrollView>
-        : <ScrollView ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
+          </PageScroll>
+        : <PageScroll ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
             <View style={box}>{children}</View>
-          </ScrollView>}
+          </PageScroll>}
       </View>
       </PageIn>
     </Backdrop>

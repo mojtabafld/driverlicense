@@ -1,3 +1,4 @@
+import { PageScroll } from '@/ui/page-scroll';
 // «گرم‌کردن»: right after the first sign-in (no test yet), five pictures of the app's own bank, one statement each
 // (Mojtaba 2026-10-30: to gauge the user and show how the app and its tests work, without too many questions), asked in
 // a lighter, game-like way than the exam:
@@ -251,7 +252,7 @@ export default function Warmup() {
         </View>
       </View>
 
-      <ScrollView ref={scroll} contentContainerStyle={{ padding: 16, paddingBottom: ins.bottom + 24, gap: 14 }}>
+      <PageScroll ref={scroll} contentContainerStyle={{ padding: 16, paddingBottom: ins.bottom + 24, gap: 14 }}>
         <Animated.View style={[{ gap: 14 }, away]}>
           <Animated.View style={step(inPic, 10)}>
             {src ? <Image source={imgSource(src)} style={{ width: '100%', aspectRatio: 4 / 3, borderRadius: 20, backgroundColor: c.surface2 }} contentFit="cover" transition={200} />
@@ -304,7 +305,7 @@ export default function Warmup() {
 
           {given != null ? <ArcButton big label={i + 1 < qs.length ? 'سؤال بعد' : 'دیدن نتیجه'} icon="arrowLeft" onPress={next} /> : null}
         </Animated.View>
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

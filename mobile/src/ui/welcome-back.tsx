@@ -1,3 +1,4 @@
+import { PageScroll } from './page-scroll';
 // The sign-in page after someone signed out on this device (Mojtaba 2026-10-20; the night look of the welcome screen
 // since 2026-10-24, ui/welcome.tsx, its day look on a phone in the light mode): on the night-blue (or light) page, the app's name and
 // its symbol on a glowing tile in the default theme's accent, then «خوش برگشتید» and the account signed out last
@@ -5,7 +6,7 @@
 // password. «شما نیستید؟» forgets the account and shows the welcome screen.
 import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
@@ -33,7 +34,7 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
   return (
     <View style={{ flex: 1, backgroundColor: N.top }}>
       <StatusBar style={N.dark ? 'light' : 'dark'} />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 30 : 24), paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
+      <PageScroll contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 30 : 24), paddingBottom: ins.bottom + 20 }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24, gap: 22 }}>
           {/* The name as a logo, as on the welcome screen: «Teori» white, «pro» on a pill of the accent. */}
           <View accessible accessibilityRole="header" accessibilityLabel="Teoripro" style={{ alignSelf: 'center', flexDirection: 'row', direction: 'ltr', alignItems: 'center', gap: 6 } as any}>
@@ -62,7 +63,7 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
             {({ hovered }: { pressed: boolean; hovered?: boolean }) => <T style={{ fontSize: 16, fontWeight: '500', color: N.ink, textDecorationLine: hovered ? 'underline' : 'none' }}>شما نیستید؟</T>}
           </Pressable>
         </View>
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }

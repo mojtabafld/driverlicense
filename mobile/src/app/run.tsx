@@ -1,3 +1,4 @@
+import { PageScroll } from '@/ui/page-scroll';
 // Taking an exam or a lesson: one picture at a time, statements to tick (on Liquid Glass), a slim strip on top and a
 // floating Liquid Glass bar at the bottom with previous / the timer / next.
 import { router } from 'expo-router';
@@ -197,7 +198,7 @@ export default function Run() {
       </GlassTop>
       {/* A sideways swipe turns to the next or previous question; it never leaves the exam (only the exit button does). */}
       <Pager i={i} n={qs.length} go={setI} rtl={rtl}>
-      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+      <PageScroll ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingTop: headH + 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The picture in its own box with rounded corners like the buttons', the page's own background around the
             question and its statements, which are outlined boxes with a round check. */}
         {/* The picture comes in again with each question. */}
@@ -240,7 +241,7 @@ export default function Run() {
           );
         })}
         </OptionGroup>
-      </ScrollView>
+      </PageScroll>
       </Pager>
       {/* The floating glass bar: previous on the left, the position between, next / hand in on the right. */}
       <GlassBar rtl={rtl}

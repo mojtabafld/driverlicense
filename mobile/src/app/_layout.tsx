@@ -1,9 +1,10 @@
+import { PageScroll } from '@/ui/page-scroll';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, usePathname, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { useFonts } from 'expo-font';
-import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { api } from '@/lib/api';
 import { RTL, UI_LANG, syncNativeDir, tr } from '@/lib/i18n';
@@ -200,7 +201,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
     </Pressable>
   );
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, gap: 14, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
+    <PageScroll style={{ flex: 1, backgroundColor: c.bg }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24, gap: 14, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
       <Text style={{ color: c.text, fontSize: 22, fontWeight: '700', textAlign: RTL ? 'right' : 'left' }}>{tr('این صفحه باز نشد')}</Text>
       <Text style={{ color: c.muted, fontSize: 15, lineHeight: 23, textAlign: RTL ? 'right' : 'left' }}>{tr('خطا برای ما فرستاده شد. دوباره امتحان کنید یا برگردید.')}</Text>
       <View style={{ padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
@@ -210,6 +211,6 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
       </View>
       {btn(tr('دوباره امتحان کنید'), () => { retry(); }, true)}
       {btn(tr('بازگشت'), () => { if (router.canGoBack()) router.back(); else router.replace('/'); retry(); })}
-    </ScrollView>
+    </PageScroll>
   );
 }

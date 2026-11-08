@@ -1,7 +1,8 @@
+import { PageScroll } from './page-scroll';
 // A new account waiting for its email link (the server's email confirmation, mail.js): over everything until the
 // link is opened. It names the address, sends the link again (or to a corrected address) and signs out.
 import { useState } from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { t } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
@@ -36,7 +37,7 @@ export function VerifyEmail() {
   };
   return (
     <Backdrop>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
+      <PageScroll keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
         <View style={{ width: '100%', maxWidth: 440, alignSelf: 'center', gap: 14 }}>
           <Card style={{ gap: 12, alignItems: 'center', paddingVertical: 26 }}>
             <View style={{ width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', backgroundColor: c.strong }}>
@@ -57,7 +58,7 @@ export function VerifyEmail() {
           {edit ? null : <Button kind="glass" icon="edit" label="ایمیل را اشتباه نوشته‌ام" onPress={() => { setEdit(true); setMsg(null); }} disabled={!!busy} />}
           <Button kind="glass" icon="exit" label="خروج از حساب" onPress={() => { logout().catch(() => {}); }} disabled={!!busy} />
         </View>
-      </ScrollView>
+      </PageScroll>
     </Backdrop>
   );
 }

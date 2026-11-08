@@ -1,3 +1,4 @@
+import { PageScroll } from '@/ui/page-scroll';
 // Sign in / sign up. Main site and /app: the welcome screen (ui/welcome.tsx), then one question per screen
 // (ui/sign-steps.tsx). The form below (the older design): a tall picture header with the greeting, then on the page (no card) a mode
 // switch, fields with icons and one wide button, then the site's three short facts. With email on (the server's
@@ -7,7 +8,7 @@
 // six boxes (or taken from the keyboard's suggestion), opens the fields for the new password (the server's
 // /api/forgot, /api/resetcheck and /api/reset).
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 
 import { useApp } from '@/lib/store';
 import { Field } from '@/ui/field';
@@ -157,7 +158,7 @@ export default function Login() {
   return (
     <Backdrop>
       <KeyboardAvoidingView behavior={Platform.OS === 'web' ? undefined : 'padding'} style={{ flex: 1 }}>
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}>
+        <PageScroll keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: 48 }}>
           <Hero tall lower={mode === 'register' ? 30 : 0} look={{ pic: 7, light: 8, icon: 'person' }} title={title} subtitle={subtitle} />
           <View style={{ width: '100%', maxWidth: 360 + 48, alignSelf: 'center', gap: 14, paddingHorizontal: 24, paddingTop: ARC ? 0 : 6 }}>
             {lost ? lostForm : <>
@@ -194,7 +195,7 @@ export default function Login() {
               ))}
             </View>}
           </View>
-        </ScrollView>
+        </PageScroll>
       </KeyboardAvoidingView>
       {/* After the intro, on the sign-in page: on an iPhone or in Safari, how to add the app to the Home Screen (once). */}
       <InstallHint />

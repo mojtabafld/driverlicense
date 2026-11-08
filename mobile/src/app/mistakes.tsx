@@ -1,3 +1,4 @@
+import { PageScroll } from '@/ui/page-scroll';
 // «اشتباهات»: «تمرین همه‌ی اشتباهات», three panels (topics / fixed, i.e. right the last time / not fixed
 // yet) and the weakest 5 topics. A panel opens its own page (/mistakes-view, with a back button): «مبحث» (or «نمایش
 // همه») all the topics, «اصلاح‌نشده» or «اصلاح‌شده» those questions by topic; a tapped topic opens its own
@@ -106,7 +107,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
       {/* Question by question a sideways swipe turns the questions; the overview pages go back with a drag from right to
           left. */}
       <SideSwipe pager={cur ? { i: at, n: items.length, go: step, rtl: learnRtl } : undefined} back={() => motion.leave(() => router.back())}>
-      <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+      <PageScroll ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + (cur ? 100 : 40), gap: 14, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* arc: the button sits in the «وضعیت مباحث» card, under the count it acts on (Arc: an action beside its data) */}
         {!view && open && !ARC ? <Button label="تمرین همه‌ی اشتباهات" icon="refresh" onPress={practiceAll} /> : null}
         {!sorted.length ? (ARC
@@ -230,7 +231,7 @@ export function MistakesScreen({ detail }: { detail?: View_ }) {
               : <Card><T style={{ textAlign: 'center', color: c.muted, paddingVertical: 8 }}>{view === 'open' ? 'هیچ سؤالی در حالت «اصلاح‌نشده» نیست؛ عالی! ✨' : 'موردی نیست.'}</T></Card>}
           </>
         )}
-      </ScrollView>
+      </PageScroll>
       </SideSwipe>
       </RevealScrollProvider>
       {/* The title row, fixed on Liquid Glass over the page. */}

@@ -1,3 +1,4 @@
+import { PageScroll } from './page-scroll';
 // The sign-in page's first screen on the main site and /app (Mojtaba 2026-10-24, the «night» look he picked of four, in
 // place of the one after the Saphe app's): on a night-blue page in every theme, the app's name, its symbol (the road bent
 // into a tick) on a glowing tile in the colour theme's accent, a headline and a line, then the ways in (email first, in that accent) and a link to go
@@ -5,7 +6,7 @@
 // steps in that mode (app/login.tsx), with «گزینه‌های دیگر» to go back to the ways in.
 import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Animated, Easing, Linking, Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Linking, Platform, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL } from '@/lib/config';
@@ -107,7 +108,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
   return (
     <View style={{ flex: 1, backgroundColor: N.top }}>
       <StatusBar style={N.dark ? 'light' : 'dark'} />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
+      <PageScroll contentContainerStyle={{ flexGrow: 1, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: ins.bottom + 16 }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 24 }}>
           {/* The language only, at the top; the theme is the phone's (ui/theme.ts useSystemTheme; Mojtaba 2026-10-21). */}
           <View style={{ alignItems: RTL ? 'flex-start' : 'flex-end' }}>
@@ -159,7 +160,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
             </Pressable>
           </Animated.View>
         </View>
-      </ScrollView>
+      </PageScroll>
     </View>
   );
 }
