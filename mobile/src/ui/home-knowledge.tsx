@@ -19,7 +19,7 @@ import { useTabLook } from './tabs/tab-look';
 import { useNewTest } from './new-test';
 import { useColors, useM3 } from './theme';
 
-function Head({ title, text }: { title: string; text?: string }) {
+export function Head({ title, text }: { title: string; text?: string }) {
   const c = useColors();
   return (
     <View style={{ gap: 6, paddingHorizontal: 4 }}>
@@ -33,12 +33,13 @@ function Head({ title, text }: { title: string; text?: string }) {
 const ICONS: [RegExp, IconName][] = [[/آزمون/, 'exam'], [/کمربند|صندلی/, 'seatbelt'], [/الکل|مواد|خستگی/, 'glass'], [/خودرو|بازدید|تجهیزات/, 'car'],
   [/سرعت/, 'gauge'], [/فاصله/, 'distance'], [/پارک|توقف/, 'parking'], [/چراغ/, 'headlight'], [/تابلو|علائم/, 'sign'], [/خط/, 'lanes'],
   [/دست راست|تقدم|راه دادن|تقاطع|میدان/, 'priority'], [/تلفن|موبایل|حواس/, 'phone'], [/عابر|دوچرخه|کودک/, 'person'], [/جاده|بزرگراه|مسیر/, 'road']];
-const iconOf = (title: string): IconName => (ICONS.find(([re]) => re.test(title)) ?? [null, 'learn'])[1] as IconName;
+export const iconOf = (title: string): IconName => (ICONS.find(([re]) => re.test(title)) ?? [null, 'learn'])[1] as IconName;
 
-// The chapter's lessons as fonts.google.com's «Browse topics» (Mojtaba 2026-11-08): outlined square tiles in a row that
-// scrolls sideways, each a large line icon in the primary over the lesson's name, a tick at its corner when done, and
-// a round arrow at the end that moves the row on by a tile.
-function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<string, number> }) {
+export type TileItem = { key: string; title: string; icon: IconName; done?: boolean; onPress: () => void };
+// A row of outlined square tiles that scrolls sideways (fonts.google.com's «Browse topics»; Mojtaba 2026-11-08): each a
+// large line icon in the primary over its name, a tick at its corner when done, and a round arrow at the end that
+// moves the row on by a tile. Shared by the home page's lessons and the learn tab's chapters.
+export function Tiles({ items }: { items: TileItem[] }) {
   const c = useColors(), m = useM3();
   const ref = useRef<ScrollView>(null), x = useRef(0);
   const [end, setEnd] = useState(false);
@@ -53,20 +54,17 @@ function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<
     <View>
       <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: GAP, paddingHorizontal: 4 }} scrollEventThrottle={32}
         onScroll={e => { const n = e.nativeEvent; x.current = Math.abs(n.contentOffset.x); setEnd(x.current + n.layoutMeasurement.width >= n.contentSize.width - 8); }}>
-        {lessons.map(l => {
-          const ok = !!done[l.id];
-          return (
-            <Pressable key={l.id} onPress={() => { tap(); router.push({ pathname: '/course-lesson', params: { id: l.id } }); }} accessibilityRole="button" accessibilityLabel={tr(l.title)}
-              style={({ pressed }) => ({ width: TILE, height: TILE, borderRadius: 24, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center',
-                gap: 12, paddingHorizontal: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-              <Icon name={iconOf(l.title)} size={64} color={m.primary} />
-              <T numberOfLines={2} style={{ fontSize: 14.5, lineHeight: 21, fontWeight: '500', textAlign: 'center' }}>{tr(l.title)}</T>
-              {ok ? <View style={{ position: 'absolute', top: 10, end: 10 } as object}><Icon name="checkCircle" size={20} color={c.ok} filled /></View> : null}
-            </Pressable>
-          );
-        })}
+        {items.map(it => (
+          <Pressable key={it.key} onPress={() => { tap(); it.onPress(); }} accessibilityRole="button" accessibilityLabel={it.title}
+            style={({ pressed }) => ({ width: TILE, height: TILE, borderRadius: 24, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center',
+              gap: 12, paddingHorizontal: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+            <Icon name={it.icon} size={64} color={m.primary} />
+            <T numberOfLines={2} style={{ fontSize: 14.5, lineHeight: 21, fontWeight: '500', textAlign: 'center' }}>{it.title}</T>
+            {it.done ? <View style={{ position: 'absolute', top: 10, end: 10 } as object}><Icon name="checkCircle" size={20} color={c.ok} filled /></View> : null}
+          </Pressable>
+        ))}
       </ScrollView>
-      {end || lessons.length < 3 ? null : (
+      {end || items.length < 3 ? null : (
         <Pressable onPress={more} accessibilityRole="button" accessibilityLabel={tr('بعدی')} hitSlop={6}
           style={({ pressed }) => ({ position: 'absolute', top: TILE / 2 - 22, ...(RTL ? { left: 0 } : { right: 0 }), width: 44, height: 44, borderRadius: 22,
             alignItems: 'center', justifyContent: 'center', backgroundColor: m.dialog, opacity: pressed ? 0.8 : 1,
@@ -76,6 +74,11 @@ function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<
       )}
     </View>
   );
+}
+
+function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<string, number> }) {
+  return <Tiles items={lessons.map(l => ({ key: l.id, title: tr(l.title), icon: iconOf(l.title), done: !!done[l.id],
+    onPress: () => router.push({ pathname: '/course-lesson', params: { id: l.id } }) }))} />;
 }
 
 export function HomeKnowledge({ gap = 14 }: { gap?: number }) {

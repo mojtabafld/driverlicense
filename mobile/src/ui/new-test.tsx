@@ -13,7 +13,7 @@ import { Pressable, View, useWindowDimensions } from 'react-native';
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { RTL, t, tr } from '@/lib/i18n';
-import { FULL, SIZES, faNum, mistakeIds, shuffle } from '@/lib/logic';
+import { FULL, SECONDS_PER_Q, SIZES, faNum, mistakeIds, passMin, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { pctText } from './activity';
@@ -64,10 +64,20 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
     <>
     {/* One card (Mojtaba 2026-10-29): the progress (after a picture he sent; at 0% before the first answer too) on top,
         a thin line, then the random test. */}
-    <Card testID="exam-setup" style={{ flex: 1, gap: tight || level ? (level >= 3 ? 7 : 10) : 14, paddingVertical: level >= 3 ? 10 : level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }}>
+    {/* (the main site: no box round it, on the page itself, in sections as the home page's; Mojtaba 2026-11-08) */}
+    <Card testID="exam-setup" style={{ flex: 1, gap: tight || level ? (level >= 3 ? 7 : 10) : 14, ...(ARC
+      ? { backgroundColor: 'transparent', borderWidth: 0, shadowOpacity: 0, elevation: 0, paddingVertical: 4, paddingHorizontal: 4 }
+      : { paddingVertical: level >= 3 ? 10 : level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }) }}>
       <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
       {/* (the smallest phones: no line, the card's gaps part the two halves) */}
-      {level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
+      {ARC ? (
+        // The random test as a section, its title and what the chosen size means (Mojtaba 2026-11-08)
+        <View style={{ gap: 6, paddingTop: level >= 2 ? 8 : 16 }}>
+          <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>{tr('آزمون تصادفی')}</T>
+          <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{t('{0} سؤال در {1} دقیقه؛ با حداکثر {2} اشتباه قبول می‌شوید.', faNum(size), faNum(Math.round(size * SECONDS_PER_Q / 60)), faNum(size - passMin(size)))
+            + (size === FULL ? ' ' + tr('مثل آزمون واقعی.') : '')}</T>
+        </View>
+      ) : level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
       {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
           تکراری» (Mojtaba 2026-10-30). */}
       {/* The number of questions on a slider over the start button, out of the button again (Mojtaba 2026-11-07). */}

@@ -7,20 +7,22 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import { View, useWindowDimensions } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { faNum } from '@/lib/logic';
+import { t, tr } from '@/lib/i18n';
 import { useApp } from '@/lib/store';
 import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
-import { Card, Screen, T } from '@/ui/kit';
+import { Card, M3Button, Screen, T, tap } from '@/ui/kit';
+import { Head, Tiles, iconOf } from '@/ui/home-knowledge';
 import { SearchBox } from '@/ui/search-box';
-import { ARC, useColors, useIsDark } from '@/ui/theme';
+import { ARC, useColors, useIsDark, useM3 } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 import { mix, rgba } from '@/ui/palette';
 
@@ -90,6 +92,52 @@ function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title
   );
 }
 
+// The main site's learn tab in the home page's language (Mojtaba 2026-11-08, after fonts.google.com/knowledge): the
+// search, then the course as a section (its title, a line with how far you are, its chapters as outlined tiles that
+// scroll sideways, «همه‌ی فصل‌ها»), then the guides as a grid of outlined tiles (rules, signs, right of way, glossary).
+const CHAPTER_ICON: Record<string, IconName> = { ready: 'car', road: 'road', priority: 'priority', signs: 'sign', manoeuvres: 'parking',
+  people: 'person', special: 'headlight', incidents: 'warning', final: 'exam' };
+function LearnSections() {
+  const c = useColors(), m = useM3();
+  const { done } = useCourseProgress();
+  const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
+  const guide = (icon: IconName, title: string, text: string, href: Href) => (
+    <Pressable key={title} onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={tr(title)}
+      style={({ pressed }) => ({ flexBasis: '47%', flexGrow: 1, minHeight: 150, borderRadius: 24, borderWidth: 1, borderColor: c.line, padding: 16, gap: 10,
+        justifyContent: 'flex-end', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+      <Icon name={icon} size={44} color={m.primary} />
+      <View style={{ gap: 2 }}>
+        <T numberOfLines={2} style={{ fontSize: 16, lineHeight: 23, fontWeight: '500' }}>{title}</T>
+        <T numberOfLines={2} style={{ fontSize: 13, lineHeight: 19, color: c.muted }}>{text}</T>
+      </View>
+    </Pressable>
+  );
+  return (
+    <View style={{ gap: 28 }}>
+      <SearchBox />
+      <View style={{ gap: 12 }}>
+        <Head title={tr('آموزش گام‌به‌گام')}
+          text={finished ? t('فصل به فصل، مثل آزمون. {0} از {1} درس را تمام کرده‌اید.', faNum(finished), faNum(lessons.length))
+            : t('فصل به فصل، مثل آزمون: {0} درس در {1} فصل، هر کدام با تمرین و آزمون کوتاه.', faNum(lessons.length), faNum(COURSE.length))} />
+        <Tiles items={COURSE.map(ch => ({ key: ch.id, title: tr(ch.title), icon: CHAPTER_ICON[ch.id] ?? iconOf(ch.title), done: ch.lessons.every(l => done[l.id]),
+          onPress: () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } }) }))} />
+        <View style={{ alignItems: 'center' }}>
+          <M3Button kind="outlined" m={m} icon="learn" label={tr('همه‌ی فصل‌ها')} onPress={() => router.push('/course')} />
+        </View>
+      </View>
+      <View style={{ gap: 12 }}>
+        <Head title={tr('راهنماها')} text={tr('قوانین، تابلوها و حق تقدم به زبان ساده، و واژه‌های دانمارکی آزمون.')} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+          {guide('rules', 'قوانین', 'قوانین مهم به زبان ساده', '/rules')}
+          {guide('sign', 'علائم رانندگی', 'تابلوها و خط‌کشی‌ها', '/signs')}
+          {guide('priority', 'آموزش حق تقدم', 'چه کسی اول می‌رود؟', '/priority')}
+          {guide('translate', 'واژه‌نامه‌ی آزمون', 'واژه‌های دانمارکی آزمون', '/glossary')}
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export default function Learn() {
   const { done } = useCourseProgress();
   const { bank, attempts } = useApp();
@@ -99,7 +147,7 @@ export default function Learn() {
   return (
     // Main site: the five cards share the screen's height between the search box and the tab bar (taller on tall
     // phones, never shorter than their content; Mojtaba 2026-10-18).
-    <Screen fill={!PROVE_PICS} gap={short ? 10 : 14} barGap={PROVE_PICS ? undefined : 16} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
+    <Screen fill={!PROVE_PICS && PROVE_BANK} gap={short ? 10 : 14} barGap={PROVE_PICS || !PROVE_BANK ? undefined : 16} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="learn" />}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>
@@ -114,6 +162,7 @@ export default function Learn() {
           </View>
         </View>
       ) : (
+        PROVE_BANK ? (
         <View style={{ gap: short ? 8 : 10, flex: 1 }}>
           {/* Search the learning pages (the course, rules, signs, right of way) by their words and, with «جستجو», by the
               AI; the results open on their own page (app/course-search.tsx). */}
@@ -131,6 +180,7 @@ export default function Learn() {
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority" text="چه کسی اول می‌رود؟" />
           <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" text="واژه‌های دانمارکی آزمون" />
         </View>
+        ) : <LearnSections />
       )}
     </Screen>
   );
