@@ -10,13 +10,13 @@ import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimen
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
 import { faNum, fmtDate, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf, shuffle } from '@/lib/logic';
-import { RTL, tr } from '@/lib/i18n';
+import { RTL, t as fmt, tr } from '@/lib/i18n';
 import { loadPromoSeen, savePromoSeen } from '@/lib/prefs';
 import { usePromoGate } from '@/lib/promo-gate';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
-import { ArcButton, Button, Card, FitLine, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
+import { ArcButton, Button, Card, FitLine, M3Button, Ring, Screen, T, tap, useCountUp } from '@/ui/kit';
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
@@ -29,7 +29,7 @@ import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
 import { usePlainHeader } from '@/lib/header-style';
 import { mix } from '@/ui/palette';
-import { ARC, useColors, useIsDark } from '@/ui/theme';
+import { ARC, useColors, useIsDark, useM3 } from '@/ui/theme';
 import { TAB_BAR_H } from '@/ui/tabs/app-tabs';
 import { HomeLicenceArt } from '@/ui/header-art';
 import { useDashboardLook } from '@/ui/dashboard-style';
@@ -160,7 +160,7 @@ function StartCard({ compact }: { compact: boolean }) {
 export default function Home() {
   const c = useColors();
   const look = useDashboardLook();
-  const dark = useIsDark();
+  const dark = useIsDark(), m3 = useM3();
   const readinessTone = dark ? mix(c.accent, c.text, 0.4) : c.accent;
   const readinessTrack = dark ? mix(c.line, c.text, 0.18) : c.line;
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
@@ -365,35 +365,29 @@ export default function Home() {
       {/* (the main site: no box round it, on the page itself; Mojtaba 2026-11-08) */}
       <Card testID="home-readiness" style={{ ...(ARC ? { backgroundColor: 'transparent', borderWidth: 0, shadowOpacity: 0, elevation: 0 } : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
         {ARC ? <>
-          {/* The readiness ring and its status share a clean card without decorative waves. */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: readinessGap }}>
-            {/* In the ring a seal with a tick in the chance's colour (green, amber, red; 2026-10-30; it was a flame, then a trophy); its percent between the title and the pill (Mojtaba 2026-10-29). */}
-            {/* Before the first test a tap on the ring starts a 5-question tryout of the test page (Mojtaba 2026-10-30;
-                its seal still, no longer animated). */}
-            <View testID="home-readiness-ring" style={{ flexShrink: 0 }}>
-            {tryout ? (
-              <Pressable onPress={startTryout} accessibilityRole="button" accessibilityLabel={tr('آزمون آزمایشی ۵ سؤالی')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-                <Ring value={0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
-                  <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
-                </Ring>
-              </Pressable>
-            ) : (
-              <Ring value={est ? est.prob : 0} size={ringSize} stroke={(tighter ? 8 : small ? 10 : 11) + (dark ? 1 : 0)} color={readinessTone} trackColor={readinessTrack}>
-                <Icon name="passed" size={Math.round(ringSize * 0.32)} color={readinessTone} weight="semibold" />
-              </Ring>
-            )}
-            </View>
-            <View style={{ flex: 1, minWidth: 0, gap: compact ? 2 : 4, alignItems: 'flex-start' }}>
-              <T style={{ fontWeight: '800', fontSize: 20 }}>احتمال قبولی</T>
-              {/* The percent with its verdict tag beside it, the percent in the tag's colour (Mojtaba 2026-11-05). */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
-                <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
-                  <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 28 : small ? 30 : 36) + (dark ? 2 : 0)} />
-                </View>
-                <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: probSoft }}>
-                  <T numberOfLines={2} style={{ color: probColor, fontSize: width < 360 ? 11 : 12, lineHeight: 17, fontWeight: '700', textAlign: 'center' }}>{probWord}</T>
-                </View>
+          {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
+              verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
+              to a 5-question tryout instead). */}
+          <View style={{ gap: compact ? 8 : 10 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>احتمال قبولی</T>
+              <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
+                <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 24 : small ? 26 : 28) + (dark ? 2 : 0)} />
               </View>
+              <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
+                <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
+              </View>
+            </View>
+            <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{est
+              ? (mistakes
+                ? fmt('بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. {1} سؤالی که اشتباه جواب داده‌اید را دوباره تمرین کنید تا این عدد بالا برود.', faNum(est.n), faNum(mistakes))
+                : fmt('بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. با آزمون‌های بیشتر دقیق‌تر می‌شود.', faNum(est.n)))
+              : tr('بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.')}</T>
+            <View style={{ alignItems: 'flex-start' }}>
+              {tryout
+                ? <M3Button kind="outlined" m={m3} icon="play" label={tr('آزمون آزمایشی ۵ سؤالی')} onPress={startTryout} />
+                : <M3Button kind={mistakes ? 'outlinedError' : 'outlined'} m={m3} icon="warning" onPress={() => router.push('/mistakes')}
+                    label={mistakes ? fmt('تمرین {0} اشتباه', faNum(mistakes)) : tr('اشتباهات')} />}
             </View>
           </View>
         </> : <>
