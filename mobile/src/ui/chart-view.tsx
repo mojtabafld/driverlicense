@@ -8,6 +8,8 @@ import { router } from 'expo-router';
 import type { Attempt } from '@/lib/bank';
 import { t, tr } from '@/lib/i18n';
 import { faNum, isFull, isPass, pctOf } from '@/lib/logic';
+import { COURSE } from '@/lib/course';
+import { useCourseProgress } from '@/lib/course-progress';
 import { pctText } from './activity';
 import { StatCarousel } from './stat-carousel';
 import { useColors } from './theme';
@@ -25,11 +27,18 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
   const ok = attempts.filter(passed).length;
+  // The course's lessons (lib/course.ts): how many are finished, and the next one (Mojtaba 2026-11-08: the second card).
+  const { done } = useCourseProgress();
+  const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
+  const next = lessons.find(l => !done[l.id]);
   // Only the cards, with no card around them, no title and no line of facts (Mojtaba 2026-11-07): the four numbers as a
   // row of Material cards that slides (after fonts.google.com's carousel); the tests' card opens their history.
   return (
     <StatCarousel dense={dense} fill={c.surface} items={[
       { title: t('{0} آزمون', faNum(n)), sub: tr('تاریخچه‌ی آزمون‌هایتان را ببینید'), icon: 'clipboard', onPress: () => router.push('/history'), label: tr('تاریخچه‌ی آزمون‌ها') },
+      { title: t('{0} از {1} درس', faNum(finished), faNum(lessons.length)), icon: 'learn',
+        sub: next ? t('درس بعدی: {0}', tr(next.title)) : tr('همه‌ی درس‌ها را تمام کرده‌اید'), color: lessons.length && !next ? c.ok : undefined,
+        onPress: () => (next ? router.push({ pathname: '/course-lesson', params: { id: next.id } }) : router.navigate('/learn')), label: tr('درس‌ها') },
       { title: avg != null ? t('میانگین {0}', pctText(avg)) : tr('میانگین'), sub: tr('میانگین نمره‌ی همه‌ی آزمون‌ها'), icon: 'gauge' },
       { title: best != null ? t('بهترین {0}', pctText(best)) : tr('بهترین'), sub: tr('بالاترین نمره‌ای که گرفته‌اید'), icon: 'trophy' },
       // (every test passed, e.g. 5 of 5: green; any not: the warning colour; Mojtaba 2026-10-20)
