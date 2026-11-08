@@ -10,9 +10,8 @@ import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 
 import { RTL, t as fmt, tr } from '@/lib/i18n';
 import { Icon } from './icon';
-import { L, T, physical, physicalAlign, tap } from './kit';
-import { DA_FONT, SOFT, useColors, useIsDark } from './theme';
-import { rgba } from './palette';
+import { L, M3Button, RoundIcon, T, physicalAlign, tap } from './kit';
+import { DA_FONT, useColors, useM3 } from './theme';
 
 type FrameProps = {
   onBack?: () => void; corner?: React.ReactNode; title: React.ReactNode; sub?: React.ReactNode; children?: React.ReactNode;
@@ -34,9 +33,8 @@ function useWebKeyboard() {
 }
 
 export function StepFrame({ onBack, corner, title, sub, children, button, fade }: FrameProps) {
-  const c = useColors(), dark = useIsDark(), ins = useSafeAreaInsets(), kb = useWebKeyboard();
+  const c = useColors(), m = useM3(), ins = useSafeAreaInsets(), kb = useWebKeyboard();
   const ready = button.ready && !button.busy;
-  const grey = dark ? c.surface2 : c.line;
   const rise = fade ? { opacity: fade, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] } : null;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: c.bg }}>
@@ -44,30 +42,20 @@ export function StepFrame({ onBack, corner, title, sub, children, button, fade }
         contentContainerStyle={{ flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 24, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 24 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 46 }}>
           {onBack ? (
-            <Pressable onPress={() => { tap(); onBack(); }} hitSlop={8} accessibilityRole="button" accessibilityLabel={tr('بازگشت')}
-              style={({ pressed }) => ({ width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: grey, opacity: pressed ? 0.75 : 1 })}>
-              <Icon name="arrowRight" size={21} color={c.text} />
-            </Pressable>
+            <RoundIcon icon="arrowRight" label="بازگشت" onPress={onBack} size={46} />
           ) : <View />}
           {corner}
         </View>
         <Animated.View style={[{ gap: 10, marginTop: 30 }, rise]}>
-          {typeof title === 'string' ? <T style={{ fontSize: 29, lineHeight: 42, fontWeight: '800' }}>{title}</T> : title}
+          {typeof title === 'string' ? <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '500' }}>{title}</T> : title}
           {typeof sub === 'string' ? <T style={{ fontSize: 16, lineHeight: 26, color: c.muted }}>{sub}</T> : sub}
           <View style={{ marginTop: 16, gap: 12 }}>{children}</View>
         </Animated.View>
       </ScrollView>
-      <View style={{ borderTopWidth: 1, borderTopColor: c.line, paddingTop: 12, paddingBottom: kb ? 12 : ins.bottom + 14, marginBottom: kb, paddingHorizontal: 24, backgroundColor: c.bg }}>
-        <Pressable onPress={() => { if (ready) { tap(); button.onPress(); } }} disabled={!ready} accessibilityRole="button" accessibilityState={{ disabled: !ready }}
-          style={({ pressed }) => ({ width: '100%', maxWidth: 432, alignSelf: 'center', height: 56, borderRadius: SOFT ? 999 : 16, justifyContent: 'center', alignItems: 'center',
-            backgroundColor: SOFT ? (pressed && ready ? rgba(c.cta, 0.12) : 'transparent') : ready ? c.cta : grey, opacity: pressed && !SOFT ? 0.85 : 1,
-            ...(SOFT ? { borderWidth: 1, borderColor: ready ? c.cta : c.line } : {}) })}>
-          {button.busy ? <L style={{ fontSize: 17, color: c.muted }}>…</L>
-            : typeof button.label === 'string' ? <T style={{ fontSize: 17, fontWeight: SOFT ? '500' : '600', color: ready ? (SOFT ? c.cta : c.ctaFg) : c.faint }}>{button.label}</T> : button.label}
-          <View style={{ position: 'absolute', top: 0, bottom: 0, ...physical(RTL ? { left: 18 } : { right: 18 }), justifyContent: 'center' }}>
-            <Icon name="arrowLeft" size={20} color={ready ? (SOFT ? c.cta : c.ctaFg) : c.faint} />
-          </View>
-        </Pressable>
+      <View style={{ paddingTop: 12, paddingBottom: kb ? 12 : ins.bottom + 14, marginBottom: kb, paddingHorizontal: 24, backgroundColor: c.bg }}>
+        <M3Button big m={m} kind="outlined" icon="arrowLeft" label={typeof button.label === 'string' ? button.label : ''}
+          after={typeof button.label === 'string' ? undefined : () => button.label} busy={button.busy} disabled={!ready}
+          onPress={button.onPress} style={{ width: '100%', maxWidth: 432, alignSelf: 'center' }} />
       </View>
     </KeyboardAvoidingView>
   );
@@ -91,23 +79,23 @@ export function BigField({ value, onChange, placeholder, label, secure, ltr, onS
   value: string; onChange: (v: string) => void; placeholder?: string; label?: string; secure?: boolean; ltr?: boolean; onSubmit: () => void; good?: boolean; bad?: boolean; focus?: boolean;
   auto?: Pick<TextInputProps, 'autoComplete' | 'textContentType' | 'keyboardType' | 'autoCapitalize'>;
 }) {
-  const c = useColors();
+  const c = useColors(), m = useM3();
   const [focus, setFocus] = useState(false), [show, setShow] = useState(false);
   const left = ltr || !RTL;
   return (
     <View style={{ gap: 8 }}>
       {label ? <T style={{ fontSize: 15, fontWeight: '500' }}>{label}</T> : null}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, height: 58, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5,
-        borderColor: bad ? c.bad : good ? c.ok : focus ? c.text : c.line, backgroundColor: c.surface }}>
-        <TextInput value={value} onChangeText={onChange} placeholder={placeholder ? tr(placeholder) : undefined} accessibilityLabel={tr(label || placeholder || '')} placeholderTextColor={c.faint}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, height: 56, paddingHorizontal: focus ? 15 : 16, borderRadius: 16, borderWidth: focus ? 2 : 1,
+        borderColor: bad ? m.error : good ? c.ok : focus ? m.primary : m.outline, backgroundColor: 'transparent' }}>
+        <TextInput value={value} onChangeText={onChange} placeholder={placeholder ? tr(placeholder) : undefined} accessibilityLabel={tr(label || placeholder || '')} placeholderTextColor={c.muted}
           secureTextEntry={secure && !show} autoCapitalize="none" autoCorrect={false} autoFocus={first} onSubmitEditing={onSubmit} returnKeyType="go" {...auto}
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
-          style={{ flex: 1, height: 54, fontSize: 17, color: c.text, fontFamily: (ltr && value) || !RTL ? DA_FONT : 'Vazirmatn-400',
+          style={{ flex: 1, minWidth: 0, height: 52, paddingVertical: 0, fontSize: 16, color: c.text, fontFamily: (ltr && value) || !RTL ? DA_FONT : 'Vazirmatn-400',
             ...(left ? { textAlign: 'left' as const, direction: 'ltr' as const } : { textAlign: physicalAlign('right' as const) }),
             writingDirection: left ? 'ltr' : 'rtl', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {secure ? (
           <Pressable onPress={() => { tap(); setShow(!show); }} hitSlop={10} accessibilityLabel={tr(show ? 'پنهان کردن رمز' : 'نمایش رمز')}>
-            <Icon name={show ? 'eyeSlash' : 'eye'} size={20} color={show ? c.text : c.faint} />
+            <Icon name={show ? 'eyeSlash' : 'eye'} size={20} color={show ? m.primary : c.muted} />
           </Pressable>
         ) : value ? (
           <Pressable onPress={() => { tap(); onChange(''); }} hitSlop={10} accessibilityLabel={tr('پاک کردن')}
@@ -123,19 +111,19 @@ export function BigField({ value, onChange, placeholder, label, secure, ltr, onS
 // One of a step's choices: a card with a picture (a flag) at the start, a name and a line under it, and a round mark
 // at the end; the chosen one with a bright border and a filled mark.
 export function ChoiceCard({ on, onPress, pic, name, note, raw }: { on: boolean; onPress: () => void; pic?: React.ReactNode; name: React.ReactNode; note?: string; raw?: boolean }) {
-  const c = useColors();
+  const c = useColors(), m = useM3();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="radio" accessibilityState={{ checked: on }}
-      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1, flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, paddingHorizontal: 16, borderRadius: 18, borderWidth: 1.5,
-        borderColor: on ? c.text : c.line, backgroundColor: c.surface })}>
+      style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1, flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1,
+        borderColor: on ? m.primary : c.line, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
       {pic ? <View style={{ borderRadius: 5, overflow: 'hidden' }}>{pic}</View> : null}
       <View style={{ flex: 1, gap: 2 }}>
-        {typeof name === 'string' ? <L style={{ fontSize: 18, lineHeight: 25, fontWeight: '700', color: c.text, textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{name}</L> : name}
+        {typeof name === 'string' ? <L style={{ fontSize: 18, lineHeight: 25, fontWeight: '500', color: c.text, textAlign: physicalAlign(RTL ? 'right' : 'left') }}>{name}</L> : name}
         {note ? <T raw={raw} style={{ fontSize: 13, lineHeight: 20, color: c.muted }}>{note}</T> : null}
       </View>
       <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 2,
-        borderColor: on ? c.text : c.faint, backgroundColor: on ? c.text : 'transparent' }}>
-        {on ? <Icon name="check" size={13} color={c.bg} weight="bold" /> : null}
+        borderColor: on ? m.primary : m.outline, backgroundColor: on ? m.primary : 'transparent' }}>
+        {on ? <Icon name="check" size={13} color={m.onPrimary} weight="bold" /> : null}
       </View>
     </Pressable>
   );
