@@ -6,6 +6,7 @@
 // change reloads the page, so lists built when the app starts are in the new language too. /app stays Persian.
 import { reloadApp } from './reload';
 import { Alert, BackHandler, I18nManager, Platform } from 'react-native';
+import { getLocales } from 'expo-localization';
 
 import { PROVE_PICS } from './config';
 import STRINGS from './i18n/strings.json';
@@ -35,7 +36,12 @@ function initial(): UiLang {
     if (valid(u)) { write(u); return u; }
   }
   const v = read(); if (valid(v)) return v;
-  return 'fa';
+  // First visit: follow the device's primary language without saving it as a user's choice.
+  try {
+    const language = getLocales()[0]?.languageCode;
+    if (valid(language)) return language;
+  } catch {}
+  return 'en';
 }
 export const UI_LANG: UiLang = initial();
 // Whether a language was chosen in this browser (else the account's choice is taken when signing in).

@@ -7,14 +7,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Platform, Pressable, View, type NativeScrollEvent, type NativeSyntheticEvent, type ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { UI_CHOSEN, UI_LANG, type UiLang } from '@/lib/i18n';
+import { UI_LANG, type UiLang } from '@/lib/i18n';
 import { Icon } from './icon';
 import { T, tap } from './kit';
 import { SOFT, useColors } from './theme';
 
 export const LANG_NAMES: Record<UiLang, string> = { fa: 'فارسی', en: 'English', da: 'Dansk' };
 export const LANG_FONT = (l: UiLang, w: 500 | 700 = 500) => (l === 'fa' ? `Vazirmatn-${w}` : `GSans-${w}`);
-// Danish on top, English in the middle (chosen to begin with), Persian below (Mojtaba, 2026-10-15); also the order
+// Danish on top, English in the middle, Persian below (Mojtaba, 2026-10-15); also the order
 // of the intro's language list.
 export const LANGS: UiLang[] = ['da', 'en', 'fa'];
 const TITLE: Record<UiLang, string> = { fa: 'زبان برنامه را انتخاب کنید', en: 'Choose your language', da: 'Vælg dit sprog' };
@@ -26,8 +26,8 @@ const ROW = 54, VISIBLE = 5, PAD = ROW * ((VISIBLE - 1) / 2);
 
 export function LangWheel({ onDone }: { onDone: (l: UiLang) => void }) {
   const c = useColors(), ins = useSafeAreaInsets();
-  // English in the middle band to begin with (Mojtaba, 2026-10-15), until another is chosen.
-  const start = Math.max(0, LANGS.indexOf(UI_CHOSEN ? UI_LANG : 'en'));
+  // The saved choice, or the device's language on the first visit.
+  const start = Math.max(0, LANGS.indexOf(UI_LANG));
   const [at, setAt] = useState(start);
   const [y] = useState(() => new Animated.Value(start * ROW));
   const ref = useRef<ScrollView>(null);
