@@ -4469,5 +4469,14 @@
 "همه‌ی درس‌ها را تمام کرده‌اید":["You have finished every lesson", "Du har gennemført alle lektioner"],
 "{0} قبول از {1}، بهترین نمره {2}، آخرین {3}":["{0} of {1} passed, best score {2}, latest {3}", "{0} af {1} bestået, bedste score {2}, seneste {3}"],
 "هنوز آزمونی نداده‌اید":["No tests yet", "Ingen prøver endnu"],
-"با یک آزمون کوتاه ببینید چقدر آماده‌اید":["Take a short test to see how ready you are", "Tag en kort prøve og se, hvor klar du er"]
+"با یک آزمون کوتاه ببینید چقدر آماده‌اید":["Take a short test to see how ready you are", "Tag en kort prøve og se, hvor klar du er"],
+"همه‌ی مباحث":["All topics", "Alle emner"],
+"همه‌ی درس‌ها":["All lessons", "Alle lektioner"],
+"درس مانده":["lessons left", "lektioner tilbage"],
+"علائم رانندگی دانمارک":["Denmark's road signs", "Danmarks færdselstavler"],
+"همه‌ی تابلوها و خط‌کشی‌های آزمون، با معنی و نکته‌ی هر کدام؛ گروه‌به‌گروه، با تصویر.":["Every sign and road marking in the test, with what each means and what to watch for; group by group, with pictures.", "Alle tavler og afmærkninger i prøven, med hvad hver betyder og hvad du skal være opmærksom på; gruppe for gruppe, med billeder."],
+"دیدن تابلوها":["See the signs", "Se tavlerne"],
+"واژه‌نامه":["Glossary", "Ordliste"],
+"واژه‌های دانمارکی که در آزمون می‌بینید":["Danish words you will meet in the test", "Danske ord, du møder i prøven"],
+"همه‌ی واژه‌ها":["All words", "Alle ord"]
 }
