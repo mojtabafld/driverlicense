@@ -2,10 +2,10 @@
 // the chart takes the height left, and on shorter screens the cards get more compact.
 // Main site: the chart button beside the profile picture opens the chart view (ui/chart-view.tsx): the chart glides to
 // the top and the test statistics and latest tests come in under it (then the page scrolls).
-import { router, useFocusEffect, useIsFocused } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { router, useIsFocused } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Animated, AppState, Easing, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
+import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions, type GestureResponderEvent } from 'react-native';
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
@@ -20,7 +20,6 @@ import { ArcButton, Button, Card, FitLine, M3Button, Ring, Screen, T, tap, useCo
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
-import { isDark } from '@/lib/sun';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { HomeChartIcon, TestStats } from '@/ui/chart-view';
 import { HomeKnowledge } from '@/ui/home-knowledge';
@@ -84,36 +83,6 @@ function PassPct({ value, size, color }: { value: number | null; size: number; c
   // (bold by its own family: the main site draws every heavier weight as 500; Mojtaba 2026-10-30)
   // `color`: the verdict tag's colour beside it (green, amber, red; Mojtaba 2026-11-05).
   return <T style={{ fontSize: size, lineHeight: Math.round(size * 1.3), fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700', ...(color ? { color } : {}) }}>{value == null ? '–' : pctText(shown)}</T>;
-}
-
-// A greeting for the time of day where the user is: night whenever it is dark outside there (lib/sun.ts: after civil
-// dusk and before dawn, so a bright summer evening at 20:00 is still «عصر» and a dark winter afternoon at 17:00 is
-// «شب»); otherwise morning before 12, noon 12–15 and afternoon after.
-// «به‌خیر» with a zero-width non-joiner: «به» is a preposition here, so it stays apart from «خیر» (the Academy's rule).
-type DayPart = 'morning' | 'noon' | 'evening' | 'night';
-function dayPart(d = new Date()): DayPart {
-  if (isDark(d)) return 'night';
-  const h = d.getHours();
-  return h < 12 ? 'morning' : h < 15 ? 'noon' : 'evening';
-}
-const GREET: Record<DayPart, string> = { morning: 'صبح به‌خیر', noon: 'ظهر به‌خیر', evening: 'عصر به‌خیر', night: 'شب به‌خیر' };
-
-// The part of the day, kept up to date while the app stays open (the greeting and its drawing follow it).
-// Looked at again every 20 seconds, and at once when the app comes back to the front (its timers stand still in the
-// background, so a greeting from the morning stayed on into the afternoon; Mojtaba 2026-10-18) or the tab is shown.
-function useDayPart() {
-  const [g, setG] = useState(() => dayPart());
-  useEffect(() => {
-    const now = () => setG(dayPart());
-    const t = setInterval(now, 20e3);
-    const app = AppState.addEventListener('change', st => { if (st === 'active') now(); });
-    const web = typeof document !== 'undefined' && typeof document.addEventListener === 'function';
-    const vis = () => { if (document.visibilityState === 'visible') now(); };
-    if (web) { document.addEventListener('visibilitychange', vis); window.addEventListener('focus', now); }
-    return () => { clearInterval(t); app.remove(); if (web) { document.removeEventListener('visibilitychange', vis); window.removeEventListener('focus', now); } };
-  }, []);
-  useFocusEffect(useCallback(() => { setG(dayPart()); }, []));
-  return g;
 }
 
 // In place of the (still empty) chart until the first exam: where to begin, the course's next lesson first and a
@@ -299,7 +268,7 @@ export default function Home() {
     return () => ts.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
-  const part = useDayPart(), hello = GREET[part];
+  const hello = 'Hi';
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
   // The tryout: before the first test, five random questions of the app's own (not one of the free tests).
