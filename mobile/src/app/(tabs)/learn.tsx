@@ -6,7 +6,8 @@
 // (app/learn-lessons.tsx) instead of the app's own course.
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, type Href } from 'expo-router';
+import { useState, type ReactNode } from 'react';
+import { router, useIsFocused, type Href } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -98,7 +99,7 @@ function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title
 // scroll sideways, «همه‌ی فصل‌ها»), then the guides as a grid of outlined tiles (rules, signs, right of way, glossary).
 const CHAPTER_ICON: Record<string, IconName> = { ready: 'car', road: 'road', priority: 'priority', signs: 'sign', manoeuvres: 'parking',
   people: 'person', special: 'headlight', incidents: 'warning', final: 'exam' };
-function LearnSections() {
+function LearnSections({ search }: { search: ReactNode }) {
   const m = useM3();
   const { done } = useCourseProgress();
   const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
@@ -107,7 +108,7 @@ function LearnSections() {
   );
   return (
     <View style={{ gap: 28 }}>
-      <SearchBox />
+      {search}
       <View style={{ gap: 12 }}>
         <Head title={tr('آموزش گام‌به‌گام')}
           text={finished ? t('فصل به فصل، مثل آزمون. {0} از {1} درس را تمام کرده‌اید.', faNum(finished), faNum(lessons.length))
@@ -132,6 +133,14 @@ function LearnSections() {
 }
 
 export default function Learn() {
+  const focused = useIsFocused();
+  const [searchDocked, setSearchDocked] = useState(false);
+  const [searchHeight, setSearchHeight] = useState(56);
+  // Screen places its first body item 6px below the fixed header. Keep this slot's size while search is in the header.
+  const search = <View onLayout={e => setSearchHeight(e.nativeEvent.layout.height)}
+    pointerEvents={searchDocked ? 'none' : 'auto'} aria-hidden={searchDocked || undefined} style={{ opacity: searchDocked ? 0 : 1 }}>
+    {searchDocked ? <View style={{ height: searchHeight }} /> : <SearchBox />}
+  </View>;
   const { done } = useCourseProgress();
   const { bank, attempts } = useApp();
   const ready = COURSE.flatMap(ch => ch.lessons), finished = ready.filter(l => done[l.id]).length;
@@ -140,7 +149,8 @@ export default function Learn() {
   return (
     // Main site: the five cards share the screen's height between the search box and the tab bar (taller on tall
     // phones, never shorter than their content; Mojtaba 2026-10-18).
-    <Screen fill={!PROVE_PICS && PROVE_BANK} gap={short ? 10 : 14} barGap={PROVE_PICS || !PROVE_BANK ? undefined : 16} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
+    <Screen headerContent={!PROVE_PICS && searchDocked ? <SearchBox compact /> : undefined}
+      onScrollY={!PROVE_PICS ? y => { if (focused) setSearchDocked(y >= searchHeight + 6); } : undefined} fill={!PROVE_PICS && PROVE_BANK} gap={short ? 10 : 14} barGap={PROVE_PICS || !PROVE_BANK ? undefined : 16} lead={<PageIcon name="learn" />} title="آموزش" subtitle="درس‌ها، تابلوها و قوانین راه" hero={{ pic: 1, icon: 'learn', art: ARC ? LearnBookArt : undefined }}
       heroAction={{ icon: 'calendar', label: 'تقویم', onPress: () => router.push('/calendar') }} heroExtra={<CoachButton from="learn" />}>
       {PROVE_PICS ? (
         <View style={{ gap: 12 }}>
@@ -159,7 +169,7 @@ export default function Learn() {
         <View style={{ gap: short ? 8 : 10, flex: 1 }}>
           {/* Search the learning pages (the course, rules, signs, right of way) by their words and, with «جستجو», by the
               AI; the results open on their own page (app/course-search.tsx). */}
-          <SearchBox />
+          {search}
           {/* /app: prove.dk's 44 numbered tests in place of the app's own course (Mojtaba 2026-10-20). */}
           {PROVE_BANK ? (
             <Part n={1} icon="learn" title="آموزش درس‌به‌درس" href="/learn-lessons" text={`${faNum(all)} درس رسمی`}
@@ -173,7 +183,7 @@ export default function Learn() {
           <Part n={4} icon="priority" title="آموزش حق تقدم" href="/priority" text="چه کسی اول می‌رود؟" />
           <Part n={5} icon="translate" title="واژه‌نامه‌ی آزمون" href="/glossary" text="واژه‌های دانمارکی آزمون" />
         </View>
-        ) : <LearnSections />
+        ) : <LearnSections search={search} />
       )}
     </Screen>
   );
