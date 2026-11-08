@@ -345,16 +345,14 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   // the edge, it slides out from behind the greeting as it fades in, and then the line under them opens (Mojtaba
   // 2026-10-19). Clipped at its own edge only while it comes in. Later the header shows it at once, as the rest.
   // Home now has no drawing and no line under the greeting (Mojtaba 2026-10-30): the greeting stands still and the
-  // name slides in beside it a moment after the app opens, once per app start.
+  // name fades in beside it a moment after the app opens, once per app start.
   // Home has no drawing and no line under the greeting now (Mojtaba 2026-10-30): the greeting stands still and the name
   // slides in beside it a moment after the app opens, once per app start.
   const plainHead = usePlainHeader(), intro = !!name && !leadGone && plainHead && !tall;
   const [nameIn] = useState(() => new Animated.Value(intro ? 0 : 1));
-  const [nameClip, setNameClip] = useState(intro);
-  const [nameW, setNameW] = useState(0);
   const openSub = () => {
     Animated.timing(nameIn, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: false })
-      .start(({ finished }) => { if (finished) setNameClip(false); settleName(); });
+      .start(() => settleName());
     Animated.sequence([Animated.delay(480), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
       .start(({ finished }) => { if (finished) setTimeout(() => setAfter(true), 2200); });
   };
@@ -394,8 +392,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const titleSize = Math.max(20, Math.min(30, Math.round(width * 0.075), Math.floor((room - 46) / 1.35)));
   // The title (and name) in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts).
   const bold = HEAD_BOLD;
-  const greetingText = { fontSize: 18, lineHeight: 26, fontWeight: '500' as const, color: ink };
   const shade = light || flat ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
+  const headingText = [{ lineHeight: 36, fontWeight: '700' as const, color: ink }, bold, shade];
   // An inner page (`back`): the title and its line under the way back (Mojtaba, 2026-10-15), where a tab's title sits,
   // the header growing when a long line needs the room.
   const under = !!back && !tall;
@@ -425,24 +423,18 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
           <View style={{ gap: 2, maxWidth: plain ? undefined : '58%', flex: plain ? 1 : undefined }}>
             {titleContent ?? <>
             {plain && name ? (
-              // «هدر ساده»: the name on the greeting's line, a little smaller than a title: the greeting in the regular cut, the
-              // name in the same typography, cut short with … if it does not fit.
+              // Greeting and name share the same title typography and responsive sizing as Learn and Exam.
               // The drawing of the time of day stands beside both lines, centred between the greeting and the line under
               // it, and that line starts where the greeting does (Mojtaba 2026-10-18); then it goes (FadingLead).
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {lead ? <FadingLead onDone={openSub}>{lead}</FadingLead> : null}
                 <View style={{ flex: 1, gap: 1 }}>
-                  {/* (the name on the greeting's line again, after a comma, cut short with … when it does not fit; Mojtaba
-                      2026-11-07; on its own line under it from 2026-11-06) */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <T style={[greetingText, { flexShrink: 0 }, shade]} numberOfLines={1}>{title}{RTL ? '،' : ','}</T>
-                    <View style={{ flexShrink: 1, overflow: nameClip ? 'hidden' : 'visible' }} onLayout={e => setNameW(e.nativeEvent.layout.width)}>
-                      <Animated.View style={{ opacity: nameIn.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0, 1, 1] }),
-                        transform: [{ translateX: nameIn.interpolate({ inputRange: [0, 1], outputRange: [(RTL ? 1 : -1) * Math.min(Math.max(nameW, 24), 64), 0] }) }] }}>
-                        <T style={[greetingText, shade]} numberOfLines={1}>{name}</T>
-                      </Animated.View>
-                    </View>
-                  </View>
+                  <FitLine size={26} min={12} id={`${title}:${name}`} style={headingText}>
+                    {fs => <>
+                      <T raw style={[{ fontSize: fs, lineHeight: 36, color: ink }, bold]}>{tr(title)}{RTL ? '،' : ','}{' '}</T>
+                      <Animated.Text style={[{ fontSize: fs, lineHeight: 36, color: ink }, bold, { opacity: nameIn }]}>{name}</Animated.Text>
+                    </>}
+                  </FitLine>
                   {subtitle ? (
                     <Animated.View style={{ height: sub.interpolate({ inputRange: [0, 1], outputRange: [0, 22] }), overflow: 'hidden',
                       opacity: sub.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0, 1] }), transform: [{ translateY: sub.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
@@ -455,9 +447,9 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             {lead ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {lead}
-                <View style={{ flex: 1 }}><FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine></View>
+                <View style={{ flex: 1 }}><FitLine size={26} min={12} style={headingText}>{title}</FitLine></View>
               </View>
-            ) : <FitLine size={26} min={12} style={[{ lineHeight: 36, fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>}
+            ) : <FitLine size={26} min={12} style={headingText}>{title}</FitLine>}
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
             </>}
             {subtitle && !(plain && name) ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
