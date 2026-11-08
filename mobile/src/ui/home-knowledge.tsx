@@ -139,7 +139,7 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
         <Head title={tr('آزمون تئوری')} />
         <View style={{ direction: 'ltr', flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <T testID="home-theory-description" style={{ flex: 1, minWidth: 0, fontSize: 14.5, lineHeight: 24, color: c.muted }}>{tr('آزمون تصادفی با تعداد سؤال دلخواه.')}</T>
-          <View testID="home-theory-controls" style={{ flex: 1.25, minWidth: 0, gap: 10 }}>
+          <View testID="home-theory-controls" style={{ flex: 1.05, minWidth: 0, gap: 10 }}>
             <View style={{ direction: 'ltr', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderRadius: 999, borderWidth: 1, borderColor: m.outline, paddingHorizontal: 4 }}>
               <Pressable onPress={() => resize(-step)} disabled={test.size <= minSize} accessibilityRole="button"
                 accessibilityLabel={tr('کاهش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size <= minSize }}
