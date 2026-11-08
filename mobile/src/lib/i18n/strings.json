@@ -4485,5 +4485,9 @@
 "حداکثر {0} اشتباه برای قبولی":["At most {0} mistakes to pass", "Højst {0} fejl for at bestå"],
 "سؤال‌هایی که دیده‌اید کنار گذاشته می‌شوند":["Questions you have seen are left out", "Spørgsmål, du har set, udelades"],
 "نتیجه و مرور همه‌ی پاسخ‌ها بعد از آزمون":["Your result and every answer reviewed afterwards", "Dit resultat og alle svar gennemgået bagefter"],
-"شروع آزمون تصادفی {0} سؤالی":["Start a random {0}-question test", "Start en tilfældig prøve med {0} spørgsmål"]
+"شروع آزمون تصادفی {0} سؤالی":["Start a random {0}-question test", "Start en tilfældig prøve med {0} spørgsmål"],
+"بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. {1} سؤالی که اشتباه جواب داده‌اید را دوباره تمرین کنید تا این عدد بالا برود.":["Based on your last {0} answers in random tests. Practise the {1} questions you got wrong again to raise it.", "Baseret på dine seneste {0} svar i tilfældige prøver. Øv de {1} spørgsmål, du svarede forkert på, igen for at hæve det."],
+"بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. با آزمون‌های بیشتر دقیق‌تر می‌شود.":["Based on your last {0} answers in random tests. More tests make it more accurate.", "Baseret på dine seneste {0} svar i tilfældige prøver. Flere prøver gør det mere præcist."],
+"بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.":["It is estimated after your first test: take a few random tests to see how close you are to passing.", "Det beregnes efter din første prøve: tag nogle tilfældige prøver og se, hvor tæt du er på at bestå."],
+"تمرین {0} اشتباه":["Practise {0} mistakes", "Øv {0} fejl"]
 }
