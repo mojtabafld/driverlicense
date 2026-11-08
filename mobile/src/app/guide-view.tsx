@@ -1,3 +1,4 @@
+import { PageScroll } from '@/ui/page-scroll';
 // One group of «علائم رانندگی» or «آموزش حق تقدم», page by page: the item's picture large, its explanation under it,
 // and the floating glass bar of the exams at the bottom (previous / the list with the position / next). The list opens
 // a sheet with every item of the group; a tap goes to it. A sideways swipe on the picture or the text turns the page
@@ -75,7 +76,7 @@ export default function GuideView() {
           </View>
         </SafeAreaView>
       </GlassTop>
-      <ScrollView ref={scroll} showsVerticalScrollIndicator={false}
+      <PageScroll ref={scroll} showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: 16, paddingTop: headH + 14, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {/* The group's general rules, the same on every page; folded until asked for. */}
         <Pressable onPress={() => { tap(); setIntro(!intro); }} accessibilityRole="button" accessibilityState={{ expanded: intro }}>
@@ -103,7 +104,7 @@ export default function GuideView() {
             </View>
           </Card>
         </Animated.View>
-      </ScrollView>
+      </PageScroll>
       <GlassBar rtl={learnRtl}
         start={<FootBtn label="قبلی" icon={navIcons(learnRtl).prev} disabled={i === 0} onPress={() => setI(i - 1)} />}
         middle={<ListButton n={i + 1} of={items.length} label="فهرست موارد" onPress={() => setList(true)} />}

@@ -1,3 +1,4 @@
+import { PageScroll } from '@/ui/page-scroll';
 // Result and answer review, laid out like the site.
 // A past exam or lesson: the site's question-by-question review (back button, tabs, a result line that flies into
 // shown only from the «جزئیات آزمون» button, one open card at a time with Forrige / Næste, and ✓ on the last one to finish).
@@ -159,7 +160,7 @@ export default function Result() {
         <RevealScrollProvider value={reveal.value}>
         {/* A sideways swipe turns to the next or previous question. */}
         <Pager i={k} n={total} go={to => { setK(to); toTop(); }} rtl={rtl}>
-        <ScrollView ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
+        <PageScroll ref={scroll} {...reveal.scrollProps} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 100, gap: 12, maxWidth: 760, width: '100%', alignSelf: 'center' }}>
           {/* .res-line */}
           {line === 'shown' ? (
             <Enter style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, backgroundColor: toneBg }}>
@@ -182,7 +183,7 @@ export default function Result() {
                 action={{ label: `نمایش همه‌ی سؤال‌ها`, icon: 'list', onPress: () => setFilter('all') }} />
             : <Empty text="موردی نیست." />)
             : <ReviewCard key={`${filter}-${r.i}`} q={Q.get(r.it.id)!} it={r.it} index={r.i} lang={lang} fa={fa} at={a.at} alwaysOpen />}
-        </ScrollView>
+        </PageScroll>
         </Pager>
         </RevealScrollProvider>
         {/* .rev-top, fixed on Liquid Glass over the page: back button, tabs, «جزئیات آزمون» on one row */}
@@ -239,7 +240,7 @@ export default function Result() {
   const marked = a.items.filter(it => it.m).length;
   return (
     <Backdrop anim={motion.style}>
-      <ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 24, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
+      <PageScroll ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: ins.top + 14, paddingHorizontal: 16, paddingBottom: ins.bottom + 24, maxWidth: 560, width: '100%', alignSelf: 'center' }}>
         {/* «خلاصه‌ی آزمون»: the only thing shown after handing in. */}
         <Card style={{ alignItems: 'center', gap: 14, padding: 20, paddingTop: 22, borderRadius: 24 }}>
           {/* Back to the exam (or lessons) page: an icon in the top corner where the app's language starts (right in
@@ -295,7 +296,7 @@ export default function Result() {
             {isLesson && nextLesson ? <Button kind="glass" label="درس بعدی" icon="arrowLeft" onPress={startNext} /> : null}
           </View>
         </Card>
-      </ScrollView>
+      </PageScroll>
     </Backdrop>
   );
 }

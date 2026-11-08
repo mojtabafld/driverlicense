@@ -1,10 +1,11 @@
+import { PageScroll } from './page-scroll';
 // The one-question screens of signing in and up (ui/sign-steps.tsx), the questions' language (ui/lang-pick.tsx) and the
 // app's language (ui/lang-wheel.tsx), after the Saphe app's (Mojtaba 2026-10-20), on the page's own colour (black in
 // the dark theme): a round back button at the top and, at the other end, where the user is («مرحله‌ی ۱ از ۴»); the
 // question as a big title with a line under it; the step's fields or choices; and its button kept at the foot of the
 // screen (over the keyboard) under a hairline, faded until the step's answer is there.
 import { useEffect, useState } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View, type TextInputProps } from 'react-native';
+import { Animated, KeyboardAvoidingView, Platform, Pressable, TextInput, View, type TextInputProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { ClipPath, Defs, Path, Rect } from 'react-native-svg';
 
@@ -38,7 +39,7 @@ export function StepFrame({ onBack, corner, title, sub, children, button, fade }
   const rise = fade ? { opacity: fade, transform: [{ translateY: fade.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] } : null;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: c.bg }}>
-      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
+      <PageScroll keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 24, paddingTop: ins.top + (Platform.OS === 'web' ? 14 : 8), paddingBottom: 24 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 46 }}>
           {onBack ? (
@@ -51,7 +52,7 @@ export function StepFrame({ onBack, corner, title, sub, children, button, fade }
           {typeof sub === 'string' ? <T style={{ fontSize: 16, lineHeight: 26, color: c.muted }}>{sub}</T> : sub}
           <View style={{ marginTop: 16, gap: 12 }}>{children}</View>
         </Animated.View>
-      </ScrollView>
+      </PageScroll>
       <View style={{ paddingTop: 12, paddingBottom: kb ? 12 : ins.bottom + 14, marginBottom: kb, paddingHorizontal: 24, backgroundColor: c.bg }}>
         <M3Button big m={m} kind="outlined" icon="arrowLeft" label={typeof button.label === 'string' ? button.label : ''}
           after={typeof button.label === 'string' ? undefined : () => button.label} busy={button.busy} disabled={!ready}

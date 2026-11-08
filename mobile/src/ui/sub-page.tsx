@@ -1,3 +1,4 @@
+import { PageScroll } from './page-scroll';
 // An inner page opened from a tab (a part of «آموزش», the help, a bug report, the account): the back button and the
 // page's title fixed at the top on Liquid Glass (the page scrolls under it, so the way back is always at hand), the
 // line under the title and the content scrolling below. It slides in and out like the other inner pages, and a drag
@@ -54,16 +55,16 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
       <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, pager ? { transform: [{ translateX: turn.dx }] } : backLean(backSwipe.dx)]}>
         <KeyboardAvoidingView behavior={Platform.OS === 'web' ? undefined : 'padding'} style={{ flex: 1 }}>
           {hero ? (
-            <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={fill ? { flexGrow: 1, paddingBottom: ins.bottom + 12 } : { paddingBottom: ins.bottom + 40 }}>
+            <PageScroll ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={fill ? { flexGrow: 1, paddingBottom: ins.bottom + 12 } : { paddingBottom: ins.bottom + 40 }}>
               <Hero look={hero} title={title} subtitle={subtitle} back />
               <View onLayout={e => onBodyY?.(e.nativeEvent.layout.y)} style={{ paddingTop: 6, paddingHorizontal: 16, gap, maxWidth, width: '100%', alignSelf: 'center', flexGrow: fill ? 1 : undefined }}>{children}</View>
-            </ScrollView>
+            </PageScroll>
           ) : (
-          <ScrollView ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
+          <PageScroll ref={ref} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingTop: headH + 12, paddingHorizontal: 16, paddingBottom: ins.bottom + 40, gap, maxWidth, width: '100%', alignSelf: 'center' }}>
             {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
             {children}
-          </ScrollView>
+          </PageScroll>
           )}
         </KeyboardAvoidingView>
         {hero ? (
