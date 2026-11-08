@@ -106,7 +106,7 @@ function Numbers({ onOpen }: { onOpen: (i: number) => void }) {
       {RULE_NUMBERS.map(x => (
         <Pressable key={x.label} onPress={() => { tap(); onOpen(x.rule); }} accessibilityRole="button" accessibilityLabel={`${x.value} ${x.unit}، ${x.label}`}
           style={({ pressed }) => ({ flexBasis: '45%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16, paddingHorizontal: 16, borderRadius: 24,
-            backgroundColor: pressed ? c.surface2 : 'transparent', borderWidth: 1, borderColor: c.line, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+            backgroundColor: pressed ? c.surface2 : c.surface, borderWidth: 0, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <View style={{ minWidth: 52, alignItems: 'center' }}>
             <T style={{ fontSize: 24, lineHeight: 32, fontWeight: '500', color: m.primary, textAlign: 'center' }}>{x.value}</T>
             {x.unit ? <T style={{ fontSize: 11, lineHeight: 14, color: c.muted, fontWeight: '700', textAlign: 'center', writingDirection: 'ltr' }}>{x.unit}</T> : null}
@@ -122,11 +122,11 @@ function Numbers({ onOpen }: { onOpen: (i: number) => void }) {
 // `locked`: only with premium (lib/free.ts): faded, a lock in place of the arrow; a tap opens the premium page.
 function RulePart({ p, on, read, onToggle, onNext, locked }: { p: GuidePart; on: boolean; read: boolean; onToggle: () => void; onNext: (() => void) | null; locked?: boolean }) {
   const c = useColors(), m = useM3();
-  if (!on) return <LearningTile fullWidth icon={p.icon ?? 'rules'} title={p.title} text={`${faNum(p.points.length)} نکته`} locked={locked} onPress={onToggle}>
+  if (!on) return <LearningTile fullWidth filled icon={p.icon ?? 'rules'} title={p.title} text={`${faNum(p.points.length)} نکته`} locked={locked} onPress={onToggle}>
     {read ? <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><Icon name="checkCircle" size={18} color={c.ok} /><T style={{ fontSize: 12, color: c.ok }}>خوانده‌شده، </T></View> : null}
   </LearningTile>;
   return (
-    <View style={{ gap: 16, padding: 16, borderRadius: 24, borderWidth: 1, borderColor: m.primary }}>
+    <View style={{ gap: 16, padding: 16, borderRadius: 24, backgroundColor: c.surface }}>
       <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: on }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: locked ? 0.55 : 1 }}>
         <Icon name={p.icon ?? 'rules'} size={44} color={m.primary} />
         <View style={{ flex: 1, gap: 2 }}>
