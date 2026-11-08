@@ -27,6 +27,7 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
   const ok = attempts.filter(passed).length;
+  const last = n ? pctOf([...attempts].sort((a, b) => b.at - a.at)[0]) : null;
   // The course's lessons (lib/course.ts): how many are finished, and the next one (Mojtaba 2026-11-08: the second card).
   const { done } = useCourseProgress();
   const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
@@ -35,14 +36,14 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   // row of Material cards that slides (after fonts.google.com's carousel); the tests' card opens their history.
   return (
     <StatCarousel dense={dense} fill={c.surface} items={[
-      { title: t('{0} آزمون', faNum(n)), sub: tr('تاریخچه‌ی آزمون‌هایتان را ببینید'), icon: 'clipboard', onPress: () => router.push('/history'), label: tr('تاریخچه‌ی آزمون‌ها') },
+      // (more about the tests in place of the best and passed cards; Mojtaba 2026-11-08)
+      n ? { title: t('{0} آزمون', faNum(n)), icon: 'clipboard', onPress: () => router.push('/history'), label: tr('تاریخچه‌ی آزمون‌ها'),
+        sub: t('{0} قبول از {1}، بهترین نمره {2}، آخرین {3}', faNum(ok), faNum(n), pctText(best ?? 0), pctText(last ?? 0)) }
+        : { title: tr('هنوز آزمونی نداده‌اید'), sub: tr('با یک آزمون کوتاه ببینید چقدر آماده‌اید'), icon: 'clipboard', onPress: () => router.navigate('/exam') },
       { title: t('{0} از {1} درس', faNum(finished), faNum(lessons.length)), icon: 'learn',
         sub: next ? t('درس بعدی: {0}', tr(next.title)) : tr('همه‌ی درس‌ها را تمام کرده‌اید'), color: lessons.length && !next ? c.ok : undefined,
         onPress: () => (next ? router.push({ pathname: '/course-lesson', params: { id: next.id } }) : router.navigate('/learn')), label: tr('درس‌ها') },
       { title: avg != null ? t('میانگین {0}', pctText(avg)) : tr('میانگین'), sub: tr('میانگین نمره‌ی همه‌ی آزمون‌ها'), icon: 'gauge' },
-      { title: best != null ? t('بهترین {0}', pctText(best)) : tr('بهترین'), sub: tr('بالاترین نمره‌ای که گرفته‌اید'), icon: 'trophy' },
-      // (every test passed, e.g. 5 of 5: green; any not: the warning colour; Mojtaba 2026-10-20)
-      { title: n ? t('قبولی {0} از {1}', faNum(ok), faNum(n)) : tr('قبولی'), sub: tr('آزمون‌هایی که قبول شده‌اید'), icon: 'passed', color: n ? (ok === n ? c.ok : c.warn) : undefined },
     ]} />
   );
 }
