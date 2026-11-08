@@ -9,7 +9,7 @@ import { Platform, Pressable, ScrollView, View } from 'react-native';
 
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
-import { RTL, t, tr } from '@/lib/i18n';
+import { RTL, tr } from '@/lib/i18n';
 import type { CourseLesson } from '@/lib/course';
 import { FULL, SIZES, faNum } from '@/lib/logic';
 import { Cookie } from './cookie';
@@ -139,22 +139,24 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
         <Head title={tr('آزمون تئوری')} text={tr('آزمون تصادفی با تعداد سؤال دلخواه.')} />
         <View style={{ gap: 10 }}>
           <T style={{ fontSize: 15, lineHeight: 24, color: c.muted }}>{tr('تعداد سؤال‌ها')}</T>
-          <View style={{ direction: 'ltr', flexDirection: 'row', alignItems: 'center', minHeight: 76, borderRadius: 999, borderWidth: 1, borderColor: m.outline, paddingHorizontal: 8 }}>
-            <Pressable onPress={() => resize(-step)} disabled={test.size <= minSize} accessibilityRole="button"
-              accessibilityLabel={tr('کاهش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size <= minSize }}
-              style={({ pressed }) => ({ width: 64, minHeight: 60, borderRadius: 999, alignItems: 'center', justifyContent: 'center', opacity: test.size <= minSize ? 0.38 : 1, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-              <T raw style={{ fontSize: 36, lineHeight: 44, color: c.text }}>−</T>
-            </Pressable>
-            <T raw testID="home-theory-size" accessibilityLiveRegion="polite" style={{ flex: 1, textAlign: 'center', fontSize: 30, lineHeight: 40, color: c.text, fontWeight: '500' }}>{faNum(test.size)}</T>
-            <Pressable onPress={() => resize(step)} disabled={test.size >= FULL} accessibilityRole="button"
-              accessibilityLabel={tr('افزایش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size >= FULL }}
-              style={({ pressed }) => ({ width: 64, minHeight: 60, borderRadius: 999, alignItems: 'center', justifyContent: 'center', opacity: test.size >= FULL ? 0.38 : 1, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-              <T raw style={{ fontSize: 36, lineHeight: 44, color: c.text }}>+</T>
-            </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ width: 64, flexShrink: 0, alignItems: 'stretch', borderRadius: 999, borderWidth: 1, borderColor: m.outline }}>
+              <Pressable onPress={() => resize(step)} disabled={test.size >= FULL} accessibilityRole="button"
+                accessibilityLabel={tr('افزایش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size >= FULL }}
+                style={({ pressed }) => ({ minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', opacity: test.size >= FULL ? 0.38 : 1, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+                <T raw style={{ fontSize: 28, lineHeight: 34, color: c.text }}>+</T>
+              </Pressable>
+              <T raw testID="home-theory-size" accessibilityLiveRegion="polite" style={{ textAlign: 'center', fontSize: 24, lineHeight: 28, color: c.text, fontWeight: '500' }}>{faNum(test.size)}</T>
+              <Pressable onPress={() => resize(-step)} disabled={test.size <= minSize} accessibilityRole="button"
+                accessibilityLabel={tr('کاهش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size <= minSize }}
+                style={({ pressed }) => ({ minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', opacity: test.size <= minSize ? 0.38 : 1, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+                <T raw style={{ fontSize: 28, lineHeight: 34, color: c.text }}>−</T>
+              </Pressable>
+            </View>
+            <M3Button kind="outlined" m={m} icon="play" big onPress={test.start} disabled={!test.ready || test.count < test.size} style={{ flex: 1, minWidth: 0 }}
+              label={test.randomLeft ? tr('شروع آزمون') : tr('فعال کردن نسخه‌ی ویژه')} />
           </View>
         </View>
-        <M3Button kind="outlined" m={m} icon="play" big onPress={test.start} disabled={!test.ready || test.count < test.size}
-          label={test.randomLeft ? t('شروع آزمون {0} سؤالی', faNum(test.size)) : tr('فعال کردن نسخه‌ی ویژه')} />
       </View>
     </View>
   );
