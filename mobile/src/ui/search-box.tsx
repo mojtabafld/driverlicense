@@ -10,13 +10,13 @@ import { T, tap } from './kit';
 import { useColors } from './theme';
 import { useSearchStyle } from './search-style';
 
-export function SearchBox() {
+export function SearchBox({ compact = false }: { compact?: boolean }) {
   const c = useColors(), searchStyle = useSearchStyle();
   return (
     <Pressable onPress={() => { tap(); router.push('/course-search'); }} accessibilityRole="search" accessibilityLabel={tr('جستجو در آموزش')}
       style={({ pressed }) => [searchStyle, { opacity: pressed ? 0.85 : 1 }]}>
       <Icon name="search" size={24} color={c.muted} />
-      <T style={{ flex: 1, color: c.muted, fontSize: 16 }} numberOfLines={1}>جستجو در درس‌ها، قوانین و تابلوها…</T>
+      <T style={{ flex: 1, color: c.muted, fontSize: 16 }} numberOfLines={1}>{compact ? 'جستجو' : 'جستجو در درس‌ها، قوانین و تابلوها…'}</T>
     </Pressable>
   );
 }

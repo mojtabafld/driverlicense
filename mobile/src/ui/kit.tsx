@@ -323,7 +323,7 @@ const TURN_MS = 10000; // how long each of several `subtitleAfter` lines stays b
 // profile picture; Mojtaba 2026-10-19), plain headers only, as the action.
 // `subtitleAfter`: the line under the title once the drawing has gone (SwapText); several lines take turns, each for
 // 10 seconds, with the same swap (the home page's: today's practice, a random test, the progress; Mojtaba 2026-10-18).
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter, extra }: { look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[]; extra?: React.ReactNode }) {
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter, extra, titleContent }: { titleContent?: React.ReactNode; look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[]; extra?: React.ReactNode }) {
   // The home header's opening (with a `lead`): first the greeting alone beside the drawing; the drawing goes and the
   // text glides to the edge; then the line under the greeting opens (the greeting moves up for it) and comes in; a
   // while later it changes to `subtitleAfter` (Mojtaba 2026-10-18). Once per app start, later the end state at once.
@@ -423,6 +423,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
         ) : null}
         {below ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ gap: 2, maxWidth: plain ? undefined : '58%', flex: plain ? 1 : undefined }}>
+            {titleContent ?? <>
             {plain && name ? (
               // «هدر ساده»: the name on the greeting's line, a little smaller than a title: the greeting in the regular cut, the
               // name in the same typography, cut short with … if it does not fit.
@@ -460,6 +461,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
             </>}
             {subtitle && !(plain && name) ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+            </>}
           </View>
           {plain && extra ? extra : null}
           {plain && act && 'node' in act ? (
@@ -487,15 +489,16 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
 // Whether a scroll view is scrolled to (within 48 points of) its end.
 const atEndOf = (n: { contentOffset: { y: number }; layoutMeasurement: { height: number }; contentSize: { height: number } }) =>
   n.contentOffset.y + n.layoutMeasurement.height >= n.contentSize.height - 48;
-export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter, dashboard = false }: { dashboard?: boolean; lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter, dashboard = false, headerContent }: { headerContent?: React.ReactNode; dashboard?: boolean; lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number, atEnd: boolean) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : 0, paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} /> : null;
+  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} titleContent={headerContent} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
+        {headerContent ?? <>
         {lead ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             {lead}
@@ -504,6 +507,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
         ) : <FitLine size={26} min={16} style={[{ lineHeight: 34, fontWeight: '700', color: c.text }, HEAD_BOLD]}>{title}</FitLine>}
         {name ? <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: c.text }} numberOfLines={1}>{name}</T> : null}
         {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
+        </>}
       </View>
       {right}
       <ThemeRound />
