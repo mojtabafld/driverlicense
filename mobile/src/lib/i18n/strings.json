@@ -4496,6 +4496,7 @@
 "راهنماها":["Guides", "Guider"],
 "قوانین، تابلوها و حق تقدم به زبان ساده، و واژه‌های دانمارکی آزمون.":["Rules, signs and right of way in plain words, and the Danish words of the test.", "Regler, tavler og vigepligt i enkle ord, og prøvens danske ord."],
 "{0} سؤال در {1} دقیقه؛ با حداکثر {2} اشتباه قبول می‌شوید.":["{0} questions in {1} minutes; you pass with at most {2} mistakes.", "{0} spørgsmål på {1} minutter; du består med højst {2} fejl."],
+"{0} سؤال در {1} دقیقه":["{0} questions in {1} minutes", "{0} spørgsmål på {1} minutter"],
 "مثل آزمون واقعی.":["Like the real test.", "Som den rigtige prøve."],
 "زبان و آزمون":["Language and test", "Sprog og prøve"]
 }

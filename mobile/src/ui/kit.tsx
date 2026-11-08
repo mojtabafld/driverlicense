@@ -491,7 +491,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number, atEnd: boolean) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
-  const box = { paddingTop: hero ? 6 : ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
+  const box = { paddingTop: hero ? 6 : 0, paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
@@ -515,12 +515,17 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
     <Backdrop>
       <PageIn>
       <View style={{ flex: 1 }}>
+      {/* All four tabs keep their header outside the scrolling body. Its natural height includes the safe area. */}
+      <View testID="main-page-header" style={{ flexShrink: 0, backgroundColor: c.bg }}>
+        {hero ? top : <View style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, paddingBottom: gap,
+          maxWidth: 980, width: '100%', alignSelf: 'center' }}>{head}</View>}
+      </View>
       {fill
-        ? <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
-            {top}<View style={[box, { flex: 1, paddingBottom: (barGap != null ? TAB_BAR_H + barGap : BAR_ROOM) + ins.bottom }]}>{head}{children}</View>
+        ? <ScrollView ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={[box, { flex: 1, paddingBottom: (barGap != null ? TAB_BAR_H + barGap : BAR_ROOM) + ins.bottom }]}>{children}</View>
           </ScrollView>
-        : <ScrollView ref={ref} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
-            {top}<View style={box}>{head}{children}</View>
+        : <ScrollView ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
+            <View style={box}>{children}</View>
           </ScrollView>}
       </View>
       </PageIn>
