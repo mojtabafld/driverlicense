@@ -17,7 +17,7 @@ import { Icon, type IconName } from './icon';
 import { M3Button, T, tap } from './kit';
 import { useTabLook } from './tabs/tab-look';
 import { useNewTest } from './new-test';
-import { useColors, useM3 } from './theme';
+import { m3Scheme, useColors, useIsDark, useM3 } from './theme';
 
 export function Head({ title, text }: { title: string; text?: string }) {
   const c = useColors();
@@ -83,6 +83,7 @@ function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<
 
 export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   const c = useColors(), m = useM3(), tab = useTabLook();
+  const signsScheme = m3Scheme(useIsDark());
   const { done } = useCourseProgress();
   // The chapter you are on: the first with a lesson not done (the last when all are).
   const chapter = COURSE.find(ch => ch.lessons.some(l => !done[l.id])) ?? COURSE[COURSE.length - 1];
@@ -121,10 +122,10 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
       </View>
 
       {/* A featured guide, as Knowledge's book block: the road signs */}
-      <View style={{ borderRadius: 28, backgroundColor: c.surface, padding: 22, gap: 14 }}>
-        <Cookie size={64} color={tab.indicator}><Icon name="sign" size={32} color={tab.onIndicator} /></Cookie>
-        <T style={{ fontSize: 24, lineHeight: 34, fontWeight: '500' }}>{tr('علائم رانندگی دانمارک')}</T>
-        <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{tr('همه‌ی تابلوها و خط‌کشی‌های آزمون، با معنی و نکته‌ی هر کدام؛ گروه‌به‌گروه، با تصویر.')}</T>
+      <View style={{ borderRadius: 28, backgroundColor: signsScheme?.container ?? c.surface, padding: 22, gap: 14 }}>
+        <Cookie size={64} color={signsScheme?.primary ?? tab.indicator}><Icon name="sign" size={32} color={signsScheme?.onPrimary ?? tab.onIndicator} /></Cookie>
+        <T style={{ fontSize: 24, lineHeight: 34, fontWeight: '500', color: signsScheme?.onContainer ?? c.text }}>{tr('علائم رانندگی دانمارک')}</T>
+        <T style={{ fontSize: 14.5, lineHeight: 24, color: signsScheme?.onContainer ?? c.muted }}>{tr('همه‌ی تابلوها و خط‌کشی‌های آزمون، با معنی و نکته‌ی هر کدام؛ گروه‌به‌گروه، با تصویر.')}</T>
         <View style={{ alignItems: 'flex-start' }}>
           <M3Button kind="outlined" m={m} icon="sign" label={tr('دیدن تابلوها')} onPress={() => router.push('/signs')} />
         </View>
