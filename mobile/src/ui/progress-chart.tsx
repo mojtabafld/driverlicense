@@ -180,7 +180,7 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
                 {/* A tap between the bars clears the pick. */}
                 <Pressable onPress={() => { if (onBlank) onBlank(); else setSel(null); }} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
                 <Svg width={CW} height={H} pointerEvents="none">
-                  {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} strokeOpacity={ARC ? 0.7 : 1} />)}
+                  {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} strokeOpacity={ARC ? 0.7 : 1} strokeDasharray={ARC ? '4 4' : undefined} />)}
                   <Defs>
                     <LinearGradient id="pcArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(ARC ? lo : 0))} gradientUnits="userSpaceOnUse">
                       <Stop offset="0" stopColor={c.forest} stopOpacity={ARC ? 0.38 : 0.32} />
