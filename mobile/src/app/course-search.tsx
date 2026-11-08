@@ -12,7 +12,8 @@ import { ASK_ON, localSearch, type SearchItem, type SearchKind } from '@/lib/sea
 import { Icon, type IconName } from '@/ui/icon';
 import { Card, Enter, T, physicalAlign, tap } from '@/ui/kit';
 import { SubPage } from '@/ui/sub-page';
-import { useColors, useIsDark } from '@/ui/theme';
+import { useColors } from '@/ui/theme';
+import { useSearchStyle } from '@/ui/search-style';
 
 const KIND: Record<SearchKind, { icon: IconName; label: string }> = {
   lesson: { icon: 'learn', label: 'درس دوره' },
@@ -59,22 +60,21 @@ function List({ items }: { items: SearchItem[] }) {
 }
 
 export default function CourseSearch() {
-  const c = useColors(), dark = useIsDark();
+  const c = useColors();
   const p = useLocalSearchParams<{ q?: string }>();
   const [q, setQ] = useState(String(p.q || ''));
   const [focus, setFocus] = useState(false);
+  const searchStyle = useSearchStyle(focus);
   const results = localSearch(q);
   const typed = q.trim().length >= 2 || /\d/.test(q);
   return (
     <SubPage title="جستجو در آموزش" subtitle="درس‌ها، قوانین، تابلوها و حق تقدم">
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingStart: 14, paddingEnd: 6, height: 56, borderRadius: 16, borderWidth: 1.5,
-        borderColor: focus ? c.accent : dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', backgroundColor: c.surface,
-        ...(Platform.OS === 'web' ? { boxShadow: focus ? `0 0 0 4px ${c.accentSoft}` : '0 1px 2px rgba(0,0,0,.05)' } as any : {}) }}>
-        <Icon name="search" size={20} color={focus ? c.link : c.faint} />
+      <View style={searchStyle}>
+        <Icon name="search" size={24} color={focus ? c.link : c.muted} />
         <TextInput value={q} onChangeText={v => setQ(v.slice(0, 200))} autoFocus={!p.q} returnKeyType="search"
           placeholder={tr('مثلاً: حق تقدم در میدان')} placeholderTextColor={c.muted} accessibilityLabel={tr('جستجو در آموزش')}
           onFocus={() => setFocus(true)} onBlur={() => setFocus(false)}
-          style={{ flex: 1, height: 52, fontSize: 16, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
+          style={{ flex: 1, minWidth: 0, height: 52, paddingVertical: 0, fontSize: 16, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
             writingDirection: RTL ? 'rtl' : 'ltr', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {q ? (
           <Pressable onPress={() => { tap(); setQ(''); }} hitSlop={8} accessibilityLabel={tr('پاک کردن')} style={{ padding: 6 }}>

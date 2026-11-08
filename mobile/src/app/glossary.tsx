@@ -16,6 +16,7 @@ import { useApp, useExamLang } from '@/lib/store';
 import { Icon, type IconName } from '@/ui/icon';
 import { ArcButton, Card, Segmented, T, physicalAlign, tap } from '@/ui/kit';
 import { Sheet, SheetScroll } from '@/ui/sheet';
+import { useSearchStyle } from '@/ui/search-style';
 import { SubPage } from '@/ui/sub-page';
 import { NoSwipe } from '@/ui/swipe';
 import { DA_FONT, radius, useColors } from '@/ui/theme';
@@ -192,6 +193,8 @@ export default function Glossary() {
   const [q, setQ] = useState(String(p.q || ''));
   const [tab, setTab] = useState<'all' | 'saved'>('all');
   const [cat, setCat] = useState<TermCat | null>(null);
+  const [searchFocus, setSearchFocus] = useState(false);
+  const searchStyle = useSearchStyle(searchFocus);
   const [sel, setSel] = useState<Term | null>(null); // the term whose lesson is open in the sheet
   // The bookmarked ones in the order they were saved (newest first), a renamed headword under its new word; the rest in
   // the glossary's order. `savedAs`: the word a term is bookmarked under, if it is.
@@ -213,11 +216,12 @@ export default function Glossary() {
   };
   return (
     <SubPage title="واژه‌نامه‌ی آزمون" subtitle="اصطلاح‌های دانمارکی آزمون تئوری">
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, height: 50, borderRadius: 14, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface }}>
-        <Icon name="search" size={18} color={c.faint} />
+      <View style={searchStyle}>
+        <Icon name="search" size={24} color={searchFocus ? c.link : c.muted} />
         <TextInput value={q} onChangeText={v => setQ(v.slice(0, 60))} placeholder={tr('یک کلمه بنویسید، دانمارکی یا فارسی')} placeholderTextColor={c.muted}
+          onFocus={() => setSearchFocus(true)} onBlur={() => setSearchFocus(false)}
           accessibilityLabel={tr('جستجو در واژه‌نامه')} autoCapitalize="none" autoCorrect={false}
-          style={{ flex: 1, height: 46, fontSize: 16, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
+          style={{ flex: 1, minWidth: 0, height: 52, paddingVertical: 0, fontSize: 16, color: c.text, fontFamily: RTL ? 'Vazirmatn-400' : undefined, textAlign: physicalAlign(RTL ? 'right' : 'left'),
             writingDirection: RTL ? 'rtl' : 'ltr', ...(Platform.OS === 'web' ? { outlineStyle: 'none' } as any : {}) }} />
         {q ? <Pressable onPress={() => { tap(); setQ(''); }} hitSlop={8} accessibilityLabel={tr('پاک کردن')}><Icon name="xmark" size={16} color={c.faint} /></Pressable> : null}
       </View>
