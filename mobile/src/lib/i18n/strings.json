@@ -4489,5 +4489,12 @@
 "بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. {1} سؤالی که اشتباه جواب داده‌اید را دوباره تمرین کنید تا این عدد بالا برود.":["Based on your last {0} answers in random tests. Practise the {1} questions you got wrong again to raise it.", "Baseret på dine seneste {0} svar i tilfældige prøver. Øv de {1} spørgsmål, du svarede forkert på, igen for at hæve det."],
 "بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. با آزمون‌های بیشتر دقیق‌تر می‌شود.":["Based on your last {0} answers in random tests. More tests make it more accurate.", "Baseret på dine seneste {0} svar i tilfældige prøver. Flere prøver gør det mere præcist."],
 "بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.":["It is estimated after your first test: take a few random tests to see how close you are to passing.", "Det beregnes efter din første prøve: tag nogle tilfældige prøver og se, hvor tæt du er på at bestå."],
-"تمرین {0} اشتباه":["Practise {0} mistakes", "Øv {0} fejl"]
+"تمرین {0} اشتباه":["Practise {0} mistakes", "Øv {0} fejl"],
+"فصل به فصل، مثل آزمون. {0} از {1} درس را تمام کرده‌اید.":["Chapter by chapter, like the test. You have finished {0} of {1} lessons.", "Kapitel for kapitel, som prøven. Du har gennemført {0} af {1} lektioner."],
+"فصل به فصل، مثل آزمون: {0} درس در {1} فصل، هر کدام با تمرین و آزمون کوتاه.":["Chapter by chapter, like the test: {0} lessons in {1} chapters, each with practice and a short test.", "Kapitel for kapitel, som prøven: {0} lektioner i {1} kapitler, hver med øvelser og en kort prøve."],
+"همه‌ی فصل‌ها":["All chapters", "Alle kapitler"],
+"راهنماها":["Guides", "Guider"],
+"قوانین، تابلوها و حق تقدم به زبان ساده، و واژه‌های دانمارکی آزمون.":["Rules, signs and right of way in plain words, and the Danish words of the test.", "Regler, tavler og vigepligt i enkle ord, og prøvens danske ord."],
+"{0} سؤال در {1} دقیقه؛ با حداکثر {2} اشتباه قبول می‌شوید.":["{0} questions in {1} minutes; you pass with at most {2} mistakes.", "{0} spørgsmål på {1} minutter; du består med højst {2} fejl."],
+"مثل آزمون واقعی.":["Like the real test.", "Som den rigtige prøve."]
 }
