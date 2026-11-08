@@ -19,7 +19,8 @@ export function StatCarousel({ items, dense, fill }: { items: StatItem[]; dense?
   const c = useColors(), tab = useTabLook(), m = useM3();
   const [w, setW] = useState(0), [at, setAt] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
-  const H = dense ? 92 : 108, GAP = 10, PEEK = 50, sign = RTL ? 1 : -1;
+  // (taller, Mojtaba 2026-11-08: 92 / 108 before)
+  const H = dense ? 116 : 140, GAP = 10, PEEK = 50, sign = RTL ? 1 : -1;
   // A card leaves room at both sides for an arrow over the cards around it: the first at the start, the last at the
   // end, the others PEEK from the start.
   const W = Math.max(180, w - PEEK * 2), stepW = W + GAP;
@@ -66,10 +67,10 @@ export function StatCarousel({ items, dense, fill }: { items: StatItem[]; dense?
                 backgroundColor: fill ?? c.surface2, opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
               <View style={{ flex: 1, gap: 3 }}>
-                <T numberOfLines={1} style={{ fontSize: dense ? 18 : 19.5, lineHeight: dense ? 26 : 28, fontWeight: '500', color: it.color ?? c.text }}>{it.title}</T>
+                <T numberOfLines={1} style={{ fontSize: dense ? 19 : 21, lineHeight: dense ? 28 : 30, fontWeight: '500', color: it.color ?? c.text }}>{it.title}</T>
                 <T numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 20, color: c.muted }}>{it.sub}</T>
               </View>
-              <Cookie size={dense ? 48 : 56} color={tab.indicator}><Icon name={it.icon} size={dense ? 24 : 28} color={tab.onIndicator} /></Cookie>
+              <Cookie size={dense ? 56 : 64} color={tab.indicator}><Icon name={it.icon} size={dense ? 28 : 32} color={tab.onIndicator} /></Cookie>
             </Pressable>
           ))}
         </Animated.View>
