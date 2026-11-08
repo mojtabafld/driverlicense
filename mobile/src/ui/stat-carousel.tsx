@@ -2,8 +2,8 @@
 // «Material Design icon guidelines» carousel): each card a title, a line under it and a cookie tile with its icon; the
 // next card peeks in at the end; round arrows at the sides move one card back or on, and a swipe does the same.
 // Laid out left to right whatever the language, the first card at the reading start (the right in Persian).
-import { useRef, useState } from 'react';
-import { Animated, Easing, PanResponder, Platform, Pressable, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, PanResponder, Platform, Pressable, View } from 'react-native';
 
 import { RTL, tr } from '@/lib/i18n';
 import { Cookie } from './cookie';
@@ -25,24 +25,64 @@ export function StatCarousel({ items, dense, fill }: { items: StatItem[]; dense?
   // end, the others PEEK from the start.
   const W = Math.max(180, w - PEEK * 2), stepW = W + GAP;
   const offset = (i: number) => i * stepW - (i === 0 ? 0 : i === items.length - 1 ? w - W : PEEK);
-  const go = (i: number) => {
+  // Smooth (Mojtaba 2026-11-08): the row follows the finger, a little stiffer past the first and last card, and lets
+  // go into a spring that carries on the swipe's own speed, settling on the card nearest to where the swipe was
+  // heading (one card on at most).
+  const go = (i: number, velocity = 0) => {
     const to = Math.max(0, Math.min(items.length - 1, i));
     setAt(to);
-    Animated.timing(x, { toValue: offset(to) * sign, duration: 280, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+    Animated.spring(x, { toValue: offset(to) * sign, velocity, stiffness: 170, damping: 24, mass: 1, overshootClamping: false,
+      restDisplacementThreshold: 0.5, restSpeedThreshold: 0.5, useNativeDriver: Platform.OS !== 'web' }).start();
   };
   const atRef = useRef(0); atRef.current = at;
   const offRef = useRef(offset); offRef.current = offset;
+  const goRef = useRef(go); goRef.current = go;
+  const nRef = useRef(items.length); nRef.current = items.length;
+  const start = useRef(0), dragged = useRef(0);  // (a drag's end is not a tap on the card under it)
   const pan = useRef(PanResponder.create({
-    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.3,
-    onPanResponderMove: (_, g) => x.setValue(offRef.current(atRef.current) * sign + g.dx),
-    onPanResponderRelease: (_, g) => {
-      // towards the end of the reading direction brings the next card (to the left in Persian, to the right in English)
-      const forward = RTL ? g.dx > 40 : g.dx < -40, back = RTL ? g.dx < -40 : g.dx > 40;
-      if (forward || back) tap();
-      go(atRef.current + (forward ? 1 : back ? -1 : 0));
+    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 8 && Math.abs(g.dx) > Math.abs(g.dy) * 1.2,
+    onPanResponderTerminationRequest: () => false,
+    onPanResponderGrant: () => { x.stopAnimation(v => { start.current = v; }); },
+    onPanResponderMove: (_, g) => {
+      const lo = Math.min(0, offRef.current(nRef.current - 1) * sign), hi = Math.max(0, offRef.current(nRef.current - 1) * sign);
+      let v = start.current + g.dx;
+      if (v < lo) v = lo - (lo - v) * 0.35; else if (v > hi) v = hi + (v - hi) * 0.35;  // (resistance past the ends)
+      x.setValue(v);
     },
-    onPanResponderTerminate: () => go(atRef.current),
+    onPanResponderRelease: (_, g) => {
+      // where the swipe was heading (its position plus a moment of its speed), then the card nearest to it, one on at most
+      const aim = start.current + g.dx + g.vx * 220;
+      let best = 0;
+      for (let i = 1; i < nRef.current; i++) if (Math.abs(offRef.current(i) * sign - aim) < Math.abs(offRef.current(best) * sign - aim)) best = i;
+      const to = Math.max(atRef.current - 1, Math.min(atRef.current + 1, best));
+      if (to !== atRef.current) tap();
+      if (Math.abs(g.dx) > 6) dragged.current = Date.now();
+      goRef.current(to, g.vx);
+    },
+    onPanResponderTerminate: () => goRef.current(atRef.current),
   })).current;
+  // On the web a trackpad's or mouse's sideways scroll moves it a card at a time too (vertical scrolling stays the page's).
+  const box = useRef<View>(null);
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const el = box.current as unknown as HTMLElement | null;
+    if (!el || !el.addEventListener) return;
+    let sum = 0, until = 0;
+    const wheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      if (Date.now() < until) return;
+      sum += e.deltaX;
+      if (Math.abs(sum) > 40) {
+        // scrolling right brings what is to the right: the next card in English, the one before in Persian
+        const step = (sum > 0) !== RTL ? 1 : -1;
+        sum = 0; until = Date.now() + 450;
+        goRef.current(atRef.current + step);
+      }
+    };
+    el.addEventListener('wheel', wheel, { passive: false });
+    return () => el.removeEventListener('wheel', wheel);
+  }, [w]);
   const arrow = (next: boolean) => {
     const show = next ? at < items.length - 1 : at > 0;
     if (!show) return null;
@@ -58,11 +98,11 @@ export function StatCarousel({ items, dense, fill }: { items: StatItem[]; dense?
     );
   };
   return (
-    <View onLayout={e => setW(e.nativeEvent.layout.width)} style={{ height: H, overflow: 'hidden', direction: 'ltr' } as any} {...pan.panHandlers}>
+    <View ref={box} onLayout={e => setW(e.nativeEvent.layout.width)} style={{ height: H, overflow: 'hidden', direction: 'ltr', ...(Platform.OS === 'web' ? { touchAction: 'pan-y' } : {}) } as any} {...pan.panHandlers}>
       {w ? (
         <Animated.View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: w, transform: [{ translateX: x }] }}>
           {items.map((it, i) => (
-            <Pressable key={i} disabled={!it.onPress} onPress={() => { tap(); it.onPress?.(); }} accessibilityRole={it.onPress ? 'button' : undefined} accessibilityLabel={it.label}
+            <Pressable key={i} disabled={!it.onPress} onPress={() => { if (Date.now() - dragged.current < 400) return; tap(); it.onPress?.(); }} accessibilityRole={it.onPress ? 'button' : undefined} accessibilityLabel={it.label}
               style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, left: RTL ? w - W - i * stepW : i * stepW, borderRadius: 24,
                 backgroundColor: fill ?? c.surface2, opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
