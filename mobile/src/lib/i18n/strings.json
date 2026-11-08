@@ -4478,5 +4478,12 @@
 "دیدن تابلوها":["See the signs", "Se tavlerne"],
 "واژه‌نامه":["Glossary", "Ordliste"],
 "واژه‌های دانمارکی که در آزمون می‌بینید":["Danish words you will meet in the test", "Danske ord, du møder i prøven"],
-"همه‌ی واژه‌ها":["All words", "Alle ord"]
+"همه‌ی واژه‌ها":["All words", "Alle ord"],
+"آزمون تئوری":["The theory test", "Teoriprøven"],
+"آزمون واقعی {0} سؤال دارد و برای قبولی دست‌کم {1} پاسخ باید درست باشد. هر سؤال یک تصویر و چند جمله دارد که درست یا نادرست بودن هر کدام را باید بگویید.":["The real test has {0} questions, and you pass with at least {1} right. Each question has a picture and a few statements, and you say whether each is right or wrong.", "Den rigtige prøve har {0} spørgsmål, og du består med mindst {1} rigtige. Hvert spørgsmål har et billede og nogle udsagn, og du skal sige, om hvert er rigtigt eller forkert."],
+"{0} سؤال تصادفی، مثل آزمون واقعی":["{0} random questions, like the real test", "{0} tilfældige spørgsmål, som den rigtige prøve"],
+"حداکثر {0} اشتباه برای قبولی":["At most {0} mistakes to pass", "Højst {0} fejl for at bestå"],
+"سؤال‌هایی که دیده‌اید کنار گذاشته می‌شوند":["Questions you have seen are left out", "Spørgsmål, du har set, udelades"],
+"نتیجه و مرور همه‌ی پاسخ‌ها بعد از آزمون":["Your result and every answer reviewed afterwards", "Dit resultat og alle svar gennemgået bagefter"],
+"شروع آزمون تصادفی {0} سؤالی":["Start a random {0}-question test", "Start en tilfældig prøve med {0} spørgsmål"]
 }

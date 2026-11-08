@@ -1,20 +1,21 @@
 // The home page's sections under the chart (Mojtaba 2026-11-08, after fonts.google.com/knowledge): «مباحث» as chips that
 // scroll sideways (its «Browse topics»), the chapter you are on as a module (its title, its line, its lessons with a tick
 // for each one done and «همه‌ی درس‌ها», as Knowledge's modules and «View all articles»), a featured guide (as its book
-// block: the road signs) and a few words from the glossary («View all glossary terms»).
+// block: the road signs) and the tests: what the real one is like and a random 25-question test (in place of the
+// glossary since 2026-11-08).
 import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
-import { GLOSSARY } from '@/lib/glossary';
-import { UI_LANG, tr } from '@/lib/i18n';
-import { faNum } from '@/lib/logic';
+import { t, tr } from '@/lib/i18n';
+import { FULL, faNum, passMin } from '@/lib/logic';
 import { Cookie } from './cookie';
 import { Icon, type IconName } from './icon';
 import { M3Button, T, tap } from './kit';
 import { useTabLook } from './tabs/tab-look';
-import { DA_FONT, useColors, useM3 } from './theme';
+import { useNewTest } from './new-test';
+import { useColors, useM3 } from './theme';
 
 function Head({ title, text }: { title: string; text?: string }) {
   const c = useColors();
@@ -31,8 +32,7 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   const { done } = useCourseProgress();
   // The chapter you are on: the first with a lesson not done (the last when all are).
   const chapter = COURSE.find(ch => ch.lessons.some(l => !done[l.id])) ?? COURSE[COURSE.length - 1];
-  // A few words from the glossary, a different set each day.
-  const day = Math.floor(Date.now() / 864e5), words = Array.from({ length: 4 }, (_, i) => GLOSSARY[(day * 4 + i * 37) % GLOSSARY.length]);
+  const test = useNewTest();
   const open = (go: () => void) => () => { tap(); go(); };
   const chip = (label: string, onPress: () => void, icon?: IconName) => (
     <Pressable key={label} onPress={open(onPress)} accessibilityRole="button"
@@ -89,19 +89,22 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
         </View>
       </View>
 
-      {/* A few words from the glossary */}
+      {/* The tests (Mojtaba 2026-11-08, in place of the glossary): what the real test is like, and a random 25-question
+          test started from here as the exam tab's start button does (new questions first, the free tests' limit). */}
       <View style={{ gap: 12 }}>
-        <Head title={tr('واژه‌نامه')} text={tr('واژه‌های دانمارکی که در آزمون می‌بینید')} />
-        <View style={{ gap: 18, paddingHorizontal: 4 }}>
-          {words.map(w => (
-            <View key={w.da} style={{ gap: 4 }}>
-              <T raw style={{ fontSize: 17, lineHeight: 25, fontWeight: '500', fontFamily: DA_FONT }}>{w.da}</T>
-              <T raw style={{ fontSize: 14.5, lineHeight: 23, color: c.muted }}>{UI_LANG === 'fa' ? w.fa : w.en}</T>
+        <Head title={tr('آزمون تئوری')} text={t('آزمون واقعی {0} سؤال دارد و برای قبولی دست‌کم {1} پاسخ باید درست باشد. هر سؤال یک تصویر و چند جمله دارد که درست یا نادرست بودن هر کدام را باید بگویید.', faNum(FULL), faNum(passMin(FULL)))} />
+        <View style={{ borderRadius: 24, backgroundColor: c.surface, overflow: 'hidden' }}>
+          {([['exam', t('{0} سؤال تصادفی، مثل آزمون واقعی', faNum(FULL))], ['warning', t('حداکثر {0} اشتباه برای قبولی', faNum(FULL - passMin(FULL)))],
+            ['eyeSlash', tr('سؤال‌هایی که دیده‌اید کنار گذاشته می‌شوند')], ['checkCircle', tr('نتیجه و مرور همه‌ی پاسخ‌ها بعد از آزمون')]] as [IconName, string][]).map(([icon, text], i) => (
+            <View key={text} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 14, borderTopWidth: i ? 1 : 0, borderTopColor: c.line }}>
+              <Icon name={icon} size={20} color={c.muted} />
+              <T style={{ flex: 1, fontSize: 15, lineHeight: 23 }}>{text}</T>
             </View>
           ))}
         </View>
         <View style={{ alignItems: 'center' }}>
-          <M3Button kind="outlined" m={m} icon="translate" label={tr('همه‌ی واژه‌ها')} onPress={() => router.push('/glossary')} />
+          <M3Button kind="outlined" m={m} icon="play" big onPress={test.start}
+            label={test.randomLeft ? t('شروع آزمون تصادفی {0} سؤالی', faNum(test.count || FULL)) : tr('فعال کردن نسخه‌ی ویژه')} />
         </View>
       </View>
     </View>
