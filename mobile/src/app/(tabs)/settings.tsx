@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { getTransLang, RTL, UI_LANG, t as fmt, type UiLang } from '@/lib/i18n';
+import { getTransLang, RTL, UI_LANG, t as fmt, tr, type UiLang } from '@/lib/i18n';
 import { PROVE_PICS } from '@/lib/config';
 import { faNum, mistakeIds, pctOf } from '@/lib/logic';
 import { fmtDay } from '@/lib/names';
@@ -14,7 +14,8 @@ import { Confirm } from '@/ui/confirm';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { Card, OkTick, Screen, Segmented, T, physical, tap } from '@/ui/kit';
-import { SOFT, useColors, useTheme } from '@/ui/theme';
+import { SOFT, useColors, useM3, useTheme } from '@/ui/theme';
+import { Head } from '@/ui/home-knowledge';
 import { VoiceChoice } from '@/ui/speak';
 import { Toggle } from '@/ui/toggle';
 import { useCoachMode } from '@/lib/coach-mode';
@@ -24,11 +25,29 @@ import { DashboardIcon } from '@/ui/dashboard-art';
 import { useDashboardLook } from '@/ui/dashboard-style';
 import { pctText } from '@/ui/activity';
 
+// The main site's settings in the home page's language (Mojtaba 2026-11-08): each group a section, its title large
+// over a rounded surface that holds its rows; /app keeps its cards.
+function Group({ title, children, gap = 4 }: { title?: string; children: React.ReactNode; gap?: number }) {
+  const c = useColors();
+  if (PROVE_PICS) return <Card style={{ gap: gap + 6 }}>{title ? <T style={{ fontWeight: '700', fontSize: 16, marginBottom: 4 }}>{title}</T> : null}{children}</Card>;
+  return (
+    <View style={{ gap: 12, marginTop: 12 }}>
+      {title ? <Head title={tr(title)} /> : null}
+      <View style={{ borderRadius: 24, backgroundColor: c.surface, paddingHorizontal: 16, paddingVertical: 8, gap }}>{children}</View>
+    </View>
+  );
+}
+// A row's icon: on the main site a plain line icon in the primary, as the tiles'; /app keeps its tile.
+function RowIcon({ name, size = 34, color }: { name: IconName; size?: number; color?: string }) {
+  const m = useM3();
+  return PROVE_PICS ? <DashboardIcon name={name} size={size} color={color} /> : <View style={{ width: 28, alignItems: 'center' }}><Icon name={name} size={24} color={color ?? m.primary} /></View>;
+}
+
 function Row({ title, sub, right, icon }: { title: string; sub?: string; right: React.ReactNode; icon?: IconName }) {
   const c = useColors();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }}>
-      {icon ? <DashboardIcon name={icon} size={34} /> : null}
+      {icon ? <RowIcon name={icon} /> : null}
       <View style={{ flex: 1 }}>
         <T style={{ fontWeight: '700' }}>{title}</T>
         {sub ? <T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>{sub}</T> : null}
@@ -43,9 +62,9 @@ function LinkRow({ icon, title, sub, onPress, ok }: { icon: IconName; title: str
   const c = useColors(), look = useDashboardLook();
   return (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={title}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 10,
-        marginVertical: 3, borderRadius: SOFT ? 10 : 4, backgroundColor: look.row, opacity: pressed ? 0.7 : 1 })}>
-      <DashboardIcon name={icon} />
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: PROVE_PICS ? 10 : 2,
+        marginVertical: PROVE_PICS ? 3 : 0, borderRadius: SOFT ? 10 : 4, backgroundColor: PROVE_PICS ? look.row : 'transparent', opacity: pressed ? 0.7 : 1 })}>
+      <RowIcon name={icon} />
       <View style={{ flex: 1 }}>
         <T style={{ fontWeight: '700' }}>{title}</T>
         {/* `ok`: a round green tick before the line (premium is on). */}
@@ -66,8 +85,8 @@ function LangSettings() {
   const { settings } = useApp();
   return (
     <Pressable onPress={() => { tap(); router.push('/language'); }} accessibilityRole="button" accessibilityLabel="تنظیمات زبان"
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: SOFT ? 10 : 4, backgroundColor: look.row, opacity: pressed ? 0.7 : 1 })}>
-      <DashboardIcon name="translate" />
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: PROVE_PICS ? 10 : 2, paddingVertical: 10, borderRadius: SOFT ? 10 : 4, backgroundColor: PROVE_PICS ? look.row : 'transparent', opacity: pressed ? 0.7 : 1 })}>
+      <RowIcon name="translate" />
       <View style={{ flex: 1 }}>
         <T style={{ fontWeight: '700' }}>تنظیمات زبان</T>
         {/* (/app has only the exam's language) */}
@@ -104,7 +123,7 @@ export default function Settings() {
           «خروج از حساب»'s «Log out» / «Log ud» while Persian keeps the one word (Mojtaba 2026-10-19). */}
       <Confirm open={askOut} icon="exit" danger title="خروج از حساب؟" text="برای ادامه‌ی تمرین دوباره باید وارد حساب خود شوید. پیشرفت شما ذخیره می‌ماند."
         cancel="ماندن" ok={UI_LANG === 'fa' ? 'خروج' : fmt('خروج از حساب')} okIcon="exit" onCancel={() => setAskOut(false)} onOk={() => { setAskOut(false); logout(); }} />
-      <Card testID="settings-profile" style={{ gap: 12, padding: 20 }}>
+      <Card testID="settings-profile" style={{ gap: 12, padding: 20, ...(PROVE_PICS ? {} : { backgroundColor: 'transparent', borderWidth: 0, shadowOpacity: 0, elevation: 0, paddingHorizontal: 4 }) }}>
       <View style={{ alignItems: 'center', gap: 12, paddingTop: 6, paddingBottom: 4 }}>
         {!guest ? <Pressable onPress={() => { tap(); router.push('/account'); }} accessibilityRole="button" accessibilityLabel="حساب کاربری"
           style={({ pressed }) => ({ position: 'absolute', top: 0, ...physical({ right: 0 }), opacity: pressed ? 0.7 : 1 })}>
@@ -128,7 +147,7 @@ export default function Settings() {
       </View>
       {/* Main site: «نسخه‌ی ویژه» in the profile card, in the box where the tests, average and mistakes were (Mojtaba
           2026-11-05); without it (/app, or no payments) those numbers stay. */}
-      {!PROVE_PICS && showPrem ? premRow : (
+      {!PROVE_PICS && showPrem ? <View style={{ borderRadius: 24, backgroundColor: c.surface, paddingHorizontal: 16, paddingVertical: 4 }}>{premRow}</View> : (
       <View style={{ flexDirection: 'row', borderRadius: SOFT ? 10 : 4, backgroundColor: look.row, paddingVertical: 12 }}>
         {([
           ['آزمون‌ها', faNum(exams.length), 'exam'],
@@ -142,7 +161,7 @@ export default function Settings() {
       </View>
       )}
       </Card>
-      {!PROVE_PICS && !guest ? <Card style={{ gap: 8 }}>
+      {!PROVE_PICS && !guest ? <Group title="مربی هوشمند" gap={8}>
         {/* «حالت مربی» (Mojtaba 2026-10-24): the AI coach, under «نسخه‌ی ویژه»; for premium accounts, on unless turned off
             here (lib/coach-mode.ts); without premium the switch is faded and the line leads to the premium page. */}
         {!PROVE_PICS && !guest ? (
@@ -152,22 +171,22 @@ export default function Settings() {
               right={<Toggle label="حالت مربی" value={coach.on} disabled={!coach.allowed} onChange={v => { setSettings({ coach: v }); }} />} />
           </Pressable>
         ) : null}
-      </Card> : null}
+      </Group> : null}
       {/* /app: «نسخه‌ی ویژه» stays a card of its own. */}
       {PROVE_PICS && showPrem ? <Card style={{ gap: 4 }}>{premRow}</Card> : null}
       {/* One card: the look and the colour theme. */}
-      <Card style={{ gap: 10 }}>
-        <Row icon="settings" title="ظاهر" right={null} />
+      <Group title={PROVE_PICS ? undefined : 'ظاهر'} gap={10}>
+        {PROVE_PICS ? <Row icon="settings" title="ظاهر" right={null} /> : <View style={{ height: 4 }} />}
         <Segmented value={mode} onChange={setMode} options={[{ value: 'system', label: 'خودکار' }, { value: 'light', label: 'روشن' }, { value: 'dark', label: 'تیره' }]} />
         {/* The colour theme (main site and the Android app): ten named themes; a change reloads the app in it. */}
         {!PROVE_PICS ? (
           <View style={{ marginTop: 4, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 6 }}><PaletteRow /></View>
         ) : null}
-      </Card>
+      </Group>
       {/* The languages in one card (Mojtaba 2026-10-21): the app's first (main site: Persian, English or Danish, each named
           in its own language; a change reloads the page in it and is kept in the account too), then the exam's and the
           translation's, all three in «تنظیمات زبان», which slides open (Mojtaba 2026-10-23); the exam's other settings under it. */}
-      <Card style={{ gap: 10 }}>
+      <Group title={PROVE_PICS ? undefined : 'زبان و آزمون'} gap={10}>
         <LangSettings />
         <View style={{ height: 1, backgroundColor: c.line }} />
         {/* The read-aloud voice, when the server can read aloud: each option plays a sample in this language. */}
@@ -179,12 +198,11 @@ export default function Settings() {
         ) : null}
         {getTransLang() === (settings.lang ?? 'da') ? null : <Row icon="translate" title="ترجمه‌ی فارسی زیر گزینه‌ها" right={<Toggle label="ترجمه‌ی فارسی زیر گزینه‌ها" value={settings.showFa} onChange={v => { setSettings({ showFa: v }); }} />} />}
         <Row icon="clock" title="زمان‌سنج" right={<Toggle label="زمان‌سنج" value={settings.timer} onChange={v => { setSettings({ timer: v }); }} />} />
-      </Card>
+      </Group>
       {/* Notifications, under the exam's settings (Mojtaba 2026-10-18; main site on the web): reminders and a daily message (ui/notify-settings.tsx). */}
       {!PROVE_PICS ? <NotifySettings /> : null}
       {/* «راهنما»: how to use the app, reporting a problem, and the version. */}
-      <Card style={{ gap: 4 }}>
-        <T style={{ fontWeight: '700', fontSize: 16, marginBottom: 4 }}>راهنما</T>
+      <Group title="راهنما">
         {/* «دستگاه‌های من» (app/devices.tsx): where the account is signed in, and signing the others out. */}
         {!guest ? <LinkRow icon="phone" title="دستگاه‌های من" sub="دستگاه‌هایی که با این حساب وارد شده‌اند" onPress={() => router.push('/devices')} /> : null}
         {/* «Passkey» (app/passkeys.tsx): signing in with the device's own lock (Mojtaba 2026-11-06). */}
@@ -192,11 +210,11 @@ export default function Settings() {
         <LinkRow icon="help" title="راهنمای استفاده" sub="آزمون، آموزش، اشتباهات و امکانات اپ" onPress={() => router.push('/help')} />
         <LinkRow icon="bug" title="گزارش خطا" sub="مشکلی دیدید؟ برای ما بنویسید" onPress={() => router.push('/report')} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 }}>
-          <DashboardIcon name="info" />
+          <RowIcon name="info" />
           <T style={{ flex: 1, fontWeight: '700' }}>نسخه‌ی نرم‌افزار</T>
           <T style={{ color: c.muted, writingDirection: 'ltr' }}>{faNum(Constants.expoConfig?.version ?? '1.0.0')}</T>
         </View>
-      </Card>
+      </Group>
     </Screen>
   );
 }
