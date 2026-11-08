@@ -13,50 +13,38 @@ import { toPremium, useFree } from '@/lib/free';
 import { useApp } from '@/lib/store';
 import { Icon, type IconName } from './icon';
 import { Card, L, T, tap } from './kit';
-import { useColors, useM3 } from './theme';
+import { useColors } from './theme';
+import { LearningTile } from './learning-tile';
+import { iconOf } from './home-knowledge';
 import { ZoomableImage } from './zoom';
 
 export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same in both themes
 
-// Material cards share the home's surfaces and type, with a thumbnail, description and count at every screen size.
+// Use Learn's outlined tiles, bare Material icons and typography for both guide category grids.
 // `limit`: only the first groups (the page offers the rest).
 export function CatGrid({ kind, cats, limit }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[]; limit?: number }) {
-  const c = useColors(), m = useM3();
+  const c = useColors();
   const { firstOk } = useFree();
-  const open = (g: { id: string }, i: number) => { tap(); if (!firstOk(i)) return toPremium(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
+  const open = (g: { id: string }, i: number) => { if (!firstOk(i)) return toPremium(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
   const count = (g: { items: unknown[] }) => (
     <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: c.surface2 }}>
       <T style={{ fontSize: 11.5, fontWeight: '600', color: c.muted }}>{faNum(g.items.length)} مورد</T>
     </View>
   );
   if (!PROVE_PICS) return (
-    <View style={{ gap: 12 }} testID="guide-categories">
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }} testID="guide-categories">
       {cats.slice(0, limit ?? cats.length).map((g, i) => (
-        <Card key={g.id} style={{ padding: 0, overflow: 'hidden' }} testID={`guide-category-${g.id}`}>
-          <Pressable onPress={() => open(g, i)} accessibilityRole="button" accessibilityLabel={tr(`${g.title}، ${faNum(g.items.length)} مورد`)}
-            style={({ pressed }) => ({ padding: 16, gap: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-              <View style={{ width: 72, height: 72, borderRadius: 16, backgroundColor: c.surface2, padding: 6, overflow: 'hidden', justifyContent: 'center' }}>
-                <GuideImage k={g.thumb} aspect={4 / 3} radius={12} compact size="m" fallbackIcon={kind === 'priority' ? 'priority' : 'sign'} />
-              </View>
-              <View style={{ flex: 1, gap: 6 }}>
-                <T style={{ fontSize: 17, lineHeight: 25, fontWeight: '500' }}>{g.title}</T>
-                <T style={{ fontSize: 13, lineHeight: 20, color: c.muted }}>{g.blurb}</T>
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              {count(g)}
-              <Icon name={firstOk(i) ? 'arrowLeft' : 'lock'} size={20} color={firstOk(i) ? m.primary : c.muted} />
-            </View>
-          </Pressable>
-        </Card>
+        <LearningTile key={g.id} icon={g.id === 'A' ? 'warning' : iconOf(g.title)} title={g.title} text={g.blurb}
+          label={`${g.title}، ${faNum(g.items.length)} مورد`} onPress={() => open(g, i)} locked={!firstOk(i)} testID={`guide-category-${g.id}`}>
+          <T style={{ fontSize: 11.5, lineHeight: 17, color: c.muted }}>{faNum(g.items.length)} مورد</T>
+        </LearningTile>
       ))}
     </View>
   );
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
       {cats.map((g, i) => (
-        <Pressable key={g.id} onPress={() => open(g, i)}
+        <Pressable key={g.id} onPress={() => { tap(); open(g, i); }}
           accessibilityRole="button" accessibilityLabel={`${g.title}، ${faNum(g.items.length)} مورد`}
           style={({ pressed }) => ({ width: '48.4%', opacity: pressed ? 0.85 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <Card style={{ padding: 0, overflow: 'hidden', flex: 1 }}>
