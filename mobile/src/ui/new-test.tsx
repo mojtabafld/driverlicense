@@ -63,13 +63,11 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
   const Setup = ARC ? View : Card;
   return (
     <>
-    {/* One card (Mojtaba 2026-10-29): the progress (after a picture he sent; at 0% before the first answer too) on top,
-        a thin line, then the random test. */}
+    {/* Test setup and its start action come first; progress and daily activity follow below. */}
     {/* (the main site: no box round it, on the page itself, in sections as the home page's; Mojtaba 2026-11-08) */}
     <Setup testID="exam-setup" style={{ flex: 1, gap: tight || level ? (level >= 3 ? 7 : 10) : 14, ...(ARC
       ? { backgroundColor: 'transparent', borderWidth: 0, shadowOpacity: 0, elevation: 0, paddingVertical: 4, paddingHorizontal: 4 }
       : { paddingVertical: level >= 3 ? 10 : level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }) }}>
-      <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
       {/* (the smallest phones: no line, the card's gaps part the two halves) */}
       {ARC ? (
         // The random test as a section, its title and what the chosen size means (Mojtaba 2026-11-08)
@@ -111,10 +109,11 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
           ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
         </View>
       ) : null}
-      {/* (Premium: no «tested on … of … questions» line here any more; the progress card above says it. Mojtaba 2026-10-29) */}
+      {/* (Premium: no «tested on … of … questions» line here any more; the progress card below says it. Mojtaba 2026-10-29) */}
       {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
         : count ? (ARC ? <ArcButton label={t('شروع آزمون {0} سؤالی', faNum(count))} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
           : null}
+      <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
     </Setup>
     </>
   );
