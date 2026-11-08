@@ -1,124 +1,64 @@
-// The exam tab's «آزمون‌های روزانه» chart, under the counts of right, wrong and unanswered (Mojtaba 2026-10-31, after a
-// picture he sent): how many tests were taken on each of the last seven days (Copenhagen's days; lessons' tests not
-// counted), as a smooth line over a soft fill, a point for each day, a light scale at the side, the days under
-// it, and the average a day in the head; in the theme's accent colour. One day is picked (at first the busiest, else today): a thin line down to it
-// and a bubble with its date and count; a tap on another day picks it. Time runs left to right in every language.
-// `height`: the drawing's height (the exam tab makes it smaller on shorter screens).
-import { useMemo, useState } from 'react';
+// The last seven Copenhagen calendar days, shown as an accessible Material bar chart.
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { RTL, t } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { dayLabel, dayOf } from './date-pick';
-import { HomeChartIcon } from './chart-icon';
 import { T, tap } from './kit';
-import { useColors, useIsDark } from './theme';
+import { useColors, useM3 } from './theme';
 
 const DAYS = 7, DAY = 864e5;
-const LABEL_W = 26, PAD_X = 10, TOP = 8, BOTTOM = 22;
 
-// A smooth line through the points (monotone, so it never swings above the busiest day or under zero).
-function smooth(p: [number, number][]): string {
-  if (p.length < 2) return p.length ? `M${p[0][0]},${p[0][1]}` : '';
-  const n = p.length, d: number[] = [], m: number[] = [];
-  for (let i = 0; i < n - 1; i++) d.push((p[i + 1][1] - p[i][1]) / (p[i + 1][0] - p[i][0]));
-  m.push(d[0]);
-  for (let i = 1; i < n - 1; i++) m.push(d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2);
-  m.push(d[n - 2]);
-  for (let i = 0; i < n - 1; i++) {
-    if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
-    const a = m[i] / d[i], b = m[i + 1] / d[i], s = a * a + b * b;
-    if (s > 9) { const k = 3 / Math.sqrt(s); m[i] = k * a * d[i]; m[i + 1] = k * b * d[i]; }
-  }
-  let out = `M${p[0][0]},${p[0][1]}`;
-  for (let i = 0; i < n - 1; i++) {
-    const h = (p[i + 1][0] - p[i][0]) / 3;
-    out += ` C${p[i][0] + h},${p[i][1] + m[i] * h} ${p[i + 1][0] - h},${p[i + 1][1] - m[i + 1] * h} ${p[i + 1][0]},${p[i + 1][1]}`;
-  }
-  return out;
-}
-
-// `fill` (the exam tab, Mojtaba 2026-11-05): the drawing takes the room its card leaves (at least 64 points), so the
-// card ends just above the tab bar on every screen.
-export function DailyTestsChart({ height: fixed = 120, fill = false }: { height?: number; fill?: boolean }) {
-  const c = useColors(), dark = useIsDark(), { attempts } = useApp();
-  // in the app's own colour (the theme chosen in the settings; Mojtaba 2026-10-31)
-  const tone = c.accent;
+export function DailyTestsChart({ height = 120 }: { height?: number }) {
+  const c = useColors(), m = useM3(), { attempts } = useApp();
+  const [today, setToday] = useState(() => dayOf(Date.now()));
+  useEffect(() => {
+    const timer = setInterval(() => setToday(dayOf(Date.now())), 60000);
+    return () => clearInterval(timer);
+  }, []);
   const days = useMemo(() => {
-    const now = Date.now(), keys = Array.from({ length: DAYS }, (_, i) => dayOf(now - (DAYS - 1 - i) * DAY));
-    const n = new Map(keys.map(k => [k, 0]));
-    for (const a of attempts) { if (a.mode === 'lesson') continue; const k = dayOf(a.at); if (n.has(k)) n.set(k, n.get(k)! + 1); }
-    return keys.map(k => ({ k, n: n.get(k)! }));
-  }, [attempts]);
-  const busiest = days.reduce((b, d, i) => (d.n > days[b].n ? i : b), DAYS - 1);
-  const [pick, setPick] = useState<number | null>(null), sel = pick ?? busiest;
-  const [w, setW] = useState(0), [boxH, setBoxH] = useState(0);
-  const height = fill ? Math.max(64, boxH || fixed) : fixed;
-  const avg = days.reduce((s, d) => s + d.n, 0) / DAYS;
-  // The scale: 0, half and the top, a round number at or above the busiest day.
-  const max = Math.max(...days.map(d => d.n)), top = max <= 4 ? 4 : max <= 10 ? Math.ceil(max / 2) * 2 : Math.ceil(max / 5) * 5;
-  const plotW = Math.max(0, w - LABEL_W - PAD_X * 2), plotH = height - TOP - BOTTOM;
-  const x = (i: number) => PAD_X + (plotW * i) / (DAYS - 1), y = (v: number) => TOP + plotH * (1 - v / top);
-  const pts = days.map((d, i) => [x(i), y(d.n)] as [number, number]);
-  const line = smooth(pts), area = line ? `${line} L${x(DAYS - 1)},${y(0)} L${x(0)},${y(0)} Z` : '';
-  // one decimal at most, with the Persian decimal sign in Persian
-  const one = (v: number) => { const x = (Math.round(v * 10) / 10).toString(); return RTL ? x.replace('.', '٫') : x; };
-  // The bubble above its point; when the point is too high for that, beside it (on the side with room).
-  const bubbleW = 92, bubbleH = 44, [sx, sy] = w ? pts[sel] : [0, 0], high = sy - bubbleH - 10 < 0;
-  const bx = !w ? 0 : high ? (sx + 12 + bubbleW <= PAD_X * 2 + plotW ? sx + 12 : sx - 12 - bubbleW) : Math.min(Math.max(sx - bubbleW / 2, 0), PAD_X * 2 + plotW - bubbleW);
-  const by = high ? Math.max(0, sy - bubbleH / 2) : sy - bubbleH - 10;
+    // Count calendar dates from noon UTC rather than subtracting 24 hours from local time across DST changes.
+    const end = Date.parse(`${today}T12:00:00Z`);
+    const keys = Array.from({ length: DAYS }, (_, i) => new Date(end - (DAYS - 1 - i) * DAY).toISOString().slice(0, 10));
+    const counts = new Map(keys.map(k => [k, 0]));
+    for (const attempt of attempts) {
+      if (attempt.mode === 'lesson') continue;
+      const k = dayOf(attempt.at);
+      if (counts.has(k)) counts.set(k, counts.get(k)! + 1);
+    }
+    return keys.map(k => ({ k, n: counts.get(k)! }));
+  }, [attempts, today]);
+  const [pick, setPick] = useState<string | null>(null);
+  const selected = days.find(d => d.k === pick);
+  const total = days.reduce((sum, d) => sum + d.n, 0), max = Math.max(1, ...days.map(d => d.n));
   return (
-    <View style={{ gap: 8, ...(fill ? { flex: 1, minHeight: 100 } : {}) }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <HomeChartIcon kind="daily" />
-        <T style={{ flex: 1, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>آزمون‌های روزانه</T>
-        <T style={{ fontSize: 12.5, color: c.muted }} numberOfLines={1}>{t('میانگین {0} در روز', faNum(one(avg)))}</T>
+    <View testID="daily-tests-card" style={{ borderRadius: 24, padding: 20, gap: 16, backgroundColor: c.surface }}>
+      <View style={{ gap: 3 }}>
+        <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>آزمون‌های روزانه</T>
+        <T testID="daily-tests-total" style={{ fontSize: 14, lineHeight: 22, color: c.muted }}>{t('{0} آزمون در ۷ روز گذشته', faNum(total))}</T>
       </View>
-      <View onLayout={e => { setW(e.nativeEvent.layout.width); if (fill) setBoxH(Math.round(e.nativeEvent.layout.height)); }}
-        style={(fill ? { flex: 1, minHeight: 64, direction: 'ltr' } : { height, direction: 'ltr' }) as any}>
-        {w ? (
-          <>
-            <Svg width={w} height={height}>
-              <Defs>
-                <LinearGradient id="dtArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(0))} gradientUnits="userSpaceOnUse">
-                  <Stop offset="0" stopColor={tone} stopOpacity={dark ? 0.35 : 0.25} />
-                  <Stop offset="1" stopColor={tone} stopOpacity={0} />
-                </LinearGradient>
-              </Defs>
-              {[0, top / 2, top].map(v => <Line key={v} x1={PAD_X} x2={PAD_X + plotW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} strokeDasharray={v ? '3 4' : undefined} />)}
-              <Line x1={pts[sel][0]} x2={pts[sel][0]} y1={TOP} y2={y(0)} stroke={c.line} strokeWidth={1.2} />
-              <Path d={area} fill="url(#dtArea)" />
-              <Path d={line} fill="none" stroke={tone} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-              {pts.map(([px, py], i) => (
-                <Circle key={i} cx={px} cy={py} r={i === sel ? 6 : 4} fill={i === sel ? tone : c.surface} stroke={i === sel ? c.surface : tone} strokeWidth={i === sel ? 3 : 2} />
-              ))}
-            </Svg>
-            {/* the scale's numbers at the side, the days under the drawing */}
-            {[0, top / 2, top].map(v => (
-              <T key={v} raw style={{ position: 'absolute', right: 0, width: LABEL_W - 4, top: y(v) - 8, fontSize: 10.5, lineHeight: 16, color: c.muted, textAlign: 'right' }}>{faNum(one(v))}</T>
-            ))}
-            {days.map((d, i) => (
-              <T key={d.k} raw style={{ position: 'absolute', left: pts[i][0] - 20, width: 40, top: height - 17, fontSize: 10.5, lineHeight: 16, textAlign: 'center',
-                color: i === sel ? c.text : c.muted, fontWeight: i === sel ? '700' : '400' }}>{faNum(Number(d.k.slice(8)))}</T>
-            ))}
-            {/* a tap anywhere over a day picks it */}
-            {days.map((d, i) => (
-              <Pressable key={`p${d.k}`} onPress={() => { tap(); setPick(i); }} accessibilityRole="button"
-                accessibilityLabel={`${dayLabel(d.k, { day: 'numeric', month: 'long' })}: ${t('{0} آزمون', faNum(d.n))}`}
-                style={{ position: 'absolute', top: 0, bottom: 0, left: pts[i][0] - plotW / (DAYS - 1) / 2, width: plotW / (DAYS - 1) }} />
-            ))}
-            {/* the picked day's bubble */}
-            <View pointerEvents="none" style={{ position: 'absolute', left: bx, top: by, width: bubbleW, height: bubbleH, justifyContent: 'center', paddingHorizontal: 8, borderRadius: 10,
-              backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, alignItems: 'center', direction: RTL ? 'rtl' : 'ltr',
-              shadowColor: '#000', shadowOpacity: dark ? 0.3 : 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 } as any}>
-              <T raw style={{ fontSize: 11, lineHeight: 15, color: c.muted }} numberOfLines={1}>{dayLabel(days[sel].k, { day: 'numeric', month: 'long' })}</T>
-              <T style={{ fontSize: 13, lineHeight: 18, fontWeight: '700' }} numberOfLines={1}>{t('{0} آزمون', faNum(days[sel].n))}</T>
-            </View>
-          </>
-        ) : null}
+      <View testID="daily-tests-bars" style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'flex-end', gap: 6 }}>
+        {days.map(d => {
+          const on = pick ? pick === d.k : d.k === today;
+          return (
+            <Pressable key={d.k} testID={`daily-bar-${d.k}`} onPress={() => { tap(); setPick(d.k); }} accessibilityRole="button" accessibilityState={{ selected: on }}
+              accessibilityLabel={`${dayLabel(d.k, { weekday: 'long', day: 'numeric', month: 'long' })}: ${t('{0} آزمون', faNum(d.n))}`}
+              style={({ pressed }) => ({ flex: 1, minWidth: 0, gap: 8, opacity: pressed ? 0.65 : 1 })}>
+              <View style={{ height: height + 28, alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                <T raw style={{ fontSize: 13, lineHeight: 20, fontWeight: '500', textAlign: 'center' }}>{faNum(d.n)}</T>
+                <View testID={`daily-bar-fill-${d.k}`} style={{ width: '78%', height: d.n ? height * d.n / max : 4, borderTopLeftRadius: 7, borderTopRightRadius: 7, borderBottomLeftRadius: 3, borderBottomRightRadius: 3,
+                  backgroundColor: d.n ? m.primary : c.line, opacity: on ? 1 : 0.85 }} />
+              </View>
+              <View style={{ minHeight: 26, borderRadius: 13, paddingHorizontal: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: d.k === today ? c.accentSoft : 'transparent' }}>
+                <T raw numberOfLines={1} style={{ fontSize: 10.5, lineHeight: 16, color: on || d.k === today ? m.primary : c.muted, textAlign: 'center', fontWeight: d.k === today ? '500' : '400' }}>{dayLabel(d.k, { weekday: RTL ? 'narrow' : 'short' })}</T>
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
+      {selected ? <T raw testID="daily-tests-selection" style={{ fontSize: 12, lineHeight: 19, color: c.muted }}>{dayLabel(selected.k, { day: 'numeric', month: 'long' })} · {t('{0} آزمون', faNum(selected.n))}</T> : null}
     </View>
   );
 }
