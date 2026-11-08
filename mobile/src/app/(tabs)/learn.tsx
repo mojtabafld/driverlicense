@@ -7,7 +7,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, type Href } from 'expo-router';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { API_URL, PROVE_BANK, PROVE_PICS } from '@/lib/config';
@@ -19,7 +19,8 @@ import { useApp } from '@/lib/store';
 import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
-import { Card, M3Button, Screen, T, tap } from '@/ui/kit';
+import { Card, M3Button, Screen, T } from '@/ui/kit';
+import { LearningTile } from '@/ui/learning-tile';
 import { Head, Tiles, iconOf } from '@/ui/home-knowledge';
 import { SearchBox } from '@/ui/search-box';
 import { ARC, useColors, useIsDark, useM3 } from '@/ui/theme';
@@ -98,19 +99,11 @@ function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title
 const CHAPTER_ICON: Record<string, IconName> = { ready: 'car', road: 'road', priority: 'priority', signs: 'sign', manoeuvres: 'parking',
   people: 'person', special: 'headlight', incidents: 'warning', final: 'exam' };
 function LearnSections() {
-  const c = useColors(), m = useM3();
+  const m = useM3();
   const { done } = useCourseProgress();
   const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
   const guide = (icon: IconName, title: string, text: string, href: Href) => (
-    <Pressable key={title} onPress={() => { tap(); router.push(href); }} accessibilityRole="button" accessibilityLabel={tr(title)}
-      style={({ pressed }) => ({ flexBasis: '47%', flexGrow: 1, minHeight: 150, borderRadius: 24, borderWidth: 1, borderColor: c.line, padding: 16, gap: 10,
-        justifyContent: 'flex-end', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-      <Icon name={icon} size={44} color={m.primary} />
-      <View style={{ gap: 2 }}>
-        <T numberOfLines={2} style={{ fontSize: 16, lineHeight: 23, fontWeight: '500' }}>{title}</T>
-        <T numberOfLines={2} style={{ fontSize: 13, lineHeight: 19, color: c.muted }}>{text}</T>
-      </View>
-    </Pressable>
+    <LearningTile key={title} icon={icon} title={title} text={text} onPress={() => router.push(href)} />
   );
   return (
     <View style={{ gap: 28 }}>
