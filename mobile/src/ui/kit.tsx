@@ -684,9 +684,9 @@ export function Button({ label, onPress, kind = 'primary', disabled, style, icon
 // primary (the line in the primary too, as on fonts.google.com); error / outlinedError: the same in the error colour.
 // A press lays the label's colour over it at 12% (Material's pressed state); disabled at 38%.
 export type M3Kind = 'filled' | 'outlined' | 'error' | 'outlinedError';
-export function M3Button({ label, onPress, icon, kind, disabled, style, big, m, busy, after, iconSize = 18 }: {
+export function M3Button({ label, onPress, icon, kind, disabled, style, big, compact, m, busy, after, iconSize = 18 }: {
   label: string; onPress: () => void; icon?: IconName; kind: M3Kind; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
-  m: ReturnType<typeof useM3>; busy?: boolean; after?: (fg: string) => React.ReactNode; iconSize?: number;
+  m: ReturnType<typeof useM3>; busy?: boolean; after?: (fg: string) => React.ReactNode; iconSize?: number; compact?: boolean;
 }) {
   // (every button outlined, as fonts.google.com's «View all articles» and «Download book»: Mojtaba 2026-11-07, «همه
   // دکمه‌ها به این سبک»; the kinds only choose the colour, the primary or the error)
@@ -694,13 +694,13 @@ export function M3Button({ label, onPress, icon, kind, disabled, style, big, m, 
   const tone = err ? m.error : m.primary;
   const fg = filled ? (err ? m.onError : m.onPrimary) : tone;
   return (
-    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled, busy }} style={style}>
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled, busy }} style={style} hitSlop={compact ? 2 : undefined}>
       {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
-        <View style={{ minHeight: big ? 52 : 46, borderRadius: 999, paddingHorizontal: 22, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+        <View style={{ minHeight: big ? 52 : compact ? 40 : 46, borderRadius: 999, paddingHorizontal: compact ? 16 : 22, flexDirection: 'row', gap: compact ? 6 : 8, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
           backgroundColor: filled ? tone : 'transparent', borderWidth: filled ? 0 : 1, borderColor: tone, opacity: disabled ? 0.38 : 1 }}>
           {pressed || hovered ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: fg, opacity: pressed ? 0.12 : 0.08 }} /> : null}
           {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={iconSize} color={fg} /> : null}
-          <T numberOfLines={1} style={{ fontSize: big ? 16 : 15, lineHeight: big ? 24 : 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
+          <T numberOfLines={1} style={{ fontSize: big ? 16 : compact ? 14 : 15, lineHeight: big ? 24 : compact ? 20 : 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
           {after?.(fg)}
         </View>
       )}
