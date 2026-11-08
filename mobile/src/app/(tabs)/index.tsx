@@ -216,7 +216,7 @@ export default function Home() {
   const [low, setLow] = useState(false);
   const fitEmpty = () => {
     if (exams.length || openTop.current == null || underH.current == null) return;
-    const room = Math.floor(height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - openTop.current - gap - underH.current);
+    const room = Math.floor(height - (TAB_BAR_H + gap + ins.bottom) - openTop.current - gap - underH.current);
     setGrow(g => (g && room < g[1] ? [g[0], Math.max(96, room)] : g));
     setLow(room < 140);
   };
@@ -236,7 +236,7 @@ export default function Home() {
         // Opened: the latest tests' «all» button shows «نمایش همه» for a moment, as on the exam page, once the page is
         // scrolled down to its end (Mojtaba 2026-10-20); at once when that card is already whole above the tab bar.
         if (finished && open) listBox.current?.measureInWindow((_x, y, _w, h) => {
-          if (h && y + h <= height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) + 1 && !atEnd.current) { atEnd.current = true; setHint(n => n + 1); }
+          if (h && y + h <= height - (TAB_BAR_H + gap + ins.bottom) + 1 && !atEnd.current) { atEnd.current = true; setHint(n => n + 1); }
         });
       });
   };
@@ -286,7 +286,7 @@ export default function Home() {
   const fit = () => {
     if (!ARC || shortPage || level >= 4 || grow || !focused) return;
     chartBox.current?.measureInWindow((_x, top) => {
-      const room = height - (TAB_BAR_H + gap + Math.max(16, ins.bottom)) - top;
+      const room = height - (TAB_BAR_H + gap + ins.bottom) - top;
       if (top > 0 && room < chartNeed - 1) setMore(m => m === more ? m + 1 : m);
     });
   };

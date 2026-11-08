@@ -4,13 +4,14 @@ import { Platform, Pressable, View, type PressableProps, type ViewProps } from '
 import { tr } from '@/lib/i18n';
 import { Icon, type IconName } from '../icon';
 import { T } from '../kit';
-import { TAB_BAR_H, TAB_GAP, TAB_ITEM_H, TAB_PAD, useTabLook, type TabLayout } from './tab-look';
+import { TAB_BAR_H, TAB_ITEM_H, TAB_PAD, useTabLook, type TabLayout } from './tab-look';
 
-export const NavRail = forwardRef<View, ViewProps>(({ children, style, ...props }, ref) => {
+// `bottomInset`: the phone's home-indicator area, added under the tabs in the bar's colour.
+export const NavRail = forwardRef<View, ViewProps & { bottomInset?: number }>(({ children, style, bottomInset = 0, ...props }, ref) => {
   const look = useTabLook();
   return (
-    <View ref={ref} {...props} style={[{ height: TAB_BAR_H, borderRadius: 28, borderWidth: 1, borderColor: look.edge,
-      backgroundColor: look.rail, padding: TAB_PAD, flexDirection: 'row', alignItems: 'center', gap: TAB_GAP }, style]}>
+    <View ref={ref} {...props} style={[{ height: TAB_BAR_H + bottomInset, paddingBottom: bottomInset, paddingHorizontal: TAB_PAD,
+      backgroundColor: look.rail }, style]}>
       {children}
     </View>
   );

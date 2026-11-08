@@ -1,5 +1,6 @@
 // Shared bottom navigation, Material 3's navigation bar (Mojtaba 2026-11-07): four equal tabs, each an icon with its
-// label under it, the open one's icon on a tinted pill; on a rounded bar a step off the page (tab-look.ts).
+// label under it, the open one's icon on a tinted pill; on a bar a step off the page, fixed to the screen's bottom edge
+// across its whole width (tab-look.ts).
 // (The home page's round start button beside the bar, from 2026-10-25, was removed on 2026-11-06, Mojtaba.)
 import { usePathname } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
@@ -36,12 +37,13 @@ const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, .
   const layout = tabLayout(width, false, tr(current.label));
   return (
     <Layout.Provider value={layout}>
-    <View pointerEvents="box-none" style={{ position: 'absolute', bottom: Math.max(16, ins.bottom), left: 0, right: 0, paddingHorizontal: 16, alignItems: 'center' }}>
-      <View pointerEvents="box-none" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%', maxWidth: 440 }}>
-        {/* (data-bar: left out when the page under the bar is read, bar-shade.tsx) */}
-        <NavRail ref={ref} {...props} {...({ dataSet: { bar: '1' } } as any)} style={{ width: layout.railWidth }}>{children}</NavRail>
-      </View>
-    </View>
+    {/* Fixed to the bottom edge, the whole width of the screen, as Material's navigation bar on fonts.google.com
+        (Mojtaba 2026-11-08; a rounded bar floating over the page until then); the phone's home-indicator area under the
+        tabs is the bar's colour too. (data-bar: left out when the page under the bar is read, bar-shade.tsx) */}
+    <NavRail ref={ref} {...props} {...({ dataSet: { bar: '1' } } as any)} bottomInset={ins.bottom}
+      style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4, width: '100%', maxWidth: 560, alignSelf: 'center' }}>{children}</View>
+    </NavRail>
     </Layout.Provider>
   );
 });
