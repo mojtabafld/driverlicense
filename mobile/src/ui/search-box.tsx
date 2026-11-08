@@ -8,15 +8,15 @@ import { tr } from '@/lib/i18n';
 import { Icon } from './icon';
 import { T, tap } from './kit';
 import { useColors } from './theme';
+import { useSearchStyle } from './search-style';
 
 export function SearchBox() {
-  const c = useColors();
+  const c = useColors(), searchStyle = useSearchStyle();
   return (
     <Pressable onPress={() => { tap(); router.push('/course-search'); }} accessibilityRole="search" accessibilityLabel={tr('جستجو در آموزش')}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, height: 52, paddingHorizontal: 16, borderRadius: 16,
-        backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, opacity: pressed ? 0.85 : 1 })}>
-      <Icon name="search" size={19} color={c.faint} />
-      <T style={{ flex: 1, color: c.muted, fontSize: 14.5 }} numberOfLines={1}>جستجو در درس‌ها، قوانین و تابلوها…</T>
+      style={({ pressed }) => [searchStyle, { opacity: pressed ? 0.85 : 1 }]}>
+      <Icon name="search" size={24} color={c.muted} />
+      <T style={{ flex: 1, color: c.muted, fontSize: 16 }} numberOfLines={1}>جستجو در درس‌ها، قوانین و تابلوها…</T>
     </Pressable>
   );
 }
