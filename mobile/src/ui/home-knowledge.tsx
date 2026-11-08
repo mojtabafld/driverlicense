@@ -135,7 +135,7 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
       </View>
 
       {/* A compact theory test setup: an outlined size stepper and one start action. */}
-      <View testID="home-theory-test" style={{ gap: 16 }}>
+      <View testID="home-theory-test" style={{ gap: 16, marginBottom: 24 }}>
         <Head title={tr('آزمون تئوری')} />
         <View style={{ direction: 'ltr', flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <T testID="home-theory-description" style={{ flex: 1, minWidth: 0, fontSize: 14.5, lineHeight: 24, color: c.muted }}>{tr('آزمون تصادفی با تعداد سؤال دلخواه.')}</T>
