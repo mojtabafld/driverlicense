@@ -22,10 +22,12 @@ import { useApp } from '@/lib/store';
 import { TrapBox } from '@/ui/course-parts';
 import { RulesArt } from '@/ui/header-art';
 import { Icon, type IconName } from '@/ui/icon';
-import { Card, Enter, T, tap } from '@/ui/kit';
+import { Enter, M3Button, T, tap } from '@/ui/kit';
 import { RoadSign, SIGN_NAME } from '@/ui/road-signs';
+import { LearningTile } from '@/ui/learning-tile';
+import { Head } from '@/ui/home-knowledge';
 import { SubPage } from '@/ui/sub-page';
-import { useColors } from '@/ui/theme';
+import { useColors, useM3 } from '@/ui/theme';
 
 const LAW = 'خلاصه‌ای برای آمادگی آزمون تئوری؛ متن کامل قوانین در قانون راهنمایی و رانندگی دانمارک (Færdselsloven) است.';
 
@@ -46,19 +48,17 @@ function Bold({ text, size }: { text: string; size: number }) {
 }
 
 // A small round icon over a pill button, like the course's tasks.
-function Task({ icon, label, title, action, onPress, main }: { icon: IconName; label: string; title: string; action: string; onPress: () => void; main?: boolean }) {
-  const c = useColors();
+function Task({ icon, label, title, action, onPress }: { icon: IconName; label: string; title: string; action: string; onPress: () => void }) {
+  const c = useColors(), m = useM3();
   return (
     <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.8 : 1 })}>
-      <View style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: main ? c.btn : c.accentSoft }}>
-        <Icon name={icon} size={19} color={main ? c.btnFg : c.link} />
-      </View>
+      <Icon name={icon} size={44} color={m.primary} />
       <View style={{ flex: 1, gap: 1 }}>
-        <T style={{ color: c.muted, fontSize: 12 }}>{label}</T>
-        <T numberOfLines={1} style={{ fontWeight: '700', fontSize: 15 }}>{title}</T>
+        <T style={{ color: c.muted, fontSize: 13, lineHeight: 19 }}>{label}</T>
+        <T style={{ fontWeight: '500', fontSize: 16, lineHeight: 23 }}>{title}</T>
       </View>
-      <View style={{ paddingHorizontal: 14, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: main ? c.btn : c.surface2 }}>
-        <T style={{ fontWeight: '700', fontSize: 13.5, color: main ? c.btnFg : c.text }}>{action}</T>
+      <View style={{ paddingHorizontal: 14, minHeight: 44, borderRadius: 999, borderWidth: 1, borderColor: m.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' }}>
+        <T style={{ fontWeight: '500', fontSize: 14, color: m.primary }}>{action}</T>
       </View>
     </Pressable>
   );
@@ -69,10 +69,10 @@ function Overview({ read, all, next, onNext }: { read: number; all: number[]; ne
   const share = RULES.length ? read / RULES.length : 0;
   const { limited } = useFree();
   return (
-    <Card style={{ gap: 16 }}>
+    <View style={{ gap: 16, padding: 16, borderRadius: 24, borderWidth: 1, borderColor: c.line }}>
       <View style={{ gap: 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-          <T style={{ flex: 1, fontWeight: '800', fontSize: 18 }}>مرور قوانین</T>
+        <View style={{ flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', gap: 8 }}>
+          <T style={{ flex: 1, fontWeight: '500', fontSize: 22, lineHeight: 32 }}>مرور قوانین</T>
           <T style={{ color: c.muted, fontSize: 12.5 }}>{faNum(read)} از {faNum(RULES.length)} بخش خوانده‌شده</T>
         </View>
         <View style={{ height: 8, borderRadius: 4, backgroundColor: c.surface2, overflow: 'hidden' }}>
@@ -80,7 +80,7 @@ function Overview({ read, all, next, onNext }: { read: number; all: number[]; ne
         </View>
       </View>
       {next !== null ? (
-        <Task icon={RULES[next].icon ?? 'rules'} main label={read ? 'بخش بعدی برای خواندن' : 'از اینجا شروع کنید'} title={RULES[next].title} action="خواندن" onPress={onNext} />
+        <Task icon={RULES[next].icon ?? 'rules'} label={read ? 'بخش بعدی برای خواندن' : 'از اینجا شروع کنید'} title={RULES[next].title} action="خواندن" onPress={onNext} />
       ) : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Icon name="checkCircle" size={22} color={c.ok} />
@@ -90,25 +90,25 @@ function Overview({ read, all, next, onNext }: { read: number; all: number[]; ne
       {all.length ? (
         <>
           <View style={{ height: 1, backgroundColor: c.line }} />
-          <Task icon="play" main={next === null} label={`${faNum(Math.min(all.length, FULL))} سؤال از همه‌ی بخش‌ها`} title="آزمون همه‌ی قوانین" action="شروع"
+          <Task icon="play" label={`${faNum(Math.min(all.length, FULL))} سؤال از همه‌ی بخش‌ها`} title="آزمون همه‌ی قوانین" action="شروع"
             onPress={() => (limited ? toPremium() : startPractice(shuffle(all).slice(0, FULL), 'آزمون همه‌ی قوانین'))} />
         </>
       ) : null}
-    </Card>
+    </View>
   );
 }
 
 // «عددهای مهم آزمون»: two columns of number tiles; a tap opens the part that explains the number.
 function Numbers({ onOpen }: { onOpen: (i: number) => void }) {
-  const c = useColors();
+  const c = useColors(), m = useM3();
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
       {RULE_NUMBERS.map(x => (
         <Pressable key={x.label} onPress={() => { tap(); onOpen(x.rule); }} accessibilityRole="button" accessibilityLabel={`${x.value} ${x.unit}، ${x.label}`}
-          style={({ pressed }) => ({ flexBasis: '45%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16,
-            backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+          style={({ pressed }) => ({ flexBasis: '45%', flexGrow: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16, paddingHorizontal: 16, borderRadius: 24,
+            backgroundColor: pressed ? c.surface2 : 'transparent', borderWidth: 1, borderColor: c.line, opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] })}>
           <View style={{ minWidth: 52, alignItems: 'center' }}>
-            <T style={{ fontSize: 20, lineHeight: 28, fontWeight: '800', textAlign: 'center' }}>{x.value}</T>
+            <T style={{ fontSize: 24, lineHeight: 32, fontWeight: '500', color: m.primary, textAlign: 'center' }}>{x.value}</T>
             {x.unit ? <T style={{ fontSize: 11, lineHeight: 14, color: c.muted, fontWeight: '700', textAlign: 'center', writingDirection: 'ltr' }}>{x.unit}</T> : null}
           </View>
           <T style={{ flex: 1, fontSize: 12.5, lineHeight: 19, color: c.muted }} numberOfLines={2}>{x.label}</T>
@@ -121,15 +121,16 @@ function Numbers({ onOpen }: { onOpen: (i: number) => void }) {
 // One rule: its card closed (drawing, title, size, read or not), or open with everything in it.
 // `locked`: only with premium (lib/free.ts): faded, a lock in place of the arrow; a tap opens the premium page.
 function RulePart({ p, on, read, onToggle, onNext, locked }: { p: GuidePart; on: boolean; read: boolean; onToggle: () => void; onNext: (() => void) | null; locked?: boolean }) {
-  const c = useColors();
+  const c = useColors(), m = useM3();
+  if (!on) return <LearningTile fullWidth icon={p.icon ?? 'rules'} title={p.title} text={`${faNum(p.points.length)} نکته`} locked={locked} onPress={onToggle}>
+    {read ? <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}><Icon name="checkCircle" size={18} color={c.ok} /><T style={{ fontSize: 12, color: c.ok }}>خوانده‌شده، </T></View> : null}
+  </LearningTile>;
   return (
-    <Card style={{ gap: 14, paddingVertical: 12, borderColor: on ? c.text : undefined }}>
+    <View style={{ gap: 16, padding: 16, borderRadius: 24, borderWidth: 1, borderColor: m.primary }}>
       <Pressable onPress={onToggle} accessibilityRole="button" accessibilityState={{ expanded: on }} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: locked ? 0.55 : 1 }}>
-        <View style={{ width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? c.btn : c.surface2 }}>
-          <Icon name={p.icon ?? 'rules'} size={22} color={on ? c.btnFg : c.text} />
-        </View>
+        <Icon name={p.icon ?? 'rules'} size={44} color={m.primary} />
         <View style={{ flex: 1, gap: 2 }}>
-          <T style={{ fontWeight: '700', fontSize: 16 }}>{p.title}</T>
+          <T style={{ fontWeight: '500', fontSize: 16, lineHeight: 23 }}>{p.title}</T>
           <T style={{ fontSize: 12, color: read ? c.ok : c.muted, fontWeight: read ? '700' : '400' }}>
             {read ? 'خوانده‌شده، ' : ''}{faNum(p.points.length)} نکته
           </T>
@@ -172,16 +173,12 @@ function RulePart({ p, on, read, onToggle, onNext, locked }: { p: GuidePart; on:
           {p.tip ? <TrapBox text={p.tip} /> : null}
           <View style={{ flexDirection: 'row', gap: 8 }}>
             {onNext ? (
-              <Pressable onPress={onNext} accessibilityRole="button" accessibilityLabel="بخش بعدی"
-                style={({ pressed }) => ({ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, height: 46, borderRadius: 23, backgroundColor: c.surface2, opacity: pressed ? 0.85 : 1 })}>
-                <T style={{ fontWeight: '700', fontSize: 14 }}>بعدی</T>
-                <Icon name="chevronLeft" size={15} color={c.text} />
-              </Pressable>
+              <M3Button kind="outlined" m={m} label={tr('بعدی')} icon="chevronLeft" onPress={onNext} />
             ) : null}
           </View>
         </View>
       ) : null}
-    </Card>
+    </View>
   );
 }
 
@@ -238,22 +235,16 @@ export default function Rules() {
   const allIds = bank.questions.filter(q => topics.has(q.c)).map(q => q.id);
   const nextUnread = RULES.findIndex(x => !read.includes(x.title));
   return (
-    <SubPage title="قوانین" subtitle="به زبان ساده" hero={{ pic: 0, icon: 'rules', art: RulesArt }} scrollRef={scroll} onBodyY={y => { at.current.body = y; }}>
+    <SubPage title="قوانین" subtitle="به زبان ساده" hero={{ pic: 0, icon: 'rules', art: RulesArt }} scrollRef={scroll} dashboard={!PROVE_PICS} theme onBodyY={y => { at.current.body = y; }}>
       <Enter><Overview read={RULES.filter(x => read.includes(x.title)).length} all={allIds} next={nextUnread >= 0 ? nextUnread : null}
         onNext={() => nextUnread >= 0 && show(nextUnread)} /></Enter>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
-        <T style={{ flex: 1, fontWeight: '800', fontSize: 18 }}>عددهای مهم آزمون</T>
-        <T style={{ color: c.muted, fontSize: 12 }}>برای توضیح، روی هر عدد بزنید</T>
-      </View>
+      <Head title={tr('عددهای مهم آزمون')} text={tr('برای توضیح، روی هر عدد بزنید')} />
       <Enter><Numbers onOpen={show} /></Enter>
-      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
-        <T style={{ flex: 1, fontWeight: '800', fontSize: 18 }}>قانون‌ها</T>
-        <T style={{ color: c.muted, fontSize: 12 }}>{faNum(RULES.length)} بخش</T>
-      </View>
-      <View style={{ gap: 10 }} onLayout={e => { at.current.list = e.nativeEvent.layout.y; }}>
+      <Head title={tr('قانون‌ها')} text={tr(`${faNum(RULES.length)} بخش`)} />
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }} onLayout={e => { at.current.list = e.nativeEvent.layout.y; }}>
         {RULES.map((x, i) => {
           return (
-            <View key={x.title} onLayout={e => { at.current.cards[i] = e.nativeEvent.layout.y; }}>
+            <View key={x.title} style={{ flexBasis: open === i ? '100%' : '47%', flexGrow: 1 }} onLayout={e => { at.current.cards[i] = e.nativeEvent.layout.y; }}>
               <RulePart p={x} on={open === i} read={read.includes(x.title)} locked={!firstOk(i)}
                 onToggle={() => show(open === i ? null : i)}
                 onNext={i < RULES.length - 1 ? () => show(i + 1) : null} />
