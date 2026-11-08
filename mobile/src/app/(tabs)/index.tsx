@@ -360,7 +360,8 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      <Card testID="home-readiness" style={{ backgroundColor: ARC ? look.hero : c.surface, gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
+      {/* (the main site: no box round it, on the page itself; Mojtaba 2026-11-08) */}
+      <Card testID="home-readiness" style={{ ...(ARC ? { backgroundColor: 'transparent', borderWidth: 0, shadowOpacity: 0, elevation: 0 } : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
         {ARC ? <>
           {/* The readiness ring and its status share a clean card without decorative waves. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: readinessGap }}>

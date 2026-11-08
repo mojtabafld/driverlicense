@@ -4466,5 +4466,8 @@
 "آزمون‌هایی که قبول شده‌اید":["The tests you have passed", "De prøver, du har bestået"],
 "{0} از {1} درس":["{0} of {1} lessons", "{0} af {1} lektioner"],
 "درس بعدی: {0}":["Next lesson: {0}", "Næste lektion: {0}"],
-"همه‌ی درس‌ها را تمام کرده‌اید":["You have finished every lesson", "Du har gennemført alle lektioner"]
+"همه‌ی درس‌ها را تمام کرده‌اید":["You have finished every lesson", "Du har gennemført alle lektioner"],
+"{0} قبول از {1}، بهترین نمره {2}، آخرین {3}":["{0} of {1} passed, best score {2}, latest {3}", "{0} af {1} bestået, bedste score {2}, seneste {3}"],
+"هنوز آزمونی نداده‌اید":["No tests yet", "Ingen prøver endnu"],
+"با یک آزمون کوتاه ببینید چقدر آماده‌اید":["Take a short test to see how ready you are", "Tag en kort prøve og se, hvor klar du er"]
 }
