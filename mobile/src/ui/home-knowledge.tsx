@@ -155,7 +155,9 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
                 <T raw style={{ fontSize: 24, lineHeight: 28, color: c.text }}>+</T>
               </Pressable>
             </View>
-            <M3Button compact iconSize={16} kind="outlined" m={m} icon={test.randomLeft ? 'play' : 'lock'} onPress={test.start} disabled={!test.ready || test.count < test.size}
+            <M3Button compact iconSize={16} kind="outlined" m={m} icon={test.randomLeft ? undefined : 'lock'} onPress={test.start} disabled={!test.ready || test.count < test.size}
+              labelStyle={test.randomLeft ? { fontSize: 22, lineHeight: 28 } : undefined}
+              contentStyle={test.randomLeft ? { paddingHorizontal: 4, gap: 4 } : undefined}
               label={test.randomLeft ? tr('شروع آزمون') : tr('نسخه‌ی ویژه')} />
           </View>
         </View>
