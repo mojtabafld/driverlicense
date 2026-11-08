@@ -10,6 +10,7 @@ import { Animated, BackHandler, KeyboardAvoidingView, Platform, ScrollView, View
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Confirm } from './confirm';
+import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS } from './dashboard-style';
 import { Backdrop, Hero, RoundIcon, T, ThemeRound, usePageMotion, useTopOnFocus, type HeroLook } from './kit';
 import { GlassTop } from './liquid';
 import { Marquee } from './marquee';
@@ -25,10 +26,11 @@ import { useColors } from './theme';
 // the way out never looks like the bar's arrows.
 // `pager`: a page with its own previous / next bar turns its steps with a sideways swipe (as the exam does) instead of
 // going back with one, so a swipe for the next step never leaves the page; `rtl`: turning right to left (see swipe.tsx).
-export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close, pager, theme, fill }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
+export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, guard, scrollKey, hero, scrollRef, onBodyY, close, pager, theme, fill, dashboard = false }: { title: string; subtitle?: string; children: React.ReactNode; gap?: number;
   maxWidth?: number; guard?: { title: string; text: string } | null; scrollKey?: string | number; hero?: HeroLook; scrollRef?: React.RefObject<ScrollView | null>;
   onBodyY?: (y: number) => void; close?: boolean; pager?: { i: number; n: number; go: (k: number) => void; rtl?: boolean };
   /** The light / dark switch in the head, as on the signs' and right of way's pages (the course's lessons). */ theme?: boolean;
+  /** Use the home page's flat header, card surfaces and corners. */ dashboard?: boolean;
   /** With a picture header: the body takes at least the rest of the screen (its cards can grow to fill it). */ fill?: boolean }) {
   const c = useColors(), ins = useSafeAreaInsets();
   const motion = usePageMotion('push');
@@ -46,6 +48,8 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
     return () => sub.remove();
   }, [guard]);
   return (
+    <DashboardContext.Provider value={dashboard}>
+    <CardRadiusContext.Provider value={dashboard ? TAB_CARD_RADIUS : null}>
     <Backdrop anim={motion.style}>
       <Animated.View {...swipe.handlers} style={[{ flex: 1 }, swipeWebStyle, pager ? { transform: [{ translateX: turn.dx }] } : backLean(backSwipe.dx)]}>
         <KeyboardAvoidingView behavior={Platform.OS === 'web' ? undefined : 'padding'} style={{ flex: 1 }}>
@@ -67,6 +71,7 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           <View pointerEvents="box-none" style={{ position: 'absolute', top: ins.top + (Platform.OS === 'web' ? 14 : 8), left: 0, right: 0, paddingHorizontal: 16 }}>
             <View pointerEvents="box-none" style={{ flexDirection: 'row', width: '100%', maxWidth, alignSelf: 'center' }}>
               <RoundIcon icon={close ? 'xmark' : 'arrowRight'} label={close ? 'بستن' : 'بازگشت'} onPress={back} size={40} />
+              {theme ? <><View style={{ flex: 1 }} /><ThemeRound size={40} /></> : null}
             </View>
           </View>
         ) : (
@@ -89,6 +94,8 @@ export function SubPage({ title, subtitle, children, gap = 14, maxWidth = 760, g
           onCancel={() => setAsking(false)} onOk={() => { setAsking(false); leave(); }} />
       ) : null}
     </Backdrop>
+    </CardRadiusContext.Provider>
+    </DashboardContext.Provider>
   );
 }
 const noop = () => {};

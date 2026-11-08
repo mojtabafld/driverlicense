@@ -11,21 +11,17 @@ import type { GuideKind } from '@/lib/guide-data';
 import { faNum } from '@/lib/logic';
 import { toPremium, useFree } from '@/lib/free';
 import { useApp } from '@/lib/store';
-import { Icon } from './icon';
+import { Icon, type IconName } from './icon';
 import { Card, L, T, tap } from './kit';
-import { LIST_PIC, ListCard } from './list-card';
-import { useColors } from './theme';
+import { useColors, useM3 } from './theme';
 import { ZoomableImage } from './zoom';
 
 export const PIC_BG = '#f2f3f5'; // the pictures' own light background, the same in both themes
 
-// The groups as cards: the group's thumbnail, its title, a line about it and how many items it has. On the main site
-// they are rows one under the other like «آموزش»'s (ui/list-card.tsx); at /app two to a row with the picture on top. A card opens the group page by page (/guide-view).
-// `limit`: only the first ones (main site; the page offers the rest); `grow`: the cards share the height the list is given,
-// lower (a small picture, one line about the group); `dense`: without the count (short screens), `bare`: without the line too;
-// `tight`: closer together.
-export function CatGrid({ kind, cats, limit, grow, dense, bare, tight }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[]; limit?: number; grow?: boolean; dense?: boolean; bare?: boolean; tight?: boolean }) {
-  const c = useColors();
+// Material cards share the home's surfaces and type, with a thumbnail, description and count at every screen size.
+// `limit`: only the first groups (the page offers the rest).
+export function CatGrid({ kind, cats, limit }: { kind: GuideKind; cats: { id: string; title: string; blurb: string; thumb: string; items: unknown[] }[]; limit?: number }) {
+  const c = useColors(), m = useM3();
   const { firstOk } = useFree();
   const open = (g: { id: string }, i: number) => { tap(); if (!firstOk(i)) return toPremium(); router.push({ pathname: '/guide-view', params: { kind, cat: g.id } }); };
   const count = (g: { items: unknown[] }) => (
@@ -34,10 +30,26 @@ export function CatGrid({ kind, cats, limit, grow, dense, bare, tight }: { kind:
     </View>
   );
   if (!PROVE_PICS) return (
-    <View style={{ gap: tight ? 6 : grow ? 8 : 10, flexGrow: grow ? 1 : undefined }}>
+    <View style={{ gap: 12 }} testID="guide-categories">
       {cats.slice(0, limit ?? cats.length).map((g, i) => (
-        <ListCard key={g.id} grow={grow} small={grow} titleLines={tight ? 1 : 2} onPress={() => open(g, i)} locked={!firstOk(i)} title={g.title} sub={bare ? undefined : g.blurb} subLines={grow ? 1 : 2} note={dense ? undefined : `${faNum(g.items.length)} مورد`}
-          label={`${g.title}، ${faNum(g.items.length)} مورد`} pic={<GuideImage k={g.thumb} aspect={LIST_PIC.width / LIST_PIC.height} radius={0} size="m" />} />
+        <Card key={g.id} style={{ padding: 0, overflow: 'hidden' }} testID={`guide-category-${g.id}`}>
+          <Pressable onPress={() => open(g, i)} accessibilityRole="button" accessibilityLabel={tr(`${g.title}، ${faNum(g.items.length)} مورد`)}
+            style={({ pressed }) => ({ padding: 16, gap: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+              <View style={{ width: 72, height: 72, borderRadius: 16, backgroundColor: c.surface2, padding: 6, overflow: 'hidden', justifyContent: 'center' }}>
+                <GuideImage k={g.thumb} aspect={4 / 3} radius={12} compact size="m" fallbackIcon={kind === 'priority' ? 'priority' : 'sign'} />
+              </View>
+              <View style={{ flex: 1, gap: 6 }}>
+                <T style={{ fontSize: 17, lineHeight: 25, fontWeight: '500' }}>{g.title}</T>
+                <T style={{ fontSize: 13, lineHeight: 20, color: c.muted }}>{g.blurb}</T>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              {count(g)}
+              <Icon name={firstOk(i) ? 'arrowLeft' : 'lock'} size={20} color={firstOk(i) ? m.primary : c.muted} />
+            </View>
+          </Pressable>
+        </Card>
       ))}
     </View>
   );
@@ -81,7 +93,7 @@ export function prefetchGuide(keys: string[], guideArt: Record<string, string>) 
 // `flat`: at the top or side of a card, flush with its edges (no rounding or edge of its own); `fill`: as tall as its
 // box instead of `aspect` (the picture covering it). `zoom`: a tap opens it full screen
 // to look at closely, like the exam's pictures (ZoomableImage). `size`: which of the server's sizes (compact: the smallest).
-export function GuideImage({ k, aspect, label, radius = 12, compact, flat, fill, zoom, size }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; fill?: boolean; zoom?: boolean; size?: GuideSize }) {
+export function GuideImage({ k, aspect, label, radius = 12, compact, flat, fill, zoom, size, fallbackIcon = 'sign' }: { k: string; aspect: number; label?: string; radius?: number; compact?: boolean; flat?: boolean; fill?: boolean; zoom?: boolean; size?: GuideSize; fallbackIcon?: IconName }) {
   const c = useColors();
   const { guideArt, token } = useApp();
   const v = guideArt[k];
@@ -91,17 +103,17 @@ export function GuideImage({ k, aspect, label, radius = 12, compact, flat, fill,
   // prove.dk's sign drawings reach their edges: a little room around them, as the made pictures have.
   const inset = prove && k.startsWith('s-') ? { transform: [{ scale: 0.82 }] } : null;
   return (
-    <View style={{ width: '100%', ...(fill ? { height: '100%' } : { aspectRatio: aspect }), borderRadius: flat ? 0 : radius, overflow: 'hidden', backgroundColor: PIC_BG, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: '100%', ...(fill ? { height: '100%' } : { aspectRatio: aspect }), borderRadius: flat ? 0 : radius, overflow: 'hidden', backgroundColor: v ? PIC_BG : c.surface2, alignItems: 'center', justifyContent: 'center' }}>
       {v && zoom ? (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
           <ZoomableImage source={src} style={[{ width: '100%', aspectRatio: aspect }, inset]} ratio={aspect} transition={200} />
         </View>
       ) : v ? <Image source={src} style={[{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }, inset]} contentFit={prove ? 'contain' : 'cover'} transition={200} />
-        : compact ? <Icon name="sign" size={16} color="#9aa0a6" /> : (
+        : compact ? <Icon name={fallbackIcon} size={28} color={c.link} /> : (
           <View style={{ alignItems: 'center', gap: 6 }}>
-            <Icon name="sign" size={30} color="#9aa0a6" />
-            {label ? <L style={{ fontSize: 13, fontWeight: '700', color: '#7a8087' }}>{label}</L> : null}
-            <T style={{ fontSize: 11, color: '#9aa0a6' }}>تصویر در حال آماده شدن</T>
+            <Icon name={fallbackIcon} size={30} color={c.muted} />
+            {label ? <L style={{ fontSize: 13, fontWeight: '700', color: c.muted }}>{label}</L> : null}
+            <T style={{ fontSize: 11, color: c.muted }}>تصویر در حال آماده شدن</T>
           </View>
         )}
       {/* a hairline edge in the dark theme, so the light picture does not glare */}
