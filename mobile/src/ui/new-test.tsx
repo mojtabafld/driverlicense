@@ -13,7 +13,7 @@ import { Pressable, View, useWindowDimensions } from 'react-native';
 import { PROVE_BANK } from '@/lib/config';
 import { FREE_RANDOM, toPremium, useFree } from '@/lib/free';
 import { RTL, t, tr } from '@/lib/i18n';
-import { FULL, SECONDS_PER_Q, SIZES, faNum, mistakeIds, passMin, shuffle } from '@/lib/logic';
+import { FULL, SECONDS_PER_Q, SIZES, faNum, mistakeIds, shuffle } from '@/lib/logic';
 import { session } from '@/lib/session';
 import { useApp } from '@/lib/store';
 import { pctText } from './activity';
@@ -74,8 +74,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
         // The random test as a section, its title and what the chosen size means (Mojtaba 2026-11-08)
         <View style={{ gap: 6, paddingTop: level >= 2 ? 8 : 16 }}>
           <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>{tr('آزمون تصادفی')}</T>
-          <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{t('{0} سؤال در {1} دقیقه؛ با حداکثر {2} اشتباه قبول می‌شوید.', faNum(size), faNum(Math.round(size * SECONDS_PER_Q / 60)), faNum(size - passMin(size)))
-            + (size === FULL ? ' ' + tr('مثل آزمون واقعی.') : '')}</T>
+          <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{t('{0} سؤال در {1} دقیقه', faNum(size), faNum(Math.round(size * SECONDS_PER_Q / 60)))}</T>
         </View>
       ) : level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
       {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
