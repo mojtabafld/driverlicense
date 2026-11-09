@@ -147,7 +147,7 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
                 style={({ pressed }) => ({ width: 40, minHeight: 38, borderRadius: 999, alignItems: 'center', justifyContent: 'center', opacity: test.size <= minSize ? 0.38 : 1, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
                 <T raw style={{ fontSize: 24, lineHeight: 28, color: c.text }}>−</T>
               </Pressable>
-              <T raw testID="home-theory-size" accessibilityLiveRegion="polite" style={{ flex: 1, textAlign: 'center', fontSize: 22, lineHeight: 28, color: c.text, fontWeight: '500' }}>{faNum(test.size)}</T>
+              <T raw testID="home-theory-size" accessibilityLiveRegion="polite" style={{ flex: 1, textAlign: 'center', fontSize: 18, lineHeight: 24, color: c.text, fontWeight: '500' }}>{faNum(test.size)}</T>
               <Pressable onPress={() => resize(step)} disabled={test.size >= FULL} accessibilityRole="button"
                 accessibilityLabel={tr('افزایش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size >= FULL }}
                 hitSlop={{ top: 3, bottom: 3, left: 2, right: 2 }}
@@ -156,7 +156,7 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
               </Pressable>
             </View>
             <M3Button compact iconSize={16} kind="outlined" m={m} icon={test.randomLeft ? undefined : 'lock'} onPress={test.start} disabled={!test.ready || test.count < test.size}
-              labelStyle={test.randomLeft ? { fontSize: 22, lineHeight: 28 } : undefined}
+              labelStyle={test.randomLeft ? { fontSize: 18, lineHeight: 24 } : undefined}
               contentStyle={test.randomLeft ? { paddingHorizontal: 4, gap: 4 } : undefined}
               label={test.randomLeft ? tr('شروع آزمون') : tr('نسخه‌ی ویژه')} />
           </View>
