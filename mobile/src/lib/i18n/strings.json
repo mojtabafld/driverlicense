@@ -4501,7 +4501,7 @@
 "{0} آزمون در ۷ روز گذشته":["{0} tests in the last 7 days", "{0} prøver de seneste 7 dage"],
 "مثل آزمون واقعی.":["Like the real test.", "Som den rigtige prøve."],
 "زبان و آزمون":["Language and test", "Sprog og prøve"],
-"آزمون تصادفی با تعداد سؤال دلخواه.":["A random test with your choice of questions.", "En tilfældig prøve med dit valgte antal spørgsmål."],
+"آزمون تصادفی با تعداد سؤال دلخواه، برای تمرین با سرعت خودتان.":["A random test with your choice of questions to practise at your own pace.", "En tilfældig prøve med dit valgte antal spørgsmål, så du kan øve i dit eget tempo."],
 "کاهش تعداد سؤال‌ها":["Decrease question count", "Færre spørgsmål"],
 "افزایش تعداد سؤال‌ها":["Increase question count", "Flere spørgsmål"]
 }
