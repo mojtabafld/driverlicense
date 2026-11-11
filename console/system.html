@@ -84,6 +84,24 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
 .src b.vault{background:var(--inkSoft);color:var(--ink)}
 .src .num{font-size:11px}
 .msum{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.mt{font:inherit;border:1px solid transparent;cursor:pointer;text-align:start;transition:border-color .15s,transform .15s}
+.mt:hover{border-color:var(--ink)}.mt:active{transform:scale(.98)}.mt:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+dialog.mi{border:0;border-radius:18px;padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px);background:var(--panel);color:var(--fg);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog.mi::backdrop{background:rgba(10,14,12,.55)}
+.mi .mh{position:sticky;top:0;background:var(--panel);display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.mi .mh h3{margin:0;font-size:18px;flex:1}
+.mi .x{font:inherit;font-size:20px;line-height:1;border:0;background:var(--panel2);color:var(--fg);width:34px;height:34px;border-radius:50%;cursor:pointer;flex:none}
+.mi .mb{padding:14px 18px 20px;display:flex;flex-direction:column;gap:14px}
+.mi h4{margin:0 0 4px;font-size:13px;color:var(--muted);font-weight:700}
+.mi p{margin:0;font-size:14px}
+.mi ul{margin:0;padding-inline-start:20px;font-size:14px}
+.mi li{margin:2px 0}
+.mi .prio{display:flex;flex-direction:column;gap:6px}
+.mi .pr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-radius:10px;padding:7px 10px;background:var(--panel2);font-size:13px;color:var(--muted)}
+.mi .pr.on{background:var(--inkSoft);color:var(--fg);font-weight:600}
+.mi .pr .n{font-family:var(--mono);font-size:12px;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--panel);flex:none}
+.mi .pr .w{margin-inline-start:auto;font-size:11.5px;color:var(--ink)}
+.mi code{font-family:var(--mono);font-size:12.5px;direction:ltr;unicode-bidi:isolate;background:var(--panel2);border-radius:5px;padding:1px 6px}
 @media (max-width:620px){.grid,.two,.ops{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.models{grid-template-columns:1fr 1fr}}
 @media (max-width:380px){.models{grid-template-columns:1fr}}
 </style>
@@ -199,8 +217,97 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
     for (const x of list) count[x.model] = (count[x.model] || 0) + 1;
     const from = x => x.from === 'vault' ? `<b class="vault">vault</b>` : x.from === 'env' ? `<b>${L('فایل env', 'env file')}</b>` : `<b>${L('پیش‌فرض کد', 'code default')}</b>`;
     return `<div class="msum">${Object.entries(count).sort((a, b) => b[1] - a[1]).map(([id, n]) => `<span class="pill">${fa(n)} ${L('بخش', n === 1 ? 'part' : 'parts')} ${pill(id)}</span>`).join('')}</div>
-      <div class="models">${list.map(x => `<div class="mt"><span class="t">${esc(L(...(TASK[x.task] || [x.task, x.task])))}</span>${pill(x.model)}<span class="src">${from(x)}<span class="num">${esc(x.setting)}</span></span></div>`).join('')}</div>`;
+      <div class="models">${list.map(x => `<button type="button" class="mt" data-task="${esc(x.task)}" aria-haspopup="dialog"><span class="t">${esc(L(...(TASK[x.task] || [x.task, x.task])))}</span>${pill(x.model)}<span class="src">${from(x)}<span class="num">${esc(x.setting)}</span></span></button>`).join('')}</div>`;
   }
+  // What each task does and where it is used, shown in a dialog when its tile is clicked (Mojtaba 2026-11-11).
+  const INFO = {
+    coach: {
+      what: ['صفحه‌ی «مربی هوشمند» هر کاربر را می‌نویسد. Claude نتیجه‌های خودِ همان کاربر را می‌خواند: آزمون‌ها، موضوع‌ها و سؤال‌هایی که در آن‌ها اشتباه می‌کند، این‌که چند وقت یک بار تمرین می‌کند و درس‌های دوره که خوانده است، همراه توصیه‌های قبلی خودش. نام و ایمیل کاربر هرگز فرستاده نمی‌شود. دو بخش دارد: «آموزش» (چه چیزی بخواند، با پیوند به صفحه‌های آموزش) و «آزمون» (جمع‌بندی اشتباه‌ها به تفکیک موضوع و جای تمرین).',
+        "Writes each user's «Smart coach» page. Claude reads that user's own results: their tests, the topics and questions they get wrong, how often they study and the course lessons done, with its own earlier advice. The user's name and email are never sent. Two parts: «Learn» (what to study, with links to the learning pages) and «Exam» (the mistakes summed up by topic, with where to practise)."],
+      where: [['اپ: دکمه‌ی مربی در بالای صفحه‌های «آموزش» و «آزمون»', 'App: the coach button at the top of «Learn» and «Exam»'],
+        ['فقط برای کاربران پریمیوم؛ با خاموش کردن «حالت مربی» در تنظیمات اجرا نمی‌شود', 'Premium users only; off when «Coach mode» is off in the settings'],
+        ['بعد از آزمون یا درس تازه (حداکثر هر ۲۰ دقیقه) یا بعد از ۳ روز دوباره ساخته می‌شود', 'Made again after a new test or lesson (at most every 20 minutes) or after 3 days']],
+      files: 'coach.js → insights.js · POST /api/coach · effort low' },
+    lesson: {
+      what: ['درس‌های هوش مصنوعی به زبان اپ را می‌نویسد. برای هر سؤال در مرور پاسخ‌ها توضیح می‌دهد سؤال درباره‌ی چیست و، از روی تیک‌های کاربر، چرا هر گزینه‌ای که اشتباه زده غلط بوده است. بعد از هر آزمون یا درس هم یک درس کوتاه درباره‌ی همه‌ی اشتباه‌ها می‌نویسد. تصویر سؤال را هم می‌بیند و فقط چیزی را توصیف می‌کند که واضح در تصویر است. یادداشت‌هایی که ادمین برای یک سؤال تأیید کرده هم در توضیح می‌آید.',
+        "Writes the AI lessons in the app's language. For each question in the answer review it explains what the question is about and, from the user's ticks, why each statement they got wrong is wrong. After each test or lesson it writes one short lesson over all the mistakes. It sees the question's picture too and describes only what it clearly shows. Notes an admin has approved for a question go into the explanation."],
+      where: [['اپ: «آموزش این سؤال» در مرور پاسخ‌های آزمون', "App: «Learn this question» in a test's answer review"],
+        ['اپ: «جمع‌بندی اشتباهات شما» بعد از آزمون یا درس', 'App: «Summary of your mistakes» after a test or lesson'],
+        ['هر ترکیب سؤال و الگوی اشتباه فقط یک بار ساخته و ذخیره می‌شود؛ دفعه‌های بعد هزینه ندارد', 'Each question and mistake pattern is made once and kept; later views cost nothing']],
+      files: 'lesson.js · POST /api/lesson, POST /api/summary · effort medium' },
+    search: {
+      what: ['جستجوی هوشمند در مطالب آموزشی اپ. کاربر با هر کلمه‌ای (فارسی، انگلیسی، دانمارکی یا کد تابلو) می‌نویسد چه می‌خواهد بداند و Claude صفحه‌هایی از مطالب خود اپ را که جوابش را دارند انتخاب می‌کند، همراه یک جواب کوتاه که فقط از همان صفحه‌ها نوشته شده است.',
+        "AI search of the app's teaching material. The user writes what they want to know in any words (Persian, English, Danish or a sign's code) and Claude picks the entries of the app's own material that answer it, with a short answer written only from those entries."],
+      where: [['اپ: کادر جستجوی «جستجو در آموزش» در دوره‌ی گام‌به‌گام', "App: the «Search the lessons» box in the step-by-step course"],
+        ['نتیجه‌ها برای هر جستجو در حافظه نگه داشته می‌شوند', 'Results are kept in memory per search']],
+      files: 'search.js · POST /api/coursesearch · effort low' },
+    ask: {
+      what: ['به سؤال‌های آزاد کاربر به شکل گفت‌وگو جواب می‌دهد. جواب از مطالب آموزشی خود اپ نوشته می‌شود و پیام‌های قبلی همان گفت‌وگو را هم در نظر می‌گیرد.',
+        "Answers the user's own questions as a conversation. The answer is written from the app's teaching material and takes the earlier messages of the conversation into account."],
+      where: [['اپ: صفحه‌ی «بپرس»', 'App: the «Ask» page'], ['فقط برای کاربران پریمیوم', 'Premium users only']],
+      files: 'search.js · POST /api/ask · effort low' },
+    'search-term': {
+      what: ['برای یک اصطلاح از واژه‌نامه یک صفحه‌ی توضیح می‌نویسد و آن را به صفحه‌های مرتبط مطالب آموزشی اپ پیوند می‌دهد.',
+        "Writes an explanation page for a glossary term and links it to the related entries of the app's teaching material."],
+      where: [['اپ: «آموزش این واژه» در واژه‌نامه', 'App: «Learn this term» in the glossary']],
+      files: 'search.js · POST /api/termpage · effort low' },
+    'picture-describe': {
+      what: ['موقعیت ترافیکی هر سؤال را به شکل واقعیت‌های دقیق می‌نویسد تا مدل تصویرساز از روی همین متن یک تصویر تازه بکشد. تصویر اصلی هرگز به مدل تصویرساز داده نمی‌شود، پس تصویر تازه مستقل است. بیشترین دقت را روی تابلوها و خط‌کشی‌ها می‌گذارد.',
+        "Writes each question's traffic situation as exact facts, so the picture model draws a new picture from that text alone. The original picture is never given to the picture model, so the new one is independent. It spends the most detail on signs and road markings."],
+      where: [['پنل ادمین: «ایجاد تصاویر» و ساخت تصویر تازه برای سؤال‌ها', 'Admin panel: «Pictures» and new question pictures'],
+        ['کاربران اپ با آن کاری ندارند', 'App users never trigger it']],
+      files: 'imagegen.js describe() · picture-describe' },
+    'picture-check': {
+      what: ['تصویری را که ساخته شده با توصیفش مقایسه می‌کند: تابلوها، خط‌کشی‌ها، چراغ روشن و جای خودروها و آدم‌ها. اگر چیز مهمی با توصیف نخواند، تصویر دوباره ساخته می‌شود (حداکثر ۳ تصویر). یافته‌ها در پنل ادمین نشان داده می‌شوند.',
+        'Compares a new picture with its description: signs, road markings, which light is lit and where vehicles and people are. When something important does not match, the picture is made again (at most 3 pictures). Its findings are shown in the admin panel.'],
+      where: [['پنل ادمین: بعد از ساخت هر تصویر تازه', 'Admin panel: after each new picture'], ['کاربران اپ با آن کاری ندارند', 'App users never trigger it']],
+      files: 'imagegen.js check() · picture-check' },
+    'picture-prompt': {
+      what: ['پرامپت‌های تصویر را برای ادمین می‌نویسد: پیش‌نویس پرامپت از روی سؤال، ترجمه‌ی پرامپت، بازنویسی آن بر اساس درخواست ادمین و تغییر سبک آن.',
+        "Writes the picture prompts for the admin: a draft prompt from a question, translating a prompt, rewriting it from the admin's request and changing its style."],
+      where: [['پنل ادمین: «ایجاد تصاویر» (پرامپت‌ها)', 'Admin panel: «Pictures» (prompts)'], ['کاربران اپ با آن کاری ندارند', 'App users never trigger it']],
+      files: 'imagegen.js writeText() · picture-prompt' },
+  };
+  function explain(task) {
+    const x = ((D && D.ai && D.ai.effective) || []).find(e => e.task === task);
+    const info = INFO[task];
+    if (!x) return;
+    const over = `AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+    const own = x.setting === over ? x.own : x.setting;
+    const shared = ((D && D.ai && D.ai.effective) || []).filter(e => e.task !== task && (e.own || e.setting) === own).map(e => e.task);
+    const where = s => s === 'vault' ? 'vault' : s === 'env' ? L('فایل env', 'env file') : L('پیش‌فرض کد', 'code default');
+    const steps = [
+      [over, L('برای همین یک کار، بر همه برتری دارد', 'For this one task, wins over everything'), x.setting === over],
+      [own || '—', L('تنظیم خودِ این بخش', "This part's own setting"), x.setting === own && x.from !== 'default'],
+      [L('پیش‌فرض کد', 'Code default'), L('وقتی هیچ‌کدام تنظیم نشده', 'When neither is set'), x.from === 'default'],
+    ];
+    let dlg = document.getElementById('mi');
+    if (!dlg) {
+      dlg = document.createElement('dialog'); dlg.id = 'mi'; dlg.className = 'mi'; document.body.appendChild(dlg);
+      dlg.addEventListener('click', e => { if (e.target === dlg || e.target.closest('.x')) dlg.close(); });
+    }
+    dlg.setAttribute('dir', L('rtl', 'ltr'));
+    dlg.innerHTML = `<div class="mh"><h3>${esc(L(...(TASK[task] || [task, task])))}</h3>${pill(x.model)}<button type="button" class="x" aria-label="${L('بستن', 'Close')}">×</button></div>
+      <div class="mb">
+        ${info ? `<div><h4>${L('کاربرد', 'What it does')}</h4><p>${esc(L(...info.what))}</p></div>
+        <div><h4>${L('کجا استفاده می‌شود', 'Where it is used')}</h4><ul>${info.where.map(w => `<li>${esc(L(...w))}</li>`).join('')}</ul><p style="margin-top:6px"><code>${esc(info.files)}</code></p></div>` : ''}
+        <div><h4>${L('مدل فعلی', 'Current model')}</h4><p><code>${esc(x.model)}</code> ${L('از', 'from')} <b>${esc(where(x.from))}</b>${L('، ', ', ')}${L('متغیر', 'setting')} <code>${esc(x.setting)}</code></p></div>
+        <div><h4>${L('ترتیب انتخاب مدل', 'How the model is chosen')}</h4><div class="prio">${steps.map(([k, d, on], i) => `<div class="pr${on ? ' on' : ''}"><span class="n">${fa(i + 1)}</span>${i === 2 ? `<b>${esc(k)}</b>` : `<code>${esc(k)}</code>`}<span>${esc(d)}</span>${on ? `<span class="w">${L('اعمال‌شده', 'In use')}</span>` : ''}</div>`).join('')}</div>
+          <p class="note" style="margin-top:6px">${L('در هر متغیر، مقدار vault بر فایل env برتری دارد.', 'For each setting, the vault wins over the env file.')}</p></div>
+        <div><h4>${L('تغییر مدل', 'Changing the model')}</h4>
+          <p>${x.setting === over
+            ? L(`الان <code>${esc(over)}</code> اعمال می‌شود. در Oracle Vault مقدار secret با همین نام را عوض کنید، یا حذفش کنید تا <code>${esc(own)}</code> یا پیش‌فرض کد اعمال شود.`,
+              `<code>${esc(over)}</code> is in use. Change the value of the secret with that name in Oracle Vault, or delete it so <code>${esc(own)}</code> or the code default applies.`)
+            : L(`در Oracle Vault یک secret با نام <code>${esc(own)}</code> بسازید یا مقدارش را عوض کنید، مثلاً <code>claude-haiku-5-5</code> یا <code>claude-opus-5-5</code>. برای برگشت به پیش‌فرض کد، آن secret را حذف کنید.`,
+              `In Oracle Vault, create or change a secret named <code>${esc(own)}</code>, e.g. <code>claude-haiku-5-5</code> or <code>claude-opus-5-5</code>. To go back to the code default, delete that secret.`)}</p>
+          ${shared.length ? `<p class="note" style="margin-top:6px">${L(`<code>${esc(own)}</code> مدل این بخش‌ها را هم تعیین می‌کند: ${shared.map(t => esc(L(...(TASK[t] || [t, t])))).join('، ')}. برای عوض کردن فقط همین کار، <code>${esc(over)}</code> را بسازید.`,
+            `<code>${esc(own)}</code> also sets the model of: ${shared.map(t => esc(L(...(TASK[t] || [t, t])))).join(', ')}. To change this task alone, create <code>${esc(over)}</code>.`)}</p>` : ''}
+          <p style="margin-top:8px">${L('بعد سرور را ری‌استارت کنید؛ سرور vault را فقط هنگام راه‌اندازی می‌خواند:', 'Then restart the server; it reads the vault only when it starts:')}</p>
+          <p style="margin-top:4px;direction:ltr;text-align:left"><code>sudo systemctl restart teoripro</code></p></div>
+      </div>`;
+    if (!dlg.open) dlg.showModal();
+  }
+  document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('.mt[data-task]'); if (t) explain(t.dataset.task); });
 
   let D = null;
   function render() {

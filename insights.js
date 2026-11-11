@@ -12,7 +12,7 @@
 const ai = require('./aigateway');
 
 const MODEL = () => process.env.INSIGHTS_MODEL || 'claude-haiku-5-5';
-ai.declare(['coach', 'insights'], 'INSIGHTS_MODEL', 'claude-haiku-5-5');
+ai.declare(['coach'], 'INSIGHTS_MODEL', 'claude-haiku-5-5');
 const available = () => !!process.env.ANTHROPIC_API_KEY;
 const KEEP_DAYS = 90;
 const NAME_RE = /^[a-z0-9][a-z0-9:/_-]{0,59}$/;
