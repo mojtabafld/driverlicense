@@ -38,7 +38,7 @@ services:
         value: ${db.CA_CERT}
       - key: LESSON_AI_MODEL
         scope: RUN_TIME
-        value: claude-opus-5-5
+        value: claude-haiku-5-5
 databases:
   - name: db
     engine: PG

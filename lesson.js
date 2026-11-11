@@ -12,7 +12,8 @@ const path = require('node:path');
 const ai = require('./aigateway');
 const imagegen = require('./imagegen');
 
-const MODEL = process.env.LESSON_AI_MODEL || 'claude-opus-5-5';
+// (Claude Haiku 5.5 by default since Mojtaba 2026-11-11, Opus 5.5 before)
+const MODEL = process.env.LESSON_AI_MODEL || 'claude-haiku-5-5';
 const PER_USER_PER_HOUR = 40, ALL_PER_HOUR = 400; // new (uncached) lessons a user may trigger per hour
 
 // How the picture is used: describe only what it clearly shows and what matters for the question.
