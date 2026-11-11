@@ -16,9 +16,10 @@ const path = require('node:path');
 // The model of each task from config/ai-models.json (Mojtaba 2026-11-11): model names are not secrets, so they live in
 // the repository, where a change is a pull request. Only this file and the modules' own defaults decide a model: no
 // environment variable or vault secret does. Read again when the file changes; a value that is not a Claude model id
-// is left out (and listed in the report), and a missing or broken file leaves every task on its default.
+// is left out (and listed in the report), and a missing or broken file leaves every task on its default. The other
+// services' models (pictures, embeddings, speech) are in the same file (modelFor(), read by imagegen.js, rag.js, tts.js).
 const MODELS_FILE = path.join(__dirname, 'config', 'ai-models.json');
-const MODEL_ID = /^claude-[a-z0-9.-]+$/;
+const MODEL_ID = /^[a-z0-9][a-z0-9._-]*$/i;  // (Claude's ids, and the picture, embedding and speech services')
 let fileCache = { mtime: -1, models: {}, bad: [], error: null };
 function fileModels() {
   let st;
@@ -72,7 +73,8 @@ async function call(task, params, { stream = false } = {}) {
   if (!available()) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   if (budget() && !ADMIN_TASKS.has(task) && todayCost() >= budget()) throw Object.assign(new Error('سقف روزانه‌ی هوش مصنوعی پر شده است؛ فردا دوباره امتحان کنید.'), { status: 429 });
   client = client || new Anthropic({ timeout: 300e3, maxRetries: 2 });
-  const model = fileModels().models[task] || params.model;
+  const fromFile = fileModels().models[task];
+  const model = fromFile && /^claude-/.test(fromFile) ? fromFile : params.model;
   // Claude Haiku has no server-side refusal fallback: for it the callers' `fallbacks` and its beta are left out.
   const req = { ...params, model };
   if (/haiku/.test(model)) {
@@ -102,12 +104,16 @@ function picture(provider, ok, error) { if (store) note(`picture:${provider}`, {
 const declared = [];
 function declare(tasks, def) { declared.push({ tasks, def }); }
 const modelFor = (task, def) => fileModels().models[task] || def;
-const MODULES = ['./lesson', './search', './insights', './imagegen'];
+const MODULES = ['./lesson', './search', './insights', './imagegen', './rag', './tts'];
 function effective() {
   for (const m of MODULES) { try { require(m); } catch { /* a module that does not load declares nothing */ } }
   const out = [];
-  for (const d of declared) for (const task of d.tasks) out.push({ task, model: modelFor(task, d.def) });
-  const ORDER = ['coach', 'lesson', 'search', 'ask', 'search-term', 'picture-describe', 'picture-check', 'picture-prompt'];
+  for (const d of declared) for (const task of d.tasks) {
+    const m = modelFor(task, d.def);
+    // (a Claude task only takes a Claude id, as call() does)
+    out.push({ task, model: /^claude-/.test(d.def) && !/^claude-/.test(m) ? d.def : m, claude: /^claude-/.test(d.def) });
+  }
+  const ORDER = ['coach', 'lesson', 'search', 'ask', 'search-term', 'picture-describe', 'picture-check', 'picture-prompt', 'picture', 'picture-openai', 'embeddings', 'speech', 'speech-fa'];
   const at = t => (ORDER.indexOf(t) + 1 || 99);
   return out.sort((a, b) => at(a.task) - at(b.task));
 }

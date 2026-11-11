@@ -14,10 +14,11 @@ const ai = require('./aigateway');
 const png = require('./png');
 
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
-// The two models, set in the server's environment (DigitalOcean: Settings → web → Environment Variables):
-// IMAGE_MODEL: the kie.ai picture model (default GPT Image 2.5 Sunburst; its text-to-image and image-to-image variants);
-// The Claude models (describing, checking and the console's prompts) come from config/ai-models.json, else Opus 5.5.
-const IMAGE_MODEL = (process.env.IMAGE_MODEL || '').trim().replace(/-(text|image)-to-image$/, '') || 'gpt-image-2-5-sunburst';
+// The models come from config/ai-models.json (aigateway.js modelFor): «picture», kie.ai's picture model (default GPT
+// Image 2.5 Sunburst; its text-to-image and image-to-image variants), and the Claude models for describing, checking
+// and the console's prompts (default Opus 5.5).
+const IMAGE_MODEL = ai.modelFor('picture', 'gpt-image-2-5-sunburst').replace(/-(text|image)-to-image$/, '');
+ai.declare(['picture'], 'gpt-image-2-5-sunburst');
 // A picture task for the image model, in that model's own form. `input`: { prompt, aspect_ratio, resolution, input_urls? }
 // (input_urls: the pictures it redraws from, none for text to image). GPT Image and the like are two models (…-text-to-
 // image / …-image-to-image) taking input_urls; Google's Nano Banana is one model taking image_input and an output format.
@@ -106,11 +107,12 @@ function learnOrders() {
 }
 
 // OpenAI's own image API, a second picture service the admin's picture page can choose (Mojtaba 2026-10-31), with
-// OPENAI_API_KEY (the vault's «OpenAI_API_Key») and OPENAI_IMAGE_MODEL (default gpt-image-2.5-sunburst, OpenAI's name for kie.ai's gpt-image-2-5-sunburst; gpt-image-1 was shut down 2026-10-23). Its answer comes in one
+// OPENAI_API_KEY (the vault's «OpenAI_API_Key») and the model config/ai-models.json's «picture-openai» (default gpt-image-2.5-sunburst, OpenAI's name for kie.ai's gpt-image-2-5-sunburst; gpt-image-1 was shut down 2026-10-23). Its answer comes in one
 // request, so it runs in the background as a task like kie.ai's: «oa-…» ids, read back through kie()'s recordInfo
 // (below) in kie.ai's form, the picture as a data: URL. Kept in memory: a server restart fails the ones still running.
 // (kie.ai's form of the name, «gpt-image-2-5-sunburst», is taken too and written OpenAI's way)
-const OPENAI_IMAGE_MODEL = ((process.env.OPENAI_IMAGE_MODEL || '').trim() || 'gpt-image-2.5-sunburst').replace(/^gpt-image-(\d)-(\d)(?=-|$)/, 'gpt-image-$1.$2');
+ai.declare(['picture-openai'], 'gpt-image-2.5-sunburst');
+const OPENAI_IMAGE_MODEL = ai.modelFor('picture-openai', 'gpt-image-2.5-sunburst').replace(/^gpt-image-(\d)-(\d)(?=-|$)/, 'gpt-image-$1.$2');
 // (the vault's secret may also be named «OpenAI_API», i.e. OPENAI_API)
 const openaiKey = () => process.env.OPENAI_API_KEY || process.env.OPENAI_API || '';
 const openaiReady = () => !!openaiKey();

@@ -1,7 +1,7 @@
 // RAG for the app's search (Mojtaba 2026-10-31): the search no longer sends Claude the whole teaching catalogue
 // (up to 300 kB) with every query, and it now knows the 1,100 questions too. Each catalogue entry (a course step,
 // a part of the rules, a sign, a right-of-way situation) and each of «آزمون جدید»'s questions with its explanations is
-// turned into a meaning vector (OpenAI embeddings, RAG_EMBED_MODEL, default text-embedding-3-small; the vault's
+// turned into a meaning vector (OpenAI embeddings, config/ai-models.json's «embeddings», default text-embedding-3-small; the vault's
 // OpenAI key); a query's vector picks the closest entries and questions (cosine), with entries that carry the
 // query's sign code (B11, E 53…) always in, and only those go to Claude, which answers from them alone.
 // The vectors are kept in the database (Oracle's VECTOR type, table tp_vectors, by the hash of the model and the
@@ -15,7 +15,9 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const MODEL = (process.env.RAG_EMBED_MODEL || '').trim() || 'text-embedding-3-small';
+const ai = require('./aigateway');
+const MODEL = ai.modelFor('embeddings', 'text-embedding-3-small');
+ai.declare(['embeddings'], 'text-embedding-3-small');
 const key = () => process.env.OPENAI_API_KEY || process.env.OPENAI_API || '';
 const hash = t => crypto.createHash('sha256').update(`${MODEL}\n${t}`).digest('hex').slice(0, 40);
 

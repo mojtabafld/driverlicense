@@ -79,6 +79,9 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
 .fam.sonnet{background:var(--inkSoft);color:var(--ink)}
 .fam.opus{background:color-mix(in srgb,var(--c2) 16%,var(--panel));color:var(--c2)}
 .fam.fable{background:var(--badSoft);color:var(--bad)}
+.msub{margin:14px 0 0;font-size:13.5px;color:var(--ink);text-align:start}
+.fam{max-width:100%;min-width:0}
+.models.svc .fam{overflow-wrap:anywhere}
 .src{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
 .src b{font-weight:700;border-radius:5px;padding:0 6px;background:var(--panel2)}
 .src b.vault{background:var(--inkSoft);color:var(--ink)}
@@ -105,6 +108,7 @@ dialog.mi::backdrop{background:rgba(10,14,12,.55)}
 .mi code{font-family:var(--mono);font-size:12.5px;direction:ltr;unicode-bidi:isolate;background:var(--panel2);border-radius:5px;padding:1px 6px}
 @media (max-width:620px){.grid,.two,.ops{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.models{grid-template-columns:1fr 1fr}}
 @media (max-width:380px){.models{grid-template-columns:1fr}}
+@media (max-width:620px){.models.svc{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -208,16 +212,21 @@ dialog.mi::backdrop{background:rgba(10,14,12,.55)}
     coach: ['مربی شخصی', 'Personal coach'], lesson: ['درس هوشمند', 'AI lessons'], search: ['جستجو', 'Search'], ask: ['بپرس', 'Ask'],
     'search-term': ['صفحه‌ی اصطلاح', 'Term page'], insights: ['گزارش روزانه‌ی ادمین', "Admin's daily report"],
     'picture-describe': ['توصیف تصویر', 'Picture description'], 'picture-check': ['بررسی تصویر', 'Picture check'], 'picture-prompt': ['پرامپت تصویر', 'Picture prompt'],
+    picture: ['ساخت تصویر (kie.ai)', 'Pictures (kie.ai)'], 'picture-openai': ['ساخت تصویر (OpenAI)', 'Pictures (OpenAI)'], embeddings: ['جستجوی معنایی (RAG)', 'Semantic search (RAG)'],
+    speech: ['خواندن سؤال‌ها با صدا', 'Questions read aloud'], 'speech-fa': ['خواندن تحلیل‌ها به فارسی', 'Analyses read aloud in Persian'],
   };
   const family = id => (/(haiku|sonnet|opus|fable|mythos)/.exec(id) || [, ''])[1].replace('mythos', 'fable');
   const pretty = id => { const m = /^claude-([a-z]+)-(\d+)(?:-(\d+))?/.exec(id || ''); return m ? `${m[1][0].toUpperCase()}${m[1].slice(1)} ${m[2]}${m[3] ? '.' + m[3] : ''}` : (id || '–'); };
   const pill = id => `<span class="fam ${family(id)}" title="${esc(id)}"><i></i>${esc(pretty(id))}</span>`;
-  function models(list) {
-    if (!list.length) return '';
+  function models(all) {
+    if (!all.length) return '';
+    const list = all.filter(x => x.claude !== false), other = all.filter(x => x.claude === false);
     const count = {};
     for (const x of list) count[x.model] = (count[x.model] || 0) + 1;
+    const tile = x => `<button type="button" class="mt" data-task="${esc(x.task)}" aria-haspopup="dialog"><span class="t">${esc(L(...(TASK[x.task] || [x.task, x.task])))}</span>${pill(x.model)}</button>`;
     return `<div class="msum">${Object.entries(count).sort((a, b) => b[1] - a[1]).map(([id, n]) => `<span class="pill">${fa(n)} ${L('بخش', n === 1 ? 'part' : 'parts')} ${pill(id)}</span>`).join('')}</div>
-      <div class="models">${list.map(x => `<button type="button" class="mt" data-task="${esc(x.task)}" aria-haspopup="dialog"><span class="t">${esc(L(...(TASK[x.task] || [x.task, x.task])))}</span>${pill(x.model)}</button>`).join('')}</div>
+      <div class="models">${list.map(tile).join('')}</div>
+      ${other.length ? `<h4 class="msub">${L('سرویس‌های دیگر', 'Other services')}</h4><div class="models svc">${other.map(tile).join('')}</div>` : ''}
       ${fileWarn()}`;
   }
   // A broken settings file or an entry that is not a model id (aigateway.js fileModels), shown under the tiles.
@@ -229,6 +238,31 @@ dialog.mi::backdrop{background:rgba(10,14,12,.55)}
   }
   // What each task does and where it is used, shown in a dialog when its tile is clicked (Mojtaba 2026-11-11).
   const INFO = {
+    picture: {
+      what: ['مدل تصویرساز kie.ai که تصویرهای تازه‌ی سؤال‌ها، درس‌ها و بقیه‌ی صفحه‌ها را از روی متن توصیف می‌کشد (و برای ویرایش، از روی تصویر قبلی). سرویس پیش‌فرض ساخت تصویر است.',
+        "kie.ai's picture model, which draws the new pictures of questions, lessons and other pages from their description (and, for an edit, from the earlier picture). The default picture service."],
+      where: [['پنل ادمین: «ایجاد تصاویر» و ساخت تصویر سؤال‌ها', 'Admin panel: «Pictures» and new question pictures'], ['کاربران اپ با آن کاری ندارند', 'App users never trigger it']],
+      files: 'imagegen.js · kie.ai · KIE_API_KEY' },
+    'picture-openai': {
+      what: ['مدل تصویرساز خودِ OpenAI؛ سرویس دومی که ادمین در صفحه‌ی تصاویر می‌تواند به جای kie.ai انتخاب کند.',
+        "OpenAI's own picture model: the second picture service the admin can choose on the pictures page instead of kie.ai."],
+      where: [['پنل ادمین: «ایجاد تصاویر»، وقتی سرویس OpenAI انتخاب شده باشد', 'Admin panel: «Pictures», when the OpenAI service is chosen'], ['کاربران اپ با آن کاری ندارند', 'App users never trigger it']],
+      files: 'imagegen.js · OpenAI images · OPENAI_API_KEY' },
+    embeddings: {
+      what: ['هر بخش از مطالب آموزشی و هر سؤال را به یک بردار معنایی تبدیل می‌کند. جستجو با همین بردارها نزدیک‌ترین بخش‌ها و سؤال‌ها را پیدا می‌کند و فقط همان‌ها را به Claude می‌فرستد. فهرست «سؤال‌های مشابه» و سؤال‌های تکراری بانک هم از همین بردارها می‌آیند. با عوض شدن مدل، همه‌ی بردارها دوباره ساخته می‌شوند.',
+        'Turns each part of the teaching material and each question into a meaning vector. Search uses them to find the closest parts and questions and sends only those to Claude. «Similar questions» and the bank\'s near-duplicates come from them too. A new model makes every vector again.'],
+      where: [['اپ: جستجوی هوشمند، «بپرس» و «سؤال‌های مشابه»', 'App: AI search, «Ask» and «Similar questions»'], ['صفحه‌ی سامانه: سؤال‌های تکراری بانک', "System page: the bank's near-duplicate questions"]],
+      files: 'rag.js · OpenAI embeddings · OPENAI_API_KEY' },
+    speech: {
+      what: ['مدل ElevenLabs که سؤال و گزینه‌هایش را به زبان آزمون (دانمارکی یا انگلیسی) با صدای انتخاب‌شده می‌خواند. هر ضبط یک بار ساخته و برای همه نگه داشته می‌شود؛ با عوض شدن مدل، ضبط‌های تازه ساخته می‌شوند.',
+        "ElevenLabs' model that reads a question and its statements aloud in the exam's language (Danish or English) in the chosen voice. Each recording is made once and kept for everyone; a new model makes new recordings."],
+      where: [['اپ: دکمه‌ی خواندن سؤال در آزمون؛ انتخاب صدا در تنظیمات', 'App: the read-aloud button in a test; the voice in the settings']],
+      files: 'tts.js · ElevenLabs · ELEVENLABS_API_KEY' },
+    'speech-fa': {
+      what: ['مدل ElevenLabs که تحلیل‌ها و جمع‌بندی‌های فارسیِ هوش مصنوعی را می‌خواند. مدل جداست، چون مدل چندزبانه‌ی دیگر فارسی را نمی‌خواند.',
+        "ElevenLabs' model that reads the AI's Persian analyses and summaries aloud. A separate model, as the multilingual one does not speak Persian."],
+      where: [['اپ: «گوش دادن» در پنل تحلیل و جمع‌بندی', 'App: «Listen» in the analysis and summary panels']],
+      files: 'tts.js · ElevenLabs · ELEVENLABS_API_KEY' },
     coach: {
       what: ['صفحه‌ی «مربی هوشمند» هر کاربر را می‌نویسد. Claude نتیجه‌های خودِ همان کاربر را می‌خواند: آزمون‌ها، موضوع‌ها و سؤال‌هایی که در آن‌ها اشتباه می‌کند، این‌که چند وقت یک بار تمرین می‌کند و درس‌های دوره که خوانده است، همراه توصیه‌های قبلی خودش. نام و ایمیل کاربر هرگز فرستاده نمی‌شود. دو بخش دارد: «آموزش» (چه چیزی بخواند، با پیوند به صفحه‌های آموزش) و «آزمون» (جمع‌بندی اشتباه‌ها به تفکیک موضوع و جای تمرین).',
         "Writes each user's «Smart coach» page. Claude reads that user's own results: their tests, the topics and questions they get wrong, how often they study and the course lessons done, with its own earlier advice. The user's name and email are never sent. Two parts: «Learn» (what to study, with links to the learning pages) and «Exam» (the mistakes summed up by topic, with where to practise)."],

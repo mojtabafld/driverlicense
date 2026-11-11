@@ -1,5 +1,5 @@
 {
-  "about": "The Claude model of each AI task. Model names only, never a key. Nothing else sets a model (no environment variable or vault secret); a task left out uses its module's default. A merge to main reaches the server within about two minutes. See aigateway.js.",
+  "about": "The model of each AI part. Model names only, never a key. Nothing else sets a model (no environment variable or vault secret); a part left out uses its module's default. Claude tasks take claude-… ids; «picture» is kie.ai's picture model, «picture-openai» OpenAI's, «embeddings» the RAG search's OpenAI model, «speech» and «speech-fa» ElevenLabs' voices' models. A merge to main reaches the server within about two minutes. See aigateway.js.",
   "models": {
     "coach": "claude-haiku-5-5",
     "lesson": "claude-haiku-5-5",
@@ -8,6 +8,11 @@
     "search-term": "claude-haiku-5-5",
     "picture-describe": "claude-opus-5-5",
     "picture-check": "claude-opus-5-5",
-    "picture-prompt": "claude-opus-5-5"
+    "picture-prompt": "claude-opus-5-5",
+    "picture": "gpt-image-2-5-sunburst",
+    "picture-openai": "gpt-image-2.5-sunburst",
+    "embeddings": "text-embedding-3-small",
+    "speech": "eleven_multilingual_v2",
+    "speech-fa": "eleven_v3"
   }
 }

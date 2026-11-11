@@ -1,7 +1,7 @@
 // Questions read aloud by ElevenLabs: the question and its statements, in the exam's language (Danish or English),
 // as one MP3. Made once per question + language + voice + model and kept in the store's blobs, so later listens are
-// free and shared by everyone. Needs ELEVENLABS_API_KEY; the voice per language and woman / man and the model can be
-// chosen (see voiceOf; default model: multilingual v2, which speaks Danish).
+// free and shared by everyone. Needs ELEVENLABS_API_KEY; the voice per language and woman / man can be chosen (see
+// voiceOf); the model is config/ai-models.json's «speech» (default multilingual v2, which speaks Danish).
 'use strict';
 const crypto = require('node:crypto');
 const fs = require('node:fs');
@@ -21,7 +21,9 @@ const SAMPLE = {
   da: 'Hej! Sådan lyder min stemme, når jeg læser spørgsmålene op for dig.',
   en: 'Hi! This is how my voice sounds when I read the questions aloud for you.',
 };
-const MODEL = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
+const ai = require('./aigateway');
+const MODEL = ai.modelFor('speech', 'eleven_multilingual_v2');
+ai.declare(['speech'], 'eleven_multilingual_v2');
 const PER_USER_PER_HOUR = 60, ALL_PER_HOUR = 600; // new (not yet made) recordings a user may cause per hour
 
 let Q = null;
@@ -93,10 +95,11 @@ async function get({ store, siteDir, qid, lang, gender, sample, username }) {
 
 // ---------- the AI's Persian texts (the analysis of an answer, the summary of an exam's mistakes) read aloud ----------
 // Only a text the server itself wrote (kept in store.meta by lesson.js) is read, so the endpoint cannot be used to
-// read anything else. Persian needs a model that speaks it (ELEVENLABS_MODEL_FA, default eleven_v3) and the voice
+// read anything else. Persian needs a model that speaks it (config/ai-models.json's «speech-fa», default eleven_v3) and the voice
 // ELEVENLABS_VOICE_ID_FA_MAN (else _FA, else ELEVENLABS_VOICE_ID, else the default). Long texts are read in parts
 // (the model takes a few thousand characters at a time) and the MP3 parts joined.
-const FA_MODEL = () => process.env.ELEVENLABS_MODEL_FA || 'eleven_v3';
+const FA_MODEL = () => ai.modelFor('speech-fa', 'eleven_v3');
+ai.declare(['speech-fa'], 'eleven_v3');
 const faVoice = () => env('ELEVENLABS_VOICE_ID_FA_MAN') || env('ELEVENLABS_VOICE_ID_FA') || env('ELEVENLABS_VOICE_ID') || 'JBFqnCBsd6RMkjVDRZzb';
 const PART = 2400;
 const aiKey = id => `tts-ai-v1-${id}-${faVoice()}-${FA_MODEL()}`;

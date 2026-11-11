@@ -3,8 +3,8 @@
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_EMAILS or ADMIN_USERS (comma-separated email addresses of the admins), ANTHROPIC_API_KEY (AI lessons in the review),
-// (each AI task's Claude model is in config/ai-models.json, not in a variable; aigateway.js) IMAGE_MODEL (the picture
-// model, default gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
+// (every AI model, Claude's and the picture, embedding and speech services', is in config/ai-models.json, not in a
+// variable; aigateway.js) KIE_API_KEY (new question pictures, admin panel),
 // ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
 // PROMO_CODE / PROMO_DAYS (a free trial code) and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js),
 // RESEND_API_KEY, MAIL_FROM, REPORT_TO, RESEND_WEBHOOK_SECRET and FORWARD_TO (email, mail.js).
