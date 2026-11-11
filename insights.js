@@ -1,8 +1,8 @@
 // The app's AI that learns from how it is used (Mojtaba 2026-10-24): its parts, all with Claude (ANTHROPIC_API_KEY).
 // - Usage: the pages opened in the app (sent by the app, mobile/src/lib/usage.ts) and the AI features used (counted here
 //   by the server), counted per Copenhagen day without any account or device id (store.meta.usage, 90 days).
-// - The AI's answers for the personal coach (coach.js, ask; INSIGHTS_MODEL picks the model, default claude-haiku-5-5:
-//   Claude Haiku 5.5 since Mojtaba 2026-11-11, Opus 5.5 before).
+// - The AI's answers for the personal coach (coach.js, ask; the model is config/ai-models.json's «coach»,
+//   else Claude Haiku 5.5; Mojtaba 2026-11-11).
 //   (The admins' daily report that also lived here was taken out with its dashboard page in #1031.)
 // - Question notes: short notes on a question's usual mistake (store.meta.qNotes, Persian and English), proposed by
 //   the earlier daily report. An admin approves or rejects it in the panel; an approved note goes into
@@ -11,8 +11,8 @@
 'use strict';
 const ai = require('./aigateway');
 
-const MODEL = () => process.env.INSIGHTS_MODEL || 'claude-haiku-5-5';
-ai.declare(['coach'], 'INSIGHTS_MODEL', 'claude-haiku-5-5');
+const MODEL = () => 'claude-haiku-5-5';
+ai.declare(['coach'], MODEL());
 const available = () => !!process.env.ANTHROPIC_API_KEY;
 const KEEP_DAYS = 90;
 const NAME_RE = /^[a-z0-9][a-z0-9:/_-]{0,59}$/;

@@ -16,7 +16,7 @@ const png = require('./png');
 const KIE = process.env.KIE_BASE || 'https://api.kie.ai/api/v1';
 // The two models, set in the server's environment (DigitalOcean: Settings → web → Environment Variables):
 // IMAGE_MODEL: the kie.ai picture model (default GPT Image 2.5 Sunburst; its text-to-image and image-to-image variants);
-// IMAGE_PROMPT_MODEL: the Claude model that writes the console's picture prompts (default Claude Opus 5.5).
+// The Claude models (describing, checking and the console's prompts) come from config/ai-models.json, else Opus 5.5.
 const IMAGE_MODEL = (process.env.IMAGE_MODEL || '').trim().replace(/-(text|image)-to-image$/, '') || 'gpt-image-2-5-sunburst';
 // A picture task for the image model, in that model's own form. `input`: { prompt, aspect_ratio, resolution, input_urls? }
 // (input_urls: the pictures it redraws from, none for text to image). GPT Image and the like are two models (…-text-to-
@@ -29,13 +29,12 @@ function imageTask(input, model = IMAGE_MODEL) {
   return kie('POST', '/jobs/createTask', { ...body, callBackUrl: `${PUBLIC_URL}/api/kiecallback` })
     .then(d => { ai.picture('kie', true); return d; }, e => { ai.picture('kie', false, e.message); throw e; });   // counted by the AI gateway
 }
-const PROMPT_MODEL = (process.env.IMAGE_PROMPT_MODEL || '').trim() || 'claude-opus-5-5';
-const models = () => ({ prompt: PROMPT_MODEL, image: IMAGE_MODEL });
+const PROMPT_MODEL = 'claude-opus-5-5';
+const models = () => ({ prompt: ai.modelFor('picture-prompt', PROMPT_MODEL), image: IMAGE_MODEL });
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
-// (its own setting since the lessons moved to Claude Haiku 5.5, Mojtaba 2026-11-11: the pictures stay on Opus 5.5)
-const CLAUDE = (process.env.IMAGE_DESCRIBE_MODEL || '').trim() || 'claude-opus-5-5';
-ai.declare(['picture-describe', 'picture-check'], 'IMAGE_DESCRIBE_MODEL', 'claude-opus-5-5');
-ai.declare(['picture-prompt'], 'IMAGE_PROMPT_MODEL', 'claude-opus-5-5');
+const CLAUDE = 'claude-opus-5-5';
+ai.declare(['picture-describe', 'picture-check'], CLAUDE);
+ai.declare(['picture-prompt'], PROMPT_MODEL);
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://teori.bitlane.app').replace(/\/$/, '');
 
 const DESCRIBE = `You write prompts for a text-to-image model that draws NEW pictures for a Danish driving-theory practice site (category B).
