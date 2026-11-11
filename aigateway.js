@@ -74,6 +74,32 @@ const text = res => res.content.filter(b => b.type === 'text').map(b => b.text).
 // A picture service's call, counted (kie.ai or OpenAI; their cost is not known here).
 function picture(provider, ok, error) { if (store) note(`picture:${provider}`, { model: provider, ok, ...(error ? { error: String(error).slice(0, 200) } : {}) }); }
 
+// The model each task really runs on (Mojtaba 2026-11-11), so the admin sees it without opening the vault: the
+// modules declare their tasks, their own setting and its default (declare()); report() works out which one wins
+// (AI_MODEL_<TASK>, then the module's setting, then the default) and where that value came from (the vault, the
+// env file or the code). Model names only, never a key.
+const declared = [];
+function declare(tasks, setting, def) { declared.push({ tasks, setting, def }); }
+const MODULES = ['./lesson', './search', './insights', './imagegen'];
+function from(name) {
+  const v = global.TP_VAULT_KEYS;
+  return v && v.has(name) ? 'vault' : 'env';
+}
+function effective() {
+  for (const m of MODULES) { try { require(m); } catch { /* a module that does not load declares nothing */ } }
+  const out = [];
+  for (const d of declared) for (const task of d.tasks) {
+    const over = `AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+    const own = (process.env[d.setting] || '').trim();
+    out.push(process.env[over] ? { task, model: process.env[over], setting: over, from: from(over) }
+      : own ? { task, model: own, setting: d.setting, from: from(d.setting) }
+      : { task, model: d.def, setting: d.setting, from: 'default' });
+  }
+  const ORDER = ['coach', 'lesson', 'search', 'ask', 'search-term', 'insights', 'picture-describe', 'picture-check', 'picture-prompt'];
+  const at = t => (ORDER.indexOf(t) + 1 || 99);
+  return out.sort((a, b) => at(a.task) - at(b.task));
+}
+
 // For the admin: today by task, the last 14 days' totals, the budget, the last calls.
 function report() {
   const u = usage(), days = Object.keys(u.days).sort().slice(-14);
@@ -84,7 +110,8 @@ function report() {
     budget: budget() || null,
     models: Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith('AI_MODEL_'))),
     recent: recent.slice(0, 50),
+    effective: effective(),
   };
 }
 
-module.exports = { init, call, text, picture, report, available };
+module.exports = { init, call, text, picture, report, available, declare };

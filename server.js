@@ -20,10 +20,11 @@ if (process.env.TP_VAULT_SECRET) {
     const text = require('node:child_process').execFileSync(process.execPath, [require('node:path').join(__dirname, 'vault.js'), process.env.TP_VAULT_SECRET],
       { encoding: 'utf8', timeout: 20e3, stdio: ['ignore', 'pipe', 'pipe'] });
     let n = 0;
+    const names = global.TP_VAULT_KEYS = new Set();  // (the names alone, for the admin's model report)
     for (const line of text.split(/\r?\n/)) {
       const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
       if (!m || line.trim().startsWith('#')) continue;
-      process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2'); n++;
+      process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2'); names.add(m[1]); n++;
     }
     console.log(`Secrets: ${n} keys from Oracle Cloud Vault`);
   } catch (e) {

@@ -13,6 +13,7 @@ const rag = require('./rag');
 
 // Its own setting only (Claude Haiku 5.5 by default since Mojtaba 2026-11-11; it followed LESSON_AI_MODEL, Opus 5.5, before).
 const MODEL = process.env.SEARCH_AI_MODEL || 'claude-haiku-5-5';
+ai.declare(['search', 'search-term', 'ask'], 'SEARCH_AI_MODEL', 'claude-haiku-5-5');
 const PER_USER_PER_HOUR = 40, ALL_PER_HOUR = 600;
 const MAX_CATALOG = 300e3, MAX_RESULTS = 8;
 
