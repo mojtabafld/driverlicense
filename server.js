@@ -1387,7 +1387,7 @@ async function api(req, res, route) {
     return send(res, 200, {
       at: Date.now(), up: Math.round(process.uptime()), node: process.version, version: VERSION, commit: head.slice(0, 7),
       users: Object.keys(store.users).length, storage: store.kind || 'file', files: store.files ? await store.files.ready() : null,
-      monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models },
+      monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models, effective: ai.effective },
       rag: require('./rag').info(), audit: audit.list().slice(0, 200), integrity: integrity.report(store.users), encryption: store.encryption ? store.encryption() : null, backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
     });
   }

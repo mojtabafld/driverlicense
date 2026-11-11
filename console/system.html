@@ -70,7 +70,22 @@ td,th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:start;verti
 th{color:var(--muted);font-weight:500;font-size:12.5px}
 .tblw{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px 12px}
 .note{color:var(--muted);font-size:12.5px;margin:0}
-@media (max-width:620px){.grid,.two,.ops{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+.models{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;text-align:start}
+.mt{background:var(--panel);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.mt .t{font-size:13.5px;font-weight:700;color:var(--fg)}
+.fam{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-family:var(--mono);font-size:12.5px;font-weight:600;border-radius:999px;padding:2px 10px;direction:ltr;background:var(--panel2);color:var(--muted)}
+.fam i{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.fam.haiku{background:var(--accentSoft);color:var(--accent)}
+.fam.sonnet{background:var(--inkSoft);color:var(--ink)}
+.fam.opus{background:color-mix(in srgb,var(--c2) 16%,var(--panel));color:var(--c2)}
+.fam.fable{background:var(--badSoft);color:var(--bad)}
+.src{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.src b{font-weight:700;border-radius:5px;padding:0 6px;background:var(--panel2)}
+.src b.vault{background:var(--inkSoft);color:var(--ink)}
+.src .num{font-size:11px}
+.msum{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+@media (max-width:620px){.grid,.two,.ops{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.models{grid-template-columns:1fr 1fr}}
+@media (max-width:380px){.models{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -168,6 +183,25 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
       </tbody></table></div>${DUP.list.length > 25 ? `<p class="note">${L(`و ${fa(DUP.list.length - 25)} جفت دیگر.`, `and ${fa(DUP.list.length - 25)} more pairs.`)}</p>` : ''}`;
   }
 
+  // The model each AI task really runs on and where that comes from (aigateway.js effective(); Mojtaba 2026-11-11):
+  // a count per model under the gateway's numbers, then one tile per task with its model and its source.
+  const TASK = {
+    coach: ['مربی شخصی', 'Personal coach'], lesson: ['درس هوشمند', 'AI lessons'], search: ['جستجو', 'Search'], ask: ['بپرس', 'Ask'],
+    'search-term': ['صفحه‌ی اصطلاح', 'Term page'], insights: ['گزارش روزانه‌ی ادمین', "Admin's daily report"],
+    'picture-describe': ['توصیف تصویر', 'Picture description'], 'picture-check': ['بررسی تصویر', 'Picture check'], 'picture-prompt': ['پرامپت تصویر', 'Picture prompt'],
+  };
+  const family = id => (/(haiku|sonnet|opus|fable|mythos)/.exec(id) || [, ''])[1].replace('mythos', 'fable');
+  const pretty = id => { const m = /^claude-([a-z]+)-(\d+)(?:-(\d+))?/.exec(id || ''); return m ? `${m[1][0].toUpperCase()}${m[1].slice(1)} ${m[2]}${m[3] ? '.' + m[3] : ''}` : (id || '–'); };
+  const pill = id => `<span class="fam ${family(id)}" title="${esc(id)}"><i></i>${esc(pretty(id))}</span>`;
+  function models(list) {
+    if (!list.length) return '';
+    const count = {};
+    for (const x of list) count[x.model] = (count[x.model] || 0) + 1;
+    const from = x => x.from === 'vault' ? `<b class="vault">vault</b>` : x.from === 'env' ? `<b>${L('فایل env', 'env file')}</b>` : `<b>${L('پیش‌فرض کد', 'code default')}</b>`;
+    return `<div class="msum">${Object.entries(count).sort((a, b) => b[1] - a[1]).map(([id, n]) => `<span class="pill">${fa(n)} ${L('بخش', n === 1 ? 'part' : 'parts')} ${pill(id)}</span>`).join('')}</div>
+      <div class="models">${list.map(x => `<div class="mt"><span class="t">${esc(L(...(TASK[x.task] || [x.task, x.task])))}</span>${pill(x.model)}<span class="src">${from(x)}<span class="num">${esc(x.setting)}</span></span></div>`).join('')}</div>`;
+  }
+
   let D = null;
   function render() {
     const d = D, m = d.monitor, pts = m.points || [], s = m.sizes || {}, host = m.host || {};
@@ -209,7 +243,7 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
       </div>
       <div class="arrow">⇅</div>
       <div class="box ai"><h3>AI Gateway</h3><p>${L('امروز', 'Today')} <span class="num">${usd(today.usd)}</span>${ai.budget ? ` ${L('از سقف', 'of the')} <span class="num">${usd(ai.budget)}</span>${L('', ' limit')}` : ''} · ${fa(today.n || 0)} ${L('درخواست', 'requests')}${today.fail ? ` · ${fa(today.fail)} ${L('ناموفق', 'failed')}` : ''}</p>
-        <p>${Object.keys(ai.models || {}).length ? L('مدل‌ها: ', 'Models: ') + Object.entries(ai.models).map(([k, v]) => `<span class="num">${esc(k.slice(9).toLowerCase())} → ${esc(v)}</span>`).join(' · ') : L('همه‌ی بخش‌ها روی مدل پیش‌فرض (Opus)', 'Every part on the default model (Opus)')}</p></div>
+        ${models(ai.effective || [])}</div>
 
       <h2 class="sec">${L('پایش ۲۴ ساعت اخیر', 'Monitoring, last 24 hours')}</h2>
       <p class="note">${pts.length ? L(`${fa(pts.length)} نمونه، هر دقیقه یکی، به وقت کپنهاگ.`, `${fa(pts.length)} samples, one a minute, Copenhagen time.`) : L('سرور تازه آغاز به ثبت کرده است.', 'The server has just started recording.')}</p>
