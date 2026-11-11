@@ -91,11 +91,11 @@ function effective() {
   for (const d of declared) for (const task of d.tasks) {
     const over = `AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
     const own = (process.env[d.setting] || '').trim();
-    out.push(process.env[over] ? { task, model: process.env[over], setting: over, from: from(over) }
+    out.push(process.env[over] ? { task, model: process.env[over], setting: over, from: from(over), own: d.setting }
       : own ? { task, model: own, setting: d.setting, from: from(d.setting) }
       : { task, model: d.def, setting: d.setting, from: 'default' });
   }
-  const ORDER = ['coach', 'lesson', 'search', 'ask', 'search-term', 'insights', 'picture-describe', 'picture-check', 'picture-prompt'];
+  const ORDER = ['coach', 'lesson', 'search', 'ask', 'search-term', 'picture-describe', 'picture-check', 'picture-prompt'];
   const at = t => (ORDER.indexOf(t) + 1 || 99);
   return out.sort((a, b) => at(a.task) - at(b.task));
 }
