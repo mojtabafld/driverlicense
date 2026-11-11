@@ -34,6 +34,8 @@ const models = () => ({ prompt: PROMPT_MODEL, image: IMAGE_MODEL });
 const UPLOAD = process.env.KIE_UPLOAD_BASE || 'https://kieai.redpandaai.co';
 // (its own setting since the lessons moved to Claude Haiku 5.5, Mojtaba 2026-11-11: the pictures stay on Opus 5.5)
 const CLAUDE = (process.env.IMAGE_DESCRIBE_MODEL || '').trim() || 'claude-opus-5-5';
+ai.declare(['picture-describe', 'picture-check'], 'IMAGE_DESCRIBE_MODEL', 'claude-opus-5-5');
+ai.declare(['picture-prompt'], 'IMAGE_PROMPT_MODEL', 'claude-opus-5-5');
 const PUBLIC_URL = (process.env.PUBLIC_URL || 'https://teori.bitlane.app').replace(/\/$/, '');
 
 const DESCRIBE = `You write prompts for a text-to-image model that draws NEW pictures for a Danish driving-theory practice site (category B).
