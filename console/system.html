@@ -82,6 +82,11 @@ th{color:var(--muted);font-weight:500;font-size:12.5px}
 .src{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
 .src b{font-weight:700;border-radius:5px;padding:0 6px;background:var(--panel2)}
 .src b.vault{background:var(--inkSoft);color:var(--ink)}
+.src b.file{background:var(--accentSoft);color:var(--accent)}
+.mleft{margin-top:12px;text-align:start;background:var(--panel);border-radius:12px;padding:10px 12px;font-size:13px}
+.mleft p{margin:2px 0 6px}
+.mleft .chips{display:flex;gap:8px;flex-wrap:wrap}
+.mwarn{margin:10px 0 0;text-align:start;font-size:13px;color:var(--bad);background:var(--badSoft);border-radius:10px;padding:8px 12px}
 .src .num{font-size:11px}
 .msum{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
 .mt{font:inherit;border:1px solid transparent;cursor:pointer;text-align:start;transition:border-color .15s,transform .15s}
@@ -215,9 +220,19 @@ dialog.mi::backdrop{background:rgba(10,14,12,.55)}
     if (!list.length) return '';
     const count = {};
     for (const x of list) count[x.model] = (count[x.model] || 0) + 1;
-    const from = x => x.from === 'vault' ? `<b class="vault">vault</b>` : x.from === 'env' ? `<b>${L('فایل env', 'env file')}</b>` : `<b>${L('پیش‌فرض کد', 'code default')}</b>`;
+    const from = x => x.from === 'file' ? `<b class="file">${L('فایل تنظیمات', 'settings file')}</b>` : x.from === 'vault' ? `<b class="vault">vault</b>` : x.from === 'env' ? `<b>${L('فایل env', 'env file')}</b>` : `<b>${L('پیش‌فرض کد', 'code default')}</b>`;
     return `<div class="msum">${Object.entries(count).sort((a, b) => b[1] - a[1]).map(([id, n]) => `<span class="pill">${fa(n)} ${L('بخش', n === 1 ? 'part' : 'parts')} ${pill(id)}</span>`).join('')}</div>
-      <div class="models">${list.map(x => `<button type="button" class="mt" data-task="${esc(x.task)}" aria-haspopup="dialog"><span class="t">${esc(L(...(TASK[x.task] || [x.task, x.task])))}</span>${pill(x.model)}<span class="src">${from(x)}<span class="num">${esc(x.setting)}</span></span></button>`).join('')}</div>`;
+      <div class="models">${list.map(x => `<button type="button" class="mt" data-task="${esc(x.task)}" aria-haspopup="dialog"><span class="t">${esc(L(...(TASK[x.task] || [x.task, x.task])))}</span>${pill(x.model)}<span class="src">${from(x)}${x.from === 'file' ? '' : `<span class="num">${esc(x.setting)}</span>`}</span></button>`).join('')}</div>
+      ${leftovers()}`;
+  }
+  // The model settings still in the vault or the env file, which config/ai-models.json now outweighs: safe to delete.
+  function leftovers() {
+    const ai = (D && D.ai) || {}, left = ai.envModels || [], f = ai.file || {};
+    const warn = f.error ? L(`فایل تنظیمات خوانده نشد: ${esc(f.error)}`, `The settings file could not be read: ${esc(f.error)}`)
+      : (f.bad || []).length ? L(`این مقدارها در فایل تنظیمات نام مدل معتبر نیستند و نادیده گرفته شدند: ${(f.bad).map(esc).join('، ')}`, `These entries in the settings file are not valid model ids and were ignored: ${(f.bad).map(esc).join(', ')}`) : '';
+    return (warn ? `<p class="mwarn">${warn}</p>` : '') + (left.length ? `<div class="mleft"><b>${L('متغیرهای مدل که هنوز تنظیم شده‌اند', 'Model settings still set')}</b>
+      <p>${L('مدل هر کار از فایل تنظیمات خوانده می‌شود و این متغیرها برای کارهای داخل فایل اثری ندارند. می‌توانید آن‌ها را حذف کنید:', 'Each task takes its model from the settings file, so these do nothing for the tasks in it. They can be deleted:')}</p>
+      <div class="chips">${left.map(v => `<span class="src"><b class="${v.from === 'vault' ? 'vault' : ''}">${v.from === 'vault' ? 'vault' : L('فایل env', 'env file')}</b><span class="num">${esc(v.name)}</span></span>`).join('')}</div></div>` : '');
   }
   // What each task does and where it is used, shown in a dialog when its tile is clicked (Mojtaba 2026-11-11).
   const INFO = {
@@ -273,12 +288,12 @@ dialog.mi::backdrop{background:rgba(10,14,12,.55)}
     const info = INFO[task];
     if (!x) return;
     const over = `AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
-    const own = x.setting === over ? x.own : x.setting;
-    const shared = ((D && D.ai && D.ai.effective) || []).filter(e => e.task !== task && (e.own || e.setting) === own).map(e => e.task);
-    const where = s => s === 'vault' ? 'vault' : s === 'env' ? L('فایل env', 'env file') : L('پیش‌فرض کد', 'code default');
+    const own = x.own || x.setting;
+    const where = s => s === 'file' ? L('فایل تنظیمات', 'settings file') : s === 'vault' ? 'vault' : s === 'env' ? L('فایل env', 'env file') : L('پیش‌فرض کد', 'code default');
     const steps = [
-      [over, L('برای همین یک کار، بر همه برتری دارد', 'For this one task, wins over everything'), x.setting === over],
-      [own || '—', L('تنظیم خودِ این بخش', "This part's own setting"), x.setting === own && x.from !== 'default'],
+      ['config/ai-models.json', L('فایل تنظیمات در مخزن؛ بر همه برتری دارد', 'The settings file in the repository; wins over everything'), x.from === 'file'],
+      [over, L('vault یا فایل env، فقط برای همین کار', 'Vault or env file, for this one task'), x.setting === over],
+      [own || '—', L('vault یا فایل env، تنظیم خودِ این بخش', "Vault or env file, this part's own setting"), x.setting === own && x.from !== 'default' && x.from !== 'file'],
       [L('پیش‌فرض کد', 'Code default'), L('وقتی هیچ‌کدام تنظیم نشده', 'When neither is set'), x.from === 'default'],
     ];
     let dlg = document.getElementById('mi');
@@ -291,19 +306,14 @@ dialog.mi::backdrop{background:rgba(10,14,12,.55)}
       <div class="mb">
         ${info ? `<div><h4>${L('کاربرد', 'What it does')}</h4><p>${esc(L(...info.what))}</p></div>
         <div><h4>${L('کجا استفاده می‌شود', 'Where it is used')}</h4><ul>${info.where.map(w => `<li>${esc(L(...w))}</li>`).join('')}</ul><p style="margin-top:6px"><code>${esc(info.files)}</code></p></div>` : ''}
-        <div><h4>${L('مدل فعلی', 'Current model')}</h4><p><code>${esc(x.model)}</code> ${L('از', 'from')} <b>${esc(where(x.from))}</b>${L('، ', ', ')}${L('متغیر', 'setting')} <code>${esc(x.setting)}</code></p></div>
-        <div><h4>${L('ترتیب انتخاب مدل', 'How the model is chosen')}</h4><div class="prio">${steps.map(([k, d, on], i) => `<div class="pr${on ? ' on' : ''}"><span class="n">${fa(i + 1)}</span>${i === 2 ? `<b>${esc(k)}</b>` : `<code>${esc(k)}</code>`}<span>${esc(d)}</span>${on ? `<span class="w">${L('اعمال‌شده', 'In use')}</span>` : ''}</div>`).join('')}</div>
+        <div><h4>${L('مدل فعلی', 'Current model')}</h4><p><code>${esc(x.model)}</code> ${L('از', 'from')} <b>${esc(where(x.from))}</b>${x.from === 'file' ? '' : `${L('، ', ', ')}${L('متغیر', 'setting')} <code>${esc(x.setting)}</code>`}</p></div>
+        <div><h4>${L('ترتیب انتخاب مدل', 'How the model is chosen')}</h4><div class="prio">${steps.map(([k, d, on], i) => `<div class="pr${on ? ' on' : ''}"><span class="n">${fa(i + 1)}</span>${i === 3 ? `<b>${esc(k)}</b>` : `<code>${esc(k)}</code>`}<span>${esc(d)}</span>${on ? `<span class="w">${L('اعمال‌شده', 'In use')}</span>` : ''}</div>`).join('')}</div>
           <p class="note" style="margin-top:6px">${L('در هر متغیر، مقدار vault بر فایل env برتری دارد.', 'For each setting, the vault wins over the env file.')}</p></div>
         <div><h4>${L('تغییر مدل', 'Changing the model')}</h4>
-          <p>${x.setting === over
-            ? L(`الان <code>${esc(over)}</code> اعمال می‌شود. در Oracle Vault مقدار secret با همین نام را عوض کنید، یا حذفش کنید تا <code>${esc(own)}</code> یا پیش‌فرض کد اعمال شود.`,
-              `<code>${esc(over)}</code> is in use. Change the value of the secret with that name in Oracle Vault, or delete it so <code>${esc(own)}</code> or the code default applies.`)
-            : L(`در Oracle Vault یک secret با نام <code>${esc(own)}</code> بسازید یا مقدارش را عوض کنید، مثلاً <code>claude-haiku-5-5</code> یا <code>claude-opus-5-5</code>. برای برگشت به پیش‌فرض کد، آن secret را حذف کنید.`,
-              `In Oracle Vault, create or change a secret named <code>${esc(own)}</code>, e.g. <code>claude-haiku-5-5</code> or <code>claude-opus-5-5</code>. To go back to the code default, delete that secret.`)}</p>
-          ${shared.length ? `<p class="note" style="margin-top:6px">${L(`<code>${esc(own)}</code> مدل این بخش‌ها را هم تعیین می‌کند: ${shared.map(t => esc(L(...(TASK[t] || [t, t])))).join('، ')}. برای عوض کردن فقط همین کار، <code>${esc(over)}</code> را بسازید.`,
-            `<code>${esc(own)}</code> also sets the model of: ${shared.map(t => esc(L(...(TASK[t] || [t, t])))).join(', ')}. To change this task alone, create <code>${esc(over)}</code>.`)}</p>` : ''}
-          <p style="margin-top:8px">${L('بعد سرور را ری‌استارت کنید؛ سرور vault را فقط هنگام راه‌اندازی می‌خواند:', 'Then restart the server; it reads the vault only when it starts:')}</p>
-          <p style="margin-top:4px;direction:ltr;text-align:left"><code>sudo systemctl restart teoripro</code></p></div>
+          <p>${L(`مدل هر کار در فایل <a href="https://github.com/mojtabafld/driverlicense/blob/main/config/ai-models.json" target="_blank" rel="noopener"><code>config/ai-models.json</code></a> در مخزن است، زیر کلید <code>${esc(task)}</code>. از Claude بخواهید عوضش کند، یا فایل را در GitHub ویرایش کنید. بعد از ادغام در main، سرور حدود دو دقیقه بعد خودش آن را می‌گیرد و ری‌استارت می‌شود؛ لازم نیست به vault یا سرور دست بزنید.`,
+            `Each task's model is in <a href="https://github.com/mojtabafld/driverlicense/blob/main/config/ai-models.json" target="_blank" rel="noopener"><code>config/ai-models.json</code></a> in the repository, under <code>${esc(task)}</code>. Ask Claude to change it, or edit the file on GitHub. Once merged to main, the server picks it up and restarts within about two minutes; no need to touch the vault or the server.`)}</p>
+          ${x.from !== 'file' ? `<p class="note" style="margin-top:6px">${L(`این کار هنوز در فایل نیست، پس مدلش از <b>${esc(where(x.from))}</b> می‌آید. با افزودن <code>${esc(task)}</code> به فایل، فایل برتری پیدا می‌کند.`, `This task is not in the file yet, so its model comes from the <b>${esc(where(x.from))}</b>. Adding <code>${esc(task)}</code> to the file makes the file win.`)}</p>` : ''}
+          <p class="note" style="margin-top:6px">${L('مدل‌های معتبر:', 'Valid models:')} <code>claude-haiku-5-5</code> <code>claude-sonnet-5-5</code> <code>claude-opus-5-5</code></p></div>
       </div>`;
     if (!dlg.open) dlg.showModal();
   }

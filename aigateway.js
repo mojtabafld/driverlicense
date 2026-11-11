@@ -11,6 +11,30 @@
 // The picture services' calls (kie.ai, OpenAI images) are counted here too (picture()), without a cost.
 'use strict';
 const Anthropic = require('@anthropic-ai/sdk');
+const fs = require('node:fs');
+const path = require('node:path');
+
+// The model of each task from config/ai-models.json (Mojtaba 2026-11-11): model names are not secrets, so they live in
+// the repository, where a change is a pull request, and they win over everything else (AI_MODEL_<TASK>, the module's
+// own setting from the vault or the env file, the code's default). Read again when the file changes; a value that is
+// not a Claude model id is left out (and listed in the report), and a missing or broken file means no entries.
+const MODELS_FILE = path.join(__dirname, 'config', 'ai-models.json');
+const MODEL_ID = /^claude-[a-z0-9.-]+$/;
+let fileCache = { mtime: -1, models: {}, bad: [], error: null };
+function fileModels() {
+  let st;
+  try { st = fs.statSync(MODELS_FILE); } catch { fileCache = { mtime: 0, models: {}, bad: [], error: null }; return fileCache; }
+  if (st.mtimeMs === fileCache.mtime) return fileCache;
+  const next = { mtime: st.mtimeMs, models: {}, bad: [], error: null };
+  try {
+    const m = JSON.parse(fs.readFileSync(MODELS_FILE, 'utf8')).models || {};
+    for (const [task, id] of Object.entries(m)) {
+      if (typeof id === 'string' && MODEL_ID.test(id.trim())) next.models[task] = id.trim(); else next.bad.push(task);
+    }
+  } catch (e) { next.error = String(e.message || e).slice(0, 200); console.error('config/ai-models.json:', next.error); }
+  fileCache = next;
+  return next;
+}
 
 // $ per million tokens (input, output, cache read); a cache write costs 1.25 × input.
 const PRICES = {
@@ -49,7 +73,7 @@ async function call(task, params, { stream = false } = {}) {
   if (!available()) throw Object.assign(new Error('ANTHROPIC_API_KEY تنظیم نشده است.'), { status: 503 });
   if (budget() && !ADMIN_TASKS.has(task) && todayCost() >= budget()) throw Object.assign(new Error('سقف روزانه‌ی هوش مصنوعی پر شده است؛ فردا دوباره امتحان کنید.'), { status: 429 });
   client = client || new Anthropic({ timeout: 300e3, maxRetries: 2 });
-  const model = process.env[`AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`] || params.model;
+  const model = fileModels().models[task] || process.env[`AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`] || params.model;
   // Claude Haiku has no server-side refusal fallback: for it the callers' `fallbacks` and its beta are left out.
   const req = { ...params, model };
   if (/haiku/.test(model)) {
@@ -76,8 +100,8 @@ function picture(provider, ok, error) { if (store) note(`picture:${provider}`, {
 
 // The model each task really runs on (Mojtaba 2026-11-11), so the admin sees it without opening the vault: the
 // modules declare their tasks, their own setting and its default (declare()); report() works out which one wins
-// (AI_MODEL_<TASK>, then the module's setting, then the default) and where that value came from (the vault, the
-// env file or the code). Model names only, never a key.
+// (config/ai-models.json, then AI_MODEL_<TASK>, then the module's setting, then the default) and where that value
+// came from (the file, the vault, the env file or the code). Model names only, never a key.
 const declared = [];
 function declare(tasks, setting, def) { declared.push({ tasks, setting, def }); }
 const MODULES = ['./lesson', './search', './insights', './imagegen'];
@@ -87,17 +111,25 @@ function from(name) {
 }
 function effective() {
   for (const m of MODULES) { try { require(m); } catch { /* a module that does not load declares nothing */ } }
-  const out = [];
+  const out = [], file = fileModels().models;
   for (const d of declared) for (const task of d.tasks) {
     const over = `AI_MODEL_${task.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
     const own = (process.env[d.setting] || '').trim();
-    out.push(process.env[over] ? { task, model: process.env[over], setting: over, from: from(over), own: d.setting }
+    out.push(file[task] ? { task, model: file[task], setting: 'config/ai-models.json', from: 'file', own: d.setting }
+      : process.env[over] ? { task, model: process.env[over], setting: over, from: from(over), own: d.setting }
       : own ? { task, model: own, setting: d.setting, from: from(d.setting) }
       : { task, model: d.def, setting: d.setting, from: 'default' });
   }
   const ORDER = ['coach', 'lesson', 'search', 'ask', 'search-term', 'picture-describe', 'picture-check', 'picture-prompt'];
   const at = t => (ORDER.indexOf(t) + 1 || 99);
   return out.sort((a, b) => at(a.task) - at(b.task));
+}
+
+// Every variable that can name a task's model: the modules' own settings and AI_MODEL_<TASK> for each task.
+function modelVars() {
+  const names = new Set(Object.keys(process.env).filter(k => k.startsWith('AI_MODEL_')));
+  for (const d of declared) { names.add(d.setting); for (const t of d.tasks) names.add(`AI_MODEL_${t.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`); }
+  return [...names].sort();
 }
 
 // For the admin: today by task, the last 14 days' totals, the budget, the last calls.
@@ -111,6 +143,9 @@ function report() {
     models: Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith('AI_MODEL_'))),
     recent: recent.slice(0, 50),
     effective: effective(),
+    // the model settings still set in the vault or the env file, which the file now outweighs (names only)
+    envModels: modelVars().filter(k => process.env[k]).map(k => ({ name: k, from: from(k) })),
+    file: { bad: fileModels().bad, error: fileModels().error },
   };
 }
 

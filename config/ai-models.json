@@ -1,0 +1,13 @@
+{
+  "about": "The Claude model of each AI task. Model names only, never a key. This file wins over the vault, the env file and the code's defaults; a task left out falls back to those. A merge to main reaches the server within about two minutes. See aigateway.js.",
+  "models": {
+    "coach": "claude-haiku-5-5",
+    "lesson": "claude-haiku-5-5",
+    "search": "claude-haiku-5-5",
+    "ask": "claude-haiku-5-5",
+    "search-term": "claude-haiku-5-5",
+    "picture-describe": "claude-opus-5-5",
+    "picture-check": "claude-opus-5-5",
+    "picture-prompt": "claude-opus-5-5"
+  }
+}

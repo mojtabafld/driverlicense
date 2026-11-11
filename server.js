@@ -3,6 +3,7 @@
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_EMAILS or ADMIN_USERS (comma-separated email addresses of the admins), ANTHROPIC_API_KEY (AI lessons in the review),
+// (config/ai-models.json names each AI task's model and wins over the model variables below; aigateway.js)
 // LESSON_AI_MODEL (Claude model for those lessons, default claude-haiku-5-5), SEARCH_AI_MODEL (search and «بپرس», default claude-haiku-5-5),
 // IMAGE_DESCRIBE_MODEL (describes and checks question pictures, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
 // prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
@@ -1387,7 +1388,7 @@ async function api(req, res, route) {
     return send(res, 200, {
       at: Date.now(), up: Math.round(process.uptime()), node: process.version, version: VERSION, commit: head.slice(0, 7),
       users: Object.keys(store.users).length, storage: store.kind || 'file', files: store.files ? await store.files.ready() : null,
-      monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models, effective: ai.effective },
+      monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models, effective: ai.effective, envModels: ai.envModels, file: ai.file },
       rag: require('./rag').info(), audit: audit.list().slice(0, 200), integrity: integrity.report(store.users), encryption: store.encryption ? store.encryption() : null, backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
     });
   }
