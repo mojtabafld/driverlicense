@@ -6,36 +6,37 @@ from nq import Q, S, above, picture, town, view
 
 Q(5226, "7.12", above("""
 THE SCENE: a junction seen from above: a main road runs left-right; a side road comes up from the bottom of the picture and meets it.
-At the end of the side road: shark teeth (a row of white triangles) across the lane and a give-way sign (inverted white triangle with a
-red border). Along the near side of the main road runs a two-way cycle path, separated from the carriageway by a kerb, with a broken
-centre line and white bicycle symbols with arrows pointing both ways.
-VEHICLES (colour code used strictly): a RED car (ours) at the shark teeth on the side road; a cyclist on the cycle path coming from the
-RIGHT (riding towards the left); another cyclist on the cycle path coming from the left; a grey car on the main road coming from the
-left. A SOLID GREEN arrow from the red car straight across the cycle path and the main road, drawn after the others have passed.
+At the end of the side road: shark teeth (a row of white triangles) across the lane. Along the near side of the main road runs a two-way
+cycle path, separated from the carriageway by a kerb, with a broken centre line and white bicycle symbols with arrows pointing both ways.
+VEHICLES (colour code used strictly): a RED car (ours) at the shark teeth on the side road, its left indicator on; a cyclist on the cycle
+path coming from the RIGHT (riding towards the left); another cyclist on the cycle path coming from the left; a grey car on the main road
+coming from the right and a blue car coming from the left. A SOLID GREEN arrow from the red car across the cycle path, then turning
+LEFT onto the far lane of the main road, drawn after the others have passed. A DASHED ORANGE short arrow from the red car stopping on the
+cycle path itself.
 MUST NOT APPEAR: traffic lights, text."""),
-  "Du kommer ad en sidevej med hajtænder og en vigepligtstavle og skal ligeud over hovedvejen. Langs hovedvejen er der en dobbeltrettet cykelsti. Hvad gælder?",
-  "You are coming along a side road with shark teeth and a give-way sign and are going straight across the main road. Along the main road there is a two-way cycle path. What applies?",
-  "از جاده‌ای فرعی با خط دندان‌کوسه و تابلوی حق تقدم می‌آیید و می‌خواهید مستقیم از جاده‌ی اصلی رد شوید. کنار جاده‌ی اصلی مسیر دوچرخه‌ی دوطرفه هست. چه قاعده‌ای برقرار است؟",
-  S(True, "Jeg skal holde tilbage for cyklister på cykelstien fra begge retninger.", "I must give way to cyclists on the cycle path from both directions.",
-    "باید به دوچرخه‌سوارهای مسیر دوچرخه از هر دو جهت راه بدهم.",
-    "Ubetinget vigepligt gælder den kørende færdsel fra begge sider, også cyklister på cykelstien.",
-    "The duty to give way applies to traffic from both sides, also cyclists on the cycle path.",
-    "حق تقدم مطلق برای ترافیک هر دو طرف است، از جمله دوچرخه‌سوارهای مسیر دوچرخه."),
-  S(True, "Jeg skal holde tilbage for bilerne på hovedvejen fra både venstre og højre.", "I must give way to the cars on the main road from both left and right.",
-    "باید به خودروهای جاده‌ی اصلی، هم از چپ و هم از راست، راه بدهم.",
-    "Med ubetinget vigepligt skal du holde tilbage for al kørende færdsel på den vej, du kører ind på eller over.",
-    "With an unconditional duty to give way, you must give way to all traffic on the road you drive onto or across.",
-    "با حق تقدم مطلق باید به همه‌ی ترافیک جاده‌ای که واردش می‌شوید یا از آن رد می‌شوید راه بدهید."),
-  S(True, "Jeg viser i god tid, at jeg vil holde tilbage, ved at sætte farten ned eller standse.", "I show in good time that I will give way by slowing down or stopping.",
-    "به موقع با کم کردن سرعت یا ایستادن نشان می‌دهم که راه می‌دهم.",
-    "Den, der har vigepligt, skal tydeligt og i god tid vise det ved at nedsætte farten eller standse.",
-    "Whoever has to give way must show it clearly and in good time by slowing down or stopping.",
-    "کسی که باید راه بدهد، باید به‌روشنی و به موقع با کم کردن سرعت یا ایستادن این را نشان دهد."),
-  S(False, "Cyklister fra højre på cykelstien skal holde tilbage for mig.", "Cyclists from the right on the cycle path must give way to me.",
-    "دوچرخه‌سوارهایی که از راست روی مسیر دوچرخه می‌آیند باید به من راه بدهند.",
-    "Du har ubetinget vigepligt for alle; på en dobbeltrettet sti kan cyklister komme fra begge retninger.",
-    "You must give way to everyone; on a two-way path cyclists can come from both directions.",
-    "شما باید به همه راه بدهید؛ در مسیر دوطرفه دوچرخه‌سوار از هر دو جهت می‌آید."),
+  "Du kommer ad en sidevej med hajtænder og vil svinge til venstre ind på hovedvejen. Langs hovedvejen er der en dobbeltrettet cykelsti. Hvad gælder?",
+  "You are coming along a side road with shark teeth and want to turn left onto the main road. Along the main road there is a two-way cycle path. What applies?",
+  "از جاده‌ای فرعی با خط دندان‌کوسه می‌آیید و می‌خواهید به چپ، به داخل جاده‌ی اصلی بپیچید. کنار جاده‌ی اصلی مسیر دوچرخه‌ی دوطرفه هست. چه قاعده‌ای برقرار است؟",
+  S(True, "Jeg skal holde tilbage for cyklister på cykelstien fra både venstre og højre.", "I must give way to cyclists on the cycle path from both left and right.",
+    "باید به دوچرخه‌سوارهای مسیر دوچرخه، هم از چپ و هم از راست، راه بدهم.",
+    "Hajtænderne giver ubetinget vigepligt for al kørende færdsel, også cyklisterne fra begge retninger på den dobbeltrettede sti.",
+    "The shark teeth mean an unconditional duty to give way to all traffic, also the cyclists from both directions on the two-way path.",
+    "دندان‌کوسه یعنی باید بی‌قیدوشرط به همه‌ی وسایل راه بدهید، از جمله دوچرخه‌سوارهای هر دو جهت در مسیر دوطرفه."),
+  S(True, "Jeg skal holde tilbage for bilerne på hovedvejen fra begge sider, før jeg svinger til venstre.", "I must give way to the cars on the main road from both sides before I turn left.",
+    "پیش از گردش به چپ باید به خودروهای جاده‌ی اصلی از هر دو طرف راه بدهم.",
+    "Når du svinger til venstre, krydser du først den ene og så den anden kørselsretning; du har ubetinget vigepligt for dem begge.",
+    "When you turn left you cross first one and then the other direction of traffic; you must give way to both.",
+    "وقتی به چپ می‌پیچید، اول از یک جهت و بعد از جهت دیگر عبور می‌کنید؛ باید به هر دو بی‌قیدوشرط راه بدهید."),
+  S(False, "Når jeg er kommet over cykelstien, har bilerne fra højre vigepligt for mig.", "Once I am across the cycle path, the cars from the right must give way to me.",
+    "وقتی از مسیر دوچرخه رد شدم، خودروهایی که از راست می‌آیند باید به من راه بدهند.",
+    "Den ubetingede vigepligt gælder hele vejen ind på hovedvejen; højrereglen gælder ikke her.",
+    "The unconditional duty to give way lasts all the way onto the main road; the right-hand rule does not apply here.",
+    "حق تقدم مطلق تا ورود کامل به جاده‌ی اصلی برقرار است؛ قاعده‌ی دست راست این‌جا اعمال نمی‌شود."),
+  S(False, "Jeg må holde stille på cykelstien og vente der på et hul i trafikken.", "I may stop on the cycle path and wait there for a gap in the traffic.",
+    "می‌توانم روی مسیر دوچرخه بایستم و آن‌جا منتظر فاصله‌ای در ترافیک بمانم.",
+    "Så spærrer du for cyklisterne; vent før cykelstien, til der er plads til at køre helt ind på hovedvejen.",
+    "Then you block the cyclists; wait before the cycle path until there is room to drive all the way onto the main road.",
+    "این‌طور راه دوچرخه‌سوارها را می‌بندید؛ پیش از مسیر دوچرخه صبر کنید تا جا برای ورود کامل به جاده‌ی اصلی باشد."),
 )
 
 Q(5227, "7.12", town("""
