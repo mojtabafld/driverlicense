@@ -3,10 +3,9 @@
 // In the cloud: set DATABASE_URL (PostgreSQL) so accounts survive redeploys.
 // Optional env: PORT, HOST, INVITE_CODE (required to sign up when set), DB_FILE,
 // ADMIN_EMAILS or ADMIN_USERS (comma-separated email addresses of the admins), ANTHROPIC_API_KEY (AI lessons in the review),
-// LESSON_AI_MODEL (Claude model for those lessons, default claude-haiku-5-5), SEARCH_AI_MODEL (search and «بپرس», default claude-haiku-5-5),
-// IMAGE_DESCRIBE_MODEL (describes and checks question pictures, default claude-opus-5-5), IMAGE_PROMPT_MODEL and IMAGE_MODEL (the console's
-// prompt-writing Claude model and the picture model; defaults claude-opus-5-5 and gpt-image-2-5-sunburst), KIE_API_KEY (new question pictures, admin panel),
-// INSIGHTS_MODEL (the coach's and the daily report's model, insights.js, default claude-haiku-5-5), ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
+// (every AI model, Claude's and the picture, embedding and speech services', is in config/ai-models.json, not in a
+// variable; aigateway.js) KIE_API_KEY (new question pictures, admin panel),
+// ELEVENLABS_API_KEY (questions read aloud), STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PREMIUM_PRICE_WEEK / _MONTH / _QUARTER
 // PROMO_CODE / PROMO_DAYS (a free trial code) and PREMIUM_GATE (premium passes bought with Stripe Checkout, payments.js),
 // RESEND_API_KEY, MAIL_FROM, REPORT_TO, RESEND_WEBHOOK_SECRET and FORWARD_TO (email, mail.js).
 // See README.md for all variables.
@@ -20,11 +19,10 @@ if (process.env.TP_VAULT_SECRET) {
     const text = require('node:child_process').execFileSync(process.execPath, [require('node:path').join(__dirname, 'vault.js'), process.env.TP_VAULT_SECRET],
       { encoding: 'utf8', timeout: 20e3, stdio: ['ignore', 'pipe', 'pipe'] });
     let n = 0;
-    const names = global.TP_VAULT_KEYS = new Set();  // (the names alone, for the admin's model report)
     for (const line of text.split(/\r?\n/)) {
       const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(line);
       if (!m || line.trim().startsWith('#')) continue;
-      process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2'); names.add(m[1]); n++;
+      process.env[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2'); n++;
     }
     console.log(`Secrets: ${n} keys from Oracle Cloud Vault`);
   } catch (e) {
@@ -1387,7 +1385,7 @@ async function api(req, res, route) {
     return send(res, 200, {
       at: Date.now(), up: Math.round(process.uptime()), node: process.version, version: VERSION, commit: head.slice(0, 7),
       users: Object.keys(store.users).length, storage: store.kind || 'file', files: store.files ? await store.files.ready() : null,
-      monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, models: ai.models, effective: ai.effective },
+      monitor: require('./monitor').report(), ai: { today: ai.today, days: ai.days, budget: ai.budget, effective: ai.effective, file: ai.file },
       rag: require('./rag').info(), audit: audit.list().slice(0, 200), integrity: integrity.report(store.users), encryption: store.encryption ? store.encryption() : null, backups: (await require('./backup').list().catch(() => [])).slice(0, 14),
     });
   }
