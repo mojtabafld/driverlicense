@@ -31,7 +31,7 @@ PREFIX = {True: ('Ja. ', 'Yes. ', 'بله. '), False: ('Nej. ', 'No. ', 'خیر.
 
 # Questions whose text changed after they were published: their number of changes («rev», as in site/data.js), so the AI's
 # lessons and topic points cached for the old text (lesson.js qkey) are written again. 6025: 1812, not 1-1-2 (2026-10-23).
-REV = {6025: 1}
+REV = {6025: 1, 5122: 1, 5226: 1}  # 5122 and 5226: rewritten 2026-11-13, they repeated 5034 and 5449
 
 
 def check(q, errors, warn):

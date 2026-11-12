@@ -448,22 +448,30 @@ MUST NOT APPEAR: signs, text."""),
 )
 
 Q(5122, "7.3", view("""
-THE SCENE: a two-way country road in thick fog: visibility is only about 50 m; the edge lines and the broken centre line fade into
-grey fog ahead, and the red rear lights of a car ahead are just visible as a faint glow far away.
-MUST BE CLEARLY VISIBLE: the thick fog, the fading road markings, the faint rear lights ahead.
-MUST NOT APPEAR: signs, text.""", cond="thick fog, visibility about 50 m, daytime"),
-  "Der er tæt tåge, og du kan kun se omkring 50 m frem. Hvordan forholder du dig?",
-  "There is thick fog, and you can only see about 50 m ahead. What do you do?",
-  "مه غلیظ است و فقط حدود ۵۰ متر جلو را می‌بینید. چه می‌کنید؟",
-  S(True, "Jeg kører så langsomt, at jeg kan standse på den strækning, jeg kan se.", "I drive so slowly that I can stop within the distance I can see.",
-    "آن‌قدر آهسته می‌رانم که بتوانم در فاصله‌ای که می‌بینم بایستم.",
-    "Du skal kunne standse på den del af vejen, du har udsyn over.", "You must be able to stop within the part of the road you can see.", "باید بتوانید در بخشی از جاده که می‌بینید بایستید."),
-  S(True, "Jeg holder større afstand til bilen foran.", "I keep a greater distance to the car in front.", "فاصله‌ی بیشتری با خودروی جلو نگه می‌دارم.",
-    "I tåge har du brug for mere tid til at reagere.", "In fog you need more time to react.", "در مه به زمان بیشتری برای واکنش نیاز دارید."),
-  S(False, "Jeg tænder fjernlyset for at se længere.", "I switch on the high beam to see further.", "نور بالا را روشن می‌کنم تا دورتر را ببینم.",
-    "I tåge reflekteres fjernlyset og blænder dig selv.", "In fog the high beam is reflected and dazzles you yourself.", "در مه نور بالا بازتاب می‌شود و خودتان را خیره می‌کند."),
-  S(True, "Jeg må bruge tågelygter.", "I may use fog lights.", "می‌توانم از چراغ مه‌شکن استفاده کنم.",
+THE SCENE: a two-way country road in thick fog; the edge lines and the broken centre line fade into grey fog a short way ahead.
+In the interior rear-view mirror (top centre of the picture) the two headlights of a car driving close behind us shine brightly through
+the fog.
+MUST BE CLEARLY VISIBLE: the thick fog, the rear-view mirror with the bright headlights of the car close behind.
+MUST NOT APPEAR: signs, text.""", cond="thick fog, daytime"),
+  "Det er tæt tåge. Hvad gælder om tågebaglygten?",
+  "There is thick fog. What applies to the rear fog light?",
+  "مه غلیظ است. درباره‌ی چراغ مه‌شکن عقب چه قاعده‌ای برقرار است؟",
+  S(True, "Jeg må tænde tågebaglygten, så bilerne bag mig ser mig i tide.", "I may switch on the rear fog light so that the cars behind me see me in time.",
+    "می‌توانم چراغ مه‌شکن عقب را روشن کنم تا خودروهای پشت سرم به موقع مرا ببینند.",
     "Tågelygter må bruges i tåge og under kraftig nedbør.", "Fog lights may be used in fog and heavy precipitation.", "چراغ مه‌شکن در مه و بارش شدید مجاز است."),
+  S(True, "Tågebaglygten kan blænde den, der kører tæt bag mig.", "The rear fog light can dazzle someone driving close behind me.",
+    "چراغ مه‌شکن عقب ممکن است چشم راننده‌ای را که نزدیک پشت سرم می‌آید بزند.",
+    "Den lyser meget kraftigt; lygter må ikke blænde andre trafikanter.", "It is very bright; lights must not dazzle other road users.", "این چراغ خیلی پرنور است؛ چراغ‌ها نباید چشم دیگران را بزنند."),
+  S(False, "Jeg lader tågebaglygten være tændt, når tågen er lettet, så jeg bliver set bedre.", "I leave the rear fog light on after the fog has lifted, so that I am seen better.",
+    "وقتی مه برطرف شد، چراغ مه‌شکن عقب را روشن می‌گذارم تا بهتر دیده شوم.",
+    "Tågelygter må kun bruges i tåge og under kraftig nedbør; sluk den, når tågen er væk.",
+    "Fog lights may only be used in fog and heavy precipitation; switch it off when the fog is gone.",
+    "چراغ مه‌شکن فقط در مه و بارش شدید مجاز است؛ وقتی مه رفت، خاموشش کنید."),
+  S(False, "Jeg må kun tænde tågebaglygten, når jeg kan se mindre end 50 m frem.", "I may only switch on the rear fog light when I can see less than 50 m ahead.",
+    "فقط وقتی کمتر از ۵۰ متر جلو را می‌بینم، می‌توانم چراغ مه‌شکن عقب را روشن کنم.",
+    "Færdselsloven sætter ingen bestemt sigtegrænse; tågelygter må bruges i tåge og under kraftig nedbør.",
+    "The Road Traffic Act sets no fixed visibility limit; fog lights may be used in fog and heavy precipitation.",
+    "قانون راهنمایی و رانندگی حد دید مشخصی تعیین نکرده؛ چراغ مه‌شکن در مه و بارش شدید مجاز است."),
 )
 
 Q(5123, "7.3", town("""
