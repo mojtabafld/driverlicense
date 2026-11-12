@@ -20,16 +20,18 @@ const path = require('node:path');
 // services' models (pictures, embeddings, speech) are in the same file (modelFor(), read by imagegen.js, rag.js, tts.js).
 const MODELS_FILE = path.join(__dirname, 'config', 'ai-models.json');
 const MODEL_ID = /^[a-z0-9][a-z0-9._-]*$/i;  // (Claude's ids, and the picture, embedding and speech services')
-let fileCache = { mtime: -1, models: {}, bad: [], error: null };
+let fileCache = { mtime: -1, models: {}, voices: {}, bad: [], error: null };
 function fileModels() {
   let st;
-  try { st = fs.statSync(MODELS_FILE); } catch { fileCache = { mtime: 0, models: {}, bad: [], error: null }; return fileCache; }
+  try { st = fs.statSync(MODELS_FILE); } catch { fileCache = { mtime: 0, models: {}, voices: {}, bad: [], error: null }; return fileCache; }
   if (st.mtimeMs === fileCache.mtime) return fileCache;
-  const next = { mtime: st.mtimeMs, models: {}, bad: [], error: null };
+  const next = { mtime: st.mtimeMs, models: {}, voices: {}, bad: [], error: null };
   try {
-    const m = JSON.parse(fs.readFileSync(MODELS_FILE, 'utf8')).models || {};
-    for (const [task, id] of Object.entries(m)) {
-      if (typeof id === 'string' && MODEL_ID.test(id.trim())) next.models[task] = id.trim(); else next.bad.push(task);
+    const all = JSON.parse(fs.readFileSync(MODELS_FILE, 'utf8'));
+    for (const [part, into, pre] of [['models', next.models, ''], ['voices', next.voices, 'voices.']]) {
+      for (const [k, id] of Object.entries(all[part] || {})) {
+        if (typeof id === 'string' && MODEL_ID.test(id.trim())) into[k] = id.trim(); else next.bad.push(pre + k);
+      }
     }
   } catch (e) { next.error = String(e.message || e).slice(0, 200); console.error('config/ai-models.json:', next.error); }
   fileCache = next;
@@ -104,6 +106,8 @@ function picture(provider, ok, error) { if (store) note(`picture:${provider}`, {
 const declared = [];
 function declare(tasks, def) { declared.push({ tasks, def }); }
 const modelFor = (task, def) => fileModels().models[task] || def;
+// ElevenLabs' voice IDs from the same file's «voices» (tts.js; Mojtaba 2026-11-12).
+const voiceFor = (key, def) => fileModels().voices[key] || def;
 const MODULES = ['./lesson', './search', './insights', './imagegen', './rag', './tts'];
 function effective() {
   for (const m of MODULES) { try { require(m); } catch { /* a module that does not load declares nothing */ } }
@@ -132,4 +136,4 @@ function report() {
   };
 }
 
-module.exports = { init, call, text, picture, report, available, declare, modelFor };
+module.exports = { init, call, text, picture, report, available, declare, modelFor, voiceFor };

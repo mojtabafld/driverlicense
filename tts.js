@@ -8,13 +8,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const API = `${(process.env.ELEVENLABS_BASE || 'https://api.elevenlabs.io').replace(/\/$/, '')}/v1/text-to-speech`;
-// The voice follows the language of the text read and the user's choice of a woman's or a man's voice:
-// ELEVENLABS_VOICE_ID_DA_WOMAN / _DA_MAN / _EN_WOMAN / _EN_MAN; without the one asked for, ELEVENLABS_VOICE_ID_DA
-// (or _EN), else ELEVENLABS_VOICE_ID for both, else a default voice.
-const env = k => process.env[k] || '';
+// The voice follows the language of the text read and the user's choice of a woman's or a man's voice: config/
+// ai-models.json's «voices» (da-woman, da-man, en-woman, en-man; Mojtaba 2026-11-12), else a default voice. No
+// environment variable or vault secret sets a voice.
 const voiceOf = (lang, gender) => {
   const L = lang === 'en' ? 'EN' : 'DA', G = gender === 'man' ? 'MAN' : 'WOMAN';
-  return env(`ELEVENLABS_VOICE_ID_${L}_${G}`) || env(`ELEVENLABS_VOICE_ID_${L}`) || env('ELEVENLABS_VOICE_ID') || 'JBFqnCBsd6RMkjVDRZzb';
+  return ai.voiceFor(`${L}-${G}`.toLowerCase(), 'JBFqnCBsd6RMkjVDRZzb');
 };
 // A short line in each language, to hear a voice before choosing it in the settings.
 const SAMPLE = {
@@ -96,11 +95,11 @@ async function get({ store, siteDir, qid, lang, gender, sample, username }) {
 // ---------- the AI's Persian texts (the analysis of an answer, the summary of an exam's mistakes) read aloud ----------
 // Only a text the server itself wrote (kept in store.meta by lesson.js) is read, so the endpoint cannot be used to
 // read anything else. Persian needs a model that speaks it (config/ai-models.json's «speech-fa», default eleven_v3) and the voice
-// ELEVENLABS_VOICE_ID_FA_MAN (else _FA, else ELEVENLABS_VOICE_ID, else the default). Long texts are read in parts
+// config/ai-models.json's «voices.fa» (else the default). Long texts are read in parts
 // (the model takes a few thousand characters at a time) and the MP3 parts joined.
 const FA_MODEL = () => ai.modelFor('speech-fa', 'eleven_v3');
 ai.declare(['speech-fa'], 'eleven_v3');
-const faVoice = () => env('ELEVENLABS_VOICE_ID_FA_MAN') || env('ELEVENLABS_VOICE_ID_FA') || env('ELEVENLABS_VOICE_ID') || 'JBFqnCBsd6RMkjVDRZzb';
+const faVoice = () => ai.voiceFor('fa', 'JBFqnCBsd6RMkjVDRZzb');
 const PART = 2400;
 const aiKey = id => `tts-ai-v1-${id}-${faVoice()}-${FA_MODEL()}`;
 // The words as spoken: no markdown, «تیک زد» worded as the app shows it.
