@@ -669,8 +669,8 @@ const clientIp = req => {
   if (IP_HEADER && fromHere(r)) { const v = String(req.headers[IP_HEADER] || '').split(',').pop().trim(); if (v) return v; }
   return r;
 };
-// Claude's read-only MCP tools (mcp.js), served at /mcp.
-const mcp = require('./mcp')({ getStore: () => store, adminStats, audit, clientIp, version: VERSION, commit: gitHead, bank: () => lessonBank(SITE) });
+// Claude's admin tools over MCP (mcp.js), served at /mcp.
+const mcp = require('./mcp')({ getStore: () => store, adminStats, audit, clientIp, version: VERSION, commit: gitHead, bank: () => lessonBank(SITE), insights, setNotes, push });
 
 // Simple rate limit per IP: 10 failures / 10 minutes (login and invite code).
 const fails = new Map();
@@ -2678,7 +2678,7 @@ async function main() {
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     }
-    // Claude's read-only tools (mcp.js; Mojtaba 2026-11-12): /mcp, or /mcp/<token> for a client without headers.
+    // Claude's admin tools (mcp.js; Mojtaba 2026-11-12): /mcp, or /mcp/<token> for a client without headers.
     if (pathname === '/mcp' || pathname.startsWith('/mcp/')) {
       try { return await mcp(req, res, pathname.slice(4)); }
       catch (e) { console.error('mcp', e); if (!res.headersSent) return send(res, 500, { error: 'server error' }); return; }

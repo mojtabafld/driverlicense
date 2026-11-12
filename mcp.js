@@ -1,13 +1,15 @@
-// Teoripro's MCP server for Claude (Mojtaba 2026-11-12): the admin's read-only tools, so Claude (Claude Code, or
-// claude.ai as a custom connector) reads the app's state itself instead of screenshots or ssh. Streamable HTTP at /mcp,
+// Teoripro's MCP server for Claude (Mojtaba 2026-11-12): the admin's tools, so Claude (Claude Code, or claude.ai as a
+// custom connector) reads the app's state and does the admin's content work itself instead of screenshots or ssh. Streamable HTTP at /mcp,
 // JSON-RPC over POST with a JSON answer (no event stream, no sessions).
 // - Access: MCP_TOKEN (the vault; 32+ characters) as «Authorization: Bearer …», or in the address, /mcp/<token>, for a
 //   client that cannot send a header (a claude.ai connector). Without MCP_TOKEN the endpoint is off. Wrong tokens from
 //   one address are slowed down (FAILS in 10 minutes, then 429), and each refusal and each tool call is in the
 //   admins' log (audit.js) as «mcp:…».
-// - Read only: no tool changes anything. Nothing personal leaves: no email, name, username, IP or device, no key or
-//   setting value, only counts and the app's own texts (a user's report keeps its text, which the user wrote to the
-//   admins).
+// - Reading and writing (read and write since Mojtaba 2026-11-12): the writing tools do what the dashboard does with
+//   the app's content (question notes, news, a backup, the reports and errors from the app); none touches an account,
+//   a payment, a key or a setting. Each write is in the admins' log with what it changed. Nothing personal leaves: no
+//   email, name, username, IP or device, no key or setting value, only counts and the app's own texts (a user's report
+//   keeps its text, which the user wrote to the admins).
 'use strict';
 const crypto = require('node:crypto');
 
@@ -15,7 +17,7 @@ const PROTOCOLS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const FAILS = 10;
 const fails = new Map();   // ip → [times]
 
-module.exports = function makeMcp({ getStore, adminStats, audit, clientIp, version, commit, bank }) {
+module.exports = function makeMcp({ getStore, adminStats, audit, clientIp, version, commit, bank, insights, setNotes, push }) {
   const sto = () => getStore();
   const token = () => String(process.env.MCP_TOKEN || '').trim();
   const same = (a, b) => crypto.timingSafeEqual(crypto.createHash('sha256').update(a).digest(), crypto.createHash('sha256').update(b).digest());
@@ -99,6 +101,71 @@ module.exports = function makeMcp({ getStore, adminStats, audit, clientIp, versi
       description: "The admins' actions and refused requests (audit.js), newest first: when, what, the method and the answer's status. Who and from where are left out.",
       inputSchema: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 200, description: 'How many (default 50).' } }, additionalProperties: false },
       run: async a => ({ entries: audit.list().slice(0, num(a.limit, 50, 1, 200)).map(e => ({ at: e.at, act: e.act, m: e.m, code: e.code, n: e.n })) }) },
+    { name: 'news_list', title: 'News',
+      description: "The news every user sees behind the bell on the app's home page, newest first: id, when, title and text.",
+      inputSchema: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 100, description: 'How many (default 20).' } }, additionalProperties: false },
+      run: async a => ({ news: (sto().meta.news || []).slice().reverse().slice(0, num(a.limit, 20, 1, 100)).map(({ id, at, title, text }) => ({ id, at, title, text })) }) },
+
+    // ---------- writing ----------
+    { name: 'news_post', title: 'Post news', write: true,
+      description: "Posts a news message for every user (the bell on the app's home page). With notify true, every device with notifications on also gets a push notification right away; that cannot be taken back, so it is off unless asked for.",
+      inputSchema: { type: 'object', properties: {
+        title: { type: 'string', maxLength: 140, description: 'The title (in the language the users read, usually Persian).' },
+        text: { type: 'string', maxLength: 4000, description: 'The message.' },
+        notify: { type: 'boolean', description: 'Also send a push notification to everyone (default false).' } }, required: ['title'], additionalProperties: false },
+      run: async a => {
+        const title = String(a.title || '').trim().slice(0, 140), text = String(a.text || '').trim().slice(0, 4000);
+        if (!title && !text) throw new Error('a title or a text is needed');
+        const item = { id: crypto.randomBytes(6).toString('hex'), at: Date.now(), title, text, by: 'mcp' };
+        const news = [...(sto().meta.news || []), item].slice(-100);
+        sto().meta.news = news; await sto().saveMeta('news', news);
+        if (a.notify === true) push.broadcast(sto(), item).then(n => console.log('news push', item.id, n)).catch(e => console.error('news push', e.message));
+        return { posted: { id: item.id, at: item.at, title, text }, notified: a.notify === true };
+      }, log: a => ({ title: clip(a.title, 60), notify: a.notify === true }) },
+    { name: 'news_delete', title: 'Delete news', write: true, destructive: true,
+      description: 'Removes a news message by its id (from news_list). Users no longer see it.',
+      inputSchema: { type: 'object', properties: { id: { type: 'string', maxLength: 40 } }, required: ['id'], additionalProperties: false },
+      run: async a => {
+        const before = sto().meta.news || [], news = before.filter(x => x.id !== String(a.id));
+        if (news.length === before.length) throw new Error('no news with that id');
+        sto().meta.news = news; await sto().saveMeta('news', news);
+        return { deleted: String(a.id) };
+      }, log: a => ({ id: clip(a.id, 40) }) },
+    { name: 'question_note_decide', title: 'Decide on a question note', write: true,
+      description: "Approves, rejects or removes the note on a question's usual mistake (from question_notes). An approved note goes into every AI explanation of that question; fa and en, when given, replace its text.",
+      inputSchema: { type: 'object', properties: {
+        qid: { type: 'integer' }, action: { type: 'string', enum: ['approve', 'reject', 'remove'] },
+        fa: { type: 'string', maxLength: 500, description: 'New Persian text (optional).' }, en: { type: 'string', maxLength: 500, description: 'New English text (optional).' } },
+        required: ['qid', 'action'], additionalProperties: false },
+      run: async a => {
+        if (!['approve', 'reject', 'remove'].includes(a.action)) throw new Error('action: approve, reject or remove');
+        const notes = insights.decide(+a.qid, a.action, { fa: typeof a.fa === 'string' ? a.fa.trim() : '', en: typeof a.en === 'string' ? a.en.trim() : '', by: 'mcp' });
+        if (!notes) throw new Error('no note for that question');
+        await sto().saveMeta('qNotes', notes); setNotes(notes);
+        const n = notes[+a.qid];
+        return { qid: +a.qid, action: a.action, note: n ? { status: n.status, fa: n.fa, en: n.en } : null };
+      }, log: a => ({ qid: +a.qid, action: a.action }) },
+    { name: 'user_report_remove', title: 'Remove a report', write: true, destructive: true,
+      description: "Removes a report from the app once it is dealt with, by its time («at» from user_reports).",
+      inputSchema: { type: 'object', properties: { at: { type: 'integer' } }, required: ['at'], additionalProperties: false },
+      run: async a => {
+        const before = sto().meta.reports || [], reports = before.filter(r => r.at !== +a.at);
+        if (reports.length === before.length) throw new Error('no report at that time');
+        sto().meta.reports = reports; await sto().saveMeta('reports', reports);
+        return { removed: before.length - reports.length, left: reports.length };
+      }, log: a => ({ at: +a.at }) },
+    { name: 'client_errors_clear', title: 'Clear app errors', write: true, destructive: true,
+      description: 'Clears the app errors seen, all of them or those up to a time («at» from client_errors), e.g. after a fix is out.',
+      inputSchema: { type: 'object', properties: { until: { type: 'integer', description: 'Only errors at or before this time (default all).' } }, additionalProperties: false },
+      run: async a => {
+        const before = sto().meta.clientErrors || [], left = Number.isFinite(+a.until) && a.until !== undefined ? before.filter(e => e.at > +a.until) : [];
+        sto().meta.clientErrors = left; await sto().saveMeta('clientErrors', left);
+        return { cleared: before.length - left.length, left: left.length };
+      }, log: a => ({ until: a.until ?? 'all' }) },
+    { name: 'backup_now', title: 'Back up now', write: true,
+      description: 'Makes a backup of the database now (sealed with BACKUP_KEY, into Object Storage), as the dashboard does, and lists the newest ones.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      run: async () => { const b = require('./backup'); const made = await b.backup(true); return { made, newest: (await b.list()).slice(0, 5) }; } },
   ];
   const byName = new Map(TOOLS.map(t => [t.name, t]));
 
@@ -112,19 +179,22 @@ module.exports = function makeMcp({ getStore, adminStats, audit, clientIp, versi
       case 'initialize':
         return ok({ protocolVersion: PROTOCOLS.includes(p.protocolVersion) ? p.protocolVersion : PROTOCOLS[0],
           capabilities: { tools: { listChanged: false } }, serverInfo: { name: 'teoripro', title: 'Teoripro', version },
-          instructions: 'Read-only tools for the Teoripro driving-theory app (teori.bitlane.app): the server, AI use and models, app statistics, the hardest questions, reports and errors from the app, near-duplicate questions, question notes and the admins\' log. Nothing personal is returned.' });
+          instructions: 'Admin tools for the Teoripro driving-theory app (teori.bitlane.app). Reading: the server, AI use and models, app statistics, the hardest questions, reports and errors from the app, near-duplicate questions, question notes, news and the admins\' log; nothing personal is returned. Writing: news (post, delete), question notes (approve, reject, remove), removing handled reports, clearing app errors and a backup now; ask the admin before a write unless they asked for it, and never send a push to everyone (news_post notify) without their say.' });
       case 'ping': return ok({});
       case 'tools/list':
-        return ok({ tools: TOOLS.map(({ name, title, description, inputSchema }) => ({ name, title, description, inputSchema, annotations: { title, readOnlyHint: true, openWorldHint: false } })) });
+        return ok({ tools: TOOLS.map(({ name, title, description, inputSchema, write, destructive }) => ({ name, title, description, inputSchema,
+          annotations: { title, readOnlyHint: !write, destructiveHint: !!destructive, idempotentHint: !write, openWorldHint: false } })) });
       case 'tools/call': {
         const t = byName.get(p.name);
         if (!t) return err(-32602, `unknown tool: ${clip(p.name, 60)}`);
-        audit.record({ by: 'mcp', act: `mcp:${t.name}`, m: 'POST', code: 200, ip });
+        const args = p.arguments && typeof p.arguments === 'object' ? p.arguments : {};
         try {
-          const out = await t.run(p.arguments && typeof p.arguments === 'object' ? p.arguments : {});
+          const out = await t.run(args);
+          audit.record({ by: 'mcp', act: `mcp:${t.name}`, m: t.write ? 'WRITE' : 'READ', code: 200, ip, d: t.log ? t.log(args) : undefined });
           return ok({ content: [{ type: 'text', text: JSON.stringify(out) }], structuredContent: out });
         } catch (e) {
-          console.error('mcp', t.name, e);
+          if (!/^(no |a title|action:)/.test(e.message)) console.error('mcp', t.name, e);
+          audit.record({ by: 'mcp', act: `mcp:${t.name}`, m: t.write ? 'WRITE' : 'READ', code: 400, ip, d: t.log ? t.log(args) : undefined });
           return ok({ content: [{ type: 'text', text: `The tool failed: ${clip(e.message, 300)}` }], isError: true });
         }
       }
