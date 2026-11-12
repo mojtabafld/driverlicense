@@ -1,0 +1,19 @@
+# Labs MCP: Claude's DevOps tools (Containerlab, Docker, services) on this server; see server.js. Installed by
+# install.sh as /etc/systemd/system/labs-mcp.service, its settings in /etc/labs-mcp/env.
+[Unit]
+Description=Labs MCP (Containerlab, Docker, DevOps tools for Claude)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+# root: Containerlab and Docker need it. It listens on 127.0.0.1 only; the Cloudflare Tunnel brings the requests.
+User=root
+WorkingDirectory=/opt/labs-mcp
+EnvironmentFile=/etc/labs-mcp/env
+ExecStart=/usr/bin/node /opt/labs-mcp/server.js
+Restart=always
+RestartSec=3
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target
