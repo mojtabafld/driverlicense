@@ -590,6 +590,10 @@ const scoreOf = a => a.items.filter(x => x.ok).length;
 // What coach.js reads: the bank, the scoring and the day.
 const usageTimes = new Map();
 const aiDeps = () => ({ store, bank: lessonBank(SITE), scoreOf, FULL, PASS_MIN, dayKey, visits });
+// The commit running (its .git/HEAD), for the system page and MCP.
+function gitHead() {
+  try { const h = fs.readFileSync(path.join(__dirname, '.git', 'HEAD'), 'utf8').trim(); return (h.startsWith('ref: ') ? fs.readFileSync(path.join(__dirname, '.git', h.slice(5)), 'utf8').trim() : h).slice(0, 7); } catch { return ''; }
+}
 function adminStats() {
   const now = Date.now(), today = dayKey(now), DAYS = 30;
   const keys = Array.from({ length: DAYS }, (_, i) => dayKey(now - (DAYS - 1 - i) * 864e5));
@@ -665,6 +669,8 @@ const clientIp = req => {
   if (IP_HEADER && fromHere(r)) { const v = String(req.headers[IP_HEADER] || '').split(',').pop().trim(); if (v) return v; }
   return r;
 };
+// Claude's admin tools over MCP (mcp.js), served at /mcp.
+const mcp = require('./mcp')({ getStore: () => store, adminStats, audit, clientIp, version: VERSION, commit: gitHead, bank: () => lessonBank(SITE), insights, setNotes, push });
 
 // Simple rate limit per IP: 10 failures / 10 minutes (login and invite code).
 const fails = new Map();
@@ -2671,6 +2677,11 @@ async function main() {
       res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Client, X-Device, X-Session');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+    }
+    // Claude's admin tools (mcp.js; Mojtaba 2026-11-12): /mcp, or /mcp/<token> for a client without headers.
+    if (pathname === '/mcp' || pathname.startsWith('/mcp/')) {
+      try { return await mcp(req, res, pathname.slice(4)); }
+      catch (e) { console.error('mcp', e); if (!res.headersSent) return send(res, 500, { error: 'server error' }); return; }
     }
     const m = /^\/api\/([a-z]+(?:\/[a-z]+)?)$/.exec(pathname);   // (google/callback: one more part)
     if (m) {
