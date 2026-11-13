@@ -8,9 +8,8 @@ import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RTL } from '@/lib/i18n';
-import { BottomMenu } from '../bottom-menu';
-import { BAR_GAP, type BarTab } from './liquid-bar-types';
-import { PILL_BAR_H, PillBar } from './pill-bar';
+import { type BarTab } from './liquid-bar-types';
+import { PillBar } from './pill-bar';
 import { TABS } from './tabs';
 
 // The bar's room at the bottom of each page (with the gap under it: kit.tsx).
@@ -36,13 +35,6 @@ function Bar() {
   return <PillBar tabs={BAR_TABS} active={active} bottomInset={ins.bottom} compact={compact} onSelect={i => router.navigate(TABS[i].href as any)} />;
 }
 
-// The quick menu's round button, floating just above the tab bar at the reading end (ui/bottom-menu.tsx; Mojtaba
-// 2026-11-13).
-function Menu() {
-  const ins = useSafeAreaInsets();
-  return <BottomMenu bottom={ins.bottom + BAR_GAP + PILL_BAR_H + 12} />;
-}
-
 export default function AppTabs() {
   return (
     <Tabs>
@@ -51,7 +43,6 @@ export default function AppTabs() {
         {TABS.map(t => <TabTrigger key={t.name} name={t.name} href={t.href as any} />)}
       </TabList>
       <Bar />
-      <Menu />
     </Tabs>
   );
 }
