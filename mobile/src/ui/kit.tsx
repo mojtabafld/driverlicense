@@ -7,7 +7,7 @@ import { Image } from 'expo-image';
 import { Fragment, cloneElement, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Circle, Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
@@ -229,6 +229,37 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // A picture header's foot fading into the page (Hero's, and the sign-in page's).
+// The pages' header (Mojtaba 2026-11-13, after his picture of a banking app's home): the page's colour lit from above by
+// two soft glows of the theme's colour, a bright one at the reading start and a deeper, cooler one at the other side,
+// fading down into the page so the header has no edge. Stronger in the dark theme, a light wash in the light one.
+export function HeaderGlow() {
+  const c = useColors(), dark = useTheme().theme === 'dark';
+  const a = c.accent, cool = mix(a, '#0f766e', 0.45);
+  const glow = dark ? mix(a, '#ffffff', 0.12) : a;
+  const start = RTL ? 80 : 20, end = RTL ? 18 : 82;
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <Defs>
+          <RadialGradient id="hg-a" cx={start} cy={22} rx={78} ry={62} fx={start} fy={22} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={glow} stopOpacity={dark ? 0.78 : 0.42} />
+            <Stop offset="0.5" stopColor={glow} stopOpacity={dark ? 0.34 : 0.18} />
+            <Stop offset="1" stopColor={glow} stopOpacity={0} />
+          </RadialGradient>
+          <RadialGradient id="hg-b" cx={end} cy={4} rx={72} ry={52} fx={end} fy={4} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.7 : 0.3} />
+            <Stop offset="1" stopColor={cool} stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Rect x={0} y={0} width={100} height={100} fill={c.bg} />
+        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-b)" />
+        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-a)" />
+      </Svg>
+      <LinearGradient pointerEvents="none" colors={[`${c.bg}00`, c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '42%' }} />
+    </View>
+  );
+}
+
 export function HeroFade() {
   const page = useColors().bg;
   return <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
@@ -324,7 +355,8 @@ const TURN_MS = 10000; // how long each of several `subtitleAfter` lines stays b
 // profile picture; Mojtaba 2026-10-19), plain headers only, as the action.
 // `subtitleAfter`: the line under the title once the drawing has gone (SwapText); several lines take turns, each for
 // 10 seconds, with the same swap (the home page's: today's practice, a random test, the progress; Mojtaba 2026-10-18).
-export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter, extra, titleContent }: { titleContent?: React.ReactNode; look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[]; extra?: React.ReactNode }) {
+// `clear`: the page draws the header's glow behind it (Screen), so a plain header leaves its own colour out.
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter, extra, titleContent, clear }: { clear?: boolean; titleContent?: React.ReactNode; look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[]; extra?: React.ReactNode }) {
   // The home header's opening (with a `lead`): first the greeting alone beside the drawing; the drawing goes and the
   // text glides to the edge; then the line under the greeting opens (the greeting moves up for it) and comes in; a
   // while later it changes to `subtitleAfter` (Mojtaba 2026-10-18). Once per app start, later the end state at once.
@@ -377,8 +409,9 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   // «هدر ساده» without the colour band (flat: the page's own colour, no fade; the title in the text colour) unless
   // PLAIN_GRADIENT is on (then the band and its fade stay, as before).
   const flat = plain && (dashboard || !PLAIN_GRADIENT), page = useColors();
+  const avatarFirst = plain && !!name && !!act && 'node' in act;
   const pic = light ? lightPic : look.pic, bg = flat ? page.bg : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
-  useHeaderTop(bg);
+  useHeaderTop(flat ? mix(page.bg, page.accent, theme === 'dark' ? 0.3 : 0.14) : bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
   // (plain: lower, with no picture to make room for; Mojtaba 2026-10-18)
@@ -399,7 +432,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   // the header growing when a long line needs the room.
   const under = !!back && !tall;
   return (
-    <View style={{ ...(under ? { minHeight: H } : { height: H }), backgroundColor: bg, overflow: 'hidden' }}>
+    <View style={{ ...(under ? { minHeight: H } : { height: H }), backgroundColor: flat && clear ? 'transparent' : bg, overflow: 'hidden' }}>
       {plain ? null : look.art ? (
         // (left to right in its own row, so the drawing stays on the left on every platform)
         <View pointerEvents="none" style={[StyleSheet.absoluteFill, { flexDirection: 'row', direction: 'ltr', justifyContent: RTL ? 'flex-start' : 'flex-end', paddingTop: ins.top } as any]}>
@@ -409,7 +442,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
         : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
             <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
           </View>}
-      {flat ? null : <HeroFade />}
+      {flat ? (clear ? null : <HeaderGlow />) : <HeroFade />}
       <View style={{ flex: 1, paddingTop: under ? topPad + 48 : topPad, paddingBottom: plain ? 30 : name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall || under ? 'flex-start' : 'flex-end' }}>
         {tall ? (
           <>
@@ -421,6 +454,13 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
           </>
         ) : null}
         {below ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          {/* (the greeting's page: the picture at the start, before the greeting, as in Mojtaba's picture of 2026-11-13) */}
+          {avatarFirst ? (
+            <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
+              style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+              {act.node}
+            </Pressable>
+          ) : null}
           <View style={{ gap: 2, maxWidth: plain ? undefined : '58%', flex: plain ? 1 : undefined }}>
             {titleContent ?? <>
             {plain && name ? (
@@ -457,7 +497,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
             </>}
           </View>
           {plain && extra ? extra : null}
-          {plain && act && 'node' in act ? (
+          {plain && act && 'node' in act && !avatarFirst ? (
             <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
               style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
               {act.node}
@@ -487,7 +527,9 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const c = useColors(), ins = useSafeAreaInsets();
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : 0, paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
-  const top = hero ? <Hero look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} titleContent={headerContent} /> : null;
+  // The glow behind the header and the page's top: a plain header (the tabs' own, «هدر ساده») or none (Mojtaba 2026-11-13).
+  const plainHead = usePlainHeader(), glowBack = !hero || dashboard || plainHead;
+  const top = hero ? <Hero clear={glowBack} look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} titleContent={headerContent} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
       <View style={{ flex: 1 }}>
@@ -512,8 +554,11 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
     <Backdrop>
       <PageIn>
       <View style={{ flex: 1 }}>
+      {/* (the tabs: the header's glow reaches down behind the top of the page and fades into it, the cards passing
+          over it; Mojtaba 2026-11-13) */}
+      {glowBack ? <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 400 }}><HeaderGlow /></View> : null}
       {/* All four tabs keep their header outside the scrolling body. Its natural height includes the safe area. */}
-      <View testID="main-page-header" style={{ flexShrink: 0, backgroundColor: c.bg }}>
+      <View testID="main-page-header" style={{ flexShrink: 0, backgroundColor: glowBack ? 'transparent' : c.bg }}>
         {hero ? top : <View style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, paddingBottom: gap,
           maxWidth: 980, width: '100%', alignSelf: 'center' }}>{head}</View>}
       </View>
