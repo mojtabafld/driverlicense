@@ -18,7 +18,8 @@ export type StatItem = { title: string; sub: string; icon: IconName; color?: str
 const CYCLE: ServiceTone[] = ['purple', 'green', 'blue', 'amber', 'red'];
 
 // (`fill`, the cards' plain colour before 2026-11-13, is kept for the callers.)
-export function StatCarousel({ items, dense }: { items: StatItem[]; dense?: boolean; fill?: string }) {
+// `first`: the first card's number (1 by default).
+export function StatCarousel({ items, dense, first = 1 }: { items: StatItem[]; dense?: boolean; fill?: string; first?: number }) {
   const c = useColors(), m = useM3(), dark = useIsDark(), ink = dark ? '#ffffff' : c.text;
   const [w, setW] = useState(0), [at, setAt] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
@@ -111,7 +112,7 @@ export function StatCarousel({ items, dense }: { items: StatItem[]; dense?: bool
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
               <CardWash tone={it.tone ?? CYCLE[i % CYCLE.length]} />
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <CardCode n={String(i + 1).padStart(3, '0')} />
+                <CardCode n={String(i + first).padStart(3, '0')} />
                 <Icon name={it.icon} size={dense ? 26 : 30} color={ink} />
               </View>
               <View style={{ gap: 2 }}>

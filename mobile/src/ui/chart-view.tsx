@@ -22,7 +22,8 @@ const passed = (a: Attempt) => (isFull(a) ? isPass(a) : pctOf(a) >= 0.8);
 // «آمار آزمون‌ها»: how many tests, the average and the best score and how many passed. `dense`: the home page on a
 // short screen, lower cards. (`noHead` and `noFacts`, for the card's title and line of facts, are kept for the callers;
 // the cards stand alone since 2026-11-07.)
-export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean }) {
+// `first`: the first card's number (the cards go on from the card above them).
+export function TestStats({ attempts, dense, noHead, noFacts, first }: { attempts: Attempt[]; dense?: boolean; noHead?: boolean; noFacts?: boolean; first?: number }) {
   const c = useColors();
   const n = attempts.length, pcts = attempts.map(pctOf);
   const avg = n ? pcts.reduce((s, p) => s + p, 0) / n : null, best = n ? Math.max(...pcts) : null;
@@ -35,7 +36,7 @@ export function TestStats({ attempts, dense, noHead, noFacts }: { attempts: Atte
   // Only the cards, with no card around them, no title and no line of facts (Mojtaba 2026-11-07): the four numbers as a
   // row of Material cards that slides (after fonts.google.com's carousel); the tests' card opens their history.
   return (
-    <StatCarousel dense={dense} fill={c.surface} items={[
+    <StatCarousel dense={dense} fill={c.surface} first={first} items={[
       // (more about the tests in place of the best and passed cards; Mojtaba 2026-11-08)
       n ? { title: t('{0} آزمون', faNum(n)), icon: 'clipboard', onPress: () => router.push('/history'), label: tr('تاریخچه‌ی آزمون‌ها'),
         sub: t('{0} قبول از {1}، بهترین نمره {2}، آخرین {3}', faNum(ok), faNum(n), pctText(best ?? 0), pctText(last ?? 0)) }
