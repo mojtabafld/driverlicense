@@ -132,6 +132,7 @@ export default function Home() {
   const look = useDashboardLook();
   const dark = useIsDark(), m3 = useM3();
   const readinessTone = dark ? mix(c.accent, c.text, 0.4) : c.accent;
+  const cardInk = dark ? '#ffffff' : c.text;  // (the gradient cards' ink)
   const readinessTrack = dark ? mix(c.line, c.text, 0.18) : c.line;
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
@@ -346,7 +347,8 @@ export default function Home() {
               to a 5-question tryout instead). */}
           <View style={{ gap: compact ? 8 : 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>احتمال قبولی</T>
+              {/* (the gradient cards' type: their title's size, weight, capitals and spacing, in the card's ink; Mojtaba 2026-11-13) */}
+              <T style={{ fontSize: 17, lineHeight: 25, fontWeight: '600', color: cardInk, textTransform: 'uppercase', letterSpacing: RTL ? 0 : 1.2 }}>احتمال قبولی</T>
               <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
                 <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 24 : small ? 26 : 28) + (dark ? 2 : 0)} />
               </View>
@@ -356,7 +358,7 @@ export default function Home() {
             </View>
             {/* (with an estimate, no line on what it is based on any more: Mojtaba 2026-11-13; before the first test the
                 line on how it comes stays) */}
-            {est ? null : <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>
+            {est ? null : <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14, lineHeight: 22, color: cardInk, opacity: 0.72 }}>
               {tr('بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.')}</T>}
             <View style={{ alignItems: 'flex-start' }}>
               {tryout
