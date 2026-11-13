@@ -14,4 +14,4 @@ export type LiquidBarProps = {
   compact: boolean;
 };
 // The pill floats this far above the bottom edge (inside the room the pages keep for the bar: TAB_BAR_H).
-export const BAR_GAP = 16;
+export const BAR_GAP = 6;
