@@ -230,31 +230,36 @@ const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // A picture header's foot fading into the page (Hero's, and the sign-in page's).
 // The pages' header (Mojtaba 2026-11-13, after his picture of a banking app's home): the page's colour lit from above by
-// two soft glows of the theme's colour, a bright one at the reading start and a deeper, cooler one at the other side,
-// fading down into the page so the header has no edge. Stronger in the dark theme, a light wash in the light one.
+// a soft wash of the theme's colour (cooled a little) over the whole width, deepest at the screen's top edge, with two
+// faint glows in it, a brighter one at the reading start and a cooler one at the other side, all fading into the page
+// so the header has no edge. Gentle (Mojtaba: «خیلی کمتر»), a little stronger in the dark theme.
+// The top edge is one flat colour across the width (the glows end before it): the iPhone's status bar strip, where it
+// is not drawn over by the page, is painted in that same colour (headerTopColor), so the two join with no seam.
+const WASH_TOP = { dark: 0.2, light: 0.09 };
+const glowCool = (accent: string) => mix(accent, '#0f766e', 0.45);
+export const headerTopColor = (bg: string, accent: string, dark: boolean) => mix(bg, glowCool(accent), dark ? WASH_TOP.dark : WASH_TOP.light);
 export function HeaderGlow() {
   const c = useColors(), dark = useTheme().theme === 'dark';
-  const a = c.accent, cool = mix(a, '#0f766e', 0.45);
+  const a = c.accent, cool = glowCool(a);
   const glow = dark ? mix(a, '#ffffff', 0.12) : a;
-  const start = RTL ? 80 : 20, end = RTL ? 18 : 82;
+  const start = RTL ? 78 : 22, end = RTL ? 20 : 80;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
         <Defs>
-          {/* one field from the screen's top edge down (the status bar's strip too, Mojtaba 2026-11-13): a wash of the cool
-              colour over the whole width, deepest at the top, with the two glows in it, so nothing shows as a band */}
           <SvgLinear id="hg-w" x1={0} y1={0} x2={0} y2={100} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.42 : 0.2} />
-            <Stop offset="0.45" stopColor={cool} stopOpacity={dark ? 0.16 : 0.08} />
+            <Stop offset="0" stopColor={cool} stopOpacity={dark ? WASH_TOP.dark : WASH_TOP.light} />
+            <Stop offset="0.5" stopColor={cool} stopOpacity={dark ? 0.08 : 0.035} />
             <Stop offset="1" stopColor={cool} stopOpacity={0} />
           </SvgLinear>
-          <RadialGradient id="hg-a" cx={start} cy={24} rx={80} ry={60} fx={start} fy={24} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={glow} stopOpacity={dark ? 0.78 : 0.42} />
-            <Stop offset="0.5" stopColor={glow} stopOpacity={dark ? 0.34 : 0.18} />
+          {/* (both glows end above y 0: their centre lower than their height, so the top edge stays the wash's flat colour) */}
+          <RadialGradient id="hg-a" cx={start} cy={36} rx={64} ry={34} fx={start} fy={36} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={glow} stopOpacity={dark ? 0.26 : 0.12} />
+            <Stop offset="0.55" stopColor={glow} stopOpacity={dark ? 0.1 : 0.05} />
             <Stop offset="1" stopColor={glow} stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hg-b" cx={end} cy={16} rx={80} ry={56} fx={end} fy={16} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.5 : 0.22} />
+          <RadialGradient id="hg-b" cx={end} cy={30} rx={58} ry={28} fx={end} fy={30} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.18 : 0.08} />
             <Stop offset="1" stopColor={cool} stopOpacity={0} />
           </RadialGradient>
         </Defs>
@@ -263,7 +268,7 @@ export function HeaderGlow() {
         <Rect x={0} y={0} width={100} height={100} fill="url(#hg-b)" />
         <Rect x={0} y={0} width={100} height={100} fill="url(#hg-a)" />
       </Svg>
-      <LinearGradient pointerEvents="none" colors={[`${c.bg}00`, c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '42%' }} />
+      <LinearGradient pointerEvents="none" colors={[`${c.bg}00`, c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '40%' }} />
     </View>
   );
 }
@@ -275,8 +280,9 @@ export function HeroFade() {
 }
 // While a page with a coloured header is in view on the web, the status bar above it in the header's colour; back to the
 // page's colour after.
-export function useHeaderTop(color: string) {
+export function useHeaderTop(color: string | null) {
   useFocusEffect(useCallback(() => {
+    if (!color) return;
     webTop.hero = color; paintWebTop();
     return () => { webTop.hero = null; paintWebTop(); };
   }, [color]));
@@ -420,7 +426,7 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const avatarFirst = plain && !!name && !!act && 'node' in act;
   const pic = light ? lightPic : look.pic, bg = flat ? page.bg : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
   // (a plain header: the glow's top edge, the cool wash over the page colour, so a bounce past the top runs on in it)
-  useHeaderTop(flat ? mix(page.bg, mix(page.accent, '#0f766e', 0.45), theme === 'dark' ? 0.42 : 0.2) : bg);
+  useHeaderTop(flat ? headerTopColor(page.bg, page.accent, theme === 'dark') : bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
   // (plain: lower, with no picture to make room for; Mojtaba 2026-10-18)
@@ -538,6 +544,8 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
   const box = { paddingTop: hero ? 6 : 0, paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   // The glow behind the header and the page's top: a plain header (the tabs' own, «هدر ساده») or none (Mojtaba 2026-11-13).
   const plainHead = usePlainHeader(), glowBack = !hero || dashboard || plainHead;
+  // (a page with no Hero, as the settings: its status bar strip in the glow's top colour too)
+  useHeaderTop(glowBack && !hero ? headerTopColor(c.bg, c.accent, dark) : null);
   const top = hero ? <Hero clear={glowBack} look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} titleContent={headerContent} /> : null;
   const head = hero ? null : (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
@@ -570,7 +578,7 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
         {/* (the iPhone's Home Screen app draws its status bar's clock and icons in white over the page: in the light theme a
             deeper tint of the theme's colour under them, fading out, so they can be read) */}
         {Platform.OS === 'web' && ins.top > 0 && c.bg && !dark ? <LinearGradient pointerEvents="none" colors={[mix(c.accent, '#000000', 0.25), `${mix(c.accent, '#000000', 0.25)}00`]}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 18, opacity: 0.55 }} /> : null}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 44, opacity: 0.35 }} /> : null}
       </View> : null}
       {/* All four tabs keep their header outside the scrolling body. Its natural height includes the safe area. */}
       <View testID="main-page-header" style={{ flexShrink: 0, backgroundColor: glowBack ? 'transparent' : c.bg }}>
