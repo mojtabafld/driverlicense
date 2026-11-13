@@ -320,6 +320,7 @@ export default function Home() {
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen dashboard={!PROVE_PICS} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined}
+      subtitle={ARC ? 'امروز یک قدم به قبولی نزدیک‌تر شوید.' : undefined}
       hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} bare />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
       heroExtra={ARC ? <BellButton /> : undefined}>
       {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
