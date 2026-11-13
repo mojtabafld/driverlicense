@@ -1,4 +1,4 @@
-// What the tab bar takes (notch-bar.tsx; the «Liquid Glass Navbar» before, whose names these keep).
+// What the tab bar takes (pill-bar.tsx; the «Liquid Glass Navbar» before, whose names these keep).
 import type { IconName } from '../icon';
 
 // The little scene each tab's icon plays when tapped (the component's NimbusFx, those the app uses).
@@ -14,4 +14,4 @@ export type LiquidBarProps = {
   compact: boolean;
 };
 // The pill floats this far above the bottom edge (inside the room the pages keep for the bar: TAB_BAR_H).
-export const BAR_GAP = 10;
+export const BAR_GAP = 16;
