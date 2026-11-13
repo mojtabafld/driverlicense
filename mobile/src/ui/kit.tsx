@@ -7,7 +7,7 @@ import { Image } from 'expo-image';
 import { Fragment, cloneElement, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient as SvgLinear, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
@@ -241,17 +241,25 @@ export function HeaderGlow() {
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
         <Defs>
-          <RadialGradient id="hg-a" cx={start} cy={22} rx={78} ry={62} fx={start} fy={22} gradientUnits="userSpaceOnUse">
+          {/* one field from the screen's top edge down (the status bar's strip too, Mojtaba 2026-11-13): a wash of the cool
+              colour over the whole width, deepest at the top, with the two glows in it, so nothing shows as a band */}
+          <SvgLinear id="hg-w" x1={0} y1={0} x2={0} y2={100} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.42 : 0.2} />
+            <Stop offset="0.45" stopColor={cool} stopOpacity={dark ? 0.16 : 0.08} />
+            <Stop offset="1" stopColor={cool} stopOpacity={0} />
+          </SvgLinear>
+          <RadialGradient id="hg-a" cx={start} cy={24} rx={80} ry={60} fx={start} fy={24} gradientUnits="userSpaceOnUse">
             <Stop offset="0" stopColor={glow} stopOpacity={dark ? 0.78 : 0.42} />
             <Stop offset="0.5" stopColor={glow} stopOpacity={dark ? 0.34 : 0.18} />
             <Stop offset="1" stopColor={glow} stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hg-b" cx={end} cy={4} rx={72} ry={52} fx={end} fy={4} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.7 : 0.3} />
+          <RadialGradient id="hg-b" cx={end} cy={16} rx={80} ry={56} fx={end} fy={16} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.5 : 0.22} />
             <Stop offset="1" stopColor={cool} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Rect x={0} y={0} width={100} height={100} fill={c.bg} />
+        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-w)" />
         <Rect x={0} y={0} width={100} height={100} fill="url(#hg-b)" />
         <Rect x={0} y={0} width={100} height={100} fill="url(#hg-a)" />
       </Svg>
@@ -411,7 +419,8 @@ export function Hero({ look, title, name, subtitle, tall, lower = 0, back, actio
   const flat = plain && (dashboard || !PLAIN_GRADIENT), page = useColors();
   const avatarFirst = plain && !!name && !!act && 'node' in act;
   const pic = light ? lightPic : look.pic, bg = flat ? page.bg : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
-  useHeaderTop(flat ? mix(page.bg, page.accent, theme === 'dark' ? 0.3 : 0.14) : bg);
+  // (a plain header: the glow's top edge, the cool wash over the page colour, so a bounce past the top runs on in it)
+  useHeaderTop(flat ? mix(page.bg, mix(page.accent, '#0f766e', 0.45), theme === 'dark' ? 0.42 : 0.2) : bg);
   const v = heroArt[String(pic)];
   // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
   // (plain: lower, with no picture to make room for; Mojtaba 2026-10-18)
