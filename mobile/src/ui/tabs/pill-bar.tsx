@@ -15,8 +15,9 @@ import { useColors, useIsDark } from '../theme';
 import { BAR_GAP, type LiquidBarProps } from './liquid-bar-types';
 
 // The open tab's name: this much room (the original's MOBILE_LABEL_WIDTH), and the bar's height.
-// (larger than the original's 72 and 52 since 2026-11-13, Mojtaba: «بزرگتر کن»)
-const LABEL_W = 88;
+// (LABEL_W: the most a name may take, the name's own width below it; the bar larger than the original's 52 since
+// 2026-11-13, Mojtaba: «بزرگتر کن»)
+const LABEL_W = 110;
 export const PILL_BAR_H = 66;
 const WEB = Platform.OS === 'web';
 // The room under the pill (less since 2026-11-13, Mojtaba: «فضای خالی پایین داکر زیاده»): the small gap, and on a phone
@@ -43,20 +44,29 @@ function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs']
     Animated.timing(fade, { toValue: on ? 1 : 0, duration: 190, useNativeDriver: false }).start();
   }, [on, still]);
   const ink = on ? c.accent : c.muted;
+  // The name's own width (measured once, out of sight), so the open pill fits the icon and the name exactly and they
+  // sit in its middle (Mojtaba 2026-11-13; a fixed 88 points before, which left room after a short name).
+  const [nameW, setNameW] = useState(0);
+  const slot = Math.min(LABEL_W, Math.ceil(nameW) + 4);  // (a little over, as the text's own edges need)
+  const nameStyle = { fontSize: 15.5, lineHeight: 24, fontWeight: '600' as const, color: c.accent };
   return (
     <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={tr(label)}
       onPressIn={() => { if (!still) Animated.spring(press, { toValue: 0.97, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}
       onPressOut={() => { if (!still) Animated.spring(press, { toValue: 1, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}>
       {({ hovered }: any) => (
-        <Animated.View style={{ flexDirection: 'row', alignItems: 'center', height: 52, minWidth: 54, paddingHorizontal: 15, borderRadius: 999,
+        <Animated.View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 52, minWidth: 54, paddingHorizontal: 15, borderRadius: 999,
           backgroundColor: on ? mix(c.accent, c.surface, dark ? 0.85 : 0.9) : hovered ? c.surface2 : 'transparent', transform: [{ scale: press }] }}>
           <Icon name={icon} size={27} color={ink} filled={on} />
           {/* the name, its room opening beside the icon */}
           {/* (the gap between them as its own room, the same on both sides in either direction) */}
           <Animated.View style={{ width: fade.interpolate({ inputRange: [0, 1], outputRange: [0, 9] }) }} />
-          <Animated.View style={{ overflow: 'hidden', width: open.interpolate({ inputRange: [0, 1], outputRange: [0, LABEL_W] }), opacity: fade }}>
-            <T raw numberOfLines={1} maxFontSizeMultiplier={1.1} style={{ width: LABEL_W, fontSize: 15.5, lineHeight: 24, fontWeight: '600', color: c.accent }}>{tr(label)}</T>
+          <Animated.View style={{ overflow: 'hidden', width: open.interpolate({ inputRange: [0, 1], outputRange: [0, slot] }), opacity: fade }}>
+            <T raw numberOfLines={1} maxFontSizeMultiplier={1.1} style={{ width: slot, ...nameStyle }}>{tr(label)}</T>
           </Animated.View>
+          {/* (the measure) */}
+          <View pointerEvents="none" aria-hidden style={{ position: 'absolute', opacity: 0, left: 0, top: 0, width: 400, alignItems: 'flex-start' }}>
+            <T raw numberOfLines={1} maxFontSizeMultiplier={1.1} onLayout={e => setNameW(e.nativeEvent.layout.width)} style={{ ...nameStyle, alignSelf: 'flex-start' }}>{tr(label)}</T>
+          </View>
         </Animated.View>
       )}
     </Pressable>
