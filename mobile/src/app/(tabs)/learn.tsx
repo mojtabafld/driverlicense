@@ -21,7 +21,7 @@ import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { Card, M3Button, Screen, T } from '@/ui/kit';
-import { Head, iconOf } from '@/ui/home-knowledge';
+import { Head, Tiles, iconOf } from '@/ui/home-knowledge';
 import { SearchBox } from '@/ui/search-box';
 import { ServiceCarousel, type ServiceItem } from '@/ui/service-carousel';
 import { ARC, useColors, useIsDark, useM3 } from '@/ui/theme';
@@ -130,7 +130,9 @@ function LearnSections({ search }: { search: ReactNode }) {
       </View>
       <View style={{ gap: 12 }}>
         <Head title={tr('راهنماها')} text={tr('قوانین، تابلوها و حق تقدم به زبان ساده، و واژه‌های دانمارکی آزمون.')} />
-        <ServiceCarousel items={GUIDES} height={260} />
+        {/* (the four as separate tiles, as the home page's lessons «آماده شدن برای رانندگی»: Mojtaba 2026-11-13; one tall
+            card at a time before) */}
+        <Tiles gradient items={GUIDES.map(g => ({ key: g.number, title: tr(g.title), icon: g.icon, onPress: g.onPress ?? (() => {}) }))} />
       </View>
     </View>
   );
