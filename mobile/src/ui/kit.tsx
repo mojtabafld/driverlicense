@@ -229,43 +229,37 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // A picture header's foot fading into the page (Hero's, and the sign-in page's).
-// The pages' header (Mojtaba 2026-11-13, after his picture of a banking app's home): the page's colour lit from above by
-// a soft wash of the theme's colour (cooled a little) over the whole width, deepest at the screen's top edge, with two
-// faint glows in it, a brighter one at the reading start and a cooler one at the other side, all fading into the page
-// so the header has no edge. Gentle (Mojtaba: «خیلی کمتر»), a little stronger in the dark theme.
-// The glows begin at the screen's very top edge (the iPhone Home Screen app draws the page under its status bar); where a
-// status bar strip is drawn apart, it takes the wash's top colour (headerTopColor).
-const WASH_TOP = { dark: 0.1, light: 0.045 };  // (halved again 2026-11-13, Mojtaba: «کمتر کن»)
-const glowCool = (accent: string) => mix(accent, '#0f766e', 0.45);
-export const headerTopColor = (bg: string, accent: string, dark: boolean) => mix(bg, glowCool(accent), dark ? WASH_TOP.dark : WASH_TOP.light);
+// The pages' header (Mojtaba 2026-11-13, after his picture of a soft grey app): no colour of its own any more, only
+// light: a white sheen from the screen's top edge (strongest at the reading start) over the page's colour, and a faint
+// grey shade at the other side, fading into the page so there is no edge. In the dark theme the same, much fainter:
+// a breath of light at the top and a deeper shade beside it.
+const WASH_TOP = { dark: 0.06, light: 0.7 };
+export const headerTopColor = (bg: string, _accent: string, dark: boolean) => mix(bg, '#ffffff', dark ? WASH_TOP.dark : WASH_TOP.light);
 export function HeaderGlow() {
   const c = useColors(), dark = useTheme().theme === 'dark';
-  const a = c.accent, cool = glowCool(a);
-  const glow = dark ? mix(a, '#ffffff', 0.12) : a;
+  const shade = dark ? '#000000' : '#c9c9d0';
   const start = RTL ? 78 : 22, end = RTL ? 20 : 80;
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
         <Defs>
           <SvgLinear id="hg-w" x1={0} y1={0} x2={0} y2={100} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={cool} stopOpacity={dark ? WASH_TOP.dark : WASH_TOP.light} />
-            <Stop offset="0.5" stopColor={cool} stopOpacity={dark ? 0.04 : 0.018} />
-            <Stop offset="1" stopColor={cool} stopOpacity={0} />
+            <Stop offset="0" stopColor="#ffffff" stopOpacity={dark ? WASH_TOP.dark : WASH_TOP.light} />
+            <Stop offset="0.5" stopColor="#ffffff" stopOpacity={dark ? 0.02 : 0.25} />
+            <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
           </SvgLinear>
-          {/* (the glows from the screen's very top edge, the status bar's part of it included: Mojtaba 2026-11-13) */}
           <RadialGradient id="hg-a" cx={start} cy={12} rx={70} ry={46} fx={start} fy={12} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={glow} stopOpacity={dark ? 0.13 : 0.06} />
-            <Stop offset="0.55" stopColor={glow} stopOpacity={dark ? 0.05 : 0.025} />
-            <Stop offset="1" stopColor={glow} stopOpacity={0} />
+            <Stop offset="0" stopColor="#ffffff" stopOpacity={dark ? 0.06 : 0.6} />
+            <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hg-b" cx={end} cy={4} rx={62} ry={36} fx={end} fy={4} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.09 : 0.04} />
-            <Stop offset="1" stopColor={cool} stopOpacity={0} />
+          <RadialGradient id="hg-b" cx={end} cy={30} rx={60} ry={40} fx={end} fy={30} gradientUnits="userSpaceOnUse">
+            <Stop offset="0" stopColor={shade} stopOpacity={dark ? 0.25 : 0.22} />
+            <Stop offset="1" stopColor={shade} stopOpacity={0} />
           </RadialGradient>
         </Defs>
         <Rect x={0} y={0} width={100} height={100} fill={c.bg} />
-        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-w)" />
         <Rect x={0} y={0} width={100} height={100} fill="url(#hg-b)" />
+        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-w)" />
         <Rect x={0} y={0} width={100} height={100} fill="url(#hg-a)" />
       </Svg>
       <LinearGradient pointerEvents="none" colors={[`${c.bg}00`, c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '40%' }} />
