@@ -233,8 +233,8 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 // a soft wash of the theme's colour (cooled a little) over the whole width, deepest at the screen's top edge, with two
 // faint glows in it, a brighter one at the reading start and a cooler one at the other side, all fading into the page
 // so the header has no edge. Gentle (Mojtaba: «خیلی کمتر»), a little stronger in the dark theme.
-// The top edge is one flat colour across the width (the glows end before it): the iPhone's status bar strip, where it
-// is not drawn over by the page, is painted in that same colour (headerTopColor), so the two join with no seam.
+// The glows begin at the screen's very top edge (the iPhone Home Screen app draws the page under its status bar); where a
+// status bar strip is drawn apart, it takes the wash's top colour (headerTopColor).
 const WASH_TOP = { dark: 0.2, light: 0.09 };
 const glowCool = (accent: string) => mix(accent, '#0f766e', 0.45);
 export const headerTopColor = (bg: string, accent: string, dark: boolean) => mix(bg, glowCool(accent), dark ? WASH_TOP.dark : WASH_TOP.light);
@@ -252,13 +252,13 @@ export function HeaderGlow() {
             <Stop offset="0.5" stopColor={cool} stopOpacity={dark ? 0.08 : 0.035} />
             <Stop offset="1" stopColor={cool} stopOpacity={0} />
           </SvgLinear>
-          {/* (both glows end above y 0: their centre lower than their height, so the top edge stays the wash's flat colour) */}
-          <RadialGradient id="hg-a" cx={start} cy={36} rx={64} ry={34} fx={start} fy={36} gradientUnits="userSpaceOnUse">
+          {/* (the glows from the screen's very top edge, the status bar's part of it included: Mojtaba 2026-11-13) */}
+          <RadialGradient id="hg-a" cx={start} cy={12} rx={70} ry={46} fx={start} fy={12} gradientUnits="userSpaceOnUse">
             <Stop offset="0" stopColor={glow} stopOpacity={dark ? 0.26 : 0.12} />
             <Stop offset="0.55" stopColor={glow} stopOpacity={dark ? 0.1 : 0.05} />
             <Stop offset="1" stopColor={glow} stopOpacity={0} />
           </RadialGradient>
-          <RadialGradient id="hg-b" cx={end} cy={30} rx={58} ry={28} fx={end} fy={30} gradientUnits="userSpaceOnUse">
+          <RadialGradient id="hg-b" cx={end} cy={4} rx={62} ry={36} fx={end} fy={4} gradientUnits="userSpaceOnUse">
             <Stop offset="0" stopColor={cool} stopOpacity={dark ? 0.18 : 0.08} />
             <Stop offset="1" stopColor={cool} stopOpacity={0} />
           </RadialGradient>
