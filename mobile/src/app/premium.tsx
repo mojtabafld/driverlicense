@@ -16,6 +16,7 @@ import { usePlayBilling } from '@/lib/play-billing';
 import { useApp, type Plan } from '@/lib/store';
 import { Icon } from '@/ui/icon';
 import { Button, Card, OkTick, T, tap } from '@/ui/kit';
+import { ServiceCarousel, type ServiceItem } from '@/ui/service-carousel';
 import { SubPage } from '@/ui/sub-page';
 import { useColors } from '@/ui/theme';
 
@@ -35,6 +36,16 @@ function Perk({ title, small }: { title: string; small?: boolean }) {
 // the server does (lib/play-billing.ts); otherwise, and on iOS, the passes and the buy button are left out and nothing
 // points elsewhere to buy. A pass already on the account works as everywhere, and a trial code still counts.
 const STORE_APP = Platform.OS !== 'web';
+
+// What premium adds, as tall gradient cards that slide sideways (ui/service-carousel.tsx; Mojtaba 2026-11-13), where the
+// page has room; the short list of ticks on a short screen.
+const PERKS: ServiceItem[] = [
+  { number: '001', title: 'توضیح هر پاسخ با هوش مصنوعی', description: 'چرا هر گزینه درست یا غلط است، از روی پاسخ خود شما', icon: 'sparkles', tone: 'purple' },
+  { number: '002', title: 'جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی', description: 'یک درس کوتاه درباره‌ی همه‌ی اشتباه‌های همان آزمون', icon: 'listCheck', tone: 'green' },
+  { number: '003', title: 'مربی هوشمند', description: 'توصیه‌های شخصی از روی نتیجه‌های خودتان', icon: 'coach', tone: 'red' },
+  { number: '004', title: 'خواندن سؤال‌ها و گزینه‌ها با صدا', description: 'سؤال‌ها را به دانمارکی یا انگلیسی بشنوید', icon: 'speaker', tone: 'blue' },
+  { number: '005', title: 'شنیدن توضیح‌ها به فارسی', description: 'توضیح‌های هوش مصنوعی را به فارسی گوش کنید', icon: 'translate', tone: 'amber' },
+];
 
 const PLAN_NAME: Record<Plan['id'], string> = { week: 'یک هفته', month: 'یک ماه', quarter: 'سه ماه' };
 
@@ -129,6 +140,12 @@ export default function Premium() {
     <SubPage title="نسخه‌ی ویژه" maxWidth={560} gap={0}>
       <View ref={box} onLayout={() => setTimeout(fit, 0)} style={{ gap }}>
       {/* What premium adds, one under the other (smaller when the screen is short), and one line on paying. */}
+      {level === 0 ? (
+        <View style={{ gap: 12 }}>
+          <ServiceCarousel items={PERKS} height={230} />
+          <T style={{ color: c.muted, fontSize: 12.5, paddingHorizontal: 4 }}>یک بار پرداخت، بدون تمدید خودکار</T>
+        </View>
+      ) : (
       <View style={{ gap: level >= 2 ? 6 : level ? 9 : 12, paddingHorizontal: 4 }}>
         <Perk small={level >= 2} title="توضیح هر پاسخ با هوش مصنوعی" />
         <Perk small={level >= 2} title="جمع‌بندی اشتباهات هر آزمون با هوش مصنوعی" />
@@ -136,6 +153,7 @@ export default function Premium() {
         <Perk small={level >= 2} title="شنیدن توضیح‌ها به فارسی" />
         <T style={{ color: c.muted, fontSize: level >= 2 ? 11.5 : 12.5, marginTop: 2 }}>یک بار پرداخت، بدون تمدید خودکار</T>
       </View>
+      )}
 
       {premium && level >= 3 ? (
         <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 }}>
