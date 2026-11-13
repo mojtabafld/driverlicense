@@ -13,6 +13,7 @@ import { RTL, tr } from '@/lib/i18n';
 import type { CourseLesson } from '@/lib/course';
 import { FULL, SIZES, faNum } from '@/lib/logic';
 import { Cookie } from './cookie';
+import { ServiceCarousel, type ServiceItem } from './service-carousel';
 import { Icon, type IconName } from './icon';
 import { M3Button, T, tap } from './kit';
 import { useTabLook } from './tabs/tab-look';
@@ -81,6 +82,16 @@ function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<
     onPress: () => router.push({ pathname: '/course-lesson', params: { id: l.id } }) }))} />;
 }
 
+// The app's main parts, for the home page's card row.
+const PARTS: ServiceItem[] = [
+  { number: '001', title: 'آزمون تئوری', description: '۱۱۰۰ سؤال مثل آزمون واقعی؛ ۲۵ سؤال در ۲۵ دقیقه', icon: 'exam', tone: 'blue', onPress: () => router.navigate('/exam') },
+  { number: '002', title: 'دوره‌ی گام‌به‌گام', description: 'درس‌های کوتاه به فارسی، از قدم اول تا روز آزمون', icon: 'learn', tone: 'green', onPress: () => router.push('/course') },
+  { number: '003', title: 'تابلوها', description: 'همه‌ی تابلوهای دانمارک با معنی و مثال', icon: 'sign', tone: 'red', onPress: () => router.push('/signs') },
+  { number: '004', title: 'حق تقدم', description: 'چه کسی اول می‌رود؟ با موقعیت‌های تصویری', icon: 'priority', tone: 'amber', onPress: () => router.push('/priority') },
+  { number: '005', title: 'قوانین', description: 'قانون راهنمایی و رانندگی دانمارک به زبان ساده', icon: 'rules', tone: 'purple', onPress: () => router.push('/rules') },
+  { number: '006', title: 'واژه‌نامه', description: 'واژه‌های آزمون به دانمارکی، فارسی و انگلیسی', icon: 'translate', tone: 'blue', onPress: () => router.push('/glossary') },
+];
+
 export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   const c = useColors(), m = useM3(), tab = useTabLook();
   const signsScheme = m3Scheme(useIsDark());
@@ -102,6 +113,13 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   );
   return (
     <View style={{ gap: gap + 16, paddingTop: 8 }}>
+      {/* «هرچه در تئوری‌پرو هست»: the app's main parts as tall gradient cards that slide sideways, each opening its
+          page (ui/service-carousel.tsx; Mojtaba 2026-11-13) */}
+      <View style={{ gap: 12 }}>
+        <Head title={tr('هرچه در تئوری‌پرو هست')} text={tr('همه‌ی بخش‌های آمادگی برای آزمون، یک‌جا')} />
+        <ServiceCarousel items={PARTS} height={280} />
+      </View>
+
       {/* «مباحث»: the course's chapters and the other guides as chips, sideways */}
       <View style={{ gap: 12 }}>
         <Head title={tr('مباحث')} />

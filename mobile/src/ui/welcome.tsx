@@ -13,7 +13,7 @@ import { API_URL } from '@/lib/config';
 import { RTL, UI_LANG, setUiLang, tr } from '@/lib/i18n';
 import { LANGS, LANG_FONT, LANG_NAMES } from './lang-wheel';
 import { Sheet } from './sheet';
-import { VibeCards } from './vibe-cards';
+import { ServiceCarousel, type ServiceItem } from './service-carousel';
 import { Icon, type IconName } from './icon';
 import { L, M3Button, RoundIcon, T, physicalAlign, tap, useHeaderTop } from './kit';
 import { useColors, useIsDark, useM3 } from './theme';
@@ -90,6 +90,13 @@ function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?:
 // The ways in, as the Saphe app's first screen (Mojtaba 2026-10-21): Apple (hidden for now, APPLE), Google (`onGoogle`, while
 // the server has it on; else off) and email (its two choices, then `onEmail` in that mode, ui/sign-steps.tsx), then the
 // guest link and the line on the privacy policy.
+// What the app does, for the welcome page's cards.
+const WELCOME_CARDS: ServiceItem[] = [
+  { number: '001', title: 'مثل آزمون واقعی', description: '۱۱۰۰ سؤال با تصویر، به دانمارکی با ترجمه‌ی فارسی', icon: 'exam', tone: 'blue' },
+  { number: '002', title: 'آموزش به فارسی', description: 'درس‌ها، تابلوها و قوانین، ساده و کوتاه', icon: 'learn', tone: 'green' },
+  { number: '003', title: 'هوش مصنوعی کنار شما', description: 'توضیح اشتباه‌ها و یک مربی شخصی', icon: 'sparkles', tone: 'purple' },
+];
+
 export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mailFirst }: { onEmail: (mode: 'login' | 'register') => void; mailFirst?: boolean; onGuest: () => void; onGoogle?: () => void; onPasskey?: () => void; busy: boolean; err: string }) {
   const c = useColors(), ins = useSafeAreaInsets(), { width, height } = useWindowDimensions(), N = useN();
   // The email's choices in place of the ways in, with a short fade (`mailFirst`: back from their steps, they show again).
@@ -122,10 +129,11 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
               <L style={{ fontSize: 30, lineHeight: 38, fontWeight: '800', letterSpacing: -0.6, color: N.onAccent }}>pro</L>
             </View>
           </View>
-          {/* The three cards of what the app does, in the middle of what is left (Mojtaba 2026-10-29; it was the symbol
-              on its glowing tile). */}
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 12, marginHorizontal: -24 }}>
-            <VibeCards room={Math.max(200, height - ins.top - ins.bottom - (byMail ? 420 : 500))} />
+          {/* The three cards of what the app does, in the middle of what is left: tall gradient cards that slide sideways
+              (ui/service-carousel.tsx; Mojtaba 2026-11-13; the mascot cards, ui/vibe-cards.tsx, since 2026-10-29, and the
+              symbol on its glowing tile before). Dark on the night-blue page in every theme. */}
+          <View style={{ flex: 1, justifyContent: 'center', paddingVertical: 12 }}>
+            <ServiceCarousel items={WELCOME_CARDS} dark={N.dark} height={Math.min(280, Math.max(190, height - ins.top - ins.bottom - (byMail ? 440 : 520)))} />
           </View>
           <Animated.View style={{ gap: 12, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
             <View style={{ alignItems: 'center', gap: 2, marginBottom: 10 }}>
