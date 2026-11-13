@@ -11,12 +11,10 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { RTL, tr } from '@/lib/i18n';
 import type { CourseLesson } from '@/lib/course';
-import { Cookie } from './cookie';
 import { ServiceCarousel, type ServiceItem } from './service-carousel';
 import { Icon, type IconName } from './icon';
 import { M3Button, T, tap } from './kit';
-import { useTabLook } from './tabs/tab-look';
-import { m3Scheme, useColors, useIsDark, useM3 } from './theme';
+import { useColors, useM3 } from './theme';
 
 export function Head({ title, text }: { title: string; text?: string }) {
   const c = useColors();
@@ -91,8 +89,7 @@ const PARTS: ServiceItem[] = [
 ];
 
 export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
-  const c = useColors(), m = useM3(), tab = useTabLook();
-  const signsScheme = m3Scheme(useIsDark());
+  const c = useColors(), m = useM3();
   const { done } = useCourseProgress();
   // The chapter you are on: the first with a lesson not done (the last when all are).
   const chapter = COURSE.find(ch => ch.lessons.some(l => !done[l.id])) ?? COURSE[COURSE.length - 1];
@@ -126,23 +123,14 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
         </ScrollView>
       </View>
 
-      {/* The chapter you are on, as a module */}
-      <View style={{ gap: 12 }}>
+      {/* The chapter you are on, as a module (the last section since 2026-11-13: the road signs' block under it taken
+          off, Mojtaba) */}
+      <View style={{ gap: 12, marginBottom: 24 }}>
         <Head title={tr(chapter.title)} text={tr(chapter.sub)} />
         <LessonTiles lessons={chapter.lessons} done={done} />
         <View style={{ alignItems: 'center' }}>
           <M3Button kind="outlined" m={m} icon="learn" onPress={() => router.push('/course')}
             label={tr('همه‌ی درس‌ها')} />
-        </View>
-      </View>
-
-      {/* A featured guide, as Knowledge's book block: the road signs */}
-      <View style={{ borderRadius: 28, backgroundColor: signsScheme?.container ?? c.surface, padding: 22, gap: 14, marginBottom: 24 }}>
-        <Cookie size={64} color={signsScheme?.primary ?? tab.indicator}><Icon name="sign" size={32} color={signsScheme?.onPrimary ?? tab.onIndicator} /></Cookie>
-        <T style={{ fontSize: 24, lineHeight: 34, fontWeight: '500', color: signsScheme?.onContainer ?? c.text }}>{tr('علائم رانندگی دانمارک')}</T>
-        <T style={{ fontSize: 14.5, lineHeight: 24, color: signsScheme?.onContainer ?? c.muted }}>{tr('همه‌ی تابلوها و خط‌کشی‌های آزمون، با معنی و نکته‌ی هر کدام؛ گروه‌به‌گروه، با تصویر.')}</T>
-        <View style={{ alignItems: 'flex-start' }}>
-          <M3Button kind="outlined" m={m} icon="sign" label={tr('دیدن تابلوها')} onPress={() => router.push('/signs')} />
         </View>
       </View>
 
