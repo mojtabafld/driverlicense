@@ -8,7 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- black-translucent: on the Home Screen app the page runs up under the status bar, so the headers' glow reaches the
+         screen's top edge (Mojtaba 2026-11-13); the pages keep clear of it with env(safe-area-inset-top). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Teoripro" />
     <!-- Home-screen icon (iOS «Add to Home Screen») and the web app manifest (Android / installs). -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />

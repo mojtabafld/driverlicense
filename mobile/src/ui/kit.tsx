@@ -524,7 +524,7 @@ const atEndOf = (n: { contentOffset: { y: number }; layoutMeasurement: { height:
   n.contentOffset.y + n.layoutMeasurement.height >= n.contentSize.height - 48;
 export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter, dashboard = false, headerContent }: { headerContent?: React.ReactNode; dashboard?: boolean; lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
   scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number, atEnd: boolean) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
-  const c = useColors(), ins = useSafeAreaInsets();
+  const c = useColors(), ins = useSafeAreaInsets(), dark = useTheme().theme === 'dark';
   const ref = useTopOnFocus(scrollRef);
   const box = { paddingTop: hero ? 6 : 0, paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
   // The glow behind the header and the page's top: a plain header (the tabs' own, «هدر ساده») or none (Mojtaba 2026-11-13).
@@ -556,7 +556,13 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
       <View style={{ flex: 1 }}>
       {/* (the tabs: the header's glow reaches down behind the top of the page and fades into it, the cards passing
           over it; Mojtaba 2026-11-13) */}
-      {glowBack ? <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 400 }}><HeaderGlow /></View> : null}
+      {glowBack ? <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 400 }}>
+        <HeaderGlow />
+        {/* (the iPhone's Home Screen app draws its status bar's clock and icons in white over the page: in the light theme a
+            deeper tint of the theme's colour under them, fading out, so they can be read) */}
+        {Platform.OS === 'web' && ins.top > 0 && c.bg && !dark ? <LinearGradient pointerEvents="none" colors={[mix(c.accent, '#000000', 0.25), `${mix(c.accent, '#000000', 0.25)}00`]}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 18, opacity: 0.55 }} /> : null}
+      </View> : null}
       {/* All four tabs keep their header outside the scrolling body. Its natural height includes the safe area. */}
       <View testID="main-page-header" style={{ flexShrink: 0, backgroundColor: glowBack ? 'transparent' : c.bg }}>
         {hero ? top : <View style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, paddingBottom: gap,
