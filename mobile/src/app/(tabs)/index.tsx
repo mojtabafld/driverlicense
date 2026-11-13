@@ -22,7 +22,7 @@ import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { HomeChartIcon, TestStats } from '@/ui/chart-view';
-import { CardCode, CardWash } from '@/ui/service-carousel';
+import { CardCode } from '@/ui/service-carousel';
 import { HomeKnowledge } from '@/ui/home-knowledge';
 import { PasskeyOffer } from '@/ui/passkey-offer';
 import { BellButton } from '@/ui/bell-button';
@@ -335,12 +335,11 @@ export default function Home() {
       <View style={{ gap }}>
       {/* (the main site: in a card again, as the progress chart's, Mojtaba 2026-11-13; on the page itself without a box
           from 2026-11-08) */}
-      {/* (ARC: in the gradient cards' look, ui/service-carousel.tsx: a soft two-colour wash and its number «( 001 )», the
-          cards under it going on from 002; Mojtaba 2026-11-13) */}
-      <Card testID="home-readiness" style={{ ...(ARC ? { backgroundColor: 'transparent', borderWidth: 0, borderRadius: 24, overflow: 'hidden' } : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: ARC ? readinessPad + 4 : readinessPad,
+      {/* (ARC: the gradient cards' number «( 001 )» and type, the cards under it going on from 002, on the same card
+          colour as the progress chart's below (Mojtaba 2026-11-13; a blue wash for a while)) */}
+      <Card testID="home-readiness" style={{ ...(ARC ? null : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: ARC ? readinessPad + 4 : readinessPad,
         paddingVertical: ARC ? readinessPad + 2 : Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
         {ARC ? <>
-          <CardWash tone="blue" />
           <View style={{ alignItems: 'flex-start', marginBottom: compact ? -4 : -8 }}><CardCode n="001" /></View>
           {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
               verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
