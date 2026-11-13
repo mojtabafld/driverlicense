@@ -69,51 +69,56 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
     <Setup testID="exam-setup" style={{ flex: 1, gap: tight || level ? (level >= 3 ? 7 : 10) : 14, ...(ARC
       ? { backgroundColor: 'transparent', borderWidth: 0, shadowOpacity: 0, elevation: 0, paddingVertical: 4, paddingHorizontal: 4 }
       : { paddingVertical: level >= 3 ? 10 : level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }) }}>
-      {/* (the smallest phones: no line, the card's gaps part the two halves) */}
-      {ARC ? (
-        // The random test as a section, its title and what the chosen size means (Mojtaba 2026-11-08)
-        <View style={{ gap: 6, paddingTop: level >= 2 ? 8 : 16 }}>
-          <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>{tr('آزمون تصادفی')}</T>
-          <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{t('{0} سؤال در {1} دقیقه', faNum(size), faNum(Math.round(size * SECONDS_PER_Q / 60)))}</T>
-        </View>
-      ) : level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
-      {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
-          تکراری» (Mojtaba 2026-10-30). */}
-      {/* The number of questions on a slider over the start button, out of the button again (Mojtaba 2026-11-07). */}
-      {randomLeft && count ? <SizeSlider value={size} values={SIZES} onChange={setSize} grey={!ARC} /> : null}
-      {/* A round check box before the words, as a question's statements are ticked, above the start button, under the slider (Mojtaba 2026-11-07; under the button from 2026-11-06) */}
-      <Pressable onPress={() => { tap(); setFresh(!fresh); }} accessibilityRole="checkbox" accessibilityState={{ checked: fresh }} accessibilityLabel={tr('بدون سؤال تکراری')}
-        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.7 : 1 })}>
-        <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: fresh ? c.pick : 'transparent', borderWidth: fresh ? 0 : 1.75, borderColor: c.faint }}>
-          {fresh ? <Icon name="check" size={14} color={c.accentText} weight="bold" /> : null}
-        </View>
-        <T style={{ flex: 1, fontWeight: '700', fontSize: 14, lineHeight: 22 }}>بدون سؤال تکراری</T>
-      </Pressable>
-      {fresh && unseen.length < size && !(unseen.length === 0 && premium && !limited) ? (
-        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
-          <Icon name="info" size={17} color={c.muted} />
-          <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{unseen.length
-            ? `فقط ${faNum(unseen.length)} سؤال تازه مانده؛ آزمون با همه‌ی آن‌ها انجام می‌شود.`
-            : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
-        </View>
-      ) : null}
-      {/* The free tests' notice: only without premium (Mojtaba 2026-10-29). */}
-      {limited && !premium ? (
-        <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
-          <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
-          {/* The free tests left: always one line, shorter and smaller on a narrow screen (Mojtaba 2026-10-22). */}
-          {randomLeft ? (
-            <View style={{ flex: 1 }}>
-              <FitLine size={13} min={10.5} style={{ lineHeight: 21, color: c.muted }}>{t('{1} از {0} آزمون تصادفی رایگان مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))}</FitLine>
-            </View>
-          ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
-        </View>
-      ) : null}
-      {/* (Premium: no «tested on … of … questions» line here any more; the progress card below says it. Mojtaba 2026-10-29) */}
-      {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
-        : count ? (ARC ? <ArcButton label={t('شروع آزمون {0} سؤالی', faNum(count))} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
-          : null}
+      {/* The random test in the gradient cards' look (Mojtaba 2026-11-13; on the page itself before), numbered first */}
+      <View testID="exam-random-card" style={ARC ? { gap: tight || level ? (level >= 3 ? 7 : 10) : 14, padding: 20, paddingTop: 16, borderRadius: 24, overflow: 'hidden' } : { gap: tight || level ? (level >= 3 ? 7 : 10) : 14 }}>
+        {ARC ? <CardWash tone="amber" /> : null}
+        {ARC ? <View style={{ alignItems: 'flex-start', marginBottom: -6 }}><CardCode n="001" /></View> : null}
+        {/* (the smallest phones: no line, the card's gaps part the two halves) */}
+        {ARC ? (
+          // The random test as a section, its title and what the chosen size means (Mojtaba 2026-11-08)
+          <View style={{ gap: 6 }}>
+            <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>{tr('آزمون تصادفی')}</T>
+            <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{t('{0} سؤال در {1} دقیقه', faNum(size), faNum(Math.round(size * SECONDS_PER_Q / 60)))}</T>
+          </View>
+        ) : level >= 3 ? null : <View style={{ height: 1, backgroundColor: c.line }} />}
+        {/* The number of questions (no title over it since 2026-10-30: the choice says it), and under it «بدون سؤال
+            تکراری» (Mojtaba 2026-10-30). */}
+        {/* The number of questions on a slider over the start button, out of the button again (Mojtaba 2026-11-07). */}
+        {randomLeft && count ? <SizeSlider value={size} values={SIZES} onChange={setSize} grey={!ARC} /> : null}
+        {/* A round check box before the words, as a question's statements are ticked, above the start button, under the slider (Mojtaba 2026-11-07; under the button from 2026-11-06) */}
+        <Pressable onPress={() => { tap(); setFresh(!fresh); }} accessibilityRole="checkbox" accessibilityState={{ checked: fresh }} accessibilityLabel={tr('بدون سؤال تکراری')}
+          style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: pressed ? 0.7 : 1 })}>
+          <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center',
+            backgroundColor: fresh ? c.pick : 'transparent', borderWidth: fresh ? 0 : 1.75, borderColor: c.faint }}>
+            {fresh ? <Icon name="check" size={14} color={c.accentText} weight="bold" /> : null}
+          </View>
+          <T style={{ flex: 1, fontWeight: '700', fontSize: 14, lineHeight: 22 }}>بدون سؤال تکراری</T>
+        </Pressable>
+        {fresh && unseen.length < size && !(unseen.length === 0 && premium && !limited) ? (
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 12, backgroundColor: c.surface2 }}>
+            <Icon name="info" size={17} color={c.muted} />
+            <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.muted }}>{unseen.length
+              ? `فقط ${faNum(unseen.length)} سؤال تازه مانده؛ آزمون با همه‌ی آن‌ها انجام می‌شود.`
+              : 'همه‌ی سؤال‌ها را دست‌کم یک بار جواب داده‌اید.'}</T>
+          </View>
+        ) : null}
+        {/* The free tests' notice: only without premium (Mojtaba 2026-10-29). */}
+        {limited && !premium ? (
+          <View style={{ flexDirection: 'row', alignItems: randomLeft ? 'center' : 'flex-start', gap: 8, padding: tight ? 10 : 12, borderRadius: 12, backgroundColor: randomLeft ? c.surface2 : c.warnSoft }}>
+            <Icon name={randomLeft ? 'info' : 'lock'} size={17} color={randomLeft ? c.muted : c.warn} />
+            {/* The free tests left: always one line, shorter and smaller on a narrow screen (Mojtaba 2026-10-22). */}
+            {randomLeft ? (
+              <View style={{ flex: 1 }}>
+                <FitLine size={13} min={10.5} style={{ lineHeight: 21, color: c.muted }}>{t('{1} از {0} آزمون تصادفی رایگان مانده است.', faNum(FREE_RANDOM), faNum(randomLeft))}</FitLine>
+              </View>
+            ) : <T style={{ flex: 1, fontSize: 13, lineHeight: 21, color: c.text }}>{t('{0} آزمون رایگان شما تمام شد. برای آزمون‌های بیشتر، نسخه‌ی ویژه را فعال کنید.', faNum(FREE_RANDOM))}</T>}
+          </View>
+        ) : null}
+        {/* (Premium: no «tested on … of … questions» line here any more; the progress card below says it. Mojtaba 2026-10-29) */}
+        {!randomLeft ? (ARC ? <ArcButton label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" /> : <Button label="فعال کردن نسخه‌ی ویژه" onPress={start} icon="lock" kind="grey" />)
+          : count ? (ARC ? <ArcButton label={t('شروع آزمون {0} سؤالی', faNum(count))} onPress={start} icon="play" variant="accent" /> : <Button label={`شروع آزمون ${faNum(count)} سؤالی`} onPress={start} icon="play" kind="grey" />)
+            : null}
+      </View>
       <Progress answered={answered} total={total} right={right} wrong={wrong} week={week} level={level} />
     </Setup>
     </>
@@ -150,7 +155,7 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
     <View style={{ gap: 14 }}>
       <View testID="exam-progress-card" style={{ padding: 20, gap: 16, borderRadius: 24, overflow: 'hidden' }}>
         <CardWash tone="blue" />
-        <View style={{ alignItems: 'flex-start', marginBottom: -10 }}><CardCode n="001" /></View>
+        <View style={{ alignItems: 'flex-start', marginBottom: -10 }}><CardCode n="002" /></View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <T style={{ flex: 1, fontSize: 22, lineHeight: 32, fontWeight: '500' }}>پیشرفت شما</T>
           <Pressable onPress={() => { tap(); setOpen(v => !v); }} accessibilityRole="button" accessibilityLabel={tr('جزئیات پیشرفت')} accessibilityState={{ expanded: open }} hitSlop={8}
@@ -187,10 +192,10 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
           </View>)}
         </View> : null}
       </View>
-      <DailyTestsChart height={level >= 3 ? 96 : 120} code="002" />
+      <DailyTestsChart height={level >= 3 ? 96 : 120} code="003" />
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        {shortcut('003', 'green', 'clock', t('{0} آزمون', faNum(tests)), ink, () => router.push('/history'))}
-        {shortcut('004', 'red', 'warning', t('{0} اشتباه', faNum(mistakes)), mistakes ? m.error : ink, () => router.push('/mistakes'))}
+        {shortcut('004', 'green', 'clock', t('{0} آزمون', faNum(tests)), ink, () => router.push('/history'))}
+        {shortcut('005', 'red', 'warning', t('{0} اشتباه', faNum(mistakes)), mistakes ? m.error : ink, () => router.push('/mistakes'))}
       </View>
     </View>
   );

@@ -21,7 +21,7 @@ import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { Card, M3Button, Screen, T } from '@/ui/kit';
-import { Head, Tiles, iconOf } from '@/ui/home-knowledge';
+import { Head, iconOf } from '@/ui/home-knowledge';
 import { SearchBox } from '@/ui/search-box';
 import { ServiceCarousel, type ServiceItem } from '@/ui/service-carousel';
 import { ARC, useColors, useIsDark, useM3 } from '@/ui/theme';
@@ -108,6 +108,7 @@ const GUIDES: ServiceItem[] = [
   { number: '003', title: 'آموزش حق تقدم', description: 'چه کسی اول می‌رود؟', icon: 'priority', tone: 'amber', onPress: () => router.push('/priority') },
   { number: '004', title: 'واژه‌نامه‌ی آزمون', description: 'واژه‌های دانمارکی آزمون', icon: 'translate', tone: 'blue', onPress: () => router.push('/glossary') },
 ];
+const TONE_CYCLE: ServiceItem['tone'][] = ['blue', 'purple', 'green', 'amber', 'red'];
 function LearnSections({ search }: { search: ReactNode }) {
   const m = useM3();
   const { done } = useCourseProgress();
@@ -119,7 +120,9 @@ function LearnSections({ search }: { search: ReactNode }) {
         <Head title={tr('آموزش گام‌به‌گام')}
           text={finished ? t('فصل به فصل، مثل آزمون. {0} از {1} درس را تمام کرده‌اید.', faNum(finished), faNum(lessons.length))
             : t('فصل به فصل، مثل آزمون: {0} درس در {1} فصل، هر کدام با تمرین و آزمون کوتاه.', faNum(lessons.length), faNum(COURSE.length))} />
-        <Tiles items={COURSE.map(ch => ({ key: ch.id, title: tr(ch.title), icon: CHAPTER_ICON[ch.id] ?? iconOf(ch.title), done: ch.lessons.every(l => done[l.id]),
+        {/* the chapters as the gradient cards that slide sideways (Mojtaba 2026-11-13; outlined tiles before) */}
+        <ServiceCarousel height={250} items={COURSE.map((ch, i): ServiceItem => ({ number: String(i + 1).padStart(3, '0'), title: ch.title, description: ch.sub,
+          icon: CHAPTER_ICON[ch.id] ?? iconOf(ch.title), tone: TONE_CYCLE[i % TONE_CYCLE.length], done: ch.lessons.every(l => done[l.id]),
           onPress: () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } }) }))} />
         <View style={{ alignItems: 'center' }}>
           <M3Button kind="outlined" m={m} icon="learn" label={tr('همه‌ی فصل‌ها')} onPress={() => router.push('/course')} />
