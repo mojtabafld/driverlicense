@@ -1,7 +1,8 @@
 import { deepAccent, mix, railColor } from '../palette';
 import { m3Scheme, useColors, useIsDark } from '../theme';
 
-export const TAB_BAR_H = 72;
+// (the notched bar's height at full size: notch-bar.tsx)
+export const TAB_BAR_H = 84;
 
 
 function luminance(color: string) {

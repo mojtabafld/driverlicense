@@ -1,6 +1,4 @@
-// The tab bar's water pill (Mojtaba 2026-11-13, the «Liquid Glass Navbar» from Nimbus UI): what both forms take, the
-// web one (liquid-bar.web.tsx: the component itself, src/components/ui/liquid-glass-navbar.tsx, with its WebGL water)
-// and the phones' (liquid-bar.tsx: the same look drawn with React Native's views and animations).
+// What the tab bar takes (notch-bar.tsx; the «Liquid Glass Navbar» before, whose names these keep).
 import type { IconName } from '../icon';
 
 // The little scene each tab's icon plays when tapped (the component's NimbusFx, those the app uses).
