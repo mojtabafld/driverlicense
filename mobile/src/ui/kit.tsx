@@ -7,7 +7,7 @@ import { Image } from 'expo-image';
 import { Fragment, cloneElement, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, LinearGradient as SvgLinear, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 
 import { usePlainHeader } from '@/lib/header-style';
 import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
@@ -229,42 +229,12 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // A picture header's foot fading into the page (Hero's, and the sign-in page's).
-// The pages' header (Mojtaba 2026-11-13, after his picture of a soft grey app): no colour of its own any more, only
-// light: a white sheen from the screen's top edge (strongest at the reading start) over the page's colour, and a faint
-// grey shade at the other side, fading into the page so there is no edge. In the dark theme the same, much fainter:
-// a breath of light at the top and a deeper shade beside it.
-const WASH_TOP = { dark: 0.06, light: 0.7 };
-export const headerTopColor = (bg: string, _accent: string, dark: boolean) => mix(bg, '#ffffff', dark ? WASH_TOP.dark : WASH_TOP.light);
+// The pages' header: the page's own colour, with no gradient (Mojtaba 2026-11-13: «گرادینت رو از هدر حذف کن»; a glow,
+// then a white sheen for a while), and the status bar strip in that same colour.
+export const headerTopColor = (bg: string, _accent: string, _dark: boolean) => bg;
 export function HeaderGlow() {
-  const c = useColors(), dark = useTheme().theme === 'dark';
-  const shade = dark ? '#000000' : '#c9c9d0';
-  const start = RTL ? 78 : 22, end = RTL ? 20 : 80;
-  return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <Defs>
-          <SvgLinear id="hg-w" x1={0} y1={0} x2={0} y2={100} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor="#ffffff" stopOpacity={dark ? WASH_TOP.dark : WASH_TOP.light} />
-            <Stop offset="0.5" stopColor="#ffffff" stopOpacity={dark ? 0.02 : 0.25} />
-            <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
-          </SvgLinear>
-          <RadialGradient id="hg-a" cx={start} cy={12} rx={70} ry={46} fx={start} fy={12} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor="#ffffff" stopOpacity={dark ? 0.06 : 0.6} />
-            <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
-          </RadialGradient>
-          <RadialGradient id="hg-b" cx={end} cy={30} rx={60} ry={40} fx={end} fy={30} gradientUnits="userSpaceOnUse">
-            <Stop offset="0" stopColor={shade} stopOpacity={dark ? 0.25 : 0.22} />
-            <Stop offset="1" stopColor={shade} stopOpacity={0} />
-          </RadialGradient>
-        </Defs>
-        <Rect x={0} y={0} width={100} height={100} fill={c.bg} />
-        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-b)" />
-        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-w)" />
-        <Rect x={0} y={0} width={100} height={100} fill="url(#hg-a)" />
-      </Svg>
-      <LinearGradient pointerEvents="none" colors={[`${c.bg}00`, c.bg]} style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '40%' }} />
-    </View>
-  );
+  const c = useColors();
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: c.bg }]} />;
 }
 
 export function HeroFade() {
@@ -569,10 +539,6 @@ export function Screen({ title, name, subtitle, children, right, fill, gap = 14,
           over it; Mojtaba 2026-11-13) */}
       {glowBack ? <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 400 }}>
         <HeaderGlow />
-        {/* (the iPhone's Home Screen app draws its status bar's clock and icons in white over the page: in the light theme a
-            deeper tint of the theme's colour under them, fading out, so they can be read) */}
-        {Platform.OS === 'web' && ins.top > 0 && c.bg && !dark ? <LinearGradient pointerEvents="none" colors={[mix(c.accent, '#000000', 0.25), `${mix(c.accent, '#000000', 0.25)}00`]}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 44, opacity: 0.35 }} /> : null}
       </View> : null}
       {/* All four tabs keep their header outside the scrolling body. Its natural height includes the safe area. */}
       <View testID="main-page-header" style={{ flexShrink: 0, backgroundColor: glowBack ? 'transparent' : c.bg }}>
