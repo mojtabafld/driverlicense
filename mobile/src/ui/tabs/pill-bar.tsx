@@ -19,6 +19,9 @@ import { BAR_GAP, type LiquidBarProps } from './liquid-bar-types';
 const LABEL_W = 88;
 export const PILL_BAR_H = 66;
 const WEB = Platform.OS === 'web';
+// The room under the pill (less since 2026-11-13, Mojtaba: «فضای خالی پایین داکر زیاده»): the small gap, and on a phone
+// with a home indicator the pill reaches a little into that strip (the indicator line stays clear under it).
+export const under = (inset: number) => (inset > 0 ? Math.max(BAR_GAP, inset - 14) : BAR_GAP);
 
 function useStill() {
   const [still, setStill] = useState(false);
@@ -66,7 +69,7 @@ export function PillBar({ tabs, active, onSelect, bottomInset }: LiquidBarProps)
   const born = useRef(new Animated.Value(still ? 1 : 0)).current;
   useEffect(() => { Animated.spring(born, { toValue: 1, stiffness: 300, damping: 26, mass: 1, useNativeDriver: !WEB }).start(); }, []);
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingBottom: bottomInset + BAR_GAP }}>
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingBottom: under(bottomInset) }}>
       <Animated.View accessibilityRole="tablist" accessibilityLabel={tr('ناوبری')}
         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, height: PILL_BAR_H, padding: 6, borderRadius: 999,
           minWidth: Math.min(380, width * 0.95), maxWidth: width * 0.95, backgroundColor: c.surface, borderWidth: 1, borderColor: dark ? mix(c.line, c.text, 0.1) : c.line,
