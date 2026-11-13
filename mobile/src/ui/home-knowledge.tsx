@@ -11,10 +11,10 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { RTL, tr } from '@/lib/i18n';
 import type { CourseLesson } from '@/lib/course';
-import { ServiceCarousel, type ServiceItem } from './service-carousel';
+import { CardCode, CardWash, ServiceCarousel, type ServiceItem, type ServiceTone } from './service-carousel';
 import { Icon, type IconName } from './icon';
 import { M3Button, T, tap } from './kit';
-import { useColors, useM3 } from './theme';
+import { useColors, useIsDark, useM3 } from './theme';
 
 export function Head({ title, text }: { title: string; text?: string }) {
   const c = useColors();
@@ -36,8 +36,12 @@ export type TileItem = { key: string; title: string; icon: IconName; done?: bool
 // A row of outlined square tiles that scrolls sideways (fonts.google.com's «Browse topics»; Mojtaba 2026-11-08): each a
 // large line icon in the primary over its name, a tick at its corner when done, and a round arrow at the end that
 // moves the row on by a tile. Shared by the home page's lessons and the learn tab's chapters.
-export function Tiles({ items }: { items: TileItem[] }) {
-  const c = useColors(), m = useM3();
+// `gradient`: each tile in the gradient cards' look (ui/service-carousel.tsx) at its own size and with its own type: a
+// soft two-colour wash in place of the outline, its number «( 001 )» at the top start (Mojtaba 2026-11-13: the home
+// page's lessons).
+const TILE_TONES: ServiceTone[] = ['blue', 'purple', 'green', 'amber', 'red'];
+export function Tiles({ items, gradient }: { items: TileItem[]; gradient?: boolean }) {
+  const c = useColors(), m = useM3(), dark = useIsDark(), ink = dark ? '#ffffff' : c.text;
   const ref = useRef<ScrollView>(null), x = useRef(0);
   const [end, setEnd] = useState(false);
   const TILE = 156, GAP = 12;
@@ -51,12 +55,19 @@ export function Tiles({ items }: { items: TileItem[] }) {
     <View>
       <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: GAP, paddingHorizontal: 4 }} scrollEventThrottle={32}
         onScroll={e => { const n = e.nativeEvent; x.current = Math.abs(n.contentOffset.x); setEnd(x.current + n.layoutMeasurement.width >= n.contentSize.width - 8); }}>
-        {items.map(it => (
+        {items.map((it, i) => (
           <Pressable key={it.key} onPress={() => { tap(); it.onPress(); }} accessibilityRole="button" accessibilityLabel={it.title}
-            style={({ pressed }) => ({ width: TILE, height: TILE, borderRadius: 24, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center',
-              gap: 12, paddingHorizontal: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-            <Icon name={it.icon} size={64} color={m.primary} />
-            <T numberOfLines={2} style={{ fontSize: 14.5, lineHeight: 21, fontWeight: '500', textAlign: 'center' }}>{it.title}</T>
+            style={({ pressed }) => (gradient
+              ? { width: TILE, height: TILE, borderRadius: 24, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 12, opacity: pressed ? 0.85 : 1 }
+              : { width: TILE, height: TILE, borderRadius: 24, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center',
+                gap: 12, paddingHorizontal: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+            {gradient ? <>
+              <CardWash tone={TILE_TONES[i % TILE_TONES.length]} />
+              <View style={{ position: 'absolute', top: 10, start: 12 } as object}><CardCode n={String(i + 1).padStart(3, '0')} /></View>
+            </> : null}
+            {/* (over the wash: the icon draws in a layer of its own on the web) */}
+            <View style={{ zIndex: 1 }}><Icon name={it.icon} size={64} color={gradient ? ink : m.primary} /></View>
+            <T numberOfLines={2} style={{ fontSize: 14.5, lineHeight: 21, fontWeight: gradient ? '600' : '500', textAlign: 'center', ...(gradient ? { color: ink } : null) }}>{it.title}</T>
             {it.done ? <View style={{ position: 'absolute', top: 10, end: 10 } as object}><Icon name="checkCircle" size={20} color={c.ok} filled /></View> : null}
           </Pressable>
         ))}
@@ -74,7 +85,7 @@ export function Tiles({ items }: { items: TileItem[] }) {
 }
 
 function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<string, number> }) {
-  return <Tiles items={lessons.map(l => ({ key: l.id, title: tr(l.title), icon: iconOf(l.title), done: !!done[l.id],
+  return <Tiles gradient items={lessons.map(l => ({ key: l.id, title: tr(l.title), icon: iconOf(l.title), done: !!done[l.id],
     onPress: () => router.push({ pathname: '/course-lesson', params: { id: l.id } }) }))} />;
 }
 
