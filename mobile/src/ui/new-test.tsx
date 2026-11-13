@@ -19,9 +19,10 @@ import { useApp } from '@/lib/store';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
 import { DailyTestsChart } from './daily-tests-chart';
+import { CardCode, CardWash, type ServiceTone } from './service-carousel';
 import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
 import { SizeSlider } from './size-slider';
-import { ARC, useColors, useM3 } from './theme';
+import { ARC, useColors, useIsDark, useM3 } from './theme';
 import { mix } from './palette';
 
 export type NewTest = ReturnType<typeof useNewTest>;
@@ -120,8 +121,10 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
 }
 
 // Option 1: a filled progress card with one proportional segmented bar, then a separate daily bar-chart card.
+// (Mojtaba 2026-11-13: the cards in the gradient cards' look, ui/service-carousel.tsx, at their own size: a soft
+// two-colour wash, the number «( 001 )» over the title; the two shortcuts under them small cards of the same kind.)
 function Progress({ answered, total, right, wrong, level = 0 }: { answered: number; total: number; right: number; wrong: number; week: number; level?: number }) {
-  const c = useColors(), m = useM3(), [open, setOpen] = useState(false);
+  const c = useColors(), m = useM3(), dark = useIsDark(), [open, setOpen] = useState(false);
   const share = total ? answered / total : 0, animated = useCountUp(share, 1100);
   const shown = total && answered >= total ? 1 : Math.min(0.99, Math.max(0, animated));
   const left = Math.max(0, total - answered);
@@ -131,17 +134,23 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
   const counts = [right, wrong, left];
   const labels = ['درست', 'اشتباه', 'جواب‌نداده'];
   const numberFont = RTL ? 'Vazirmatn-700' : 'GSans-700';
-  const shortcut = (icon: IconName, label: string, color: string, onPress: () => void) => (
+  const ink = dark ? '#ffffff' : c.text;
+  const shortcut = (code: string, tone: ServiceTone, icon: IconName, label: string, color: string, onPress: () => void) => (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => ({ flex: 1, minWidth: 0, minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-        paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: color, backgroundColor: pressed ? mix(c.surface, color, 0.12) : 'transparent' })}>
-      <Icon name={icon} size={16} color={color} />
-      <T raw numberOfLines={1} style={{ flexShrink: 1, fontSize: 14, lineHeight: 22, color }}>{label}</T>
+      style={({ pressed }) => ({ flex: 1, minWidth: 0, minHeight: 46, paddingHorizontal: 16, paddingVertical: 14, gap: 10, borderRadius: 24, overflow: 'hidden', opacity: pressed ? 0.85 : 1 })}>
+      <CardWash tone={tone} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <CardCode n={code} />
+        <Icon name={icon} size={22} color={color} />
+      </View>
+      <T raw numberOfLines={1} style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: ink }}>{label}</T>
     </Pressable>
   );
   return (
     <View style={{ gap: 14 }}>
-      <View testID="exam-progress-card" style={{ padding: 20, gap: 16, borderRadius: 24, backgroundColor: c.surface }}>
+      <View testID="exam-progress-card" style={{ padding: 20, gap: 16, borderRadius: 24, overflow: 'hidden' }}>
+        <CardWash tone="blue" />
+        <View style={{ alignItems: 'flex-start', marginBottom: -10 }}><CardCode n="001" /></View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <T style={{ flex: 1, fontSize: 22, lineHeight: 32, fontWeight: '500' }}>پیشرفت شما</T>
           <Pressable onPress={() => { tap(); setOpen(v => !v); }} accessibilityRole="button" accessibilityLabel={tr('جزئیات پیشرفت')} accessibilityState={{ expanded: open }} hitSlop={8}
@@ -178,10 +187,10 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
           </View>)}
         </View> : null}
       </View>
-      <DailyTestsChart height={level >= 3 ? 96 : 120} />
+      <DailyTestsChart height={level >= 3 ? 96 : 120} code="002" />
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        {shortcut('clock', t('{0} آزمون', faNum(tests)), m.primary, () => router.push('/history'))}
-        {shortcut('warning', t('{0} اشتباه', faNum(mistakes)), mistakes ? m.error : m.primary, () => router.push('/mistakes'))}
+        {shortcut('003', 'green', 'clock', t('{0} آزمون', faNum(tests)), ink, () => router.push('/history'))}
+        {shortcut('004', 'red', 'warning', t('{0} اشتباه', faNum(mistakes)), mistakes ? m.error : ink, () => router.push('/mistakes'))}
       </View>
     </View>
   );

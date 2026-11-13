@@ -19,7 +19,7 @@ export type ServiceTone = 'purple' | 'green' | 'red' | 'blue' | 'amber';
 export type ServiceItem = { number: string; title: string; description: string; icon: IconName; tone: ServiceTone; onPress?: () => void };
 
 // The original's Tailwind gradients: «from-X-100 to-X-200» in the light theme, «from-X-900/50 to-X-800/50» in the dark.
-const TONES: Record<ServiceTone, { light: [string, string]; dark: [string, string] }> = {
+export const TONES: Record<ServiceTone, { light: [string, string]; dark: [string, string] }> = {
   purple: { light: ['#f3e8ff', '#e9d5ff'], dark: ['rgba(88,28,135,0.5)', 'rgba(107,33,168,0.5)'] },
   green: { light: ['#dcfce7', '#bbf7d0'], dark: ['rgba(20,83,45,0.5)', 'rgba(22,101,52,0.5)'] },
   red: { light: ['#fee2e2', '#fecaca'], dark: ['rgba(127,29,29,0.5)', 'rgba(153,27,27,0.5)'] },
@@ -28,6 +28,25 @@ const TONES: Record<ServiceTone, { light: [string, string]; dark: [string, strin
 };
 const GAP = 12;
 const MONO = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'ui-monospace, SFMono-Regular, Menlo, monospace' });
+
+// The cards' look on its own, for other cards that keep their own content and size (Mojtaba 2026-11-13: the test
+// page's cards and the three under «شانس قبولی»): the two-colour wash with its shade from the foot, drawn behind the
+// card's content (the card itself has the rounded corners and `overflow: 'hidden'`).
+export function CardWash({ tone, dark: forceDark }: { tone: ServiceTone; dark?: boolean }) {
+  const themeDark = useIsDark(), dark = forceDark ?? themeDark;
+  return (
+    <>
+      <LinearGradient pointerEvents="none" colors={dark ? TONES[tone].dark : TONES[tone].light} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      <LinearGradient pointerEvents="none" colors={[dark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)', 'transparent']} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+    </>
+  );
+}
+// A card's number, «( 001 )», in small mono letters: Latin digits and left to right in every language.
+export function CardCode({ n, color }: { n: string; color?: string }) {
+  const c = useColors(), dark = useIsDark();
+  return <T raw style={{ fontFamily: MONO, fontSize: 13, lineHeight: 18, color: color ?? (dark ? '#ffffff' : c.text), opacity: 0.5, writingDirection: 'ltr', ...(Platform.OS === 'web' ? { direction: 'ltr', unicodeBidi: 'isolate' } : null) } as any}>( {n} )</T>;
+}
 
 function Card({ it, index, width, height, dark, shown, still }: { it: ServiceItem; index: number; width: number; height: number; dark: boolean; shown: boolean; still: boolean }) {
   const c = useColors();

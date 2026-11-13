@@ -2,21 +2,24 @@
 // «Material Design icon guidelines» carousel): each card a title, a line under it and a cookie tile with its icon; the
 // next card peeks in at the end; round arrows at the sides move one card back or on, and a swipe does the same.
 // Laid out left to right whatever the language, the first card at the reading start (the right in Persian).
+// Since 2026-11-13 (Mojtaba) each card has the gradient cards' look (ui/service-carousel.tsx) at its own size: a soft
+// two-colour wash, its number «( 001 )» in small mono letters with the line icon across from it, and at the foot the
+// title over its line.
 import { useEffect, useRef, useState } from 'react';
 import { Animated, PanResponder, Platform, Pressable, View } from 'react-native';
 
 import { RTL, tr } from '@/lib/i18n';
-import { Cookie } from './cookie';
 import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
-import { useTabLook } from './tabs/tab-look';
-import { useColors, useM3 } from './theme';
+import { CardCode, CardWash, type ServiceTone } from './service-carousel';
+import { useColors, useIsDark, useM3 } from './theme';
 
-export type StatItem = { title: string; sub: string; icon: IconName; color?: string; onPress?: () => void; label?: string };
+export type StatItem = { title: string; sub: string; icon: IconName; color?: string; onPress?: () => void; label?: string; tone?: ServiceTone };
+const CYCLE: ServiceTone[] = ['purple', 'green', 'blue', 'amber', 'red'];
 
-// `fill`: the cards' colour (the inner surface inside a card by default; the card colour on the page).
-export function StatCarousel({ items, dense, fill }: { items: StatItem[]; dense?: boolean; fill?: string }) {
-  const c = useColors(), tab = useTabLook(), m = useM3();
+// (`fill`, the cards' plain colour before 2026-11-13, is kept for the callers.)
+export function StatCarousel({ items, dense }: { items: StatItem[]; dense?: boolean; fill?: string }) {
+  const c = useColors(), m = useM3(), dark = useIsDark(), ink = dark ? '#ffffff' : c.text;
   const [w, setW] = useState(0), [at, setAt] = useState(0);
   const [x] = useState(() => new Animated.Value(0));
   // (taller, Mojtaba 2026-11-08: 92 / 108 before)
@@ -103,14 +106,18 @@ export function StatCarousel({ items, dense, fill }: { items: StatItem[]; dense?
         <Animated.View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: w, transform: [{ translateX: x }] }}>
           {items.map((it, i) => (
             <Pressable key={i} disabled={!it.onPress} onPress={() => { if (Date.now() - dragged.current < 400) return; tap(); it.onPress?.(); }} accessibilityRole={it.onPress ? 'button' : undefined} accessibilityLabel={it.label}
-              style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, left: RTL ? w - W - i * stepW : i * stepW, borderRadius: 24,
-                backgroundColor: fill ?? c.surface2, opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 14,
+              style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, left: RTL ? w - W - i * stepW : i * stepW, borderRadius: 24, overflow: 'hidden',
+                opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, paddingVertical: dense ? 12 : 16, justifyContent: 'space-between',
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
-              <View style={{ flex: 1, gap: 3 }}>
-                <T numberOfLines={1} style={{ fontSize: dense ? 19 : 21, lineHeight: dense ? 28 : 30, fontWeight: '500', color: it.color ?? c.text }}>{it.title}</T>
-                <T numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 20, color: c.muted }}>{it.sub}</T>
+              <CardWash tone={it.tone ?? CYCLE[i % CYCLE.length]} />
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <CardCode n={String(i + 1).padStart(3, '0')} />
+                <Icon name={it.icon} size={dense ? 26 : 30} color={ink} />
               </View>
-              <Cookie size={dense ? 56 : 64} color={tab.indicator}><Icon name={it.icon} size={dense ? 28 : 32} color={tab.onIndicator} /></Cookie>
+              <View style={{ gap: 2 }}>
+                <T numberOfLines={1} style={{ fontSize: dense ? 17 : 19, lineHeight: dense ? 25 : 28, fontWeight: '600', color: it.color ?? ink }}>{it.title}</T>
+                <T numberOfLines={dense ? 1 : 2} style={{ fontSize: 13.5, lineHeight: 20, color: ink, opacity: 0.72 }}>{it.sub}</T>
+              </View>
             </Pressable>
           ))}
         </Animated.View>

@@ -6,6 +6,8 @@
     "@expo-google-fonts/google-sans-flex": "^0.4.7",
     "@expo-google-fonts/vazirmatn": "^0.4.1",
     "@expo/app-integrity": "~57.0.2",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "@radix-ui/react-slot": "^1.5.0",
     "@react-native-community/slider": "5.2.0",
     "class-variance-authority": "^0.7.1",
@@ -38,6 +40,7 @@
     "expo-web-browser": "~57.0.3",
     "framer-motion": "^14.13.0",
     "lucide-react": "^1.72.0",
+    "motion": "^14.13.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
@@ -49,6 +52,7 @@
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
+    "react-use-measure": "^2.1.7",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
