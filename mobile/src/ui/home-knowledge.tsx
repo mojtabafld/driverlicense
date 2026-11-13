@@ -1,8 +1,8 @@
 // The home page's sections under the chart (Mojtaba 2026-11-08, after fonts.google.com/knowledge): «مباحث» as chips that
 // scroll sideways (its «Browse topics»), the chapter you are on as a module (its title, its line, its lessons with a tick
 // for each one done and «همه‌ی درس‌ها», as Knowledge's modules and «View all articles»), a featured guide (as its book
-// block: the road signs) and a random test with a 5–25 question size control (in place of the
-// glossary since 2026-11-08).
+// block: the road signs). (A random test with a 5–25 question size control closed them from 2026-11-08 until Mojtaba
+// took it off on 2026-11-13; the test tab has its own.)
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
@@ -11,13 +11,11 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { RTL, tr } from '@/lib/i18n';
 import type { CourseLesson } from '@/lib/course';
-import { FULL, SIZES, faNum } from '@/lib/logic';
 import { Cookie } from './cookie';
 import { ServiceCarousel, type ServiceItem } from './service-carousel';
 import { Icon, type IconName } from './icon';
 import { M3Button, T, tap } from './kit';
 import { useTabLook } from './tabs/tab-look';
-import { useNewTest } from './new-test';
 import { m3Scheme, useColors, useIsDark, useM3 } from './theme';
 
 export function Head({ title, text }: { title: string; text?: string }) {
@@ -98,10 +96,6 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   const { done } = useCourseProgress();
   // The chapter you are on: the first with a lesson not done (the last when all are).
   const chapter = COURSE.find(ch => ch.lessons.some(l => !done[l.id])) ?? COURSE[COURSE.length - 1];
-  // Home offers a size only: use the whole bank so previous answers never shorten the selected test.
-  const test = useNewTest(false);
-  const minSize = SIZES[0], step = SIZES[1] - minSize;
-  const resize = (delta: number) => { tap(); test.setSize(size => Math.max(minSize, Math.min(FULL, size + delta))); };
   const open = (go: () => void) => () => { tap(); go(); };
   const chip = (label: string, onPress: () => void, icon?: IconName) => (
     <Pressable key={label} onPress={open(onPress)} accessibilityRole="button"
@@ -143,7 +137,7 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
       </View>
 
       {/* A featured guide, as Knowledge's book block: the road signs */}
-      <View style={{ borderRadius: 28, backgroundColor: signsScheme?.container ?? c.surface, padding: 22, gap: 14 }}>
+      <View style={{ borderRadius: 28, backgroundColor: signsScheme?.container ?? c.surface, padding: 22, gap: 14, marginBottom: 24 }}>
         <Cookie size={64} color={signsScheme?.primary ?? tab.indicator}><Icon name="sign" size={32} color={signsScheme?.onPrimary ?? tab.onIndicator} /></Cookie>
         <T style={{ fontSize: 24, lineHeight: 34, fontWeight: '500', color: signsScheme?.onContainer ?? c.text }}>{tr('علائم رانندگی دانمارک')}</T>
         <T style={{ fontSize: 14.5, lineHeight: 24, color: signsScheme?.onContainer ?? c.muted }}>{tr('همه‌ی تابلوها و خط‌کشی‌های آزمون، با معنی و نکته‌ی هر کدام؛ گروه‌به‌گروه، با تصویر.')}</T>
@@ -152,34 +146,6 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
         </View>
       </View>
 
-      {/* A compact theory test setup: an outlined size stepper and one start action. */}
-      <View testID="home-theory-test" style={{ gap: 16, marginBottom: 24 }}>
-        <Head title={tr('آزمون تئوری')} />
-        <View style={{ direction: 'ltr', flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <T testID="home-theory-description" style={{ flex: 1, minWidth: 0, fontSize: 14.5, lineHeight: 24, color: c.muted }}>{tr('آزمون تصادفی با تعداد سؤال دلخواه، برای تمرین با سرعت خودتان.')}</T>
-          <View testID="home-theory-controls" style={{ flex: 0.95, minWidth: 0, gap: 10 }}>
-            <View style={{ direction: 'ltr', flexDirection: 'row', alignItems: 'center', minHeight: 40, borderRadius: 999, borderWidth: 1, borderColor: m.outline, paddingHorizontal: 4 }}>
-              <Pressable onPress={() => resize(-step)} disabled={test.size <= minSize} accessibilityRole="button"
-                accessibilityLabel={tr('کاهش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size <= minSize }}
-                hitSlop={{ top: 3, bottom: 3, left: 2, right: 2 }}
-                style={({ pressed }) => ({ width: 40, minHeight: 38, borderRadius: 999, alignItems: 'center', justifyContent: 'center', opacity: test.size <= minSize ? 0.38 : 1, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-                <T raw style={{ fontSize: 24, lineHeight: 28, color: c.text }}>−</T>
-              </Pressable>
-              <T raw testID="home-theory-size" accessibilityLiveRegion="polite" style={{ flex: 1, textAlign: 'center', fontSize: 16, lineHeight: 22, color: c.text, fontWeight: '500' }}>{faNum(test.size)}</T>
-              <Pressable onPress={() => resize(step)} disabled={test.size >= FULL} accessibilityRole="button"
-                accessibilityLabel={tr('افزایش تعداد سؤال‌ها')} accessibilityState={{ disabled: test.size >= FULL }}
-                hitSlop={{ top: 3, bottom: 3, left: 2, right: 2 }}
-                style={({ pressed }) => ({ width: 40, minHeight: 38, borderRadius: 999, alignItems: 'center', justifyContent: 'center', opacity: test.size >= FULL ? 0.38 : 1, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-                <T raw style={{ fontSize: 24, lineHeight: 28, color: c.text }}>+</T>
-              </Pressable>
-            </View>
-            <M3Button compact iconSize={16} kind="outlined" m={m} icon={test.randomLeft ? undefined : 'lock'} onPress={test.start} disabled={!test.ready || test.count < test.size}
-              labelStyle={test.randomLeft ? { fontSize: 16, lineHeight: 22 } : undefined}
-              contentStyle={test.randomLeft ? { paddingHorizontal: 4, gap: 4 } : undefined}
-              label={test.randomLeft ? tr('شروع آزمون') : tr('نسخه‌ی ویژه')} />
-          </View>
-        </View>
-      </View>
     </View>
   );
 }
