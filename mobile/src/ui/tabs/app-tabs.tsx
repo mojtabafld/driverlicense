@@ -1,67 +1,49 @@
-// Shared bottom navigation, Material 3's navigation bar (Mojtaba 2026-11-07): four equal tabs, each an icon with its
-// label under it, the open one's icon on a tinted pill; on a bar a step off the page, fixed to the screen's bottom edge
-// across its whole width (tab-look.ts).
-// (The home page's round start button beside the bar, from 2026-10-25, was removed on 2026-11-06, Mojtaba.)
-import { usePathname } from 'expo-router';
-import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
-import { createContext, forwardRef, useContext } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+// Shared bottom navigation: the «Liquid Glass Navbar» (Mojtaba 2026-11-13; Material 3's full-width navigation bar
+// before): a pill of frosted glass floating above the bottom edge, a drop of water under the open tab that stretches to
+// the one tapped, and each tab's icon playing its own little scene. The web draws it with the component itself and its
+// WebGL water (liquid-bar.web.tsx, src/components/ui/liquid-glass-navbar.tsx), the phones with React Native
+// (liquid-bar.tsx). Expo Router's tabs stay underneath, their trigger row hidden: the pill moves between them.
+import { router, usePathname } from 'expo-router';
+import { TabList, TabSlot, Tabs, TabTrigger } from 'expo-router/ui';
+import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { tr } from '@/lib/i18n';
-import { tap } from '../kit';
-import { type IconName } from '../icon';
+import { RTL } from '@/lib/i18n';
+import { LiquidBar } from './liquid-bar';
+import { type BarTab } from './liquid-bar-types';
 import { TABS } from './tabs';
-import { NavRail, NavTab } from './tab-item';
-import { tabLayout } from './tab-look';
 
-const TAB_ICON: Record<string, IconName> = { index: 'house', exam: 'exam', learn: 'learn', settings: 'settings' };
-// The bar's height (also the room the pages keep for it, with the gap under it: kit.tsx).
+// The bar's room at the bottom of each page (with the gap under it: kit.tsx).
 export { TAB_BAR_H } from './tab-look';
-const Layout = createContext(tabLayout(393, false, 'Settings'));
 
-const TabButton = forwardRef<View, TabTriggerSlotProps & { name: string; label: string }>(({ isFocused, name, label, onPress, ...props }, ref) => {
-  const layout = useContext(Layout);
-  return (
-    <NavTab ref={ref} {...props} active={!!isFocused} icon={TAB_ICON[name]} label={label} layout={layout}
-      onPress={e => { if (!isFocused) tap(); onPress?.(e); }} />
-  );
-});
-TabButton.displayName = 'TabButton';
+// Each tab's icon and the scene it plays when tapped: home hops, learning falls like a drop, the test pops, the
+// settings' cog spins.
+const LOOK: Record<string, Pick<BarTab, 'icon' | 'fx'>> = {
+  index: { icon: 'house', fx: 'glow' },
+  learn: { icon: 'learn', fx: 'drop' },
+  exam: { icon: 'exam', fx: 'pop' },
+  settings: { icon: 'settings', fx: 'spin' },
+};
+const BAR_TABS: BarTab[] = TABS.map(t => ({ name: t.name, label: t.label, ...LOOK[t.name] }));
 
-// Same structure as Expo's template: TabList asChild → a custom bar whose direct children are the TabTriggers.
-const TabShell = forwardRef<View, { children?: React.ReactNode }>(({ children, ...props }, ref) => {
-  const ins = useSafeAreaInsets(), path = usePathname(), { width } = useWindowDimensions();
-  const current = TABS.find(t => t.href === path) ?? TABS[0];
-  // (no start button beside the bar on the home page any more, Mojtaba 2026-11-06: the bar takes the whole row)
-  const layout = tabLayout(width, false, tr(current.label));
-  return (
-    <Layout.Provider value={layout}>
-    {/* Fixed to the bottom edge, the whole width of the screen, as Material's navigation bar on fonts.google.com
-        (Mojtaba 2026-11-08; a rounded bar floating over the page until then); the phone's home-indicator area under the
-        tabs is the bar's colour too. (data-bar: left out when the page under the bar is read, bar-shade.tsx) */}
-    <NavRail ref={ref} {...props} {...({ dataSet: { bar: '1' } } as any)} bottomInset={ins.bottom}
-      style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
-      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4, width: '100%', maxWidth: 560, alignSelf: 'center' }}>{children}</View>
-    </NavRail>
-    </Layout.Provider>
-  );
-});
-TabShell.displayName = 'TabShell';
+function Bar() {
+  const path = usePathname(), ins = useSafeAreaInsets(), { width } = useWindowDimensions();
+  const found = TABS.findIndex(t => t.href === path);
+  // (a page inside a tab, e.g. /learn/…: the tab whose address it starts with)
+  const active = found >= 0 ? found : Math.max(0, TABS.findIndex(t => t.href !== '/' && path.startsWith(t.href + '/')));
+  // Icons only on a narrow screen (the labels are the tabs' accessible names); Persian labels are wider.
+  const compact = width < (RTL ? 460 : 420);
+  return <LiquidBar tabs={BAR_TABS} active={active} bottomInset={ins.bottom} compact={compact} onSelect={i => router.navigate(TABS[i].href as any)} />;
+}
 
 export default function AppTabs() {
   return (
     <Tabs>
       <TabSlot style={{ flex: 1 }} />
-      <TabList asChild>
-        <TabShell>
-          {TABS.map(t => (
-            <TabTrigger key={t.name} name={t.name} href={t.href as any} asChild>
-              <TabButton name={t.name} label={t.label} />
-            </TabTrigger>
-          ))}
-        </TabShell>
+      <TabList style={{ display: 'none' }}>
+        {TABS.map(t => <TabTrigger key={t.name} name={t.name} href={t.href as any} />)}
       </TabList>
+      <Bar />
     </Tabs>
   );
 }
