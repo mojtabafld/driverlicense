@@ -331,8 +331,10 @@ export default function Home() {
           transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
         } : undefined}>
       <View style={{ gap }}>
-      {/* (the main site: no box round it, on the page itself; Mojtaba 2026-11-08) */}
-      <Card testID="home-readiness" style={{ ...(ARC ? { backgroundColor: 'transparent', borderWidth: 0, shadowOpacity: 0, elevation: 0 } : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: readinessPad, paddingVertical: Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
+      {/* (the main site: in a card again, as the progress chart's, Mojtaba 2026-11-13; on the page itself without a box
+          from 2026-11-08) */}
+      <Card testID="home-readiness" style={{ ...(ARC ? null : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: ARC ? readinessPad + 4 : readinessPad,
+        paddingVertical: ARC ? readinessPad + 2 : Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
         {ARC ? <>
           {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
               verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
@@ -347,7 +349,7 @@ export default function Home() {
                 <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
               </View>
             </View>
-            <T numberOfLines={2} ellipsizeMode="tail" style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{est
+            <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{est
               ? (mistakes
                 ? fmt('بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. {1} سؤالی که اشتباه جواب داده‌اید را دوباره تمرین کنید تا این عدد بالا برود.', faNum(est.n), faNum(mistakes))
                 : fmt('بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. با آزمون‌های بیشتر دقیق‌تر می‌شود.', faNum(est.n)))
