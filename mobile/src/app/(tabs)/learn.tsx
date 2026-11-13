@@ -21,9 +21,9 @@ import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
 import { Card, M3Button, Screen, T } from '@/ui/kit';
-import { LearningTile } from '@/ui/learning-tile';
 import { Head, Tiles, iconOf } from '@/ui/home-knowledge';
 import { SearchBox } from '@/ui/search-box';
+import { ServiceCarousel, type ServiceItem } from '@/ui/service-carousel';
 import { ARC, useColors, useIsDark, useM3 } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 import { mix, rgba } from '@/ui/palette';
@@ -96,16 +96,22 @@ function Tile({ n, icon, title, note, href }: { n: number; icon: IconName; title
 
 // The main site's learn tab in the home page's language (Mojtaba 2026-11-08, after fonts.google.com/knowledge): the
 // search, then the course as a section (its title, a line with how far you are, its chapters as outlined tiles that
-// scroll sideways, «همه‌ی فصل‌ها»), then the guides as a grid of outlined tiles (rules, signs, right of way, glossary).
+// scroll sideways, «همه‌ی فصل‌ها»), then the guides as gradient cards that slide sideways (rules, signs, right of way,
+// glossary; outlined tiles until 2026-11-13).
 const CHAPTER_ICON: Record<string, IconName> = { ready: 'car', road: 'road', priority: 'priority', signs: 'sign', manoeuvres: 'parking',
   people: 'person', special: 'headlight', incidents: 'warning', final: 'exam' };
+// The guides, as the home page's tall gradient cards that slide sideways (ui/service-carousel.tsx; Mojtaba 2026-11-13;
+// a grid of outlined tiles before).
+const GUIDES: ServiceItem[] = [
+  { number: '001', title: 'قوانین', description: 'قوانین مهم به زبان ساده', icon: 'rules', tone: 'purple', onPress: () => router.push('/rules') },
+  { number: '002', title: 'علائم رانندگی', description: 'تابلوها و خط‌کشی‌ها', icon: 'sign', tone: 'red', onPress: () => router.push('/signs') },
+  { number: '003', title: 'آموزش حق تقدم', description: 'چه کسی اول می‌رود؟', icon: 'priority', tone: 'amber', onPress: () => router.push('/priority') },
+  { number: '004', title: 'واژه‌نامه‌ی آزمون', description: 'واژه‌های دانمارکی آزمون', icon: 'translate', tone: 'blue', onPress: () => router.push('/glossary') },
+];
 function LearnSections({ search }: { search: ReactNode }) {
   const m = useM3();
   const { done } = useCourseProgress();
   const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
-  const guide = (icon: IconName, title: string, text: string, href: Href) => (
-    <LearningTile key={title} filled icon={icon} title={title} text={text} onPress={() => router.push(href)} />
-  );
   return (
     <View style={{ gap: 28 }}>
       {search}
@@ -121,12 +127,7 @@ function LearnSections({ search }: { search: ReactNode }) {
       </View>
       <View style={{ gap: 12 }}>
         <Head title={tr('راهنماها')} text={tr('قوانین، تابلوها و حق تقدم به زبان ساده، و واژه‌های دانمارکی آزمون.')} />
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-          {guide('rules', 'قوانین', 'قوانین مهم به زبان ساده', '/rules')}
-          {guide('sign', 'علائم رانندگی', 'تابلوها و خط‌کشی‌ها', '/signs')}
-          {guide('priority', 'آموزش حق تقدم', 'چه کسی اول می‌رود؟', '/priority')}
-          {guide('translate', 'واژه‌نامه‌ی آزمون', 'واژه‌های دانمارکی آزمون', '/glossary')}
-        </View>
+        <ServiceCarousel items={GUIDES} height={260} />
       </View>
     </View>
   );
