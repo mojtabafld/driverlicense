@@ -349,11 +349,10 @@ export default function Home() {
                 <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
               </View>
             </View>
-            <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{est
-              ? (mistakes
-                ? fmt('بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. {1} سؤالی که اشتباه جواب داده‌اید را دوباره تمرین کنید تا این عدد بالا برود.', faNum(est.n), faNum(mistakes))
-                : fmt('بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. با آزمون‌های بیشتر دقیق‌تر می‌شود.', faNum(est.n)))
-              : tr('بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.')}</T>
+            {/* (with an estimate, no line on what it is based on any more: Mojtaba 2026-11-13; before the first test the
+                line on how it comes stays) */}
+            {est ? null : <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>
+              {tr('بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.')}</T>}
             <View style={{ alignItems: 'flex-start' }}>
               {tryout
                 ? <M3Button kind="outlined" m={m3} icon="play" label={tr('آزمون آزمایشی ۵ سؤالی')} onPress={startTryout} />
