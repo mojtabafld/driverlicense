@@ -15,8 +15,9 @@ import { useColors, useIsDark } from '../theme';
 import { BAR_GAP, type LiquidBarProps } from './liquid-bar-types';
 
 // The open tab's name: this much room (the original's MOBILE_LABEL_WIDTH), and the bar's height.
-const LABEL_W = 72;
-export const PILL_BAR_H = 52;
+// (larger than the original's 72 and 52 since 2026-11-13, Mojtaba: «بزرگتر کن»)
+const LABEL_W = 88;
+export const PILL_BAR_H = 66;
 const WEB = Platform.OS === 'web';
 
 function useStill() {
@@ -44,14 +45,14 @@ function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs']
       onPressIn={() => { if (!still) Animated.spring(press, { toValue: 0.97, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}
       onPressOut={() => { if (!still) Animated.spring(press, { toValue: 1, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}>
       {({ hovered }: any) => (
-        <Animated.View style={{ flexDirection: 'row', alignItems: 'center', height: 40, minWidth: 44, paddingHorizontal: 12, borderRadius: 999,
+        <Animated.View style={{ flexDirection: 'row', alignItems: 'center', height: 52, minWidth: 54, paddingHorizontal: 15, borderRadius: 999,
           backgroundColor: on ? mix(c.accent, c.surface, dark ? 0.85 : 0.9) : hovered ? c.surface2 : 'transparent', transform: [{ scale: press }] }}>
-          <Icon name={icon} size={22} color={ink} filled={on} />
+          <Icon name={icon} size={27} color={ink} filled={on} />
           {/* the name, its room opening beside the icon */}
           {/* (the gap between them as its own room, the same on both sides in either direction) */}
-          <Animated.View style={{ width: fade.interpolate({ inputRange: [0, 1], outputRange: [0, 8] }) }} />
+          <Animated.View style={{ width: fade.interpolate({ inputRange: [0, 1], outputRange: [0, 9] }) }} />
           <Animated.View style={{ overflow: 'hidden', width: open.interpolate({ inputRange: [0, 1], outputRange: [0, LABEL_W] }), opacity: fade }}>
-            <T raw numberOfLines={1} maxFontSizeMultiplier={1.1} style={{ width: LABEL_W, fontSize: 13, lineHeight: 22, fontWeight: '500', color: c.accent }}>{tr(label)}</T>
+            <T raw numberOfLines={1} maxFontSizeMultiplier={1.1} style={{ width: LABEL_W, fontSize: 15.5, lineHeight: 24, fontWeight: '600', color: c.accent }}>{tr(label)}</T>
           </Animated.View>
         </Animated.View>
       )}
@@ -67,8 +68,8 @@ export function PillBar({ tabs, active, onSelect, bottomInset }: LiquidBarProps)
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingBottom: bottomInset + BAR_GAP }}>
       <Animated.View accessibilityRole="tablist" accessibilityLabel={tr('ناوبری')}
-        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4, height: PILL_BAR_H, padding: 6, borderRadius: 999,
-          minWidth: Math.min(320, width * 0.95), maxWidth: width * 0.95, backgroundColor: c.surface, borderWidth: 1, borderColor: dark ? mix(c.line, c.text, 0.1) : c.line,
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, height: PILL_BAR_H, padding: 6, borderRadius: 999,
+          minWidth: Math.min(380, width * 0.95), maxWidth: width * 0.95, backgroundColor: c.surface, borderWidth: 1, borderColor: dark ? mix(c.line, c.text, 0.1) : c.line,
           shadowColor: '#000', shadowOpacity: dark ? 0.5 : 0.16, shadowRadius: 22, shadowOffset: { width: 0, height: 12 }, elevation: 12,
           direction: RTL ? 'rtl' : 'ltr', opacity: born, transform: [{ scale: born.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] } as any}>
         {tabs.map((t, i) => (

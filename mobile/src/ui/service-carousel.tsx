@@ -16,7 +16,8 @@ import { T, tap } from './kit';
 import { useColors, useIsDark } from './theme';
 
 export type ServiceTone = 'purple' | 'green' | 'red' | 'blue' | 'amber';
-export type ServiceItem = { number: string; title: string; description: string; icon: IconName; tone: ServiceTone; onPress?: () => void };
+// (`done`: a tick at the card's top end, as a finished chapter's)
+export type ServiceItem = { number: string; title: string; description: string; icon: IconName; tone: ServiceTone; onPress?: () => void; done?: boolean };
 
 // The original's Tailwind gradients: «from-X-100 to-X-200» in the light theme, «from-X-900/50 to-X-800/50» in the dark.
 export const TONES: Record<ServiceTone, { light: [string, string]; dark: [string, string] }> = {
@@ -63,6 +64,7 @@ function Card({ it, index, width, height, dark, shown, still }: { it: ServiceIte
       <LinearGradient pointerEvents="none" colors={[dark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)', 'transparent']} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
       <View style={{ flex: 1, padding: width < 300 ? 20 : 26, justifyContent: 'space-between' }}>
+        {it.done ? <View style={{ position: 'absolute', top: width < 300 ? 18 : 24, end: width < 300 ? 18 : 24 } as object}><Icon name="checkCircle" size={22} color={c.ok} filled /></View> : null}
         <View style={{ alignItems: 'flex-start', gap: 22 }}>
           {/* (a code, as the original's «( 001 )»: Latin digits and left to right in every language) */}
           <T raw style={{ fontFamily: MONO, fontSize: 13, color: ink, opacity: 0.5, writingDirection: 'ltr', ...(Platform.OS === 'web' ? { direction: 'ltr', unicodeBidi: 'isolate' } : null) } as any}>( {it.number} )</T>

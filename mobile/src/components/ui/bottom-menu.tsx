@@ -1,5 +1,5 @@
-// (Teoripro: kept as it came, for the web with Tailwind; the app draws the same menu with React Native on the web and
-// the phones, src/ui/bottom-menu.tsx, since it has no Tailwind and the phone apps have no DOM.)
+// (Teoripro: kept as it came, for the web with Tailwind. Not used by the app: its React Native form, the round «…»
+// button over the tab bar, was taken off on 2026-11-13, Mojtaba.)
 "use client";
 
 import {

@@ -1,8 +1,8 @@
 import { deepAccent, mix, railColor } from '../palette';
 import { m3Scheme, useColors, useIsDark } from '../theme';
 
-// (the pill's room: its 52 points and the gap under it, pill-bar.tsx)
-export const TAB_BAR_H = 70;
+// (the pill's room: its 66 points and the gap under it, pill-bar.tsx)
+export const TAB_BAR_H = 84;
 
 
 function luminance(color: string) {
