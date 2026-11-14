@@ -121,7 +121,8 @@ function LearnSections({ search }: { search: ReactNode }) {
           text={finished ? t('فصل به فصل، مثل آزمون. {0} از {1} درس را تمام کرده‌اید.', faNum(finished), faNum(lessons.length))
             : t('فصل به فصل، مثل آزمون: {0} درس در {1} فصل، هر کدام با تمرین و آزمون کوتاه.', faNum(lessons.length), faNum(COURSE.length))} />
         {/* the chapters as the gradient cards that slide sideways (Mojtaba 2026-11-13; outlined tiles before) */}
-        <ServiceCarousel height={250} items={COURSE.map((ch, i): ServiceItem => ({ number: String(i + 1).padStart(3, '0'), title: ch.title, description: ch.sub,
+        {/* (half its height since 2026-11-14, Mojtaba; 250 before) */}
+        <ServiceCarousel height={125} items={COURSE.map((ch, i): ServiceItem => ({ number: String(i + 1).padStart(3, '0'), title: ch.title, description: ch.sub,
           icon: CHAPTER_ICON[ch.id] ?? iconOf(ch.title), tone: TONE_CYCLE[i % TONE_CYCLE.length], done: ch.lessons.every(l => done[l.id]),
           onPress: () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } }) }))} />
         <View style={{ alignItems: 'center' }}>

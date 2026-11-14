@@ -100,11 +100,11 @@ const PARTS: ServiceItem[] = [
 
 export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   return (
-    <View style={{ gap: gap + 16, paddingTop: 8 }}>
+    <View style={{ gap: gap + 16 }}>
       {/* «هرچه در تئوری‌پرو هست»: the app's main parts as tall gradient cards that slide sideways, each opening its
           page (ui/service-carousel.tsx; Mojtaba 2026-11-13) */}
       <View style={{ gap: 12, marginBottom: 24 }}>
-        <Head title={tr('هرچه در تئوری‌پرو هست')} text={tr('همه‌ی بخش‌های آمادگی برای آزمون، یک‌جا')} />
+        {/* (no title or line over the cards since 2026-11-14, Mojtaba) */}
         {/* (half its height since 2026-11-14, Mojtaba; 280 before) */}
         <ServiceCarousel items={PARTS} height={140} />
       </View>
