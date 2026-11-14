@@ -354,9 +354,10 @@ export default function Home() {
               <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
                 <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 24 : small ? 26 : 28) + (dark ? 2 : 0)} />
               </View>
-              <View testID="home-readiness-status" style={{ flexShrink: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
-                <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
-              </View>
+            </View>
+            {/* the verdict under the title (Mojtaba 2026-11-14; beside the percent before) */}
+            <View testID="home-readiness-status" style={{ alignSelf: 'flex-start', marginTop: compact ? -4 : -6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
+              <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
             </View>
             {/* (with an estimate, no line on what it is based on any more: Mojtaba 2026-11-13; before the first test the
                 line on how it comes stays) */}
