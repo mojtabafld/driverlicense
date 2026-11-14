@@ -22,7 +22,7 @@ const WEB = Platform.OS === 'web';
 // The dock's colours (Mojtaba 2026-11-13, after his picture of a soft grey app): a frosted light grey track with a white
 // rim, the open tab a white pill with its icon and name in near-black, the others' icons near-black too; the dark theme
 // the same in reverse, a frosted dark grey track with the open tab a lighter grey pill and white ink.
-const DOCK = {
+export const DOCK = {
   light: { track: 'rgba(232,232,236,0.82)', rim: 'rgba(255,255,255,0.95)', on: '#ffffff', ink: '#111114', hover: 'rgba(255,255,255,0.55)' },
   dark: { track: 'rgba(40,40,44,0.82)', rim: 'rgba(255,255,255,0.09)', on: '#3a3a40', ink: '#f4f4f6', hover: 'rgba(255,255,255,0.06)' },
 };
@@ -80,16 +80,21 @@ function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs']
   );
 }
 
-export function PillBar({ tabs, active, onSelect, bottomInset }: LiquidBarProps) {
+// `side`: a round button of the bar's height beside it, at its end (the start button, start-button.tsx; Mojtaba
+// 2026-11-14), the pill narrower by its room.
+export const SIDE_GAP = 10;
+export function PillBar({ tabs, active, onSelect, bottomInset, side }: LiquidBarProps & { side?: React.ReactNode }) {
   const c = useColors(), dark = useIsDark(), still = useStill(), { width } = useWindowDimensions();
   // springs into place the first time it is shown
+  const room = width * 0.95 - (side ? PILL_BAR_H + SIDE_GAP : 0);
   const born = useRef(new Animated.Value(still ? 1 : 0)).current;
   useEffect(() => { Animated.spring(born, { toValue: 1, stiffness: 300, damping: 26, mass: 1, useNativeDriver: !WEB }).start(); }, []);
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingBottom: under(bottomInset) }}>
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: SIDE_GAP,
+      paddingBottom: under(bottomInset), direction: RTL ? 'rtl' : 'ltr' } as any}>
       <Animated.View accessibilityRole="tablist" accessibilityLabel={tr('ناوبری')}
         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, height: PILL_BAR_H, padding: 6, borderRadius: 999,
-          minWidth: Math.min(380, width * 0.95), maxWidth: width * 0.95, backgroundColor: dark ? DOCK.dark.track : DOCK.light.track, borderWidth: 1, borderColor: dark ? DOCK.dark.rim : DOCK.light.rim,
+          minWidth: Math.min(380, room), maxWidth: room, backgroundColor: dark ? DOCK.dark.track : DOCK.light.track, borderWidth: 1, borderColor: dark ? DOCK.dark.rim : DOCK.light.rim,
           shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 12,
           ...(WEB ? { backdropFilter: 'blur(20px) saturate(1.4)', WebkitBackdropFilter: 'blur(20px) saturate(1.4)' } : null),
           direction: RTL ? 'rtl' : 'ltr', opacity: born, transform: [{ scale: born.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] } as any}>
@@ -97,6 +102,7 @@ export function PillBar({ tabs, active, onSelect, bottomInset }: LiquidBarProps)
           <Tab key={t.name} icon={t.icon} label={t.label} on={i === active} still={still} onPress={() => { tap(); if (i !== active) onSelect(i); }} />
         ))}
       </Animated.View>
+      {side}
     </View>
   );
 }

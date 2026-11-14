@@ -4,12 +4,14 @@
 // web and the phones. Expo Router's tabs stay underneath, their trigger row hidden: the pill moves between them.
 import { router, usePathname } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger } from 'expo-router/ui';
+import { useEffect, useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RTL } from '@/lib/i18n';
 import { type BarTab } from './liquid-bar-types';
 import { PillBar } from './pill-bar';
+import { StartBackdrop, StartButton } from './start-button';
 import { TABS } from './tabs';
 
 // The bar's room at the bottom of each page (with the gap under it: kit.tsx).
@@ -32,7 +34,16 @@ function Bar() {
   const active = found >= 0 ? found : Math.max(0, TABS.findIndex(t => t.href !== '/' && path.startsWith(t.href + '/')));
   // Icons only on a narrow screen (the labels are the tabs' accessible names); Persian labels are wider.
   const compact = width < (RTL ? 460 : 420);
-  return <PillBar tabs={BAR_TABS} active={active} bottomInset={ins.bottom} compact={compact} onSelect={i => router.navigate(TABS[i].href as any)} />;
+  // The start button beside the dock: on the home and test pages only (Mojtaba 2026-11-14), its menu closed on leaving.
+  const startHere = path === '/' || path === '/exam', [open, setOpen] = useState(false);
+  useEffect(() => setOpen(false), [path]);
+  return (
+    <>
+      <StartBackdrop open={open && startHere} onClose={() => setOpen(false)} />
+      <PillBar tabs={BAR_TABS} active={active} bottomInset={ins.bottom} compact={compact} onSelect={i => router.navigate(TABS[i].href as any)}
+        side={startHere ? <StartButton open={open} setOpen={setOpen} /> : undefined} />
+    </>
+  );
 }
 
 export default function AppTabs() {
