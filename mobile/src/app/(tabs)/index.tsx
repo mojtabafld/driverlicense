@@ -280,7 +280,8 @@ export default function Home() {
     return () => ts.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
-  const hello = 'Hi';
+  // (in the app's language: «سلام» / Hi / Hej; Mojtaba 2026-11-14 — «Hi» in every language before)
+  const hello = 'سلام';
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
   // The tryout: before the first test, five random questions of the app's own (not one of the free tests).
