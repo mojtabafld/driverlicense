@@ -71,7 +71,7 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       : { paddingVertical: level >= 3 ? 10 : level >= 2 ? 12 : level ? 16 : 20, paddingHorizontal: level >= 2 ? 16 : 20 }) }}>
       {/* The random test in the gradient cards' look (Mojtaba 2026-11-13; on the page itself before), numbered first */}
       <View testID="exam-random-card" style={ARC ? { gap: tight || level ? (level >= 3 ? 7 : 10) : 14, padding: 20, paddingTop: 16, borderRadius: 24, overflow: 'hidden' } : { gap: tight || level ? (level >= 3 ? 7 : 10) : 14 }}>
-        {ARC ? <CardWash tone="amber" /> : null}
+        {ARC ? <CardWash tone="green" /> : null}
         {/* (the smallest phones: no line, the card's gaps part the two halves) */}
         {ARC ? (
           // The random test as a section, its title and what the chosen size means (Mojtaba 2026-11-08)
@@ -191,7 +191,7 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
       </View>
       <DailyTestsChart height={level >= 3 ? 96 : 120} code="003" />
       <View style={{ flexDirection: 'row', gap: 10 }}>
-        {shortcut('004', 'green', 'clock', t('{0} آزمون', faNum(tests)), ink, () => router.push('/history'))}
+        {shortcut('004', 'amber', 'clock', t('{0} آزمون', faNum(tests)), ink, () => router.push('/history'))}
         {shortcut('005', 'red', 'warning', t('{0} اشتباه', faNum(mistakes)), mistakes ? m.error : ink, () => router.push('/mistakes'))}
       </View>
     </View>
