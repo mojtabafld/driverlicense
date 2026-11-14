@@ -111,13 +111,12 @@ export function StatCarousel({ items, dense, first = 1 }: { items: StatItem[]; d
                 opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, paddingVertical: dense ? 12 : 16, justifyContent: 'space-between',
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
               <CardWash tone={it.tone ?? CYCLE[i % CYCLE.length]} />
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
+              {/* the title at the top, across from the icon (Mojtaba 2026-11-14; at the foot over its line before) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <T numberOfLines={1} style={{ flexShrink: 1, fontSize: dense ? 17 : 19, lineHeight: dense ? 25 : 28, fontWeight: '600', color: it.color ?? ink }}>{it.title}</T>
                 <Icon name={it.icon} size={dense ? 26 : 30} color={ink} />
               </View>
-              <View style={{ gap: 2 }}>
-                <T numberOfLines={1} style={{ fontSize: dense ? 17 : 19, lineHeight: dense ? 25 : 28, fontWeight: '600', color: it.color ?? ink }}>{it.title}</T>
-                <T numberOfLines={dense ? 1 : 2} style={{ fontSize: 13.5, lineHeight: 20, color: ink, opacity: 0.72 }}>{it.sub}</T>
-              </View>
+              <T numberOfLines={dense ? 2 : 3} style={{ fontSize: 13.5, lineHeight: 20, color: ink, opacity: 0.72 }}>{it.sub}</T>
             </Pressable>
           ))}
         </Animated.View>
