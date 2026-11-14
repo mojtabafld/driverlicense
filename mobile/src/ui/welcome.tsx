@@ -91,7 +91,7 @@ function Wide({ label, icon, main, onPress, mark, off }: { label: string; icon?:
 // the server has it on; else off) and email (its two choices, then `onEmail` in that mode, ui/sign-steps.tsx), then the
 // guest link and the line on the privacy policy.
 // What the app does, for the welcome page's cards.
-const WELCOME_CARDS: ServiceItem[] = [
+export const WELCOME_CARDS: ServiceItem[] = [
   { number: '001', title: 'مثل آزمون واقعی', description: '۱۱۰۰ سؤال با تصویر، به دانمارکی با ترجمه‌ی فارسی', icon: 'exam', tone: 'blue' },
   { number: '002', title: 'آموزش به فارسی', description: 'درس‌ها، تابلوها و قوانین، ساده و کوتاه', icon: 'learn', tone: 'green' },
   { number: '003', title: 'هوش مصنوعی کنار شما', description: 'توضیح اشتباه‌ها و یک مربی شخصی', icon: 'sparkles', tone: 'purple' },
@@ -133,7 +133,7 @@ export function Welcome({ onEmail, onGuest, onGoogle, onPasskey, busy, err, mail
               (ui/service-carousel.tsx; Mojtaba 2026-11-13; the mascot cards, ui/vibe-cards.tsx, since 2026-10-29, and the
               symbol on its glowing tile before). Dark on the night-blue page in every theme. */}
           <View style={{ flex: 1, justifyContent: 'center', paddingVertical: 12 }}>
-            <ServiceCarousel items={WELCOME_CARDS} dark={N.dark} height={Math.min(280, Math.max(190, height - ins.top - ins.bottom - (byMail ? 440 : 520)))} />
+            <ServiceCarousel items={WELCOME_CARDS} dark={N.dark} auto={4500} height={Math.min(280, Math.max(190, height - ins.top - ins.bottom - (byMail ? 440 : 520)))} />
           </View>
           <Animated.View style={{ gap: 12, opacity: ways, transform: [{ translateY: ways.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }] }}>
             <View style={{ alignItems: 'center', gap: 2, marginBottom: 10 }}>

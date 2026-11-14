@@ -85,7 +85,9 @@ function Card({ it, index, width, height, dark, shown, still }: { it: ServiceIte
 
 // `height`: the cards' height (450 in the original; less where the page has less room). `dark`: the dark cards
 // whatever the theme (a page that is dark in every theme, as the welcome page).
-export function ServiceCarousel({ items, height = 300, dark: forceDark }: { items: ServiceItem[]; height?: number; dark?: boolean }) {
+// `auto`: moves on by itself every this many milliseconds, back to the first after the last, until it is touched
+// (Mojtaba 2026-11-14: the welcome pages' cards turn by themselves); never with «reduce motion».
+export function ServiceCarousel({ items, height = 300, dark: forceDark, auto }: { items: ServiceItem[]; height?: number; dark?: boolean; auto?: number }) {
   const c = useColors(), themeDark = useIsDark(), dark = forceDark ?? themeDark;
   const [w, setW] = useState(0), [still, setStill] = useState(false);
   const ref = useRef<ScrollView>(null), x = useRef(0);
@@ -93,8 +95,9 @@ export function ServiceCarousel({ items, height = 300, dark: forceDark }: { item
   const per = w >= 1000 ? 3 : w >= 700 ? 2 : 1;
   const cardW = w ? (w - GAP * (per - 1)) / per : 0, step = cardW + GAP;
   // on to the next card, and back to the first after the last
-  const next = () => {
-    tap();
+  const touched = useRef(false);
+  const next = (quiet?: boolean) => {
+    if (!quiet) tap();
     const end = x.current + w >= items.length * step - GAP - 4;
     const node = (ref.current as unknown as { getScrollableNode?: () => HTMLElement })?.getScrollableNode?.();
     if (Platform.OS === 'web' && node?.scrollTo) {
@@ -102,12 +105,19 @@ export function ServiceCarousel({ items, height = 300, dark: forceDark }: { item
       else node.scrollBy({ left: (RTL ? -1 : 1) * step, behavior: 'smooth' });
     } else ref.current?.scrollTo({ x: end ? 0 : Math.round(x.current / step + 1) * step, animated: true });
   };
+  const nextRef = useRef(next); nextRef.current = next;
+  useEffect(() => {
+    if (!auto || still || !w || items.length <= per) return;
+    const id = setInterval(() => { if (!touched.current) nextRef.current(true); }, auto);
+    return () => clearInterval(id);
+  }, [auto, still, w, per, items.length]);
   return (
     <View onLayout={e => setW(e.nativeEvent.layout.width)} accessibilityRole={'region' as any} accessibilityLabel={tr('کارت‌ها')}>
       {w ? (
         <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} decelerationRate="fast" snapToInterval={step} snapToAlignment="start"
           contentContainerStyle={{ gap: GAP }} scrollEventThrottle={32}
           style={Platform.OS === 'web' ? ({ scrollSnapType: 'x mandatory' } as object) : undefined}
+          onScrollBeginDrag={() => { touched.current = true; }} onTouchStart={() => { touched.current = true; }}
           onScroll={e => { x.current = Math.abs(e.nativeEvent.contentOffset.x); }}>
           {items.map((it, i) => (
             <View key={it.number} style={Platform.OS === 'web' ? ({ scrollSnapAlign: 'start' } as object) : undefined}>
@@ -117,7 +127,7 @@ export function ServiceCarousel({ items, height = 300, dark: forceDark }: { item
         </ScrollView>
       ) : <View style={{ height }} />}
       {items.length > per ? (
-        <Pressable onPress={next} accessibilityRole="button" accessibilityLabel={tr('کارت بعدی')} hitSlop={6}
+        <Pressable onPress={() => { touched.current = true; next(); }} accessibilityRole="button" accessibilityLabel={tr('کارت بعدی')} hitSlop={6}
           style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ position: 'absolute', top: height / 2 - 20, [RTL ? 'left' : 'right']: 8, width: 40, height: 40,
             borderRadius: 20, alignItems: 'center', justifyContent: 'center',
             backgroundColor: dark ? `rgba(255,255,255,${pressed || hovered ? 0.2 : 0.1})` : (pressed || hovered ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.06)') }) as any}>

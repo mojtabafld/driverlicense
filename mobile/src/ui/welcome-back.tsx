@@ -14,8 +14,8 @@ import type { LastUser } from '@/lib/prefs';
 import { useApp } from '@/lib/store';
 import { Icon } from './icon';
 import { L, T, tap, useHeaderTop } from './kit';
-import { VibeCards } from './vibe-cards';
-import { useN } from './welcome';
+import { ServiceCarousel } from './service-carousel';
+import { useN, WELCOME_CARDS } from './welcome';
 
 function Face({ u, size }: { u: LastUser; size: number }) {
   const { avatarArt } = useApp(), N = useN();
@@ -43,9 +43,10 @@ export function WelcomeBack({ last, onPick, onNotYou }: { last: LastUser; onPick
               <L style={{ fontSize: 28, lineHeight: 36, fontWeight: '800', letterSpacing: -0.6, color: N.onAccent }}>pro</L>
             </View>
           </View>
-          {/* The three cards of what the app does, in the room left above the account (Mojtaba 2026-10-29). */}
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginHorizontal: -24 }}>
-            <VibeCards room={Math.max(200, height - ins.top - ins.bottom - 450)} />
+          {/* The three cards of what the app does, in the room left above the account (Mojtaba 2026-10-29): the welcome
+              page's gradient cards since 2026-11-14, turning by themselves as there. */}
+          <View style={{ flex: 1, alignSelf: 'stretch', justifyContent: 'center' }}>
+            <ServiceCarousel items={WELCOME_CARDS} dark={N.dark} auto={4500} height={Math.min(280, Math.max(190, height - ins.top - ins.bottom - 470))} />
           </View>
           <T style={{ fontSize: 28, lineHeight: 40, fontWeight: '500', textAlign: 'center', color: N.ink }}>خوش برگشتید</T>
           <Pressable onPress={() => { tap(); onPick(); }} accessibilityRole="button" accessibilityLabel={last.name}
