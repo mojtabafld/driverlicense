@@ -63,6 +63,18 @@ function Card({ it, index, width, height, dark, shown, still }: { it: ServiceIte
       {/* the faint shade rising from the foot, for the text over it */}
       <LinearGradient pointerEvents="none" colors={[dark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)', 'transparent']} start={{ x: 0, y: 1 }} end={{ x: 0, y: 0 }}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+      {height < 200 ? (
+        // A short card (Mojtaba 2026-11-14: home's «Everything in Teoripro» at half its height): the icon beside the
+        // title on one line, the words under them.
+        <View style={{ flex: 1, padding: 20, paddingEnd: 60, justifyContent: 'center', gap: 8 } as object}>
+          {it.done ? <View style={{ position: 'absolute', top: 16, end: 16 } as object}><Icon name="checkCircle" size={20} color={c.ok} filled /></View> : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Icon name={it.icon} size={30} color={ink} />
+            <T numberOfLines={1} style={{ flex: 1, fontSize: 16, lineHeight: 24, fontWeight: '600', color: ink, textTransform: 'uppercase', letterSpacing: RTL ? 0 : 1 }}>{it.title}</T>
+          </View>
+          <T numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 21, color: ink, opacity: 0.72 }}>{it.description}</T>
+        </View>
+      ) : (
       <View style={{ flex: 1, padding: width < 300 ? 20 : 26, justifyContent: 'space-between' }}>
         {it.done ? <View style={{ position: 'absolute', top: width < 300 ? 18 : 24, end: width < 300 ? 18 : 24 } as object}><Icon name="checkCircle" size={22} color={c.ok} filled /></View> : null}
         <View style={{ alignItems: 'flex-start', gap: 22 }}>
@@ -74,6 +86,7 @@ function Card({ it, index, width, height, dark, shown, still }: { it: ServiceIte
           <T numberOfLines={4} style={{ fontSize: 14, lineHeight: 22, color: ink, opacity: 0.72 }}>{it.description}</T>
         </View>
       </View>
+      )}
     </Animated.View>
   );
   if (!it.onPress) return body;
