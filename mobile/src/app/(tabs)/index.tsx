@@ -126,6 +126,9 @@ function StartCard({ compact }: { compact: boolean }) {
 
 // The line under the greeting, once the opening is over: these take turns every 10 seconds (Mojtaba 2026-10-18).
 
+// The chance-of-passing card's mistakes button: off for now while Mojtaba looks at the card without it (2026-11-14);
+// true brings it back. (The 5-question tryout before the first test stays.)
+const SHOW_MISTAKES_BUTTON = false;
 // The chance-of-passing card's button, half its usual size (Mojtaba 2026-11-14).
 const SMALL_BTN = { minHeight: 26, paddingHorizontal: 11, gap: 4 } as const;
 const SMALL_BTN_LABEL = { fontSize: 12, lineHeight: 16 } as const;
@@ -376,13 +379,14 @@ export default function Home() {
                 line on how it comes stays) */}
             {est ? null : <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14, lineHeight: 22, color: cardInk, opacity: 0.72 }}>
               {tr('بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.')}</T>}
-            <View style={{ alignItems: 'flex-start' }}>
+            {/* (the mistakes button hidden for now, to see the card without it: SHOW_MISTAKES_BUTTON; Mojtaba 2026-11-14) */}
+            {tryout || SHOW_MISTAKES_BUTTON ? <View style={{ alignItems: 'flex-start' }}>
               {/* (half the size it was: Mojtaba 2026-11-14) */}
               {tryout
                 ? <M3Button kind="outlined" m={m3} icon="play" label={tr('آزمون آزمایشی ۵ سؤالی')} onPress={startTryout} iconSize={13} contentStyle={SMALL_BTN} labelStyle={SMALL_BTN_LABEL} />
                 : <M3Button kind={mistakes ? 'outlinedError' : 'outlined'} m={m3} icon="warning" onPress={() => router.push('/mistakes')} iconSize={13} contentStyle={SMALL_BTN} labelStyle={SMALL_BTN_LABEL}
                     label={mistakes ? fmt('تمرین {0} اشتباه', faNum(mistakes)) : tr('اشتباهات')} />}
-            </View>
+            </View> : null}
           </View>
         </> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
