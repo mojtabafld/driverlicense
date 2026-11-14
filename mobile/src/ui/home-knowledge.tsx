@@ -11,7 +11,7 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { RTL, tr } from '@/lib/i18n';
 import type { CourseLesson } from '@/lib/course';
-import { CardCode, CardWash, ServiceCarousel, type ServiceItem, type ServiceTone } from './service-carousel';
+import { CardWash, ServiceCarousel, type ServiceItem, type ServiceTone } from './service-carousel';
 import { Icon, type IconName } from './icon';
 import { M3Button, T, tap } from './kit';
 import { useColors, useIsDark, useM3 } from './theme';
@@ -63,7 +63,6 @@ export function Tiles({ items, gradient }: { items: TileItem[]; gradient?: boole
                 gap: 12, paddingHorizontal: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
             {gradient ? <>
               <CardWash tone={TILE_TONES[i % TILE_TONES.length]} />
-              <View style={{ position: 'absolute', top: 10, start: 12 } as object}><CardCode n={String(i + 1).padStart(3, '0')} /></View>
             </> : null}
             {/* (over the wash: the icon draws in a layer of its own on the web) */}
             <View style={{ zIndex: 1 }}><Icon name={it.icon} size={64} color={gradient ? ink : m.primary} /></View>
@@ -100,51 +99,16 @@ const PARTS: ServiceItem[] = [
 ];
 
 export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
-  const c = useColors(), m = useM3();
-  const { done } = useCourseProgress();
-  // The chapter you are on: the first with a lesson not done (the last when all are).
-  const chapter = COURSE.find(ch => ch.lessons.some(l => !done[l.id])) ?? COURSE[COURSE.length - 1];
-  const open = (go: () => void) => () => { tap(); go(); };
-  const chip = (label: string, onPress: () => void, icon?: IconName) => (
-    <Pressable key={label} onPress={open(onPress)} accessibilityRole="button"
-      style={({ pressed }) => ({ height: 40, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: m.outline, flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: pressed ? c.surface2 : 'transparent' })}>
-      {icon ? <Icon name={icon} size={18} color={c.text} /> : null}
-      <T numberOfLines={1} style={{ fontSize: 14, fontWeight: '500' }}>{label}</T>
-    </Pressable>
-  );
   return (
     <View style={{ gap: gap + 16, paddingTop: 8 }}>
       {/* «هرچه در تئوری‌پرو هست»: the app's main parts as tall gradient cards that slide sideways, each opening its
           page (ui/service-carousel.tsx; Mojtaba 2026-11-13) */}
-      <View style={{ gap: 12 }}>
+      <View style={{ gap: 12, marginBottom: 24 }}>
         <Head title={tr('هرچه در تئوری‌پرو هست')} text={tr('همه‌ی بخش‌های آمادگی برای آزمون، یک‌جا')} />
         <ServiceCarousel items={PARTS} height={280} />
       </View>
 
-      {/* «مباحث»: the course's chapters and the other guides as chips, sideways */}
-      <View style={{ gap: 12 }}>
-        <Head title={tr('مباحث')} />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 4 }}>
-          {COURSE.map(ch => chip(tr(ch.title), () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } })))}
-          {chip(tr('علائم رانندگی'), () => router.push('/signs'), 'sign')}
-          {chip(tr('حق تقدم'), () => router.push('/priority'), 'priority')}
-          {chip(tr('قوانین'), () => router.push('/rules'), 'rules')}
-          {chip(tr('همه‌ی مباحث'), () => router.navigate('/learn'), 'arrowLeft')}
-        </ScrollView>
-      </View>
-
-      {/* The chapter you are on, as a module (the last section since 2026-11-13: the road signs' block under it taken
-          off, Mojtaba) */}
-      <View style={{ gap: 12, marginBottom: 24 }}>
-        <Head title={tr(chapter.title)} text={tr(chapter.sub)} />
-        <LessonTiles lessons={chapter.lessons} done={done} />
-        <View style={{ alignItems: 'center' }}>
-          <M3Button kind="outlined" m={m} icon="learn" onPress={() => router.push('/course')}
-            label={tr('همه‌ی درس‌ها')} />
-        </View>
-      </View>
-
+      {/* (no «مباحث» chips and no current chapter's lessons under the cards since 2026-11-14, Mojtaba) */}
     </View>
   );
 }

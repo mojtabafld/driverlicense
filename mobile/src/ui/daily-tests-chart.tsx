@@ -7,7 +7,7 @@ import { faNum } from '@/lib/logic';
 import { useApp } from '@/lib/store';
 import { dayLabel, dayOf } from './date-pick';
 import { T, tap } from './kit';
-import { CardCode, CardWash } from './service-carousel';
+import { CardWash } from './service-carousel';
 import { useColors, useM3 } from './theme';
 
 const DAYS = 7, DAY = 864e5;
@@ -39,7 +39,6 @@ export function DailyTestsChart({ height = 120, code }: { height?: number; code?
     <View testID="daily-tests-card" style={{ borderRadius: 24, padding: 20, gap: 16, overflow: 'hidden', backgroundColor: code ? undefined : c.surface }}>
       {code ? <CardWash tone="purple" /> : null}
       <View style={{ gap: 3 }}>
-        {code ? <View style={{ alignItems: 'flex-start', marginBottom: 6 }}><CardCode n={code} /></View> : null}
         <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>آزمون‌های روزانه</T>
         <T testID="daily-tests-total" style={{ fontSize: 14, lineHeight: 22, color: c.muted }}>{t('{0} آزمون در ۷ روز گذشته', faNum(total))}</T>
       </View>
