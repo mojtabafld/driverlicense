@@ -136,6 +136,13 @@ export default function Home() {
   const dark = useIsDark(), m3 = useM3();
   const readinessTone = dark ? mix(c.accent, c.text, 0.4) : c.accent;
   const cardInk = dark ? '#ffffff' : c.text;  // (the gradient cards' ink)
+  const narrowRow = useWindowDimensions().width < 400;  // (the chance-of-passing title row on a narrow screen)
+  // The title row's widths, so the title takes the size the row leaves it (17 at most, 9.5 at least).
+  const [rowFit, setRowFit] = useState({ row: 0, title: 0, pct: 0, pill: 0 });
+  const ROW_GAP = narrowRow ? 6 : 10;
+  const titleStyle = { lineHeight: 25, fontWeight: '600' as const, color: cardInk, textTransform: 'uppercase' as const, letterSpacing: RTL ? 0 : narrowRow ? 0.2 : 1.2 };
+  const titleRoom = rowFit.row - rowFit.pct - rowFit.pill - ROW_GAP * 2 - 2;
+  const titleSize = rowFit.row && rowFit.title ? Math.max(9.5, Math.min(17, Math.floor(17 * titleRoom * 0.96 / rowFit.title * 10) / 10)) : 17;
   const readinessTrack = dark ? mix(c.line, c.text, 0.18) : c.line;
   // Screen height decides how compact the page is: below 900 points (the picture header takes its share) less padding
   // and a smaller ring, below 680 the secondary lines go too, so everything stays on one screen above the tab bar.
@@ -273,7 +280,8 @@ export default function Home() {
     return () => ts.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   });
-  const hello = 'Hi';
+  // (in the app's language: «سلام» / Hi / Hej; Mojtaba 2026-11-14 — «Hi» in every language before)
+  const hello = 'سلام';
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
   const est = passEstimate(attempts);
   // The tryout: before the first test, five random questions of the app's own (not one of the free tests).
@@ -348,16 +356,21 @@ export default function Home() {
               verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
               to a 5-question tryout instead). */}
           <View style={{ gap: compact ? 8 : 10 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              {/* (the gradient cards' type: their title's size, weight, capitals and spacing, in the card's ink; Mojtaba 2026-11-13) */}
-              <T style={{ fontSize: 17, lineHeight: 25, fontWeight: '600', color: cardInk, textTransform: 'uppercase', letterSpacing: RTL ? 0 : 1.2 }}>احتمال قبولی</T>
-              <View testID="home-readiness-value" style={{ flexShrink: 0 }}>
+            {/* The title, the percent and the verdict on one line on every screen (Mojtaba 2026-11-14): the title shrinks
+                to fit, the percent and the verdict keep theirs (a little smaller on a narrow screen). */}
+            <View onLayout={e => setRowFit(f => ({ ...f, row: e.nativeEvent.layout.width }))} style={{ flexDirection: 'row', alignItems: 'center', gap: ROW_GAP, flexWrap: 'nowrap' }}>
+              {/* (the gradient cards' type: their title's size, weight, capitals and spacing, in the card's ink; Mojtaba 2026-11-13;
+                  its size from the room the row leaves it, measured at 17 out of sight) */}
+              <View style={{ position: 'absolute', opacity: 0, width: 1000, alignItems: 'flex-start' }} pointerEvents="none" aria-hidden>
+                <T onLayout={e => setRowFit(f => ({ ...f, title: e.nativeEvent.layout.width }))} style={{ ...titleStyle, fontSize: 17 }}>احتمال قبولی</T>
+              </View>
+              <T numberOfLines={1} style={{ ...titleStyle, fontSize: titleSize, flexShrink: 1 }}>احتمال قبولی</T>
+              <View testID="home-readiness-value" onLayout={e => setRowFit(f => ({ ...f, pct: e.nativeEvent.layout.width }))} style={{ flexShrink: 0 }}>
                 <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 24 : small ? 26 : 28) + (dark ? 2 : 0)} />
               </View>
-            </View>
-            {/* the verdict under the title (Mojtaba 2026-11-14; beside the percent before) */}
-            <View testID="home-readiness-status" style={{ alignSelf: 'flex-start', marginTop: compact ? -4 : -6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
-              <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
+              <View testID="home-readiness-status" onLayout={e => setRowFit(f => ({ ...f, pill: e.nativeEvent.layout.width }))} style={{ flexShrink: 0, paddingHorizontal: narrowRow ? 7 : 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
+                <T numberOfLines={1} style={{ color: probColor, fontSize: narrowRow ? 11 : 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
+              </View>
             </View>
             {/* (with an estimate, no line on what it is based on any more: Mojtaba 2026-11-13; before the first test the
                 line on how it comes stays) */}
