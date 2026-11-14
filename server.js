@@ -114,10 +114,22 @@ const UI_PAGES = [
   ['/admin/images', 'تصاویر', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'],
   ['/console', 'مقایسه با prove.dk', '<rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/>'],
 ];
+const UI_THEMES = [
+  ['auto', 'خودکار', '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'],
+  ['light', 'روشن', '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'],
+  ['dark', 'تیره', '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'],
+];
+const UI_THEME_JS = `(function(){var K='admin-theme',d=document.documentElement;function get(){try{return localStorage.getItem(K)||'auto'}catch(e){return 'auto'}}
+function apply(t){if(t==='light'||t==='dark')d.setAttribute('data-theme',t);else d.removeAttribute('data-theme');
+document.querySelectorAll('.ui-theme button').forEach(function(b){var on=b.getAttribute('data-t')===t;b.classList.toggle('on',on);b.setAttribute('aria-checked',on)})}
+apply(get());document.addEventListener('DOMContentLoaded',function(){apply(get());document.querySelectorAll('.ui-theme button').forEach(function(b){b.onclick=function(){var t=b.getAttribute('data-t');try{localStorage.setItem(K,t)}catch(e){}apply(t)}})})})();`;
 function withUi(buf, here) {
   const nav = UI_PAGES.map(([href, label, icon]) => `<a href="${href}"${href === here ? ' class="on" aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${label}</a>`).join('');
-  const bar = `<header class="ui-bar" dir="rtl"><div class="in"><a class="ui-logo" href="/admin"><i>T</i>Teoripro Admin</a><nav class="ui-nav" aria-label="صفحه‌های مدیریت">${nav}</nav></div></header>`;
-  return Buffer.from(String(buf).replace('</head>', `<style id="ui">${UI_CSS}</style>\n</head>`).replace(/<body([^>]*)>/, `<body$1>${bar}`));
+  // The theme switch (Mojtaba 2026-11-14): automatic (the system's), light or dark, kept on this device; read in the
+  // head so the page opens in it with no flash.
+  const theme = `<div class="ui-theme" role="radiogroup" aria-label="تم">${UI_THEMES.map(([k, l, icon]) => `<button type="button" role="radio" data-t="${k}" title="${l}" aria-label="${l}"><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg></button>`).join('')}</div>`;
+  const bar = `<header class="ui-bar" dir="rtl"><div class="in"><a class="ui-logo" href="/admin"><i>T</i>Teoripro Admin</a><nav class="ui-nav" aria-label="صفحه‌های مدیریت">${nav}</nav>${theme}</div></header>`;
+  return Buffer.from(String(buf).replace('</head>', `<style id="ui">${UI_CSS}</style>\n<script>${UI_THEME_JS}</script>\n</head>`).replace(/<body([^>]*)>/, `<body$1>${bar}`));
 }
 const CONSOLE_HTML = withUi(fs.readFileSync(path.join(__dirname, 'console', 'index.html')), '/console');
 // The privacy policy at /privacy (pages/privacy.html, in English, Danish and Persian; Mojtaba 2026-10-21, for Google sign-in).

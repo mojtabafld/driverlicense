@@ -12,11 +12,26 @@
   --ui-shadow:0 1px 2px rgba(16,16,24,.04),0 2px 8px rgba(16,16,24,.04);
   --ui-radius:18px;
 }
-@media (prefers-color-scheme:dark){:root{
+/* The theme: the system's by default; the top bar's switch sets html[data-theme] (kept on this device) to light or dark. */
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
   --bg:#0b0b0d;--surface:#141417;--surface2:#1c1c21;--line:#27272e;--text:#f4f4f6;--muted:#9b9ba8;
   --accent:#818cf8;--accentSoft:#1e1f3a;--ok:#4ade80;--okSoft:#13291c;--bad:#f87171;--badSoft:#2e1416;--warn:#fbbf24;--warnSoft:#2c2310;
   --bar:#818cf8;--bar2:#312e81;--ink:#a5b4fc;--inkSoft:#1e1f3a;--c2:#fbbf24;
   --ui-shadow:0 1px 2px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme=dark]{
+  --bg:#0b0b0d;--surface:#141417;--surface2:#1c1c21;--line:#27272e;--text:#f4f4f6;--muted:#9b9ba8;
+  --accent:#818cf8;--accentSoft:#1e1f3a;--ok:#4ade80;--okSoft:#13291c;--bad:#f87171;--badSoft:#2e1416;--warn:#fbbf24;--warnSoft:#2c2310;
+  --bar:#818cf8;--bar2:#312e81;--ink:#a5b4fc;--inkSoft:#1e1f3a;--c2:#fbbf24;
+  --ui-shadow:0 1px 2px rgba(0,0,0,.4);color-scheme:dark}
+:root[data-theme=light]{
+  --bg:#f4f4f5;--surface:#ffffff;--surface2:#f4f4f6;--line:#e6e6ea;--text:#111114;--muted:#6b6b76;
+  --accent:#4f46e5;--accentSoft:#eef0ff;--ok:#16a34a;--okSoft:#e8f7ee;--bad:#e5484d;--badSoft:#fdecec;--warn:#d97706;--warnSoft:#fdf3e2;
+  --bar:#6366f1;--bar2:#c7d2fe;
+  /* (the system page's own names for the same) */
+  --panel:var(--surface);--panel2:var(--surface2);--fg:var(--text);--ink:#4f46e5;--inkSoft:#eef0ff;--c2:#f59e0b;
+  --ui-shadow:0 1px 2px rgba(16,16,24,.04),0 2px 8px rgba(16,16,24,.04);
+  --ui-radius:18px;color-scheme:light;
+}
 
 body{background:var(--bg);color:var(--text);letter-spacing:-.005em}
 main{max-width:1240px}
@@ -86,6 +101,13 @@ tr.u:hover td{background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
 /* the sign-in form */
 .login{margin-top:14vh;padding:28px;gap:12px}
 .login h1{font-size:22px}
+
+/* the theme switch in the bar */
+.ui-theme{display:flex;gap:2px;padding:3px;border-radius:11px;background:var(--surface2);border:1px solid var(--line)}
+.ui-theme button{font:inherit;border:0;background:none;color:var(--muted);width:32px;height:28px;border-radius:8px;display:grid;place-items:center;cursor:pointer}
+.ui-theme button:hover{color:var(--text)}
+.ui-theme button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.ui-theme svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 /* small screens: the nav scrolls under the logo */
 @media (max-width:720px){.ui-nav{margin-inline:0;width:100%;overflow-x:auto;flex-wrap:nowrap}.ui-nav a{white-space:nowrap}}
