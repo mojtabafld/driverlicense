@@ -361,17 +361,17 @@ export default function Home() {
           <View style={{ gap: compact ? 8 : 10 }}>
             {/* The title, the percent and the verdict on one line on every screen (Mojtaba 2026-11-14): the title shrinks
                 to fit, the percent and the verdict keep theirs (a little smaller on a narrow screen). */}
-            <View onLayout={e => setRowFit(f => ({ ...f, row: e.nativeEvent.layout.width }))} style={{ flexDirection: 'row', alignItems: 'center', gap: ROW_GAP, flexWrap: 'nowrap' }}>
+            <View onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, row: w })); }} style={{ flexDirection: 'row', alignItems: 'center', gap: ROW_GAP, flexWrap: 'nowrap' }}>
               {/* (the gradient cards' type: their title's size, weight, capitals and spacing, in the card's ink; Mojtaba 2026-11-13;
                   its size from the room the row leaves it, measured at 17 out of sight) */}
               <View style={{ position: 'absolute', opacity: 0, width: 1000, alignItems: 'flex-start' }} pointerEvents="none" aria-hidden>
-                <T onLayout={e => setRowFit(f => ({ ...f, title: e.nativeEvent.layout.width }))} style={{ ...titleStyle, fontSize: 17 }}>احتمال قبولی</T>
+                <T onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, title: w })); }} style={{ ...titleStyle, fontSize: 17 }}>احتمال قبولی</T>
               </View>
               <T numberOfLines={1} style={{ ...titleStyle, fontSize: titleSize, flexShrink: 1 }}>احتمال قبولی</T>
-              <View testID="home-readiness-value" onLayout={e => setRowFit(f => ({ ...f, pct: e.nativeEvent.layout.width }))} style={{ flexShrink: 0 }}>
+              <View testID="home-readiness-value" onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, pct: w })); }} style={{ flexShrink: 0 }}>
                 <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 24 : small ? 26 : 28) + (dark ? 2 : 0)} />
               </View>
-              <View testID="home-readiness-status" onLayout={e => setRowFit(f => ({ ...f, pill: e.nativeEvent.layout.width }))} style={{ flexShrink: 0, paddingHorizontal: narrowRow ? 7 : 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
+              <View testID="home-readiness-status" onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, pill: w })); }} style={{ flexShrink: 0, paddingHorizontal: narrowRow ? 7 : 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
                 <T numberOfLines={1} style={{ color: probColor, fontSize: narrowRow ? 11 : 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
               </View>
             </View>
