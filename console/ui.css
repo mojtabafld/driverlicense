@@ -1,0 +1,91 @@
+/* The admin pages' shared look (Mojtaba 2026-11-14, after his pictures of clean SaaS dashboards): neutral greys, white
+   cards with a hairline edge and a soft shadow, large rounded corners, an indigo accent, tinted soft pills for states,
+   segmented tabs, tables in a rounded frame with a grey header row, and a top bar with the logo and the pages as pill
+   links (the open one raised in white). The server adds this after each page's own styles (server.js, withUi), so it
+   only restyles: the pages' markup and scripts stay as they are. The dark theme the same in reverse. */
+:root{
+  --bg:#f4f4f5;--surface:#ffffff;--surface2:#f4f4f6;--line:#e6e6ea;--text:#111114;--muted:#6b6b76;
+  --accent:#4f46e5;--accentSoft:#eef0ff;--ok:#16a34a;--okSoft:#e8f7ee;--bad:#e5484d;--badSoft:#fdecec;--warn:#d97706;--warnSoft:#fdf3e2;
+  --bar:#6366f1;--bar2:#c7d2fe;
+  /* (the system page's own names for the same) */
+  --panel:var(--surface);--panel2:var(--surface2);--fg:var(--text);--ink:#4f46e5;--inkSoft:#eef0ff;--c2:#f59e0b;
+  --ui-shadow:0 1px 2px rgba(16,16,24,.04),0 2px 8px rgba(16,16,24,.04);
+  --ui-radius:18px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0b0b0d;--surface:#141417;--surface2:#1c1c21;--line:#27272e;--text:#f4f4f6;--muted:#9b9ba8;
+  --accent:#818cf8;--accentSoft:#1e1f3a;--ok:#4ade80;--okSoft:#13291c;--bad:#f87171;--badSoft:#2e1416;--warn:#fbbf24;--warnSoft:#2c2310;
+  --bar:#818cf8;--bar2:#312e81;--ink:#a5b4fc;--inkSoft:#1e1f3a;--c2:#fbbf24;
+  --ui-shadow:0 1px 2px rgba(0,0,0,.4);color-scheme:dark}}
+
+body{background:var(--bg);color:var(--text);letter-spacing:-.005em}
+main{max-width:1240px}
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+h2{font-size:16px;font-weight:700}
+a{color:var(--accent)}
+
+/* the top bar */
+.ui-bar{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.ui-bar .in{max-width:1240px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ui-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--text);text-decoration:none}
+.ui-logo i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-style:normal;font-weight:800;color:#fff;
+  background:linear-gradient(180deg,#6366f1,#4f46e5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(79,70,229,.35)}
+.ui-nav{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);margin-inline:auto;flex-wrap:wrap}
+.ui-nav a{font-size:13.5px;font-weight:500;color:var(--muted);text-decoration:none;padding:6px 14px;border-radius:9px;display:flex;align-items:center;gap:7px}
+.ui-nav a:hover{color:var(--text)}
+.ui-nav a.on{background:var(--surface);color:var(--text);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.ui-nav svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* cards and boxes */
+.card,.box,.mcard,.kpi,.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--ui-radius);box-shadow:var(--ui-shadow)}
+.card{padding:18px 20px}
+.box,.mcard{padding:16px 18px}
+
+/* stat tiles: a small coloured icon square, the number large, its label and line muted */
+.tiles{gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.tile{padding:16px 18px;position:relative}
+.tile::before{content:"";display:block;width:30px;height:30px;border-radius:9px;margin-bottom:12px;
+  background:linear-gradient(180deg,#818cf8,#4f46e5);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.tile:nth-child(5n+2)::before{background:linear-gradient(180deg,#fbbf24,#f59e0b)}
+.tile:nth-child(5n+3)::before{background:linear-gradient(180deg,#f472b6,#ec4899)}
+.tile:nth-child(5n+4)::before{background:linear-gradient(180deg,#34d399,#10b981)}
+.tile:nth-child(5n+5)::before{background:linear-gradient(180deg,#60a5fa,#3b82f6)}
+.tile .n{font-size:25px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+.tile .l{font-size:13px;color:var(--text);font-weight:500}
+.kpi{padding:14px 16px}
+.kpi b{color:var(--text)}
+
+/* buttons */
+.btn{border-radius:11px;padding:8px 16px;font-weight:600;background:linear-gradient(180deg,#6366f1,#4f46e5);color:#fff;border:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(79,70,229,.35);transition:filter .15s}
+.btn:hover{filter:brightness(1.06)}
+.btn.soft,.top .btn{background:var(--surface);color:var(--text);border:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.btn.soft:hover,.top .btn:hover{background:var(--surface2);filter:none}
+
+/* chips and tabs: one segmented track, the chosen one raised in white */
+.toolbar,.tabs{gap:6px}
+.chip,.tab{border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);font-weight:500;padding:6px 13px}
+.chip.on,.tab.on{background:var(--accentSoft);border-color:color-mix(in srgb,var(--accent) 35%,transparent);color:var(--accent);font-weight:700}
+
+/* fields */
+input,textarea,select{border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--text)}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+
+/* tables in a rounded frame with a grey header row */
+.tablewrap,.tblw{border:1px solid var(--line);border-radius:14px;overflow:auto;background:var(--surface)}
+.tablewrap table,.tblw table{margin:0}
+th{background:var(--surface2);color:var(--muted);font-weight:500;font-size:12.5px;padding:10px 12px;border-bottom:1px solid var(--line)}
+td{padding:11px 12px;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+tr.u:hover td{background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+
+/* states: soft tinted pills */
+.tag{border-radius:7px;padding:2px 9px;font-weight:600;font-size:11.5px}
+.pill{border-radius:8px}
+
+/* the sign-in form */
+.login{margin-top:14vh;padding:28px;gap:12px}
+.login h1{font-size:22px}
+
+/* small screens: the nav scrolls under the logo */
+@media (max-width:720px){.ui-nav{margin-inline:0;width:100%;overflow-x:auto;flex-wrap:nowrap}.ui-nav a{white-space:nowrap}}

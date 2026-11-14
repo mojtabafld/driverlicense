@@ -105,15 +105,29 @@ const VERSION = crypto.createHash('sha256')
   .update([path.join(SITE, 'data.js'), path.join(SITE, 'newq.js'), path.join(__dirname, 'app-web', 'index.html')].filter(f => fs.existsSync(f)).map(f => fs.readFileSync(f)).join('\0'))
   .digest('hex').slice(0, 8);
 // The admin's console at /console (console/index.html): only the comparison of the teaching pictures with prove.dk's.
-const CONSOLE_HTML = fs.readFileSync(path.join(__dirname, 'console', 'index.html'));
+// The admin pages' shared look and top bar (console/ui.css; Mojtaba 2026-11-14): added after each page's own styles, and
+// the bar with the logo and the pages as pill links at the top of its body, the open page's raised.
+const UI_CSS = fs.readFileSync(path.join(__dirname, 'console', 'ui.css'), 'utf8');
+const UI_PAGES = [
+  ['/admin', 'داشبورد', '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>'],
+  ['/admin/system', 'سامانه', '<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/>'],
+  ['/admin/images', 'تصاویر', '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/>'],
+  ['/console', 'مقایسه با prove.dk', '<rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/>'],
+];
+function withUi(buf, here) {
+  const nav = UI_PAGES.map(([href, label, icon]) => `<a href="${href}"${href === here ? ' class="on" aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${label}</a>`).join('');
+  const bar = `<header class="ui-bar" dir="rtl"><div class="in"><a class="ui-logo" href="/admin"><i>T</i>Teoripro Admin</a><nav class="ui-nav" aria-label="صفحه‌های مدیریت">${nav}</nav></div></header>`;
+  return Buffer.from(String(buf).replace('</head>', `<style id="ui">${UI_CSS}</style>\n</head>`).replace(/<body([^>]*)>/, `<body$1>${bar}`));
+}
+const CONSOLE_HTML = withUi(fs.readFileSync(path.join(__dirname, 'console', 'index.html')), '/console');
 // The privacy policy at /privacy (pages/privacy.html, in English, Danish and Persian; Mojtaba 2026-10-21, for Google sign-in).
 const PRIVACY_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'privacy.html'));
 // How to delete an account, at /delete-account (pages/delete-account.html, three languages): the address Google Play's
 // Data safety form asks for (Mojtaba 2026-10-23).
 const DELETE_HTML = fs.readFileSync(path.join(__dirname, 'pages', 'delete-account.html'));
-const ADMIN_HTML = fs.readFileSync(path.join(__dirname, 'console', 'admin.html'));
-const IMAGES_HTML = fs.readFileSync(path.join(__dirname, 'console', 'images.html'));
-const SYSTEM_HTML = fs.readFileSync(path.join(__dirname, 'console', 'system.html'));
+const ADMIN_HTML = withUi(fs.readFileSync(path.join(__dirname, 'console', 'admin.html')), '/admin');
+const IMAGES_HTML = withUi(fs.readFileSync(path.join(__dirname, 'console', 'images.html')), '/admin/images');
+const SYSTEM_HTML = withUi(fs.readFileSync(path.join(__dirname, 'console', 'system.html')), '/admin/system');
 // The style each picture was last made in on the admin's picture page (its «سبک تصویر»), so the page opens on it again:
 // store.meta.picStyles = { ['newq:<id>' | 'course:<key>' | 'g:<key>']: style }.
 const PIC_STYLES = new Set(['flat', 'sim', 'realistic', 'semi', '3d', 'cartoon', 'signs']);
