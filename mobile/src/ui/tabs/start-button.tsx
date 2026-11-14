@@ -64,9 +64,11 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
       </Animated.View>
       <Pressable testID="start-test" onPress={press} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={tr('شروع آزمون')}
         style={({ pressed }) => ({ width: PILL_BAR_H, height: PILL_BAR_H, borderRadius: PILL_BAR_H / 2, alignItems: 'center', justifyContent: 'center',
-          backgroundColor: c.accent, transform: [{ scale: pressed ? 0.95 : 1 }],
-          shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.18, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 12 })}>
-        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={26} color={c.accentText} filled />
+          // frosted like the dock: what is behind it blurred (Mojtaba 2026-11-14)
+          backgroundColor: d.track, borderWidth: 1, borderColor: d.rim, transform: [{ scale: pressed ? 0.95 : 1 }],
+          ...(WEB ? { backdropFilter: 'blur(20px) saturate(1.4)', WebkitBackdropFilter: 'blur(20px) saturate(1.4)' } : null),
+          shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 12 } as any)}>
+        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={26} color={d.ink} filled />
       </Pressable>
     </View>
   );
