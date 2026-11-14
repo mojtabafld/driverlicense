@@ -99,16 +99,17 @@ const PARTS: ServiceItem[] = [
 ];
 
 export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
+  // On a tall screen the cards grow to fill the room down to the dock, so no empty band is left above it (Mojtaba
+  // 2026-11-14); never lower than 140. (The carousel lies over its measured room, so its height never sets the room.)
+  const [room, setRoom] = useState(0);
+  const h = Math.round(Math.max(140, room));
   return (
-    <View style={{ gap: gap + 16 }}>
-      {/* «هرچه در تئوری‌پرو هست»: the app's main parts as tall gradient cards that slide sideways, each opening its
-          page (ui/service-carousel.tsx; Mojtaba 2026-11-13) */}
-      <View style={{ gap: 12, marginBottom: 24 }}>
-        {/* (no title or line over the cards since 2026-11-14, Mojtaba) */}
-        {/* (half its height since 2026-11-14, Mojtaba; 280 before) */}
-        <ServiceCarousel items={PARTS} height={140} />
+    <View style={{ flexGrow: 1, gap: gap + 16 }}>
+      {/* «هرچه در تئوری‌پرو هست»: the app's main parts as gradient cards that slide sideways, each opening its page
+          (ui/service-carousel.tsx; Mojtaba 2026-11-13). (no title or line over the cards since 2026-11-14, Mojtaba) */}
+      <View style={{ flexGrow: 1, minHeight: 140 }} onLayout={e => setRoom(e.nativeEvent.layout.height)}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}><ServiceCarousel items={PARTS} height={h} /></View>
       </View>
-
       {/* (no «مباحث» chips and no current chapter's lessons under the cards since 2026-11-14, Mojtaba) */}
     </View>
   );
