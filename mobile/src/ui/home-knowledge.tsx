@@ -105,7 +105,8 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
           page (ui/service-carousel.tsx; Mojtaba 2026-11-13) */}
       <View style={{ gap: 12, marginBottom: 24 }}>
         <Head title={tr('هرچه در تئوری‌پرو هست')} text={tr('همه‌ی بخش‌های آمادگی برای آزمون، یک‌جا')} />
-        <ServiceCarousel items={PARTS} height={280} />
+        {/* (half its height since 2026-11-14, Mojtaba; 280 before) */}
+        <ServiceCarousel items={PARTS} height={140} />
       </View>
 
       {/* (no «مباحث» chips and no current chapter's lessons under the cards since 2026-11-14, Mojtaba) */}
