@@ -19,7 +19,7 @@ import { useApp } from '@/lib/store';
 import { pctText } from './activity';
 import { Icon, type IconName } from './icon';
 import { DailyTestsChart } from './daily-tests-chart';
-import { CardCode, CardWash, type ServiceTone } from './service-carousel';
+import { CardWash, type ServiceTone } from './service-carousel';
 import { ArcButton, Button, Card, FitLine, T, tap, useCountUp } from './kit';
 import { SizeSlider } from './size-slider';
 import { ARC, useColors, useIsDark, useM3 } from './theme';
@@ -72,7 +72,6 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
       {/* The random test in the gradient cards' look (Mojtaba 2026-11-13; on the page itself before), numbered first */}
       <View testID="exam-random-card" style={ARC ? { gap: tight || level ? (level >= 3 ? 7 : 10) : 14, padding: 20, paddingTop: 16, borderRadius: 24, overflow: 'hidden' } : { gap: tight || level ? (level >= 3 ? 7 : 10) : 14 }}>
         {ARC ? <CardWash tone="amber" /> : null}
-        {ARC ? <View style={{ alignItems: 'flex-start', marginBottom: -6 }}><CardCode n="001" /></View> : null}
         {/* (the smallest phones: no line, the card's gaps part the two halves) */}
         {ARC ? (
           // The random test as a section, its title and what the chosen size means (Mojtaba 2026-11-08)
@@ -144,8 +143,7 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label}
       style={({ pressed }) => ({ flex: 1, minWidth: 0, minHeight: 46, paddingHorizontal: 16, paddingVertical: 14, gap: 10, borderRadius: 24, overflow: 'hidden', opacity: pressed ? 0.85 : 1 })}>
       <CardWash tone={tone} />
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <CardCode n={code} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
         <Icon name={icon} size={22} color={color} />
       </View>
       <T raw numberOfLines={1} style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: ink }}>{label}</T>
@@ -155,7 +153,6 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
     <View style={{ gap: 14 }}>
       <View testID="exam-progress-card" style={{ padding: 20, gap: 16, borderRadius: 24, overflow: 'hidden' }}>
         <CardWash tone="blue" />
-        <View style={{ alignItems: 'flex-start', marginBottom: -10 }}><CardCode n="002" /></View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <T style={{ flex: 1, fontSize: 22, lineHeight: 32, fontWeight: '500' }}>پیشرفت شما</T>
           <Pressable onPress={() => { tap(); setOpen(v => !v); }} accessibilityRole="button" accessibilityLabel={tr('جزئیات پیشرفت')} accessibilityState={{ expanded: open }} hitSlop={8}

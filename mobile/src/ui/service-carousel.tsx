@@ -66,8 +66,7 @@ function Card({ it, index, width, height, dark, shown, still }: { it: ServiceIte
       <View style={{ flex: 1, padding: width < 300 ? 20 : 26, justifyContent: 'space-between' }}>
         {it.done ? <View style={{ position: 'absolute', top: width < 300 ? 18 : 24, end: width < 300 ? 18 : 24 } as object}><Icon name="checkCircle" size={22} color={c.ok} filled /></View> : null}
         <View style={{ alignItems: 'flex-start', gap: 22 }}>
-          {/* (a code, as the original's «( 001 )»: Latin digits and left to right in every language) */}
-          <T raw style={{ fontFamily: MONO, fontSize: 13, color: ink, opacity: 0.5, writingDirection: 'ltr', ...(Platform.OS === 'web' ? { direction: 'ltr', unicodeBidi: 'isolate' } : null) } as any}>( {it.number} )</T>
+          {/* (no «( 001 )» over the icon since 2026-11-14, Mojtaba; `number` stays the card's key) */}
           <Icon name={it.icon} size={44} color={ink} />
         </View>
         <View style={{ gap: 6 }}>

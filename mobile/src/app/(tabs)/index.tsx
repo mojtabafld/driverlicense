@@ -22,7 +22,6 @@ import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { HomeChartIcon, TestStats } from '@/ui/chart-view';
-import { CardCode } from '@/ui/service-carousel';
 import { HomeKnowledge } from '@/ui/home-knowledge';
 import { PasskeyOffer } from '@/ui/passkey-offer';
 import { BellButton } from '@/ui/bell-button';
@@ -317,6 +316,12 @@ export default function Home() {
   // (the pill's background a clear tint of its colour, so it always shows on the card; Mojtaba 2026-10-30)
   const probSoft = mix(!est ? c.muted : probColor, c.surface, 0.8);
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
+  const readinessRing = (
+    <View style={{ flexShrink: 0 }}>
+      <Ring value={est ? est.prob : 0} size={tighter ? 56 : compact ? 64 : 76} stroke={compact ? 7 : 8} color={est ? probColor : c.line}
+        label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} />
+    </View>
+  );
   return (
     // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
     <Screen dashboard={!PROVE_PICS} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined}
@@ -336,16 +341,18 @@ export default function Home() {
       <View style={{ gap }}>
       {/* (the main site: in a card again, as the progress chart's, Mojtaba 2026-11-13; on the page itself without a box
           from 2026-11-08) */}
-      {/* (ARC: the gradient cards' number «( 001 )» and type, the cards under it going on from 002, on the same card
-          colour as the progress chart's below (Mojtaba 2026-11-13; a blue wash for a while)) */}
+      {/* (ARC: the gradient cards' type on the progress chart's card colour, and a small ring of the chance at the card's
+          left (Mojtaba 2026-11-14; no «( 001 )» over it any more)) */}
       <Card testID="home-readiness" style={{ ...(ARC ? null : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: ARC ? readinessPad + 4 : readinessPad,
         paddingVertical: ARC ? readinessPad + 2 : Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
         {ARC ? <>
-          <View style={{ alignItems: 'flex-start', marginBottom: compact ? -4 : -8 }}><CardCode n="001" /></View>
           {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
               verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
               to a 5-question tryout instead). */}
-          <View style={{ gap: compact ? 8 : 10 }}>
+          {/* the chance as a small ring at the card's left side (after the text in Persian, before it in English) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          {RTL ? null : readinessRing}
+          <View style={{ flex: 1, minWidth: 0, gap: compact ? 8 : 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               {/* (the gradient cards' type: their title's size, weight, capitals and spacing, in the card's ink; Mojtaba 2026-11-13) */}
               <T style={{ fontSize: 17, lineHeight: 25, fontWeight: '600', color: cardInk, textTransform: 'uppercase', letterSpacing: RTL ? 0 : 1.2 }}>احتمال قبولی</T>
@@ -366,6 +373,8 @@ export default function Home() {
                 : <M3Button kind={mistakes ? 'outlinedError' : 'outlined'} m={m3} icon="warning" onPress={() => router.push('/mistakes')}
                     label={mistakes ? fmt('تمرین {0} اشتباه', faNum(mistakes)) : tr('اشتباهات')} />}
             </View>
+          </View>
+          {RTL ? readinessRing : null}
           </View>
         </> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>

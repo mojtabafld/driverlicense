@@ -11,7 +11,7 @@ import { Animated, PanResponder, Platform, Pressable, View } from 'react-native'
 import { RTL, tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
 import { T, tap } from './kit';
-import { CardCode, CardWash, type ServiceTone } from './service-carousel';
+import { CardWash, type ServiceTone } from './service-carousel';
 import { useColors, useIsDark, useM3 } from './theme';
 
 export type StatItem = { title: string; sub: string; icon: IconName; color?: string; onPress?: () => void; label?: string; tone?: ServiceTone };
@@ -111,8 +111,7 @@ export function StatCarousel({ items, dense, first = 1 }: { items: StatItem[]; d
                 opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, paddingVertical: dense ? 12 : 16, justifyContent: 'space-between',
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
               <CardWash tone={it.tone ?? CYCLE[i % CYCLE.length]} />
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <CardCode n={String(i + first).padStart(3, '0')} />
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'flex-end' }}>
                 <Icon name={it.icon} size={dense ? 26 : 30} color={ink} />
               </View>
               <View style={{ gap: 2 }}>
