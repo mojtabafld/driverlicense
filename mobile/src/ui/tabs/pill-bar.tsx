@@ -28,7 +28,8 @@ export const DOCK = {
 };
 // The room under the pill (less since 2026-11-13, Mojtaba: «فضای خالی پایین داکر زیاده»): the small gap, and on a phone
 // with a home indicator the pill reaches a little into that strip (the indicator line stays clear under it).
-export const under = (inset: number) => (inset > 0 ? Math.max(BAR_GAP, inset - 14) : BAR_GAP);
+// (8 points higher since 2026-11-15, Mojtaba: «داکر پایینی مقدار کمی بالاتر قرار بگیره»)
+export const under = (inset: number) => (inset > 0 ? Math.max(BAR_GAP, inset - 14) : BAR_GAP) + 8;
 
 function useStill() {
   const [still, setStill] = useState(false);
@@ -48,7 +49,9 @@ function Tab({ icon, label, on, onPress, still, fit = 'wide' }: { icon: LiquidBa
   const open = useRef(new Animated.Value(on ? 1 : 0)).current, fade = useRef(new Animated.Value(on ? 1 : 0)).current;
   const press = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    if (still) { open.setValue(on ? 1 : 0); fade.setValue(on ? 1 : 0); return; }
+    // (on the phones the change is instant since 2026-11-15, Mojtaba: the name's room grew on the JS thread while the new
+    // page was drawn, and the switch lagged on Android)
+    if (still || !WEB) { open.setValue(on ? 1 : 0); fade.setValue(on ? 1 : 0); return; }
     Animated.spring(open, { toValue: on ? 1 : 0, stiffness: 350, damping: 32, mass: 1, useNativeDriver: false }).start();
     Animated.timing(fade, { toValue: on ? 1 : 0, duration: 190, useNativeDriver: false }).start();
   }, [on, still]);

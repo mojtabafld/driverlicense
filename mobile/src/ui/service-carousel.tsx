@@ -12,7 +12,7 @@ import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, View } fr
 
 import { RTL, tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
-import { T, tap } from './kit';
+import { T, tap, physical } from './kit';
 import { useColors, useIsDark } from './theme';
 
 export type ServiceTone = 'purple' | 'green' | 'red' | 'blue' | 'amber';
@@ -141,7 +141,7 @@ export function ServiceCarousel({ items, height = 300, dark: forceDark, auto }: 
       ) : <View style={{ height }} />}
       {items.length > per ? (
         <Pressable onPress={() => { touched.current = true; next(); }} accessibilityRole="button" accessibilityLabel={tr('کارت بعدی')} hitSlop={6}
-          style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ position: 'absolute', top: height / 2 - 20, [RTL ? 'left' : 'right']: 8, width: 40, height: 40,
+          style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({ position: 'absolute', top: height / 2 - 20, ...physical({ [RTL ? 'left' : 'right']: 8 }), width: 40, height: 40,
             borderRadius: 20, alignItems: 'center', justifyContent: 'center',
             backgroundColor: dark ? `rgba(255,255,255,${pressed || hovered ? 0.2 : 0.1})` : (pressed || hovered ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.06)') }) as any}>
           {/* (arrowLeft points to the reading end: the icon turns it round in English) */}

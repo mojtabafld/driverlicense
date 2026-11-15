@@ -75,7 +75,9 @@ export function usePageMotion(motion: Motion) {
   const own = motion === 'tab' || Platform.OS === 'web';
   useFocusReturn(useCallback(returned => {
     const back = goingBack; goingBack = false;
-    if (!own || returned) { v.stopAnimation(); v.setValue(1); return; }
+    // (no entrance for a tab's page since 2026-11-15, Mojtaba: switching tabs on the dock was slow and jerky on Android;
+    // the page is simply there)
+    if (!own || returned || motion === 'tab') { v.stopAnimation(); v.setValue(1); return; }
     setFrom(back ? -1 : 1);
     v.setValue(0);
     Animated.timing(v, { toValue: 1, duration: motion === 'sheet' ? 320 : motion === 'push' ? 200 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
