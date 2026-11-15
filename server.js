@@ -617,8 +617,17 @@ const scoreOf = a => a.items.filter(x => x.ok).length;
 const usageTimes = new Map();
 const aiDeps = () => ({ store, bank: lessonBank(SITE), scoreOf, FULL, PASS_MIN, dayKey, visits });
 // The commit running (its .git/HEAD), for the system page and MCP.
+// (a branch's commit is in its own file, or, once git gc has packed the refs, in .git/packed-refs: update.sh runs gc
+// after each update since 2026-11-15)
 function gitHead() {
-  try { const h = fs.readFileSync(path.join(__dirname, '.git', 'HEAD'), 'utf8').trim(); return (h.startsWith('ref: ') ? fs.readFileSync(path.join(__dirname, '.git', h.slice(5)), 'utf8').trim() : h).slice(0, 7); } catch { return ''; }
+  try {
+    const git = path.join(__dirname, '.git'), h = fs.readFileSync(path.join(git, 'HEAD'), 'utf8').trim();
+    if (!h.startsWith('ref: ')) return h.slice(0, 7);
+    const ref = h.slice(5);
+    try { return fs.readFileSync(path.join(git, ref), 'utf8').trim().slice(0, 7); } catch { /* packed */ }
+    const line = fs.readFileSync(path.join(git, 'packed-refs'), 'utf8').split('\n').find(l => l.endsWith(' ' + ref));
+    return line ? line.slice(0, 7) : '';
+  } catch { return ''; }
 }
 function adminStats() {
   const now = Date.now(), today = dayKey(now), DAYS = 30;
