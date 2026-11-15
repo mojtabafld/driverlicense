@@ -67,7 +67,7 @@ jobs:
           last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 500 --json tagName --jq '.[].tagName' | { grep -E "^${TAG}-[0-9]+$" || true; } | sed "s/${TAG}-//" | sort -n | tail -1)
           echo "RELEASE_N=$(( ${last:-0} + 1 ))" >> "$GITHUB_ENV"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
