@@ -125,9 +125,9 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000/   # 200
 ```bash
 sudo bash /opt/teoripro/deploy/oracle/setup-staging.sh teori-staging.bitlane.app
 ```
-نسخه‌ی جدا در `/opt/teoripro-staging`، پورت 3001، دیتابیس فایلی خودش، بدون vault و بدون bucket (به داده و کلیدهای
+نسخه‌ی جدا در `/opt/teoripro-staging`، پورت 3100 (یا پورتی که بعد از دامنه بدهید؛ اگر پورت پر باشد اسکریپت متوقف می‌شود)، دیتابیس فایلی خودش، بدون vault و بدون bucket (به داده و کلیدهای
 production دست نمی‌زند). بعد در Cloudflare Tunnel یک Public hostname برای `teori-staging.bitlane.app` →
-`localhost:3001` بسازید (یا در Caddy؛ اسکریپت در آخر می‌گوید). بهتر است با Cloudflare Access فقط برای خودتان باز باشد.
+`localhost:3100` بسازید (یا در Caddy؛ اسکریپت در آخر می‌گوید). بهتر است با Cloudflare Access فقط برای خودتان باز باشد.
 
 ### production به‌جای main، بیلدهای تأییدشده را بگیرد (یک بار، بعد از اولین Promote)
 
