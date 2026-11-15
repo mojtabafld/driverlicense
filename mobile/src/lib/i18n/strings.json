@@ -4488,7 +4488,7 @@
 "شروع آزمون تصادفی {0} سؤالی":["Start a random {0}-question test", "Start en tilfældig prøve med {0} spørgsmål"],
 "بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. {1} سؤالی که اشتباه جواب داده‌اید را دوباره تمرین کنید تا این عدد بالا برود.":["Based on your last {0} answers in random tests. Practise the {1} questions you got wrong again to raise it.", "Baseret på dine seneste {0} svar i tilfældige prøver. Øv de {1} spørgsmål, du svarede forkert på, igen for at hæve det."],
 "بر اساس {0} پاسخ اخیر شما در آزمون‌های تصادفی. با آزمون‌های بیشتر دقیق‌تر می‌شود.":["Based on your last {0} answers in random tests. More tests make it more accurate.", "Baseret på dine seneste {0} svar i tilfældige prøver. Flere prøver gør det mere præcist."],
-"بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.":["It is estimated after your first test: take a few random tests to see how close you are to passing.", "Det beregnes efter din første prøve: tag nogle tilfældige prøver og se, hvor tæt du er på at bestå."],
+"بعد از اولین آزمون تخمین زده می‌شود.":["It is estimated after your first test.", "Det beregnes efter din første prøve."],
 "تمرین {0} اشتباه":["Practise {0} mistakes", "Øv {0} fejl"],
 "فصل به فصل، مثل آزمون. {0} از {1} درس را تمام کرده‌اید.":["Chapter by chapter, like the test. You have finished {0} of {1} lessons.", "Kapitel for kapitel, som prøven. Du har gennemført {0} af {1} lektioner."],
 "فصل به فصل، مثل آزمون: {0} درس در {1} فصل، هر کدام با تمرین و آزمون کوتاه.":["Chapter by chapter, like the test: {0} lessons in {1} chapters, each with practice and a short test.", "Kapitel for kapitel, som prøven: {0} lektioner i {1} kapitler, hver med øvelser og en kort prøve."],

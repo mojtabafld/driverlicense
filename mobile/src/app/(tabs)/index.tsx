@@ -376,9 +376,9 @@ export default function Home() {
               </View>
             </View>
             {/* (with an estimate, no line on what it is based on any more: Mojtaba 2026-11-13; before the first test the
-                line on how it comes stays) */}
+                line on how it comes stays, without «take a few random tests…» since 2026-11-15, Mojtaba) */}
             {est ? null : <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14, lineHeight: 22, color: cardInk, opacity: 0.72 }}>
-              {tr('بعد از اولین آزمون تخمین زده می‌شود: چند آزمون تصادفی بدهید تا ببینید چقدر به قبولی نزدیک هستید.')}</T>}
+              {tr('بعد از اولین آزمون تخمین زده می‌شود.')}</T>}
             {/* (the mistakes button hidden for now, to see the card without it: SHOW_MISTAKES_BUTTON; Mojtaba 2026-11-14) */}
             {tryout || SHOW_MISTAKES_BUTTON ? <View style={{ alignItems: 'flex-start' }}>
               {/* (half the size it was: Mojtaba 2026-11-14) */}
