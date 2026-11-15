@@ -1,0 +1,58 @@
+# Continuous delivery (Mojtaba 2026-11-15, «CI/CD کامل: تست، بیلد و دیپلوی خودکار، با محیط staging جدا از production»):
+# every merge into main is tested and built here, and the result, with the web app built from that very code, is
+# published as one commit on the branch deploy/staging. The server's staging copy (/opt/teoripro-staging,
+# deploy/oracle/setup-staging.sh) takes it in within two minutes (update.sh). Production takes in only what is promoted
+# to deploy/production (promote.yml), once it follows that branch (deploy/oracle/README.md, «CI/CD»).
+name: Deploy to staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Server packages
+        run: npm ci --no-audit --no-fund
+      - name: Every server file parses
+        run: for f in *.js deploy/oracle/*.js scripts/*.js; do node --check "$f" || exit 1; done
+      - name: API tests
+        run: npm test
+      - name: App packages
+        working-directory: mobile
+        run: npm ci --no-audit --no-fund
+      - name: TypeScript
+        working-directory: mobile
+        run: npx tsc --noEmit -p .
+      - name: Build the web app (/ and /app)
+        working-directory: mobile
+        run: npm run build:web && npm run build:web-app
+      - name: The main pages in a browser
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+      - name: Publish to deploy/staging
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # one commit holding the code and the web app built from it, with no history (the server fetches only it)
+          git checkout -q --orphan staging-build
+          git add -A app-web app-web-app
+          git add -u
+          git commit -q -m "Staging build of ${GITHUB_SHA::7}" -m "Built and tested by ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} from main ${GITHUB_SHA}."
+          git push -q -f origin HEAD:refs/heads/deploy/staging
+          echo "Published $(git rev-parse --short HEAD) to deploy/staging (from main ${GITHUB_SHA::7})" >> "$GITHUB_STEP_SUMMARY"

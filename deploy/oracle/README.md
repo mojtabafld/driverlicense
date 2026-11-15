@@ -107,3 +107,35 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000/   # 200
 - وقتی یکی دو روز همه‌چیز درست کار کرد، اپ و دیتابیس DigitalOcean را حذف کنید.
 - حساب Oracle را اگر می‌توانید به **Pay As You Go** ارتقا دهید: منابع Always Free رایگان می‌مانند و Oracle
   سرورِ کم‌مصرف را پس نمی‌گیرد.
+
+## CI/CD: تست، بیلد، staging و production
+
+از ۲۰۲۶-۱۱-۱۵ هر تغییر این مسیر را می‌رود:
+
+1. **Pull request** → `.github/workflows/ci.yml`: تست‌های API سرور (`npm test`)، TypeScript اپ، ساخت اپ وب و
+   تست صفحه‌های اصلی در مرورگر واقعی (`npm run test:e2e`). قرمز یعنی ادغام نکنید.
+2. **ادغام در main** → `.github/workflows/deploy.yml`: همان تست‌ها و بیلد، و نتیجه (کد + اپ وب ساخته‌شده) به‌صورت یک
+   commit روی شاخه‌ی `deploy/staging` منتشر می‌شود. نسخه‌ی staging روی سرور ظرف ۲ دقیقه آن را می‌گیرد.
+3. **Actions → Promote to production → Run workflow** → `.github/workflows/promote.yml`: همان بیلدی که staging اجرا
+   می‌کند به `deploy/production` می‌رود و production ظرف ۲ دقیقه آن را می‌گیرد (با برگشت خودکار اگر بالا نیاید).
+   برای تأیید دستی پیش از انتشار: Settings → Environments → production → Required reviewers.
+
+### راه‌اندازی staging (یک بار)
+
+```bash
+sudo bash /opt/teoripro/deploy/oracle/setup-staging.sh teori-staging.bitlane.app
+```
+نسخه‌ی جدا در `/opt/teoripro-staging`، پورت 3001، دیتابیس فایلی خودش، بدون vault و بدون bucket (به داده و کلیدهای
+production دست نمی‌زند). بعد در Cloudflare Tunnel یک Public hostname برای `teori-staging.bitlane.app` →
+`localhost:3001` بسازید (یا در Caddy؛ اسکریپت در آخر می‌گوید). بهتر است با Cloudflare Access فقط برای خودتان باز باشد.
+
+### production به‌جای main، بیلدهای تأییدشده را بگیرد (یک بار، بعد از اولین Promote)
+
+```bash
+sudo mkdir -p /etc/systemd/system/teoripro-update.service.d
+printf '[Service]\nEnvironment=TP_BRANCH=deploy/production\n' | sudo tee /etc/systemd/system/teoripro-update.service.d/branch.conf
+sudo systemctl daemon-reload && sudo systemctl start teoripro-update.service
+journalctl -u teoripro-update -n 5
+```
+از این به بعد ادغام در main فقط staging را عوض می‌کند و production فقط با Promote. برگشت به حالت قبل:
+`sudo rm /etc/systemd/system/teoripro-update.service.d/branch.conf && sudo systemctl daemon-reload`.
