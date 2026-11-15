@@ -1,0 +1,37 @@
+# Promote to production (Mojtaba 2026-11-15): copies the build staging runs (branch deploy/staging, made by deploy.yml
+# from main and tested) to deploy/production, which production's server takes in within two minutes (update.sh, with
+# its rollback). Run by hand from the Actions tab («Run workflow»). A GitHub environment «production» guards the job:
+# reviewers can be required for it under Settings → Environments.
+name: Promote to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        description: "The deploy/staging commit to promote (empty: the newest)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promote-production
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: deploy/staging, fetch-depth: 0 }
+      - name: Promote
+        env:
+          BUILD: ${{ inputs.build }}
+        run: |
+          sha=$(git rev-parse "${BUILD:-HEAD}^{commit}")
+          git log -1 --format=%B "$sha"
+          git push -q -f origin "$sha:refs/heads/deploy/production"
+          echo "Promoted $(git log -1 --format='%h %s' "$sha") to deploy/production" >> "$GITHUB_STEP_SUMMARY"

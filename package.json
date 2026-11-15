@@ -5,7 +5,9 @@
   "description": "Danish driving theory test practice (category B) with Persian translations, accounts and progress tracking.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node --test test/e2e/*.test.js"
   },
   "engines": {
     "node": ">=20"

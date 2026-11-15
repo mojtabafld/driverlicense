@@ -1,0 +1,19 @@
+# Teoripro's staging copy (Mojtaba 2026-11-15): the build GitHub Actions made from main (branch deploy/staging), in
+# /opt/teoripro-staging, on its own port, its own file database and no keys from the vault; production stays untouched.
+# Installed by setup-staging.sh; its settings in /etc/teoripro-staging/env.
+[Unit]
+Description=Teoripro (staging)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=teoripro
+WorkingDirectory=/opt/teoripro-staging
+EnvironmentFile=/etc/teoripro-staging/env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

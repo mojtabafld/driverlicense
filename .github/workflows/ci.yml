@@ -3,7 +3,9 @@
 #   server: every .js file parses, the server starts on its own (a file database, no keys) and answers
 #           /api/health, /api/config and the web app's page;
 #           and its packages have no known high-severity hole (npm audit);
-#   app:    the app's TypeScript compiles (mobile/, tsc --noEmit).
+#   app:    the app's TypeScript compiles (mobile/, tsc --noEmit);
+#   tests:  the server's API tests (test/*.test.js), and with the web app built from this very code, its main pages in
+#           a real browser (test/e2e; Mojtaba 2026-11-15, «CI/CD کامل»).
 # A red run means: do not merge.
 name: CI
 
@@ -32,6 +34,8 @@ jobs:
       # (the server's own packages, not the build tools: a known high or critical hole fails the run)
       - name: No known high-severity holes in the server's packages
         run: npm audit --omit=dev --audit-level=high
+      - name: API tests
+        run: npm test
       - name: The server starts and answers
         run: |
           PORT=3999 DB_FILE=$RUNNER_TEMP/db.json node server.js > $RUNNER_TEMP/server.log 2>&1 &
@@ -56,3 +60,14 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - name: TypeScript
         run: npx tsc --noEmit -p .
+      - name: Build the web app (/ and /app)
+        run: npm run build:web && npm run build:web-app
+      - name: Server packages and the browser
+        working-directory: .
+        run: |
+          npm ci --no-audit --no-fund
+          npm i --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: The main pages in a browser
+        working-directory: .
+        run: npm run test:e2e
