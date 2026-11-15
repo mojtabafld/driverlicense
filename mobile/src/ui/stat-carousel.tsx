@@ -10,7 +10,7 @@ import { Animated, PanResponder, Platform, Pressable, View } from 'react-native'
 
 import { RTL, tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
-import { T, tap } from './kit';
+import { T, tap, physical } from './kit';
 import { CardWash, type ServiceTone } from './service-carousel';
 import { useColors, useIsDark, useM3 } from './theme';
 
@@ -91,7 +91,7 @@ export function StatCarousel({ items, dense, first = 1 }: { items: StatItem[]; d
     const show = next ? at < items.length - 1 : at > 0;
     if (!show) return null;
     // (physical sides: the row is laid out left to right; «next» at the reading end)
-    const side = next === RTL ? { left: 6 } : { right: 6 };
+    const side = physical(next === RTL ? { left: 6 } : { right: 6 });  // (physical(): the phones swap left and right in Persian)
     return (
       <Pressable onPress={() => { tap(); go(at + (next ? 1 : -1)); }} accessibilityRole="button" accessibilityLabel={tr(next ? 'بعدی' : 'قبلی')} hitSlop={6}
         style={({ pressed }) => ({ position: 'absolute', top: H / 2 - 20, ...side, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
@@ -107,7 +107,7 @@ export function StatCarousel({ items, dense, first = 1 }: { items: StatItem[]; d
         <Animated.View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: w, transform: [{ translateX: x }] }}>
           {items.map((it, i) => (
             <Pressable key={i} disabled={!it.onPress} onPress={() => { if (Date.now() - dragged.current < 400) return; tap(); it.onPress?.(); }} accessibilityRole={it.onPress ? 'button' : undefined} accessibilityLabel={it.label}
-              style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, left: RTL ? w - W - i * stepW : i * stepW, borderRadius: 24, overflow: 'hidden',
+              style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, ...physical({ left: RTL ? w - W - i * stepW : i * stepW }), borderRadius: 24, overflow: 'hidden',
                 opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, paddingVertical: dense ? 12 : 16, justifyContent: 'space-between',
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
               <CardWash tone={it.tone ?? CYCLE[i % CYCLE.length]} />

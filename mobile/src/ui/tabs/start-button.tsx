@@ -9,7 +9,7 @@ import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, View } fr
 import { RTL, t, tr } from '@/lib/i18n';
 import { SECONDS_PER_Q, SIZES, faNum } from '@/lib/logic';
 import { Icon } from '../icon';
-import { T, tap } from '../kit';
+import { T, physical, tap } from '../kit';
 import { useNewTest } from '../new-test';
 import { useColors, useIsDark } from '../theme';
 import { DOCK, PILL_BAR_H } from './pill-bar';
@@ -43,7 +43,7 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
     <View style={{ width: PILL_BAR_H, height: PILL_BAR_H }}>
       {/* the menu, growing up from the button */}
       <Animated.View pointerEvents={open ? 'auto' : 'none'} accessibilityRole="menu"
-        style={{ position: 'absolute', bottom: PILL_BAR_H + 10, [RTL ? 'left' : 'right']: 0, width: 200, padding: 6, gap: 2, borderRadius: 24,
+        style={{ position: 'absolute', bottom: PILL_BAR_H + 10, ...physical({ [RTL ? 'left' : 'right']: 0 }), width: 200, padding: 6, gap: 2, borderRadius: 24,
           backgroundColor: dark ? 'rgba(40,40,44,0.94)' : 'rgba(244,244,247,0.96)', borderWidth: 1, borderColor: d.rim,
           shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 14,
           ...(WEB ? { backdropFilter: 'blur(20px) saturate(1.4)', WebkitBackdropFilter: 'blur(20px) saturate(1.4)' } : null),
