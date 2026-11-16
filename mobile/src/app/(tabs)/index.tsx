@@ -289,7 +289,7 @@ export default function Home() {
   // (ARC: the card's padding and edge, its head (a title over a line; one short row at the densest level), the chart and
   // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
   const chartNeed = ARC
-    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (slim ? 30 : 56) + (compact ? 8 : 12) + chartMin + (tiniest ? 0 : 8 + 20)
+    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (slim ? 30 : 56) + (compact ? 8 : 12) + chartMin + (tiniest ? 0 : 8 + 26)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
@@ -451,7 +451,7 @@ export default function Home() {
           header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
       {exams.length || ARC ? (
-      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : ARC ? { flexGrow: 8, flexBasis: 200, minHeight: 200, maxHeight: 420 } /* (the room the screen leaves, shared with the cards under it, so they end just above the dock on every phone; Mojtaba 2026-11-16; 270 / 300 before) */ : { flex: 1, minHeight: shortPage ? 280 : undefined }}
+      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : ARC ? { flexGrow: 8, flexBasis: chartNeed + 8, minHeight: chartNeed + 8, maxHeight: Math.max(420, chartNeed + 8) } /* (the room the screen leaves, shared with the cards under it, so they end just above the dock on every phone; Mojtaba 2026-11-16; 270 / 300 before) */ : { flex: 1, minHeight: shortPage ? 280 : undefined }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>

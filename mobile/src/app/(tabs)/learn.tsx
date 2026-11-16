@@ -20,11 +20,11 @@ import { useApp } from '@/lib/store';
 import { CoachButton } from '@/ui/coach-button';
 import { Icon, type IconName } from '@/ui/icon';
 import { PageIcon } from '@/ui/page-icon';
-import { Card, M3Button, Screen, T } from '@/ui/kit';
+import { Card, Screen, T } from '@/ui/kit';
 import { Head, Tiles, iconOf } from '@/ui/home-knowledge';
 import { SearchBox } from '@/ui/search-box';
 import { ServiceCarousel, type ServiceItem } from '@/ui/service-carousel';
-import { ARC, useColors, useIsDark, useM3 } from '@/ui/theme';
+import { ARC, useColors, useIsDark } from '@/ui/theme';
 import { LearnBookArt } from '@/ui/header-art';
 import { mix, rgba } from '@/ui/palette';
 
@@ -110,7 +110,6 @@ const GUIDES: ServiceItem[] = [
 ];
 const TONE_CYCLE: ServiceItem['tone'][] = ['blue', 'purple', 'green', 'amber', 'red'];
 function LearnSections({ search }: { search: ReactNode }) {
-  const m = useM3();
   const { done } = useCourseProgress();
   const lessons = COURSE.flatMap(ch => ch.lessons), finished = lessons.filter(l => done[l.id]).length;
   return (
@@ -124,10 +123,10 @@ function LearnSections({ search }: { search: ReactNode }) {
         {/* (half its height since 2026-11-14, Mojtaba; 250 before) */}
         <ServiceCarousel height={125} items={COURSE.map((ch, i): ServiceItem => ({ number: String(i + 1).padStart(3, '0'), title: ch.title, description: ch.sub,
           icon: CHAPTER_ICON[ch.id] ?? iconOf(ch.title), tone: TONE_CYCLE[i % TONE_CYCLE.length], done: ch.lessons.every(l => done[l.id]),
-          onPress: () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } }) }))} />
-        <View style={{ alignItems: 'center' }}>
-          <M3Button kind="outlined" m={m} icon="learn" label={tr('همه‌ی فصل‌ها')} onPress={() => router.push('/course')} />
-        </View>
+          onPress: () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } }) })).concat([
+          // «همه‌ی فصل‌ها» as the row's last card (Mojtaba 2026-11-16: a button under the cards before)
+          { number: String(COURSE.length + 1).padStart(3, '0'), title: 'همه‌ی فصل‌ها', description: 'فهرست همه‌ی فصل‌ها و درس‌ها', icon: 'learn',
+            tone: TONE_CYCLE[COURSE.length % TONE_CYCLE.length], onPress: () => router.push('/course') }])} />
       </View>
       <View style={{ gap: 12 }}>
         <Head title={tr('راهنماها')} text={tr('قوانین، تابلوها و حق تقدم به زبان ساده، و واژه‌های دانمارکی آزمون.')} />

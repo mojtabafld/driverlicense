@@ -10,7 +10,7 @@ import { Animated, PanResponder, Platform, Pressable, View } from 'react-native'
 
 import { RTL, tr } from '@/lib/i18n';
 import { Icon, type IconName } from './icon';
-import { T, tap, physical } from './kit';
+import { T, tap } from './kit';
 import { CardWash, type ServiceTone } from './service-carousel';
 import { useColors, useIsDark, useM3 } from './theme';
 
@@ -89,12 +89,14 @@ export function StatCarousel({ items, dense, first = 1 }: { items: StatItem[]; d
   }, [w]);
   const arrow = (next: boolean) => {
     const show = next ? at < items.length - 1 : at > 0;
-    if (!show) return null;
-    // (physical sides: the row is laid out left to right; «next» at the reading end)
-    const side = physical(next === RTL ? { left: 6 } : { right: 6 });  // (physical(): the phones swap left and right in Persian)
+    if (!show || !w) return null;
+    // «next» at the reading end (the left in Persian). Placed in the middle and moved by a transform, which is always
+    // physical: Android in Persian reads left and right in its own way (Mojtaba 2026-11-16: the arrows on the wrong
+    // side and the row scrolling wrong), so no left or right is relied on.
+    const toLeft = next === RTL, dx = (w - 40) / 2 - 6;
     return (
       <Pressable onPress={() => { tap(); go(at + (next ? 1 : -1)); }} accessibilityRole="button" accessibilityLabel={tr(next ? 'بعدی' : 'قبلی')} hitSlop={6}
-        style={({ pressed }) => ({ position: 'absolute', top: H / 2 - 20, ...side, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+        style={({ pressed }) => ({ position: 'absolute', top: H / 2 - 20, left: (w - 40) / 2, transform: [{ translateX: toLeft ? -dx : dx }], width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
           backgroundColor: m.dialog, opacity: pressed ? 0.8 : 1, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 })}>
         {/* chevronLeft points to the reading end (the icon turns it round in English); «back» the other way */}
         <View style={next ? undefined : { transform: [{ scaleX: -1 }] }}><Icon name="chevronLeft" size={22} color={c.text} /></View>
@@ -107,7 +109,7 @@ export function StatCarousel({ items, dense, first = 1 }: { items: StatItem[]; d
         <Animated.View style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: w, transform: [{ translateX: x }] }}>
           {items.map((it, i) => (
             <Pressable key={i} disabled={!it.onPress} onPress={() => { if (Date.now() - dragged.current < 400) return; tap(); it.onPress?.(); }} accessibilityRole={it.onPress ? 'button' : undefined} accessibilityLabel={it.label}
-              style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, ...physical({ left: RTL ? w - W - i * stepW : i * stepW }), borderRadius: 24, overflow: 'hidden',
+              style={({ pressed }) => ({ position: 'absolute', top: 0, height: H, width: W, left: (w - W) / 2, transform: [{ translateX: (RTL ? w - W - i * stepW : i * stepW) - (w - W) / 2 }], borderRadius: 24, overflow: 'hidden',
                 opacity: pressed ? 0.85 : 1, paddingHorizontal: 18, paddingVertical: dense ? 12 : 16, justifyContent: 'space-between',
                 direction: RTL ? 'rtl' : 'ltr' } as any)}>
               <CardWash tone={it.tone ?? CYCLE[i % CYCLE.length]} />
