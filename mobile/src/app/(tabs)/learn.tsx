@@ -121,12 +121,12 @@ function LearnSections({ search }: { search: ReactNode }) {
             : t('فصل به فصل، مثل آزمون: {0} درس در {1} فصل، هر کدام با تمرین و آزمون کوتاه.', faNum(lessons.length), faNum(COURSE.length))} />
         {/* the chapters as the gradient cards that slide sideways (Mojtaba 2026-11-13; outlined tiles before) */}
         {/* (half its height since 2026-11-14, Mojtaba; 250 before) */}
-        <ServiceCarousel height={125} items={COURSE.map((ch, i): ServiceItem => ({ number: String(i + 1).padStart(3, '0'), title: ch.title, description: ch.sub,
-          icon: CHAPTER_ICON[ch.id] ?? iconOf(ch.title), tone: TONE_CYCLE[i % TONE_CYCLE.length], done: ch.lessons.every(l => done[l.id]),
-          onPress: () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } }) })).concat([
-          // «همه‌ی فصل‌ها» as the row's last card (Mojtaba 2026-11-16: a button under the cards before)
-          { number: String(COURSE.length + 1).padStart(3, '0'), title: 'همه‌ی فصل‌ها', description: 'فهرست همه‌ی فصل‌ها و درس‌ها', icon: 'learn',
-            tone: TONE_CYCLE[COURSE.length % TONE_CYCLE.length], onPress: () => router.push('/course') }])} />
+        <ServiceCarousel height={125} items={[
+          // «همه‌ی فصل‌ها» as the row's first card (Mojtaba 2026-11-16: its last card, a button under the cards before)
+          { number: '000', title: 'همه‌ی فصل‌ها', description: 'فهرست همه‌ی فصل‌ها و درس‌ها', icon: 'learn' as IconName, tone: 'blue' as ServiceItem['tone'], onPress: () => router.push('/course') },
+          ...COURSE.map((ch, i): ServiceItem => ({ number: String(i + 1).padStart(3, '0'), title: ch.title, description: ch.sub,
+          icon: CHAPTER_ICON[ch.id] ?? iconOf(ch.title), tone: TONE_CYCLE[(i + 1) % TONE_CYCLE.length], done: ch.lessons.every(l => done[l.id]),
+          onPress: () => router.push({ pathname: '/course-lesson', params: { id: (ch.lessons.find(l => !done[l.id]) ?? ch.lessons[0]).id } }) }))]} />
       </View>
       <View style={{ gap: 12 }}>
         <Head title={tr('راهنماها')} text={tr('قوانین، تابلوها و حق تقدم به زبان ساده، و واژه‌های دانمارکی آزمون.')} />
