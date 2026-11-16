@@ -1,4 +1,7 @@
 {
+"{0} تا حد آمادگی":["{0} to ready", "{0} til klar"],
+"آماده {0}":["Ready {0}", "Klar {0}"],
+"اولین آزمون را بدهید (۵ سؤال)":["Take your first test (5 questions)", "Tag din første prøve (5 spørgsmål)"],
 "ورود سریع‌تر با Passkey":["Faster sign-in with a passkey", "Hurtigere login med passkey"],
 "دفعه‌ی بعد فقط با اثر انگشت، چهره یا قفل دستگاه وارد شوید؛ بدون رمز و بدون کد. اگر نخواستید، بعداً هم از تنظیمات ← Passkey می‌توانید بسازید.":["Next time, sign in with just your fingerprint, face or screen lock — no password, no code. If you'd rather not now, you can create one later in Settings → Passkey.", "Næste gang logger du ind med fingeraftryk, ansigt eller skærmlås — uden adgangskode og kode. Vil du ikke nu, kan du oprette en senere under Indstillinger → Passkey."],
 "Passkey ساخته شد.":["Passkey created.", "Passkey oprettet."],

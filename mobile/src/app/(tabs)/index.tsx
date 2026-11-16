@@ -78,6 +78,31 @@ function Stat({ icon, label, value, extra, sub, tone, onPress, short, progress, 
 }
 
 // The chance of passing as a large number, counting up as the ring fills; «–» before there is an estimate.
+// The verdict turns «آماده‌ی آزمون» here (probWord below): the ready bar's mark.
+const READY = 0.7;
+// A bar from the reading start up to the chance of passing, with the ready mark over it (Mojtaba 2026-11-16).
+function ReadyBar({ value, color, ink }: { value: number; color: string; ink: string }) {
+  const c = useColors(), dark = useIsDark();
+  const pct = (v: number) => `${Math.round(Math.max(0, Math.min(1, v)) * 1000) / 10}%` as const;
+  // (laid out from the reading start: right to left in Persian, on the web too)
+  const dir = { direction: RTL ? 'rtl' : 'ltr' } as object;
+  return (
+    <View style={[{ paddingTop: 22 }, dir]} accessibilityLabel={fmt('{0} تا حد آمادگی', pctText(Math.max(0, READY - value)))}>
+      <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row' }, dir]} pointerEvents="none">
+        <View style={{ width: pct(READY), alignItems: 'flex-end' }} />
+        <T numberOfLines={1} style={{ fontSize: 11.5, lineHeight: 16, fontWeight: '700', color: ink, marginStart: -14 } as object}>{fmt('آماده {0}', pctText(READY))}</T>
+      </View>
+      <View style={[{ height: 12, borderRadius: 99, backgroundColor: dark ? 'rgba(255,255,255,0.1)' : mix(c.muted, c.surface, 0.78), flexDirection: 'row', overflow: 'visible' }, dir]}>
+        <View style={{ width: pct(value), height: 12, borderRadius: 99, backgroundColor: color }} />
+        <View style={[{ position: 'absolute', top: -6, bottom: -6, left: 0, right: 0, flexDirection: 'row' }, dir]} pointerEvents="none">
+          <View style={{ width: pct(READY) }} />
+          <View style={{ width: 2.5, marginStart: -1.25, borderRadius: 2, backgroundColor: ink } as object} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
 function PassPct({ value, size, color }: { value: number | null; size: number; color?: string }) {
   const shown = useCountUp(value ?? 0, 1800);
   // (bold by its own family: the main site draws every heavier weight as 500; Mojtaba 2026-10-30)
@@ -358,36 +383,38 @@ export default function Home() {
           {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
               verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
               to a 5-question tryout instead). */}
-          <View style={{ gap: compact ? 8 : 10 }}>
-            {/* The title, the percent and the verdict on one line on every screen (Mojtaba 2026-11-14): the title shrinks
-                to fit, the percent and the verdict keep theirs (a little smaller on a narrow screen). */}
-            <View onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, row: w })); }} style={{ flexDirection: 'row', alignItems: 'center', gap: ROW_GAP, flexWrap: 'nowrap' }}>
-              {/* (the gradient cards' type: their title's size, weight, capitals and spacing, in the card's ink; Mojtaba 2026-11-13;
-                  its size from the room the row leaves it, measured at 17 out of sight) */}
-              <View style={{ position: 'absolute', opacity: 0, width: 1000, alignItems: 'flex-start' }} pointerEvents="none" aria-hidden>
-                <T onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, title: w })); }} style={{ ...titleStyle, fontSize: 17 }}>احتمال قبولی</T>
+          {/* (Mojtaba 2026-11-16, after the mockups: with an estimate, the title and the verdict on one line, the percent
+              large with how far it is to «ready», and a bar up to it with the ready mark (70%, where the verdict turns
+              «آماده‌ی آزمون»); before the first test, a tile with «؟», the line on how it comes and a large button to
+              the 5-question tryout) */}
+          {est ? (
+            <View style={{ gap: compact ? 6 : 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                <T numberOfLines={1} style={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17, flexShrink: 1 }}>احتمال قبولی</T>
+                <View testID="home-readiness-status" style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
+                  <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
+                </View>
               </View>
-              <T numberOfLines={1} style={{ ...titleStyle, fontSize: titleSize, flexShrink: 1 }}>احتمال قبولی</T>
-              <View testID="home-readiness-value" onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, pct: w })); }} style={{ flexShrink: 0 }}>
-                <PassPct value={est ? est.prob : null} color={est ? probColor : undefined} size={(tighter ? 24 : small ? 26 : 28) + (dark ? 2 : 0)} />
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
+                <View testID="home-readiness-value"><PassPct value={est.prob} color={probColor} size={(tighter ? 30 : small ? 34 : 38) + (dark ? 2 : 0)} /></View>
+                {est.prob < READY ? <T style={{ fontSize: 13.5, lineHeight: 20, color: cardInk, opacity: 0.72 }}>{fmt('{0} تا حد آمادگی', pctText(READY - est.prob))}</T> : null}
               </View>
-              <View testID="home-readiness-status" onLayout={e => { const w = e.nativeEvent.layout.width; setRowFit(f => ({ ...f, pill: w })); }} style={{ flexShrink: 0, paddingHorizontal: narrowRow ? 7 : 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
-                <T numberOfLines={1} style={{ color: probColor, fontSize: narrowRow ? 11 : 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
-              </View>
+              <ReadyBar value={est.prob} color={probColor} ink={cardInk} />
             </View>
-            {/* (with an estimate, no line on what it is based on any more: Mojtaba 2026-11-13; before the first test the
-                line on how it comes stays, without «take a few random tests…» since 2026-11-15, Mojtaba) */}
-            {est ? null : <T numberOfLines={3} ellipsizeMode="tail" style={{ fontSize: 14, lineHeight: 22, color: cardInk, opacity: 0.72 }}>
-              {tr('بعد از اولین آزمون تخمین زده می‌شود.')}</T>}
-            {/* (the mistakes button hidden for now, to see the card without it: SHOW_MISTAKES_BUTTON; Mojtaba 2026-11-14) */}
-            {tryout || SHOW_MISTAKES_BUTTON ? <View style={{ alignItems: 'flex-start' }}>
-              {/* (half the size it was: Mojtaba 2026-11-14) */}
-              {tryout
-                ? <M3Button kind="outlined" m={m3} icon="play" label={tr('آزمون آزمایشی ۵ سؤالی')} onPress={startTryout} iconSize={13} contentStyle={SMALL_BTN} labelStyle={SMALL_BTN_LABEL} />
-                : <M3Button kind={mistakes ? 'outlinedError' : 'outlined'} m={m3} icon="warning" onPress={() => router.push('/mistakes')} iconSize={13} contentStyle={SMALL_BTN} labelStyle={SMALL_BTN_LABEL}
-                    label={mistakes ? fmt('تمرین {0} اشتباه', faNum(mistakes)) : tr('اشتباهات')} />}
-            </View> : null}
-          </View>
+          ) : (
+            <View style={{ gap: compact ? 12 : 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+                <View style={{ width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: dark ? 'rgba(255,255,255,0.08)' : '#ffffff' }}>
+                  <T raw style={{ fontSize: 28, lineHeight: 36, fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700', color: c.accent }}>{RTL ? '؟' : '?'}</T>
+                </View>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <T numberOfLines={1} style={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17 }}>احتمال قبولی</T>
+                  <T numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 21, color: cardInk, opacity: 0.72 }}>{tr('بعد از اولین آزمون تخمین زده می‌شود.')}</T>
+                </View>
+              </View>
+              {tryout ? <ArcButton label={tr('اولین آزمون را بدهید (۵ سؤال)')} onPress={startTryout} icon="play" variant="accent" /> : null}
+            </View>
+          )}
         </> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <View><Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} /></View>
