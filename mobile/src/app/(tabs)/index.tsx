@@ -87,7 +87,7 @@ function ReadyBar({ value, color, ink }: { value: number; color: string; ink: st
   // (laid out from the reading start: right to left in Persian, on the web too)
   const dir = { direction: RTL ? 'rtl' : 'ltr' } as object;
   return (
-    <View style={[{ paddingTop: 22 }, dir]} accessibilityLabel={fmt('{0} تا حد آمادگی', pctText(Math.max(0, READY - value)))}>
+    <View style={[{ paddingTop: 18 }, dir]} accessibilityLabel={fmt('{0} تا حد آمادگی', pctText(Math.max(0, READY - value)))}>
       <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row' }, dir]} pointerEvents="none">
         <View style={{ width: pct(READY), alignItems: 'flex-end' }} />
         <T numberOfLines={1} style={{ fontSize: 11.5, lineHeight: 16, fontWeight: '700', color: ink, marginStart: -14 } as object}>{fmt('آماده {0}', pctText(READY))}</T>
@@ -378,7 +378,7 @@ export default function Home() {
       {/* (ARC: the gradient cards' type on the progress chart's card colour; no «( 001 )» over it and no ring beside it
           (Mojtaba 2026-11-14: a small ring at its left for a while)) */}
       <Card testID="home-readiness" style={{ ...(ARC ? null : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: ARC ? readinessPad + 4 : readinessPad,
-        paddingVertical: ARC ? readinessPad + 2 : Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
+        paddingVertical: ARC ? readinessPad - 2 /* (a little lower: Mojtaba 2026-11-16) */ : Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
         {ARC ? <>
           {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
               verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
@@ -388,7 +388,7 @@ export default function Home() {
               «آماده‌ی آزمون»); before the first test, a tile with «؟», the line on how it comes and a large button to
               the 5-question tryout) */}
           {est ? (
-            <View style={{ gap: compact ? 6 : 8 }}>
+            <View style={{ gap: compact ? 2 : 4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <T numberOfLines={1} style={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17, flexShrink: 1 }}>احتمال قبولی</T>
                 <View testID="home-readiness-status" style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
@@ -396,15 +396,15 @@ export default function Home() {
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
-                <View testID="home-readiness-value"><PassPct value={est.prob} color={probColor} size={(tighter ? 30 : small ? 34 : 38) + (dark ? 2 : 0)} /></View>
+                <View testID="home-readiness-value"><PassPct value={est.prob} color={probColor} size={(tighter ? 28 : small ? 30 : 34) + (dark ? 2 : 0)} /></View>
                 {/* (no «… to ready» beside it since 2026-11-16, Mojtaba; the bar shows it) */}
               </View>
               <ReadyBar value={est.prob} color={probColor} ink={cardInk} />
             </View>
           ) : (
-            <View style={{ gap: compact ? 12 : 14 }}>
+            <View style={{ gap: compact ? 10 : 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                <View style={{ width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: dark ? 'rgba(255,255,255,0.08)' : '#ffffff' }}>
+                <View style={{ width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: dark ? 'rgba(255,255,255,0.08)' : '#ffffff' }}>
                   <T raw style={{ fontSize: 28, lineHeight: 36, fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700', color: c.accent }}>{RTL ? '؟' : '?'}</T>
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
