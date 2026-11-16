@@ -90,7 +90,7 @@ function ReadyBar({ value, color, ink }: { value: number; color: string; ink: st
     <View style={[{ paddingTop: 18 }, dir]} accessibilityLabel={fmt('{0} تا حد آمادگی', pctText(Math.max(0, READY - value)))}>
       <View style={[{ position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row' }, dir]} pointerEvents="none">
         <View style={{ width: pct(READY), alignItems: 'flex-end' }} />
-        <T numberOfLines={1} style={{ fontSize: 11.5, lineHeight: 16, fontWeight: '700', color: ink, marginStart: -14 } as object}>{fmt('آماده {0}', pctText(READY))}</T>
+        <T numberOfLines={1} style={{ fontSize: 11.5, lineHeight: 16, fontWeight: '700', color: ink, marginStart: 6 } as object}>{fmt('آماده {0}', pctText(READY))}</T>
       </View>
       <View style={[{ height: 12, borderRadius: 99, backgroundColor: dark ? 'rgba(255,255,255,0.1)' : mix(c.muted, c.surface, 0.78), flexDirection: 'row', overflow: 'visible' }, dir]}>
         <View style={{ width: pct(value), height: 12, borderRadius: 99, backgroundColor: color }} />
