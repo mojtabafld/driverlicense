@@ -231,12 +231,17 @@ const HERO_FADE = 110;   // how far up from the header's bottom the picture fade
 const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
 const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
 // A picture header's foot fading into the page (Hero's, and the sign-in page's).
-// The pages' header: the page's own colour, with no gradient (Mojtaba 2026-11-13: «گرادینت رو از هدر حذف کن»; a glow,
-// then a white sheen for a while), and the status bar strip in that same colour.
-export const headerTopColor = (bg: string, _accent: string, _dark: boolean) => bg;
+// The pages' header: a soft wash of the user's own colour (the palette's accent) at the screen's top edge, under the
+// status bar too, fading smoothly into the page down behind the first cards (Mojtaba 2026-11-16, after a wallet app's
+// green header: «با توجه به رنگ انتخابی کاربر و حالت روشن یا تیره ... روی گرادینت هدر تمرکز کن»). Light: a pale tint
+// of the colour; dark: a deep one, so the text on it reads in both. (the page's own colour, no gradient, 2026-11-13 to 16)
+export const headerTopColor = (bg: string, accent: string, dark: boolean) => mix(bg, accent, dark ? 0.26 : 0.34);
+// The wash's steps: the top colour held a little, then eased into the page (smoothstep), so no edge shows.
+const GLOW_STOPS = [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.74, 0.86, 1] as const;
 export function HeaderGlow() {
-  const c = useColors();
-  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: c.bg }]} />;
+  const c = useColors(), { theme } = useTheme(), top = headerTopColor(c.bg, c.accent, theme === 'dark');
+  const colors = GLOW_STOPS.map(t => { const u = Math.max(0, (t - 0.08) / 0.92); return mix(top, c.bg, u * u * (3 - 2 * u)); });
+  return <LinearGradient pointerEvents="none" colors={colors as unknown as readonly [string, string, ...string[]]} locations={GLOW_STOPS} style={StyleSheet.absoluteFill} />;
 }
 
 export function HeroFade() {
