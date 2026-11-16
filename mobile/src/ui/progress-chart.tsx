@@ -240,9 +240,9 @@ export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH
       {ARC && !noLegend ? (
         // The legend, as the picture's: a pale square for the questions, a full one for the right answers, in the picked
         // test's colour (green when it passed, coral when not), so it matches the bars with the bubble (Mojtaba 2026-10-29).
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol, opacity: dark ? 0.32 : 0.26 }} /><T style={{ color: c.muted, fontSize: 12.5 }}>سؤال‌ها</T></View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol }} /><T style={{ color: c.muted, fontSize: 12.5 }}>پاسخ درست</T></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 2, paddingBottom: Platform.OS === 'android' ? 6 : 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol, opacity: dark ? 0.32 : 0.26 }} /><T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>سؤال‌ها</T></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol }} /><T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>پاسخ درست</T></View>
         </View>
       ) : null}
       {ARC && fill ? null : fill && noHint && !a ? null : fill ? (

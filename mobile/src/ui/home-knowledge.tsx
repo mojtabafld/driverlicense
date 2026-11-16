@@ -103,7 +103,7 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   // 2026-11-14); never lower than 140. (The carousel lies over its measured room, so its height never sets the room.)
   const [room, setRoom] = useState(0);
   // (a short screen: 116 at least, the cards' short layout still fitting; Mojtaba 2026-11-16)
-  const least = useWindowDimensions().height < 760 ? 116 : 140;
+  const wh = useWindowDimensions().height, least = wh < 760 ? 116 : wh < 900 ? 118 : 140;
   const h = Math.round(Math.max(least, room));
   return (
     <View style={{ flexGrow: 1, gap: gap + 16 }}>
