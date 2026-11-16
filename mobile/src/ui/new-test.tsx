@@ -88,8 +88,12 @@ export function NewTestCard({ test, level = 0 }: { test: NewTest; level?: number
 // Option 1: a filled progress card with one proportional segmented bar, then a separate daily bar-chart card.
 // (Mojtaba 2026-11-13: the cards in the gradient cards' look, ui/service-carousel.tsx, at their own size: a soft
 // two-colour wash, the number «( 001 )» over the title; the two shortcuts under them small cards of the same kind.)
+// The daily chart's card without its bars: its padding, title lines, gaps, the bars' counts and the day labels (the
+// compact card, on a short screen, with its title and count on one line and less padding).
+const CHART_EXTRA = 180, CHART_EXTRA_COMPACT = 136;
 function Progress({ answered, total, right, wrong, level = 0 }: { answered: number; total: number; right: number; wrong: number; week: number; level?: number }) {
-  const c = useColors(), m = useM3(), dark = useIsDark(), [open, setOpen] = useState(false);
+  const c = useColors(), m = useM3(), dark = useIsDark(), [open, setOpen] = useState(false), [chartRoom, setChartRoom] = useState(CHART_EXTRA + 120);
+  const extra = level >= 3 ? CHART_EXTRA_COMPACT : CHART_EXTRA;
   const share = total ? answered / total : 0, animated = useCountUp(share, 1100);
   const shown = total && answered >= total ? 1 : Math.min(0.99, Math.max(0, animated));
   const left = Math.max(0, total - answered);
@@ -102,7 +106,7 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
   const ink = dark ? '#ffffff' : c.text;
   const shortcut = (code: string, tone: ServiceTone, icon: IconName, label: string, color: string, onPress: () => void) => (
     <Pressable onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityLabel={label}
-      style={({ pressed }) => ({ flex: 1, minWidth: 0, minHeight: 46, paddingHorizontal: 16, paddingVertical: 14, gap: 10, borderRadius: 24, overflow: 'hidden', opacity: pressed ? 0.85 : 1 })}>
+      style={({ pressed }) => ({ flex: 1, minWidth: 0, minHeight: 46, paddingHorizontal: 16, paddingVertical: level >= 3 ? 10 : 14, gap: level >= 3 ? 6 : 10, borderRadius: 24, overflow: 'hidden', opacity: pressed ? 0.85 : 1 })}>
       <CardWash tone={tone} />
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
         <Icon name={icon} size={22} color={color} />
@@ -111,22 +115,25 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
     </Pressable>
   );
   return (
-    <View style={{ gap: 14 }}>
-      <View testID="exam-progress-card" style={{ padding: 20, gap: 16, borderRadius: 24, overflow: 'hidden' }}>
+    <View style={{ gap: 14, flexGrow: 1 }}>
+      {/* (a short screen, level 3: a tighter card, the percent on the title's line; Mojtaba 2026-11-16, so the page
+          ends above the dock on small phones too) */}
+      <View testID="exam-progress-card" style={{ padding: level >= 3 ? 14 : 20, gap: level >= 3 ? 10 : 16, borderRadius: 24, overflow: 'hidden' }}>
         <CardWash tone="blue" />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <T style={{ flex: 1, fontSize: 22, lineHeight: 32, fontWeight: '500' }}>پیشرفت شما</T>
+          <T style={{ flex: 1, fontSize: level >= 3 ? 19 : 22, lineHeight: 32, fontWeight: '500' }}>پیشرفت شما</T>
+          {level >= 3 ? <T raw style={{ fontSize: 30, lineHeight: 38, fontFamily: numberFont }}>{pctText(shown)}</T> : null}
           <Pressable onPress={() => { tap(); setOpen(v => !v); }} accessibilityRole="button" accessibilityLabel={tr('جزئیات پیشرفت')} accessibilityState={{ expanded: open }} hitSlop={8}
             style={({ pressed }) => ({ width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
             <Icon name="more" size={22} color={c.muted} />
           </Pressable>
         </View>
         <View style={{ gap: 2 }}>
-          <T raw testID="exam-progress-percent" style={{ fontSize: level >= 3 ? 48 : 60, lineHeight: level >= 3 ? 58 : 70, fontFamily: numberFont }}>{pctText(shown)}</T>
+          {level >= 3 ? null : <T raw testID="exam-progress-percent" style={{ fontSize: 60, lineHeight: 70, fontFamily: numberFont }}>{pctText(shown)}</T>}
           <T style={{ fontSize: 14, lineHeight: 22, color: c.muted }}>{t('{0} از {1} سؤال', faNum(answered), faNum(total))}</T>
         </View>
         <View testID="exam-progress-bar" accessibilityRole="progressbar" accessibilityLabel={tr('پیشرفت شما')} accessibilityValue={{ min: 0, max: total, now: answered }} aria-valuemin={0} aria-valuemax={total} aria-valuenow={answered}
-          style={{ flexDirection: 'row', height: 26, gap: 4, borderRadius: 8, overflow: 'hidden' }}>
+          style={{ flexDirection: 'row', height: level >= 3 ? 16 : 26, gap: 4, borderRadius: 8, overflow: 'hidden' }}>
           {counts.map((n, i) => n ? <View key={labels[i]} testID={`exam-progress-segment-${i}`} style={{ flexGrow: n, flexBasis: 0, minWidth: 0, borderRadius: 6, backgroundColor: colors[i] }} /> : null)}
         </View>
         <View testID="exam-answer-counts" style={{ flexDirection: 'row', gap: 8 }}>
@@ -150,7 +157,14 @@ function Progress({ answered, total, right, wrong, level = 0 }: { answered: numb
           </View>)}
         </View> : null}
       </View>
-      <DailyTestsChart height={level >= 3 ? 96 : 120} code="003" />
+      {/* The daily chart takes the room the screen leaves, so the cards under it end just above the dock on every
+          phone (Mojtaba 2026-11-16): its bars as tall as that room allows, between 40 and 220 points. (It lies over
+          its measured room, so its own height never sets the room.) */}
+      <View style={{ flexGrow: 1, minHeight: extra + 24 }} onLayout={e => { const h = e.nativeEvent.layout.height; setChartRoom(h); }}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+          <DailyTestsChart height={Math.max(24, Math.min(220, chartRoom - extra))} code="003" compact={level >= 3} />
+        </View>
+      </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {shortcut('004', 'amber', 'clock', t('{0} آزمون', faNum(tests)), ink, () => router.push('/history'))}
         {shortcut('005', 'red', 'warning', t('{0} اشتباه', faNum(mistakes)), mistakes ? m.error : ink, () => router.push('/mistakes'))}

@@ -5,7 +5,7 @@
 // took it off on 2026-11-13; the test tab has its own.)
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
@@ -102,12 +102,14 @@ export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
   // On a tall screen the cards grow to fill the room down to the dock, so no empty band is left above it (Mojtaba
   // 2026-11-14); never lower than 140. (The carousel lies over its measured room, so its height never sets the room.)
   const [room, setRoom] = useState(0);
-  const h = Math.round(Math.max(140, room));
+  // (a short screen: 116 at least, the cards' short layout still fitting; Mojtaba 2026-11-16)
+  const least = useWindowDimensions().height < 760 ? 116 : 140;
+  const h = Math.round(Math.max(least, room));
   return (
     <View style={{ flexGrow: 1, gap: gap + 16 }}>
       {/* «هرچه در تئوری‌پرو هست»: the app's main parts as gradient cards that slide sideways, each opening its page
           (ui/service-carousel.tsx; Mojtaba 2026-11-13). (no title or line over the cards since 2026-11-14, Mojtaba) */}
-      <View style={{ flexGrow: 1, minHeight: 140 }} onLayout={e => setRoom(e.nativeEvent.layout.height)}>
+      <View style={{ flexGrow: 1, minHeight: least }} onLayout={e => setRoom(e.nativeEvent.layout.height)}>
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}><ServiceCarousel items={PARTS} height={h} /></View>
       </View>
       {/* (no «مباحث» chips and no current chapter's lessons under the cards since 2026-11-14, Mojtaba) */}
