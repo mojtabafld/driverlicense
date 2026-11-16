@@ -451,7 +451,7 @@ export default function Home() {
           header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
       {exams.length || ARC ? (
-      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : ARC ? { height: compact ? 270 : 300 } /* (lower and no longer down to the tab bar: the sections under it follow; Mojtaba 2026-11-08) */ : { flex: 1, minHeight: shortPage ? 280 : undefined }}
+      <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : ARC ? { flexGrow: 8, flexBasis: 200, minHeight: 200, maxHeight: 420 } /* (the room the screen leaves, shared with the cards under it, so they end just above the dock on every phone; Mojtaba 2026-11-16; 270 / 300 before) */ : { flex: 1, minHeight: shortPage ? 280 : undefined }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>

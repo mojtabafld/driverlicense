@@ -13,7 +13,7 @@ import { useColors, useM3 } from './theme';
 const DAYS = 7, DAY = 864e5;
 
 // `code`: the card's number «( 002 )» over its title, in the gradient cards' look (Mojtaba 2026-11-13: the test page).
-export function DailyTestsChart({ height = 120, code }: { height?: number; code?: string }) {
+export function DailyTestsChart({ height = 120, code, compact }: { height?: number; code?: string; compact?: boolean }) {
   const c = useColors(), m = useM3(), { attempts } = useApp();
   const [today, setToday] = useState(() => dayOf(Date.now()));
   useEffect(() => {
@@ -36,11 +36,12 @@ export function DailyTestsChart({ height = 120, code }: { height?: number; code?
   const selected = days.find(d => d.k === pick);
   const total = days.reduce((sum, d) => sum + d.n, 0), max = Math.max(1, ...days.map(d => d.n));
   return (
-    <View testID="daily-tests-card" style={{ borderRadius: 24, padding: 20, gap: 16, overflow: 'hidden', backgroundColor: code ? undefined : c.surface }}>
+    <View testID="daily-tests-card" style={{ borderRadius: 24, padding: compact ? 14 : 20, gap: compact ? 10 : 16, overflow: 'hidden', backgroundColor: code ? undefined : c.surface }}>
       {code ? <CardWash tone="purple" /> : null}
-      <View style={{ gap: 3 }}>
-        <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>آزمون‌های روزانه</T>
-        <T testID="daily-tests-total" style={{ fontSize: 14, lineHeight: 22, color: c.muted }}>{t('{0} آزمون در ۷ روز گذشته', faNum(total))}</T>
+      {/* (`compact`, a short screen: the title and the week's count on one line, less padding; Mojtaba 2026-11-16) */}
+      <View style={compact ? { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 } : { gap: 3 }}>
+        <T style={{ fontSize: compact ? 19 : 22, lineHeight: 32, fontWeight: '500' }}>آزمون‌های روزانه</T>
+        <T testID="daily-tests-total" numberOfLines={1} style={{ flexShrink: 1, fontSize: compact ? 12.5 : 14, lineHeight: 22, color: c.muted }}>{t('{0} آزمون در ۷ روز گذشته', faNum(total))}</T>
       </View>
       <View testID="daily-tests-bars" style={{ flexDirection: 'row', direction: 'ltr', alignItems: 'flex-end', gap: 6 }}>
         {days.map(d => {
