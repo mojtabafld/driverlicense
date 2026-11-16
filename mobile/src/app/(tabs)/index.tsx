@@ -384,7 +384,7 @@ export default function Home() {
               verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
               to a 5-question tryout instead). */}
           {/* (Mojtaba 2026-11-16, after the mockups: with an estimate, the title and the verdict on one line, the percent
-              large with how far it is to «ready», and a bar up to it with the ready mark (70%, where the verdict turns
+              large, and a bar up to it with the ready mark (70%, where the verdict turns
               «آماده‌ی آزمون»); before the first test, a tile with «؟», the line on how it comes and a large button to
               the 5-question tryout) */}
           {est ? (
@@ -397,7 +397,7 @@ export default function Home() {
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
                 <View testID="home-readiness-value"><PassPct value={est.prob} color={probColor} size={(tighter ? 30 : small ? 34 : 38) + (dark ? 2 : 0)} /></View>
-                {est.prob < READY ? <T style={{ fontSize: 13.5, lineHeight: 20, color: cardInk, opacity: 0.72 }}>{fmt('{0} تا حد آمادگی', pctText(READY - est.prob))}</T> : null}
+                {/* (no «… to ready» beside it since 2026-11-16, Mojtaba; the bar shows it) */}
               </View>
               <ReadyBar value={est.prob} color={probColor} ink={cardInk} />
             </View>
