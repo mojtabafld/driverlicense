@@ -235,7 +235,7 @@ const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toS
 // status bar too, fading smoothly into the page down behind the first cards (Mojtaba 2026-11-16, after a wallet app's
 // green header: «با توجه به رنگ انتخابی کاربر و حالت روشن یا تیره ... روی گرادینت هدر تمرکز کن»). Light: a pale tint
 // of the colour; dark: a deep one, so the text on it reads in both. (the page's own colour, no gradient, 2026-11-13 to 16)
-export const headerTopColor = (bg: string, accent: string, dark: boolean) => mix(bg, accent, dark ? 0.26 : 0.34);
+export const headerTopColor = (bg: string, accent: string, dark: boolean) => mix(bg, accent, dark ? 0.16 : 0.2);
 // The wash's steps: the top colour held a little, then eased into the page (smoothstep), so no edge shows.
 const GLOW_STOPS = [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.74, 0.86, 1] as const;
 export function HeaderGlow() {
