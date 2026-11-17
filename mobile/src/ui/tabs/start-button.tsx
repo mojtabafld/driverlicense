@@ -12,6 +12,7 @@ import { Icon } from '../icon';
 import { T, tap } from '../kit';
 import { useNewTest } from '../new-test';
 import { lightness, useColors, useIsDark } from '../theme';
+import { mix } from '../palette';
 import { DOCK } from './pill-bar';
 
 const WEB = Platform.OS === 'web';
@@ -32,6 +33,9 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
     if (still) { show.setValue(open ? 1 : 0); return; }
     Animated.spring(show, { toValue: open ? 1 : 0, stiffness: 380, damping: 30, useNativeDriver: !WEB }).start();
   }, [open, still]);
+  // Its colour: the theme's own, unless that is too near the open tab's ink circle (the black-and-white palettes), then a
+  // step between it and the page, so the two never look alike (Mojtaba 2026-11-17).
+  const fill = Math.abs(lightness(c.accent) - lightness(d.ink)) < 0.25 ? mix(c.accent, c.bg, 0.45) : c.accent;
   if (!test.ready) return null;
   const press = () => {
     tap();
@@ -66,9 +70,9 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
       <Pressable testID="start-test" onPress={press} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={tr('شروع آزمون')}
         style={({ pressed }: any) => ({ width: BIG, height: BIG, borderRadius: BIG / 2, alignItems: 'center', justifyContent: 'center',
           // raised and in the theme's own colour, apart from the plain tabs around it (Mojtaba 2026-11-17)
-          backgroundColor: c.accent, borderWidth: 3, borderColor: c.bg, transform: [{ translateY: -8 }, { scale: pressed ? 0.94 : 1 }],
-          shadowColor: c.accent, shadowOpacity: dark ? 0.5 : 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 8 } as any)}>
-        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={28} color={lightness(c.accent) > 0.62 ? '#111114' : '#ffffff'} filled />
+          backgroundColor: fill, borderWidth: 3, borderColor: c.bg, transform: [{ translateY: -8 }, { scale: pressed ? 0.94 : 1 }],
+          shadowColor: fill, shadowOpacity: dark ? 0.5 : 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 8 } as any)}>
+        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={28} color={lightness(fill) > 0.62 ? '#111114' : '#ffffff'} filled />
       </Pressable>
     </View>
   );

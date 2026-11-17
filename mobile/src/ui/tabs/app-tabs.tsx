@@ -34,15 +34,15 @@ function Bar() {
   const active = found >= 0 ? found : Math.max(0, TABS.findIndex(t => t.href !== '/' && path.startsWith(t.href + '/')));
   // Icons only on a narrow screen (the labels are the tabs' accessible names); Persian labels are wider.
   const compact = width < (RTL ? 460 : 420);
-  // The start button in the dock's middle: on the home page only (Mojtaba 2026-11-17; the test page too before), its menu
-  // closed on leaving.
-  const startHere = path === '/', [open, setOpen] = useState(false);
+  // The start button in the dock's middle, on every tab page so the dock is the same everywhere (Mojtaba 2026-11-17;
+  // the home page only, and the home and test pages, before), its menu closed on leaving.
+  const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
   return (
     <>
-      <StartBackdrop open={open && startHere} onClose={() => setOpen(false)} />
+      <StartBackdrop open={open} onClose={() => setOpen(false)} />
       <PillBar tabs={BAR_TABS} active={active} bottomInset={ins.bottom} compact={compact} onSelect={i => router.navigate(TABS[i].href as any)}
-        side={startHere ? <StartButton open={open} setOpen={setOpen} /> : null} />
+        side={<StartButton open={open} setOpen={setOpen} />} />
     </>
   );
 }
