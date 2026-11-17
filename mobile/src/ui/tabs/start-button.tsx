@@ -9,12 +9,13 @@ import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, View } fr
 import { RTL, t, tr } from '@/lib/i18n';
 import { SECONDS_PER_Q, SIZES, faNum } from '@/lib/logic';
 import { Icon } from '../icon';
-import { T, physical, tap } from '../kit';
+import { T, tap } from '../kit';
 import { useNewTest } from '../new-test';
-import { useColors, useIsDark } from '../theme';
-import { DOCK, DOT } from './pill-bar';
+import { lightness, useColors, useIsDark } from '../theme';
+import { DOCK } from './pill-bar';
 
 const WEB = Platform.OS === 'web';
+const BIG = 64;  // (a little larger than the tabs' circles)
 
 export function StartBackdrop({ open, onClose }: { open: boolean; onClose: () => void }) {
   if (!open) return null;
@@ -40,15 +41,15 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
   const pick = (n: number) => { tap(); setOpen(false); test.startWith(n); };
   const sizes = [...SIZES].reverse();
   return (
-    <View style={{ width: DOT, height: DOT }}>
+    <View style={{ width: BIG, height: BIG }}>
       {/* the menu, growing up from the button */}
       <Animated.View pointerEvents={open ? 'auto' : 'none'} accessibilityRole="menu"
-        style={{ position: 'absolute', bottom: DOT + 14, ...physical({ [RTL ? 'left' : 'right']: 0 }), width: 200, padding: 6, gap: 2, borderRadius: 24,
+        style={{ position: 'absolute', bottom: BIG + 14, left: (BIG - 220) / 2, width: 220, padding: 6, gap: 2, borderRadius: 24,
           backgroundColor: dark ? 'rgba(40,40,44,0.94)' : 'rgba(244,244,247,0.96)', borderWidth: 1, borderColor: d.rim,
           shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 14,
           ...(WEB ? { backdropFilter: 'blur(20px) saturate(1.4)', WebkitBackdropFilter: 'blur(20px) saturate(1.4)' } : null),
           opacity: show, transform: [{ translateY: show.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }, { scale: show.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
-          transformOrigin: RTL ? 'bottom left' : 'bottom right', direction: RTL ? 'rtl' : 'ltr' } as any}>
+          transformOrigin: 'bottom center', direction: RTL ? 'rtl' : 'ltr' } as any}>
         <T style={{ fontSize: 13, lineHeight: 20, color: c.muted, fontWeight: '600', paddingHorizontal: 12, paddingTop: 6, paddingBottom: 4 }}>{tr('تعداد سؤال‌ها')}</T>
         {sizes.map(n => (
           <Pressable key={n} testID={`start-${n}`} accessibilityRole="menuitem" onPress={() => pick(n)}>
@@ -63,10 +64,11 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
         ))}
       </Animated.View>
       <Pressable testID="start-test" onPress={press} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={tr('شروع آزمون')}
-        style={({ pressed, hovered }: any) => ({ width: DOT, height: DOT, borderRadius: DOT / 2, alignItems: 'center', justifyContent: 'center',
-          // one of the dock's plain icons (2026-11-17); a filled circle while its menu is open, as the open tab
-          backgroundColor: open ? d.ink : hovered ? d.hover : 'transparent', transform: [{ scale: pressed ? 0.92 : 1 }] } as any)}>
-        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={26} color={open ? c.bg : d.ink} filled={open} />
+        style={({ pressed }: any) => ({ width: BIG, height: BIG, borderRadius: BIG / 2, alignItems: 'center', justifyContent: 'center',
+          // raised and in the theme's own colour, apart from the plain tabs around it (Mojtaba 2026-11-17)
+          backgroundColor: c.accent, borderWidth: 3, borderColor: c.bg, transform: [{ translateY: -8 }, { scale: pressed ? 0.94 : 1 }],
+          shadowColor: c.accent, shadowOpacity: dark ? 0.5 : 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 8 } as any)}>
+        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={28} color={lightness(c.accent) > 0.62 ? '#111114' : '#ffffff'} filled />
       </Pressable>
     </View>
   );
