@@ -9,7 +9,7 @@ import { Animated, Easing, Pressable, ScrollView, View, useWindowDimensions, typ
 
 import type { Attempt } from '@/lib/bank';
 import { PROVE_BANK, PROVE_PICS } from '@/lib/config';
-import { faNum, fmtDate, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, scoreOf, shuffle } from '@/lib/logic';
+import { faNum, lessonNumber, mistakeIds, passEstimate, pctOf, randomIds, shuffle } from '@/lib/logic';
 import { RTL, t as fmt, tr } from '@/lib/i18n';
 import { loadPromoSeen, savePromoSeen } from '@/lib/prefs';
 import { usePromoGate } from '@/lib/promo-gate';
@@ -20,8 +20,9 @@ import { ArcButton, Button, Card, FitLine, M3Button, Ring, Screen, T, tap, useCo
 import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
+import { TrendChart } from '@/ui/trend-chart';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
-import { HomeChartIcon, TestStats } from '@/ui/chart-view';
+import { TestStats } from '@/ui/chart-view';
 import { HomeKnowledge } from '@/ui/home-knowledge';
 import { PasskeyOffer } from '@/ui/passkey-offer';
 import { BellButton } from '@/ui/bell-button';
@@ -282,14 +283,12 @@ export default function Home() {
     },
   } : null;
   const chartMin = tighter ? (ARC ? 52 : 84) : ARC ? [compact ? 100 : 120, 76, 56][shrink] : 120;
-  // The chart's head in one short row (no line under the title, no change under the score).
-  const slim = tighter || shrink >= 2;
   // Main site at the densest level: the «tap the chart» hint under it goes too (the line shows only for a picked attempt).
   const noHint = ARC && tighter;
   // (ARC: the card's padding and edge, its head (a title over a line; one short row at the densest level), the chart and
   // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
   const chartNeed = ARC
-    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (slim ? 30 : 56) + (compact ? 8 : 12) + chartMin + (tiniest ? 0 : 8 + 26)
+    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (compact ? 56 : 64) + (compact ? 8 : 12) * 2 + chartMin + 18  // (the trend chart's head, the chart, its dates)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
@@ -456,39 +455,8 @@ export default function Home() {
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card testID="home-progress" style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
-        {ARC ? (() => {
-          // As the picture's head (Mojtaba 2026-10-29): the title over a short line at its start; at its end the picked
-          // test's right answers large (the latest until one is tapped; 2026-10-30, in place of the bubble over its bars),
-          // and under them its date and how its percent moved from the test before (green up, red down).
-          const shown = attempts.slice(-200), at = picked != null && picked < shown.length ? picked : shown.length - 1;
-          const last = shown[at], prev = at > 0 ? shown[at - 1] : undefined;
-          const diff = last && prev ? Math.round((pctOf(last) - pctOf(prev)) * 100) : null;
-          return (
-            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <HomeChartIcon kind="progress" size={slim ? 30 : 36} />
-                <View style={{ flex: 1, gap: 2 }}>
-                  <T style={{ fontWeight: '700', fontSize: slim ? 16 : 18 }}>نمودار پیشرفت</T>
-                </View>
-              </View>
-              {last ? (
-                <View style={{ alignItems: 'flex-end', gap: 2 }}>
-                  <T style={{ fontSize: slim ? 17 : 22, lineHeight: slim ? 24 : 30, fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700' }}>{`${faNum(scoreOf(last))}/${faNum(last.items.length)}`}</T>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <T raw style={{ fontSize: 12.5, color: c.muted }}>{fmtDate(last.at)}</T>
-                    {diff != null && diff !== 0 && !slim ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <View style={{ width: 0, height: 0, borderLeftWidth: 5, borderRightWidth: 5, borderLeftColor: 'transparent', borderRightColor: 'transparent',
-                          ...(diff > 0 ? { borderBottomWidth: 8, borderBottomColor: c.ok } : { borderTopWidth: 8, borderTopColor: c.bad }) }} />
-                        <T raw style={{ fontSize: 13, fontWeight: '600', color: diff > 0 ? c.ok : c.bad }}>{`${faNum(Math.abs(diff))}${RTL ? '٪' : '%'}`}</T>
-                      </View>
-                    ) : null}
-                  </View>
-                </View>
-              ) : null}
-            </View>
-          );
-        })() : (
+        {/* (main site since 2026-11-17: the trend chart, ui/trend-chart.tsx; Mojtaba picked it of three) */}
+        {ARC ? <TrendChart attempts={exams} minH={chartMin} compact={compact} onOpen={openAttempt} /> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -497,8 +465,8 @@ export default function Home() {
             <View style={{ width: 14, borderTopWidth: 2, borderStyle: 'dashed', borderColor: c.forest, marginRight: 4 }} /><T style={{ color: c.muted, fontSize: 12 }}>حد قبولی</T>
           </View>
         </View>
-        )}
         <ProgressChart fill minH={low ? 40 : chartMin} noHint={noHint} noNote={low} noLegend={tiniest} attempts={attempts} onOpen={openAttempt} sel={picked} onSel={setPicked} onBlank={ARC ? () => {} : undefined} />
+        </>}
       </Card>
       </Pressable>
       </View>
