@@ -437,7 +437,8 @@ export default function Home() {
         </>}
       </Card>
       {/* Main site: the tests' statistics in place of the three counts (Mojtaba 2026-10-29); /app keeps its counts. */}
-      {ARC ? <TestStats attempts={exams} dense={compact} noHead={tighter} noFacts={tiniest} first={2} /> : (
+      {/* (main site: under the progress chart since 2026-11-17, Mojtaba asked) */}
+      {ARC ? null : (
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Stat grow={share} onPress={() => router.navigate('/exam')} short={tight} icon="exam" label="آزمون‌ها" value={faNum(exams.length)} />
         <Stat grow={share} onPress={() => router.navigate('/learn')} short={tight} icon="learn" label="درس‌ها" value={faNum(lessonsDone)} extra={` / ${faNum(lessonsAll)}`} />
@@ -474,6 +475,8 @@ export default function Home() {
       ) : <StartCard compact={compact} />}
       {/* Under the chart, the sections after fonts.google.com/knowledge (topics, the chapter you are on, a featured guide,
           the glossary; ui/home-knowledge.tsx), the page scrolling to them (Mojtaba 2026-11-08); not in the chart view. */}
+      {/* The tests' statistics, under the progress chart (Mojtaba 2026-11-17; above it, under the chance of passing, before) */}
+      {ARC && !view ? <TestStats attempts={exams} dense={compact} noHead={tighter} noFacts={tiniest} first={2} /> : null}
       {ARC && !view ? <HomeKnowledge gap={gap} /> : null}
       {/* The chart view: the statistics and the latest tests, coming in under the chart; a row opens its test. */}
       {grow ? (
