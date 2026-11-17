@@ -7,16 +7,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Platform, Pressable, View, useWindowDimensions } from 'react-native';
 
+
 import { RTL, tr } from '@/lib/i18n';
 import { Icon } from '../icon';
-import { T, tap } from '../kit';
+import { tap } from '../kit';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useColors, useIsDark } from '../theme';
 import { BAR_GAP, type LiquidBarProps } from './liquid-bar-types';
 
 // The open tab's name: this much room (the original's MOBILE_LABEL_WIDTH), and the bar's height.
 // (LABEL_W: the most a name may take, the name's own width below it; the bar larger than the original's 52 since
 // 2026-11-13, Mojtaba: «بزرگتر کن»)
-const LABEL_W = 110;
 export const PILL_BAR_H = 66;
 const WEB = Platform.OS === 'web';
 // The dock's colours (Mojtaba 2026-11-13, after his picture of a soft grey app): a frosted light grey track with a white
@@ -41,75 +42,56 @@ function useStill() {
   return still;
 }
 
-// `fit`: how much room the dock has (Mojtaba 2026-11-14: on a small screen the last icon touched the dock's edge):
-// 'wide' as drawn, 'narrow' slimmer tabs and a shorter name, 'tight' icons only (the names stay the tabs' accessible names).
-type Fit = 'wide' | 'narrow' | 'tight';
-function Tab({ icon, label, on, onPress, still, fit = 'wide' }: { icon: LiquidBarProps['tabs'][number]['icon']; label: string; on: boolean; onPress: () => void; still: boolean; fit?: Fit }) {
-  const c = useColors(), dark = useIsDark();
-  const open = useRef(new Animated.Value(on ? 1 : 0)).current, fade = useRef(new Animated.Value(on ? 1 : 0)).current;
-  const press = useRef(new Animated.Value(1)).current;
+// The dock since 2026-11-17 (Mojtaba, after his picture of a finance app: «ثابت پایین صفحه و بدون بک گراند»): no bar
+// behind the icons, only the page fading out under them; the tabs spread across the bottom as plain line icons, the
+// open one a filled circle in the ink colour (near-black in the light theme, near-white in the dark) with its icon
+// filled in the page's colour. Icons only: the names stay the tabs' accessible names. The start button
+// (start-button.tsx) takes the row's last place on the home and test pages; elsewhere its place stays empty, so the
+// icons never move between pages.
+export const DOT = 56;
+function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs'][number]['icon']; label: string; on: boolean; onPress: () => void; still: boolean }) {
+  const c = useColors(), dark = useIsDark(), d = dark ? DOCK.dark : DOCK.light;
+  const fill = useRef(new Animated.Value(on ? 1 : 0)).current, press = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    // (on the phones the change is instant since 2026-11-15, Mojtaba: the name's room grew on the JS thread while the new
-    // page was drawn, and the switch lagged on Android)
-    if (still || !WEB) { open.setValue(on ? 1 : 0); fade.setValue(on ? 1 : 0); return; }
-    Animated.spring(open, { toValue: on ? 1 : 0, stiffness: 350, damping: 32, mass: 1, useNativeDriver: false }).start();
-    Animated.timing(fade, { toValue: on ? 1 : 0, duration: 190, useNativeDriver: false }).start();
+    // (instant on the phones: an animation on the JS thread while the new page is drawn lags on Android; 2026-11-15)
+    if (still || !WEB) { fill.setValue(on ? 1 : 0); return; }
+    Animated.timing(fill, { toValue: on ? 1 : 0, duration: 180, useNativeDriver: false }).start();
   }, [on, still]);
-  const d = dark ? DOCK.dark : DOCK.light, ink = d.ink;
-  // The name's own width (measured once, out of sight), so the open pill fits the icon and the name exactly and they
-  // sit in its middle (Mojtaba 2026-11-13; a fixed 88 points before, which left room after a short name).
-  const [nameW, setNameW] = useState(0);
-  const slot = fit === 'tight' ? 0 : Math.min(fit === 'narrow' ? 76 : LABEL_W, Math.ceil(nameW) + 4);  // (a little over, as the text's own edges need)
-  const nameStyle = { fontSize: 15.5, lineHeight: 24, fontWeight: '600' as const, color: d.ink };
   return (
-    <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={tr(label)}
-      onPressIn={() => { if (!still) Animated.spring(press, { toValue: 0.97, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}
+    <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={tr(label)} hitSlop={4}
+      onPressIn={() => { if (!still) Animated.spring(press, { toValue: 0.92, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}
       onPressOut={() => { if (!still) Animated.spring(press, { toValue: 1, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}>
       {({ hovered }: any) => (
-        <Animated.View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 52, minWidth: fit === 'wide' ? 54 : 46, paddingHorizontal: fit === 'wide' ? 15 : 10, borderRadius: 999,
-          backgroundColor: on ? d.on : hovered ? d.hover : 'transparent', transform: [{ scale: press }],
-          ...(on ? { shadowColor: '#000', shadowOpacity: dark ? 0.35 : 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: 2 } : null) }}>
-          <Icon name={icon} size={27} color={ink} filled={on} />
-          {/* the name, its room opening beside the icon */}
-          {/* (the gap between them as its own room, the same on both sides in either direction) */}
-          <Animated.View style={{ width: fade.interpolate({ inputRange: [0, 1], outputRange: [0, slot ? 9 : 0] }) }} />
-          <Animated.View style={{ overflow: 'hidden', width: open.interpolate({ inputRange: [0, 1], outputRange: [0, slot] }), opacity: fade }}>
-            <T raw numberOfLines={1} maxFontSizeMultiplier={1.1} style={{ width: slot, ...nameStyle }}>{tr(label)}</T>
-          </Animated.View>
-          {/* (the measure) */}
-          <View pointerEvents="none" aria-hidden style={{ position: 'absolute', opacity: 0, left: 0, top: 0, width: 400, alignItems: 'flex-start' }}>
-            <T raw numberOfLines={1} maxFontSizeMultiplier={1.1} onLayout={e => setNameW(e.nativeEvent.layout.width)} style={{ ...nameStyle, alignSelf: 'flex-start' }}>{tr(label)}</T>
-          </View>
+        <Animated.View style={{ width: DOT, height: DOT, borderRadius: DOT / 2, alignItems: 'center', justifyContent: 'center', transform: [{ scale: press }],
+          backgroundColor: on ? d.ink : hovered ? d.hover : 'transparent',
+          ...(on ? { shadowColor: '#000', shadowOpacity: dark ? 0.4 : 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4 } : null) }}>
+          <Icon name={icon} size={26} color={on ? c.bg : d.ink} filled={on} />
         </Animated.View>
       )}
     </Pressable>
   );
 }
 
-// `side`: a round button of the bar's height beside it, at its end (the start button, start-button.tsx; Mojtaba
-// 2026-11-14), the pill narrower by its room.
+// `side`: the start button (start-button.tsx) in the row's last place, or null for an empty place.
 export const SIDE_GAP = 10;
 export function PillBar({ tabs, active, onSelect, bottomInset, side }: LiquidBarProps & { side?: React.ReactNode }) {
-  const c = useColors(), dark = useIsDark(), still = useStill(), { width } = useWindowDimensions();
-  // springs into place the first time it is shown
-  const room = width * 0.95 - (side ? PILL_BAR_H + SIDE_GAP : 0);
-  const fit: Fit = room >= 360 ? 'wide' : room >= 270 ? 'narrow' : 'tight';
-  const born = useRef(new Animated.Value(still ? 1 : 0)).current;
-  useEffect(() => { Animated.spring(born, { toValue: 1, stiffness: 300, damping: 26, mass: 1, useNativeDriver: !WEB }).start(); }, []);
+  const c = useColors(), still = useStill(), { width } = useWindowDimensions();
+  const rowW = Math.min(width - 24, 460), pad = under(bottomInset);
+  // (the page's colour, clear at the top and nearly whole at the icons, so the page runs out under them unseen)
+  const fadeH = PILL_BAR_H + pad + 30;
+  const stops = [0, 0.3, 0.55, 0.75, 1];
+  const fade = stops.map(t => `${c.bg}${Math.round(255 * Math.min(1, t * 1.25) ** 1.4).toString(16).padStart(2, '0')}`);
   return (
-    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-end', gap: SIDE_GAP,
-      paddingBottom: under(bottomInset), direction: RTL ? 'rtl' : 'ltr' } as any}>
-      <Animated.View accessibilityRole="tablist" accessibilityLabel={tr('ناوبری')}
-        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: fit === 'wide' ? 6 : 2, height: PILL_BAR_H, padding: 6, paddingHorizontal: fit === 'wide' ? 6 : 10, borderRadius: 999,
-          minWidth: Math.min(380, room), maxWidth: room, backgroundColor: dark ? DOCK.dark.track : DOCK.light.track, borderWidth: 1, borderColor: dark ? DOCK.dark.rim : DOCK.light.rim,
-          shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 12,
-          ...(WEB ? { backdropFilter: 'blur(20px) saturate(1.4)', WebkitBackdropFilter: 'blur(20px) saturate(1.4)' } : null),
-          direction: RTL ? 'rtl' : 'ltr', opacity: born, transform: [{ scale: born.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] } as any}>
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingBottom: pad }}>
+      <LinearGradient pointerEvents="none" colors={fade as unknown as readonly [string, string, ...string[]]} locations={stops as unknown as readonly [number, number, ...number[]]}
+        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: fadeH }} />
+      <View accessibilityRole="tablist" accessibilityLabel={tr('ناوبری')}
+        style={{ width: rowW, height: PILL_BAR_H, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, direction: RTL ? 'rtl' : 'ltr' } as any}>
         {tabs.map((t, i) => (
-          <Tab key={t.name} icon={t.icon} label={t.label} on={i === active} still={still} fit={fit} onPress={() => { tap(); if (i !== active) onSelect(i); }} />
+          <Tab key={t.name} icon={t.icon} label={t.label} on={i === active} still={still} onPress={() => { tap(); if (i !== active) onSelect(i); }} />
         ))}
-      </Animated.View>
-      {side}
+        <View style={{ width: DOT, height: DOT }}>{side}</View>
+      </View>
     </View>
   );
 }
