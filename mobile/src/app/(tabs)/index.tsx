@@ -287,8 +287,10 @@ export default function Home() {
   const noHint = ARC && tighter;
   // (ARC: the card's padding and edge, its head (a title over a line; one short row at the densest level), the chart and
   // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
+  const est = passEstimate(attempts);
   const chartNeed = ARC
-    ? (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 30 : small ? 33 : 37) + (compact ? 8 : 12) * 2 + chartMin + 18  // (the trend chart's head, the chart, its dates)
+    ? (est ? 25 + 8 + (tighter ? 37 : small ? 39 : 44) + 30 : 48 + 12 + 48) + 1 + (compact ? 10 : 14) * 2  // (the chance of passing over it, and the line between)
+      + (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 30 : small ? 33 : 37) + (compact ? 8 : 12) * 2 + chartMin + 18  // (the trend chart's head, the chart, its dates)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
@@ -310,7 +312,6 @@ export default function Home() {
   // (in the app's language: «سلام» / Hi / Hej; Mojtaba 2026-11-14 — «Hi» in every language before)
   const hello = 'سلام';
   const [picked, setPicked] = useState<number | null>(null); // the chart's picked attempt
-  const est = passEstimate(attempts);
   // The tryout: before the first test, five random questions of the app's own (not one of the free tests).
   const { newBank } = useApp();
   const tryout = ARC && !PROVE_BANK && !exams.length && !!newBank?.questions.length;
@@ -355,38 +356,8 @@ export default function Home() {
   // (the pill's background a clear tint of its colour, so it always shows on the card; Mojtaba 2026-10-30)
   const probSoft = mix(!est ? c.muted : probColor, c.surface, 0.8);
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
-  return (
-    // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
-    <Screen dashboard={!PROVE_PICS} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined}
-      subtitle={ARC ? 'امروز یک قدم به قبولی نزدیک‌تر شوید.' : undefined}
-      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} bare />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
-      heroExtra={ARC ? <BellButton /> : undefined}>
-      {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view). */}
-      <Animated.View pointerEvents={view ? 'none' : 'auto'} aria-hidden={view || undefined}
-        onLayout={e => { if (!grow) topH.current = e.nativeEvent.layout.height; }}
-        style={grow ? {
-          overflow: 'hidden',
-          height: t.interpolate({ inputRange: [0, 1], outputRange: [topH.current, 0] }),
-          marginBottom: t.interpolate({ inputRange: [0, 1], outputRange: [0, -gap] }),
-          opacity: t.interpolate({ inputRange: [0, 0.55], outputRange: [1, 0], extrapolate: 'clamp' }),
-          transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
-        } : undefined}>
-      <View style={{ gap }}>
-      {/* (the main site: in a card again, as the progress chart's, Mojtaba 2026-11-13; on the page itself without a box
-          from 2026-11-08) */}
-      {/* (ARC: the gradient cards' type on the progress chart's card colour; no «( 001 )» over it and no ring beside it
-          (Mojtaba 2026-11-14: a small ring at its left for a while)) */}
-      <Card testID="home-readiness" style={{ ...(ARC ? null : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: ARC ? readinessPad + 4 : readinessPad,
-        paddingVertical: ARC ? readinessPad - 2 /* (a little lower: Mojtaba 2026-11-16) */ : Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
-        {ARC ? <>
-          {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
-              verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
-              to a 5-question tryout instead). */}
-          {/* (Mojtaba 2026-11-16, after the mockups: with an estimate, the title and the verdict on one line, the percent
-              large, and a bar up to it with the ready mark (70%, where the verdict turns
-              «آماده‌ی آزمون»); before the first test, a tile with «؟», the line on how it comes and a large button to
-              the 5-question tryout) */}
-          {est ? (
+  // The chance of passing, at the top of the progress chart's card since 2026-11-17 (Mojtaba: the two in one card).
+  const chanceBody = (est ? (
             <View style={{ gap: compact ? 2 : 4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <T numberOfLines={1} style={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17, flexShrink: 1 }}>احتمال قبولی</T>
@@ -413,7 +384,39 @@ export default function Home() {
               </View>
               {tryout ? <ArcButton label={tr('اولین آزمون را بدهید (۵ سؤال)')} onPress={startTryout} icon="play" variant="accent" /> : null}
             </View>
-          )}
+          ));
+  return (
+    // Main site: a full stop after the name; the LRM keeps it after a Latin name in the RTL line, Mojtaba asked.
+    <Screen dashboard={!PROVE_PICS} fill gap={gap} scrollRef={scroll} onScrollY={(y, end) => { scrollY.current = y; if (!view) { atEnd.current = false; return; } if (end && !atEnd.current) setHint(n => n + 1); atEnd.current = end; }} title={hello} name={user?.name ? (ARC ? `${user.name}.\u200E` : user.name) : undefined}
+      subtitle={ARC ? 'امروز یک قدم به قبولی نزدیک‌تر شوید.' : undefined}
+      hero={{ pic: 3, icon: 'house', art: ARC ? HomeLicenceArt : undefined }} heroAction={{ node: <Avatar size={44} premium={premium} bare />, label: 'حساب کاربری و تنظیمات', onPress: () => router.navigate('/settings') }} barGap={ARC ? gap : undefined}
+      heroExtra={ARC ? <BellButton /> : undefined}>
+      {/* The four cards at the top: the chance of passing and the three counts (folded away in the chart view); /app
+          only (the main site has the chance of passing in the chart's card since 2026-11-17). */}
+      {ARC ? null : <Animated.View pointerEvents={view ? 'none' : 'auto'} aria-hidden={view || undefined}
+        onLayout={e => { if (!grow) topH.current = e.nativeEvent.layout.height; }}
+        style={grow ? {
+          overflow: 'hidden',
+          height: t.interpolate({ inputRange: [0, 1], outputRange: [topH.current, 0] }),
+          marginBottom: t.interpolate({ inputRange: [0, 1], outputRange: [0, -gap] }),
+          opacity: t.interpolate({ inputRange: [0, 0.55], outputRange: [1, 0], extrapolate: 'clamp' }),
+          transform: [{ translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }],
+        } : undefined}>
+      <View style={{ gap }}>
+      {/* (the main site: in a card again, as the progress chart's, Mojtaba 2026-11-13; on the page itself without a box
+          from 2026-11-08) */}
+      {/* (ARC: the gradient cards' type on the progress chart's card colour; no «( 001 )» over it and no ring beside it
+          (Mojtaba 2026-11-14: a small ring at its left for a while)) */}
+      <Card testID="home-readiness" style={{ ...(ARC ? null : { backgroundColor: c.surface }), gap: compact ? 10 : 14, padding: ARC ? readinessPad + 4 : readinessPad,
+        paddingVertical: ARC ? readinessPad - 2 /* (a little lower: Mojtaba 2026-11-16) */ : Math.max(8, readinessPad - 4) /* (less room above and below; Mojtaba 2026-11-05) */ }}>
+        {ARC ? <>
+          {/* No ring any more (Mojtaba 2026-11-08): as the sections under the chart, the title, the percent with its
+              verdict, a few words on what it is based on and an outlined button to the mistakes (before the first test,
+              to a 5-question tryout instead). */}
+          {/* (Mojtaba 2026-11-16, after the mockups: with an estimate, the title and the verdict on one line, the percent
+              large, and a bar up to it with the ready mark (70%, where the verdict turns
+              «آماده‌ی آزمون»); before the first test, a tile with «؟», the line on how it comes and a large button to
+              the 5-question tryout) */}
         </> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <View><Ring value={est ? est.prob : 0} size={tighter ? 62 : compact ? 74 : 96} stroke={compact ? 8 : 9} color={probColor} label={est ? pctText(est.prob) : '–'} format={est ? pctText : undefined} /></View>
@@ -446,7 +449,7 @@ export default function Home() {
       </View>
       )}
       </View>
-      </Animated.View>
+      </Animated.View>}
       {/* A tap anywhere in the chart's card, off its points: on the main site it opens or closes the chart view as the
           header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
@@ -457,6 +460,8 @@ export default function Home() {
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card testID="home-progress" style={ARC ? { flex: 1, gap: compact ? 10 : 14, padding: readinessPad + 4, paddingVertical: readinessPad - 2 } /* (as the chance-of-passing card: Mojtaba 2026-11-17) */ : { flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         {/* (main site since 2026-11-17: the trend chart, ui/trend-chart.tsx; Mojtaba picked it of three) */}
+        {ARC ? <View testID="home-readiness">{chanceBody}</View> : null}
+        {ARC ? <View style={{ height: 1, backgroundColor: c.line, opacity: 0.8 }} /> : null}
         {ARC ? <TrendChart attempts={exams} minH={chartMin} compact={compact} onOpen={openAttempt} title={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17 }} big={(tighter ? 23 : small ? 25 : 28) + (dark ? 2 : 0)} /* (a little smaller than the chance card's: Mojtaba 2026-11-17) */ ink={cardInk} /> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
