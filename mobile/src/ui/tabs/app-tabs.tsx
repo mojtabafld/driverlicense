@@ -34,8 +34,9 @@ function Bar() {
   const active = found >= 0 ? found : Math.max(0, TABS.findIndex(t => t.href !== '/' && path.startsWith(t.href + '/')));
   // Icons only on a narrow screen (the labels are the tabs' accessible names); Persian labels are wider.
   const compact = width < (RTL ? 460 : 420);
-  // The start button beside the dock: on the home and test pages only (Mojtaba 2026-11-14), its menu closed on leaving.
-  const startHere = path === '/' || path === '/exam', [open, setOpen] = useState(false);
+  // The start button in the dock's middle: on the home page only (Mojtaba 2026-11-17; the test page too before), its menu
+  // closed on leaving.
+  const startHere = path === '/', [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [path]);
   return (
     <>

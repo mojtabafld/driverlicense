@@ -46,8 +46,8 @@ function useStill() {
 // behind the icons, only the page fading out under them; the tabs spread across the bottom as plain line icons, the
 // open one a filled circle in the ink colour (near-black in the light theme, near-white in the dark) with its icon
 // filled in the page's colour. Icons only: the names stay the tabs' accessible names. The start button
-// (start-button.tsx) takes the row's last place on the home and test pages; elsewhere its place stays empty, so the
-// icons never move between pages.
+// (start-button.tsx) takes the row's middle place on the home page (since 2026-11-17; the last place on the home and
+// test pages before); elsewhere its place stays empty, so the icons never move between pages.
 export const DOT = 56;
 function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs'][number]['icon']; label: string; on: boolean; onPress: () => void; still: boolean }) {
   const c = useColors(), dark = useIsDark(), d = dark ? DOCK.dark : DOCK.light;
@@ -72,7 +72,7 @@ function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs']
   );
 }
 
-// `side`: the start button (start-button.tsx) in the row's last place, or null for an empty place.
+// `side`: the start button (start-button.tsx) in the row's middle place, or null for an empty place.
 export const SIDE_GAP = 10;
 export function PillBar({ tabs, active, onSelect, bottomInset, side }: LiquidBarProps & { side?: React.ReactNode }) {
   const c = useColors(), still = useStill(), { width } = useWindowDimensions();
@@ -87,10 +87,11 @@ export function PillBar({ tabs, active, onSelect, bottomInset, side }: LiquidBar
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: fadeH }} />
       <View accessibilityRole="tablist" accessibilityLabel={tr('ناوبری')}
         style={{ width: rowW, height: PILL_BAR_H, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, direction: RTL ? 'rtl' : 'ltr' } as any}>
-        {tabs.map((t, i) => (
-          <Tab key={t.name} icon={t.icon} label={t.label} on={i === active} still={still} onPress={() => { tap(); if (i !== active) onSelect(i); }} />
-        ))}
-        <View style={{ width: DOT, height: DOT }}>{side}</View>
+        {tabs.map((t, i) => [
+          // the start button's place in the middle of the row (Mojtaba 2026-11-17), kept empty where it is not shown
+          i === Math.ceil(tabs.length / 2) ? <View key="side" style={{ width: DOT, height: DOT, alignItems: 'center', justifyContent: 'center' }}>{side}</View> : null,
+          <Tab key={t.name} icon={t.icon} label={t.label} on={i === active} still={still} onPress={() => { tap(); if (i !== active) onSelect(i); }} />,
+        ])}
       </View>
     </View>
   );
