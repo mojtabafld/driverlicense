@@ -288,7 +288,7 @@ export default function Home() {
   // (ARC: the card's padding and edge, its head (a title over a line; one short row at the densest level), the chart and
   // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
   const chartNeed = ARC
-    ? (tighter ? 20 : compact ? 24 : 32) + 2 + (compact ? 56 : 64) + (compact ? 8 : 12) * 2 + chartMin + 18  // (the trend chart's head, the chart, its dates)
+    ? (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 37 : small ? 42 : 47) + (compact ? 8 : 12) * 2 + chartMin + 18  // (the trend chart's head, the chart, its dates)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
@@ -455,9 +455,9 @@ export default function Home() {
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
       <View ref={chartBox} style={{ flex: 1 }} onLayout={fit}>
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>
-      <Card testID="home-progress" style={{ flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
+      <Card testID="home-progress" style={ARC ? { flex: 1, gap: compact ? 10 : 14, padding: readinessPad + 4, paddingVertical: readinessPad - 2 } /* (as the chance-of-passing card: Mojtaba 2026-11-17) */ : { flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         {/* (main site since 2026-11-17: the trend chart, ui/trend-chart.tsx; Mojtaba picked it of three) */}
-        {ARC ? <TrendChart attempts={exams} minH={chartMin} compact={compact} onOpen={openAttempt} /> : <>
+        {ARC ? <TrendChart attempts={exams} minH={chartMin} compact={compact} onOpen={openAttempt} title={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17 }} big={(tighter ? 28 : small ? 30 : 34) + (dark ? 2 : 0)} ink={cardInk} /> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

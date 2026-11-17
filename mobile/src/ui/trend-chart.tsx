@@ -5,7 +5,7 @@
 // the pass mark (80%) as a dashed green line over a faint green band; the first test's date at the left and the last
 // one's at the right. A tap on a point picks that test; a tap on the picked one opens its review.
 import { useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, type TextStyle } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
 import type { Attempt } from '@/lib/bank';
@@ -23,7 +23,10 @@ const RANGES: { id: Range; label: () => string }[] = [
 const PASS = 0.8, DAY = 864e5;
 const TOP = 8, BOT = 8, SIDE = 8;
 
-export function TrendChart({ attempts, minH, compact, onOpen }: { attempts: Attempt[]; minH: number; compact?: boolean; onOpen: (a: Attempt) => void }) {
+// `title` / `big` / `ink`: the chance-of-passing card's title style, percent size and ink, so the two cards match
+// (Mojtaba 2026-11-17).
+export function TrendChart({ attempts, minH, compact, onOpen, title, big: bigSize, ink: cardInk }: { attempts: Attempt[]; minH: number; compact?: boolean; onOpen: (a: Attempt) => void;
+  title?: TextStyle; big?: number; ink?: string }) {
   const c = useColors(), dark = useIsDark();
   const [range, setRange] = useState<Range>('ten');
   const [pick, setPick] = useState<number | null>(null);
@@ -46,36 +49,36 @@ export function TrendChart({ attempts, minH, compact, onOpen }: { attempts: Atte
   const pts = shown.map((a, i) => [x(i), y(pctOf(a))] as const);
   const line = pts.map(([px, py], i) => `${i ? 'L' : 'M'}${px.toFixed(1)} ${py.toFixed(1)}`).join(' ');
   const area = pts.length > 1 ? `${line} L${pts[pts.length - 1][0].toFixed(1)} ${h} L${pts[0][0].toFixed(1)} ${h} Z` : '';
-  const ink = c.accent, big = compact ? 28 : 34;
+  const ink = c.accent, big = bigSize ?? (compact ? 28 : 34), text = cardInk ?? c.text;
   const slot = shown.length > 1 ? (w - SIDE * 2) / (shown.length - 1) : w;
 
   return (
     <View style={{ flex: 1, gap: compact ? 8 : 12 }}>
-      {/* the head: the picked test's score and its change, and the range */}
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
-        <View style={{ flexShrink: 1, gap: 2 }}>
-          <T numberOfLines={1} style={{ fontSize: 12.5, lineHeight: 19, color: c.muted }}>
-            {!cur ? 'نمودار پیشرفت' : at === shown.length - 1 && pick == null ? 'نمره‌ی آخرین آزمون' : fmtDate(cur.at)}
-          </T>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <T raw style={{ fontSize: big, lineHeight: Math.round(big * 1.25), fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700', color: c.text }}>{cur ? pctStr(pctOf(cur)) : '–'}</T>
-            {diff ? (
-              <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: diff > 0 ? (dark ? 'rgba(74,222,128,0.14)' : 'rgba(22,163,74,0.12)') : (dark ? 'rgba(248,113,113,0.14)' : 'rgba(220,38,38,0.1)') }}>
-                <T raw style={{ fontSize: 12, lineHeight: 18, fontWeight: '700', color: diff > 0 ? c.ok : c.bad }}>{`${diff > 0 ? '▲' : '▼'} ${faNum(Math.abs(diff))}${RTL ? '٪' : '%'}`}</T>
-              </View>
-            ) : null}
+      {/* the head, as the chance-of-passing card's: the title and the range on one line, then the picked test's score
+          large with its change and whose it is */}
+      <View style={{ gap: compact ? 2 : 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <T numberOfLines={1} style={{ fontSize: 17, lineHeight: 25, fontWeight: '600', color: text, flexShrink: 1, ...title }}>نمودار پیشرفت</T>
+          <View style={{ flexDirection: 'row', padding: 3, gap: 2, borderRadius: 99, backgroundColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)' }}>
+            {RANGES.map(r => {
+              const on = r.id === range;
+              return (
+                <Pressable key={r.id} onPress={() => { tap(); setRange(r.id); setNow(Date.now()); setPick(null); }} accessibilityRole="button" accessibilityState={{ selected: on }}
+                  style={{ paddingHorizontal: compact ? 8 : 10, paddingVertical: 3, borderRadius: 99, backgroundColor: on ? text : 'transparent' }}>
+                  <T raw numberOfLines={1} style={{ fontSize: 12, lineHeight: 18, fontWeight: on ? '700' : '500', color: on ? c.bg : c.muted }}>{r.label()}</T>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
-        <View style={{ flexDirection: 'row', padding: 3, gap: 2, borderRadius: 99, backgroundColor: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)' }}>
-          {RANGES.map(r => {
-            const on = r.id === range;
-            return (
-              <Pressable key={r.id} onPress={() => { tap(); setRange(r.id); setNow(Date.now()); setPick(null); }} accessibilityRole="button" accessibilityState={{ selected: on }}
-                style={{ paddingHorizontal: compact ? 8 : 10, paddingVertical: 4, borderRadius: 99, backgroundColor: on ? c.text : 'transparent' }}>
-                <T raw numberOfLines={1} style={{ fontSize: 12, lineHeight: 18, fontWeight: on ? '700' : '500', color: on ? c.bg : c.muted }}>{r.label()}</T>
-              </Pressable>
-            );
-          })}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <T raw style={{ fontSize: big, lineHeight: Math.round(big * 1.3), fontFamily: RTL ? 'Vazirmatn-800' : 'GSans-700', color: text }}>{cur ? pctStr(pctOf(cur)) : '–'}</T>
+          {diff ? (
+            <View style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99, backgroundColor: diff > 0 ? (dark ? 'rgba(74,222,128,0.14)' : 'rgba(22,163,74,0.12)') : (dark ? 'rgba(248,113,113,0.14)' : 'rgba(220,38,38,0.1)') }}>
+              <T raw style={{ fontSize: 12, lineHeight: 18, fontWeight: '700', color: diff > 0 ? c.ok : c.bad }}>{`${diff > 0 ? '▲' : '▼'} ${faNum(Math.abs(diff))}${RTL ? '٪' : '%'}`}</T>
+            </View>
+          ) : null}
+          {cur ? <T numberOfLines={1} style={{ flexShrink: 1, fontSize: 12.5, lineHeight: 19, color: c.muted }}>{at === shown.length - 1 && pick == null ? 'آخرین آزمون' : fmtDate(cur.at)}</T> : null}
         </View>
       </View>
 
