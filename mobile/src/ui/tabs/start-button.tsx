@@ -12,7 +12,7 @@ import { Icon } from '../icon';
 import { T, physical, tap } from '../kit';
 import { useNewTest } from '../new-test';
 import { useColors, useIsDark } from '../theme';
-import { DOCK, PILL_BAR_H } from './pill-bar';
+import { DOCK, DOT } from './pill-bar';
 
 const WEB = Platform.OS === 'web';
 
@@ -40,10 +40,10 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
   const pick = (n: number) => { tap(); setOpen(false); test.startWith(n); };
   const sizes = [...SIZES].reverse();
   return (
-    <View style={{ width: PILL_BAR_H, height: PILL_BAR_H }}>
+    <View style={{ width: DOT, height: DOT }}>
       {/* the menu, growing up from the button */}
       <Animated.View pointerEvents={open ? 'auto' : 'none'} accessibilityRole="menu"
-        style={{ position: 'absolute', bottom: PILL_BAR_H + 10, ...physical({ [RTL ? 'left' : 'right']: 0 }), width: 200, padding: 6, gap: 2, borderRadius: 24,
+        style={{ position: 'absolute', bottom: DOT + 14, ...physical({ [RTL ? 'left' : 'right']: 0 }), width: 200, padding: 6, gap: 2, borderRadius: 24,
           backgroundColor: dark ? 'rgba(40,40,44,0.94)' : 'rgba(244,244,247,0.96)', borderWidth: 1, borderColor: d.rim,
           shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.12, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 14,
           ...(WEB ? { backdropFilter: 'blur(20px) saturate(1.4)', WebkitBackdropFilter: 'blur(20px) saturate(1.4)' } : null),
@@ -63,12 +63,10 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
         ))}
       </Animated.View>
       <Pressable testID="start-test" onPress={press} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={tr('شروع آزمون')}
-        style={({ pressed }) => ({ width: PILL_BAR_H, height: PILL_BAR_H, borderRadius: PILL_BAR_H / 2, alignItems: 'center', justifyContent: 'center',
-          // frosted like the dock: what is behind it blurred (Mojtaba 2026-11-14)
-          backgroundColor: d.track, borderWidth: 1, borderColor: d.rim, transform: [{ scale: pressed ? 0.95 : 1 }],
-          ...(WEB ? { backdropFilter: 'blur(20px) saturate(1.4)', WebkitBackdropFilter: 'blur(20px) saturate(1.4)' } : null),
-          shadowColor: '#000', shadowOpacity: dark ? 0.45 : 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, elevation: 12 } as any)}>
-        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={26} color={d.ink} filled />
+        style={({ pressed, hovered }: any) => ({ width: DOT, height: DOT, borderRadius: DOT / 2, alignItems: 'center', justifyContent: 'center',
+          // one of the dock's plain icons (2026-11-17); a filled circle while its menu is open, as the open tab
+          backgroundColor: open ? d.ink : hovered ? d.hover : 'transparent', transform: [{ scale: pressed ? 0.92 : 1 }] } as any)}>
+        <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={26} color={open ? c.bg : d.ink} filled={open} />
       </Pressable>
     </View>
   );

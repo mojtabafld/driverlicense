@@ -41,7 +41,7 @@ function Bar() {
     <>
       <StartBackdrop open={open && startHere} onClose={() => setOpen(false)} />
       <PillBar tabs={BAR_TABS} active={active} bottomInset={ins.bottom} compact={compact} onSelect={i => router.navigate(TABS[i].href as any)}
-        side={startHere ? <StartButton open={open} setOpen={setOpen} /> : undefined} />
+        side={startHere ? <StartButton open={open} setOpen={setOpen} /> : null} />
     </>
   );
 }
