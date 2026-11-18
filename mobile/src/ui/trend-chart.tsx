@@ -53,6 +53,12 @@ export function TrendChart({ attempts, minH, compact, onOpen, title, big: bigSiz
   const { w, h } = box;
   const barH = Math.max(20, h - LABEL - TIP);
   const gap = n > 14 ? 4 : 8, colW = n ? (w - gap * (n - 1)) / n : 0;
+  // the bar itself: slim and tall as the component's, never wider than 24 however few the tests (Mojtaba 2026-11-18:
+  // with a few tests the bars were as wide as they were tall, round); a low score keeps a short pill, not a dot
+  const barW = Math.min(24, colW), least = Math.min(barW * 1.6, barH * 0.25);
+  // (heights against the best score shown, as the component's value / maxValue, so low scores still make tall bars; the
+  // pass mark shows only when it falls inside)
+  const top = Math.max(0.05, ...shown.map(pctOf)), scale = (v: number) => barH * Math.min(1, v / top);
   // (a label under every bar while they fit, else every few)
   const every = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(w / 22))));
 
@@ -111,15 +117,15 @@ export function TrendChart({ attempts, minH, compact, onOpen, title, big: bigSiz
         {w > 0 && h > 0 && n ? (
           <View style={{ position: 'absolute', top: 0, left: 0, width: w, height: h, direction: 'ltr' } as any}>
             {/* the pass mark */}
-            <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: TIP + barH * (1 - PASS), borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.ok, opacity: 0.6 }} />
+            {top >= PASS ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: TIP + barH - scale(PASS), borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.ok, opacity: 0.6 }} /> : null}
             {shown.map((a, i) => {
               const sel = picked && i === at, near = picked && Math.abs(i - at) === 1;
-              const bh = Math.max(colW, barH * pctOf(a));
+              const bh = Math.max(least, scale(pctOf(a)));
               return (
                 <Pressable key={`b${i}`} accessibilityRole="button" accessibilityLabel={`${fmtDate(a.at)}: ${pctStr(pctOf(a))}`}
                   onPress={() => { tap(); if (sel) onOpen(a); else setPick(i); }}
                   style={{ position: 'absolute', top: 0, height: h, left: i * (colW + gap), width: colW, alignItems: 'center' }}>
-                  <View style={{ position: 'absolute', top: TIP + barH - bh, height: bh, width: colW, borderRadius: colW / 2,
+                  <View style={{ position: 'absolute', top: TIP + barH - bh, height: bh, width: barW, borderRadius: barW / 2,
                     backgroundColor: sel ? text : near ? tint(0.3) : picked ? tint(0.1) : i === n - 1 ? tint(0.45) : tint(0.2),  // (the newest a shade deeper until one is picked)
                     transform: [{ scaleX: sel ? 1.15 : near ? 1.05 : 1 }] }} />
                   {i % every === (n - 1) % every ? (
@@ -130,7 +136,7 @@ export function TrendChart({ attempts, minH, compact, onOpen, title, big: bigSiz
             })}
             {/* the picked bar's tooltip */}
             {picked && cur ? (() => {
-              const cx = at * (colW + gap) + colW / 2, bh = Math.max(colW, barH * pctOf(cur)), tipW = 56;
+              const cx = at * (colW + gap) + colW / 2, bh = Math.max(least, scale(pctOf(cur))), tipW = 56;
               return (
                 <View pointerEvents="none" style={{ position: 'absolute', top: Math.max(0, TIP + barH - bh - 28), left: Math.max(0, Math.min(w - tipW, cx - tipW / 2)), width: tipW, alignItems: 'center' }}>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: text }}>
