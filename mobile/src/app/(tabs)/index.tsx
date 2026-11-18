@@ -290,7 +290,7 @@ export default function Home() {
   const est = passEstimate(attempts);
   const chartNeed = ARC
     ? (est ? 25 + 8 + (tighter ? 37 : small ? 39 : 44) + 30 : 48 + 12 + 48) + 1 + (compact ? 10 : 14) * 2  // (the chance of passing over it, and the line between)
-      + (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 30 : small ? 33 : 37) + (compact ? 8 : 12) * 2 + chartMin + 18  // (the trend chart's head, the chart, its dates)
+      + (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 30 : small ? 33 : 37) + (compact ? 8 : 12) * 3 + 1 + chartMin + 18  // (the head, the line under it, the dots, their dates)  // (the trend chart's head, the chart, its dates)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
