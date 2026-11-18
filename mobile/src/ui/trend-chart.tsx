@@ -12,7 +12,7 @@ import { AccessibilityInfo, Animated, Easing, Platform, Pressable, View, type Te
 import type { Attempt } from '@/lib/bank';
 import { RTL, t, tr } from '@/lib/i18n';
 import { faNum, fmtDate, pctOf } from '@/lib/logic';
-import { T, tap, useCountUp } from './kit';
+import { T, tap } from './kit';
 import { rgba } from './palette';
 import { useColors, useIsDark } from './theme';
 
@@ -45,7 +45,8 @@ export function TrendChart({ attempts, minH, compact, onOpen, title, big: bigSiz
   const at = picked ? pick : n - 1;
   const cur = shown[at], prev = at > 0 ? shown[at - 1] : (at === 0 && cur ? attempts[attempts.indexOf(cur) - 1] : undefined);
   const diff = cur && prev ? Math.round((pctOf(cur) - pctOf(prev)) * 100) : null;
-  const counted = useCountUp(cur ? Math.round(pctOf(cur) * 100) : 0, 900);
+  // (shown as it is, no count-up: Mojtaba 2026-11-18)
+  const counted = cur ? Math.round(pctOf(cur) * 100) : 0;
   const pctStr = (v: number) => `${faNum(Math.round(v * 100))}${RTL ? '٪' : '%'}`;
 
   const big = bigSize ?? (compact ? 28 : 34), text = cardInk ?? c.text;
