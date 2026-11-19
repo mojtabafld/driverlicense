@@ -4,9 +4,9 @@
 // part reached; in its middle the percent large, «٪ of 100» in a small pill and the change since the test before in
 // blue; under it the verdict (a button to the mistakes under it was taken off the same day, Mojtaba). Drawn the same on the web and the phones.
 import { View, useWindowDimensions } from 'react-native';
-import Svg, { Defs, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Line, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { RTL, t, tr } from '@/lib/i18n';
+import { RTL, t } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { Icon, type IconName } from './icon';
 import { T } from './kit';
@@ -43,18 +43,7 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
   const zoneColor = [light, acc, deep];
   return (
     <View testID="home-readiness-value" style={{ alignItems: 'center', gap: 6 }}>
-      {/* the warm glow behind the top of it */}
-      <View pointerEvents="none" style={{ position: 'absolute', top: -60, left: -40, right: -40, height: 340 }}>
-        <Svg width="100%" height="100%">
-          <Defs>
-            <RadialGradient id="gaugeGlow" cx="50%" cy="45%" rx="50%" ry="50%">
-              <Stop offset="0" stopColor={acc} stopOpacity={dark ? 0.22 : 0.26} />
-              <Stop offset="1" stopColor={acc} stopOpacity={0} />
-            </RadialGradient>
-          </Defs>
-          <Rect x="0" y="0" width="100%" height="100%" fill="url(#gaugeGlow)" />
-        </Svg>
-      </View>
+      {/* (no glow of its own since 2026-11-19: it sits on the page, in the header's wash) */}
       {/* (the title alone: no «i» beside it since 2026-11-19, Mojtaba) */}
       <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: dark ? light : deep }}>احتمال قبولی</T>
 
