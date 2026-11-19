@@ -10,13 +10,14 @@ import { RTL, t, tr } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { Icon, type IconName } from './icon';
 import { T } from './kit';
+import { mix } from './palette';
 import { useColors, useIsDark } from './theme';
 
 const READY = 0.7;
-const ZONES: { from: number; to: number; color: string; icon: IconName }[] = [
-  { from: 0, to: 0.5, color: '#ff8a00', icon: 'learn' },
-  { from: 0.5, to: 0.7, color: '#ff5a1f', icon: 'exam' },
-  { from: 0.7, to: 1, color: '#f0127a', icon: 'check' },
+const ZONES: { from: number; to: number; icon: IconName }[] = [
+  { from: 0, to: 0.5, icon: 'learn' },
+  { from: 0.5, to: 0.7, icon: 'exam' },
+  { from: 0.7, to: 1, icon: 'check' },
 ];
 
 export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, small }: {
@@ -36,6 +37,10 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
   const big = Math.round(52 * Math.max(0.85, S)), badge = Math.round(28 * Math.max(0.85, S));
   const pctSign = RTL ? '٪' : '%';
   const blue = dark ? '#6aaeff' : '#2b8be0';
+  // the colours from the theme's own (Mojtaba 2026-11-19: orange, red and pink before): a light shade fading in, the
+  // colour itself, a deep shade for «ready»; the glow and the title in it too
+  const acc = c.accent, light = mix(acc, '#ffffff', 0.35), deep = dark ? mix(acc, '#ffffff', 0.3) : mix(acc, '#000000', 0.28);
+  const zoneColor = [light, acc, deep];
   return (
     <View testID="home-readiness-value" style={{ alignItems: 'center', gap: 6 }}>
       {/* the warm glow behind the top of it */}
@@ -43,30 +48,30 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
         <Svg width="100%" height="100%">
           <Defs>
             <RadialGradient id="gaugeGlow" cx="50%" cy="45%" rx="50%" ry="50%">
-              <Stop offset="0" stopColor={dark ? '#ff823c' : '#ffaa6e'} stopOpacity={dark ? 0.2 : 0.3} />
-              <Stop offset="1" stopColor={dark ? '#ff823c' : '#ffaa6e'} stopOpacity={0} />
+              <Stop offset="0" stopColor={acc} stopOpacity={dark ? 0.22 : 0.26} />
+              <Stop offset="1" stopColor={acc} stopOpacity={0} />
             </RadialGradient>
           </Defs>
           <Rect x="0" y="0" width="100%" height="100%" fill="url(#gaugeGlow)" />
         </Svg>
       </View>
       {/* (the title alone: no «i» beside it since 2026-11-19, Mojtaba) */}
-      <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: '#e07b1a' }}>احتمال قبولی</T>
+      <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: dark ? light : deep }}>احتمال قبولی</T>
 
       <View style={{ width: W, height: H, direction: 'ltr' } as any}>
         <Svg width={W} height={H}>
           <Defs>
             <LinearGradient id="gaugeA" x1="0" y1="1" x2="1" y2="0">
-              <Stop offset="0" stopColor="#ffb347" stopOpacity={0.15} />
-              <Stop offset="0.55" stopColor="#ff9a1f" />
-              <Stop offset="1" stopColor="#ff7a00" />
+              <Stop offset="0" stopColor={light} stopOpacity={0.15} />
+              <Stop offset="0.55" stopColor={light} />
+              <Stop offset="1" stopColor={mix(light, acc, 0.5)} />
             </LinearGradient>
           </Defs>
           <Path d={arc(0, 1)} stroke={track} strokeWidth={SW} fill="none" strokeLinecap="round" />
           {ZONES.map((z, i) => {
             const e = Math.min(z.to, v);
             if (e <= z.from + gap * 2) return null;
-            return <Path key={i} d={arc(z.from + (i ? gap : 0), e - gap)} stroke={i ? z.color : 'url(#gaugeA)'} strokeWidth={SW} fill="none" strokeLinecap="round" />;
+            return <Path key={i} d={arc(z.from + (i ? gap : 0), e - gap)} stroke={i ? zoneColor[i] : 'url(#gaugeA)'} strokeWidth={SW} fill="none" strokeLinecap="round" />;
           })}
           <Line x1={mx} y1={my} x2={nx} y2={ny} stroke={ink} strokeWidth={2.5} strokeLinecap="round" opacity={0.55} />
         </Svg>
@@ -77,7 +82,7 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
           const [bx, by] = pt(Math.max(0.04, e - 0.035), R);
           return (
             <View key={`b${i}`} pointerEvents="none" style={{ position: 'absolute', left: bx - badge / 2, top: by - badge / 2, width: badge, height: badge, borderRadius: badge / 2,
-              alignItems: 'center', justifyContent: 'center', backgroundColor: z.color, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
+              alignItems: 'center', justifyContent: 'center', backgroundColor: zoneColor[i], shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 }}>
               <Icon name={z.icon} size={Math.round(badge * 0.55)} color="#ffffff" />
             </View>
           );
