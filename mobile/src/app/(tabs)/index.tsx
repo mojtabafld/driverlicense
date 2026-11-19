@@ -21,6 +21,7 @@ import { COURSE } from '@/lib/course';
 import { useCourseProgress } from '@/lib/course-progress';
 import { ProgressChart } from '@/ui/progress-chart';
 import { TrendChart } from '@/ui/trend-chart';
+import { PassGauge } from '@/ui/pass-gauge';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { TestStats } from '@/ui/chart-view';
 import { HomeKnowledge } from '@/ui/home-knowledge';
@@ -289,7 +290,7 @@ export default function Home() {
   // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
   const est = passEstimate(attempts);
   const chartNeed = ARC
-    ? (est ? 25 + 8 + (tighter ? 37 : small ? 39 : 44) + 30 : 48 + 12 + 48) + 1 + (compact ? 10 : 14) * 2  // (the chance of passing over it, and the line between)
+    ? (est ? (small ? 196 : 222) : 48 + 12 + 48) + 1 + (compact ? 10 : 14) * 2  // (the chance of passing over it, and the line between)
       + (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 30 : small ? 33 : 37) + (compact ? 8 : 12) * 3 + 1 + chartMin + 18  // (the head, the line under it, the dots, their dates)  // (the trend chart's head, the chart, its dates)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
@@ -357,20 +358,11 @@ export default function Home() {
   const probSoft = mix(!est ? c.muted : probColor, c.surface, 0.8);
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   // The chance of passing, at the top of the progress chart's card since 2026-11-17 (Mojtaba: the two in one card).
+  // (the half-circle gauge since 2026-11-19, Mojtaba; the title, percent and a bar up to the ready mark before)
+  const estBefore = exams.length > 1 ? passEstimate(attempts.slice(0, attempts.lastIndexOf(exams[exams.length - 1]))) : null;
+  const estChange = est && estBefore ? Math.round((est.prob - estBefore.prob) * 100) : null;
   const chanceBody = (est ? (
-            <View style={{ gap: compact ? 2 : 4 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                <T numberOfLines={1} style={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17, flexShrink: 1 }}>احتمال قبولی</T>
-                <View testID="home-readiness-status" style={{ flexShrink: 0, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99, backgroundColor: probSoft }}>
-                  <T numberOfLines={1} style={{ color: probColor, fontSize: 12.5, lineHeight: 18, fontWeight: '600', textAlign: 'center' }}>{probWord}</T>
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
-                <View testID="home-readiness-value"><PassPct value={est.prob} color={probColor} size={(tighter ? 28 : small ? 30 : 34) + (dark ? 2 : 0)} /></View>
-                {/* (no «… to ready» beside it since 2026-11-16, Mojtaba; the bar shows it) */}
-              </View>
-              <ReadyBar value={est.prob} color={probColor} ink={cardInk} />
-            </View>
+            <PassGauge value={est.prob} change={estChange} verdict={probWord} verdictColor={probColor} verdictSoft={probSoft} small={small} />
           ) : (
             <View style={{ gap: compact ? 10 : 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
