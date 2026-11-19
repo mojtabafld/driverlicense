@@ -290,8 +290,7 @@ export default function Home() {
   // its legend under it; the line with «مرور» under the chart is gone since 2026-10-29)
   const est = passEstimate(attempts);
   const chartNeed = ARC
-    ? (est ? (small ? 196 : 222) : 48 + 12 + 48) + 1 + (compact ? 10 : 14) * 2  // (the chance of passing over it, and the line between)
-      + (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 30 : small ? 33 : 37) + (compact ? 8 : 12) * 3 + 1 + chartMin + 18  // (the head, the line under it, the dots, their dates)  // (the trend chart's head, the chart, its dates)
+    ? (readinessPad - 2) * 2 + 2 + 25 + 4 + (tighter ? 30 : small ? 33 : 37) + (compact ? 8 : 12) * 3 + 1 + chartMin + 18  // (the head, the line under it, the dots, their dates)  // (the trend chart's head, the chart, its dates)
     : (tighter ? 20 : compact ? 24 : 32) + 2 + 24 + (compact ? 8 : 12) + chartMin + (noHint ? 0 : 8 + 40);
   // The room from the chart card's top to the tab bar (the card's own height can't tell: it has a least height and the
   // page would scroll instead).
@@ -445,6 +444,9 @@ export default function Home() {
       {/* A tap anywhere in the chart's card, off its points: on the main site it opens or closes the chart view as the
           header's chart button does, the picked test staying picked (Mojtaba 2026-10-19); at /app it clears the pick. */}
       {/* Main site: the chart card always, empty until there are attempts; /app keeps the start card. */}
+      {/* (main site: the chance of passing on the page itself, no card, under the header's one wash of colour; Mojtaba
+          2026-11-19, after the health app's picture; in the chart's card 2026-11-17 to 19) */}
+      {ARC && !view ? <View testID="home-readiness">{chanceBody}</View> : null}
       {exams.length || ARC ? (
       <Animated.View {...swipe} style={grow ? { height: t.interpolate({ inputRange: [0, 1], outputRange: grow }) } : ARC ? { flexGrow: 8, flexBasis: chartNeed + 8, minHeight: chartNeed + 8, maxHeight: Math.max(420, chartNeed + 8) } /* (the room the screen leaves, shared with the cards under it, so they end just above the dock on every phone; Mojtaba 2026-11-16; 270 / 300 before) */ : { flex: 1, minHeight: shortPage ? 280 : undefined }}
         onLayout={e => { if (!grow) chartH.current = e.nativeEvent.layout.height; }}>
@@ -452,8 +454,6 @@ export default function Home() {
       <Pressable onPress={ARC ? undefined : () => setPicked(null)} style={{ flex: 1 }} accessible={false}>
       <Card testID="home-progress" style={ARC ? { flex: 1, gap: compact ? 10 : 14, padding: readinessPad + 4, paddingVertical: readinessPad - 2 } /* (as the chance-of-passing card: Mojtaba 2026-11-17) */ : { flex: 1, gap: compact ? 8 : 12, padding: tighter ? 10 : compact ? 12 : 16 }}>
         {/* (main site since 2026-11-17: the trend chart, ui/trend-chart.tsx; Mojtaba picked it of three) */}
-        {ARC ? <View testID="home-readiness">{chanceBody}</View> : null}
-        {ARC ? <View style={{ height: 1, backgroundColor: c.line, opacity: 0.8 }} /> : null}
         {ARC ? <TrendChart attempts={exams} minH={chartMin} compact={compact} onOpen={openAttempt} title={{ ...titleStyle, fontSize: narrowRow ? 15.5 : 17 }} big={(tighter ? 23 : small ? 25 : 28) + (dark ? 2 : 0)} /* (a little smaller than the chance card's: Mojtaba 2026-11-17) */ ink={cardInk} /> : <>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <T style={{ fontWeight: '700', fontSize: 16 }}>نمودار پیشرفت</T>
