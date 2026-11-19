@@ -1,17 +1,15 @@
 // The chance of passing as a half-circle gauge (Mojtaba 2026-11-19, after a health app's «Overall health» picture and
-// the mockup he approved): a warm glow behind it; the title in orange with an «i» that shows what the estimate is
-// based on; the arc in three parts, up to 50% orange fading in, 50–70% orange-red, 70% and over pink («ready»),
+// the mockup he approved): a warm glow behind it; the title in orange; the arc in three parts, up to 50% orange fading in, 50–70% orange-red, 70% and over pink («ready»),
 // filled up to the estimate over a grey track, a tick at the ready mark (70%) and a round badge at the end of each
 // part reached; in its middle the percent large, «٪ of 100» in a small pill and the change since the test before in
 // blue; under it the verdict (a button to the mistakes under it was taken off the same day, Mojtaba). Drawn the same on the web and the phones.
-import { useState } from 'react';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { RTL, t, tr } from '@/lib/i18n';
 import { faNum } from '@/lib/logic';
 import { Icon, type IconName } from './icon';
-import { T, tap } from './kit';
+import { T } from './kit';
 import { useColors, useIsDark } from './theme';
 
 const READY = 0.7;
@@ -24,7 +22,6 @@ const ZONES: { from: number; to: number; color: string; icon: IconName }[] = [
 export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, small }: {
   value: number; change: number | null; verdict: string; verdictColor: string; verdictSoft: string; small?: boolean }) {
   const c = useColors(), dark = useIsDark(), { width } = useWindowDimensions();
-  const [why, setWhy] = useState(false);
   // the arc's size: as the mockup's 300 × 176, smaller on a narrow or short screen
   const W = Math.min(small ? 250 : 300, width - 72), S = W / 300, H = 176 * S;
   const R = 128 * S, SW = 26 * S, cx = W / 2, cy = 160 * S;
@@ -53,12 +50,8 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
           <Rect x="0" y="0" width="100%" height="100%" fill="url(#gaugeGlow)" />
         </Svg>
       </View>
-      <Pressable onPress={() => { tap(); setWhy(w => !w); }} accessibilityRole="button" accessibilityLabel={tr('احتمال قبولی')} hitSlop={8}
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: '#e07b1a' }}>احتمال قبولی</T>
-        <Icon name="info" size={17} color="#e07b1a" />
-      </Pressable>
-      {why ? <T style={{ fontSize: 12.5, lineHeight: 19, color: c.muted, textAlign: 'center', paddingHorizontal: 12 }}>بر اساس پاسخ‌های اخیر شما در آزمون‌های تصادفی</T> : null}
+      {/* (the title alone: no «i» beside it since 2026-11-19, Mojtaba) */}
+      <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: '#e07b1a' }}>احتمال قبولی</T>
 
       <View style={{ width: W, height: H, direction: 'ltr' } as any}>
         <Svg width={W} height={H}>
