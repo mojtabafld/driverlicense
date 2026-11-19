@@ -3,8 +3,7 @@
 // based on; the arc in three parts, up to 50% orange fading in, 50–70% orange-red, 70% and over pink («ready»),
 // filled up to the estimate over a grey track, a tick at the ready mark (70%) and a round badge at the end of each
 // part reached; in its middle the percent large, «٪ of 100» in a small pill and the change since the test before in
-// blue; under it the verdict and a button to what lowers it (the mistakes). Drawn the same on the web and the phones.
-import { router } from 'expo-router';
+// blue; under it the verdict (a button to the mistakes under it was taken off the same day, Mojtaba). Drawn the same on the web and the phones.
 import { useState } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -109,12 +108,6 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
           <T numberOfLines={1} style={{ color: verdictColor, fontSize: 12.5, lineHeight: 18, fontWeight: '700' }}>{verdict}</T>
         </View>
       </View>
-      <Pressable onPress={() => { tap(); router.push('/mistakes'); }} accessibilityRole="button"
-        style={({ pressed }) => ({ marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 7, borderRadius: 99,
-          borderWidth: 1, borderColor: c.line, backgroundColor: dark ? '#26262a' : '#ffffff', opacity: pressed ? 0.8 : 1 })}>
-        <T numberOfLines={1} style={{ fontSize: 13, lineHeight: 19, fontWeight: '600', color: c.muted }}>ببینید چه چیزی روی احتمال قبولی اثر دارد</T>
-        <Icon name="chevronLeft" size={16} color={c.muted} />
-      </Pressable>
     </View>
   );
 }
