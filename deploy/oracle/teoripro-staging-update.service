@@ -1,0 +1,8 @@
+# Takes in each new staging build (update.sh, as production's but for the copy in /opt/teoripro-staging).
+[Unit]
+Description=Teoripro (staging) update from GitHub
+
+[Service]
+Type=oneshot
+Environment=TP_DIR=/opt/teoripro-staging TP_BRANCH=deploy/staging TP_SERVICE=teoripro-staging TP_ENV=/etc/teoripro-staging/env
+ExecStart=/opt/teoripro-staging/deploy/oracle/update.sh

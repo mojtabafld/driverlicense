@@ -1,0 +1,118 @@
+// The home page's sections under the chart (Mojtaba 2026-11-08, after fonts.google.com/knowledge): «مباحث» as chips that
+// scroll sideways (its «Browse topics»), the chapter you are on as a module (its title, its line, its lessons with a tick
+// for each one done and «همه‌ی درس‌ها», as Knowledge's modules and «View all articles»), a featured guide (as its book
+// block: the road signs). (A random test with a 5–25 question size control closed them from 2026-11-08 until Mojtaba
+// took it off on 2026-11-13; the test tab has its own.)
+import { router } from 'expo-router';
+import { useRef, useState } from 'react';
+import { Platform, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+
+import { COURSE } from '@/lib/course';
+import { useCourseProgress } from '@/lib/course-progress';
+import { RTL, tr } from '@/lib/i18n';
+import type { CourseLesson } from '@/lib/course';
+import { CardWash, ServiceCarousel, type ServiceItem, type ServiceTone } from './service-carousel';
+import { Icon, type IconName } from './icon';
+import { M3Button, T, tap } from './kit';
+import { useColors, useIsDark, useM3 } from './theme';
+
+export function Head({ title, text }: { title: string; text?: string }) {
+  const c = useColors();
+  return (
+    <View style={{ gap: 6, paddingHorizontal: 4 }}>
+      <T style={{ fontSize: 22, lineHeight: 32, fontWeight: '500' }}>{title}</T>
+      {text ? <T style={{ fontSize: 14.5, lineHeight: 24, color: c.muted }}>{text}</T> : null}
+    </View>
+  );
+}
+
+// An icon for a lesson, from the words of its title (the course has none of its own).
+const ICONS: [RegExp, IconName][] = [[/آزمون/, 'exam'], [/کمربند|صندلی/, 'seatbelt'], [/الکل|مواد|خستگی/, 'glass'], [/خودرو|بازدید|تجهیزات/, 'car'],
+  [/سرعت/, 'gauge'], [/فاصله/, 'distance'], [/پارک|توقف/, 'parking'], [/چراغ/, 'headlight'], [/تابلو|علائم/, 'sign'], [/خط/, 'lanes'],
+  [/دست راست|تقدم|راه دادن|تقاطع|میدان/, 'priority'], [/تلفن|موبایل|حواس/, 'phone'], [/عابر|دوچرخه|کودک/, 'person'], [/جاده|بزرگراه|مسیر/, 'road']];
+export const iconOf = (title: string): IconName => (ICONS.find(([re]) => re.test(title)) ?? [null, 'learn'])[1] as IconName;
+
+export type TileItem = { key: string; title: string; icon: IconName; done?: boolean; onPress: () => void };
+// A row of outlined square tiles that scrolls sideways (fonts.google.com's «Browse topics»; Mojtaba 2026-11-08): each a
+// large line icon in the primary over its name, a tick at its corner when done, and a round arrow at the end that
+// moves the row on by a tile. Shared by the home page's lessons and the learn tab's chapters.
+// `gradient`: each tile in the gradient cards' look (ui/service-carousel.tsx) at its own size and with its own type: a
+// soft two-colour wash in place of the outline, its number «( 001 )» at the top start (Mojtaba 2026-11-13: the home
+// page's lessons).
+const TILE_TONES: ServiceTone[] = ['blue', 'purple', 'green', 'amber', 'red'];
+export function Tiles({ items, gradient }: { items: TileItem[]; gradient?: boolean }) {
+  const c = useColors(), m = useM3(), dark = useIsDark(), ink = dark ? '#ffffff' : c.text;
+  const ref = useRef<ScrollView>(null), x = useRef(0);
+  const [end, setEnd] = useState(false);
+  const TILE = 156, GAP = 12;
+  const more = () => {
+    tap();
+    const node = (ref.current as unknown as { getScrollableNode?: () => HTMLElement })?.getScrollableNode?.();
+    if (Platform.OS === 'web' && node?.scrollBy) node.scrollBy({ left: (RTL ? -1 : 1) * (TILE + GAP), behavior: 'smooth' });
+    else ref.current?.scrollTo({ x: x.current + TILE + GAP, animated: true });
+  };
+  return (
+    <View>
+      <ScrollView ref={ref} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: GAP, paddingHorizontal: 4 }} scrollEventThrottle={32}
+        onScroll={e => { const n = e.nativeEvent; x.current = Math.abs(n.contentOffset.x); setEnd(x.current + n.layoutMeasurement.width >= n.contentSize.width - 8); }}>
+        {items.map((it, i) => (
+          <Pressable key={it.key} onPress={() => { tap(); it.onPress(); }} accessibilityRole="button" accessibilityLabel={it.title}
+            style={({ pressed }) => (gradient
+              ? { width: TILE, height: TILE, borderRadius: 24, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 12, opacity: pressed ? 0.85 : 1 }
+              : { width: TILE, height: TILE, borderRadius: 24, borderWidth: 1, borderColor: c.line, alignItems: 'center', justifyContent: 'center',
+                gap: 12, paddingHorizontal: 12, backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+            {gradient ? <>
+              <CardWash tone={TILE_TONES[i % TILE_TONES.length]} />
+            </> : null}
+            {/* (over the wash: the icon draws in a layer of its own on the web) */}
+            <View style={{ zIndex: 1 }}><Icon name={it.icon} size={64} color={gradient ? ink : m.primary} /></View>
+            <T numberOfLines={2} style={{ fontSize: 14.5, lineHeight: 21, fontWeight: gradient ? '600' : '500', textAlign: 'center', ...(gradient ? { color: ink } : null) }}>{it.title}</T>
+            {it.done ? <View style={{ position: 'absolute', top: 10, end: 10 } as object}><Icon name="checkCircle" size={20} color={c.ok} filled /></View> : null}
+          </Pressable>
+        ))}
+      </ScrollView>
+      {end || items.length < 3 ? null : (
+        <Pressable onPress={more} accessibilityRole="button" accessibilityLabel={tr('بعدی')} hitSlop={6}
+          style={({ pressed }) => ({ position: 'absolute', top: TILE / 2 - 22, ...(RTL ? { left: 0 } : { right: 0 }), width: 44, height: 44, borderRadius: 22,
+            alignItems: 'center', justifyContent: 'center', backgroundColor: m.dialog, opacity: pressed ? 0.8 : 1,
+            shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 })}>
+          <Icon name="chevronLeft" size={24} color={c.text} />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+function LessonTiles({ lessons, done }: { lessons: CourseLesson[]; done: Record<string, number> }) {
+  return <Tiles gradient items={lessons.map(l => ({ key: l.id, title: tr(l.title), icon: iconOf(l.title), done: !!done[l.id],
+    onPress: () => router.push({ pathname: '/course-lesson', params: { id: l.id } }) }))} />;
+}
+
+// The app's main parts, for the home page's card row.
+const PARTS: ServiceItem[] = [
+  { number: '001', title: 'آزمون تئوری', description: '۱۱۰۰ سؤال مثل آزمون واقعی؛ ۲۵ سؤال در ۲۵ دقیقه', icon: 'exam', tone: 'blue', onPress: () => router.navigate('/exam') },
+  { number: '002', title: 'دوره‌ی گام‌به‌گام', description: 'درس‌های کوتاه به فارسی، از قدم اول تا روز آزمون', icon: 'learn', tone: 'green', onPress: () => router.push('/course') },
+  { number: '003', title: 'تابلوها', description: 'همه‌ی تابلوهای دانمارک با معنی و مثال', icon: 'sign', tone: 'red', onPress: () => router.push('/signs') },
+  { number: '004', title: 'حق تقدم', description: 'چه کسی اول می‌رود؟ با موقعیت‌های تصویری', icon: 'priority', tone: 'amber', onPress: () => router.push('/priority') },
+  { number: '005', title: 'قوانین', description: 'قانون راهنمایی و رانندگی دانمارک به زبان ساده', icon: 'rules', tone: 'purple', onPress: () => router.push('/rules') },
+  { number: '006', title: 'واژه‌نامه', description: 'واژه‌های آزمون به دانمارکی، فارسی و انگلیسی', icon: 'translate', tone: 'blue', onPress: () => router.push('/glossary') },
+];
+
+export function HomeKnowledge({ gap = 14 }: { gap?: number }) {
+  // On a tall screen the cards grow to fill the room down to the dock, so no empty band is left above it (Mojtaba
+  // 2026-11-14); never lower than 140. (The carousel lies over its measured room, so its height never sets the room.)
+  const [room, setRoom] = useState(0);
+  // (a short screen: 116 at least, the cards' short layout still fitting; Mojtaba 2026-11-16)
+  const wh = useWindowDimensions().height, least = wh < 760 ? 116 : wh < 900 ? 110 : 140;
+  const h = Math.round(Math.max(least, room));
+  return (
+    <View style={{ flexGrow: 1, gap: gap + 16 }}>
+      {/* «هرچه در تئوری‌پرو هست»: the app's main parts as gradient cards that slide sideways, each opening its page
+          (ui/service-carousel.tsx; Mojtaba 2026-11-13). (no title or line over the cards since 2026-11-14, Mojtaba) */}
+      <View style={{ flexGrow: 1, minHeight: least }} onLayout={e => setRoom(e.nativeEvent.layout.height)}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0 }}><ServiceCarousel items={PARTS} height={h} /></View>
+      </View>
+      {/* (no «مباحث» chips and no current chapter's lessons under the cards since 2026-11-14, Mojtaba) */}
+    </View>
+  );
+}

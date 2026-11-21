@@ -1,0 +1,73 @@
+# Checks on every pull request (Mojtaba 2026-10-31), before anything is merged into main, which the server takes
+# in by itself every 2 minutes (deploy/oracle/update.sh, which also rolls back a version that does not start):
+#   server: every .js file parses, the server starts on its own (a file database, no keys) and answers
+#           /api/health, /api/config and the web app's page;
+#           and its packages have no known high-severity hole (npm audit);
+#   app:    the app's TypeScript compiles (mobile/, tsc --noEmit);
+#   tests:  the server's API tests (test/*.test.js), and with the web app built from this very code, its main pages in
+#           a real browser (test/e2e; Mojtaba 2026-11-15, «CI/CD کامل»).
+# A red run means: do not merge.
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --no-audit --no-fund
+      - name: Every server file parses
+        run: for f in *.js deploy/oracle/*.js scripts/*.js; do node --check "$f" || exit 1; done
+      # (the server's own packages, not the build tools: a known high or critical hole fails the run)
+      - name: No known high-severity holes in the server's packages
+        run: npm audit --omit=dev --audit-level=high
+      - name: API tests
+        run: npm test
+      - name: The server starts and answers
+        run: |
+          PORT=3999 DB_FILE=$RUNNER_TEMP/db.json node server.js > $RUNNER_TEMP/server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:3999/api/health >/dev/null && break; sleep 1; done
+          curl -sf localhost:3999/api/health | tee /dev/stderr | grep -q '"db":true'
+          curl -sf localhost:3999/api/config >/dev/null
+          curl -sf -o /dev/null localhost:3999/
+          echo "OK"
+      - if: failure()
+        run: cat $RUNNER_TEMP/server.log || true
+
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: mobile/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - name: TypeScript
+        run: npx tsc --noEmit -p .
+      - name: Build the web app (/ and /app)
+        run: npm run build:web && npm run build:web-app
+      - name: Server packages and the browser
+        working-directory: .
+        run: |
+          npm ci --no-audit --no-fund
+          npm i --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: The main pages in a browser
+        working-directory: .
+        run: npm run test:e2e

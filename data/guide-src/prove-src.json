@@ -1,0 +1,1602 @@
+{
+"signs": [
+{
+"code": "A11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A11.svg"
+},
+{
+"code": "A12.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A12.1.svg"
+},
+{
+"code": "A16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A16.svg"
+},
+{
+"code": "A17",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A17.svg"
+},
+{
+"code": "A18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A18.svg"
+},
+{
+"code": "A19",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A19.svg"
+},
+{
+"code": "A20",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A20.svg"
+},
+{
+"code": "A21",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A21.svg"
+},
+{
+"code": "A22",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A22.svg"
+},
+{
+"code": "A23",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A23.svg"
+},
+{
+"code": "A26",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A26.svg"
+},
+{
+"code": "A27",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A27.svg"
+},
+{
+"code": "A31",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A31.svg"
+},
+{
+"code": "A33",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A33.svg"
+},
+{
+"code": "A34",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A34.svg"
+},
+{
+"code": "A35",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A35.svg"
+},
+{
+"code": "A36",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A36.svg"
+},
+{
+"code": "A37",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A37.svg"
+},
+{
+"code": "A38",
+"img": "https://prove.dk/storage/app/media/traffic_signs/A38_dip.svg"
+},
+{
+"code": "A39",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A39.svg"
+},
+{
+"code": "A41.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A41.1.svg"
+},
+{
+"code": "A41.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A41.2.svg"
+},
+{
+"code": "A42.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A42.1.svg"
+},
+{
+"code": "A42.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A42.2.svg"
+},
+{
+"code": "A43.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A43.1.svg"
+},
+{
+"code": "A43.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A43.2.svg"
+},
+{
+"code": "A43.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A43.3.svg"
+},
+{
+"code": "A44",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A44.svg"
+},
+{
+"code": "A46.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A46.1.svg"
+},
+{
+"code": "A46.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A46.2.svg"
+},
+{
+"code": "A71",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A71.svg"
+},
+{
+"code": "A72",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A72.svg"
+},
+{
+"code": "A73",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A73.svg"
+},
+{
+"code": "A74.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A74.1.svg"
+},
+{
+"code": "A74.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A74.2.svg"
+},
+{
+"code": "A75",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A75.svg"
+},
+{
+"code": "A91",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A91.svg"
+},
+{
+"code": "A92",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A92.svg"
+},
+{
+"code": "A95",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A95.svg"
+},
+{
+"code": "A96",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A96.svg"
+},
+{
+"code": "A97",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A97.svg"
+},
+{
+"code": "A99",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_A99.svg"
+},
+{
+"code": "B11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B11.svg"
+},
+{
+"code": "B13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B13.svg"
+},
+{
+"code": "B13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B13_historisk.svg"
+},
+{
+"code": "B15",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B15.svg"
+},
+{
+"code": "B16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B16.svg"
+},
+{
+"code": "B17",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B17.svg"
+},
+{
+"code": "B18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B18.svg"
+},
+{
+"code": "B19",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_B19.svg"
+},
+{
+"code": "C11.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C11.1.svg"
+},
+{
+"code": "C11.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C11.2.svg"
+},
+{
+"code": "C12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C12.svg"
+},
+{
+"code": "C19",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C19.svg"
+},
+{
+"code": "C21",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C21.svg"
+},
+{
+"code": "C22.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C22.1.svg"
+},
+{
+"code": "C22.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C22.2.svg"
+},
+{
+"code": "C23.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C23.1.svg"
+},
+{
+"code": "C23.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C23.2.svg"
+},
+{
+"code": "C23.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C23.3.svg"
+},
+{
+"code": "C24.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C24.1.svg"
+},
+{
+"code": "C24.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C24.2.svg"
+},
+{
+"code": "C25.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C25.1.svg"
+},
+{
+"code": "C25.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C25.2.svg"
+},
+{
+"code": "C26.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C26.1.svg"
+},
+{
+"code": "C26.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C26.2.svg"
+},
+{
+"code": "C31",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C31.svg"
+},
+{
+"code": "C32",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C32.svg"
+},
+{
+"code": "C35",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C35.svg"
+},
+{
+"code": "C36",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C36.svg"
+},
+{
+"code": "C41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C41.svg"
+},
+{
+"code": "C42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C42.svg"
+},
+{
+"code": "C43",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C43.svg"
+},
+{
+"code": "C51",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C51.svg"
+},
+{
+"code": "C51",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C51_historisk.svg"
+},
+{
+"code": "C52",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C52.svg"
+},
+{
+"code": "C53",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C53.svg"
+},
+{
+"code": "C54",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C54.svg"
+},
+{
+"code": "C55",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C55.svg"
+},
+{
+"code": "C56",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C56.svg"
+},
+{
+"code": "C59",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C59.svg"
+},
+{
+"code": "C61",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C61.svg"
+},
+{
+"code": "C62",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C62.svg"
+},
+{
+"code": "C92",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_C92.svg"
+},
+{
+"code": "D11.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.1.svg"
+},
+{
+"code": "D11.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.2.svg"
+},
+{
+"code": "D11.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.3.svg"
+},
+{
+"code": "D11.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.4.svg"
+},
+{
+"code": "D11.5",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.5.svg"
+},
+{
+"code": "D11.6",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.6.svg"
+},
+{
+"code": "D11.7",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.7.svg"
+},
+{
+"code": "D11.8",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D11.8.svg"
+},
+{
+"code": "D12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D12.svg"
+},
+{
+"code": "D15.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D15.2.svg"
+},
+{
+"code": "D15.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D15.3.svg"
+},
+{
+"code": "D16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D16.svg"
+},
+{
+"code": "D21",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D21.svg"
+},
+{
+"code": "D22",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D22.svg"
+},
+{
+"code": "D23",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D23.svg"
+},
+{
+"code": "D26",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D26.svg"
+},
+{
+"code": "D26.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D26.1.svg"
+},
+{
+"code": "D26.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D26.2.svg"
+},
+{
+"code": "D26.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D26.3.svg"
+},
+{
+"code": "D26.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D26.4.svg"
+},
+{
+"code": "D26.5",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D26.5.svg"
+},
+{
+"code": "D27",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D27.svg"
+},
+{
+"code": "D27.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D27.1.svg"
+},
+{
+"code": "D55",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D55.svg"
+},
+{
+"code": "D56",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_D56.svg"
+},
+{
+"code": "E11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-11.jpg"
+},
+{
+"code": "E15",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-15.jpg"
+},
+{
+"code": "E16.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-16%2C1.jpg"
+},
+{
+"code": "E16.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-16%2C2.jpg"
+},
+{
+"code": "E17",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E17.svg"
+},
+{
+"code": "E18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E18.svg"
+},
+{
+"code": "E18.1.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E18.1.1.svg"
+},
+{
+"code": "E18.1.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E18.1.2.svg"
+},
+{
+"code": "E18.1.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E18.1.3.svg"
+},
+{
+"code": "E19",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E19-L.svg"
+},
+{
+"code": "E21.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E21.1.svg"
+},
+{
+"code": "E21.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E21.2.svg"
+},
+{
+"code": "E21.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E21.3.svg"
+},
+{
+"code": "E21.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E21.4.svg"
+},
+{
+"code": "E22.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E22.1.svg"
+},
+{
+"code": "E22.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-22%2C2.jpg"
+},
+{
+"code": "E22.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-22%2C3.jpg"
+},
+{
+"code": "E22.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-22%2C4.jpg"
+},
+{
+"code": "E23",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E23.svg"
+},
+{
+"code": "E24",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E24.svg"
+},
+{
+"code": "E26.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E26.1.svg"
+},
+{
+"code": "E30",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E30.svg"
+},
+{
+"code": "E31",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E31.svg"
+},
+{
+"code": "E32",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-32.jpg"
+},
+{
+"code": "E33.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E33.1.svg"
+},
+{
+"code": "E33.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E33.2.svg"
+},
+{
+"code": "E34",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E34.svg"
+},
+{
+"code": "E37",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-37.jpg"
+},
+{
+"code": "E39",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E39.svg"
+},
+{
+"code": "E40",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E40.svg"
+},
+{
+"code": "E41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-41.jpg"
+},
+{
+"code": "E42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E42.svg"
+},
+{
+"code": "E43",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E43.svg"
+},
+{
+"code": "E44",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E44.svg"
+},
+{
+"code": "E45",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E45.svg"
+},
+{
+"code": "E47",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-47.jpg"
+},
+{
+"code": "E48",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-48.jpg"
+},
+{
+"code": "E49",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E49.svg"
+},
+{
+"code": "E50",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E50.svg"
+},
+{
+"code": "E51",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-51.jpg"
+},
+{
+"code": "E52",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E52.svg"
+},
+{
+"code": "E53",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-53.jpg"
+},
+{
+"code": "E54",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-54.jpg"
+},
+{
+"code": "E55",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E55.svg"
+},
+{
+"code": "E56",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E56.svg"
+},
+{
+"code": "E68.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E68.2.svg"
+},
+{
+"code": "E68.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E68_3.svg"
+},
+{
+"code": "E68.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E68.4.svg"
+},
+{
+"code": "E68.9",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-68%2C9.jpg"
+},
+{
+"code": "E69",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-69.jpg"
+},
+{
+"code": "E69.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E69.3.svg"
+},
+{
+"code": "E69.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E69.4.svg"
+},
+{
+"code": "E69.5",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E69.5.svg"
+},
+{
+"code": "E69.9",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-69%2C9.jpg"
+},
+{
+"code": "E70",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-70.jpg"
+},
+{
+"code": "E80",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E80.svg"
+},
+{
+"code": "E90",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_E90.svg"
+},
+{
+"code": "E91",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-91.jpg"
+},
+{
+"code": "E92",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-92.jpg"
+},
+{
+"code": "E93",
+"img": "https://prove.dk/storage/app/media/traffic_signs/E-93.jpg"
+},
+{
+"code": "F11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_F11.svg"
+},
+{
+"code": "F12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_F12.svg"
+},
+{
+"code": "F13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_F13.svg"
+},
+{
+"code": "F14",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_F14.svg"
+},
+{
+"code": "F16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-16.jpg"
+},
+{
+"code": "F18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_F18.svg"
+},
+{
+"code": "F21.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-21%2C1.jpg"
+},
+{
+"code": "F21.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-21%2C2.jpg"
+},
+{
+"code": "F21.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-21%2C3.jpg"
+},
+{
+"code": "F21.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-21%2C4.jpg"
+},
+{
+"code": "F30",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_F30.svg"
+},
+{
+"code": "F33.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-33%2C1.jpg"
+},
+{
+"code": "F33.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_F33.2.svg"
+},
+{
+"code": "F34,2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-34%2C2.jpg"
+},
+{
+"code": "F34,3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-34%2C3.jpg"
+},
+{
+"code": "F34.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/F-34%2C1.jpg"
+},
+{
+"code": "G11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/G-11.jpg"
+},
+{
+"code": "G14",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_G14.svg"
+},
+{
+"code": "G15",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_G15.svg"
+},
+{
+"code": "G18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Denmark_road_sign_G18.svg"
+},
+{
+"code": "H41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/H-41.jpg"
+},
+{
+"code": "H42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/H-42.jpg"
+},
+{
+"code": "H45",
+"img": "https://prove.dk/storage/app/media/traffic_signs/H-45.jpg"
+},
+{
+"code": "H46",
+"img": "https://prove.dk/storage/app/media/traffic_signs/H-46.jpg"
+},
+{
+"code": "H47",
+"img": "https://prove.dk/storage/app/media/traffic_signs/H-49.jpg"
+},
+{
+"code": "H51",
+"img": "https://prove.dk/storage/app/media/traffic_signs/H-51.jpg"
+},
+{
+"code": "I11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/I-11.jpg"
+},
+{
+"code": "I12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/I-12.jpg"
+},
+{
+"code": "I13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/I-13.jpg"
+},
+{
+"code": "I16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/I-16.jpg"
+},
+{
+"code": "I17",
+"img": "https://prove.dk/storage/app/media/traffic_signs/I-17.jpg"
+},
+{
+"code": "I18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/I-18.jpg"
+},
+{
+"code": "I20",
+"img": "https://prove.dk/storage/app/media/traffic_signs/I-20.jpg"
+},
+{
+"code": "J11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/J-11.jpg"
+},
+{
+"code": "J12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/J-12.jpg"
+},
+{
+"code": "J13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/J-13.jpg"
+},
+{
+"code": "K11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/K-11.jpg"
+},
+{
+"code": "K12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/K-12.jpg"
+},
+{
+"code": "K30",
+"img": "https://prove.dk/storage/app/media/traffic_signs/K-30.jpg"
+},
+{
+"code": "L41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-41.jpg"
+},
+{
+"code": "L42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-42.jpg"
+},
+{
+"code": "L43",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-43.jpg"
+},
+{
+"code": "L44",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-44.jpg"
+},
+{
+"code": "L45",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-45.jpg"
+},
+{
+"code": "L46",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-46.jpg"
+},
+{
+"code": "L47",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-47.jpg"
+},
+{
+"code": "L50",
+"img": "https://prove.dk/storage/app/media/traffic_signs/L-50.jpg"
+},
+{
+"code": "M10",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-10.jpg"
+},
+{
+"code": "M101",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-100%2C1.jpg"
+},
+{
+"code": "M102",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-100%2C2.jpg"
+},
+{
+"code": "M11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-11.jpg"
+},
+{
+"code": "M12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-12.jpg"
+},
+{
+"code": "M13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-13.jpg"
+},
+{
+"code": "M13,1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-13%2C1.jpg"
+},
+{
+"code": "M13,2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-13%2C2.jpg"
+},
+{
+"code": "M13,3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-13%2C3.jpg"
+},
+{
+"code": "M14",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-14.jpg"
+},
+{
+"code": "M15",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-15.jpg"
+},
+{
+"code": "M16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-16.jpg"
+},
+{
+"code": "M17",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-17.jpg"
+},
+{
+"code": "M18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-18.jpg"
+},
+{
+"code": "M21",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-21.jpg"
+},
+{
+"code": "M22",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-22.jpg"
+},
+{
+"code": "M23",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-23.jpg"
+},
+{
+"code": "M24",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-24.jpg"
+},
+{
+"code": "M30",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-30.jpg"
+},
+{
+"code": "M31",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-31.jpg"
+},
+{
+"code": "M32",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-32.jpg"
+},
+{
+"code": "M33",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-33.jpg"
+},
+{
+"code": "M34",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-34.jpg"
+},
+{
+"code": "M35",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-35.jpg"
+},
+{
+"code": "M36",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-36.jpg"
+},
+{
+"code": "M37",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-37.jpg"
+},
+{
+"code": "M38",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-38.jpg"
+},
+{
+"code": "M41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-41.jpg"
+},
+{
+"code": "M42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-42.jpg"
+},
+{
+"code": "M43",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-43.jpg"
+},
+{
+"code": "M45",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-45.jpg"
+},
+{
+"code": "M46",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-46.jpg"
+},
+{
+"code": "M47",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-47.jpg"
+},
+{
+"code": "M51",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-51.jpg"
+},
+{
+"code": "M52",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-52%2C1.jpg"
+},
+{
+"code": "M53",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-53.jpg"
+},
+{
+"code": "M54",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-54.jpg"
+},
+{
+"code": "M57",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-57.jpg"
+},
+{
+"code": "M61",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-61.jpg"
+},
+{
+"code": "M9",
+"img": "https://prove.dk/storage/app/media/traffic_signs/M-9.jpg"
+},
+{
+"code": "N41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/N-41.jpg"
+},
+{
+"code": "N42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/N-42.jpg"
+},
+{
+"code": "N43",
+"img": "https://prove.dk/storage/app/media/traffic_signs/N-43.jpg"
+},
+{
+"code": "N44.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/N-44%2C1.jpg"
+},
+{
+"code": "N44.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/N-44%2C2.jpg"
+},
+{
+"code": "N44.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/N-44%2C3.jpg"
+},
+{
+"code": "N46",
+"img": "https://prove.dk/storage/app/media/traffic_signs/N-46.jpg"
+},
+{
+"code": "O41-42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/O-41-42.jpg"
+},
+{
+"code": "O43-45",
+"img": "https://prove.dk/storage/app/media/traffic_signs/O-43-45.jpg"
+},
+{
+"code": "P11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/P-11.jpg"
+},
+{
+"code": "Q41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Q-41.jpg"
+},
+{
+"code": "Q42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Q-42.jpg"
+},
+{
+"code": "Q44",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Q-44.jpg"
+},
+{
+"code": "Q45",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Q-45.jpg"
+},
+{
+"code": "Q46",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Q-46.jpg"
+},
+{
+"code": "Q47",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Q-47.jpg"
+},
+{
+"code": "R11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/R-11.jpg"
+},
+{
+"code": "R13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/R-13.jpg"
+},
+{
+"code": "R14",
+"img": "https://prove.dk/storage/app/media/traffic_signs/R-14.jpg"
+},
+{
+"code": "R15",
+"img": "https://prove.dk/storage/app/media/traffic_signs/R-15.jpg"
+},
+{
+"code": "S11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-11.jpg"
+},
+{
+"code": "S13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-13.jpg"
+},
+{
+"code": "S16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-16.jpg"
+},
+{
+"code": "S17",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-17.jpg"
+},
+{
+"code": "S18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-18.jpg"
+},
+{
+"code": "S20",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-20.jpg"
+},
+{
+"code": "S21",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-21.jpg"
+},
+{
+"code": "S22",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-22.jpg"
+},
+{
+"code": "S32",
+"img": "https://prove.dk/storage/app/media/traffic_signs/S-32.jpg"
+},
+{
+"code": "T33",
+"img": "https://prove.dk/storage/app/media/traffic_signs/T-33.jpg"
+},
+{
+"code": "T61",
+"img": "https://prove.dk/storage/app/media/traffic_signs/T-61.jpg"
+},
+{
+"code": "T62",
+"img": "https://prove.dk/storage/app/media/traffic_signs/T-62.jpg"
+},
+{
+"code": "T63",
+"img": "https://prove.dk/storage/app/media/traffic_signs/T-63.jpg"
+},
+{
+"code": "U1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/U-1.jpg"
+},
+{
+"code": "U2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/U-2.jpg"
+},
+{
+"code": "U3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/U-3.jpg"
+},
+{
+"code": "U4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/U-4.jpg"
+},
+{
+"code": "U5",
+"img": "https://prove.dk/storage/app/media/traffic_signs/U-5.jpg"
+},
+{
+"code": "U6",
+"img": "https://prove.dk/storage/app/media/traffic_signs/U-6.jpg"
+},
+{
+"code": "U7",
+"img": "https://prove.dk/storage/app/media/traffic_signs/U-7.jpg"
+},
+{
+"code": "UA31",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UA-31.jpg"
+},
+{
+"code": "UA41",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UA-41.jpg"
+},
+{
+"code": "UA43",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UA-43.jpg"
+},
+{
+"code": "UA43.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UA-43%2C1.jpg"
+},
+{
+"code": "UA72",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UA-72.jpg"
+},
+{
+"code": "UA73",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UA-73.jpg"
+},
+{
+"code": "UA99",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UA-99.jpg"
+},
+{
+"code": "UB11.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UB-11%2C1.jpg"
+},
+{
+"code": "UB11.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UB-11%2C2.jpg"
+},
+{
+"code": "UB11.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UB-11%2C3.jpg"
+},
+{
+"code": "UC33",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-33.jpg"
+},
+{
+"code": "UC60.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-60%2C1.jpg"
+},
+{
+"code": "UC60.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-60%2C2.jpg"
+},
+{
+"code": "UC60.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-60%2C3.jpg"
+},
+{
+"code": "UC60.5",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-60%2C5.jpg"
+},
+{
+"code": "UC60.6",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-60%2C6.jpg"
+},
+{
+"code": "UC60.7",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-60%2C7.jpg"
+},
+{
+"code": "UC60.8",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-60%2C8.jpg"
+},
+{
+"code": "UC61",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-61.jpg"
+},
+{
+"code": "UC62",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UC-62.jpg"
+},
+{
+"code": "UD1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UD-1.jpg"
+},
+{
+"code": "UD21.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UD-21%2C1.jpg"
+},
+{
+"code": "UD21.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UD-21%2C2.jpg"
+},
+{
+"code": "UE33.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UE-33%2C1.jpg"
+},
+{
+"code": "UE33.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UE-33%2C2.jpg"
+},
+{
+"code": "UE33.3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UE-33%2C3.jpg"
+},
+{
+"code": "UE33.4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UE-33%2C4.jpg"
+},
+{
+"code": "UE34",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UE-34.jpg"
+},
+{
+"code": "UE80",
+"img": "https://prove.dk/storage/app/media/traffic_signs/UE-80.jpg"
+},
+{
+"code": "US1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-1.jpg"
+},
+{
+"code": "US10",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-10.jpg"
+},
+{
+"code": "US11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-11.jpg"
+},
+{
+"code": "US12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-12.jpg"
+},
+{
+"code": "US13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-13.jpg"
+},
+{
+"code": "US2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-2.jpg"
+},
+{
+"code": "US3",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-3.jpg"
+},
+{
+"code": "US4",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-4.jpg"
+},
+{
+"code": "US5",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-5.jpg"
+},
+{
+"code": "US6",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-6.jpg"
+},
+{
+"code": "US7",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-7.jpg"
+},
+{
+"code": "US8",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-8.jpg"
+},
+{
+"code": "US9",
+"img": "https://prove.dk/storage/app/media/traffic_signs/US-9.jpg"
+},
+{
+"code": "V11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-11.jpg"
+},
+{
+"code": "V12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-12.jpg"
+},
+{
+"code": "V15",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-15.jpg"
+},
+{
+"code": "V20",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-20.jpg"
+},
+{
+"code": "V21",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-21.jpg"
+},
+{
+"code": "V23",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-23.jpg"
+},
+{
+"code": "V33",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-33.jpg"
+},
+{
+"code": "V42",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-42.jpg"
+},
+{
+"code": "V43",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-43.jpg"
+},
+{
+"code": "V44",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-44.jpg"
+},
+{
+"code": "V45",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-45.jpg"
+},
+{
+"code": "V46",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-46.jpg"
+},
+{
+"code": "V50",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-50.jpg"
+},
+{
+"code": "V60",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-60.jpg"
+},
+{
+"code": "V61",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-61.jpg"
+},
+{
+"code": "V62",
+"img": "https://prove.dk/storage/app/media/traffic_signs/V-62.jpg"
+},
+{
+"code": "X11",
+"img": "https://prove.dk/storage/app/media/traffic_signs/X-11.jpg"
+},
+{
+"code": "X12",
+"img": "https://prove.dk/storage/app/media/traffic_signs/X-12.jpg"
+},
+{
+"code": "X13",
+"img": "https://prove.dk/storage/app/media/traffic_signs/X-13.jpg"
+},
+{
+"code": "X16",
+"img": "https://prove.dk/storage/app/media/traffic_signs/X-16new.jpg"
+},
+{
+"code": "X18",
+"img": "https://prove.dk/storage/app/media/traffic_signs/X-18new.jpg"
+},
+{
+"code": "X19",
+"img": "https://prove.dk/storage/app/media/traffic_signs/X-19.jpg"
+},
+{
+"code": "Y17",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Y-17.jpg"
+},
+{
+"code": "Z72.1",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Z-72%2C1.jpg"
+},
+{
+"code": "Z72.2",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Z-72%2C2.jpg"
+},
+{
+"code": "Z93",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Z-93.jpg"
+},
+{
+"code": "Z95",
+"img": "https://prove.dk/storage/app/media/traffic_signs/Z-95.jpg"
+}
+],
+"priority": [
+{
+"id": 53,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/righthandgivewayduty.jpg"
+},
+{
+"id": 54,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija54.jpg"
+},
+{
+"id": 55,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija55.jpg"
+},
+{
+"id": 56,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija56.jpg"
+},
+{
+"id": 57,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija57.jpg"
+},
+{
+"id": 58,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija58.jpg"
+},
+{
+"id": 59,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija59.jpg"
+},
+{
+"id": 60,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija60.jpg"
+},
+{
+"id": 62,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija62.jpg"
+},
+{
+"id": 63,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija63.jpg"
+},
+{
+"id": 64,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija64.jpg"
+},
+{
+"id": 65,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija65.jpg"
+},
+{
+"id": 66,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija66.jpg"
+},
+{
+"id": 67,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija67.jpg"
+},
+{
+"id": 68,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija68.jpg"
+},
+{
+"id": 69,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija69.jpg"
+},
+{
+"id": 70,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija70.jpg"
+},
+{
+"id": 71,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija71.jpg"
+},
+{
+"id": 72,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija72.jpg"
+},
+{
+"id": 73,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija73.jpg"
+},
+{
+"id": 76,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija76.jpg"
+},
+{
+"id": 77,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija77.jpg"
+},
+{
+"id": 78,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija78.jpg"
+},
+{
+"id": 80,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija80.jpg"
+},
+{
+"id": 81,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija81.jpg"
+},
+{
+"id": 82,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija82.jpg"
+},
+{
+"id": 85,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija85.jpg"
+},
+{
+"id": 86,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija86.jpg"
+},
+{
+"id": 87,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija87.jpg"
+},
+{
+"id": 88,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija88.jpg"
+},
+{
+"id": 89,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija89.jpg"
+},
+{
+"id": 91,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija91.jpg"
+},
+{
+"id": 92,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija92.jpg"
+},
+{
+"id": 93,
+"picture": "https://prove.dk/storage/app/media/priority-questions-pictures/Situacija93.jpg"
+}
+]
+}

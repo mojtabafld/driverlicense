@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<!-- The admin's console at teori.bitlane.app/console: sign in (an admin account, ADMIN_USERS) and compare the
+     pictures with prove.dk's, in four parts: the lessons' and exams' question pictures (prove.dk's original beside the
+     made ones; choose which the app shows), the signs and right of way (the made picture, prove.dk's and the official
+     drawing; for a sign, choose the made picture or the official drawing), and the rules (the questions' pictures of
+     each part of «قوانین»), as many as in the app. A picture chosen for the main site is only marked; the item's own
+     «اعمال در سایت اصلی» applies it (or «اعمال همه» at the bottom, all marked choices). Under every item, «ساخت پرامپت با هوش مصنوعی» has the API write a prompt (editable) and «ایجاد تصویر» makes the picture;
+     the item's prompt is kept («پرامپت ذخیره‌شده», with the item's code); Claude Code edits it on the admin's request
+     (/api/claudeprompt), and then it shows as edited by Claude Code with «ساخت تصویر با این پرامپت» to make the new one. «اصلاح بخش‌هایی از
+     تصویر»: mark parts of the picture, comment on each, and the API changes the prompt for those parts (/api/consoleregion). One AI picture is kept per item. An item
+     can be marked (⚑, with a note) to be made again later; «فقط علامت‌دارها» lists the marked items of a part, and the
+     «⚑ علامت‌دارها» part all of them in full. Every picture opens full screen to zoom in (⤢, or a double click). Only this; it talks to /api/login, /api/logout, /api/guideref*, /api/guidedraft,
+     /api/guidegen, /api/consolepics, /api/consolemark(ed), /api/consoleprompt, /api/consoleregion and /api/imggen*. -->
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Teoripro Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f7;--surface:#fff;--surface2:#eef1f3;--line:#dde2e6;--text:#1c2226;--muted:#6b757d;--accent:#2e8285;--ok:#2fae4f;--bad:#d64545}
+@media (prefers-color-scheme:dark){:root{--bg:#121516;--surface:#1c2022;--surface2:#262b2e;--line:#333a3e;--text:#e8ecee;--muted:#9aa4aa;--accent:#4fb3b6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Vazirmatn',system-ui,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 90px}
+h1{font-size:22px;margin:0}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:9px 16px;background:var(--accent);color:#fff;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.soft{background:var(--surface2);color:var(--text)}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;background:var(--surface);color:var(--text);cursor:pointer}
+.chip.on{border-color:var(--ok);color:var(--ok);font-weight:700}
+.chip:disabled{cursor:default}
+.chip:not(.on):disabled{opacity:.5}
+input,select{font:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--surface);color:var(--text)}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.head .sp{flex:1}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:12px}
+.item{display:flex;flex-direction:column;gap:8px}
+.pics{display:grid;gap:8px;align-items:start}
+.pic{width:100%;aspect-ratio:4/3;object-fit:contain;background:#f2f3f5;border-radius:10px;display:block}
+.pic.on{outline:3px solid var(--ok);outline-offset:2px}
+.none{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;background:var(--surface2);border-radius:10px;font-size:13px}
+small{display:block;font-size:12px;margin-top:2px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{font:inherit;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:7px 16px;background:var(--surface);color:var(--text);cursor:pointer}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.qtext{font-size:14px}
+.gen{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.gen textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;min-height:150px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--text);resize:vertical}
+.gen .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.gen .btn{padding:7px 14px;font-size:14px}
+.state{font-size:13px;color:var(--accent);font-weight:700}
+.fail{font-size:12.5px;color:var(--bad)}
+.qda{font-size:12.5px;direction:ltr;text-align:left}
+.tile{display:flex;flex-direction:column;gap:4px;border-radius:12px;padding:4px;border:2px solid transparent}
+.tile.can{cursor:pointer}
+.tile.can:hover{background:var(--surface2)}
+.tile.sel{border-color:var(--accent)}
+.tl{display:flex;align-items:center;gap:6px;min-height:22px}
+.tl small{margin:0}
+.radio{color:var(--accent);font-size:14px;line-height:1}
+.live{margin-inline-start:auto;font-size:11px;font-weight:700;color:var(--ok);border:1px solid var(--ok);border-radius:99px;padding:0 8px}
+.item.marked{border-color:#e8912d;box-shadow:inset 0 0 0 1px #e8912d}
+.mk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:rgba(232,145,45,.12);color:#b8670f;border-radius:10px;padding:6px 10px;font-size:13px}
+.mk .sp{flex:1}
+.chip.flag{color:#b8670f;border-color:rgba(232,145,45,.5)}
+.only{display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}
+.tab.tabm:not(.on){color:#b8670f;border-color:rgba(232,145,45,.5)}
+.mlist{display:flex;flex-direction:column;gap:14px}
+.mhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px}
+.mhead .sp{flex:1}
+.kind{font-weight:700;font-size:12px;border-radius:99px;padding:1px 10px;background:var(--surface2)}
+.mbody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;align-items:start}
+@media (max-width:820px){.mbody{grid-template-columns:1fr}}
+.minfo,.mpics{display:flex;flex-direction:column;gap:8px}
+.sts{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.sts li{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:8px;background:var(--surface2)}
+.sts li .mark{font-weight:800;width:16px;flex:none}
+.sts li.ok .mark{color:var(--ok)}
+.sts li.no .mark{color:var(--bad)}
+.gtext{font-size:13.5px;line-height:1.8}
+.saved{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg)}
+.saved.cc{border-color:var(--accent)}
+.sv-h{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:14px}
+.sv-h .code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--surface2);border-radius:6px;padding:1px 7px;user-select:all}
+.reply{white-space:pre-wrap;font-size:13px;line-height:1.75;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.lb.rg{align-items:flex-start;overflow:auto;touch-action:auto;padding:16px}
+.rg-in{background:var(--surface);color:var(--text);border-radius:14px;padding:12px;width:min(1000px,100%);display:flex;flex-direction:column;gap:10px;margin:0 auto}
+.rg-h{display:flex;align-items:center;gap:8px}
+.rg-h .code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--surface2);border-radius:6px;padding:1px 7px}
+.rg-h .lbx{position:static;background:var(--surface2);color:var(--text)}
+.rg-t{font-size:13px}
+.rg-pic{position:relative;display:flex;justify-content:center;cursor:crosshair;touch-action:none;user-select:none}
+.rg-pic img{max-width:100%;max-height:62vh;border-radius:8px;-webkit-user-drag:none;pointer-events:none}
+.rg-box{position:absolute;border:3px solid #ff1a1a;background:rgba(255,26,26,.12);border-radius:3px;pointer-events:none}
+.rg-box span{position:absolute;top:-3px;left:-3px;min-width:22px;height:22px;padding:0 4px;background:#ff1a1a;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;border-radius:3px 0 6px 0}
+.rg-list{display:flex;flex-direction:column;gap:8px}
+.rg-row{display:flex;gap:8px;align-items:flex-start}
+.rg-n{flex:none;width:26px;height:26px;border-radius:6px;background:#ff1a1a;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:6px}
+.rg-row textarea{flex:1}
+.rg-in textarea{font:inherit;font-size:14px;min-height:52px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl}
+.ccl{color:var(--accent);font-weight:700;font-size:13px}
+.ptext pre{white-space:pre-wrap;direction:ltr;text-align:left;font-size:12.5px;line-height:1.6;background:var(--surface2);border-radius:10px;padding:10px;margin:4px 0 0;max-height:320px;overflow:auto}
+.fixbox{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px}
+.fixbox textarea{font:inherit;font-size:14px;width:100%;min-height:80px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--text);resize:vertical;direction:rtl;text-align:right}
+.act{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.act .btn{padding:7px 14px;font-size:14px}
+.pw{position:relative}
+.zoom{position:absolute;bottom:6px;left:6px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:16px;line-height:30px;cursor:zoom-in;padding:0}
+.zoom:hover{background:rgba(0,0,0,.75)}
+.lb{position:fixed;inset:0;background:rgba(10,12,14,.92);z-index:20;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+.lb img{max-width:94vw;max-height:86vh;object-fit:contain;background:#f2f3f5;border-radius:8px;transition:transform .15s ease-out;user-select:none;-webkit-user-drag:none}
+.lbx{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:18px;cursor:pointer}
+.lbc{position:absolute;top:20px;left:50%;transform:translateX(-50%);color:#fff;font-weight:700}
+.lbh{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:12.5px;white-space:nowrap}
+.apply{position:fixed;left:0;right:0;bottom:0;display:none;align-items:center;gap:10px;padding:12px max(16px,calc((100vw - 1200px)/2 + 16px));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.08);z-index:5}
+.apply.show{display:flex}
+.apply .sp{flex:1}
+.login{max-width:360px;margin:12vh auto 0;display:flex;flex-direction:column;gap:10px}
+.err{color:var(--bad);min-height:1.5em;font-size:14px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+pre{white-space:pre-wrap;font-size:12px;direction:ltr;text-align:left}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="toast"></div>
+<script>
+(() => {
+  const $app = document.getElementById('app');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  const when = t => new Date(t).toLocaleString('fa-IR', { dateStyle: 'medium', timeStyle: 'short' });
+  let toastT;
+  const toast = m => { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); };
+  async function api(method, route, body) {
+    const r = await fetch('/api/' + route, { method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(d.error || 'خطا'), { status: r.status });
+    return d;
+  }
+
+  // Signing in: an admin account (the same accounts as the app).
+  function login(msg = '') {
+    $app.innerHTML = `<form class="card login" id="f">
+      <h1>کنسول Teoripro</h1>
+      <p class="muted" style="margin:0">مقایسه‌ی تصاویر با prove.dk؛ فقط برای مدیران.</p>
+      <input name="u" placeholder="نام کاربری" autocomplete="username" dir="ltr" required>
+      <input name="p" type="password" placeholder="رمز عبور" autocomplete="current-password" dir="ltr" required>
+      <div class="err" id="err">${esc(msg)}</div>
+      <button class="btn">ورود</button>
+    </form>`;
+    const f = document.getElementById('f');
+    f.u.focus();
+    f.onsubmit = async e => {
+      e.preventDefault();
+      try { const d = await api('POST', 'login', { username: f.u.value, password: f.p.value }); if (!d.user.admin) { await api('POST', 'logout').catch(() => {}); return login('این حساب دسترسی مدیریت ندارد.'); } view(); }
+      catch (er) { document.getElementById('err').textContent = er.message; }
+    };
+  }
+
+  // Four parts; the open one and its group are kept in the address (#signs/3), so a reload stays there.
+  const TABS = [['lessons', 'درس‌ها و آزمون‌ها'], ['signs', 'علائم'], ['priority', 'حق تقدم'], ['rules', 'قوانین'], ['marked', '⚑ علامت‌دارها']];
+  // `only`: show only the items marked to be made again (from all groups of the part).
+  const st = { tab: 'lessons', g: 0, data: null, only: false };
+  { const [t, g] = location.hash.slice(1).split('/'); if (TABS.some(x => x[0] === t)) { st.tab = t; st.g = +g || 0; } }
+  const isGuide = () => st.tab === 'signs' || st.tab === 'priority';
+  let pollT;
+  // Choices not applied yet, by item ('q:<qid>' → job id or '' for prove.dk's; 'g:<key>' → ai | cand | prove |
+  // official), with what they replace; «اعمال» sends them all. Kept across parts and groups until applied.
+  const pending = {};
+  // Prompts being written or edited, by item: { text } or { busy: true }; kept across redraws.
+  const drafts = {};
+  let busyPoll = false;   // something is being made: the page looks again in a few seconds
+
+  // One picture to choose: `val` is what choosing it means; `now` what the main site shows; a choice not applied
+  // yet is outlined, the one applied is marked.
+  const tile = (id, val, now, src, label, empty) => {
+    const sel = id in pending ? pending[id].val : now, on = sel === val, live = now === val;
+    return `<div class="tile ${src ? 'can' : ''} ${on ? 'sel' : ''}" ${src ? `data-pick="${esc(id)}" data-val="${esc(val)}" data-now="${esc(now)}" role="button" tabindex="0"` : ''}>
+      ${src ? `<div class="pw"><img loading="lazy" class="pic" src="${esc(src)}" alt=""><button class="zoom" data-zoom="${esc(src)}" data-cap="${esc(label)}" title="بزرگ‌نمایی" aria-label="بزرگ‌نمایی">⤢</button></div>` : `<div class="none muted">${empty}</div>`}
+      <div class="tl"><span class="radio">${on ? '●' : '○'}</span><small>${label}</small>${live ? '<span class="live">سایت اصلی</span>' : ''}</div>
+    </div>`;
+  };
+  // The item's own «اعمال»: applies only its marked choice (and «لغو» drops it).
+  const actRow = id => `<div class="act">${id in pending
+    ? `<button class="btn" data-apply="${esc(id)}">اعمال در سایت اصلی</button><button class="btn soft" data-undo1="${esc(id)}">لغو</button><span class="muted" style="font-size:12.5px">انتخاب تازه هنوز اعمال نشده است.</span>`
+    : `<button class="btn" disabled>اعمال در سایت اصلی</button>`}</div>`;
+  // Making a picture: «ساخت پرامپت با هوش مصنوعی» → the API's prompt (editable) → «ایجاد تصویر». Every item keeps its
+  // prompt (the API's, or the last picture's) on the server; the admin asks Claude Code (in its chat, giving the item's
+  // code) to change it, and it then shows here as edited by Claude Code, with «ساخت تصویر با این پرامپت» to make the
+  // new picture from it (consoleprompts.js). Per item: { data: { prompt, by, at, note }, loading, open }.
+  const saved = {};
+  const savedOf = id => (saved[id] = saved[id] || {});
+  const loadSaved = async id => {
+    const sv = savedOf(id);
+    if (sv.loading) return;
+    sv.loading = true; render();
+    try { sv.data = await api('GET', `consoleprompt?id=${encodeURIComponent(id)}`); } catch (e) { toast(e.message); }
+    sv.loading = false; render();
+  };
+  const promptBox = (id, hasAi, pic) => {
+    const m = (st.data.prompts || {})[id], sv = savedOf(id), byClaude = m && m.by === 'claude', byRegion = m && m.by === 'region';
+    if (!m && !hasAi) return '';
+    // A newer edit than the one loaded: load again when opened.
+    if (sv.data && m && sv.data.at !== m.at) sv.data = null;
+    return `<div class="saved ${byClaude || byRegion ? 'cc' : ''}">
+      <div class="sv-h"><b>پرامپت ذخیره‌شده</b><span class="code" dir="ltr" title="این کد را برای ویرایش پرامپت به Claude Code بدهید">${esc(id)}</span>
+        ${byClaude ? `<span class="ccl">✎ این پرامپت توسط Claude Code ویرایش شده${m.at ? ` · ${esc(when(m.at))}` : ''}</span>` : ''}
+        ${byRegion ? `<span class="ccl">✎ با API برای بخش انتخاب‌شده‌ی تصویر ویرایش شده${m.at ? ` · ${esc(when(m.at))}` : ''}</span>` : ''}
+        ${(byClaude || byRegion) && m.used && m.used >= m.at ? '<span class="muted" style="font-size:12px">ساخت تصویر با همین پرامپت درخواست شده</span>' : ''}
+        <span style="flex:1"></span>
+        ${pic ? `<button class="chip" data-region="${esc(id)}" data-pic="${esc(pic)}">اصلاح بخش‌هایی از تصویر</button>` : ''}
+        <button class="chip" data-sopen="${esc(id)}">${sv.open ? 'بستن' : 'نمایش پرامپت'}</button></div>
+      ${(byClaude || byRegion) && m.note ? `<div class="muted" style="font-size:13px;white-space:pre-wrap">${byRegion ? 'درخواست شما' : 'تغییر'}: ${esc(m.note)}</div>` : ''}
+      ${byRegion && m.reply ? `<div class="reply">${esc(m.reply)}</div>` : ''}
+      ${sv.open ? (sv.data ? `<div class="ptext"><pre>${esc(sv.data.prompt || 'پرامپتی ذخیره نشده است.')}</pre></div>` : '<span class="muted" style="font-size:13px">در حال بارگذاری…</span>') : ''}
+      ${byClaude || byRegion ? `<div class="row"><button class="btn" data-smake="${esc(id)}">ساخت تصویر با این پرامپت</button></div>` : ''}
+    </div>`;
+  };
+  // «اصلاح بخش‌هایی از تصویر»: the picture full screen; the admin drags rectangles over the parts to correct (each one
+  // numbered, with its own comment), then «اعمال اصلاحات روی همین تصویر» corrects the saved picture in those parts
+  // only (the rest stays exactly as it is) and the saved prompt with it, or «فقط اصلاح پرامپت» the prompt only
+  // (/api/consoleregion). The page draws the picture with the parts outlined and numbered, and each part close up.
+  function regionEdit(id, src) {
+    const box = document.createElement('div');
+    box.className = 'lb rg';
+    box.innerHTML = `<div class="rg-in">
+      <div class="rg-h"><b>اصلاح بخش‌هایی از تصویر</b><span class="code" dir="ltr">${esc(id)}</span><span style="flex:1"></span><button class="lbx" aria-label="بستن">✕</button></div>
+      <div class="muted rg-t">روی تصویر بکشید تا یک بخش انتخاب شود؛ برای هر بخش بنویسید چه چیزی در آن اشتباه است. می‌توانید چند بخش انتخاب کنید.</div>
+      <div class="rg-pic"><img src="${esc(src)}" alt="" draggable="false"></div>
+      <div class="rg-list"></div>
+      <div class="rg-out" hidden></div>
+      <div class="row"><button class="btn" data-rimg disabled>اعمال اصلاحات روی همین تصویر</button><button class="btn soft" data-rgo disabled>فقط اصلاح پرامپت</button><button class="btn soft" data-rno>انصراف</button></div>
+      <small class="muted">«اعمال اصلاحات روی همین تصویر»: فقط داخل کادرها عوض می‌شود و بقیه‌ی تصویر دقیقاً همان می‌ماند؛ پرامپت هم به‌روز می‌شود. «فقط اصلاح پرامپت»: تصویر عوض نمی‌شود.</small>
+    </div>`;
+    document.body.appendChild(box);
+    const img = box.querySelector('img'), wrap = box.querySelector('.rg-pic'), list = box.querySelector('.rg-list'),
+      go = box.querySelector('[data-rgo]'), gi = box.querySelector('[data-rimg]'), out = box.querySelector('.rg-out'), no = box.querySelector('[data-rno]');
+    // The parts: { x, y, w, h } (fractions of the picture) and the comment.
+    const regions = [];
+    let drawing = null, start = null, busy = false, done = false;
+    const ready = () => { go.disabled = gi.disabled = busy || done || !regions.length || regions.some(r => !r.text.trim()); };
+    const close = () => { if (busy) return; box.remove(); document.removeEventListener('keydown', key); window.removeEventListener('resize', show); };
+    const key = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', key);
+    box.querySelector('.lbx').onclick = close;
+    no.onclick = close;
+    const at = e => { const r = img.getBoundingClientRect(); return { x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) }; };
+    // The rectangles over the picture, numbered as in the list.
+    function show() {
+      wrap.querySelectorAll('.rg-box').forEach(el => el.remove());
+      const r = img.getBoundingClientRect(), w = wrap.getBoundingClientRect();
+      [...regions, ...(drawing ? [drawing] : [])].forEach((g, i) => {
+        const el = document.createElement('div');
+        el.className = 'rg-box';
+        Object.assign(el.style, { left: `${r.left - w.left + g.x * r.width}px`, top: `${r.top - w.top + g.y * r.height}px`, width: `${g.w * r.width}px`, height: `${g.h * r.height}px` });
+        if (g !== drawing) el.innerHTML = `<span>${faNum(i + 1)}</span>`;
+        wrap.appendChild(el);
+      });
+    }
+    // One comment box per part, in order; ✕ removes the part.
+    function listParts() {
+      list.innerHTML = regions.map((g, i) => `<div class="rg-row"><span class="rg-n">${faNum(i + 1)}</span>
+        <textarea class="fa" data-i="${i}" placeholder="چه چیزی در بخش ${faNum(i + 1)} باید اصلاح شود؟" maxlength="2000" ${busy || done ? 'disabled' : ''}>${esc(g.text)}</textarea>
+        ${busy || done ? '' : `<button class="chip" data-del="${i}" title="حذف این بخش">✕</button>`}</div>`).join('')
+        || '<div class="muted" style="font-size:13px">هنوز بخشی انتخاب نشده است.</div>';
+      list.querySelectorAll('textarea').forEach(t => t.oninput = () => { regions[+t.dataset.i].text = t.value; ready(); });
+      list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { regions.splice(+b.dataset.del, 1); listParts(); show(); ready(); });
+      ready();
+    }
+    wrap.onpointerdown = e => { if (busy || done) return; e.preventDefault(); start = at(e); drawing = { ...start, w: 0, h: 0 }; wrap.setPointerCapture(e.pointerId); show(); };
+    wrap.onpointermove = e => { if (!start) return; const p = at(e); drawing = { x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) }; show(); };
+    wrap.onpointerup = () => {
+      if (!start) return;
+      start = null;
+      const g = drawing; drawing = null;
+      if (g && g.w >= 0.02 && g.h >= 0.02 && regions.length < 8) {
+        regions.push({ ...g, text: '' });
+        listParts();
+        const t = list.querySelector(`textarea[data-i="${regions.length - 1}"]`); if (t) t.focus();
+      } else if (regions.length >= 8) toast('حداکثر ۸ بخش');
+      show();
+    };
+    window.addEventListener('resize', show);
+    img.onload = show;
+    listParts();
+    // The picture with the parts outlined and numbered, and each part close up, as JPEG data URLs.
+    const draw = () => {
+      const W = img.naturalWidth, H = img.naturalHeight, k = Math.min(1, 1400 / Math.max(W, H));
+      const c = document.createElement('canvas'); c.width = Math.round(W * k); c.height = Math.round(H * k);
+      const g = c.getContext('2d'); g.drawImage(img, 0, 0, c.width, c.height);
+      const lw = Math.max(4, c.width / 220), fs = Math.max(22, c.width / 32);
+      regions.forEach((r, i) => {
+        g.strokeStyle = '#ff1a1a'; g.lineWidth = lw;
+        g.strokeRect(r.x * c.width, r.y * c.height, r.w * c.width, r.h * c.height);
+        g.fillStyle = '#ff1a1a'; g.fillRect(r.x * c.width, r.y * c.height, fs * 1.3, fs * 1.3);
+        g.fillStyle = '#fff'; g.font = `bold ${fs}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText(String(i + 1), r.x * c.width + fs * 0.65, r.y * c.height + fs * 0.68);
+      });
+      const crop = r => {
+        const sw = r.w * W, sh = r.h * H, kc = Math.min(1, 700 / Math.max(sw, sh), 4);
+        const d = document.createElement('canvas'); d.width = Math.max(1, Math.round(sw * kc)); d.height = Math.max(1, Math.round(sh * kc));
+        d.getContext('2d').drawImage(img, r.x * W, r.y * H, sw, sh, 0, 0, d.width, d.height);
+        return d.toDataURL('image/jpeg', 0.88);
+      };
+      return { marked: c.toDataURL('image/jpeg', 0.85), regions: regions.map(r => ({ box: { x: r.x, y: r.y, w: r.w, h: r.h }, message: r.text.trim(), crop: crop(r) })) };
+    };
+    const send = async (mode, b, label) => {
+      busy = true; listParts(); b.textContent = mode === 'image' ? 'در حال اصلاح پرامپت و شروع اصلاح تصویر…' : 'در حال اصلاح پرامپت…';
+      try {
+        const e = await api('POST', 'consoleregion', { id, part: st.tab, mode, ...draw() });
+        st.data.prompts = { ...(st.data.prompts || {}), [id]: { by: e.by, at: e.at, note: e.note, reply: e.reply, used: e.used || null } };
+        delete saved[id];
+        busy = false; done = true; listParts();
+        out.hidden = false;
+        out.innerHTML = `<b>${mode === 'image' ? 'پرامپت ذخیره شد و اصلاح تصویر شروع شد.' : 'پرامپت نهایی ذخیره شد.'}</b>${e.reply ? `<div class="reply">${esc(e.reply)}</div>` : ''}
+          <div class="muted" style="font-size:13px">${mode === 'image' ? 'تصویر اصلاح‌شده تا یکی دو دقیقه‌ی دیگر جای همین تصویر را می‌گیرد؛ فقط داخل کادرها عوض می‌شود.' : 'برای ساختن تصویر تازه، زیر همین مورد «ساخت تصویر با این پرامپت» را بزنید.'}</div>`;
+        go.hidden = gi.hidden = true; no.textContent = 'بستن';
+        if (mode === 'image') view(); else render();
+      } catch (er) { busy = false; toast(er.message); b.textContent = label; listParts(); }
+    };
+    gi.onclick = () => send('image', gi, 'اعمال اصلاحات روی همین تصویر');
+    go.onclick = () => send('prompt', go, 'فقط اصلاح پرامپت');
+  }
+  const genBox = (id, making, failed, hasAi, pic) => {
+    const d = drafts[id];
+    return `<div class="gen">
+      ${failed ? `<span class="fail">ساخت تصویر قبلی ناموفق بود: ${esc(failed)}</span>` : ''}
+      ${making ? `<span class="state">در حال ساخت تصویر…</span>`
+        : !d ? `<div class="row"><button class="btn soft" data-draft="${esc(id)}">ساخت پرامپت با هوش مصنوعی</button></div>`
+        : d.busy ? `<span class="state">در حال نوشتن پرامپت…</span>`
+        : `<textarea data-dr="${esc(id)}" spellcheck="false">${esc(d.text)}</textarea>
+          <div class="row"><button class="btn" data-go="${esc(id)}">ایجاد تصویر</button><button class="btn soft" data-cancel="${esc(id)}">انصراف</button></div>`}
+      ${!making ? promptBox(id, hasAi, pic) : ''}
+      ${hasAi || d ? `<small class="muted">تصویر تازه جای تصویر AI قبلی را می‌گیرد؛ اگر سایت اصلی تصویر AI را نشان می‌داد، از این پس تصویر تازه را نشان می‌دهد.</small>` : ''}
+    </div>`;
+  };
+  // Marks: items flagged to be made again later (kept on the server, with an optional note).
+  const marks = () => st.data.marks || {};
+  const markRow = id => {
+    const m = marks()[id];
+    return m ? `<div class="mk"><span>⚑ برای ساخت دوباره علامت خورده${m.note ? `: <b>${esc(m.note)}</b>` : ''}</span><span class="sp"></span>
+        <button class="chip" data-mark="${esc(id)}" data-on="1">ویرایش یادداشت</button><button class="chip" data-mark="${esc(id)}" data-on="0">برداشتن علامت</button></div>`
+      : `<div><button class="chip flag" data-mark="${esc(id)}" data-on="1">⚑ علامت برای ساخت دوباره</button></div>`;
+  };
+  const idOf = x => (x.key ? `g:${x.key}` : `q:${x.id}`);
+  // The item's newest AI picture (the one its saved prompt belongs to), for «اصلاح بخش‌هایی از تصویر».
+  const picOf = (x, isQ) => {
+    if (isQ) { const m = x.made.slice().sort((a, b) => a.at - b.at).pop(); return m ? `/img/gen/${x.qid}/${encodeURIComponent(m.id)}` : ''; }
+    const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
+    const c = x.cand; return c && c.done && c.v ? ref('cand', x.key, c.v) : x.ai ? ref('ai', x.key, x.ai) : '';
+  };
+  const nMarked = items => items.filter(x => marks()[idOf(x)]).length;
+  const select = (groups, label) => `<label style="margin-inline-start:auto">گروه <select id="grp" ${st.only ? 'disabled' : ''}>${groups.map((x, i) => { const m = nMarked(x.items); return `<option value="${i}" ${i === st.g ? 'selected' : ''}>${esc(label(x))} (${faNum(x.items.length)}${m ? ` · ⚑${faNum(m)}` : ''})</option>`; }).join('')}</select></label>`;
+  // The cards to show: the open group's items, or (only marked) the marked items of every group, once each.
+  const shown = (groups, g) => {
+    if (!st.only) return g.items.map((x, k) => ({ x, n: k + 1, from: '' }));
+    const seen = new Set(), out = [];
+    for (const gr of groups) gr.items.forEach((x, k) => { const id = idOf(x); if (marks()[id] && !seen.has(id)) { seen.add(id); out.push({ x, n: k + 1, from: gr.title }); } });
+    return out;
+  };
+  const onlyBox = groups => { const all = new Set(groups.flatMap(gr => gr.items.map(idOf)).filter(id => marks()[id])).size;
+    return `<label class="only"><input type="checkbox" id="only" ${st.only ? 'checked' : ''}> فقط علامت‌دارها (${faNum(all)})</label>`; };
+
+  // A picture full screen: a click (or the wheel, or two fingers) zooms in at that point and out again, dragging moves
+  // it; Esc, ✕ or a click beside it closes.
+  function zoom(src, cap) {
+    const box = document.createElement('div');
+    box.className = 'lb';
+    box.innerHTML = `<img src="${esc(src)}" alt="" draggable="false"><button class="lbx" aria-label="بستن">✕</button>${cap ? `<div class="lbc">${esc(cap)}</div>` : ''}<div class="lbh">کلیک یا چرخ موس: بزرگ‌نمایی · کشیدن: جابه‌جایی · Esc: بستن</div>`;
+    document.body.appendChild(box);
+    const img = box.querySelector('img');
+    let k = 1, x = 0, y = 0, drag = null, moved = false;
+    const put = () => { img.style.transform = `translate(${x}px, ${y}px) scale(${k})`; img.style.cursor = k > 1 ? 'grab' : 'zoom-in'; };
+    // Zoom to `nk` keeping the point (cx, cy) of the screen where it is.
+    const to = (nk, cx, cy) => {
+      nk = Math.min(6, Math.max(1, nk));
+      const r = img.getBoundingClientRect(), ox = cx - (r.left + r.width / 2), oy = cy - (r.top + r.height / 2);
+      x -= ox * (nk / k - 1); y -= oy * (nk / k - 1); k = nk;
+      if (k === 1) { x = 0; y = 0; }
+      put();
+    };
+    const close = () => { box.remove(); document.removeEventListener('keydown', key); };
+    const key = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', key);
+    box.onclick = e => { if (e.target === box || e.target.classList.contains('lbx')) close(); };
+    img.onclick = e => { if (moved) return; to(k > 1 ? 1 : 2.5, e.clientX, e.clientY); };
+    img.onwheel = e => { e.preventDefault(); to(k * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY); };
+    img.onpointerdown = e => { if (k === 1) return; drag = { sx: e.clientX - x, sy: e.clientY - y }; moved = false; img.setPointerCapture(e.pointerId); };
+    img.onpointermove = e => { if (!drag) return; x = e.clientX - drag.sx; y = e.clientY - drag.sy; moved = true; put(); };
+    img.onpointerup = () => { drag = null; setTimeout(() => { moved = false; }, 0); };
+    // Two fingers on a touch screen.
+    let pinch = null;
+    img.ontouchstart = e => { if (e.touches.length === 2) { const [a, b] = e.touches; pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), k }; } };
+    img.ontouchmove = e => { if (pinch && e.touches.length === 2) { e.preventDefault(); const [a, b] = e.touches; to(pinch.k * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) / pinch.d, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2); } };
+    img.ontouchend = () => { pinch = null; };
+    put();
+  }
+
+  async function view() {
+    clearTimeout(pollT);
+    history.replaceState(null, '', `#${st.tab}/${st.g}`);
+    try { st.data = st.tab === 'marked' ? await api('GET', 'consolemarked') : isGuide() ? await api('GET', 'guideref') : await api('GET', `consolepics?kind=${st.tab}`); }
+    catch (e) { return login(e.status === 401 || e.status === 403 ? '' : e.message); }
+    render();
+  }
+
+  function render() {
+    clearTimeout(pollT);
+    busyPoll = false;
+    const n = Object.keys(pending).length;
+    $app.innerHTML = `
+      <div class="head"><h1>مقایسه‌ی تصاویر با prove.dk</h1><span class="sp"></span><button class="btn soft" id="out">خروج</button></div>
+      <div class="tabs">${TABS.map(([k, t]) => `<button class="tab ${k === st.tab ? 'on' : ''} ${k === 'marked' ? 'tabm' : ''}" data-tab="${k}">${t}${k === 'marked' ? ` (${faNum(Object.keys(marks()).length)})` : ''}</button>`).join('')}</div>
+      ${st.data.models ? `<p class="muted" style="margin:-4px 0 10px;font-size:12.5px">مدل پرامپت‌نویسی: <b dir="ltr">${esc(st.data.models.prompt)}</b> · مدل ساخت تصویر: <b dir="ltr">${esc(st.data.models.image)}</b></p>` : ''}
+      ${st.tab === 'marked' ? markedBody() : isGuide() ? guideBody() : questionBody()}
+      <div class="apply ${n ? 'show' : ''}"><span>${faNum(n)} تغییر انتخاب شده (همه با هم)</span><span class="sp"></span>
+        <button class="btn soft" id="undo">لغو</button><button class="btn" id="apply">اعمال همه در سایت اصلی</button></div>`;
+    wire();
+    if (busyPoll) pollT = setTimeout(function again() {
+      // Not while a prompt is being typed (a redraw would take the cursor away).
+      if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') pollT = setTimeout(again, 4000); else view();
+    }, 5000);
+  }
+
+  // Signs or right of way: the made picture (and a new one, once made), prove.dk's and (for a sign) the official drawing.
+  function guideBody() {
+    const d = st.data, run = d.run, running = run && !run.done;
+    const groups = d.groups.filter(x => x.kind === st.tab), g = groups[Math.min(st.g, groups.length - 1)];
+    if (running || g.items.some(x => x.cand && !x.cand.done)) busyPoll = true;
+    const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
+    return `
+      <p class="muted" style="margin:0 0 12px">برای هر مورد، تصویری را که سایت اصلی باید نشان دهد انتخاب کنید و «اعمال در سایت اصلی» را بزنید. سایت پشتیبان (/app) همیشه تصویر prove.dk را نشان می‌دهد. تصاویر prove.dk و طرح‌های رسمی (Wikimedia Commons) در پایگاه داده‌ی خودمان ذخیره می‌شوند و سرور هر چه را هنوز ندارد خودش دریافت می‌کند.</p>
+      <div class="card bar">
+        <button class="btn" id="imp" ${running ? 'disabled' : ''}>دریافت تصاویر مرجع</button>
+        <span class="muted">${running ? `در حال دریافت… ${faNum(run.n)} از ${faNum(run.total)}` : run ? `آخرین دریافت: ${when(run.at)} · ${faNum(run.n)} مورد${run.errors.length ? ` · ${faNum(run.errors.length)} خطا` : ''}${run.stopped ? ' (نیمه‌کاره ماند؛ دوباره بزنید)' : ''}` : 'هنوز دریافت نشده است.'}</span>
+        ${onlyBox(groups)}${select(groups, x => x.title)}
+      </div>
+      ${run && run.errors.length ? `<details class="card" style="margin-bottom:12px"><summary class="muted">خطاهای دریافت</summary><pre>${esc(run.errors.slice(0, 50).join('\n'))}</pre></details>` : ''}
+      ${st.only && !shown(groups, g).length ? '<p class="muted">موردی علامت نخورده است.</p>' : ''}
+      <div class="grid">${shown(groups, g).map(({ x, from }) => {
+        const id = `g:${x.key}`, c = x.cand, newPic = c && c.done && c.v, now = x.choice;
+        const cols = 2 + (x.canOfficial ? 1 : 0) + (newPic ? 1 : 0);
+        return `<div class="card item ${marks()[id] ? 'marked' : ''}">
+        ${from ? `<small class="muted">${esc(from)}</small>` : ''}
+        <div><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
+        ${markRow(id)}
+        <div class="pics" style="grid-template-columns:repeat(${cols},1fr)">
+          ${tile(id, 'ai', now, x.ai ? ref('ai', x.key, x.ai) : '', 'تصویر AI', 'ساخته نشده')}
+          ${newPic ? tile(id, 'cand', now, ref('cand', x.key, c.v), 'تصویر تازه‌ی AI', '') : ''}
+          ${tile(id, 'prove', now, x.prove ? ref('prove', x.key, '') : '', 'prove.dk', x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}
+          ${x.canOfficial ? tile(id, 'official', now, x.official ? ref('official', x.key, '') : '', 'طرح رسمی', 'دریافت نشده') : ''}
+        </div>
+        ${actRow(id)}
+        ${genBox(id, c && !c.done ? c.state : null, c && c.done && !c.v ? c.error || 'failed' : null, !!x.ai, newPic ? ref('cand', x.key, c.v) : x.ai ? ref('ai', x.key, x.ai) : '')}
+      </div>`; }).join('')}</div>`;
+  }
+
+  // Lessons or rules: every question of the group, as in the app: prove.dk's picture and the AI one (when made).
+  function questionBody() {
+    const d = st.data, g = d.groups[Math.min(st.g, d.groups.length - 1)];
+    if (shown(d.groups, g).some(({ x }) => x.making)) busyPoll = true;
+    return `
+      <p class="muted" style="margin:0 0 12px">${st.tab === 'rules' ? 'سؤال‌های هر بخش «قوانین»، همان سؤال‌هایی که تمرین آن بخش در برنامه از آن‌ها ساخته می‌شود.' : 'سؤال‌های هر درس، همان‌طور که در برنامه هستند.'} برای هر سؤال، تصویری را که سایت اصلی باید نشان دهد (prove.dk یا AI) انتخاب کنید و «اعمال در سایت اصلی» را بزنید. سایت پشتیبان (/app) همیشه تصویر prove.dk را نشان می‌دهد. برای هر سؤال فقط یک تصویر AI هست: تصویر تازه جای قبلی را می‌گیرد.</p>
+      <div class="card bar">${onlyBox(d.groups)}${select(d.groups, x => x.title)}</div>
+      ${st.only && !shown(d.groups, g).length ? '<p class="muted">موردی علامت نخورده است.</p>' : ''}
+      <div class="grid">${shown(d.groups, g).map(({ x, n, from }) => {
+        const id = `q:${x.id}`, now = x.active || '', made = x.made.slice().sort((a, b) => a.at - b.at);
+        return `<div class="card item ${marks()[id] ? 'marked' : ''}">
+        <div class="qtext"><b>${from ? `${esc(from)} · ` : ''}${faNum(n)}.</b> ${esc(x.text)}</div>
+        ${x.da && x.da !== x.text ? `<div class="qda muted">${esc(x.da)}</div>` : ''}
+        ${markRow(id)}
+        <div class="pics" style="grid-template-columns:repeat(${1 + Math.max(1, made.length)},1fr)">
+          ${tile(id, '', now, `/img/q${x.id}.jpg?orig=1`, 'prove.dk', '')}
+          ${made.length ? made.map((j, i) => tile(id, j.id, now, `/img/gen/${x.id}/${encodeURIComponent(j.id)}`, made.length > 1 && i === made.length - 1 ? 'تصویر تازه‌ی AI' : 'تصویر AI', '')).join('')
+            : tile(id, '-', now, '', 'تصویر AI', 'هنوز ساخته نشده')}
+        </div>
+        ${actRow(id)}
+        ${genBox(id, x.making, x.failed, made.length > 0, made.length ? `/img/gen/${x.id}/${encodeURIComponent(made[made.length - 1].id)}` : '')}
+      </div>`; }).join('')}</div>`;
+  }
+
+  // Every marked item of all four parts, newest mark first, in full: where it is, the question with its answers (or the
+  // sign's or situation's text), its pictures, the note, and the same choosing and making as in the parts.
+  function markedBody() {
+    const items = st.data.items || [];
+    if (items.some(x => x.making || (x.cand && !x.cand.done))) busyPoll = true;
+    const ref = (kind, key, v) => `/img/guideref/${kind}/${encodeURIComponent(key)}?v=${encodeURIComponent(String(v || ''))}`;
+    const plain = t => esc(String(t || '').replace(/\*\*/g, ''));
+    return `
+      <p class="muted" style="margin:0 0 12px">همه‌ی مواردی که برای ساخت دوباره علامت خورده‌اند، از هر چهار بخش، تازه‌ترین علامت اول.</p>
+      ${items.length ? '' : '<p class="muted">موردی علامت نخورده است.</p>'}
+      <div class="mlist">${items.map(x => {
+        const id = x.id, m = x.mark, isQ = id[0] === 'q';
+        const kind = isQ ? 'سؤال' : x.kind === 'signs' ? 'علائم' : 'حق تقدم';
+        const where = isQ ? [...x.lessons, ...x.rules.map(r => `قوانین: ${r}`)].join(' · ') : x.group;
+        let pics, info;
+        if (isQ) {
+          const now = x.active || '', made = x.made.slice().sort((a, b) => a.at - b.at);
+          pics = `<div class="pics" style="grid-template-columns:repeat(${1 + Math.max(1, made.length)},1fr)">
+            ${tile(id, '', now, `/img/q${x.qid}.jpg?orig=1`, 'prove.dk', '')}
+            ${made.length ? made.map((j, i) => tile(id, j.id, now, `/img/gen/${x.qid}/${encodeURIComponent(j.id)}`, made.length > 1 && i === made.length - 1 ? 'تصویر تازه‌ی AI' : 'تصویر AI', '')).join('') : tile(id, '-', now, '', 'تصویر AI', 'هنوز ساخته نشده')}</div>`;
+          info = `<div class="qtext"><b>${esc(x.text)}</b></div>
+            ${x.da && x.da !== x.text ? `<div class="qda muted">${esc(x.da)}</div>` : ''}
+            <ul class="sts">${x.statements.map(t => `<li class="${t.ok ? 'ok' : 'no'}"><span class="mark">${t.ok ? '✓' : '✗'}</span><span>${esc(t.fa)}<br><span class="qda muted">${esc(t.da)}</span></span></li>`).join('')}</ul>
+            ${x.topic ? `<small class="muted">موضوع: ${esc(x.topic)}</small>` : ''}`;
+        } else {
+          const c = x.cand, newPic = c && c.done && c.v, now = x.choice, cols = 2 + (x.canOfficial ? 1 : 0) + (newPic ? 1 : 0);
+          pics = `<div class="pics" style="grid-template-columns:repeat(${cols},1fr)">
+            ${tile(id, 'ai', now, x.ai ? ref('ai', x.key, x.ai) : '', 'تصویر AI', 'ساخته نشده')}
+            ${newPic ? tile(id, 'cand', now, ref('cand', x.key, c.v), 'تصویر تازه‌ی AI', '') : ''}
+            ${tile(id, 'prove', now, x.prove ? ref('prove', x.key, '') : '', 'prove.dk', x.onProve ? 'دریافت نشده' : 'در prove.dk نیست')}
+            ${x.canOfficial ? tile(id, 'official', now, x.official ? ref('official', x.key, '') : '', 'طرح رسمی', 'دریافت نشده') : ''}</div>`;
+          info = `<div class="qtext"><b>${x.sub ? `<span dir="ltr">${esc(x.sub)}</span> · ` : ''}${esc(x.label)}</b></div>
+            ${x.da ? `<div class="qda muted">${esc(x.da)}</div>` : ''}
+            ${x.text ? `<div class="gtext">${plain(x.text)}</div>` : ''}`;
+        }
+        const making = isQ ? x.making : x.cand && !x.cand.done ? x.cand.state : null;
+        const failed = isQ ? x.failed : x.cand && x.cand.done && !x.cand.v ? x.cand.error || 'failed' : null;
+        return `<div class="card item marked mrow">
+          <div class="mhead"><span class="kind">${kind}</span><span class="muted">${esc(where)}</span><span class="sp"></span><small class="muted">علامت: ${when(m.at)}${m.by ? ` · ${esc(m.by)}` : ''}</small></div>
+          ${markRow(id)}
+          <div class="mbody"><div class="minfo">${info}</div><div class="mpics">${pics}${actRow(id)}</div></div>
+          ${genBox(id, making, failed, isQ ? x.made.length > 0 : !!x.ai, picOf(x, isQ))}
+        </div>`; }).join('')}</div>`;
+  }
+
+  function wire() {
+    document.getElementById('out').onclick = async () => { await api('POST', 'logout').catch(() => {}); login(); };
+    $app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.tab; st.g = 0; view(); });
+    const grp = document.getElementById('grp');
+    if (grp) grp.onchange = e => { st.g = +e.target.value; view(); window.scrollTo({ top: 0 }); };
+    const only = document.getElementById('only');
+    if (only) only.onchange = () => { st.only = only.checked; render(); window.scrollTo({ top: 0 }); };
+    $app.querySelectorAll('[data-mark]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.mark, on = b.dataset.on === '1';
+      let note = '';
+      if (on) { const cur = (marks()[id] || {}).note || ''; const t = prompt('یادداشت (اختیاری): چه چیزی باید در ساخت دوباره درست شود؟', cur); if (t === null) return; note = t; }
+      try { st.data.marks = (await api('POST', 'consolemark', { id, on, note })).marks; toast(on ? 'علامت خورد' : 'علامت برداشته شد'); if (st.tab === 'marked') view(); else render(); } catch (e) { toast(e.message); }
+    });
+    const imp = document.getElementById('imp');
+    if (imp) imp.onclick = async () => { try { await api('POST', 'guiderefimport', {}); } catch (e) { toast(e.message); } view(); };
+    // Choosing a picture only marks it; «اعمال» applies.
+    $app.querySelectorAll('[data-zoom]').forEach(z => z.onclick = e => { e.stopPropagation(); zoom(z.dataset.zoom, z.dataset.cap); });
+    $app.querySelectorAll('.pw img').forEach(i => i.ondblclick = e => { e.stopPropagation(); zoom(i.getAttribute('src'), ''); });
+    $app.querySelectorAll('[data-pick]').forEach(t => t.onclick = () => {
+      const id = t.dataset.pick, val = t.dataset.val;
+      if (val === t.dataset.now) delete pending[id]; else pending[id] = { val };
+      render();
+    });
+    document.getElementById('undo').onclick = () => { for (const k of Object.keys(pending)) delete pending[k]; render(); };
+    // Applies the marked choices of `ids` on the main site.
+    const applyIds = async ids => {
+      let ok = 0, bad = 0;
+      for (const id of ids) {
+        const ref = id.slice(2), { val } = pending[id];
+        try {
+          if (id[0] === 'q') await api('POST', 'imggenset', { qid: +ref, job: val || null });
+          else await api('POST', 'guiderefchoose', { key: ref, choice: val });
+          delete pending[id]; ok++;
+        } catch (er) { bad++; toast(er.message); }
+      }
+      if (ok) toast(`${ok > 1 ? `${faNum(ok)} تغییر` : 'تغییر'} در سایت اصلی اعمال شد${bad ? ` · ${faNum(bad)} خطا` : ''}`);
+      view();
+    };
+    document.getElementById('apply').onclick = e => { e.target.disabled = true; applyIds(Object.keys(pending)); };
+    $app.querySelectorAll('[data-apply]').forEach(b => b.onclick = () => { b.disabled = true; applyIds([b.dataset.apply]); });
+    $app.querySelectorAll('[data-undo1]').forEach(b => b.onclick = () => { delete pending[b.dataset.undo1]; render(); });
+    // A prompt from Claude, edited in its box, then the picture made from it.
+    $app.querySelectorAll('[data-draft]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.draft, kind = id[0], ref = id.slice(2);
+      drafts[id] = { busy: true }; render();
+      try { drafts[id] = { text: (kind === 'q' ? await api('POST', 'imggendraft', { qid: +ref, part: st.tab }) : await api('POST', 'guidedraft', { key: ref })).prompt }; }
+      catch (e) { delete drafts[id]; toast(e.message); }
+      render();
+    });
+    $app.querySelectorAll('[data-dr]').forEach(t => t.oninput = () => { drafts[t.dataset.dr] = { text: t.value }; });
+    // The saved prompt: shown on request; a picture made from it (Claude Code's edited one).
+    $app.querySelectorAll('[data-sopen]').forEach(b => b.onclick = () => {
+      const id = b.dataset.sopen, sv = savedOf(id);
+      sv.open = !sv.open;
+      if (sv.open && !sv.data) loadSaved(id); else render();
+    });
+    $app.querySelectorAll('[data-region]').forEach(b => b.onclick = () => regionEdit(b.dataset.region, b.dataset.pic));
+    $app.querySelectorAll('[data-smake]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.smake, ref = id.slice(2);
+      b.disabled = true;
+      try {
+        const { prompt } = await api('GET', `consoleprompt?id=${encodeURIComponent(id)}`);
+        if (!prompt) throw new Error('پرامپتی ذخیره نشده است.');
+        if (id[0] === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
+        else await api('POST', 'guidegen', { key: ref, prompt });
+        toast('تصویر جدید در حال ساخت است');
+      } catch (e) { toast(e.message); }
+      view();
+    });
+    $app.querySelectorAll('[data-cancel]').forEach(b => b.onclick = () => { delete drafts[b.dataset.cancel]; render(); });
+    $app.querySelectorAll('[data-go]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.go, kind = id[0], ref = id.slice(2), prompt = (drafts[id] || {}).text || '';
+      if (!prompt.trim()) return toast('پرامپت خالی است.');
+      b.disabled = true;
+      try {
+        if (kind === 'q') await api('POST', 'imggenstart', { qid: +ref, model: 'sunburst', prompt, pick: true });
+        else await api('POST', 'guidegen', { key: ref, prompt });
+        delete drafts[id]; delete saved[id]; toast('ساخت تصویر شروع شد');
+      } catch (e) { toast(e.message); }
+      view();
+    });
+  }
+
+  view();
+})();
+</script>
+</body>
+</html>

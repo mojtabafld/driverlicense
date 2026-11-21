@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<!-- The admin's picture page at teori.bitlane.app/admin/images, opened from the dashboard's «ایجاد تصاویر» (an admin
+     account, signed in on the dashboard). Four parts: «سؤالات», the app's own 1100 questions («آزمون جدید», by topic),
+     «آموزش», the step-by-step course's pictures (by lesson), and the signs' and right of way's (by their groups). A part's
+     group and then one of its pictures are chosen from two lists («فقط تصاویر ساخته‌نشده» lists only those not made yet,
+     with each group's count); the picture is shown with its prompt, which may be edited, and «ساخت تصویر جدید» makes a
+     new picture from it, which the app shows once made. «سبک تصویر» has the API rewrite the prompt for another look
+     (flat, driving simulator, realistic, digital painting, 3D, cartoon; /api/restyle), the scene kept; the list
+     starts on the style the saved prompt is in, marked «سبک فعلی». A question can be bookmarked, taken out of the bank or
+     rewritten by the AI on the admin's instruction (a proposal, applied on «اعمال»; /api/newq*, newqadmin.js). For a sign or right of way, a click on its made picture,
+     prove.dk's or the official drawing makes it the one the app shows (/api/guiderefchoose). It talks to /api/courseart, /api/courseprompt, /api/coursegen
+     (?set=newq|course), /api/guideref, /api/guidegen, /api/guidedraft, /api/consoleprompt and /api/imageupload («آپلود تصویر»). -->
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Teoripro Images</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f7;--surface:#fff;--surface2:#eef1f3;--line:#dde2e6;--text:#1c2226;--muted:#6b757d;--accent:#2e8285;--ok:#1f9a4a;--bad:#d64545}
+@media (prefers-color-scheme:dark){:root{--bg:#121516;--surface:#1c2022;--surface2:#262b2e;--line:#333a3e;--text:#e8ecee;--muted:#9aa4aa;--accent:#4fb3b6;--ok:#4cc47a;--bad:#ef6b6b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Vazirmatn',system-ui,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 90px}
+h1{font-size:22px;margin:0}
+.muted{color:var(--muted)}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.head .sp{flex:1}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.btn{font:inherit;font-weight:700;border:0;border-radius:10px;padding:8px 14px;background:var(--accent);color:#fff;cursor:pointer;text-decoration:none;display:inline-block}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.soft{background:var(--surface2);color:var(--text)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{font:inherit;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:7px 18px;background:var(--surface);color:var(--text);cursor:pointer}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.pick{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:10px;margin-bottom:12px}
+@media (max-width:640px){.pick{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+select{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--surface);color:var(--text);width:100%}
+.zoomable{cursor:zoom-in}
+.btn.mini{padding:4px 10px;font-size:12px}
+.lightbox{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+.lb-in{max-width:min(1200px,100%);max-height:100%;display:flex;flex-direction:column;gap:10px;align-items:center}
+.lb-in img{max-width:100%;max-height:calc(100vh - 110px);object-fit:contain;border-radius:10px;background:#fff}
+.lb-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;background:var(--surface);color:var(--text);border-radius:12px;padding:8px 12px}
+.pics{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:12px;margin:10px 0}
+figure{margin:0;display:flex;flex-direction:column;gap:6px}
+figure img,.none{width:100%;aspect-ratio:4/3;object-fit:contain;background:var(--surface2);border-radius:10px;display:block}
+.none{display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted)}
+figure.on img{outline:3px solid var(--ok);outline-offset:2px}
+img.pickable{cursor:pointer}
+img.pickable:hover{opacity:.85}
+figcaption a{font-size:12.5px;text-decoration:none}
+figcaption{font-size:12.5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+figcaption .btn{padding:4px 10px;font-size:12.5px}
+.on-tag{color:var(--ok);font-weight:700}
+.q{font-size:14.5px;margin:0 0 4px}
+.da{font-size:13px;direction:ltr;text-align:left}
+textarea{font:inherit;font-size:13px;direction:ltr;text-align:left;width:100%;min-height:220px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--text);resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.state{font-size:13px;color:var(--accent);font-weight:700}
+.fail{font-size:13px;color:var(--bad)}
+.chk{flex-direction:row;align-items:center;gap:6px;font-size:14px;color:var(--text);cursor:pointer}
+.qbox{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.qbox.gone{border-color:var(--bad)}
+.sts{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sts li{display:flex;gap:8px;font-size:14px}
+.sts .mk{font-weight:800;width:16px;flex:none}
+.sts li > span:last-child{flex:1;min-width:0}
+.sts li.ok .mk{color:var(--ok)}
+.sts li.no .mk{color:var(--bad)}
+.sts .da,.sts .why{display:block;font-size:12.5px}
+.sts .why{color:var(--muted)}
+.tag{font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+.tag.bad{color:var(--bad);border-color:var(--bad)}
+.aibox{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+textarea.fa{direction:rtl;text-align:right;min-height:80px}
+.trbox{white-space:pre-wrap;direction:rtl;text-align:right;font-size:13.5px;line-height:1.9;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 10px;background:var(--surface)}
+.prop{margin-top:10px;background:var(--surface2);border-radius:10px;padding:10px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;font-size:14px;z-index:9}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">در حال بارگذاری…</p></main>
+<script>
+(() => {
+  const $app = document.getElementById('app');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const faNum = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+  const cut = (t, n) => (t.length > n ? `${t.slice(0, n)}…` : t);
+  async function api(method, route, body) {
+    const r = await fetch('/api/' + route, { method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(d.error || 'خطا'), { status: r.status });
+    return d;
+  }
+  function toast(t) {
+    const el = document.createElement('div'); el.className = 'toast'; el.textContent = t; document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+  }
+
+  const PARTS = [
+    { id: 'q', title: 'سؤالات' },
+    { id: 'course', title: 'آموزش' },
+    { id: 'signs', title: 'علائم' },
+    { id: 'priority', title: 'حق تقدم' },
+    { id: 'landing', title: 'صفحه ورود' },
+  ];
+  // part, group and item chosen (kept in the address, so a reload stays on the same picture)
+  const h = new URLSearchParams(location.hash.slice(1));
+  // The picture services (kie.ai, OpenAI) and the one chosen here, kept in this browser (Mojtaba 2026-10-31).
+  let PROV = null, prov = 'kie';
+  try { prov = localStorage.getItem('img.provider') || 'kie'; } catch {}
+  const st = { part: PARTS.some(p => p.id === h.get('p')) ? h.get('p') : 'q', g: +h.get('g') || 0, i: +h.get('i') || 0, filter: ({ 1: 'missing' })[h.get('m')] || h.get('m') || 'all', pid: null, qd: null, qfor: '', ai: null, data: {}, prompt: null, promptFor: '', saved: '' };
+  const remember = () => history.replaceState(null, '', `#p=${st.part}&g=${st.g}&i=${st.i}${st.filter !== 'all' ? `&m=${st.filter}` : ''}`);
+
+  // A part's groups, each { title, items: [{ id, label, … }] }, in one shape for the page.
+  async function load(part, fresh) {
+    if (st.data[part] && !fresh) return st.data[part];
+    let groups;
+    if (part === 'q' || part === 'course') {
+      // the app's own 1100 questions (by topic) or the course's pictures (by lesson)
+      const set = part === 'q' ? 'newq' : 'course', d = await api('GET', `courseart?set=${set}`);
+      groups = d.groups.map(g => ({ title: g.title, items: g.items.map((x, n) => ({ ...x, set, pid: `${set}:${x.key}`, label: `${faNum(n + 1)}. ${cut(x.name || x.key, 70)}` })) }));
+    } else {
+      const d = await api('GET', 'guideref');
+      groups = d.groups.filter(g => g.kind === part).map(g => ({ title: g.title, items: g.items.map(x => ({ ...x, pid: `g:${x.key}`, label: `${x.sub ? `${x.sub} · ` : ''}${x.label}`,
+        making: x.cand && !x.cand.done ? x.cand.state : null, failed: x.cand && x.cand.done && !x.cand.v ? x.cand.error || 'failed' : null })) }));
+    }
+    return (st.data[part] = groups);
+  }
+  const current = () => {
+    const groups = st.data[st.part] || [], g = groups[Math.min(st.g, groups.length - 1)], items = g ? shown(g) : [];
+    // the picture being looked at stays on screen (e.g. once made it is no longer «not made yet», and the lists are read
+    // again while it is being made): found by its id first, by its place only when another one was chosen
+    let x = st.pid ? items.find(y => y.pid === st.pid) : null;
+    if (!x) x = items[Math.min(st.i, items.length - 1)];
+    if (x) { st.i = items.indexOf(x); st.pid = x.pid; remember(); }
+    return { groups, g, items, x };
+  };
+
+  // «فقط تصاویر ساخته‌نشده»: a picture not made yet (a sign or right of way: no AI picture)
+  const made = x => !!(x.pid[0] === 'g' ? x.ai : x.v);
+  // What the lists show: every picture, those not made yet, or (questions) the bookmarked, removed or AI-edited ones.
+  const FILTERS = [['all', 'همه'], ['missing', 'فقط تصاویر ساخته‌نشده'], ['marked', '🔖 نشان‌شده‌ها', 1], ['edited', '✎ ویرایش‌شده‌ها', 1], ['removed', '✕ حذف‌شده‌ها از بانک', 1]];
+  const pass = x => ({ all: true, missing: !made(x), marked: !!x.marked, edited: !!x.edited, removed: !!x.removed })[st.filter] ?? true;
+  const shown = g => (st.filter === 'all' ? g.items : g.items.filter(x => pass(x) || x.pid === st.pid));
+  // { prompt, style }: the saved prompt and the style the picture was last made in here (none before)
+  async function promptOf(x) {
+    if (x.set) return api('GET', `courseprompt?set=${x.set}&key=${encodeURIComponent(x.key)}`);
+    return api('GET', `consoleprompt?id=${encodeURIComponent(x.pid)}`);
+  }
+
+  // A sign's or right-of-way item's pictures: a click on one makes it the picture the app shows (its «تصویر اصلی»).
+  function pictures(x) {
+    // A click on a picture opens it large here (Mojtaba 2026-10-31); choosing the one the app shows is its own button,
+    // under the picture and in the large view.
+    const fig = (src, cap, on, act, pick) => `<figure class="${on ? 'on' : ''}">${!src ? `<div class="none">${esc(act || 'ساخته نشده')}</div>`
+      : `<img class="zoomable" src="${esc(src)}" alt="" loading="lazy" data-zoom="${esc(src)}" data-cap="${esc(cap.replace(/<[^>]+>/g, ''))}" ${pick ? `data-pickof="${pick}" data-on="${on ? 1 : ''}"` : ''} title="برای دیدن بزرگ کلیک کنید">`}
+      <figcaption>${cap}${src && pick ? ` ${on ? '<span class="on-tag">✓ تصویر اصلی</span>' : `<button class="btn soft mini" data-pick="${pick}">انتخاب به‌عنوان تصویر اصلی</button>`}` : ''}</figcaption></figure>`;
+    if (x.set) return fig(x.v ? `/${x.set === 'newq' ? 'newq' : 'course'}-art/${encodeURIComponent(x.key)}.png?v=${encodeURIComponent(x.v)}` : '', '<b>تصویر فعلی</b>', false, 'هنوز ساخته نشده');
+    const ref = (kind, v) => `/img/guideref/${kind}/${encodeURIComponent(x.key)}?v=${encodeURIComponent(String(v || ''))}`, c = x.choice || 'ai';
+    return fig(x.ai ? ref('ai', x.ai) : '', '<b>تصویر ساخته‌شده (AI)</b>', c === 'ai' && !!x.ai, '', 'ai')
+      + fig(x.prove ? ref('prove', '') : '', '<b>prove.dk</b>', c === 'prove', x.onProve ? 'دریافت نشده' : 'در prove.dk نیست', 'prove')
+      + (x.canOfficial ? fig(x.official ? ref('official', '') : '', '<b>طرح رسمی</b>', c === 'official', 'دریافت نشده', 'official') : '');
+  }
+
+  const STYLES = [['signs', 'سبک تابلوها و علائم (مثل تصاویر قبلی)'], ['flat', 'تصویرسازی تخت (وکتور)'], ['sim', 'شبیه‌ساز رانندگی (مثل آزمون رسمی)'], ['realistic', 'واقع‌گرایانه (عکس)'],
+    ['semi', 'نقاشی دیجیتال نیمه‌واقع‌گرا'], ['3d', 'سه‌بعدی مدرن'], ['cartoon', 'کارتونی']];
+  // The style a prompt is written in, from its words (its «Style:» line first); the «NOT …» words do not count.
+  function styleOf(p) {
+    const t = String(p || ''), line = (/(^|\n)\s*Style\s*:([^\n]*)/i.exec(t) || [])[2];
+    const w = (line || t.slice(0, 600)).toLowerCase().replace(/\bnot (a |an )?(photo-?realistic|3d render|3d|photograph)\w*/g, '');
+    if (/style as the app's road-sign pictures/.test(w)) return 'signs';
+    if (/driving[- ]simulator|game[- ]engine/.test(w)) return 'sim';
+    if (/digital painting|semi-realistic/.test(w)) return 'semi';
+    if (/cartoon/.test(w)) return 'cartoon';
+    if (/photo-?realistic|photograph/.test(w)) return 'realistic';
+    if (/\b3d\b/.test(w)) return '3d';
+    return 'flat';
+  }
+  // A question (the 1100 of «آزمون جدید»): its text and statements, and the admin's bookmark, removal from the bank and
+  // AI edit (a proposal shown first, applied only on «اعمال»).
+  const stList = q => `<ul class="sts">${q.st.map(t => `<li class="${t.ok ? 'ok' : 'no'}"><span class="mk">${t.ok ? '✓' : '✗'}</span><span>${esc(t.fa)}
+    <span class="da muted">${esc(t.da)}</span><span class="why">${esc(t.efa)}</span></span></li>`).join('')}</ul>`;
+  function questionPanel(x) {
+    const d = st.qd;
+    if (!d) return `<p class="q">${esc(x.name)}</p><p class="muted" style="font-size:13px">در حال بارگذاری سؤال…</p>`;
+    const q = d.q, a = st.ai;
+    return `<div class="qbox ${d.removed ? 'gone' : ''}">
+      <div class="row" style="margin:0 0 6px">${d.marked ? '<span class="tag">🔖 نشان‌شده</span>' : ''}${d.removed ? '<span class="tag bad">✕ حذف‌شده از بانک (در آزمون‌های تازه نمی‌آید)</span>' : ''}${d.edited ? `<span class="tag">✎ ویرایش‌شده</span>` : ''}</div>
+      <p class="q">${esc(q.sfa)}</p><div class="da muted">${esc(q.sda)}</div>
+      ${stList(q)}
+      <div class="row">
+        <button class="btn soft" id="qmark">${d.marked ? 'برداشتن نشان' : '🔖 نشان کردن برای بعد'}</button>
+        <button class="btn soft" id="qrm">${d.removed ? 'بازگرداندن به بانک' : '✕ حذف از بانک سؤال‌ها'}</button>
+        <button class="btn soft" id="qai">✎ ویرایش با هوش مصنوعی</button>
+        ${d.edited ? '<button class="btn soft" id="qrev">بازگرداندن نسخه‌ی اصلی</button>' : ''}
+      </div>
+      ${a ? `<div class="aibox">
+        <label>چه چیزی تغییر کند؟<textarea id="qins" class="fa" placeholder="مثلاً: گزینه‌ی دوم را دقیق‌تر کن، یا ترجمه‌ی فارسی را روان‌تر بنویس">${esc(a.ins || '')}</textarea></label>
+        <div class="row"><button class="btn" id="qsend" ${a.busy ? 'disabled' : ''}>${a.busy ? 'در حال ویرایش…' : 'ارسال به هوش مصنوعی'}</button><button class="btn soft" id="qcancel">بستن</button></div>
+        ${a.p ? `<div class="prop"><b>پیشنهاد هوش مصنوعی</b>${a.note ? `<p class="muted" style="margin:2px 0 6px;font-size:13px">${esc(a.note)}</p>` : ''}
+          <p class="q">${esc(a.p.sfa)}</p><div class="da muted">${esc(a.p.sda)}</div>${stList(a.p)}
+          <div class="row"><button class="btn" id="qapply">اعمال این ویرایش</button><span class="muted" style="font-size:12.5px">تا «اعمال» را نزنید چیزی عوض نمی‌شود.</span></div></div>` : ''}
+      </div>` : ''}
+    </div>`;
+  }
+  // after a change: the question and its flags in the lists
+  function setQ(x, d) {
+    st.qd = d; Object.assign(x, { marked: d.marked, removed: d.removed, edited: !!d.edited, name: d.q.sfa });
+    x.label = x.label.replace(/^([۰-۹]+\. ).*$/, (m0, n) => n + cut(d.q.sfa, 70));
+  }
+  function questionWire(x) {
+    const on = (id, f) => { const el = document.getElementById(id); if (el) el.onclick = f; };
+    const act = async (route, body, msg) => { try { setQ(x, await api('POST', route, { id: x.key, ...body })); toast(msg); } catch (e) { toast(e.message); } view(); };
+    on('qmark', () => act('newqmark', { on: !st.qd.marked }, st.qd.marked ? 'نشان برداشته شد' : 'نشان شد'));
+    on('qrm', () => { if (!st.qd.removed && !confirm('این سؤال از بانک حذف شود؟ دیگر در آزمون‌های تازه نمی‌آید (آزمون‌های قبلی کاربران با آن می‌مانند).')) return; act('newqremove', { on: !st.qd.removed }, st.qd.removed ? 'به بانک برگشت' : 'از بانک حذف شد'); });
+    on('qrev', () => { if (confirm('ویرایش کنار گذاشته شود و نسخه‌ی اصلی برگردد؟')) act('newqrevert', {}, 'نسخه‌ی اصلی برگشت'); });
+    on('qai', () => { st.ai = st.ai || {}; view(); });
+    on('qcancel', () => { st.ai = null; view(); });
+    const ins = document.getElementById('qins'); if (ins) ins.oninput = () => { st.ai.ins = ins.value; };
+    on('qsend', async () => {
+      const a = st.ai, pid = x.pid;
+      if (!String(a.ins || '').trim()) return toast('بنویسید چه چیزی باید تغییر کند.');
+      a.busy = true; view();
+      try { const d = await api('POST', 'newqai', { id: x.key, instruction: a.ins }); if (st.qfor === pid) Object.assign(a, { p: d.q, note: d.note }); } catch (e) { toast(e.message); }
+      a.busy = false; view();
+    });
+    on('qapply', async () => {
+      if (!confirm('این ویرایش در برنامه اعمال شود؟')) return;
+      try { setQ(x, await api('POST', 'newqapply', { id: x.key, q: st.ai.p })); st.ai = null; toast('ویرایش اعمال شد'); } catch (e) { toast(e.message); }
+      view();
+    });
+  }
+  const EMPTY = 'هنوز پرامپتی برای این تصویر ذخیره نشده؛ آن را بنویسید.';
+  let pollT = null;
+  // «صفحه ورود» (Mojtaba 2026-11-05): the welcome page's three cards, a light and a dark picture each, made with OpenAI
+  // (or kie.ai) in the style of data/hero-ref/landing-style.jpg; a new one waits beside the current one until it is
+  // chosen («انتخاب برای برنامه»), and «بازگشت به تصویر خود برنامه» goes back to the app's own mascot.
+  const VIBE_TAGS = ['تمرین', 'مربی هوشمند', 'قبولی'];
+  let vibe = null; const vibeEdits = {};
+  async function landing(fresh) {
+    if (!vibe || fresh) {
+      try { vibe = await api('GET', 'vibeart'); }
+      catch (e) { $app.innerHTML = e.status === 401 || e.status === 403 ? '<div class="card"><p>برای این صفحه ابتدا در داشبورد با حساب مدیر وارد شوید.</p><a class="btn" href="/admin">رفتن به داشبورد</a></div>' : `<div class="card fail">${esc(e.message)}</div>`; return; }
+    }
+    const P = vibe.providers || {}, vp = P.openai && P.openai.ok ? 'openai' : 'kie';
+    const card = it => {
+      const n = +it.key[0], dark = it.key.endsWith('dark'), c = it.cand, making = c && !c.done;
+      const box = (src, cap) => `<figure><div style="background:${esc(it.bg)};border-radius:12px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;overflow:hidden">${src ? `<img class="zoomable" src="${esc(src)}" data-zoom="${esc(src)}" data-cap="${esc(cap)}" style="width:100%;height:100%;object-fit:contain">` : '<span class="muted" style="font-size:12.5px">تصویر خود برنامه</span>'}</div><figcaption>${cap}</figcaption></figure>`;
+      return `<div class="card" style="margin-bottom:14px">
+        <h3 style="margin:0 0 10px;font-size:16px">کارت ${faNum(n)} · ${VIBE_TAGS[n - 1]} · ${dark ? 'تیره' : 'روشن'}</h3>
+        <div class="pics">
+          ${box(it.v ? `/vibe-art/${it.key}.png?v=${encodeURIComponent(it.v)}` : '', 'تصویر فعلی در برنامه')}
+          ${c && c.done && c.v ? box(`/api/vibecand?key=${it.key}&v=${encodeURIComponent(c.v)}`, `تصویر تازه (${c.provider === 'openai' ? 'ChatGPT' : 'kie.ai'})`) : c && !c.done ? `<figure><div class="none">در حال ساخت… (${esc(c.state)})</div></figure>` : ''}
+        </div>
+        ${c && c.done && !c.v ? `<p class="fail">ساخت تصویر ناموفق بود: ${esc(c.error || 'failed')}</p>` : ''}
+        <label>پرامپت<textarea data-vp="${it.key}" style="min-height:150px">${esc(vibeEdits[it.key] ?? it.prompt)}</textarea></label>
+        <div class="row" style="margin-top:6px">
+          <button class="btn" data-vgen="${it.key}" ${making ? 'disabled' : ''}>ساخت تصویر با ${vp === 'openai' ? 'ChatGPT' : 'kie.ai'}</button>
+          ${c && c.done && c.v ? `<button class="btn soft" data-vpick="${it.key}">انتخاب برای برنامه</button>` : ''}
+          ${it.v ? `<button class="btn soft" data-vreset="${it.key}">بازگشت به تصویر خود برنامه</button>` : ''}
+        </div></div>`;
+    };
+    $app.innerHTML = `
+      <div class="head"><h1>ایجاد تصاویر</h1><span class="sp"></span><a class="btn soft" href="/admin">بازگشت به داشبورد</a></div>
+      <div class="tabs">${PARTS.map(p => `<button class="tab ${p.id === st.part ? 'on' : ''}" data-part="${p.id}">${p.title}</button>`).join('')}</div>
+      <p class="muted" style="font-size:13px;margin:0 0 12px">تصاویر سه کارت صفحه‌ی ورود، روشن و تیره، به سبک تصویر نمونه (خطی ایزومتریک). ${P.openai && P.openai.ok ? 'ساخت با ChatGPT (OpenAI).' : 'کلید OpenAI روی سرور تنظیم نشده؛ ساخت با kie.ai.'} هر تصویر تازه کنار تصویر فعلی می‌ماند تا «انتخاب برای برنامه» را بزنید.</p>
+      ${vibe.items.map(card).join('')}`;
+    document.querySelectorAll('[data-part]').forEach(b => { b.onclick = () => { st.part = b.dataset.part; st.g = 0; st.i = 0; st.pid = null; remember(); view(); }; });
+    document.querySelectorAll('textarea[data-vp]').forEach(t => { t.oninput = () => { vibeEdits[t.dataset.vp] = t.value; }; });
+    document.querySelectorAll('[data-vgen]').forEach(b => { b.onclick = async () => {
+      const key = b.dataset.vgen; b.disabled = true;
+      try { await api('POST', 'vibegen', { key, prompt: vibeEdits[key] ?? vibe.items.find(x => x.key === key).prompt, provider: vp }); delete vibeEdits[key]; toast('ساخت تصویر شروع شد'); }
+      catch (e) { toast(e.message); }
+      landing(true);
+    }; });
+    document.querySelectorAll('[data-vpick]').forEach(b => { b.onclick = async () => {
+      if (!confirm('این تصویر در صفحه‌ی ورود برنامه نشان داده شود؟')) return;
+      try { vibe.items = (await api('POST', 'vibechoose', { key: b.dataset.vpick })).items; toast('تصویر برنامه عوض شد'); } catch (e) { toast(e.message); }
+      landing();
+    }; });
+    document.querySelectorAll('[data-vreset]').forEach(b => { b.onclick = async () => {
+      if (!confirm('تصویر خود برنامه برگردد؟')) return;
+      try { vibe.items = (await api('POST', 'vibereset', { key: b.dataset.vreset })).items; toast('تصویر خود برنامه برگشت'); } catch (e) { toast(e.message); }
+      landing();
+    }; });
+    document.querySelectorAll('img[data-zoom]').forEach(im => { im.onclick = () => window.open(im.dataset.zoom, '_blank', 'noopener'); });
+    // while one is being made, read the list again now and then (not while a prompt is being typed)
+    if (vibe.items.some(x => x.cand && !x.cand.done)) {
+      const again = () => { if (st.part !== 'landing') return; if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') pollT = setTimeout(again, 6000); else landing(true); };
+      pollT = setTimeout(again, 8000);
+    }
+  }
+  async function view(fresh) {
+    clearTimeout(pollT);
+    if (st.part === 'landing') return landing(fresh);
+    try { await load(st.part, fresh); }
+    catch (e) {
+      if (e.status === 401 || e.status === 403) { $app.innerHTML = '<div class="card"><p>برای این صفحه ابتدا در داشبورد با حساب مدیر وارد شوید.</p><a class="btn" href="/admin">رفتن به داشبورد</a></div>'; return; }
+      $app.innerHTML = `<div class="card fail">${esc(e.message)}</div>`; return;
+    }
+    const { groups, g, items, x } = current();
+    if (st.part !== 'q' && FILTERS.some(f => f[0] === st.filter && f[2])) st.filter = 'all';
+    if (x && st.part === 'q' && st.qfor !== x.pid) {
+      st.qd = null; st.qfor = x.pid; st.ai = null;
+      api('GET', `newqitem?id=${x.key}`).then(d => { if (st.qfor === x.pid) { st.qd = d; view(); } }).catch(e => toast(e.message));
+    }
+    if (x && st.promptFor !== x.pid) {
+      st.prompt = null; st.promptFor = x.pid; st.style = null; st.tr = null; st.trOpen = false; st.req = ''; st.revising = false;
+      promptOf(x).then(d => { if (st.promptFor === x.pid) { st.prompt = st.saved = d.prompt || ''; st.style = st.base = (STYLES.some(([k]) => k === d.style) && d.style) || styleOf(st.saved); view(); } })
+        .catch(e => toast(e.message));
+    }
+    const draftable = x && !x.set;
+    const all = groups.flatMap(y => y.items), done = all.filter(made).length;
+    $app.innerHTML = `
+      <div class="head"><h1>ایجاد تصاویر</h1><span class="sp"></span><a class="btn soft" href="/admin">بازگشت به داشبورد</a></div>
+      <div class="tabs">${PARTS.map(p => `<button class="tab ${p.id === st.part ? 'on' : ''}" data-part="${p.id}">${p.title}</button>`).join('')}</div>
+      <div class="card">
+        <div class="pick">
+          <label>دسته‌بندی<select id="g">${groups.map((y, n) => { const left = y.items.filter(z => !made(z)).length;
+            const cnt = st.filter === 'all' ? `${faNum(y.items.length - left)} از ${faNum(y.items.length)} ساخته شده` : st.filter === 'missing' ? `${faNum(left)} ساخته‌نشده` : faNum(y.items.filter(pass).length);
+            return `<option value="${n}" ${y === g ? 'selected' : ''}>${esc(y.title)} (${cnt})</option>`; }).join('')}</select></label>
+          <label>تصویر<select id="i">${g ? items.map((y, n) => `<option value="${n}" ${y === x ? 'selected' : ''}>${made(y) ? '✓ ' : ''}${y.marked ? '🔖 ' : ''}${y.removed ? '✕ ' : ''}${y.edited ? '✎ ' : ''}${esc(y.label)}${y.making ? ' ⏳' : ''}</option>`).join('') : ''}</select></label>
+        </div>
+        <div class="row" style="margin:0 0 10px"><label class="chk">نمایش:<select id="flt" style="width:auto">${FILTERS.filter(f => !f[2] || st.part === 'q').map(([k, t]) => `<option value="${k}" ${k === st.filter ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+          <span class="muted" style="font-size:13px">در این بخش ${faNum(done)} از ${faNum(all.length)} تصویر ساخته شده؛ ${faNum(all.length - done)} مانده.</span></div>
+        ${x ? `
+          ${st.part === 'q' ? questionPanel(x) : ''}
+          <div class="pics">${pictures(x)}</div>
+          <div class="row" style="margin:0 0 12px">
+            <label class="btn soft" style="cursor:pointer">⬆ آپلود تصویر<input type="file" id="upl" accept="image/png,image/jpeg,image/webp" hidden ${st.uploading ? 'disabled' : ''}></label>
+            ${st.uploading ? '<span class="state">در حال آپلود…</span>' : `<span class="muted" style="font-size:12.5px">تصویری از دستگاه خود انتخاب کنید؛ با بالاترین کیفیت و به نسبت ${esc(x.aspect || '4:3')} کارت برنامه (بی‌برش؛ کناره‌ها با همان تصویر مات پر می‌شود) جای ${x.set ? 'تصویر فعلی' : 'تصویر ساخته‌شده'} را می‌گیرد.</span>`}
+          </div>
+          <div class="row" style="margin:0 0 8px">
+            <label class="chk">سرویس ساخت تصویر:<select id="prov" style="width:auto">${PROV ? Object.entries(PROV).map(([k, v]) => `<option value="${k}" ${k === prov ? 'selected' : ''} ${v.ok ? '' : 'disabled'}>${esc(v.name)}${v.ok ? '' : ' · کلید تنظیم نشده'}</option>`).join('') : '<option>…</option>'}</select></label>
+            <label class="chk">سبک تصویر:<select id="sty" style="width:auto" ${st.prompt == null || st.restyling ? 'disabled' : ''}>${STYLES.map(([k, t]) => `<option value="${k}" ${k === (st.restyling || st.style) ? 'selected' : ''}>${t}${k === st.base ? ' · سبک فعلی' : ''}</option>`).join('')}</select></label>
+            ${st.restyling ? '<span class="state">در حال نوشتن پرامپت برای این سبک…</span>' : '<span class="muted" style="font-size:12.5px">با انتخاب سبک، پرامپت برای همان صحنه در آن سبک بازنویسی می‌شود.</span>'}
+          </div>
+          <label>پرامپت<textarea id="pr" ${st.prompt == null ? 'disabled' : ''} placeholder="${st.prompt == null ? 'در حال بارگذاری…' : EMPTY}">${esc(st.prompt == null ? '' : st.prompt)}</textarea></label>
+          <div class="row" style="margin:6px 0 4px">
+            <button class="btn soft" id="copy" ${st.prompt == null ? 'disabled' : ''}>📋 کپی پرامپت</button>
+            <button class="btn soft" id="trb" ${st.prompt == null || st.tr === 'loading' ? 'disabled' : ''}>${st.tr === 'loading' ? 'در حال ترجمه…' : st.trOpen ? 'بستن ترجمه' : 'ترجمه‌ی فارسی پرامپت'}</button>
+          </div>
+          ${st.trOpen && st.tr && st.tr !== 'loading' ? `<div class="trbox">${esc(st.tr.text)}${st.tr.for !== (st.prompt || '') ? '<div class="muted" style="font-size:12px;margin-top:6px">پرامپت پس از این ترجمه تغییر کرده؛ برای ترجمه‌ی تازه دوباره بزنید.</div>' : ''}</div>` : ''}
+          <label>درخواست ویرایش تصویر<textarea id="req" class="fa" ${st.prompt == null || st.revising ? 'disabled' : ''} placeholder="مثلاً: دوچرخه‌سوار از سمت چپ بیاید، هوا بارانی باشد، تابلو بزرگ‌تر دیده شود…">${esc(st.req || '')}</textarea></label>
+          <div class="row" style="margin:6px 0 12px">
+            <button class="btn" id="revgen" ${st.prompt == null || st.revising || x.making ? 'disabled' : ''}>افزودن به پرامپت و ساخت تصویر</button>
+            <button class="btn soft" id="rev" ${st.prompt == null || st.revising ? 'disabled' : ''}>فقط افزودن به پرامپت</button>
+            ${st.revising ? '<span class="state">در حال افزودن درخواست به پرامپت…</span>' : '<span class="muted" style="font-size:12.5px">درخواست شما با هوش مصنوعی در پرامپت بالا گنجانده می‌شود و تصویر از پرامپت نهایی ساخته می‌شود.</span>'}
+          </div>
+          <div class="row">
+            <button class="btn" id="gen" ${x.making ? 'disabled' : ''}>ساخت تصویر جدید با این پرامپت</button>
+            <button class="btn soft" id="undo">بازگرداندن پرامپت</button>
+            ${draftable ? '<button class="btn soft" id="draft">نوشتن پرامپت با هوش مصنوعی</button>' : ''}
+            ${x.making ? `<span class="state">در حال ساخت تصویر… (${esc(x.making)})</span>` : ''}
+            ${x.failed ? `<span class="fail">ساخت تصویر ناموفق بود: ${esc(x.failed)}</span>` : ''}
+          </div>
+          <p class="muted" style="font-size:12.5px;margin:8px 0 0">تصویر تازه پس از ساخته شدن در برنامه نشان داده می‌شود (به‌جای تصویر فعلی، اگر باشد). ساخت هر تصویر چند دقیقه طول می‌کشد.</p>`
+          : `<p class="muted">${st.filter === 'missing' ? 'همه‌ی تصاویر این دسته ساخته شده‌اند.' : st.filter !== 'all' ? 'در این دسته موردی نیست.' : 'موردی نیست.'}</p>`}
+      </div>`;
+    document.querySelectorAll('[data-part]').forEach(b => { b.onclick = () => { st.part = b.dataset.part; st.g = 0; st.i = 0; st.pid = null; remember(); view(); }; });
+    document.getElementById('g').onchange = e => { st.g = +e.target.value; st.i = 0; st.pid = null; remember(); view(); };
+    const si = document.getElementById('i'); if (si) si.onchange = e => { st.i = +e.target.value; st.pid = null; remember(); view(); };
+    document.getElementById('flt').onchange = e => { st.filter = e.target.value; st.i = 0; st.pid = null; remember(); view(); };
+    if (!x) return;
+    if (st.part === 'q') questionWire(x);
+    const ta = document.getElementById('pr');
+    document.getElementById('prov').onchange = e => { prov = e.target.value; try { localStorage.setItem('img.provider', prov); } catch {} };
+    ta.oninput = () => { st.prompt = ta.value; };
+    document.getElementById('undo').onclick = () => { st.prompt = ta.value = st.saved; st.style = st.base; view(); };
+    document.getElementById('sty').onchange = async e => {
+      const style = e.target.value, pid = x.pid;
+      // from the prompt as it is in the current style (with any edits), else from the saved one
+      const from = st.style === st.base ? ta.value : st.saved;
+      if (style === st.base) { st.style = style; st.prompt = st.saved; return view(); }
+      st.restyling = style; view();
+      try {
+        const d = await api('POST', 'restyle', { prompt: from, style, aspect: x.aspect || '4:3' });
+        if (st.promptFor === pid) { st.style = style; st.prompt = d.prompt; }
+      } catch (er) { toast(er.message); }
+      st.restyling = null; view();
+    };
+    const dr = document.getElementById('draft');
+    if (dr) dr.onclick = async () => {
+      dr.disabled = true; dr.textContent = 'در حال نوشتن…';
+      try { const d = await api('POST', 'guidedraft', { key: x.key }); st.prompt = st.saved = ta.value = d.prompt; toast('پرامپت تازه نوشته شد'); }
+      catch (e) { toast(e.message); }
+      dr.disabled = false; dr.textContent = 'نوشتن پرامپت با هوش مصنوعی';
+    };
+    const generate = async (prompt, ask = true) => {
+      if (!prompt) return toast('پرامپت خالی است.');
+      if (ask && !confirm('با این پرامپت تصویر تازه ساخته شود؟')) return;
+      try {
+        if (x.set) await api('POST', 'coursegen', { set: x.set, key: x.key, prompt, style: st.style, provider: prov });
+        else await api('POST', 'guidegen', { key: x.key, prompt, style: st.style, provider: prov });
+        st.saved = prompt; st.base = st.style; toast('ساخت تصویر شروع شد');
+      } catch (e) { return toast(e.message); }
+      view(true);
+    };
+    document.getElementById('gen').onclick = () => generate(ta.value.trim());
+    // «کپی پرامپت»: the prompt as it is in the box now (with any edits), to the clipboard; a page not served over HTTPS
+    // (no navigator.clipboard) copies it from a hidden text box instead.
+    document.getElementById('copy').onclick = async () => {
+      const text = ta.value;
+      if (!text.trim()) return toast('پرامپت خالی است.');
+      try { await navigator.clipboard.writeText(text); }
+      catch {
+        const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+        document.body.appendChild(t); t.select(); const ok = document.execCommand('copy'); t.remove();
+        if (!ok) return toast('کپی ممکن نشد؛ متن را دستی انتخاب کنید.');
+      }
+      toast('پرامپت کپی شد');
+    };
+    // «آپلود تصویر»: a picture from the admin's device in place of the item's picture, at the best quality there is.
+    // It is cut to the shape of the card it shows in (the item's aspect, e.g. 4:3: the middle of it, so the card has no
+    // empty bands) at its full size in pixels; a PNG stays a lossless PNG, anything else becomes a JPEG at quality 0.98.
+    // A file already that shape (a PNG or JPEG) is sent exactly as it is.
+    document.getElementById('upl').onchange = async e => {
+      const f = e.target.files && e.target.files[0]; e.target.value = '';
+      if (!f) return;
+      const [aw, ah] = String(x.aspect || '4:3').split(':').map(Number), want = aw / ah;
+      if (!confirm(`«${f.name}» به‌عنوان تصویر این مورد قرار بگیرد؟\n(اگر نسبتش با کارت برنامه (${x.aspect || '4:3'}) فرق کند، کل تصویر حفظ می‌شود و کناره‌ها با همان تصویر مات پر می‌شود.)`)) return;
+      const pid = x.pid;
+      st.uploading = true; view();
+      try {
+        const url = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = () => bad(new Error('خواندن فایل ممکن نشد.')); r.readAsDataURL(f); });
+        const im = await new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => bad(new Error('این فایل تصویر نیست.')); i.src = url; });
+        const W = im.naturalWidth, H = im.naturalHeight, png = /^data:image\/png;/.test(url);
+        // The card's shape around the whole picture at its full size: a picture of another shape is not cut; the
+        // bands beside it (or above and below it) are filled with the same picture enlarged and blurred, so the card
+        // has no empty space and nothing of the picture is lost.
+        let cw = W, ch = Math.round(W / want);
+        if (ch < H) { ch = H; cw = Math.round(H * want); }
+        let data = url;
+        if (Math.abs(cw - W) > 1 || Math.abs(ch - H) > 1 || !/^data:image\/(png|jpeg);/.test(url)) {
+          const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+          const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+          if (Math.abs(cw - W) > 1 || Math.abs(ch - H) > 1) {
+            // the blur: the picture covering the frame, drawn very small and stretched back (works in every browser)
+            const sm = document.createElement('canvas'), k = 48 / Math.max(cw, ch); sm.width = Math.max(2, Math.round(cw * k)); sm.height = Math.max(2, Math.round(ch * k));
+            const sx = sm.getContext('2d'), cover = Math.max(cw / W, ch / H);
+            sx.drawImage(im, (sm.width - W * cover * k) / 2, (sm.height - H * cover * k) / 2, W * cover * k, H * cover * k);
+            cx.drawImage(sm, 0, 0, cw, ch);
+            cx.fillStyle = 'rgba(255,255,255,0.12)'; cx.fillRect(0, 0, cw, ch);
+          } else if (!png) { cx.fillStyle = '#fff'; cx.fillRect(0, 0, cw, ch); }
+          cx.drawImage(im, Math.round((cw - W) / 2), Math.round((ch - H) / 2), W, H);
+          data = png ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.98);
+        }
+        if (data.length > 47e6) throw new Error('تصویر بیش از حد بزرگ است (بیشتر از حدود ۳۵ مگابایت).');
+        await api('POST', 'imageupload', { id: pid, data });
+        toast(`تصویر ${cw}×${ch} آپلود شد و جای تصویر قبلی را گرفت`);
+      } catch (er) { toast(er.message); }
+      st.uploading = false; view(true);
+    };
+    // «ترجمه‌ی فارسی پرامپت»: the prompt as it is now in Persian (made again only when the prompt has changed)
+    document.getElementById('trb').onclick = async () => {
+      if (st.trOpen) { st.trOpen = false; return view(); }
+      const now = ta.value, pid = x.pid;
+      st.trOpen = true;
+      if (st.tr && st.tr.for === now) return view();
+      st.tr = 'loading'; view();
+      try { const d = await api('POST', 'prompttr', { prompt: now }); if (st.promptFor === pid) st.tr = { for: now, text: d.text }; }
+      catch (e) { st.tr = null; st.trOpen = false; toast(e.message); }
+      view();
+    };
+    // «درخواست ویرایش تصویر»: the admin's request worked into the prompt by the AI, and with «…و ساخت تصویر» the picture
+    // made from the final prompt right away
+    const rq = document.getElementById('req');
+    rq.oninput = () => { st.req = rq.value; };
+    const revise = async make => {
+      const request = rq.value.trim(), pid = x.pid;
+      if (!request) return toast('بنویسید چه چیزی در تصویر تغییر کند.');
+      if (make && !confirm('درخواست به پرامپت افزوده شود و تصویر تازه از پرامپت نهایی ساخته شود؟')) return;
+      st.prompt = ta.value; st.revising = true; view();
+      let out;
+      try { out = (await api('POST', 'promptrevise', { prompt: st.prompt, request, aspect: x.aspect || '4:3' })).prompt; }
+      catch (e) { st.revising = false; view(); return toast(e.message); }
+      st.revising = false;
+      if (st.promptFor !== pid) return view();
+      st.prompt = out; st.req = ''; st.trOpen = false;
+      if (!make) { toast('درخواست به پرامپت افزوده شد؛ پرامپت را ببینید و بسازید.'); return view(); }
+      view(); await generate(out, false);
+    };
+    document.getElementById('rev').onclick = () => revise(false);
+    document.getElementById('revgen').onclick = () => revise(true);
+    const NAMES = { ai: 'تصویر ساخته‌شده', prove: 'تصویر prove.dk', official: 'طرح رسمی' };
+    const choose = async choice => {
+      if ((x.choice || 'ai') === choice) return;
+      if (!confirm(`«${NAMES[choice]}» تصویر اصلی این مورد در برنامه شود؟`)) return;
+      try { await api('POST', 'guiderefchoose', { key: x.key, choice }); toast('تصویر اصلی عوض شد'); } catch (e) { return toast(e.message); }
+      view(true);
+    };
+    document.querySelectorAll('button[data-pick]').forEach(b => { b.onclick = () => choose(b.dataset.pick); });
+    // the large view: the picture, its name, and (for a choosable one not yet chosen) «انتخاب به‌عنوان تصویر اصلی»
+    document.querySelectorAll('img[data-zoom]').forEach(im => { im.onclick = () => {
+      const box = document.createElement('div');
+      box.className = 'lightbox';
+      box.innerHTML = `<div class="lb-in"><img src="${esc(im.dataset.zoom)}" alt=""><div class="lb-bar"><b>${esc(im.dataset.cap)}</b>
+        ${im.dataset.pickof ? (im.dataset.on ? '<span class="on-tag">✓ تصویر اصلی</span>' : '<button class="btn" data-lbpick>انتخاب به‌عنوان تصویر اصلی</button>') : ''}
+        <a class="btn soft" href="${esc(im.dataset.zoom)}" target="_blank" rel="noopener">باز کردن در زبانه‌ی جدید</a><button class="btn soft" data-lbclose>بستن</button></div></div>`;
+      const close = () => { box.remove(); document.removeEventListener('keydown', key); };
+      const key = e => { if (e.key === 'Escape') close(); };
+      box.onclick = e => { if (e.target === box || e.target.hasAttribute('data-lbclose')) close(); };
+      const pb = box.querySelector('[data-lbpick]');
+      if (pb) pb.onclick = () => { close(); choose(im.dataset.pickof); };
+      document.addEventListener('keydown', key);
+      document.body.appendChild(box);
+    }; });
+    // while a picture is being made, look again every 6 seconds (not while the prompt or the request is being edited)
+    if (g.items.some(y => y.making)) {
+      const again = () => { if (document.activeElement === ta || document.activeElement === rq) pollT = setTimeout(again, 6000); else view(true); };
+      pollT = setTimeout(again, 6000);
+    }
+  }
+  view();
+  api('GET', 'imageproviders').then(d => {
+    PROV = d;
+    if (!(PROV[prov] && PROV[prov].ok)) prov = Object.keys(PROV).find(k => PROV[k].ok) || 'kie';
+    if (document.activeElement !== document.getElementById('pr') && document.activeElement !== document.getElementById('req')) view();
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>
