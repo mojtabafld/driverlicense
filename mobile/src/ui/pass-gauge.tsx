@@ -20,8 +20,8 @@ const ZONES: { from: number; to: number; icon: IconName }[] = [
   { from: 0.7, to: 1, icon: 'check' },
 ];
 
-export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, small }: {
-  value: number; change: number | null; verdict: string; verdictColor: string; verdictSoft: string; small?: boolean }) {
+export function PassGauge({ value, verdict, verdictColor, verdictSoft, small }: {
+  value: number; verdict: string; verdictColor: string; verdictSoft: string; small?: boolean }) {
   const c = useColors(), dark = useIsDark(), { width } = useWindowDimensions();
   // the arc's size: as the mockup's 300 × 176, smaller on a narrow or short screen
   const W = Math.min(small ? 250 : 300, width - 72), S = W / 300, H = 176 * S;
@@ -36,7 +36,6 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
   const [mx, my] = pt(READY, R + SW / 2 + 6), [nx, ny] = pt(READY, R - SW / 2 - 6);
   const big = Math.round(52 * Math.max(0.85, S)), badge = Math.round(28 * Math.max(0.85, S));
   const pctSign = RTL ? '٪' : '%';
-  const blue = dark ? '#6aaeff' : '#2b8be0';
   // the colours from the theme's own (Mojtaba 2026-11-19: orange, red and pink before): a light shade fading in, the
   // colour itself, a deep shade for «ready»; the glow and the title in it too
   const acc = c.accent, light = mix(acc, '#ffffff', 0.35), deep = dark ? mix(acc, '#ffffff', 0.3) : mix(acc, '#000000', 0.28);
@@ -84,13 +83,8 @@ export function PassGauge({ value, change, verdict, verdictColor, verdictSoft, s
           </View>
         </View>
       </View>
-      {/* the change and the verdict */}
+      {/* the verdict (no change since the test before under it since 2026-11-21, Mojtaba) */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: -4 }}>
-        {change ? (
-          <T raw style={{ fontSize: 13.5, lineHeight: 20, fontWeight: '600', color: change > 0 ? blue : c.bad }}>
-            {t('{0} نسبت به آزمون قبل', `⁦${change > 0 ? '+' : '−'}${faNum(Math.abs(change))}⁩`)}
-          </T>
-        ) : null}
         <View testID="home-readiness-status" style={{ paddingHorizontal: 12, paddingVertical: 3, borderRadius: 99, backgroundColor: verdictSoft }}>
           <T numberOfLines={1} style={{ color: verdictColor, fontSize: 12.5, lineHeight: 18, fontWeight: '700' }}>{verdict}</T>
         </View>

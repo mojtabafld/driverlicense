@@ -358,10 +358,8 @@ export default function Home() {
   const probWord = !est ? 'هنوز تخمینی نیست' : est.prob >= 0.7 ? 'آماده‌ی آزمون' : est.prob >= 0.4 ? 'نزدیک به قبولی' : 'نیاز به تمرین';
   // The chance of passing, at the top of the progress chart's card since 2026-11-17 (Mojtaba: the two in one card).
   // (the half-circle gauge since 2026-11-19, Mojtaba; the title, percent and a bar up to the ready mark before)
-  const estBefore = exams.length > 1 ? passEstimate(attempts.slice(0, attempts.lastIndexOf(exams[exams.length - 1]))) : null;
-  const estChange = est && estBefore ? Math.round((est.prob - estBefore.prob) * 100) : null;
   const chanceBody = (est ? (
-            <PassGauge value={est.prob} change={estChange} verdict={probWord} verdictColor={probColor} verdictSoft={probSoft} small={small} />
+            <PassGauge value={est.prob} verdict={probWord} verdictColor={probColor} verdictSoft={probSoft} small={small} />
           ) : (
             <View style={{ gap: compact ? 10 : 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
