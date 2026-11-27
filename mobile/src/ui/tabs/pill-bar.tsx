@@ -11,8 +11,7 @@ import { AccessibilityInfo, Animated, Platform, Pressable, View, useWindowDimens
 import { RTL, tr } from '@/lib/i18n';
 import { Icon } from '../icon';
 import { tap } from '../kit';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useColors, useIsDark } from '../theme';
+import { useIsDark } from '../theme';
 import { BAR_GAP, type LiquidBarProps } from './liquid-bar-types';
 
 // The open tab's name: this much room (the original's MOBILE_LABEL_WIDTH), and the bar's height.
@@ -50,7 +49,7 @@ function useStill() {
 // test pages before); elsewhere its place stays empty, so the icons never move between pages.
 export const DOT = 56;
 function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs'][number]['icon']; label: string; on: boolean; onPress: () => void; still: boolean }) {
-  const c = useColors(), dark = useIsDark(), d = dark ? DOCK.dark : DOCK.light;
+
   const fill = useRef(new Animated.Value(on ? 1 : 0)).current, press = useRef(new Animated.Value(1)).current;
   useEffect(() => {
     // (instant on the phones: an animation on the JS thread while the new page is drawn lags on Android; 2026-11-15)
@@ -63,9 +62,10 @@ function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs']
       onPressOut={() => { if (!still) Animated.spring(press, { toValue: 1, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}>
       {({ hovered }: any) => (
         <Animated.View style={{ width: DOT, height: DOT, borderRadius: DOT / 2, alignItems: 'center', justifyContent: 'center', transform: [{ scale: press }],
-          backgroundColor: on ? d.ink : hovered ? d.hover : 'transparent',
-          ...(on ? { shadowColor: '#000', shadowOpacity: dark ? 0.4 : 0.18, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4 } : null) }}>
-          <Icon name={icon} size={26} color={on ? c.bg : d.ink} filled={on} />
+          backgroundColor: hovered && !on ? 'rgba(255,255,255,0.06)' : 'transparent' }}>
+          {/* (the bar's look since 2026-11-27, after Mojtaba's picture: line icons on the black bar, the open one white,
+              the others grey; a filled ink circle on no bar before) */}
+          <Icon name={icon} size={26} color={on ? '#ffffff' : '#8a8a90'} />
         </Animated.View>
       )}
     </Pressable>
@@ -75,18 +75,16 @@ function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs']
 // `side`: the start button (start-button.tsx) in the row's middle place, or null for an empty place.
 export const SIDE_GAP = 10;
 export function PillBar({ tabs, active, onSelect, bottomInset, side }: LiquidBarProps & { side?: React.ReactNode }) {
-  const c = useColors(), still = useStill(), { width } = useWindowDimensions();
+  const dark = useIsDark(), still = useStill(), { width } = useWindowDimensions();
   const rowW = Math.min(width - 24, 460), pad = under(bottomInset);
-  // (the page's colour, clear at the top and nearly whole at the icons, so the page runs out under them unseen)
-  const fadeH = PILL_BAR_H + pad + 30;
-  const stops = [0, 0.3, 0.55, 0.75, 1];
-  const fade = stops.map(t => `${c.bg}${Math.round(255 * Math.min(1, t * 1.25) ** 1.4).toString(16).padStart(2, '0')}`);
   return (
     <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingBottom: pad }}>
-      <LinearGradient pointerEvents="none" colors={fade as unknown as readonly [string, string, ...string[]]} locations={stops as unknown as readonly [number, number, ...number[]]}
-        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: fadeH }} />
       <View accessibilityRole="tablist" accessibilityLabel={tr('ناوبری')}
-        style={{ width: rowW, height: PILL_BAR_H, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, direction: RTL ? 'rtl' : 'ltr' } as any}>
+        style={{ width: rowW, height: PILL_BAR_H, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, direction: RTL ? 'rtl' : 'ltr',
+          // a black bar with round ends and a soft shadow (Mojtaba 2026-11-27, after his picture; no bar, the page fading
+          // out under the icons, before); a hair of light at its edge in the dark theme so it shows on the dark page
+          backgroundColor: '#000000', borderRadius: PILL_BAR_H / 2, borderWidth: dark ? 1 : 0, borderColor: 'rgba(255,255,255,0.08)',
+          shadowColor: '#000', shadowOpacity: dark ? 0.5 : 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 10 } as any}>
         {tabs.map((t, i) => [
           // the start button's place in the middle of the row (Mojtaba 2026-11-17), kept empty where it is not shown
           i === Math.ceil(tabs.length / 2) ? <View key="side" style={{ width: DOT, height: DOT, alignItems: 'center', justifyContent: 'center' }}>{side}</View> : null,

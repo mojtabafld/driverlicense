@@ -70,7 +70,8 @@ export function StartButton({ open, setOpen }: { open: boolean; setOpen: (v: boo
       <Pressable testID="start-test" onPress={press} accessibilityRole="button" accessibilityState={{ expanded: open }} accessibilityLabel={tr('شروع آزمون')}
         style={({ pressed }: any) => ({ width: BIG, height: BIG, borderRadius: BIG / 2, alignItems: 'center', justifyContent: 'center',
           // raised and in the theme's own colour, apart from the plain tabs around it (Mojtaba 2026-11-17)
-          backgroundColor: fill, borderWidth: 3, borderColor: c.bg, transform: [{ translateY: -8 }, { scale: pressed ? 0.94 : 1 }],
+          backgroundColor: fill, borderWidth: 3, borderColor: '#000000',  // (the black bar's own colour: it sits on the bar; 2026-11-27)
+          transform: [{ translateY: -8 }, { scale: pressed ? 0.94 : 1 }],
           shadowColor: fill, shadowOpacity: dark ? 0.5 : 0.45, shadowRadius: 14, shadowOffset: { width: 0, height: 6 }, elevation: 8 } as any)}>
         <Icon name={!test.randomLeft ? 'lock' : open ? 'xmark' : 'play'} size={28} color={lightness(fill) > 0.62 ? '#111114' : '#ffffff'} filled />
       </Pressable>
