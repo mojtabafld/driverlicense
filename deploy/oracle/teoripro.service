@@ -1,0 +1,18 @@
+# Teoripro's server (node server.js), started at boot and again whenever it stops; its settings in /etc/teoripro/env.
+[Unit]
+Description=Teoripro
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=teoripro
+WorkingDirectory=/opt/teoripro
+EnvironmentFile=/etc/teoripro/env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+# (the server keeps everything in memory; 12 GB is plenty, this only stops a runaway)
+MemoryMax=4G
+
+[Install]
+WantedBy=multi-user.target

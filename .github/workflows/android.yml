@@ -1,0 +1,233 @@
+# Builds the Android app (an APK to install directly, arm64 phones) from mobile/ when run by hand, and
+# publishes it as a GitHub Release «Android build N» with the file teoriprove.apk. Run it by hand from the Actions tab
+# too («Run workflow»).
+#
+# N, the release number, counts from 1 since 2026-10-11 (the owner asked; the releases before it, tagged android-*, are
+# deleted by this workflow): one more than the highest release-N there is, so a cancelled run skips no number. The APK's
+# versionCode stays the run number, so a new APK still installs over the ones built before.
+#
+# Signing: with the repository secrets ANDROID_KEYSTORE_BASE64 (the .jks file in base64), ANDROID_KEYSTORE_PASSWORD
+# and ANDROID_KEY_ALIAS every build is signed with that key, so a new APK installs over the old one. Without them a
+# key is made once and kept in the Actions cache (it is lost if no build runs for a week; then uninstall the app once
+# before installing the next APK).
+#
+# Google Play (input «play», 2026-10-23): the same build also makes teoriprove.aab, the bundle Google Play takes, for
+# every phone's processor (arm64, arm and x86), signed with the upload key; it goes on the release beside the APK. Play
+# needs the same upload key for every update, so this refuses to run with the key kept in the cache: the three secrets
+# above must be set.
+name: Android APK
+
+# Only by hand (the owner asked, 2026-10-10: an APK is built and published only when he asks for one), from the Actions
+# tab or the API.
+on:
+  workflow_dispatch:
+    inputs:
+      copy:
+        description: "main: the main site's app; prove: the app of teori.bitlane.app/app (prove.dk's bank and lessons)"
+        type: choice
+        options: [main, prove]
+        default: main
+      play:
+        description: "Also build teoriprove.aab for Google Play (all phones; needs the signing key in the repository secrets)"
+        type: boolean
+        default: false
+      upload:
+        description: "Also upload the bundle to Google Play's internal testing (needs «play» and the PLAY_SERVICE_ACCOUNT_JSON secret)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk-${{ inputs.copy || 'main' }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      # prove: the /app copy's app (mobile/app.config.js: its own name and package; lib/config.ts: PROVE_BANK), released as
+      # «Android /app build N» (tags prove-N, file teoriprove-prove.apk), never as the latest release (the main app's).
+      EXPO_PUBLIC_PROVE: ${{ inputs.copy == 'prove' && '1' || '' }}
+      TAG: ${{ inputs.copy == 'prove' && 'prove' || 'release' }}
+      APK: ${{ inputs.copy == 'prove' && 'teoriprove-prove.apk' || 'teoriprove.apk' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release number
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 500 --json tagName --jq '.[].tagName' | { grep -E "^${TAG}-[0-9]+$" || true; } | sed "s/${TAG}-//" | sort -n | tail -1)
+          echo "RELEASE_N=$(( ${last:-0} + 1 ))" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+
+      - name: Google Play needs the lasting key
+        if: inputs.play && env.HAS_KEY != 'true'
+        run: |
+          echo "::error::A Google Play bundle needs the upload key in the secrets ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD and ANDROID_KEY_ALIAS (Settings → Secrets and variables → Actions)."
+          exit 1
+
+      # The native Android project, made from app.json (it is not kept in the repository).
+      - run: npx expo prebuild --platform android --no-install
+
+      # The signing key: from the secrets, else the one kept in the cache, else a new one.
+      - name: Signing key from secrets
+        if: env.HAS_KEY == 'true'
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
+      - name: Cached signing key
+        if: env.HAS_KEY != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.teoriprove-key
+          key: teoriprove-android-key-v1
+      - name: Signing key (cache or new)
+        env:
+          PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ "$HAS_KEY" = "true" ]; then
+            echo "STORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASS=$PASS" >> "$GITHUB_ENV"
+            echo "KEY_ALIAS=$ALIAS" >> "$GITHUB_ENV"
+          else
+            mkdir -p ~/.teoriprove-key
+            if [ ! -f ~/.teoriprove-key/release.jks ]; then
+              keytool -genkeypair -v -keystore ~/.teoriprove-key/release.jks -storepass teoriprove -keypass teoriprove \
+                -alias teoriprove -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=TeoriProve"
+            fi
+            echo "STORE=$HOME/.teoriprove-key/release.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASS=teoriprove" >> "$GITHUB_ENV"
+            echo "KEY_ALIAS=teoriprove" >> "$GITHUB_ENV"
+          fi
+
+      # The signing key's SHA-256 fingerprint (public): what the site's assetlinks.json (android-certs.json) must name
+      # for passkeys in an APK installed from the release (Mojtaba 2026-11-06).
+      - name: Signing certificate fingerprint
+        run: keytool -list -v -keystore "$STORE" -storepass "$STORE_PASS" -alias "$KEY_ALIAS" | grep -E "SHA256:" | sed 's/^/Upload key certificate /'
+
+      # Version: the build number, so each APK counts as newer; release signing with the key above.
+      - name: Version and signing in the Gradle project
+        run: |
+          cd android/app
+          # (A Google Play build keeps the app's own version as its name, e.g. «1.0», as the store shows it; an APK adds
+          # its release number.)
+          if [ "${{ inputs.play }}" = "true" ]; then SUFFIX=""; else SUFFIX=" (${RELEASE_N})"; fi
+          sed -i -E "s/versionCode [0-9]+/versionCode ${GITHUB_RUN_NUMBER}/; s/versionName \"([^\"]+)\"/versionName \"\1${SUFFIX}\"/" build.gradle
+          echo "APP_VERSION=$(node -p "require('../../app.json').expo.version")" >> "$GITHUB_ENV"
+          cat >> build.gradle <<GRADLE
+
+          android {
+              signingConfigs {
+                  teoriprove {
+                      storeFile file(System.getenv("STORE"))
+                      storePassword System.getenv("STORE_PASS")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("STORE_PASS")
+                  }
+              }
+              buildTypes { release { signingConfig signingConfigs.teoriprove } }
+          }
+          GRADLE
+          grep -E "versionCode|versionName" build.gradle
+
+      # More room for Gradle's class metadata (with expo-updates the lint step ran out of Metaspace and the build hung
+      # until the time limit), and no release lint (it checks nothing the app needs and took the most memory).
+      - name: Build the APK
+        run: |
+          cd android
+          sed -i '/^org.gradle.jvmargs=/d' gradle.properties
+          # A new line first: the file ends without one, and the setting would run into its last line.
+          printf '\norg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1536m -Dfile.encoding=UTF-8\n' >> gradle.properties
+          printf '\nandroid { lint { checkReleaseBuilds false } }\n' >> app/build.gradle
+          ./gradlew assembleRelease --no-daemon --stacktrace -PreactNativeArchitectures=arm64-v8a
+
+      # Google Play's bundle: every processor, so Play gives each phone its own part.
+      - name: Build the Google Play bundle
+        if: inputs.play
+        run: |
+          cd android
+          ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: Collect
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/out/$APK"
+          if [ "${{ inputs.play }}" = "true" ]; then cp android/app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/out/${APK%.apk}.aab"; fi
+          ls -la "$RUNNER_TEMP/out"
+
+      # Google Play (input «upload», 2026-10-29): the bundle straight to the internal testing track, rolled out to its
+      # testers, with the Play service account's JSON key in the PLAY_SERVICE_ACCOUNT_JSON secret (its user in Play
+      # Console has «Release to testing tracks» for the app). The main app only.
+      - name: Upload to Google Play (internal testing)
+        if: inputs.play && inputs.upload && inputs.copy != 'prove'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: app.bitlane.teoripro
+          releaseFiles: ${{ runner.temp }}/out/teoriprove.aab
+          track: internal
+          status: completed
+          releaseName: ${{ env.APP_VERSION }}
+
+      # The certificate Google Play signs the app with (Play App Signing), for assetlinks.json: printed only.
+      - name: Play app signing certificate
+        if: inputs.play && inputs.upload && inputs.copy != 'prove'
+        continue-on-error: true
+        timeout-minutes: 12
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        working-directory: .
+        run: node scripts/play-signing-cert.js app.bitlane.teoripro "$GITHUB_RUN_NUMBER"
+
+      # A copy for the run page only; the release below is what counts, so a full artifact storage quota does not stop it.
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: ${{ env.TAG }}-apk
+          path: ${{ runner.temp }}/out/${{ env.APK }}
+
+      # The releases of the old numbering (tags android-1 … android-110): removed, with their tags.
+      - name: Remove the old releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 500 --json tagName --jq '.[].tagName' | { grep '^android-' || true; } | while read -r tag; do
+            gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
+          done
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}-${{ env.RELEASE_N }}
+          name: ${{ inputs.copy == 'prove' && 'Android /app build' || 'Android build' }} ${{ env.RELEASE_N }}
+          target_commitish: ${{ github.sha }}
+          make_latest: ${{ inputs.copy != 'prove' }}
+          body: |
+            ${{ inputs.copy == 'prove' && 'Teoripro Prove, the app of teori.bitlane.app/app (prove.dk''s question bank and lessons)' || 'Teoripro' }} for Android (arm64), build ${{ env.RELEASE_N }} from ${{ github.sha }}.
+            Download ${{ env.APK }} on the phone and open it to install.${{ inputs.play && ' For Google Play: upload the .aab in Play Console (Testing or Production → Create new release).' || '' }}
+          files: |
+            ${{ runner.temp }}/out/${{ env.APK }}
+            ${{ runner.temp }}/out/*.aab
+          fail_on_unmatched_files: false

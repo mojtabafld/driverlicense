@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069455275738",
+    "project_id": "teoripro-ef254",
+    "storage_bucket": "teoripro-ef254.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069455275738:android:dbf801d1f04325149017e3",
+        "android_client_info": {
+          "package_name": "app.bitlane.teoripro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA__fGHmyW4IpS-jMCyHi3uZDhRSHs88vk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

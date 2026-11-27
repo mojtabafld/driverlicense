@@ -1,0 +1,78 @@
+// A small question in the app's own look instead of the system's alert: a card over a dimmed page with a title, a
+// line of text, optional content, and two buttons (stay / go on). The second one is red when it is `danger`. `icon`: a
+// round badge above the title (red with `danger`). It comes in at once with its own short fade (the system Modal's
+// fade is slow, ~300 ms) and a slight grow of the card.
+// `slide`: instead of the going-on button, a slide-to-confirm track (as the exam's hand-in) with the stay button under
+// it, so a step that cannot be undone never happens on a stray tap (deleting the exam history; Mojtaba 2026-10-22).
+import { useEffect, useState } from 'react';
+import { Animated, Easing, Modal, Pressable, View } from 'react-native';
+
+import { PROVE_PICS } from '@/lib/config';
+import { tr } from '@/lib/i18n';
+import { Icon, type IconName } from './icon';
+import { ActionButton, T } from './kit';
+import { SlideToConfirm } from './slide-confirm';
+import { SOFT, useColors, useIsDark, useM3 } from './theme';
+
+type Props = {
+  open: boolean; title: string; text?: string; children?: React.ReactNode;
+  cancel: string; ok: string; danger?: boolean; onCancel: () => void; onOk: () => void;
+  // Flat icons before the two labels.
+  cancelIcon?: IconName; okIcon?: IconName; icon?: IconName;
+  slide?: { label: string; doneLabel: string };
+};
+export function Confirm({ open, title, text, children, cancel, ok, danger, onCancel, onOk, cancelIcon = 'xmark', okIcon = 'check', icon, slide }: Props) {
+  const c = useColors(), dark = useIsDark(), m = useM3();
+  const long = Math.max(tr(ok).length, tr(cancel).length) > 11;
+  const [v] = useState(() => new Animated.Value(0));
+  // Still shown while it fades out after `open` goes false.
+  const [shown, setShown] = useState(open);
+  // Each opening gets a fresh slide track (a finished one stays at its end).
+  const [round, setRound] = useState(0);
+  if (open && !shown) { setShown(true); setRound(round + 1); }
+  useEffect(() => {
+    if (open) { Animated.timing(v, { toValue: 1, duration: 140, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(); return; }
+    Animated.timing(v, { toValue: 0, duration: 110, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(({ finished }) => { if (finished) setShown(false); });
+  }, [open, v]);
+  return (
+    <Modal visible={shown} transparent animationType="none" onRequestClose={onCancel}>
+      <Animated.View style={{ flex: 1, opacity: v }}>
+      <Pressable onPress={onCancel} accessibilityLabel={cancel}
+        style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: dark ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.4)' }}>
+        <Animated.View style={{ width: '100%', maxWidth: 360, transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
+        {/* The card itself does not close the dialog. */}
+        <Pressable onPress={() => {}} accessibilityRole="alert"
+          // (Material 3's dialog: corners 28, the surface container a step above the page, no outline; Mojtaba 2026-11-07)
+          style={{ width: '100%', padding: SOFT ? 24 : 20, gap: 14, borderRadius: SOFT ? 28 : 22, backgroundColor: SOFT ? m.dialog : c.surface, borderWidth: SOFT ? 0 : 1, borderColor: c.cardBorder,
+            shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 8 }}>
+          <View style={{ gap: 6, alignItems: 'center' }}>
+            {icon ? (
+              <View style={{ width: 56, height: 56, borderRadius: 28, marginBottom: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: danger ? c.badSoft : c.surface2 }}>
+                <Icon name={icon} size={26} color={danger ? c.bad : c.text} weight="semibold" />
+              </View>
+            ) : null}
+            <T style={{ alignSelf: 'stretch', fontSize: 18, lineHeight: 28, fontWeight: '700', textAlign: 'center' }}>{title}</T>
+            {text ? <T style={{ alignSelf: 'stretch', fontSize: 14.5, lineHeight: 24, color: c.muted, textAlign: 'center' }}>{text}</T> : null}
+          </View>
+          {children}
+          {/* Side by side; one above the other, the going-on one first, when a label (in the app's language) would not fit
+              in half the card (e.g. «Delete account»; Mojtaba 2026-10-20). */}
+          {slide ? (
+            <View style={{ gap: 10 }}>
+              <SlideToConfirm key={round} toRight={!PROVE_PICS} danger={danger} label={slide.label} doneLabel={slide.doneLabel} onConfirm={onOk} />
+              <ActionButton label={cancel} icon={cancelIcon} tone="soft" onPress={onCancel} />
+            </View>
+          ) : (
+          <View style={long ? { gap: 10 } : { flexDirection: 'row', gap: 10 }}>
+            {long ? <ActionButton label={ok} icon={okIcon} tone={danger ? 'danger' : 'main'} onPress={onOk} /> : null}
+            <ActionButton label={cancel} icon={cancelIcon} tone="soft" onPress={onCancel} style={long ? undefined : { flex: 1 }} />
+            {long ? null : <ActionButton label={ok} icon={okIcon} tone={danger ? 'danger' : 'main'} onPress={onOk} style={{ flex: 1 }} />}
+          </View>
+          )}
+        </Pressable>
+        </Animated.View>
+      </Pressable>
+      </Animated.View>
+    </Modal>
+  );
+}
