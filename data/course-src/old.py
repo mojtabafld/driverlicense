@@ -1,0 +1,270 @@
+# The English and Danish of texts changed in course.ts's own lessons (chapters 1, 3, 4 and 5), for i18n/strings.json:
+# the warning triangle's distance (CAR_CHECK), §§ 21-25 on overtaking and pedestrian crossings (OVERTAKING), and A 11
+# without the A 12 of the old rules (WARN_PRIORITY); C 51 exempts only bicycles and small mopeds (OVERTAKING); the alcohol
+# limit of new drivers, 0.2 since July 2025 (ALCOHOL, with the same rule in guide.ts and build.py). At the end, the pictures
+# of course.ts's own new steps (OWN_ART), whose prompts build.py writes into data/course-art.json.
+from course import picture
+
+TEXTS = [
+    # CAR_CHECK
+    ('مثلث خطر را دورتر پشت خودرو بگذارید تا دیگران به‌موقع ببینند: در جاده‌ی معمولی دست‌کم ۵۰ متر و در بزرگراه دست‌کم ۱۰۰ متر',
+     'Place the warning triangle well behind the car so others see it in time: at least 50 metres on an ordinary road and at least 100 metres on a motorway',
+     'Stil advarselstrekanten et godt stykke bag bilen, så andre ser den i tide: mindst 50 meter på almindelig vej og mindst 100 meter på motorvej'),
+    ('Detailforskrifter for køretøjer | Færdselsloven § 31، بند ۲',
+     'Detailforskrifter for køretøjer | Færdselsloven § 31(2)',
+     'Detailforskrifter for køretøjer | Færdselsloven § 31, stk. 2'),
+    # OVERTAKING
+    ('Færdselsloven § 21، بند ۱ و ۳', 'Færdselsloven § 21(1) and (3)', 'Færdselsloven § 21, stk. 1 og 3'),
+    ('Færdselsloven § 21، بند ۱', 'Færdselsloven § 21(1)', 'Færdselsloven § 21, stk. 1'),
+    ('Færdselsloven § 21، بند ۴ | § 22، بند ۱', 'Færdselsloven § 21(4) | § 22(1)', 'Færdselsloven § 21, stk. 4 | § 22, stk. 1'),
+    ('از خودرویی که دیدتان را به گذرگاه عابر پیاده بسته است، سبقت نگیرید و از کنارش رد نشوید',
+     'Do not overtake or pass a vehicle that blocks your view of a pedestrian crossing',
+     'Overhal eller kør ikke forbi et køretøj, der skjuler udsynet over et fodgængerfelt'),
+    ('خط ممتد، تابلوی C 51، جاهای کم‌دید و خودرویی که دید گذرگاه عابر را بسته: سبقت نگیرید.',
+     'Solid line, sign C 51, places with poor visibility and a vehicle blocking your view of a pedestrian crossing: do not overtake.',
+     'Spærrelinje, tavle C 51, uoverskuelige steder og et køretøj, der skjuler udsynet over et fodgængerfelt: overhal ikke.'),
+    ('خودرویی که جلوی گذرگاه عابر آهسته می‌کند دیدتان را می‌بندد؛ از آن سبقت نگیرید و از کنارش رد نشوید.',
+     'A car slowing down before a pedestrian crossing blocks your view; do not overtake or pass it.',
+     'En bil, der sætter farten ned foran et fodgængerfelt, skjuler udsynet; overhal eller kør ikke forbi den.'),
+    ('خط ممتد، تابلوی C 51، جاهای کم‌دید و خودرویی که دید گذرگاه عابر را بسته: سبقت ممنوع.',
+     'Solid line, sign C 51, places with poor visibility and a vehicle blocking the view of a pedestrian crossing: no overtaking.',
+     'Spærrelinje, tavle C 51, uoverskuelige steder og et køretøj, der skjuler udsynet over et fodgængerfelt: overhaling forbudt.'),
+    # C 51's exception is only two-wheeled bicycles and small mopeds (Bekendtgørelse om vejafmærkning), not motorcycles.
+    ('بعد از تابلوی «سبقت ممنوع» (C 51) تا تابلوی پایانش (C 53)؛ ولی سبقت از دوچرخه و موپد کوچک دوچرخ مجاز است، نه از موتورسیکلت',
+     'After a “No overtaking” sign (C 51) until its end sign (C 53); but overtaking two-wheeled bicycles and small mopeds is allowed, not motorcycles',
+     'Efter tavlen »Overhaling forbudt« (C 51) indtil tavlen for ophør (C 53) – men overhaling af tohjulede cykler og små knallerter er tilladt, ikke af motorcykler'),
+    ('تابلوی C 51 سبقت از دوچرخه و موپد کوچک دوچرخ را ممنوع نمی‌کند؛ سبقت از موتورسیکلت ممنوع است.',
+     'Sign C 51 does not prohibit overtaking two-wheeled bicycles and small mopeds; overtaking motorcycles is prohibited.',
+     'Tavle C 51 forbyder ikke overhaling af tohjulede cykler og små knallerter; overhaling af motorcykler er forbudt.'),
+    # WARN_PRIORITY
+    ('A 11: هشدار تقاطع، ولی شما حق تقدم دارید', 'A 11: junction warning, but you have right of way', 'A 11: advarsel om kryds, men du har forkørselsret'),
+    ('A 11 مثلث هشداری است با نماد یک خط پهن عمودی (جاده‌ی شما) و یک خط باریک افقی (جاده‌ی متقاطع). یعنی تقاطع خطرناکی در پیش است و ترافیک جاده‌ی متقاطع باید بی‌قید و شرط به شما راه بدهد. نماد می‌تواند شکل تقاطع را هم نشان دهد، مثلاً فرعی‌ای که فقط از یک طرف وصل می‌شود.',
+     'A 11 is a warning triangle with a symbol of a wide vertical line (your road) and a narrow horizontal line (the crossing road). It means there is a dangerous junction ahead, and traffic on the crossing road must give way to you unconditionally. The symbol can also show the shape of the junction, for example a side road that joins from one side only.',
+     'A 11 er en advarselstrekant med et symbol af en bred lodret streg (din vej) og en smal vandret streg (den krydsende vej). Den betyder, at der er et farligt vejkryds forude, og at trafikken på den krydsende vej har ubetinget vigepligt over for dig. Symbolet kan også vise krydsets form, fx en sidevej, der kun munder ud fra den ene side.'),
+    ('A 11: خط پهن جاده‌ی شماست؛ ترافیک متقاطع راه می‌دهد.', 'A 11: the wide line is your road; crossing traffic gives way.', 'A 11: den brede streg er din vej; den krydsende trafik har vigepligt.'),
+    # ALCOHOL (course.ts), and the same rule on the rules page (guide.ts) and in the topic lessons (build.py): since
+    # 1 July 2025 a new driver, in the first 3 years after a first category B licence, has a limit of 0.2 per mille
+    # (Færdselsloven § 53, stk. 2, lov nr. 567 af 27/05/2025; FDM), and the course had called that a mistake.
+    ('الکل: ۰٫۵ در هزار، برای تازه‌کار ۰٫۲', 'Alcohol: 0.5 per mille, 0.2 for new drivers', 'Alkohol: 0,5 promille, 0,2 for nye bilister'),
+    ('رانندگی با غلظت الکل خون بیش از ۰٫۵ در هزار (promille) ممنوع است. برای راننده‌ی تازه‌کار، یعنی در ۳ سال اول پس از گرفتن نخستین گواهینامه‌ی B، حد از ۱ ژوئیه‌ی ۲۰۲۵ پایین‌تر است: ۰٫۲ در هزار.',
+     'Driving with a blood alcohol concentration above 0.5 per mille (promille) is prohibited. For a new driver, that is in the first 3 years after getting a first category B licence, the limit has been lower since 1 July 2025: 0.2 per mille.',
+     'Det er forbudt at køre med en alkoholkoncentration i blodet over 0,5 promille. For en ny bilist, dvs. i de første 3 år efter det første kørekort til kategori B, har grænsen siden 1. juli 2025 været lavere: 0,2 promille.'),
+    ('زیر این حدها هم اگر نتوانید مطمئن رانندگی کنید، مجازات می‌شوید', 'Even below these limits, you will be penalised if you cannot drive safely',
+     'Også under grænserne bliver du straffet, hvis du ikke kan føre bilen sikkert'),
+    ('فقط زمان الکل را از خون بیرون می‌برد؛ قهوه، دوش آب سرد یا هوای تازه سرعتش را بیشتر نمی‌کند',
+     'Only time removes alcohol from the blood; coffee, a cold shower or fresh air do not speed this up',
+     'Kun tiden fjerner alkoholen fra blodet; kaffe, et koldt bad eller frisk luft gør det ikke hurtigere'),
+    ('بیش از ۰٫۵ در هزار ممنوع، برای تازه‌کار بیش از ۰٫۲؛ بهترین قاعده: اگر می‌رانید، ننوشید.',
+     'Over 0.5 per mille is prohibited, over 0.2 for a new driver; the best rule: if you drive, don\'t drink.',
+     'Over 0,5 promille er forbudt, for nye bilister over 0,2; den bedste regel: kører du, så drikker du ikke.'),
+    ('Færdselsloven § 53، بند ۱ و ۲ | § 54', 'Færdselsloven § 53, subsections 1 and 2 | § 54', 'Færdselsloven § 53, stk. 1 og 2 | § 54'),
+    ('دو اشتباه رایج: «حد ۰٫۵ برای راننده‌ی تازه‌کار هم صدق می‌کند» (در ۳ سال اول، حد او ۰٫۲ است) و «قهوه‌ی قوی الکل را زودتر از بین می‌برد». هر دو غلط‌اند.',
+     'Two common mistakes: “The 0.5 limit also applies to new drivers” (in the first 3 years their limit is 0.2) and “Strong coffee clears alcohol faster”. Both are wrong.',
+     'To almindelige fejl: »Grænsen på 0,5 gælder også nye bilister« (de første 3 år er deres grænse 0,2) og »Stærk kaffe fjerner alkoholen hurtigere«. Begge er forkerte.'),
+    ('حد الکل: ۰٫۵ در هزار، و در ۳ سال اول رانندگی ۰٫۲؛ زیر آن هم اگر مطمئن نرانید، مجازات دارد.',
+     'Alcohol limit: 0.5 per mille, and 0.2 in the first 3 years of driving; even below that, not driving safely is punishable.',
+     'Promillegrænse: 0,5, og 0,2 de første 3 år som bilist; også under den er det strafbart, hvis du ikke kører sikkert.'),
+    ('این حد عمومی در دانمارک است؛ برای راننده‌ی تازه‌کار حد پایین‌تر و ۰٫۲ است.',
+     'This is the general limit in Denmark; for a new driver the limit is lower, 0.2.',
+     'Det er den almindelige grænse i Danmark; for nye bilister er grænsen lavere, 0,2.'),
+    ('از ۱ ژوئیه‌ی ۲۰۲۵، در ۳ سال اول پس از نخستین گواهینامه‌ی B حد ۰٫۲ در هزار است.',
+     'Since 1 July 2025 the limit is 0.2 per mille in the first 3 years after a first category B licence.',
+     'Siden 1. juli 2025 er grænsen 0,2 promille de første 3 år efter det første kørekort til kategori B.'),
+    ('راننده: الکل حداکثر ۰٫۵ در هزار (تازه‌کار ۰٫۲)؛ خسته‌اید، بایستید و استراحت کنید.',
+     'The driver: alcohol at most 0.5 per mille (new drivers 0.2); if you\'re tired, stop and rest.',
+     'Føreren: højst 0,5 promille (nye bilister 0,2); er du træt, så hold ind og hvil dig.'),
+    # (guide.ts)
+    ('حد مجاز الکل خون در دانمارک ۰٫۵ در هزار است و برای راننده‌ی تازه‌کار، در ۳ سال اول پس از نخستین گواهینامه‌ی B، ۰٫۲ در هزار؛ ولی هر مقدار الکل توانایی رانندگی را کم می‌کند.',
+     'The legal blood alcohol limit in Denmark is 0.5 per mille, and 0.2 per mille for a new driver in the first 3 years after a first category B licence, but any amount of alcohol reduces your ability to drive.',
+     'Promillegrænsen i Danmark er 0,5, og for nye bilister de første 3 år efter det første kørekort til kategori B 0,2, men enhver mængde alkohol nedsætter din evne til at køre bil.'),
+    ('حد الکل راننده‌ی تازه‌کار', "New drivers' limit", 'Grænse for nye bilister'),
+    # (guide.ts: a tile for the 30 m before a level crossing, so the numbers' grid stays even, and its line)
+    ('پارک ممنوع تا گذرگاه راه‌آهن', 'No parking near a level crossing', 'Parkering forbudt ved overkørsel'),
+    ('۰٫۲', '0.2', '0,2'), ('۳۰', '30', '30'),
+    ('در ۳۰ متری گذرگاه راه‌آهن پارک ممنوع است و روی خود گذرگاه، توقف هم ممنوع است.',
+     'Parking is prohibited within 30 metres of a level crossing, and stopping on the crossing itself is prohibited too.',
+     'Parkering er forbudt nærmere end 30 meter fra en jernbaneoverkørsel, og på selve overkørslen er standsning også forbudt.'),
+    # The course review of 2026-10-23, checked against Færdselsloven (LBK 1312/2024 with lov 567/2025) and
+    # Bekendtgørelse om vejafmærkning (BEK 425/2023):
+    # CAR_CHECK: the owner answers for the car's lawful state and the driver for its safe state (§ 67, stk. 2 and 3), not
+    # the driver for both; carrying a warning triangle is not required in Denmark, putting one out is (§ 31, stk. 2; FDM).
+    ('پیش از هر رانندگی، راننده مسئول است که خودرو سالم و بی‌خطر باشد. در آزمون تئوری درباره‌ی لاستیک، چراغ‌ها، شیشه‌ها، چراغ‌های هشدار داشبورد و مثلث خطر سؤال می‌آید.',
+     'Before every drive, the driver is responsible for the car being roadworthy and safe. The theory test includes questions about tyres, lights, windows, dashboard warning lights and the warning triangle.',
+     'Før hver tur er føreren ansvarlig for, at bilen er i forsvarlig stand. Til teoriprøven kommer der spørgsmål om dæk, lygter, ruder, advarselslamper i instrumentbrættet og advarselstrekant.'),
+    ('خودرو باید طوری ساخته و نگه داشته شود که بدون خطر برای کسی بشود از آن استفاده کرد. صاحب خودرو مسئول است که خودرو قانونی باشد، و کسی که پشت فرمان می‌نشیند باید همیشه مطمئن باشد که خودرو بی‌خطر است، حتی اگر مال او نیست. پیش از حرکت، این‌ها را بررسی کنید:',
+     'A car must be built and maintained so that it can be used without danger to anyone. The owner is responsible for the car being legal, and whoever is behind the wheel must always make sure it is safe, even if the car is not theirs. Before setting off, check the following:',
+     'En bil skal være indrettet og holdt i en sådan stand, at den kan bruges uden fare for nogen. Ejeren er ansvarlig for, at bilen er i lovlig stand, og den, der sidder bag rattet, skal altid være opmærksom på, at bilen er i forsvarlig stand, også selvom den ikke er hans eller hendes egen. Kontrollér følgende, før du kører:'),
+    ('راننده همیشه مسئول است که خودرو بی‌خطر باشد، حتی اگر مال او نیست؛ قانونی بودنش با صاحب خودرو است.',
+     'The driver is always responsible for the car being safe, even if it is not theirs; its being legal is the owner\'s responsibility.',
+     'Føreren skal altid sørge for, at bilen er i forsvarlig stand, også når den ikke er førerens egen; ejeren har ansvaret for, at den er i lovlig stand.'),
+    ('Færdselsloven § 67، بند ۲ و ۳', 'Færdselsloven § 67(2) and (3)', 'Færdselsloven § 67, stk. 2 og 3'),
+    ('Færdselsloven § 33 و § 33 a', 'Færdselsloven § 33 and § 33 a', 'Færdselsloven § 33 og § 33 a'),
+    ('در دانمارک همراه داشتن مثلث خطر (advarselstrekant) اجباری نیست، ولی اگر خودرو جایی بایستد که برای دیگران خطر دارد، باید آن را بگذارید؛ پس همیشه یکی در خودرو داشته باشید. اگر خودرو جایی خراب شد که برای دیگران خطر دارد، این کارها را بکنید:',
+     'In Denmark you are not required to carry a warning triangle (advarselstrekant), but if the car stops where it is a danger to others, you must put one out, so always keep one in the car. If your car breaks down somewhere it is a danger to others, do the following:',
+     'I Danmark er det ikke lovpligtigt at have en advarselstrekant i bilen, men holder bilen et sted, hvor den er til fare for andre, skal du stille en op – så hav altid en i bilen. Hvis bilen bryder sammen et sted, hvor den er til fare for andre, skal du gøre følgende:'),
+    ('چراغ خطر (چهارراهنما) را روشن کنید؛ ولی جای مثلث خطر را نمی‌گیرد',
+     'Switch on the hazard warning lights; they do not replace the warning triangle',
+     'Tænd havariblinket; det erstatter ikke advarselstrekanten'),
+    ('خودرو جای خطرناکی ایستاده؟ مثلث خطر را دورتر پشت آن بگذارید، نه درست پشتش.',
+     'Is the car stopped in a dangerous place? Put the warning triangle well behind it, not right behind it.',
+     'Holder bilen et farligt sted? Stil advarselstrekanten et godt stykke bag den, ikke lige bag den.'),
+    ('راننده مسئول است که خودرو بی‌خطر باشد، حتی خودروی امانتی؛ قانونی بودنش با صاحب خودرو است.',
+     'The driver is responsible for the car being safe, even a borrowed car; its being legal is the owner\'s responsibility.',
+     'Føreren er ansvarlig for, at bilen er i forsvarlig stand, også når bilen er lånt; ejeren har ansvaret for, at den er i lovlig stand.'),
+    # BELTS: seat belts are § 80 and children's seats § 80 a (§ 81 is about helmets).
+    ('Færdselsloven § 80، بند ۴ | § 80 a', 'Færdselsloven § 80(4) | § 80 a', 'Færdselsloven § 80, stk. 4 | § 80 a'),
+    ('Færdselsloven § 80 a، بند ۳ | Undervisningsplan for kategori B', 'Færdselsloven § 80 a(3) | Undervisningsplan for kategori B',
+     'Færdselsloven § 80 a, stk. 3 | Undervisningsplan for kategori B'),
+    # ALCOHOL: since lov 567/2025, § 53, stk. 2 is the new drivers' limit and stk. 3 driving unsafely below the limits; drugs
+    # are § 54, stk. 1, and medicine, tiredness and illness § 54, stk. 2. The body burns a unit in about 1.5 to 2 hours.
+    ('Færdselsloven § 53، بند ۱ تا ۳', 'Færdselsloven § 53(1)-(3)', 'Færdselsloven § 53, stk. 1-3'),
+    ('Færdselsloven § 54، بند ۱ و ۲', 'Færdselsloven § 54(1) and (2)', 'Færdselsloven § 54, stk. 1 og 2'),
+    ('Færdselsloven § 54، بند ۲', 'Færdselsloven § 54(2)', 'Færdselsloven § 54, stk. 2'),
+    ('بدن الکل را آهسته دفع می‌کند: هر واحد (genstand) حدود ۱٫۵ تا ۲ ساعت طول می‌کشد.',
+     'The body gets rid of alcohol slowly: each unit (genstand) takes about 1.5 to 2 hours.',
+     'Kroppen forbrænder alkohol langsomt: hver genstand tager cirka 1½ til 2 timer.'),
+    # OVERTAKING: C 51 does not cover two-wheeled bicycles and small mopeds, but it does cover motorcycles.
+    ('ممنوعیت سبقت از دوچرخه و موپد کوچکِ دوچرخ را شامل نمی‌شود.',
+     'The ban does not cover overtaking two-wheeled bicycles and small mopeds.',
+     'Forbuddet gælder ikke overhaling af tohjulede cykler og små knallerter.'),
+    # TURNS: § 16, stk. 5 lets two oncoming left-turners pass each other to the left, that is turn in front of each other
+    # (each keeps the other on its right), if it can be done without danger or inconvenience; it is not «usually behind».
+    ('وقتی دو خودرو از روبه‌روی هم هر دو به چپ می‌پیچند، اگر خطر یا مزاحمتی پیش نیاید، می‌توانند جلوی هم بپیچند: هر کدام پیش از مرکز تقاطع می‌پیچد و دیگری را سمت راست خود دارد.',
+     'When two oncoming cars both turn left, they may turn in front of each other if this causes no danger or inconvenience: each turns before the centre of the junction, with the other car on its right.',
+     'Når to modkørende biler begge skal svinge til venstre, må de køre forbi hinanden til venstre, hvis det kan ske uden fare eller ulempe: hver bil svinger før krydsets midte og har den anden bil på sin højre side.'),
+    # (build.py, the topic lesson of 4.4)
+    ('حد مجاز الکل ۰٫۵ پرومیل است و برای راننده‌ی تازه‌کار، در ۳ سال اول پس از نخستین گواهینامه‌ی B، ۰٫۲ پرومیل؛ اما اگر ناایمن برانید، حتی زیر این حد هم مجازات می‌شوید.',
+     'The legal alcohol limit is 0.5 per mille, and 0.2 per mille for a new driver in the first 3 years after a first category B licence; but if you drive unsafely, you can be punished even below this limit.',
+     'Promillegrænsen er 0,5, og for nye bilister de første 3 år efter det første kørekort til kategori B 0,2; men hvis du kører uforsvarligt, kan du straffes selv under denne grænse.'),
+    # The welcome screen (ui/welcome.tsx, 2026-10-23): the owner's line in place of «سفرتان را با TeoriPrøve شروع کنید», and
+    # «مطمئن پشت فرمان» left out of the one under it.
+    ('تضمین قبولی در آزمون تئوری رانندگی', 'A guaranteed pass in the driving theory test', 'Garanti for at bestå teoriprøven'),
+    ('آماده‌ی آزمون تئوری.', 'Ready for the theory test.', 'Klar til teoriprøven.'),
+    # The rules page (guide.ts, 2026-10-23), checked against Færdselsloven: carrying a warning triangle is not compulsory
+    # (§ 31, stk. 2), overtaking near a pedestrian crossing is forbidden only past a vehicle that hides it (§ 25), Denmark
+    # has no lane-splitting «emergency corridor» rule (keep the hard shoulder free; § 7, stk. 2), and the numbers the test
+    # asks: the trailer limit (§ 43), the 2-second gap, 1.2 per mille (§ 126), the bus stop's 12 m (§ 29, stk. 2), the
+    # 3 minutes of § 2, nr. 18, the triangle's 50/100 m, 750 kg trailers with a B licence, klip (§ 125, stk. 2 and 3;
+    # a new driver's 2 klip give a driving ban, § 127). «klip» is written «نمره‌ی منفی (klip)», as in the glossary.
+    ('خودروی سواری با تریلر یا کاروان: حداکثر ۸۰ کیلومتر در ساعت؛ در بزرگراه اگر خودرو و تریلر برای ۱۰۰ تأیید شده باشند، ۱۰۰.',
+     'A car with a trailer or caravan: at most 80 km/h; on the motorway 100 if the car and trailer are approved for 100.',
+     'Bil med trailer eller campingvogn: højst 80 km/t; på motorvej 100, hvis bil og trailer er godkendt til 100.'),
+    ('قاعده‌ی دو ثانیه: وقتی خودروی جلو از کنار نقطه‌ای رد شد، تا رسیدن شما به همان نقطه دست‌کم ۲ ثانیه بگذرد؛ در جاده‌ی خیس یا لغزنده بیشتر.',
+     'The two-second rule: when the car in front passes a fixed point, at least 2 seconds should pass before you reach the same point; more on a wet or slippery road.',
+     'To-sekunders-reglen: Når bilen foran passerer et fast punkt, skal der gå mindst 2 sekunder, før du når samme punkt; mere på våd eller glat vej.'),
+    ('بالای ۱٫۲ در هزار، گواهینامه بی‌قید و شرط و دست‌کم برای ۳ سال گرفته می‌شود.',
+     'Above 1.2 per mille, your licence is taken away unconditionally, for at least 3 years.',
+     'Over 1,2 promille frakendes kørekortet ubetinget, i mindst 3 år.'),
+    ('استفاده از تلفن در دست یک نمره‌ی منفی (klip) در گواهینامه دارد.',
+     'Using a handheld phone gives a penalty point (klip) on your licence.',
+     'Brug af håndholdt mobil giver et klip i kørekortet.'),
+    ('از غروب تا طلوع آفتاب و وقتی دید کم است (مه، باران شدید، برف) نور پایین یا بالا لازم است؛ چراغ روشنایی روز کافی نیست، چون عقب خودرو را روشن نمی‌کند.',
+     'From sunset to sunrise and when visibility is poor (fog, heavy rain, snow) you need dipped or full headlights; daytime running lights are not enough, because they do not light up the back of the car.',
+     'Fra solnedgang til solopgang og når sigtbarheden er nedsat (tåge, kraftig regn, sne), skal du køre med nærlys eller fjernlys; kørelys er ikke nok, fordi det ikke tænder lygterne bag på bilen.'),
+    ('چراغ مه‌شکن (جلو و عقب) فقط در مه و بارش شدید مجاز است.',
+     'Fog lights (front and rear) are only allowed in fog and heavy rain or snow.',
+     'Tågelygter (for og bag) må kun bruges i tåge og under kraftig nedbør.'),
+    ('از خودرویی که دیدتان را به گذرگاه عابر پیاده بسته است، سبقت نگیرید و از کنارش رد نشوید.',
+     'Do not overtake or pass a vehicle that blocks your view of a pedestrian crossing.',
+     'Overhal eller kør ikke forbi et køretøj, der skjuler udsynet over et fodgængerfelt.'),
+    ('درست پیش از تقاطع و در آن، پیش از تقاطع راه‌آهن و روی آن، و سر پیچ یا بالای سربالایی که دید کافی ندارید، سبقت نگیرید.',
+     'Do not overtake just before or in a junction, just before or on a level crossing, or on a bend or hilltop where you cannot see far enough.',
+     'Overhal ikke umiddelbart før eller i et vejkryds, umiddelbart før eller på en jernbaneoverkørsel eller i et sving eller ved en bakketop, hvor du ikke kan se langt nok.'),
+    ('بعد از تابلوی «سبقت ممنوع» (C 51) تا تابلوی پایانش (C 53) سبقت ممنوع است؛ ولی سبقت از دوچرخه و موپد کوچکِ دوچرخ مجاز است، نه از موتورسیکلت.',
+     'After the “No overtaking” sign (C 51) until its end sign (C 53), overtaking is prohibited; but overtaking two-wheeled bicycles and small mopeds is allowed, not motorcycles.',
+     'Efter tavlen »Overhaling forbudt« (C 51) og indtil tavlen for ophør (C 53) er overhaling forbudt; men overhaling af tohjulede cykler og små knallerter er tilladt, ikke af motorcykler.'),
+    ('در سمت راست جاده و در جهت حرکت توقف و پارک کنید (در خیابان یک‌طرفه و جاده‌ی کم‌رفت‌وآمد سمت چپ هم مجاز است).',
+     'Stop and park on the right-hand side of the road in the direction of travel (in one-way streets and on quiet roads also on the left).',
+     'Stands og parkér i højre side af vejen i kørselsretningen (på ensrettede og mindre befærdede veje også i venstre side).'),
+    ('در ایستگاه اتوبوس، روی بخش خط‌کشی‌شده یا اگر خط‌کشی نیست تا ۱۲ متر دو طرف تابلو، توقف ممنوع است.',
+     'At a bus stop, stopping is prohibited on the marked stretch or, if there are no markings, within 12 metres either side of the sign.',
+     'Ved et busstoppested er standsning forbudt på den afmærkede strækning eller, hvis der ikke er afmærkning, inden for 12 meter på hver side af skiltet.'),
+    ('جایی که خودروی شما دید دیگران را می‌گیرد یا مانع ترافیک می‌شود، نایستید: سر پیچ یا بالای سربالایی، روی پلِ روی بزرگراه، در زیرگذر یا تونل.',
+     'Do not stop where your car blocks other people\'s view or gets in the way of traffic: on a bend or hilltop, on a bridge over a motorway, in an underpass or in a tunnel.',
+     'Stands ikke, hvor bilen tager udsynet for andre eller er i vejen for trafikken: i et sving eller ved en bakketop, på en bro over motorvej, i en viadukt eller i en tunnel.'),
+    ('توقف (standsning) یعنی ایستادن کمتر از ۳ دقیقه، یا برای سوار و پیاده کردن مسافر یا بار زدن؛ بیشتر از این، با یا بدون راننده، پارک است.',
+     'Stopping (standsning) means standing still for less than 3 minutes, or to let passengers in or out or to load goods; anything longer, with or without a driver, is parking.',
+     'Standsning er at holde stille i under 3 minutter eller for af- og påstigning eller af- og pålæsning; alt andet, med eller uden fører, er parkering.'),
+    ('فقط وسیله‌های موتوری که بتوانند و اجازه داشته باشند دست‌کم ۵۰ کیلومتر در ساعت بروند، وارد بزرگراه و جاده‌ی موتوری می‌شوند؛ نه موپد، دوچرخه یا عابر.',
+     'Only motor vehicles that can and may drive at least 50 km/h may use motorways and motor roads; no mopeds, bicycles or pedestrians.',
+     'Kun motorkøretøjer, der kan og må køre mindst 50 km/t, må køre på motorvej og motortrafikvej; ikke knallerter, cykler eller fodgængere.'),
+    ('در اضطرار: چراغ هشدار را روشن کنید، تا جای ممکن به شانه‌ی اضطراری بروید، همه پشت گاردریل بروند و مثلث هشدار را دست‌کم ۱۰۰ متر پشت خودرو بگذارید.',
+     'In an emergency: switch on the hazard lights, pull as far onto the hard shoulder as you can, get everyone behind the crash barrier and place the warning triangle at least 100 metres behind the car.',
+     'I en nødsituation: tænd havariblinket, kør så langt ud i nødsporet som muligt, få alle om bag autoværnet, og stil advarselstrekanten mindst 100 meter bag bilen.'),
+    ('در صف، شانه‌ی اضطراری (nødspor) را آزاد بگذارید؛ وقتی خودروی امدادی با چراغ آبی و آژیر می‌آید، به‌موقع راه باز کنید.',
+     'In a queue, keep the hard shoulder (nødspor) free; when an emergency vehicle comes with blue lights and siren, make way in good time.',
+     'I kø skal nødsporet holdes frit; når et udrykningskøretøj kommer med blåt blink og sirene, skal du give plads i god tid.'),
+    ('با گواهینامه‌ی B می‌توانید تریلر تا ۷۵۰ کیلوگرم بکشید؛ تریلر سنگین‌تر فقط وقتی که وزن کل مجاز خودرو و تریلر با هم از ۳٬۵۰۰ کیلوگرم بیشتر نشود.',
+     'With a category B licence you may tow a trailer of up to 750 kg; a heavier trailer only if the permitted total weight of the car and trailer together does not exceed 3,500 kg.',
+     'Med kørekort til kategori B må du trække en trailer på op til 750 kg; en tungere trailer kun, hvis bilens og trailerens samlede tilladte totalvægt ikke overstiger 3.500 kg.'),
+    ('۳ نمره‌ی منفی (klip) در ۳ سال گواهینامه را می‌گیرد؛ در ۳ سال اول پس از نخستین گواهینامه، ۲ نمره‌ی منفی به ممنوعیت رانندگی (kørselsforbud) می‌رسد.',
+     '3 penalty points (klip) within 3 years cost you your licence; in the first 3 years after your first licence, 2 penalty points lead to a driving ban (kørselsforbud).',
+     '3 klip inden for 3 år koster kørekortet; de første 3 år efter det første kørekort giver 2 klip kørselsforbud.'),
+    ('همراه داشتن مثلث هشدار اجباری نیست، ولی اگر خودرو جای خطرناکی بایستد گذاشتنش اجباری است: دست‌کم ۵۰ متر پشت خودرو و در بزرگراه ۱۰۰ متر.',
+     'Carrying a warning triangle is not compulsory, but if the car stops in a dangerous place you must put one out: at least 50 metres behind the car, 100 metres on a motorway.',
+     'Det er ikke lovpligtigt at have en advarselstrekant med, men holder bilen et farligt sted, skal den stilles op: mindst 50 meter bag bilen, på motorvej 100 meter.'),
+    # (the new number tiles: their labels, units and values)
+    ('خودرو با تریلر', 'Car with a trailer', 'Bil med trailer'),
+    ('کمترین فاصله با خودروی جلو', 'Minimum gap to the car in front', 'Mindste afstand til bilen foran'),
+    ('گرفتن بی‌قید و شرط گواهینامه', 'Licence taken away unconditionally', 'Ubetinget frakendelse'),
+    ('کمربند سرنشین زیر این سن با راننده', 'The driver answers for belts under this age', 'Føreren har ansvaret for seler under denne alder'),
+    ('توقف ممنوع کنار ایستگاه اتوبوس', 'No stopping by a bus stop', 'Standsning forbudt ved busstoppested'),
+    ('توقف کوتاه‌تر از این، پارک نیست', 'A shorter stop is not parking', 'Kortere standsning er ikke parkering'),
+    ('مثلث خطر پشت خودرو (بزرگراه ۱۰۰)', 'Warning triangle behind the car (motorway 100)', 'Advarselstrekant bag bilen (motorvej 100)'),
+    ('تریلر با گواهینامه‌ی B', 'Trailer with a B licence', 'Trailer på B-kørekort'),
+    ('ثانیه', 'seconds', 'sekunder'), ('دقیقه', 'minutes', 'minutter'), ('سال', 'years', 'år'),
+    ('۱٫۲', '1.2', '1,2'), ('۱۵', '15', '15'), ('۱۲', '12', '12'), ('۳', '3', '3'), ('۷۵۰', '750', '750'),
+    # The settings' «تنظیمات زبان», which slides open with the three languages, and the glossary's line under a word while
+    # the AI looks for the page that teaches it (2026-10-23).
+    ('تنظیمات زبان', 'Language Settings', 'Sprogindstillinger'),
+    ('در حال یافتن مرتبط‌ترین درس…', 'Finding the most relevant lesson…', 'Finder den mest relevante lektion…'),
+    # The check of «آزمون جدید»'s questions against the lessons (2026-10-23): load and trailers in CAR_CHECK, the exceptions to
+    # the ban on overtaking at junctions (Færdselsloven § 23) in OVERTAKING and on the rules page.
+    ('بار، باربند و تریلر', 'Load, roof box and trailer', 'Last, tagboks og trailer'),
+    ('بار را طوری بگذارید و ببندید که جابه‌جا نشود و نیفتد، و دیدتان را نگیرد و چراغ‌ها یا پلاک را نپوشاند؛ باربند دوچرخه هم همین‌طور. بار سنگین را پایین و جلوی صندوق بگذارید و باری را که از پشت خودرو زیاد بیرون زده علامت‌گذاری کنید.',
+     'Place and secure the load so that it cannot shift or fall off, and so that it does not block your view or hide the lights or the number plate; that goes for a bike rack too. Put heavy things low and at the front of the boot, and mark a load that sticks out well behind the car.',
+     'Anbring og fastgør lasten, så den ikke kan forskubbe sig eller falde af, og så den ikke tager udsynet eller skjuler lygterne eller nummerpladen; det gælder også en cykelholder. Læg tunge ting lavt og forrest i bagagerummet, og afmærk last, der rager et godt stykke ud bag bilen.'),
+    ('بار سبک و ریز را در تریلر روباز با تور یا برزنت بپوشانید تا نریزد',
+     'Cover a loose, light load in an open trailer with a net or tarpaulin so that nothing blows off',
+     'Dæk løs og let last på en åben trailer med net eller presenning, så intet blæser af'),
+    ('پیش از حرکت با تریلر: چراغ‌هایش کار کنند و اتصال، ترمز و کابل ایمنی‌اش درست وصل باشد',
+     'Before you drive with a trailer: its lights must work, and its coupling, brakes and breakaway cable must be properly connected',
+     'Før du kører med trailer: dens lygter skal virke, og koblingen, bremserne og sikkerhedswiren skal være forsvarligt tilsluttet'),
+    ('به خودروی سواری فقط یک تریلر می‌توان بست', 'A car may only tow one trailer', 'En bil må kun trække ét påhængskøretøj'),
+    ('در کاروانِ در حال حرکت هیچ‌کس نباید بنشیند', 'Nobody may ride in a caravan while it is being towed',
+     'Der må ikke befordres personer i en campingvogn'),
+    ('اگر کاروان از خودرو پهن‌تر است و پشتش را نمی‌بینید، آینه‌ی اضافه لازم است',
+     'If the caravan is wider than the car and you cannot see past it, you need extra mirrors',
+     'Er campingvognen bredere end bilen, så du ikke kan se forbi den, skal du have ekstra spejle'),
+    ('بار محکم باشد و چراغ، پلاک و دید را نپوشاند؛ پیش از حرکت چراغ‌ها و اتصال تریلر را وارسی کنید.',
+     'The load must be secured and must not cover the lights, the number plate or your view; check the trailer\'s lights and coupling before you drive.',
+     'Lasten skal være fastgjort og må ikke skjule lygter, nummerplade eller udsyn; tjek trailerens lygter og kobling, før du kører.'),
+    ('Færdselsloven § 67، بند ۳ | § 70، بند ۱ | § 82، بند ۱ و ۳ | § 83 a',
+     'Færdselsloven § 67(3) | § 70(1) | § 82(1) and (3) | § 83 a',
+     'Færdselsloven § 67, stk. 3 | § 70, stk. 1 | § 82, stk. 1 og 3 | § 83 a'),
+    ('گزینه‌ی «راه کوتاه است، پس بار را نمی‌بندم» غلط است.',
+     'The option “It is a short trip, so I do not tie the load down” is wrong.',
+     'Svarmuligheden »Det er en kort tur, så jeg spænder ikke lasten fast« er forkert.'),
+    ('بار را محکم ببندید و نگذارید چراغ، پلاک یا دیدتان را بپوشاند؛ پیش از حرکت چراغ‌ها و اتصال تریلر را وارسی کنید.',
+     'Tie the load down and do not let it cover the lights, the number plate or your view; check the trailer\'s lights and coupling before you drive.',
+     'Spænd lasten fast, og lad den ikke skjule lygter, nummerplade eller udsyn; tjek trailerens lygter og kobling, før du kører.'),
+    ('جایی که دید کافی ندارید: سر پیچ و بالای سربالایی', 'Where you cannot see far enough: on bends and at the top of hills',
+     'Hvor du ikke har tilstrækkelig oversigt: i sving og ved bakketoppe'),
+    ('درست پیش از تقاطع و در آن، و درست پیش از تقاطع راه‌آهن و روی آن؛ ولی در تقاطع سبقت مجاز است وقتی ترافیک جاده‌ی متقاطع باید بی‌قید و شرط به شما راه بدهد، تقاطع چراغ یا پلیس دارد، در خط‌های هم‌جهت می‌رانید یا از سمت راستِ خودرویی که به چپ می‌پیچد رد می‌شوید',
+     'Just before and in a junction, and just before and on a level crossing; but at a junction overtaking is allowed when the crossing traffic must give way to you unconditionally, when the junction has traffic lights or a police officer, when you drive in lanes going the same way, or when you pass a car turning left on its right',
+     'Umiddelbart før og i et vejkryds og umiddelbart før og på en jernbaneoverkørsel; men i et kryds må du godt overhale, når den krydsende trafik har ubetinget vigepligt over for dig, når krydset er reguleret af lyssignal eller politi, når I kører i vognbaner for samme retning, eller når du overhaler en bil, der svinger til venstre, i højre side'),
+    ('در تقاطع سبقت مجاز است وقتی ترافیک جاده‌ی متقاطع باید بی‌قید و شرط به شما راه بدهد، تقاطع چراغ یا پلیس دارد، یا در خط‌های هم‌جهت می‌رانید.',
+     'At a junction overtaking is allowed when the crossing traffic must give way to you unconditionally, when the junction has traffic lights or a police officer, or when you drive in lanes going the same way.',
+     'I et kryds må du godt overhale, når den krydsende trafik har ubetinget vigepligt over for dig, når krydset er reguleret af lyssignal eller politi, eller når I kører i vognbaner for samme retning.'),
+]
+
+# The pictures of course.ts's own lessons that build.py writes into data/course-art.json (their steps name them there).
+# CAR_CHECK's step on load, roof box and trailer, added after the check of «آزمون جدید»'s questions (2026-10-23).
+picture('check-load', """
+Educational illustration for a Danish driving-theory app: a RED estate car (ours) with a small open trailer coupled behind it, standing on a plain light grey surface, seen from behind, a little from the side and slightly from above, so that the car's rear, the coupling and the whole trailer are clearly visible.
+THE SUBJECT: the trailer is loaded with garden waste and cardboard boxes under a tight dark green net, fastened with straps to the trailer's sides, so that nothing can blow off. The trailer's two rear lights glow red, and its number plate (blank, no characters) is clean and fully visible; nothing in the load covers the lights or the plate. At the coupling, the thin steel breakaway cable runs from the trailer's drawbar to the car's tow bar, and the trailer's electric cable is plugged into the car's socket. On the car's roof a closed black roof box sits on roof bars.
+MUST BE CLEARLY VISIBLE: the net and straps over the load, the trailer's lit rear lights and blank number plate, the coupling with the breakaway cable and the plugged-in electric cable, the roof box.
+MUST NOT APPEAR: people, other vehicles, signs, text, letters, numbers, brand names, logos.
+Style: a clean, precise flat vector illustration for a Danish driving-theory app, NOT photorealistic and NOT a 3D render: simple clean shapes, flat even colours, crisp edges, only very soft shadows, uncluttered. No text, letters or numbers anywhere.
+""")
+OWN_ART = ['check-load']

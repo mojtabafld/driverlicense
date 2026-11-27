@@ -1,0 +1,29 @@
+{
+  "name": "teoriprove",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Danish driving theory test practice (category B) with Persian translations, accounts and progress tracking.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "test:e2e": "node --test test/e2e/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@simplewebauthn/server": "14.0.3",
+    "jpeg-js": "^0.4.4",
+    "nodemailer": "^10.3.1",
+    "oci-common": "^2.144.0",
+    "oci-keymanagement": "^2.144.0",
+    "oci-objectstorage": "^2.144.0",
+    "oci-secrets": "^2.144.0",
+    "oci-vault": "^2.144.0",
+    "oracledb": "^6.10.0",
+    "pg": "^8.13.0",
+    "web-push": "^3.6.7"
+  }
+}

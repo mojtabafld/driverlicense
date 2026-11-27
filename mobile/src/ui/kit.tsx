@@ -1,0 +1,999 @@
+import { PageScroll } from './page-scroll';
+// Small building blocks shared by all screens, styled like the web site.
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect, useNavigation } from 'expo-router';
+import { Image } from 'expo-image';
+import { Fragment, cloneElement, isValidElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, Animated, Easing, I18nManager, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
+
+import { usePlainHeader } from '@/lib/header-style';
+import { RTL, getTransLang, tr, tryTr } from '@/lib/i18n';
+import { useSurfaceUnder, useUnderBar } from './bar-shade';
+import { daFamily, faFamily } from './fonts';
+import { Icon, type IconName } from './icon';
+import { Glass } from './glass';
+import { API_URL, PROVE_PICS } from '@/lib/config';
+import { enTerms } from '@/lib/en-terms';
+import { useApp, useExamLang } from '@/lib/store';
+import { ARC, SOFT, m3Scheme, UBER, lighten, lightness, radius, useColors, useM3, useTheme } from './theme';
+import { PALETTE, deepAccent, graphiteCtl, heroDark, mix, px, railColor, rgba as rgbaOf } from './palette';
+import { TAB_BAR_H, useTabLook } from './tabs/tab-look';
+import { CardRadiusContext, DashboardContext, TAB_CARD_RADIUS, useDashboardLook } from './dashboard-style';
+
+// A style given in physical left/right terms. Phones running right-to-left (Persian) swap left and right in styles,
+// the web does not; this keeps "left" meaning the left edge on both.
+const nativeRtl = () => Platform.OS !== 'web' && I18nManager.isRTL;
+export function physical<S extends Record<string, any>>(style: S): S {
+  if (!nativeRtl()) return style;
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(style)) out[k.replace(/Left|Right|left|right/, w => ({ Left: 'Right', Right: 'Left', left: 'right', right: 'left' } as any)[w])] = v;
+  return out as S;
+}
+
+// A text alignment given as the physical edge. On phones a right-to-left layout swaps textAlign's left and right (like
+// the styles physical() fixes), so there it is given swapped; for text laid out right to left only.
+export function physicalAlign<A extends TextStyle['textAlign']>(a: A): A {
+  if (!nativeRtl()) return a;
+  return (a === 'left' ? 'right' : a === 'right' ? 'left' : a) as A;
+}
+
+export const tap = () => { if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {}); };
+
+// The light motion of Uber Eats between screens, the same on every platform:
+// - tab: a page whose tab is chosen comes in with a quick fade and a short rise;
+// - push: an inner page (mistakes, account, a past exam) slides in from the side and fades in, and slides back out
+//   when left with its back button; the page returned to comes in from the other side;
+// - sheet: the exam comes up from the bottom when it starts and goes back down when it is left.
+// On phones the native stack already moves pushed pages and the exam, so there only the fade of a tab plays.
+export type Motion = 'tab' | 'push' | 'sheet';
+let goingBack = false; // set by leave(): the next page shown is the one returned to
+// Runs `cb` each time the page comes into view, with `returned` true when it was only covered meanwhile (a page opened
+// over it and closed again, by any way back: the back button, a swipe, the browser's or the phone's back) — then the
+// page is just there again as it was, nothing replays. For a tab page a switch to another tab is not covering.
+function useFocusReturn(cb: (returned: boolean) => void) {
+  const nav = useNavigation();
+  const covered = useRef(false);
+  useFocusEffect(useCallback(() => {
+    const returned = covered.current;
+    covered.current = false;
+    cb(returned);
+    const st = nav.getState(), mine = st?.routes[st.index]?.key;
+    return () => {
+      // Blurred while still here: covered, unless (in the tabs) another tab is now chosen.
+      const now = nav.getState();
+      covered.current = !!now && (now.type !== 'tab' || now.routes[now.index]?.key === mine);
+    };
+  }, [cb, nav]));
+}
+
+export function usePageMotion(motion: Motion) {
+  const [v] = useState(() => new Animated.Value(0));
+  const [from, setFrom] = useState<1 | -1>(1);
+  const own = motion === 'tab' || Platform.OS === 'web';
+  useFocusReturn(useCallback(returned => {
+    const back = goingBack; goingBack = false;
+    // (no entrance for a tab's page since 2026-11-15, Mojtaba: switching tabs on the dock was slow and jerky on Android;
+    // the page is simply there)
+    if (!own || returned || motion === 'tab') { v.stopAnimation(); v.setValue(1); return; }
+    setFrom(back ? -1 : 1);
+    v.setValue(0);
+    Animated.timing(v, { toValue: 1, duration: motion === 'sheet' ? 320 : motion === 'push' ? 200 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [v, own, motion]));
+  // Play the way out, then go (`then`, e.g. router.back()); on phones the native stack moves the page itself.
+  const leave = useCallback((then: () => void) => {
+    goingBack = true;
+    if (Platform.OS !== 'web' || motion === 'tab') { then(); return; }
+    setFrom(1);
+    Animated.timing(v, { toValue: 0, duration: motion === 'push' ? 140 : 200, easing: Easing.in(Easing.quad), useNativeDriver: true }).start(() => then());
+  }, [v, motion]);
+  // Right to left: a new page comes in from the left (and goes back out there), as Persian reads.
+  const shift = motion === 'sheet' ? { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [70, 0] }) }
+    : motion === 'push' ? { translateX: v.interpolate({ inputRange: [0, 1], outputRange: [-14 * from, 0] }) }   // a light, short glide
+    : { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) };
+  const style = { flex: 1, opacity: motion === 'sheet' ? v.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) : v, transform: [shift] };
+  return { style, leave };
+}
+
+// Each part of a page coming in on its own: a fade and a 12px rise (320 ms). Parts that appear together come one after
+// another (55 ms apart, at most 8 steps), so a page builds up from the top, as in Uber Eats.
+let enterSeq = 0, enterReset: ReturnType<typeof setTimeout> | null = null;
+function nextEnterDelay() {
+  const d = Math.min(enterSeq, 8) * 55;
+  enterSeq++;
+  if (enterReset) clearTimeout(enterReset);
+  enterReset = setTimeout(() => { enterSeq = 0; }, 120);
+  return d;
+}
+export function useEnter() {
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    Animated.timing(v, { toValue: 1, duration: 320, delay: nextEnterDelay(), easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+  }, [v]);
+  return { opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] };
+}
+// A part of a page that comes in with useEnter; `style` for its place in the layout (e.g. a width).
+export function Enter({ children, style }: { children?: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  const anim = useEnter();
+  return <Animated.View style={[style, anim] as any}>{children}</Animated.View>;
+}
+
+// A tab page's content coming in (see usePageMotion).
+export function PageIn({ children, motion = 'tab' }: { children?: React.ReactNode; motion?: Motion }) {
+  const { style } = usePageMotion(motion);
+  return <Animated.View style={style as any}>{children}</Animated.View>;
+}
+
+// One solid page colour, shared with every header. `anim`: the page's entrance motion.
+export function Backdrop({ children, anim }: { children?: React.ReactNode; anim?: object }) {
+  const c = useColors();
+  return (
+    <View style={{ flex: 1, overflow: 'hidden', backgroundColor: c.bg }}>
+      {anim ? <Animated.View style={anim as any}>{children}</Animated.View> : children}
+    </View>
+  );
+}
+
+// Light / dark switch, like the site's moon button in its top bar (sets a fixed mode; «خودکار» is in the settings).
+// A round button in the look of the home page's (the default profile picture, ui/avatar.tsx, and the chart button,
+// ui/chart-view.tsx): the theme's link colour on the blush-to-lavender wash (Mojtaba 2026-10-19: every page's header
+// buttons as the home page's). The plain headers' buttons, the inner pages' way back and light / dark switch, and the
+// settings page's light / dark switch.
+// `disabled`: faded and not to be pressed (the coach's button without premium).
+export function RoundIcon({ icon, label, onPress, size = 44, disabled }: { icon: IconName; label: string; onPress: () => void; size?: number; disabled?: boolean }) {
+  const c = useColors();
+  return (
+    <Pressable onPress={() => { tap(); onPress(); }} disabled={disabled} hitSlop={6} accessibilityRole="button" accessibilityLabel={tr(label)} accessibilityState={{ disabled }}
+      style={({ pressed }) => ({ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', opacity: disabled ? 0.4 : pressed ? 0.6 : 1, transform: [{ scale: pressed ? 0.94 : 1 }] })}>
+      {/* (the icon alone, in the theme's colour, no round background; Mojtaba 2026-10-29) */}
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name={icon} size={Math.round(size * 0.52)} color={c.link} weight="semibold" />
+      </View>
+    </Pressable>
+  );
+}
+// The light / dark switch as a RoundIcon.
+export function ThemeRound({ size }: { size?: number }) {
+  const { theme, setMode } = useTheme(), dark = theme === 'dark';
+  return <RoundIcon icon={dark ? 'sun' : 'moon'} label="تغییر تم" onPress={() => setMode(dark ? 'light' : 'dark')} size={size} />;
+}
+
+export function ThemeButton() {
+  const c = useColors(), { theme, setMode } = useTheme(), dark = theme === 'dark';
+  return (
+    <Pressable onPress={() => { tap(); setMode(dark ? 'light' : 'dark'); }} hitSlop={8} accessibilityRole="button" accessibilityLabel="تغییر تم"
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: pressed ? c.surface2 : 'transparent' })}>
+      {dark ? <Icon name="sun" size={20} color={c.text} /> : <Icon name="moon" size={19} color={c.muted} />}
+    </Pressable>
+  );
+}
+
+// A scroll view that is back at the top whenever its page comes into view (a tab chosen again, a page returned to).
+// `given`: the page's own ref to the scroll view, when it has one.
+export function useTopOnFocus(given?: React.RefObject<ScrollView | null>) {
+  const own = useRef<ScrollView | null>(null);
+  // From the top when the page is opened (or its tab chosen), where it was when a page over it is closed.
+  useFocusReturn(useCallback(returned => { if (!returned) (given ?? own).current?.scrollTo({ y: 0, animated: false }); }, [given]));
+  return given ?? own;
+}
+
+// Scrollable tab screen: the page heading (with the theme switch beside it; no app name or logo, so the page has the
+// room) and the content; it leaves room for the floating tab bar over the page's end.
+// With `fill` its content gets at least the height between the header and the tab bar (so a part set to flex: 1 takes
+// what is left), and the screen scrolls only when the content needs more than that (a part's own minimum height, e.g.
+// the home page's chart under its picture header on a short screen); `gap` can be set tighter for short screens.
+// `scrollRef` / `onScrollY`: the scroll view and where it is scrolled (and whether to its end).
+// Room for the floating tab bar (src/ui/tabs/app-tabs.tsx: 64 high, above the bottom edge) and a clear gap above it,
+// on every platform.
+const BAR_ROOM = TAB_BAR_H + 30;
+
+// A page's picture header: a picture made for the page (imagegen.js HERO_PROMPTS) covering the whole header from the top
+// edge (under the status bar) to its square bottom, and the title and a line on its calm right side (no buttons on
+// it; the theme is chosen in the settings). Until the picture is made, the app's dark green with the page's icon.
+// Its lower edge melts into the page in the theme's own background colour, so picture and page read as one; the page's
+// content starts below it.
+// `light`: the light theme's picture (pic + 3 unless given).
+// `art`: a drawing made in the app (vector) in place of the server's picture, laid in the header's left part with the
+// header's height; it gets the theme (light) to colour itself.
+// The plain header («هدر ساده») keeps the picture header's colour band and its fade into the page when this is on; off
+// (Mojtaba 2026-10-18, to try it on the site) it is flat, in the page's own colour. Flip it back to bring the band back.
+// Off since 2026-10-29: the header in the page's own colour, no gradient (Mojtaba).
+const PLAIN_GRADIENT = false;
+// The headers' title in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts): the picture headers and the
+// plain one (Hero), and the settings page's title (Screen without a picture), so they all match.
+const HEAD_BOLD = { fontFamily: RTL ? 'Vazirmatn-700' : Platform.OS === 'web' ? 'GSans-700, Vazirmatn-700, sans-serif' : 'GSans-700', fontWeight: 'normal' as const };
+export type HeroLook = { pic: number; light?: number; icon: IconName; art?: React.ComponentType<{ light: boolean; height: number }> };
+
+// On the web, the colour behind the page and of the browser's / Home Screen app's status bar (theme-color): the
+// screen's cover (intro, language question, offline page) if one is up, else a picture header's green while one is in
+// view, else the page's own top colour. Set from the app's layout (page colour, cover) and from Hero (its green), each
+// keeping the others, so a theme switch on a page with a header does not take the header's green away.
+const webTop = { base: '', cover: null as string | null, hero: null as string | null };
+function paintWebTop() {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+  const top = webTop.cover ?? webTop.hero ?? webTop.base; if (!top) return;
+  document.body.style.backgroundColor = top;
+  let m = document.querySelector('meta[name="theme-color"]');
+  if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'theme-color'); document.head.appendChild(m); }
+  m.setAttribute('content', top);
+}
+export function setWebTop(base: string, cover: string | null) { webTop.base = base; webTop.cover = cover; paintWebTop(); }
+// The colour at the top of the header pictures: also the phone's status bar over the header (the Home Screen web app
+// colours it with theme-color), so the header runs up to the screen's edge.
+// In the light theme, a light version of the same picture (number + 3, on a soft light green) with a dark green title,
+// once the server has made it; until then the dark one.
+// (the main site's in its teal green, from Mojtaba's reference)
+const HERO_BG = ARC ? heroDark() : '#1b4827', HERO_BG_LIGHT = ARC ? px('#d3d9ee') : '#d9ecd5', HERO_INK_LIGHT = ARC ? px('#111d45') : '#14421c';
+const HERO_FADE = 110;   // how far up from the header's bottom the picture fades into the page
+// The fade's steps: slow at first and at the end (smoothstep), so no edge shows where it begins or ends.
+const FADE_STOPS = [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1] as const;
+const FADE_ALPHA = FADE_STOPS.map(t => Math.round(255 * t * t * (3 - 2 * t)).toString(16).padStart(2, '0'));
+// A picture header's foot fading into the page (Hero's, and the sign-in page's).
+// The pages' header: a soft wash of the user's own colour (the palette's accent) at the screen's top edge, under the
+// status bar too, fading smoothly into the page down behind the first cards (Mojtaba 2026-11-16, after a wallet app's
+// green header: «با توجه به رنگ انتخابی کاربر و حالت روشن یا تیره ... روی گرادینت هدر تمرکز کن»). Light: a pale tint
+// of the colour; dark: a deep one, so the text on it reads in both. (the page's own colour, no gradient, 2026-11-13 to 16)
+// (stronger and longer since 2026-11-19, as the health app's peach header Mojtaba sent, in the theme's own colour)
+export const headerTopColor = (bg: string, accent: string, dark: boolean) => mix(bg, accent, dark ? 0.22 : 0.1);  // (light theme as light as it goes while still showing: Mojtaba 2026-11-27; 0.3 before)
+// The wash's steps: the top colour held a little, then eased into the page (smoothstep), so no edge shows.
+const GLOW_STOPS = [0, 0.12, 0.25, 0.38, 0.5, 0.62, 0.74, 0.86, 1] as const;
+export function HeaderGlow() {
+  const c = useColors(), { theme } = useTheme(), top = headerTopColor(c.bg, c.accent, theme === 'dark');
+  const colors = GLOW_STOPS.map(t => { const u = Math.max(0, (t - 0.08) / 0.92); return mix(top, c.bg, u * u * (3 - 2 * u)); });
+  return <LinearGradient pointerEvents="none" colors={colors as unknown as readonly [string, string, ...string[]]} locations={GLOW_STOPS} style={StyleSheet.absoluteFill} />;
+}
+
+export function HeroFade() {
+  const page = useColors().bg;
+  return <LinearGradient pointerEvents="none" colors={FADE_ALPHA.map(a => `${page}${a}`) as unknown as readonly [string, string, ...string[]]} locations={FADE_STOPS}
+    style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_FADE }} />;
+}
+// While a page with a coloured header is in view on the web, the status bar above it in the header's colour; back to the
+// page's colour after.
+export function useHeaderTop(color: string | null) {
+  useFocusEffect(useCallback(() => {
+    if (!color) return;
+    webTop.hero = color; paintWebTop();
+    return () => { webTop.hero = null; paintWebTop(); };
+  }, [color]));
+}
+// `tall`: about half the screen high (the sign-in page, its form under it), with the theme switch at its top on a soft
+// round backing; the title's top stays in one place, so a longer text (signing up) runs further down, not up.
+// `lower`: that place this much further down (signing up). `name`: a line under the title (the user's name on the home
+// page's greeting).
+// `back`: an inner page's back button floats over the header's top right; the title and its line stay at the right
+// edge, where a tab's are, set a little lower so they start under the button.
+// `action`: with «هدر ساده» on, a round button on the other side of the title (the home page's light / dark switch,
+// the learning tab's search, the exam tab's start); 'theme' is the switch.
+export type HeroAction = 'theme' | { icon: IconName; label: string; onPress: () => void } | { node: React.ReactNode; label: string; onPress: () => void };
+// `node`: something of the page's own in place of an icon (the home page's profile picture), shown as it is.
+// The home header's time-of-day drawing (Hero's `lead` beside the greeting): shown when the app opens, then, a moment
+// later, it fades and shrinks away and the greeting and the line under it glide over to the header's edge (Mojtaba
+// 2026-10-18). Once per app start: after that the header shows the text alone.
+let leadGone = false;
+// Whether the home header's name has come in and settled (at once when there is no opening to play); others may wait
+// for it (the pass ring's tryout badge, Mojtaba 2026-10-30).
+let nameSettled = false;
+const nameWaiters = new Set<() => void>();
+const settleName = () => { if (nameSettled) return; nameSettled = true; nameWaiters.forEach(f => f()); nameWaiters.clear(); };
+export function useHeaderNameSettled() {
+  const [done, setDone] = useState(nameSettled);
+  useEffect(() => {
+    if (nameSettled) return;
+    const f = () => setDone(true);
+    nameWaiters.add(f);
+    return () => { nameWaiters.delete(f); };
+  }, []);
+  return done || nameSettled;
+}
+const LEAD_W = 38; // the drawing (28) and the space after it (10)
+function FadingLead({ children, onDone }: { children: React.ReactNode; onDone?: () => void }) {
+  const [gone, setGone] = useState(leadGone);
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (gone) return;
+    const a = Animated.sequence([Animated.delay(1800), Animated.timing(v, { toValue: 1, duration: 650, easing: Easing.inOut(Easing.cubic), useNativeDriver: false })]);
+    a.start(({ finished }) => { if (finished) { leadGone = true; setGone(true); onDone?.(); } });
+    return () => a.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gone, v]);
+  if (gone) return null;
+  return (
+    <Animated.View style={{ width: v.interpolate({ inputRange: [0, 1], outputRange: [LEAD_W, 0] }), overflow: 'hidden', alignItems: 'flex-start' }}>
+      <Animated.View style={{ opacity: v.interpolate({ inputRange: [0, 0.45, 1], outputRange: [1, 0, 0] }), transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 0.55] }) }] }}>
+        {children}
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+// A line whose text changes with a soft swap: the old text fades and lifts away, the new one fades in from just
+// below (the home header's line once its drawing has gone; Mojtaba 2026-10-18).
+function SwapText({ text, style, numberOfLines }: { text: string; style: StyleProp<TextStyle>; numberOfLines?: number }) {
+  const [shown, setShown] = useState(text);
+  const [v] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (text === shown) return;
+    const out = Animated.timing(v, { toValue: 0, duration: 220, easing: Easing.in(Easing.quad), useNativeDriver: Platform.OS !== 'web' });
+    let done = false;
+    out.start(({ finished }) => {
+      if (!finished) return;
+      done = true;
+      setShown(text);
+      v.setValue(-1);
+      Animated.timing(v, { toValue: 1, duration: 380, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+    });
+    // (Stopping the finished fade would stop the value's next run too, the coming in.)
+    return () => { if (!done) out.stop(); };
+  }, [text, shown, v]);
+  // v: 1 shown; 0 gone (lifted); -1 about to come in (below).
+  const opacity = v.interpolate({ inputRange: [-1, 0, 1], outputRange: [0, 0, 1] });
+  const translateY = v.interpolate({ inputRange: [-1, 0, 1], outputRange: [6, -6, 0] });
+  return <Animated.View style={{ opacity, transform: [{ translateY }] }}><T style={style} numberOfLines={numberOfLines}>{shown}</T></Animated.View>;
+}
+
+const TURN_MS = 10000; // how long each of several `subtitleAfter` lines stays before the next (Mojtaba 2026-10-18)
+
+// `lead`: a small drawing before the title, on its line (the home page's time of day, ui/greet-icon.tsx).
+// `extra`: something of the page's own beside the action, on its inner side (the home page's chart button, beside the
+// profile picture; Mojtaba 2026-10-19), plain headers only, as the action.
+// `subtitleAfter`: the line under the title once the drawing has gone (SwapText); several lines take turns, each for
+// 10 seconds, with the same swap (the home page's: today's practice, a random test, the progress; Mojtaba 2026-10-18).
+// `clear`: the page draws the header's glow behind it (Screen), so a plain header leaves its own colour out.
+export function Hero({ look, title, name, subtitle, tall, lower = 0, back, action, lead, subtitleAfter, extra, titleContent, clear }: { clear?: boolean; titleContent?: React.ReactNode; look: HeroLook; title: string; name?: string; subtitle?: string; tall?: boolean; lower?: number; back?: boolean; action?: HeroAction; lead?: React.ReactNode; subtitleAfter?: string | string[]; extra?: React.ReactNode }) {
+  // The home header's opening (with a `lead`): first the greeting alone beside the drawing; the drawing goes and the
+  // text glides to the edge; then the line under the greeting opens (the greeting moves up for it) and comes in; a
+  // while later it changes to `subtitleAfter` (Mojtaba 2026-10-18). Once per app start, later the end state at once.
+  const [after, setAfter] = useState(leadGone);
+  const afters = subtitleAfter == null ? [] : Array.isArray(subtitleAfter) ? subtitleAfter : [subtitleAfter];
+  const [turn, setTurn] = useState(0);
+  // The turns run while the page is in view, and not at all with reduced motion (the first line stays).
+  useFocusEffect(useCallback(() => {
+    if (!after || afters.length < 2) return;
+    let timer: ReturnType<typeof setInterval> | null = null, live = true;
+    AccessibilityInfo.isReduceMotionEnabled().catch(() => false).then(reduce => {
+      if (live && !reduce) timer = setInterval(() => setTurn(k => (k + 1) % afters.length), TURN_MS);
+    });
+    return () => { live = false; if (timer) clearInterval(timer); };
+  }, [after, afters.length]));
+  const line = after && afters.length ? afters[turn % afters.length] : subtitle;
+  const [sub] = useState(() => new Animated.Value(leadGone || !lead ? 1 : 0));
+  // The name beside the greeting (home): not there at first; once the drawing has gone and the greeting has settled at
+  // the edge, it slides out from behind the greeting as it fades in, and then the line under them opens (Mojtaba
+  // 2026-10-19). Clipped at its own edge only while it comes in. Later the header shows it at once, as the rest.
+  // Home now has no drawing and no line under the greeting (Mojtaba 2026-10-30): the greeting stands still and the
+  // name fades in beside it a moment after the app opens, once per app start.
+  // Home has no drawing and no line under the greeting now (Mojtaba 2026-10-30): the greeting stands still and the name
+  // slides in beside it a moment after the app opens, once per app start.
+  const plainHead = usePlainHeader(), intro = !!name && !leadGone && plainHead && !tall;
+  const [nameIn] = useState(() => new Animated.Value(intro ? 0 : 1));
+  const openSub = () => {
+    Animated.timing(nameIn, { toValue: 1, duration: 650, easing: Easing.out(Easing.cubic), useNativeDriver: false })
+      .start(() => settleName());
+    Animated.sequence([Animated.delay(480), Animated.timing(sub, { toValue: 1, duration: 520, easing: Easing.out(Easing.cubic), useNativeDriver: false })])
+      .start(({ finished }) => { if (finished) setTimeout(() => setAfter(true), 2200); });
+  };
+  useEffect(() => {
+    if (!name) return;
+    if (!intro) { leadGone = true; settleName(); return; }
+    const t = setTimeout(() => { leadGone = true; openSub(); }, 450);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const ins = useSafeAreaInsets(), { heroArt } = useApp(), { width, height } = useWindowDimensions();
+  // «هدر ساده» in the settings (not the sign-in page's tall header): the header keeps its colour and its fade into the
+  // page, only the picture or drawing goes, and the title may take the whole width.
+  const dashboard = useContext(DashboardContext);
+  const plain = (dashboard || plainHead) && !tall;
+  const { theme, setMode } = useTheme();
+  const lightPic = look.light ?? look.pic + 3, light = theme !== 'dark' && (!!look.art || !!heroArt[String(lightPic)]);
+  const act = action === 'theme'
+    ? { icon: (theme === 'dark' ? 'sun' : 'moon') as IconName, label: 'تغییر تم', onPress: () => setMode(theme === 'dark' ? 'light' : 'dark') }
+    : action;
+  // «هدر ساده» without the colour band (flat: the page's own colour, no fade; the title in the text colour) unless
+  // PLAIN_GRADIENT is on (then the band and its fade stay, as before).
+  const flat = plain && (dashboard || !PLAIN_GRADIENT), page = useColors();
+  const avatarFirst = plain && !!name && !!act && 'node' in act;
+  const pic = light ? lightPic : look.pic, bg = flat ? page.bg : light ? HERO_BG_LIGHT : HERO_BG, ink = flat ? page.text : light ? HERO_INK_LIGHT : '#ffffff';
+  // (a plain header: the glow's top edge, the cool wash over the page colour, so a bounce past the top runs on in it)
+  useHeaderTop(flat ? headerTopColor(page.bg, page.accent, theme === 'dark') : bg);
+  const v = heroArt[String(pic)];
+  // (tall, narrow: high enough that the room under the sign-in picture's drawing, below, holds the title and its line)
+  // (plain: lower, with no picture to make room for; Mojtaba 2026-10-18)
+  const H = ins.top + (tall ? Math.max(Math.min(Math.round(height * 0.42), 440), width < 600 ? Math.round(186 + width * 0.36) : 0) : plain ? 128 : Math.min(Math.round(width * 0.34), 190) + 70);
+  const topPad = ins.top + (Platform.OS === 'web' ? 14 : 8);
+  // The sign-in picture (square, laid in from its left edge, its height or width filling the header, the other cut evenly)
+  // has its objects across most of its width, down to about 68% of its height, with calm ground under them. On a narrow
+  // screen the title and line go there, across the width, sized to the screen and to the room left, so they never lie
+  // on the drawing; on a wide one its right side is calm and they stay there.
+  const side = Math.max(width, H), objEnd = Math.round(side * 0.68 - (side - H) / 2), room = H - objEnd - 10;
+  const below = !!tall && room >= 70 && width < H * 1.3;
+  const titleSize = Math.max(20, Math.min(30, Math.round(width * 0.075), Math.floor((room - 46) / 1.35)));
+  // The title (and name) in the bold cut, above the site's usual 500 cap (src/ui/fonts.ts).
+  const bold = HEAD_BOLD;
+  const shade = light || flat ? null : { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 };
+  const headingText = [{ lineHeight: 36, fontWeight: '700' as const, color: ink }, bold, shade];
+  // An inner page (`back`): the title and its line under the way back (Mojtaba, 2026-10-15), where a tab's title sits,
+  // the header growing when a long line needs the room.
+  const under = !!back && !tall;
+  return (
+    <View style={{ ...(under ? { minHeight: H } : { height: H }), backgroundColor: flat && clear ? 'transparent' : bg, overflow: 'hidden' }}>
+      {plain ? null : look.art ? (
+        // (left to right in its own row, so the drawing stays on the left on every platform)
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { flexDirection: 'row', direction: 'ltr', justifyContent: RTL ? 'flex-start' : 'flex-end', paddingTop: ins.top } as any]}>
+          <look.art light={light} height={H - ins.top} />
+        </View>
+      ) : v ? <Image source={{ uri: `${API_URL}/hero-art/${pic}.png?v=${v}` }} contentFit="cover" contentPosition="left" transition={300} style={StyleSheet.absoluteFill} accessibilityIgnoresInvertColors />
+        : <View style={[StyleSheet.absoluteFill, { alignItems: 'flex-end', justifyContent: 'center', paddingHorizontal: 40, paddingTop: ins.top }]}>
+            <Icon name={look.icon} size={96} color="rgba(255,255,255,0.22)" />
+          </View>}
+      {flat ? (clear ? null : <HeaderGlow />) : <HeroFade />}
+      <View style={{ flex: 1, paddingTop: under ? topPad + 48 : topPad, paddingBottom: plain ? 30 : name ? 88 : back ? 82 : 100, paddingHorizontal: 16, maxWidth: 980, width: '100%', alignSelf: 'center', justifyContent: tall || under ? 'flex-start' : 'flex-end' }}>
+        {tall ? (
+          <>
+            <View style={{ alignSelf: 'flex-end', borderRadius: 19, backgroundColor: light ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.25)' }}>
+              <ThemeButton />
+            </View>
+            {/* Down to where a title and a two-line line, set on the header's foot (100 above its end), would begin. */}
+            {below ? null : <View style={{ height: Math.max(0, H - 100 - 82 - topPad - 38 + lower) }} />}
+          </>
+        ) : null}
+        {below ? null : <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          {/* (the greeting's page: the picture at the start, before the greeting, as in Mojtaba's picture of 2026-11-13) */}
+          {avatarFirst ? (
+            <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
+              style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+              {act.node}
+            </Pressable>
+          ) : null}
+          <View style={{ gap: 2, maxWidth: plain ? undefined : '58%', flex: plain ? 1 : undefined }}>
+            {titleContent ?? <>
+            {plain && name ? (
+              // Greeting and name share the same title typography and responsive sizing as Learn and Exam.
+              // The drawing of the time of day stands beside both lines, centred between the greeting and the line under
+              // it, and that line starts where the greeting does (Mojtaba 2026-10-18); then it goes (FadingLead).
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {lead ? <FadingLead onDone={openSub}>{lead}</FadingLead> : null}
+                <View style={{ flex: 1, gap: 1 }}>
+                  <FitLine size={26} min={12} id={`${title}:${name}`} style={headingText}>
+                    {fs => <>
+                      <T raw style={[{ fontSize: fs, lineHeight: 36, color: ink }, bold]}>{tr(title)}{RTL ? '،' : ','}{' '}</T>
+                      <Animated.Text style={[{ fontSize: fs, lineHeight: 36, color: ink }, bold, { opacity: nameIn }]}>{name}</Animated.Text>
+                    </>}
+                  </FitLine>
+                  {subtitle ? (
+                    <Animated.View style={{ height: sub.interpolate({ inputRange: [0, 1], outputRange: [0, 22] }), overflow: 'hidden',
+                      opacity: sub.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 0, 1] }), transform: [{ translateY: sub.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
+                      <SwapText text={line ?? ''} style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]} numberOfLines={1} />
+                    </Animated.View>
+                  ) : null}
+                </View>
+              </View>
+            ) : <>
+            {lead ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {lead}
+                <View style={{ flex: 1 }}><FitLine size={26} min={12} style={headingText}>{title}</FitLine></View>
+              </View>
+            ) : <FitLine size={26} min={12} style={headingText}>{title}</FitLine>}
+            {name ? <T style={[{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: ink, opacity: 0.95 }, bold, shade]} numberOfLines={1}>{name}</T> : null}
+            </>}
+            {subtitle && !(plain && name) ? <T style={[{ color: ink, opacity: 0.9, fontSize: 14, lineHeight: 22 }, shade]}>{subtitle}</T> : null}
+            </>}
+          </View>
+          {plain && extra ? extra : null}
+          {plain && act && 'node' in act && !avatarFirst ? (
+            <Pressable onPress={() => { tap(); act.onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityLabel={act.label}
+              style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+              {act.node}
+            </Pressable>
+          ) : plain && act && 'icon' in act ? (
+            <RoundIcon icon={act.icon} label={act.label} onPress={act.onPress} />
+          ) : null}
+        </View>}
+      </View>
+      {below ? (
+        <View style={{ position: 'absolute', top: objEnd, left: 0, right: 0, paddingHorizontal: 16, gap: 2, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
+          <FitLine size={titleSize} min={16} style={[{ lineHeight: Math.round(titleSize * 1.35), fontWeight: '700', color: ink }, bold, shade]}>{title}</FitLine>
+          {subtitle ? <T style={[{ color: ink, opacity: 0.9, fontSize: width < 360 ? 13 : 14, lineHeight: width < 360 ? 20 : 22 }, shade]}>{subtitle}</T> : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+// `barGap`: with `fill`, the room left between the content's end and the top of the tab bar (30 unless given; the home
+// page's chart ends just above the bar).
+// Whether a scroll view is scrolled to (within 48 points of) its end.
+const atEndOf = (n: { contentOffset: { y: number }; layoutMeasurement: { height: number }; contentSize: { height: number } }) =>
+  n.contentOffset.y + n.layoutMeasurement.height >= n.contentSize.height - 48;
+export function Screen({ title, name, subtitle, children, right, fill, gap = 14, scrollRef, onScrollY, hero, heroAction, heroExtra, barGap, lead, subtitleAfter, dashboard = false, headerContent }: { headerContent?: React.ReactNode; dashboard?: boolean; lead?: React.ReactNode; subtitleAfter?: string | string[]; title: string; name?: string; subtitle?: string; children: React.ReactNode; right?: React.ReactNode; fill?: boolean; gap?: number; barGap?: number;
+  scrollRef?: React.RefObject<ScrollView | null>; onScrollY?: (y: number, atEnd: boolean) => void; hero?: HeroLook; heroAction?: HeroAction; heroExtra?: React.ReactNode }) {
+  const c = useColors(), ins = useSafeAreaInsets(), dark = useTheme().theme === 'dark';
+  const ref = useTopOnFocus(scrollRef);
+  const box = { paddingTop: hero ? 6 : 0, paddingHorizontal: 16, gap, maxWidth: 980, width: '100%', alignSelf: 'center' } as const;
+  // The glow behind the header and the page's top: a plain header (the tabs' own, «هدر ساده») or none (Mojtaba 2026-11-13).
+  const plainHead = usePlainHeader(), glowBack = !hero || dashboard || plainHead;
+  // (a page with no Hero, as the settings: its status bar strip in the glow's top colour too)
+  useHeaderTop(glowBack && !hero ? headerTopColor(c.bg, c.accent, dark) : null);
+  const top = hero ? <Hero clear={glowBack} look={hero} title={title} name={name} subtitle={subtitle} action={heroAction} lead={lead} subtitleAfter={subtitleAfter} extra={heroExtra} titleContent={headerContent} /> : null;
+  const head = hero ? null : (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 2 }}>
+      <View style={{ flex: 1 }}>
+        {headerContent ?? <>
+        {lead ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {lead}
+            <View style={{ flex: 1 }}><FitLine size={26} min={16} style={[{ lineHeight: 34, fontWeight: '700', color: c.text }, HEAD_BOLD]}>{title}</FitLine></View>
+          </View>
+        ) : <FitLine size={26} min={16} style={[{ lineHeight: 34, fontWeight: '700', color: c.text }, HEAD_BOLD]}>{title}</FitLine>}
+        {name ? <T style={{ fontSize: 22, lineHeight: 30, fontWeight: '700', color: c.text }} numberOfLines={1}>{name}</T> : null}
+        {subtitle ? <T style={{ color: c.muted, fontSize: 14, lineHeight: 22 }}>{subtitle}</T> : null}
+        </>}
+      </View>
+      {right}
+      <ThemeRound />
+    </View>
+  );
+  return (
+    <DashboardContext.Provider value={dashboard}>
+    <CardRadiusContext.Provider value={TAB_CARD_RADIUS}>
+    <Backdrop>
+      <PageIn>
+      <View style={{ flex: 1 }}>
+      {/* (the tabs: the header's glow reaches down behind the top of the page and fades into it, the cards passing
+          over it; Mojtaba 2026-11-13) */}
+      {glowBack ? <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ins.top + 480 }}>
+        <HeaderGlow />
+      </View> : null}
+      {/* All four tabs keep their header outside the scrolling body. Its natural height includes the safe area. */}
+      <View testID="main-page-header" style={{ flexShrink: 0, backgroundColor: glowBack ? 'transparent' : c.bg }}>
+        {hero ? top : <View style={{ paddingTop: ins.top + (Platform.OS === 'web' ? 18 : 10), paddingHorizontal: 16, paddingBottom: gap,
+          maxWidth: 980, width: '100%', alignSelf: 'center' }}>{head}</View>}
+      </View>
+      {fill
+        ? <PageScroll ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={[box, { flex: 1, paddingBottom: (barGap != null ? TAB_BAR_H + barGap : BAR_ROOM) + ins.bottom }]}>{children}</View>
+          </PageScroll>
+        : <PageScroll ref={ref} testID="main-page-scroll" style={{ flex: 1, minHeight: 0 }} onScroll={onScrollY ? e => onScrollY(e.nativeEvent.contentOffset.y, atEndOf(e.nativeEvent)) : undefined} scrollEventThrottle={32} contentInsetAdjustmentBehavior="never" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: BAR_ROOM + Math.max(16, ins.bottom) + 6 }}>
+            <View style={box}>{children}</View>
+          </PageScroll>}
+      </View>
+      </PageIn>
+    </Backdrop>
+    </CardRadiusContext.Provider>
+    </DashboardContext.Provider>
+  );
+}
+
+// Persian text (right to left).
+// Set in Vazirmatn; the weight picks the font file, so fontWeight itself is reset (no faux bold).
+// On the main site, with the exam in English, the Danish terms in a Persian text are given in English (lib/en-terms.ts).
+const enKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ? enTerms(k) : Array.isArray(k) ? k.map(enKids) : k);
+// In English or Danish, the text in that language (lib/i18n.ts): a text given in parts (JSX «درس {n}») as one.
+// (Into a fragment's children too: a line handed over whole as <>…</>, ui/marquee.tsx's `rich`.)
+const trKids = (k: React.ReactNode): React.ReactNode => (typeof k === 'string' ? tr(k)
+  : Array.isArray(k) ? (k.every(x => typeof x === 'string' || typeof x === 'number') ? tryTr(k.join('')) ?? k.map(trKids) : k.map(trKids))
+  : isValidElement<{ children?: React.ReactNode }>(k) && k.type === Fragment ? cloneElement(k, undefined, trKids(k.props.children)) : k);
+const swapAlign = (a: TextStyle['textAlign']) => (a === 'left' ? 'right' : a === 'right' ? 'left' : a);
+// `keepDa`: the Danish words in it stay Danish for users who take the exam in English (the glossary, which is about them).
+export function T({ style, raw, keepDa, ...p }: TextProps & { style?: StyleProp<TextStyle>; raw?: boolean; keepDa?: boolean }) {
+  const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS && !keepDa;
+  if (!RTL && !raw) p = { ...p, children: trKids(p.children) };
+  if (en) p = { ...p, children: enKids(p.children) };
+  const flat = StyleSheet.flatten(style) ?? {};
+  if (!RTL) {
+    // English / Danish: left to right in the Latin font, the alignment the mirror of the Persian one (its start edge).
+    const { family } = daFamily(flat.fontWeight);
+    const font = flat.fontFamily ? null : { fontFamily: Platform.OS === 'web' ? `${family}, Vazirmatn-400, sans-serif` : family, fontWeight: 'normal' as const };
+    const side = { writingDirection: 'ltr' as const, textAlign: flat.writingDirection === 'ltr' ? flat.textAlign ?? 'left' : swapAlign(flat.textAlign ?? 'right'), ...(Platform.OS === 'web' ? null : { direction: 'ltr' as const }) };
+    return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24 }, style, font, side]} />;
+  }
+  const font = flat.fontFamily ? null : { fontFamily: faFamily(flat.fontWeight), fontWeight: 'normal' as const };
+  // On phones the text is laid out right to left wherever it sits (also in a row set to 'ltr'), so its alignment,
+  // the physical edge as on the web, is always swapped the same way. Text asking for writingDirection 'ltr' (counts
+  // like «۱ / ۲۵», the clock, Danish words) is laid out left to right instead, so it reads in its own order there too,
+  // and its alignment is the edge it names.
+  const ltr = flat.writingDirection === 'ltr';
+  const side = Platform.OS === 'web' ? null
+    : ltr ? { direction: 'ltr' as const } : { direction: 'rtl' as const, textAlign: physicalAlign(flat.textAlign ?? 'right') };
+  return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24, writingDirection: 'rtl', textAlign: 'right' }, style, font, side]} />;
+}
+// A question's translation (lib/i18n.ts transText), in its own direction and font whatever the app's language:
+// Persian right to left in Vazirmatn, English or Danish left to right; never looked up in the app's own texts.
+export function TransT({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
+  const c = useColors(), en = useExamLang() === 'en' && !PROVE_PICS;
+  if (RTL && getTransLang() === 'fa') return <T raw {...p} style={style} />;
+  const flat = StyleSheet.flatten(style) ?? {};
+  const fa = getTransLang() === 'fa';
+  const kids = fa && en ? enKids(p.children) : p.children;
+  const font = fa ? faFamily(flat.fontWeight) : Platform.OS === 'web' ? `${daFamily(flat.fontWeight).family}, sans-serif` : daFamily(flat.fontWeight).family;
+  return <Text {...p} style={[{ color: c.text, fontSize: 15, lineHeight: 24 }, style,
+    { fontFamily: font, fontWeight: 'normal', writingDirection: fa ? 'rtl' : 'ltr', textAlign: fa ? 'right' : 'left', ...(Platform.OS === 'web' ? null : { direction: fa ? 'rtl' as const : 'ltr' as const }) }]}>{kids}</Text>;
+}
+// A label kept on one line in every language (Mojtaba, 2026-10-15): measured once at `size` in a hidden, very wide
+// box, then set just small enough to fit the width it has (never below `min`). `children` may be a function of the
+// font size, for a line with parts in its own style (then `id` names the text, so a new one is measured again).
+export function FitLine({ children, size, min = 9, style, id }: { children: string | ((fs: number) => React.ReactNode); size: number; min?: number; style?: StyleProp<TextStyle>; id?: string }) {
+  const [full, setFull] = useState<{ text: string; w: number } | null>(null);
+  const [room, setRoom] = useState(0);
+  const key = typeof children === 'string' ? children : id ?? '';
+  const w = full && full.text === key ? full.w : 0;
+  const fs = w && room ? Math.max(min, Math.min(size, Math.floor(size * room / w * 0.97 * 10) / 10)) : size;
+  const line = (f: number) => (typeof children === 'string' ? children : children(f));
+  const raw = typeof children !== 'string';
+  return (
+    <View onLayout={e => setRoom(e.nativeEvent.layout.width)} style={{ alignSelf: 'stretch', overflow: 'hidden' }}>
+      <View pointerEvents="none" style={{ position: 'absolute', opacity: 0, top: 0, left: 0, width: 4000, flexDirection: 'row' }}>
+        <View onLayout={e => setFull({ text: key, w: e.nativeEvent.layout.width })} style={{ flexShrink: 0, flexGrow: 0 }}>
+          <T raw={raw} numberOfLines={1} style={[style, { fontSize: size }]}>{line(size)}</T>
+        </View>
+      </View>
+      <T raw={raw} numberOfLines={1} style={[style, { fontSize: fs, opacity: w && room ? 1 : 0 }]}>{line(fs)}</T>
+    </View>
+  );
+}
+// Danish / English text (left to right).
+// In the Latin font (src/ui/fonts.ts), its weight (and italic) picked by family as for T; on the web Vazirmatn follows
+// for the Persian digits.
+export function L({ style, ...p }: TextProps & { style?: StyleProp<TextStyle> }) {
+  const c = useColors();
+  const flat = StyleSheet.flatten(style) ?? {};
+  const { family, slant } = daFamily(flat.fontWeight, flat.fontStyle === 'italic');
+  const font = { fontFamily: Platform.OS === 'web' ? `${family}, Vazirmatn-400, sans-serif` : family, fontWeight: 'normal' as const, fontStyle: slant ? 'italic' as const : 'normal' as const };
+  // Laid out left to right on phones too, so its alignment is the physical edge as given.
+  const side = Platform.OS === 'web' ? null : { direction: 'ltr' as const };
+  return <Text {...p} style={[{ color: c.text, fontSize: 16, lineHeight: 24, writingDirection: 'ltr', textAlign: 'left' }, style, font, side]} />;
+}
+
+// The translation switch under a question's picture, the same in the exam and in the review: a round button with the
+// translate icon, grey while off and filled while the Persian translation shows.
+// Not shown when the translation is in the questions' own language (lang), as there is nothing to translate then.
+export function TranslateButton({ on, onPress, lang }: { on: boolean; onPress: () => void; lang: 'da' | 'en' }) {
+  const c = useColors();
+  if (getTransLang() === lang) return null;
+  return (
+    <Pressable onPress={() => { tap(); onPress(); }} hitSlop={6} accessibilityRole="button" accessibilityState={{ selected: on }}
+      accessibilityLabel={tr(on ? 'پنهان کردن ترجمه' : 'نمایش ترجمه')}
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.8 : 1,
+        backgroundColor: on ? c.strong : c.nav })}>
+      <Icon name="translate" size={19} color={on ? c.strongFg : c.navFg} />
+    </Pressable>
+  );
+}
+
+// The site's .card.
+// A tappable card hands its own size (flex, width, alignSelf) to the touch area around it and fills that, so cards
+// side by side in a row keep the sizes they ask for.
+// Cards come in with useEnter; their place in the layout (flex, width, margins) stays on the outer box.
+export function Card({ children, style, onPress, testID }: { children: React.ReactNode; style?: StyleProp<ViewStyle>; onPress?: () => void; testID?: string }) {
+  const anim = useEnter(), c = useColors(), under = useSurfaceUnder(c.surface); // (in the apps: the bars see it under them)
+  const dashboard = useContext(DashboardContext), look = useDashboardLook(), tabRadius = useContext(CardRadiusContext);
+  const dashboardStyle: ViewStyle | null = dashboard ? { borderRadius: tabRadius ?? 26, borderColor: look.edge, shadowColor: c.accent,
+    shadowOpacity: look.dark ? 0.025 : 0.055, shadowRadius: 16, shadowOffset: { width: 0, height: 5 } } : null;  // (no Android elevation, as glass.tsx)
+  const { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical, ...rest } = StyleSheet.flatten(style) ?? {};
+  const outer = { flex, flexGrow, flexShrink, flexBasis, width, alignSelf, margin, marginTop, marginBottom, marginHorizontal, marginVertical };
+  // Grows to the size the card is given; flexGrow, not flex: 1, so that inside a box of no set height (a row of cards)
+  // phones keep the content's own height instead of collapsing it to nothing.
+  const fill = flex != null || flexGrow != null ? { flexGrow: 1 } : null;
+  return (
+    <Animated.View testID={testID} ref={under as any} style={[outer, anim] as any}>
+      {onPress ? (
+        <Pressable onPress={() => { tap(); onPress(); }} style={({ pressed }) => [fill, pressed && { opacity: 0.9, transform: [{ scale: 0.985 }] }]}>
+          <Glass style={[{ padding: 16 }, tabRadius != null ? { borderRadius: tabRadius } : null, dashboardStyle, rest, fill]}>{children}</Glass>
+        </Pressable>
+      ) : <Glass style={[{ padding: 16 }, tabRadius != null ? { borderRadius: tabRadius } : null, dashboardStyle, rest, fill]}>{children}</Glass>}
+    </Animated.View>
+  );
+}
+
+// The site's .btn-primary (navy) and .btn-ghost (surface with a line border); danger is a ghost in red.
+type BtnProps = { label: string; onPress: () => void; kind?: 'primary' | 'glass' | 'danger' | 'grey'; disabled?: boolean; style?: StyleProp<ViewStyle>; icon?: IconName; big?: boolean };
+// Every button carries a flat icon before its label, in the label's colour.
+export function Button({ label, onPress, kind = 'primary', disabled, style, icon, big }: BtnProps) {
+  const c = useColors(), m = useM3();
+  // Material 3 (Mojtaba 2026-11-07): primary a filled pill, the others outlined pills (danger in the error colour).
+  if (SOFT && kind !== 'grey') return <M3Button label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} big={big}
+    kind={kind === 'primary' ? 'filled' : kind === 'danger' ? 'outlinedError' : 'outlined'} m={m} />;
+  // grey: the main flat button (ActionButton). In the Uber look every main button is that one and outlined ones take
+  // the text colour, so no button is green.
+  const grey = kind === 'grey' || (UBER && kind === 'primary'), primary = kind === 'primary' && !grey;
+  if (grey) return <ActionButton label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} />;
+  const fg = primary ? c.accentText : kind === 'danger' ? c.bad : UBER ? c.text : c.link;
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.9 : 1, transform: [{ scale: pressed && !disabled ? 0.98 : 1 }] }, style]}>
+      <View style={{
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+        paddingVertical: big ? 14 : 11, paddingHorizontal: 20, minHeight: big ? 50 : undefined, borderRadius: SOFT ? 999 : big ? radius.field : radius.btn,
+        backgroundColor: primary ? c.accent : c.surface, borderWidth: primary ? 0 : 1.5, borderColor: kind === 'danger' ? c.badSoft : c.line,
+      }}>
+        {icon ? <Icon name={icon} size={18} color={fg} weight="semibold" /> : null}<T style={{ color: fg, fontWeight: '600', fontSize: 15, lineHeight: 22, textAlign: 'center' }}>{label}</T>
+      </View>
+    </Pressable>
+  );
+}
+
+// Material 3's common buttons (Mojtaba 2026-11-07, after fonts.google.com): a full pill, 46 tall (52 `big`), the
+// label in weight 500. filled: the primary with its ink; outlined: transparent with a 1px line and the label in the
+// primary (the line in the primary too, as on fonts.google.com); error / outlinedError: the same in the error colour.
+// A press lays the label's colour over it at 12% (Material's pressed state); disabled at 38%.
+export type M3Kind = 'filled' | 'outlined' | 'error' | 'outlinedError';
+export function M3Button({ label, onPress, icon, kind, disabled, style, contentStyle, labelStyle, big, compact, m, busy, after, iconSize = 18 }: {
+  label: string; onPress: () => void; icon?: IconName; kind: M3Kind; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean;
+  m: ReturnType<typeof useM3>; busy?: boolean; after?: (fg: string) => React.ReactNode; iconSize?: number; compact?: boolean;
+  contentStyle?: StyleProp<ViewStyle>; labelStyle?: StyleProp<TextStyle>;
+}) {
+  // (every button outlined, as fonts.google.com's «View all articles» and «Download book»: Mojtaba 2026-11-07, «همه
+  // دکمه‌ها به این سبک»; the kinds only choose the colour, the primary or the error)
+  const filled = false, err = kind === 'error' || kind === 'outlinedError';
+  const tone = err ? m.error : m.primary;
+  const fg = filled ? (err ? m.onError : m.onPrimary) : tone;
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled, busy }} style={style} hitSlop={compact ? 2 : undefined}>
+      {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
+        <View style={[{ minHeight: big ? 52 : compact ? 40 : 46, borderRadius: 999, paddingHorizontal: compact ? 16 : 22, flexDirection: 'row', gap: compact ? 6 : 8, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+          backgroundColor: filled ? tone : 'transparent', borderWidth: filled ? 0 : 1, borderColor: tone, opacity: disabled ? 0.38 : 1 }, contentStyle]}>
+          {pressed || hovered ? <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: fg, opacity: pressed ? 0.12 : 0.08 }} /> : null}
+          {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={iconSize} color={fg} /> : null}
+          <T numberOfLines={1} style={[{ fontSize: big ? 16 : compact ? 14 : 15, lineHeight: big ? 24 : compact ? 20 : 22, fontWeight: '500', color: fg, textAlign: 'center' }, labelStyle]}>{label}</T>
+          {after?.(fg)}
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+// The flat, minimal action button, like a «Confirm order» button: a solid fill, no border, sheen or shadow, 54 tall
+// with corners rounded 12. main: `btn` (soft light grey with black text in dark mode, near-black with white text in
+// light mode); soft: the grey of the secondary buttons (cancel, back to the exam); danger: red with white text.
+// Start exam, sign in, hand in and the dialogs' buttons all use it.
+export function ActionButton({ label, onPress, icon, tone = 'main', disabled, style, iconWeight = 'semibold' }: {
+  label: string; onPress: () => void; icon?: IconName; tone?: 'main' | 'soft' | 'danger'; disabled?: boolean; style?: StyleProp<ViewStyle>; iconWeight?: 'semibold' | 'bold';
+}) {
+  const c = useColors(), dark = useTheme().theme === 'dark', m = useM3();
+  // Material 3 (Mojtaba 2026-11-07): main the filled button, soft the outlined one, danger filled in the error colour.
+  if (SOFT) return <M3Button label={label} onPress={onPress} icon={icon} disabled={disabled} style={style} big
+    kind={tone === 'main' ? 'filled' : tone === 'danger' ? 'error' : 'outlined'} m={m} />;
+  // («soft», e.g. a dialog's «ماندن»: a step off the dialog's card in the theme's colour, so it shows; the neutral grey
+  // it was matched the cards once they took the theme's colour; Mojtaba 2026-11-07)
+  const soft = SOFT ? lighten(railColor(dark, c.accent), dark ? 0.1 : -0.08) : c.nav;
+  const bg = tone === 'main' ? c.btn : tone === 'danger' ? c.bad : soft, fg = tone === 'main' ? c.btnFg : tone === 'danger' ? '#ffffff' : SOFT ? c.text : c.navFg;
+  return (
+    <Pressable disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled }}
+      style={({ pressed }) => [{ opacity: disabled ? 0.45 : pressed ? 0.85 : 1 }, style]}>
+      <View style={{ height: ARC ? 50 : 54, borderRadius: SOFT ? 999 : ARC ? radius.btn : 12, paddingHorizontal: 16, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: bg }}>
+        {icon ? <Icon name={icon} size={18} color={fg} weight={iconWeight} /> : null}
+        <T numberOfLines={1} style={{ fontSize: 16, lineHeight: 24, fontWeight: '600', color: fg, textAlign: 'center' }}>{label}</T>
+      </View>
+    </Pressable>
+  );
+}
+
+// Arc's Button (uiarc.dev/r/button.json), size lg, ported: primary in the theme's `cta`, a deep green like the page
+// headers with white text (the owner's choice over Arc's black and its bright green), secondary the card surface on a 1px border; 50 tall, corners 18, label
+// in weight 500 with a 20px icon beside it. A press springs the button down to 0.985 (0.97 when it is narrower than
+// 220) and dims a primary to 0.84 / fills a secondary with the muted grey; with a mouse, hover lifts a primary with a
+// resting shadow at 0.91. Main site only: the home page's next lesson and the exam tab's start button.
+// `big`: taller, with a larger label (the sign-in page's one wide button). `busy`: a spinner in the icon's place while
+// what it does is on its way (the glossary's «آموزش این واژه» waiting for the AI).
+export function ArcButton({ label, onPress, icon, variant = 'primary', disabled, style, big, busy, after, corner }: {
+  label: string; onPress: () => void; icon?: IconName; variant?: 'primary' | 'secondary' | 'accent'; disabled?: boolean; style?: StyleProp<ViewStyle>; big?: boolean; busy?: boolean;
+  /** Drawn right after the label, centred with it (the exam's question-count pill); gets the text colour. */
+  after?: (fg: string) => React.ReactNode;
+  /** Its corners' radius instead of the theme's (the exam's start, squarer; Mojtaba 2026-11-06). */
+  corner?: number;
+}) {
+  const c = useColors();
+  const dashboard = useContext(DashboardContext);
+  const [scale] = useState(() => new Animated.Value(1));
+  const width = useRef(0);
+  const spring = (to: number) => Animated.spring(scale, { toValue: to, useNativeDriver: Platform.OS !== 'web', stiffness: 520, damping: 34, mass: 1 }).start();
+  // `accent`: a primary button in the theme's own colour in the dark theme too (where the primary is white), e.g. the
+  // exam tab's start (Mojtaba 2026-10-20).
+  // («گرافیت»: the accent button in its grey, as the chosen tab; Mojtaba 2026-10-29.)
+  const g = graphiteCtl(useTheme().theme === 'dark');
+  // («نرم»: every main button the near-black pill of his pictures, white in the dark theme)
+  // (…but in the dark theme the accent button, the exam's start, is the theme's own colour with text that reads on it)
+  const isDark = useTheme().theme === 'dark';
+  const accent = variant === 'accent' && (!SOFT || isDark), primary = variant === 'primary' || variant === 'accent';
+  // (dark: a dark shade of the theme's colour with white text, Mojtaba 2026-11-05)
+  // («سنگی»: Material 3's filled button, its primary with on-primary ink; Mojtaba 2026-11-07)
+  // (Material 3 in every theme: primary and accent the filled button, secondary the outlined one; Mojtaba 2026-11-07)
+  const mm = useM3(), m3 = SOFT ? { primary: mm.primary, onPrimary: mm.onPrimary } : null;
+  const fill = m3 ? m3.primary : accent ? g?.fill ?? (SOFT && isDark ? deepAccent(c.accent) : c.accent) : c.cta;
+  const fg = m3 ? m3.primary : accent ? g?.fg ?? (SOFT ? (lightness(fill) > 0.6 ? '#111113' : '#ffffff') : c.accentText) : primary ? c.ctaFg : c.text;
+  const under = useUnderBar(); // the deep green: the floating bar turns dark over it (ui/bar-shade.tsx)
+  // A new label rises about 4px out of a soft blur, as Arc's button swaps its text (the exam's count, for one).
+  const [enter] = useState(() => new Animated.Value(1));
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    enter.setValue(0);
+    Animated.timing(enter, { toValue: 1, duration: 220, easing: Easing.out(Easing.cubic), useNativeDriver: Platform.OS !== 'web' }).start();
+  }, [label, enter]);
+  const labelIn = { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
+    ...(Platform.OS === 'web' ? { filter: enter.interpolate({ inputRange: [0, 1], outputRange: ['blur(2px)', 'blur(0px)'] }) } : {}) };
+  return (
+    <Pressable ref={primary ? under : undefined} disabled={disabled} onPress={() => { tap(); onPress(); }} accessibilityRole="button" accessibilityState={{ disabled, busy }}
+      onLayout={e => { width.current = e.nativeEvent.layout.width; }}
+      onPressIn={() => spring(width.current > 220 ? 0.985 : 0.97)} onPressOut={() => spring(1)} style={style}>
+      {({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => (
+        <Animated.View style={{
+          minHeight: big ? 56 : 50, borderRadius: SOFT ? 999 : corner ?? (dashboard ? 25 : big ? 16 : radius.btn), borderWidth: 1, paddingHorizontal: 20, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
+          // (Material 3: every one the outlined button, a transparent pill with a 1px line in the primary; Mojtaba 2026-11-07)
+          borderColor: m3 ? m3.primary : primary ? fill : c.line,
+          backgroundColor: m3 ? (pressed || hovered ? rgbaOf(m3.primary, pressed ? 0.12 : 0.08) : 'transparent') : primary ? fill : pressed || hovered ? c.surface2 : c.surface,
+          opacity: disabled ? (big ? 0.72 : 0.52) : !m3 && primary && pressed ? 0.84 : !m3 && primary && hovered ? 0.91 : 1,
+          transform: [{ scale }],
+          ...(hovered && !disabled ? { boxShadow: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' } : {}),
+          ...(Platform.OS === 'web' ? { transitionProperty: 'background-color, opacity, box-shadow', transitionDuration: '150ms' } as any : {}),
+        }}>
+          {busy ? <ActivityIndicator size="small" color={fg} /> : icon ? <Icon name={icon} size={20} color={fg} /> : null}
+          <Animated.View style={labelIn as any}>
+            <T numberOfLines={1} style={{ fontSize: big ? 16.5 : 15, lineHeight: big ? 24 : 22, fontWeight: '500', color: fg, textAlign: 'center' }}>{label}</T>
+          </Animated.View>
+          {after?.(fg)}
+        </Animated.View>
+      )}
+    </Pressable>
+  );
+}
+
+// Arc's segmented control, shared by every switch of two or three parts (Segmented, the review's tabs and «پاسخ شما /
+// پاسخ صحیح», sign in / sign up): a pill track and the chosen part a raised pill on it, its label in the text colour.
+// In the light theme the track is the sign-in switch's grey (Mojtaba, 2026-10-15), so it shows on the white cards.
+export function useArcSeg() {
+  const c = useColors(), dark = useTheme().theme === 'dark';
+  const dashboard = useContext(DashboardContext), look = useDashboardLook(), rail = railColor(dark, c.accent), tab = useTabLook();
+  // Material 3's segmented button (Mojtaba 2026-11-07, after his picture of fonts.google.com): an outlined pill, the
+  // chosen part filled with the bottom bar's indicator tint and its ink.
+  const outline = m3Scheme(dark)?.outline ?? (dark ? mix(rail, '#ffffff', 0.28) : mix(rail, '#000000', 0.22));
+  if (SOFT) return {
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: 'transparent', borderWidth: 1, borderColor: outline } as ViewStyle,
+    pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
+    raised: { borderRadius: radius.pill, backgroundColor: tab.indicator } as ViewStyle,
+    label: (on: boolean) => ({ color: on ? tab.onIndicator : c.muted, fontWeight: '500' }) as TextStyle,
+  };
+  return {
+    // («نرم»: a grey track with the chosen part a white raised pill and dark text, as in his pictures, on the dashboards too)
+    // (Every switch's track in the active theme's colour, Mojtaba 2026-11-07: the bottom bar's rail, as the cards' inner
+    // surfaces; it was a neutral grey.)
+    track: { padding: 3, gap: 3, borderRadius: radius.pill, backgroundColor: SOFT ? rail : dashboard ? look.wash : dark ? c.nav : px('#e3e6ef') } as ViewStyle,
+    // The part itself stays clear: the raised pill is SegPill, a layer under its label that is always there and only
+    // fades in and out. On Android a part whose own background and shadow came and went lost its round corners.
+    pill: (_on: boolean) => ({ borderRadius: radius.pill, backgroundColor: 'transparent' }) as ViewStyle,
+    raised: { borderRadius: radius.pill, backgroundColor: SOFT ? (dark ? lighten(rail, 0.12) : '#ffffff') : dashboard ? c.accent : dark ? (ARC ? px('#2a3150') : '#3d3d3d') : c.surface,
+      boxShadow: '0 1px 2px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.06)' } as ViewStyle,
+    label: (on: boolean) => ({ color: on ? (dashboard && !SOFT ? c.accentText : c.text) : c.muted, fontWeight: '500' }) as TextStyle,
+  };
+}
+
+// The chosen part's raised pill (useArcSeg), the first child of each part: shown on the chosen one, clear on the others.
+export function SegPill({ on }: { on: boolean }) {
+  const seg = useArcSeg();
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, seg.raised, { opacity: on ? 1 : 0 }]} />;
+}
+
+// The site's .tabs: grey track, the chosen one is a white tab with navy text.
+// `raw`: a label shown as it is, never translated (a language's own name).
+export function Segmented<V extends string>({ value, options, onChange }: { value: V; options: { value: V; label: string; raw?: boolean }[]; onChange: (v: V) => void }) {
+  const c = useColors(), seg = useArcSeg();
+  return (
+    <View style={[{ flexDirection: 'row', padding: 3, gap: 3, borderRadius: radius.sm, backgroundColor: c.surface2 }, ARC && seg.track]}>
+      {options.map(o => {
+        const on = o.value === value;
+        return (
+          <Pressable key={o.value} onPress={() => { tap(); onChange(o.value); }} style={{ flex: 1 }}>
+            <View style={[{ paddingVertical: 7, borderRadius: 6, backgroundColor: on ? c.surface : 'transparent' }, ARC && seg.pill(on)]}>
+              {ARC ? <SegPill on={on} /> : null}
+              <T style={[{ textAlign: 'center', fontSize: 14, fontWeight: '600', color: on ? (UBER ? c.text : c.link) : c.muted }, ARC && seg.label(on), o.raw ? { fontFamily: 'Vazirmatn-500', writingDirection: 'rtl' } : null]} raw={o.raw}>{o.label}</T>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+// Percent ring.
+// A number easing from 0 to `target` (and on to a new target from where it is), about 0.9 s, slowing at the end: the
+// home page's chance ring and its percent count up, and the lessons bar fills, when the app opens.
+export function useCountUp(target: number, ms = 900) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    let raf = 0; const from = v, t0 = Date.now();
+    const step = () => {
+      const k = Math.min(1, (Date.now() - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      setV(from + (target - from) * e);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, ms]);
+  return v;
+}
+
+// `format`: the label from the ring's value as it fills (so the number counts up with it); else the fixed `label`.
+// `children`: drawn in the middle instead of the label (the home page's icon; Mojtaba 2026-10-29).
+export function Ring({ value, size = 76, stroke = 8, color, trackColor, label, format, children }: { value: number; size?: number; stroke?: number; color?: string; trackColor?: string; label?: string; format?: (v: number) => string; children?: React.ReactNode }) {
+  const c = useColors(), r = (size - stroke) / 2, C = 2 * Math.PI * r;
+  const shown = useCountUp(Math.max(0, Math.min(1, value)), 1800);
+  return (
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={size} height={size} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={trackColor ?? c.line} strokeWidth={stroke} fill="none" />
+        <Circle cx={size / 2} cy={size / 2} r={r} stroke={color ?? c.accent} strokeWidth={stroke} fill="none" strokeLinecap="round"
+          strokeDasharray={`${C} ${C}`} strokeDashoffset={C * (1 - shown)} />
+      </Svg>
+      {children ?? <T style={{ fontWeight: '700', fontSize: size / 4.6, textAlign: 'center' }}>{format ? format(shown) : label}</T>}
+    </View>
+  );
+}
+
+// Arc's skeleton: a muted block in the final layout while its content loads, with a soft pulse (Arc: a skeleton, not a
+// page spinner). `w` / `h` / `r`: its size and corner.
+export function Skeleton({ w = '100%', h = 14, r = radius.pill, style }: { w?: ViewStyle['width']; h?: number; r?: number; style?: StyleProp<ViewStyle> }) {
+  const c = useColors(), dark = useTheme().theme === 'dark';
+  const [pulse] = useState(() => new Animated.Value(0.6));
+  useEffect(() => {
+    const loop = Animated.loop(Animated.sequence([
+      Animated.timing(pulse, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      Animated.timing(pulse, { toValue: 0.6, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+    ]));
+    loop.start(); return () => loop.stop();
+  }, [pulse]);
+  return <Animated.View style={[{ width: w, height: h, borderRadius: r, backgroundColor: dark ? c.surface2 : c.nav, opacity: pulse }, style]} />;
+}
+
+// The app's first load (fonts, the account, the question bank) as Arc's skeleton of a tab page: the header, a large
+// card and a row of three, so the page that follows takes the same places. (flex-start: the start of the line, the
+// right edge in the app's right-to-left layout.)
+export function PageSkeleton() {
+  const c = useColors(), ins = useSafeAreaInsets();
+  const card = { borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, padding: 16, gap: 12 } as const;
+  return (
+    <View style={{ flex: 1, backgroundColor: c.bg }} accessibilityRole="progressbar" accessibilityLabel="در حال بارگذاری">
+      <View style={{ paddingTop: ins.top + 24, paddingHorizontal: 16, gap: 14, maxWidth: 980, width: '100%', alignSelf: 'center' }}>
+        <View style={{ alignItems: 'flex-start', gap: 10, paddingVertical: 24 }}>
+          <Skeleton w="45%" h={26} r={radius.sm} />
+          <Skeleton w="62%" h={14} />
+        </View>
+        <View style={card}>
+          <Skeleton w="38%" h={18} r={radius.sm} style={{ alignSelf: 'flex-start' }} />
+          <Skeleton h={12} /><Skeleton w="80%" h={12} style={{ alignSelf: 'flex-start' }} />
+          <Skeleton h={50} r={radius.btn} style={{ marginTop: 6 }} />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          {[0, 1, 2].map(k => <View key={k} style={[card, { flex: 1, height: 96 }]}><Skeleton w="60%" h={14} style={{ alignSelf: 'flex-start' }} /><Skeleton w="35%" h={20} r={radius.sm} style={{ alignSelf: 'flex-start' }} /></View>)}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// Arc's empty state: what is missing, why, and the one thing to do next, centred, with a plain icon (no tile) over it.
+export function EmptyState({ icon, title, text, action }: { icon: IconName; title: string; text?: string; action?: { label: string; onPress: () => void; icon?: IconName } }) {
+  const c = useColors();
+  return (
+    <View style={{ alignItems: 'center', gap: 6, paddingVertical: 28, paddingHorizontal: 20, borderRadius: radius.md, borderWidth: 1, borderColor: c.cardBorder, backgroundColor: c.surface }}>
+      <Icon name={icon} size={28} color={c.muted} />
+      <T style={{ fontSize: 16, lineHeight: 26, fontWeight: '500', textAlign: 'center', marginTop: 6 }}>{title}</T>
+      {text ? <T style={{ fontSize: 13.5, lineHeight: 22, color: c.muted, textAlign: 'center', maxWidth: 360 }}>{text}</T> : null}
+      {action ? <Button kind="glass" label={action.label} icon={action.icon} onPress={action.onPress} style={{ marginTop: 10 }} /> : null}
+    </View>
+  );
+}
+
+// A round green tick: the green tick inside a thin green ring, on the page's own surface colour (light or dark
+// theme): the premium page's perks and the settings' «فعال تا».
+export function OkTick({ size = 20 }: { size?: number }) {
+  const c = useColors();
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 2, borderWidth: 1.5, borderColor: c.ok, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name="check" size={Math.round(size * 0.58)} color={c.ok} weight="bold" />
+    </View>
+  );
+}

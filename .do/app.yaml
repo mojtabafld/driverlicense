@@ -1,0 +1,42 @@
+# DigitalOcean App Platform spec.
+# Create the app with:  doctl apps create --spec .do/app.yaml
+# (or in the dashboard: Create App → GitHub → mojtabafld/driverlicense — it detects this file).
+#
+# This file is only read when the app is created. Later edits here do NOT reach the running app on
+# push: change variables in the dashboard (Settings → web → Environment Variables) instead.
+# Do not run `doctl apps update --spec .do/app.yaml` on the live app: it replaces the whole variable
+# list, so the secrets added only in the dashboard (below) would be deleted.
+#
+# After the first deploy, add these in the dashboard (Settings → web → Environment Variables):
+#   ANTHROPIC_API_KEY  (Encrypt)  key from console.anthropic.com; turns on the AI lesson after an exam
+#   KIE_API_KEY        (Encrypt)  kie.ai key; new question pictures in the admin panel (optional)
+#   INVITE_CODE        (Encrypt)  only people who know it can sign up (optional)
+#   ADMIN_USERS                   comma-separated usernames that get the admin panel
+# See README.md → "Environment variables" for the full list.
+name: teoriprove
+region: fra
+services:
+  - name: web
+    github:
+      repo: mojtabafld/driverlicense
+      branch: main
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: npm ci --omit=dev
+    run_command: npm start
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    health_check:
+      http_path: /api/config
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+      - key: DATABASE_CA_CERT
+        scope: RUN_TIME
+        value: ${db.CA_CERT}
+databases:
+  - name: db
+    engine: PG
+    production: false

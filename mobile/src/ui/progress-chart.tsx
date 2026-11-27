@@ -1,0 +1,282 @@
+// Progress chart, «نمودار پیشرفت»: a point for the percent correct of each attempt on a smooth grey line (light grey in
+// the light theme, dark grey in the dark one) with a soft green gradient under it, ten across the width and older ones
+// by dragging (it opens at the newest); a point is green when the
+// attempt passed or reached 80%, else grey, with the 80% pass line; when it opens the line draws itself from left to
+// right across the view, its fill and points following it (as Cloudflare's charts do, Mojtaba asked), once per app start. Tap a point to pick
+// that attempt (the newest is picked until another is); its details and a review button show below. With `fill` it takes the height of the space it is given,
+// at least FILL_MIN (the home screen fits above the tab bar; only a very short screen scrolls a little).
+import { router } from 'expo-router';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
+import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
+
+import { RTL, tr } from '@/lib/i18n';
+import { faNum, fmtDate, isFull, isPass, pctOf, scoreOf } from '@/lib/logic';
+import type { Attempt } from '@/lib/bank';
+import { Icon } from './icon';
+import { Marquee } from './marquee';
+import { ArcButton, Button, T, tap, useCountUp } from './kit';
+import { ARC, useColors, useIsDark } from './theme';
+
+// The main site (ARC) draws it as bars (Mojtaba 2026-10-24, after a picture he sent): no percent scale or grid, the
+// thin dashed pass line over them, a bar with rounded top corners for each attempt, in a soft grey of the theme (its lines' colour) and green
+// when it passed (or reached 80%); the picked one (by default the newest) has its percent above it and, when not
+// passed, a darker grey. The bars grow up from the bottom when the chart opens; dates below.
+// ARC: one column per test. Its full height is the question count; the saturated part
+// shows correct answers, with the remaining questions in a pale tint above it.
+const L = ARC ? 30 : 38, R = ARC ? 4 : 12, TOP = ARC ? 10 : 14, B = 24, FILL_MIN = 120;
+// (ARC: the top 10 px only hold the highest count's label; it was 34, from the bubble over the picked test, gone since
+// 2026-10-30. Mojtaba 2026-11-05: less room between the card's head and the chart's lines.)
+// The line drew itself in already since the app started.
+let drawnOnce = false;
+// The tests the chart needs: the main site's bars from the first test on (Mojtaba 2026-10-30: the warm-up's test shows
+// at once), /app's line from the second.
+const MIN_TESTS = ARC ? 1 : 2;
+// (The app's own random exam, mode 'new', is «آزمون تصادفی» too since it took the old one's place; Mojtaba 2026-10-19.)
+const modeName = (a: Attempt) => (a.mode === 'lesson' ? 'درس' : a.mode === 'mistakes' ? 'تمرین اشتباهات' : a.mode === 'sections' ? 'آموزش دسته‌بندی' : a.mode === 'demo' ? 'آزمون آزمایشی' : 'آزمون تصادفی');
+
+// `sel` / `onSel`: the picked attempt, when the page holds it (so a tap elsewhere in its card can clear it).
+// `minH`: with `fill`, the chart's least height (FILL_MIN unless given).
+// `noHint`: with `fill`, the line under the chart shows only for a picked attempt (no «tap the chart» hint), for small screens.
+// `noNote`: the empty chart without its line under it (home's chart view on a very short screen, Mojtaba 2026-10-19).
+// `onBlank`: a tap on the chart off its points does this instead of clearing the pick (home: it opens or closes its chart
+// view, and the picked test stays picked; Mojtaba 2026-10-19).
+// `noLegend`: ARC, without the legend under the chart (the smallest phones).
+export function ProgressChart({ attempts, onOpen, fill, sel: selOut, onSel, minH = FILL_MIN, noHint, noNote, noLegend, onBlank }: { attempts: Attempt[]; onOpen: (a: Attempt) => void; fill?: boolean; sel?: number | null; onSel?: (i: number | null) => void; minH?: number; noHint?: boolean; noNote?: boolean; noLegend?: boolean; onBlank?: () => void }) {
+  const c = useColors(), dark = useIsDark();
+  const chartId = useId().replace(/:/g, '');
+  // «قبول» in green / «مردود» in red, only the word, for the picked exam.
+  const verdict = (a: Attempt) => <T style={{ fontSize: 13, fontWeight: '700', color: isPass(a) ? c.ok : c.bad }}>{isPass(a) ? 'قبول' : 'مردود'}</T>;
+  const [W, setW] = useState(0), [fillH, setFillH] = useState(0);
+  const abs = !!fill && ARC;
+  const H = fill ? Math.max(fillH, minH) : 210;
+  const [selIn, setSelIn] = useState<number | null>(null);
+  const chosen = onSel ? selOut ?? null : selIn, setSel = onSel ?? setSelIn;
+  const scroller = useRef<ScrollView>(null);
+  // The width the chart was last scrolled to the newest at: only a new width (more tests, another screen) scrolls there
+  // again, not a new height (home's chart view grows the chart; it kept jumping back to the newest test).
+  const endW = useRef(-1);
+  // How far the line has drawn itself across the view, 0 to 1: drawn in once per app start (after signing in), and
+  // whole at once when the chart is shown again (moving between pages), Mojtaba asked.
+  // (The page stays mounted under the tabs and its width drops to 0 while hidden, so once started it does not go back.)
+  // It starts only once the line itself is there (two attempts or more) and measured, a moment after: on Android the
+  // attempts can come in after the page (and the splash) first shows, and it had drawn itself under the empty chart
+  // already (Mojtaba 2026-10-18: no animation in the Android app).
+  const [instant] = useState(() => drawnOnce);
+  const [go, setGo] = useState(false);
+  const shown = W > 0 && attempts.length >= MIN_TESTS;
+  useEffect(() => {
+    if (!shown || go) return;
+    const t = setTimeout(() => { setGo(true); drawnOnce = true; }, Platform.OS === 'web' ? 0 : 350);
+    return () => clearTimeout(t);
+  }, [shown, go]);
+  const anim = useCountUp(go && !instant ? 1 : 0, 1400), draw = instant ? 1 : anim;
+  // The box's size. A zero width (the page hidden under another) is ignored. The empty chart measures too, so the
+  // chart that replaces it after a test handed in elsewhere has its size at once: its own first layout comes while
+  // home is hidden, and the browser gives no new one when home shows again (Mojtaba 2026-10-17: it stayed blank).
+  const measure = (e: { nativeEvent: { layout: { width: number; height: number } } }) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (width <= 0) return;
+    setW(width); if (fill) setFillH(height);
+  };
+  if (attempts.length < MIN_TESTS && ARC && fill) {
+    // Main site, home: the empty chart (its dashed pass line on a faint plot) with a word on when it fills in, Mojtaba asked.
+    return (
+      <View style={{ flex: 1, minHeight: minH, gap: 8 }}>
+        <View pointerEvents="none" onLayout={measure} style={{ flex: 1, borderRadius: 6, backgroundColor: c.forest + '10' }}>
+          <View style={{ position: 'absolute', left: 0, right: 0, top: '30%', borderTopWidth: 1, borderStyle: 'dashed', borderColor: c.faint }} />
+        </View>
+        {/* Where the dates go once there are attempts (not with `noNote`). */}
+        {noNote ? null : <T numberOfLines={1} style={{ color: c.muted, fontSize: 12, lineHeight: 19, textAlign: 'center' }}>نمودار بعد از اولین آزمون نمایش داده می‌شود.</T>}
+      </View>
+    );
+  }
+  if (attempts.length < MIN_TESTS) {
+    // Nothing to draw yet: say so, with a button to the exam tab.
+    return (
+      <View style={[{ alignItems: 'center', justifyContent: 'center', gap: 14, paddingVertical: 20 }, fill && { flex: 1 }]}>
+        <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>بعد از حداقل ۲ آزمون، نمودار پیشرفت اینجا نمایش داده می‌شود.</T>
+        {/* On the main site the theme's call to action, as home's and the exam's other start buttons (ArcButton). */}
+        {ARC ? <ArcButton label="شروع آزمون" onPress={() => router.navigate('/exam')} icon="play" />
+          : <Button label="شروع آزمون" onPress={() => router.navigate('/exam')} icon="play" />}
+      </View>
+    );
+  }
+  const data = attempts.slice(-200), offset = attempts.length - data.length;
+  // The picked attempt: the newest one unless another is picked (Mojtaba 2026-10-18), so the chart always shows one; a
+  // tap that clears the pick goes back to the newest.
+  const sel = chosen != null && chosen < data.length ? chosen : data.length ? data.length - 1 : null;
+  // Ten attempts fill the width; older ones lie to the left, reached by dragging the bars (it opens at the newest).
+  const VIEW = 10, VW = Math.max(0, W - L - R);
+  const slot = VW / Math.min(VIEW, data.length);
+  const CW = slot * data.length, bw = ARC ? Math.max(4, Math.min(34, slot * 0.56)) : Math.max(4, Math.min(34, slot * 0.66));
+  const DOT = 5;   // the points' radius (10 across), with a ring in the card's colour
+  const x0 = (i: number) => slot * (i + 0.5);
+  // In every language the chart runs left to right, the oldest at the left and the newest at the right edge, where it
+  // opens (Persian too, as English, Mojtaba 2026-10-22; it ran right to left in Persian before). FLIP mirrors it.
+  const FLIP = false as boolean;
+  const x = (i: number) => (FLIP ? CW - x0(i) : x0(i));
+  // ARC: the scale starts well under the lowest score (in tens, at most 50%), so the bars use the card's height and the
+  // lowest one still shows.
+  const lo = 0;
+  // ARC: the scale in questions, up to the longest test's count.
+  const top = Math.max(5, ...data.map(a => a.items.length));
+  const y = (v: number) => (ARC ? TOP + (1 - v / top) * (H - TOP - B) : TOP + (1 - (v - lo) / (100 - lo)) * (H - TOP - B));
+  // Keep the full column visible even for very short tests. Correct answers occupy
+  // their exact fraction of that column, including an empty fill for a zero score.
+  const MIN_BAR = 8;
+  const totals = data.map(a => y(0) - Math.max(MIN_BAR, y(0) - y(a.items.length)) * draw);
+  const tops = data.map((a, i) => (ARC ? y(0) - (y(0) - totals[i]) * pctOf(a) : y(pctOf(a) * 100)));
+  // The drawn part ends here: the older attempts left of the view are there at once, the view fills from its left edge
+  // (mirrored right to left with FLIP: the part drawn runs from the right end, `ahead` is a point not reached yet).
+  const edge = Math.max(0, CW - VW) + (VW + DOT * 2 + 2) * draw;
+  const ahead = (i: number) => (FLIP ? x(i) < CW - edge : x(i) > edge);
+  // On Android a clip path whose rectangle changes is not drawn again (react-native-svg), so the line stayed hidden
+  // while its points came in (Mojtaba 2026-10-18); the phones get a new clip, by its id, at each step instead.
+  const clipId = Platform.OS === 'web' ? 'pcDraw' : `pcDraw${Math.round(edge)}`;
+  const good = (a: Attempt) => isPass(a) || pctOf(a) >= 0.8;
+  const legendCol = sel != null && data[sel] && !good(data[sel]) ? c.bad : c.ok;
+  // The line through the points, smooth: each step a curve leaving and reaching its points level, so it never swings
+  // above or below them; the area under it down to 0%.
+  const line = data.map((_, i) => (i === 0 ? `M${x(0)} ${tops[0]}` : `C${(x(i - 1) + x(i)) / 2} ${tops[i - 1]} ${(x(i - 1) + x(i)) / 2} ${tops[i]} ${x(i)} ${tops[i]}`)).join(' ');
+  const area = `${line} L${x(data.length - 1)} ${y(lo)} L${x(0)} ${y(lo)} Z`;
+  // ARC: a bar from the bottom to its top, its top corners rounded.
+  // ARC: centred on the test, with rounded top corners.
+  const bar = (i: number, t = totals[i]) => {
+    const l = x(i) - bw / 2, r = x(i) + bw / 2, b = y(0), k = Math.min(bw / 2, b - t);
+    return `M${l} ${b} L${l} ${t + k} Q${l} ${t} ${l + k} ${t} L${r - k} ${t} Q${r} ${t} ${r} ${t + k} L${r} ${b} Z`;
+  };
+  const every = ARC ? Math.max(1, Math.ceil(90 / slot)) : slot >= 26 ? 1 : 2;
+  // ARC: the scale's marks are the question counts of the tests shown (5, 10, 15, 20, 25 when tests of those sizes were
+  // taken; Mojtaba 2026-10-29), and 0; one too close to the one above it (a short chart) is left out.
+  const arcTicks = () => {
+    const out: number[] = [];
+    for (const v of [...new Set([0, ...data.map(d => d.items.length)])].sort((p, q) => q - p)) if (!out.length || y(v) - y(out[out.length - 1]) >= 14) out.push(v);
+    return out;
+  };
+  const ticks = ARC ? arcTicks() : H < 150 ? [0, 50, 100] : [0, 20, 40, 60, 80, 100];
+  const font = RTL ? 'Vazirmatn-400' : 'GSans-400';
+  const a = sel != null ? data[sel] : null;
+  // The picked attempt's name under the chart: «آخرین آزمون» for the newest (picked by default), else its number.
+  const pickName = sel === data.length - 1 ? 'آخرین آزمون' : `آزمون ${faNum((sel ?? 0) + 1 + offset)}`;
+  return (
+    <View style={fill ? { flex: 1, gap: 8 } : { gap: 10 }}>
+      <View onLayout={measure}
+        style={[fill ? { flex: 1, minHeight: minH } : { height: H }, { flexDirection: 'row', direction: 'ltr' } as any]}
+        accessibilityRole="image" accessibilityLabel="نمودار نمره‌ی آزمون‌ها">
+        {W > 0 ? (
+          /* Main site: laid over the box, so the box (and the chart's height) can also shrink when the home page gets denser. */
+          <View style={abs ? { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row', direction: 'ltr' } as any : { flex: 1, flexDirection: 'row', direction: 'ltr' } as any}>
+            {/* The percent scale stays put on the left. */}
+            {<Svg width={L} height={H} pointerEvents="none">
+              {ticks.map(v => (
+                <SvgText key={`t${v}`} x={L - 8} y={y(v) + 4} fill={c.muted} fontSize={11} fontFamily={font} textAnchor="end">{ARC ? faNum(v) : `${faNum(v)}${RTL ? '٪' : '%'}`}</SvgText>
+              ))}
+            </Svg>}
+            <ScrollView ref={scroller} horizontal showsHorizontalScrollIndicator={false} style={{ width: VW, flexGrow: 0, flexShrink: 0, direction: 'ltr' } as any}
+              onContentSizeChange={w => { if (Math.abs(w - endW.current) > 1) { endW.current = w; if (FLIP) scroller.current?.scrollTo({ x: 0, animated: false }); else scroller.current?.scrollToEnd({ animated: false }); } }}>
+              {/* ARC: clipped, so the edge points' tap areas do not widen the scroll past the line's end. */}
+              <View style={{ width: CW, height: H, overflow: ARC ? 'hidden' : 'visible' }}>
+                {/* A tap between the bars clears the pick. */}
+                <Pressable onPress={() => { if (onBlank) onBlank(); else setSel(null); }} style={{ position: 'absolute', left: 0, top: 0, width: CW, height: H }} />
+                <Svg width={CW} height={H} pointerEvents="none">
+                  {ticks.map(v => <Line key={v} x1={0} x2={CW} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} strokeOpacity={ARC ? 0.7 : 1} strokeDasharray={ARC ? '4 4' : undefined} />)}
+                  <Defs>
+                    <LinearGradient id="pcArea" x1="0" y1={String(TOP)} x2="0" y2={String(y(ARC ? lo : 0))} gradientUnits="userSpaceOnUse">
+                      <Stop offset="0" stopColor={c.forest} stopOpacity={ARC ? 0.38 : 0.32} />
+                      <Stop offset="1" stopColor={c.forest} stopOpacity={0} />
+                    </LinearGradient>
+                    {/* The part drawn so far: the line and its fill show up to `edge`. */}
+                    <ClipPath id={clipId} key={clipId}><Rect x={FLIP ? CW - edge : 0} y={0} width={edge} height={H} /></ClipPath>
+                  </Defs>
+                  {ARC ? null : <G key={clipId} clipPath={`url(#${clipId})`}>
+                    <Path d={area} fill="url(#pcArea)" />
+                    <Path d={line} fill="none" stroke={c.faint} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={sel == null ? 1 : 0.5} />
+                  </G>}
+                  {/* Each point shows once the line has reached it. */}
+                  {ARC ? data.map((d, i) => {
+                    // One column: pale total with correct answers filled from the bottom.
+                    // Clip the fill to the column so a full score retains its rounded top.
+                    const col = good(d) ? c.ok : c.bad, on = i === sel;
+                    return (<G key={i} opacity={on ? 1 : 0.4}>
+                      <Defs><ClipPath id={`${chartId}-${clipId}-bar-${i}`}><Path d={bar(i)} /></ClipPath></Defs>
+                      <Path d={bar(i)} fill={col} fillOpacity={dark ? 0.28 : 0.22} />
+                      {scoreOf(d) > 0 ? <Rect x={x(i) - bw / 2} y={tops[i]} width={bw} height={Math.max(0, y(0) - tops[i])} fill={col} clipPath={`url(#${chartId}-${clipId}-bar-${i})`} /> : null}
+                    </G>);
+                  })
+                  /* The points: green for a pass, grey below it; the picked one larger, the others fade a little. */
+                  : data.map((d, i) => ahead(i) ? null : (
+                    <Circle key={i} cx={x(i)} cy={tops[i]} r={sel === i ? DOT + 2 : DOT} fill={good(d) ? c.forest : sel === i ? c.muted : c.faint}
+                      stroke={c.surface} strokeWidth={2} fillOpacity={sel == null || sel === i ? 1 : 0.4} />
+                  ))}
+                  {/* The picked point's percent above it, kept inside the chart at its ends. */}
+                  {/* (ARC: no bubble over the picked test since 2026-10-30; home's chart head shows its score, date and change) */}
+                  {sel != null && data[sel] && !ARC ? (
+                    <SvgText x={Math.min(CW - 16, Math.max(16, x(sel)))} y={Math.max(11, tops[sel] - (DOT + 8))} fill={c.text} fontSize={12} fontWeight="700" fontFamily="Vazirmatn-700" textAnchor="middle">
+                      {`${faNum(Math.round(pctOf(data[sel]) * 100))}${RTL ? '٪' : '%'}`}
+                    </SvgText>
+                  ) : null}
+                  {ARC ? null : <Line x1={0} x2={CW} y1={y(80)} y2={y(80)} stroke={c.forest} strokeOpacity={0.7} strokeWidth={1.5} strokeDasharray="5 5" />}
+                  {/* ARC: dates under the line, the newest at the right edge and the oldest in view at the left (mirrored with FLIP). */}
+                  {data.map((d, i) => ((data.length - 1 - i) % every === 0 && !(ARC && i > 0 && Math.abs(x(i) - (FLIP ? VW : CW - VW)) < 36)
+                    ? <SvgText key={`x${i}`} x={ARC ? Math.min(CW - 36, Math.max(36, x(i))) : x(i)} y={H - 6} fill={ARC && i === sel ? c.text : c.muted} fontSize={11} fontFamily={ARC && i === sel ? (RTL ? 'Vazirmatn-700' : 'GSans-700') : font}
+                        textAnchor="middle">{ARC ? fmtDate(d.at) : faNum(i + 1 + offset)}</SvgText>
+                    : null))}
+                </Svg>
+                {/* A tap on an attempt's column (around its point) picks it, a second tap opens its review (main site, Mojtaba
+                    2026-10-30; a drag scrolls instead). */}
+                {data.map((_, i) => (
+                  <Pressable key={`p${i}`} onPress={() => { tap(); if (ARC && chosen === i) onOpen(data[i]); else setSel(ARC ? i : sel === i ? null : i); }} accessibilityLabel={`آزمون ${faNum(i + 1 + offset)}`}
+                    // The whole column picks the test, including its pale portion.
+                    style={ARC ? { position: 'absolute', left: x(i) - slot / 2, top: 0, width: slot, height: H }
+                      : { position: 'absolute', left: x(i) - Math.max(bw / 2 + 4, 14), top: Math.max(0, tops[i] - 18), width: Math.max(bw + 8, 28), height: H - Math.max(0, tops[i] - 18) }} />
+                ))}
+              </View>
+            </ScrollView>
+            {/* Main site: no «حد قبولی ۸۰٪» under the dashed line (the legend names it), Mojtaba asked. */}
+          </View>
+        ) : null}
+      </View>
+      {ARC && !noLegend ? (
+        // The legend, as the picture's: a pale square for the questions, a full one for the right answers, in the picked
+        // test's colour (green when it passed, coral when not), so it matches the bars with the bubble (Mojtaba 2026-10-29).
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 2, paddingBottom: Platform.OS === 'android' ? 6 : 2 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol, opacity: dark ? 0.32 : 0.26 }} /><T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>سؤال‌ها</T></View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><View style={{ width: 11, height: 11, borderRadius: 3, backgroundColor: legendCol }} /><T style={{ color: c.muted, fontSize: 12.5, lineHeight: 20 }}>پاسخ درست</T></View>
+        </View>
+      ) : null}
+      {ARC && fill ? null : fill && noHint && !a ? null : fill ? (
+        // Fitted to the screen: one fixed line, so the chart keeps its height when an attempt is picked.
+        <View style={{ height: 40, justifyContent: 'center' }}>
+          {a ? (
+            <Pressable onPress={() => onOpen(a)} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 40, paddingHorizontal: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
+                {/* Too long for a small phone: the line glides once to show its end, then rests at its start
+                    (ui/marquee.tsx; Mojtaba 2026-10-18). */}
+                <Marquee once flush height={20} bg={c.surface2} style={{ fontSize: 13, lineHeight: 20 }}
+                  text={[tr(pickName), isFull(a) ? `${tr(`${faNum(scoreOf(a))}/${faNum(a.items.length)}`)} ${tr(isPass(a) ? 'قبول' : 'مردود')}` : tr(`${faNum(Math.round(pctOf(a) * 100))}٪ درست`), fmtDate(a.at)].join(tr('،') + ' ')}
+                  rich={<>
+                    <T style={{ fontSize: 13, fontWeight: '700' }}>{pickName}</T>
+                    {'، '}{isFull(a) ? <>{`${faNum(scoreOf(a))}/${faNum(a.items.length)} `}{verdict(a)}</> : `${faNum(Math.round(pctOf(a) * 100))}٪ درست`}، {fmtDate(a.at)}
+                  </>} />
+                <T style={{ color: c.text, fontWeight: '700', fontSize: 13 }}>مرور</T><Icon name="chevronLeft" size={14} color={c.text} weight="semibold" />
+              </View>
+            </Pressable>
+          ) : <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>برای دیدن جزئیات هر آزمون، روی نمودار بزنید.</T>}
+        </View>
+      ) : a ? (
+        <Pressable onPress={() => onOpen(a)} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, backgroundColor: c.surface2 }}>
+            <View style={{ flex: 1 }}>
+              <T style={{ fontWeight: '700' }}>{pickName}: {modeName(a)}</T>
+              <T style={{ color: c.muted, fontSize: 13 }}>
+                {fmtDate(a.at)}، {isFull(a) ? <>{`نمره ${faNum(scoreOf(a))}/${faNum(a.items.length)}، `}{verdict(a)}</> : `${faNum(a.items.length)} سؤالی، ${faNum(Math.round(pctOf(a) * 100))}٪ درست`}
+              </T>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}><T style={{ color: c.text, fontWeight: '700' }}>مرور</T><Icon name="chevronLeft" size={15} color={c.text} weight="semibold" /></View>
+          </View>
+        </Pressable>
+      ) : <T style={{ color: c.muted, fontSize: 12.5, textAlign: 'center' }}>برای دیدن جزئیات هر آزمون، روی نمودار بزنید.</T>}
+    </View>
+  );
+}
