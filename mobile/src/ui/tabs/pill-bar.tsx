@@ -17,6 +17,12 @@ import { BAR_GAP, type LiquidBarProps } from './liquid-bar-types';
 // The open tab's name: this much room (the original's MOBILE_LABEL_WIDTH), and the bar's height.
 // (LABEL_W: the most a name may take, the name's own width below it; the bar larger than the original's 52 since
 // 2026-11-13, Mojtaba: «بزرگتر کن»)
+// The bar's own colours (2026-11-27): black with a white open icon in the dark theme, as Mojtaba's picture; in the light
+// theme the same in reverse, a white bar with a near-black open icon (Mojtaba: «در تم روشن مناسب با حالت روشن»).
+export const BAR = {
+  dark: { bg: '#000000', on: '#ffffff', off: '#8a8a90', hover: 'rgba(255,255,255,0.06)', edge: 'rgba(255,255,255,0.08)' },
+  light: { bg: '#ffffff', on: '#111114', off: '#9a9aa2', hover: 'rgba(0,0,0,0.04)', edge: 'rgba(0,0,0,0.06)' },
+};
 export const PILL_BAR_H = 66;
 const WEB = Platform.OS === 'web';
 // The dock's colours (Mojtaba 2026-11-13, after his picture of a soft grey app): a frosted light grey track with a white
@@ -49,6 +55,7 @@ function useStill() {
 // test pages before); elsewhere its place stays empty, so the icons never move between pages.
 export const DOT = 56;
 function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs'][number]['icon']; label: string; on: boolean; onPress: () => void; still: boolean }) {
+  const b = useIsDark() ? BAR.dark : BAR.light;
 
   const fill = useRef(new Animated.Value(on ? 1 : 0)).current, press = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -62,10 +69,10 @@ function Tab({ icon, label, on, onPress, still }: { icon: LiquidBarProps['tabs']
       onPressOut={() => { if (!still) Animated.spring(press, { toValue: 1, stiffness: 500, damping: 30, useNativeDriver: !WEB }).start(); }}>
       {({ hovered }: any) => (
         <Animated.View style={{ width: DOT, height: DOT, borderRadius: DOT / 2, alignItems: 'center', justifyContent: 'center', transform: [{ scale: press }],
-          backgroundColor: hovered && !on ? 'rgba(255,255,255,0.06)' : 'transparent' }}>
+          backgroundColor: hovered && !on ? b.hover : 'transparent' }}>
           {/* (the bar's look since 2026-11-27, after Mojtaba's picture: line icons on the black bar, the open one white,
               the others grey; a filled ink circle on no bar before) */}
-          <Icon name={icon} size={26} color={on ? '#ffffff' : '#8a8a90'} />
+          <Icon name={icon} size={26} color={on ? b.on : b.off} />
         </Animated.View>
       )}
     </Pressable>
@@ -83,8 +90,8 @@ export function PillBar({ tabs, active, onSelect, bottomInset, side }: LiquidBar
         style={{ width: rowW, height: PILL_BAR_H, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, direction: RTL ? 'rtl' : 'ltr',
           // a black bar with round ends and a soft shadow (Mojtaba 2026-11-27, after his picture; no bar, the page fading
           // out under the icons, before); a hair of light at its edge in the dark theme so it shows on the dark page
-          backgroundColor: '#000000', borderRadius: PILL_BAR_H / 2, borderWidth: dark ? 1 : 0, borderColor: 'rgba(255,255,255,0.08)',
-          shadowColor: '#000', shadowOpacity: dark ? 0.5 : 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 10 } as any}>
+          backgroundColor: (dark ? BAR.dark : BAR.light).bg, borderRadius: PILL_BAR_H / 2, borderWidth: 1, borderColor: (dark ? BAR.dark : BAR.light).edge,
+          shadowColor: '#000', shadowOpacity: dark ? 0.5 : 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 10 } as any}>
         {tabs.map((t, i) => [
           // the start button's place in the middle of the row (Mojtaba 2026-11-17), kept empty where it is not shown
           i === Math.ceil(tabs.length / 2) ? <View key="side" style={{ width: DOT, height: DOT, alignItems: 'center', justifyContent: 'center' }}>{side}</View> : null,
