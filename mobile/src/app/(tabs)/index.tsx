@@ -24,7 +24,6 @@ import { TrendChart } from '@/ui/trend-chart';
 import { PassGauge } from '@/ui/pass-gauge';
 import { ActivityList, Pill, openAttempt, pctText } from '@/ui/activity';
 import { TestStats } from '@/ui/chart-view';
-import { HomeKnowledge } from '@/ui/home-knowledge';
 import { PasskeyOffer } from '@/ui/passkey-offer';
 import { BellButton } from '@/ui/bell-button';
 import { Avatar } from '@/ui/avatar';
@@ -472,7 +471,7 @@ export default function Home() {
           the glossary; ui/home-knowledge.tsx), the page scrolling to them (Mojtaba 2026-11-08); not in the chart view. */}
       {/* The tests' statistics, under the progress chart (Mojtaba 2026-11-17; above it, under the chance of passing, before) */}
       {ARC && !view ? <TestStats attempts={exams} dense={compact} noHead={tighter} noFacts={tiniest} first={2} /> : null}
-      {ARC && !view ? <HomeKnowledge gap={gap} /> : null}
+      {/* (no «everything in Teoripro» cards at the page's foot since 2026-11-27, Mojtaba) */}
       {/* The chart view: the statistics and the latest tests, coming in under the chart; a row opens its test. */}
       {grow ? (
         <Animated.View {...swipe} onLayout={e => { if (view && underH.current == null) { underH.current = e.nativeEvent.layout.height; fitEmpty(); } }}
