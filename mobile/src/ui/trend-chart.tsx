@@ -84,7 +84,7 @@ export function TrendChart({ attempts, minH, compact, onOpen, title, big: bigSiz
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
             <Animated.View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981', opacity: pulse }} />
-            <T numberOfLines={1} style={{ fontSize: 17, lineHeight: 25, fontWeight: '600', color: text, flexShrink: 1, ...title }}>نمودار پیشرفت</T>
+            <T numberOfLines={1} style={{ fontSize: 17, lineHeight: 25, fontWeight: '600', color: text, flexShrink: 1, ...title }}>پیشرفت</T>
           </View>
           <View style={{ flexDirection: 'row', gap: compact ? 12 : 16 }}>
             {RANGES.map(r => {

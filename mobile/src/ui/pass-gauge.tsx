@@ -44,7 +44,7 @@ export function PassGauge({ value, verdict, verdictColor, verdictSoft, small }: 
     <View testID="home-readiness-value" style={{ alignItems: 'center', gap: 6 }}>
       {/* (no glow of its own since 2026-11-19: it sits on the page, in the header's wash) */}
       {/* (the title alone: no «i» beside it since 2026-11-19, Mojtaba) */}
-      <T style={{ fontSize: 15, lineHeight: 22, fontWeight: '600', color: dark ? light : deep }}>احتمال قبولی</T>
+      {/* (no title over it since 2026-11-27, Mojtaba) */}
 
       <View style={{ width: W, height: H, direction: 'ltr' } as any}>
         <Svg width={W} height={H}>
